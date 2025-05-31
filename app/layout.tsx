@@ -10,8 +10,8 @@ const shareTechMono = Share_Tech_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "WEATHER.EXE - Retro Weather Terminal",
-  description: "A retro 8-bit style weather application with pixel art graphics",
+  title: "16-bit Weather - Retro Weather Terminal",
+  description: "A retro 16-bit style weather application with pixel art graphics and comprehensive location search",
     generator: 'v0.dev'
 }
 
