@@ -8,10 +8,16 @@ interface WeatherData {
     windDisplay: string; // Formatted wind display (e.g., "SW 6 mph" or "Calm")
     location: string;
     description: string;
+    sunrise: string; // Formatted sunrise time (e.g., "6:23 am")
+    sunset: string; // Formatted sunset time (e.g., "7:45 pm")
+    dewPoint: number; // Dew point in Fahrenheit
+    uvIndex: number; // UV Index (0-11+)
+    uvDescription: string; // UV intensity description (Low/Moderate/High/Very High/Extreme)
   };
   forecast: Array<{
     day: string;
-    temp: number;
+    highTemp: number;
+    lowTemp: number;
     condition: string;
     description: string;
   }>;
@@ -40,6 +46,8 @@ interface OpenWeatherMapCurrentResponse {
   name: string;
   sys: {
     country: string;
+    sunrise: number; // Unix timestamp
+    sunset: number; // Unix timestamp
   };
 }
 
@@ -48,6 +56,8 @@ interface OpenWeatherMapForecastResponse {
     dt: number;
     main: {
       temp: number;
+      temp_min: number;
+      temp_max: number;
     };
     weather: Array<{
       main: string;
@@ -88,6 +98,52 @@ const getCompassDirection = (degrees: number): string => {
   if (normalizedDegrees >= 292.5 && normalizedDegrees < 337.5) return 'NW';
   
   return 'N'; // Fallback
+};
+
+// Format Unix timestamp to readable time (e.g., "5:38 am", "8:14 pm")
+const formatTime = (timestamp: number): string => {
+  const date = new Date(timestamp * 1000);
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  
+  // Convert to 12-hour format
+  const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+  const ampm = hours >= 12 ? 'pm' : 'am';
+  
+  // Pad minutes with leading zero if needed
+  const paddedMinutes = minutes.toString().padStart(2, '0');
+  
+  return `${displayHours}:${paddedMinutes} ${ampm}`;
+};
+
+// Calculate dew point from temperature (°F) and humidity (%)
+const calculateDewPoint = (tempF: number, humidity: number): number => {
+  // Convert Fahrenheit to Celsius for calculation
+  const tempC = (tempF - 32) * 5/9;
+  
+  // Magnus formula coefficients
+  const a = 17.27;
+  const b = 237.7;
+  
+  // Calculate alpha
+  const alpha = ((a * tempC) / (b + tempC)) + Math.log(humidity / 100);
+  
+  // Calculate dew point in Celsius
+  const dewPointC = (b * alpha) / (a - alpha);
+  
+  // Convert back to Fahrenheit and round
+  const dewPointF = (dewPointC * 9/5) + 32;
+  
+  return Math.round(dewPointF);
+};
+
+// Get UV Index description
+const getUVDescription = (uvIndex: number): string => {
+  if (uvIndex <= 2) return 'Low';
+  if (uvIndex <= 5) return 'Moderate';
+  if (uvIndex <= 7) return 'High';
+  if (uvIndex <= 10) return 'Very High';
+  return 'Extreme';
 };
 
 // Format wind display with direction and speed
@@ -437,13 +493,96 @@ const calculateMoonPhase = (): MoonPhaseInfo => {
   };
 };
 
+// Process 5-day forecast data to extract daily high/low temperatures
+const processDailyForecast = (forecastData: OpenWeatherMapForecastResponse) => {
+  const dailyData: { [key: string]: { 
+    temps: number[]; 
+    conditions: string[]; 
+    descriptions: string[]; 
+    date: Date;
+  } } = {};
+
+  // Group forecast data by day
+  forecastData.list.forEach((item) => {
+    const date = new Date(item.dt * 1000);
+    const dateKey = date.toDateString(); // Use date string as key
+    
+    if (!dailyData[dateKey]) {
+      dailyData[dateKey] = {
+        temps: [],
+        conditions: [],
+        descriptions: [],
+        date: date
+      };
+    }
+    
+    dailyData[dateKey].temps.push(item.main.temp);
+    dailyData[dateKey].conditions.push(item.weather[0].main);
+    dailyData[dateKey].descriptions.push(item.weather[0].description);
+  });
+
+  // Convert to forecast array, excluding today and taking next 3 days
+  const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+  const today = new Date().toDateString();
+  
+  return Object.entries(dailyData)
+    .filter(([dateKey]) => dateKey !== today) // Exclude today
+    .slice(0, 3) // Take next 3 days
+    .map(([dateKey, data]) => {
+      const highTemp = Math.round(Math.max(...data.temps));
+      const lowTemp = Math.round(Math.min(...data.temps));
+      
+      // Use the most common condition for the day
+      const conditionCounts: { [key: string]: number } = {};
+      data.conditions.forEach(condition => {
+        conditionCounts[condition] = (conditionCounts[condition] || 0) + 1;
+      });
+      const dominantCondition = Object.entries(conditionCounts)
+        .sort(([,a], [,b]) => b - a)[0][0];
+      
+      // Use the first description for the dominant condition
+      const conditionIndex = data.conditions.findIndex(c => c === dominantCondition);
+      const description = data.descriptions[conditionIndex];
+      
+      return {
+        day: dayNames[data.date.getDay()],
+        highTemp,
+        lowTemp,
+        condition: mapWeatherCondition(dominantCondition),
+        description
+      };
+    });
+};
+
+// Fetch UV Index data
+const fetchUVIndex = async (lat: number, lon: number, apiKey: string): Promise<{ uvIndex: number; uvDescription: string }> => {
+  try {
+    const response = await fetch(
+      `${BASE_URL}/uvi?lat=${lat}&lon=${lon}&appid=${apiKey}`
+    );
+
+    if (!response.ok) {
+      console.warn('UV Index API error:', response.status);
+      return { uvIndex: 0, uvDescription: 'N/A' };
+    }
+
+    const data = await response.json();
+    const uvIndex = Math.round(data.value || 0);
+    const uvDescription = getUVDescription(uvIndex);
+    
+    return { uvIndex, uvDescription };
+  } catch (error) {
+    console.warn('Failed to fetch UV Index:', error);
+    return { uvIndex: 0, uvDescription: 'N/A' };
+  }
+};
+
 export const fetchWeatherData = async (locationInput: string, apiKey: string): Promise<WeatherData> => {
   // Debug logging for API key
   console.log('🔍 [DEBUG] fetchWeatherData called');
-  console.log('🔍 [DEBUG] API Key received:', apiKey ? `${apiKey.substring(0, 8)}...${apiKey.substring(-4)}` : 'NULL/UNDEFINED');
+  console.log('🔍 [DEBUG] API Key received:', apiKey ? `${apiKey.substring(0, 8)}...` : 'NULL/UNDEFINED');
   console.log('🔍 [DEBUG] API Key length:', apiKey ? apiKey.length : 0);
   console.log('🔍 [DEBUG] API Key type:', typeof apiKey);
-  console.log('🔍 [DEBUG] Environment variable NEXT_PUBLIC_OPENWEATHERMAP_API_KEY:', process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY ? `${process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY.substring(0, 8)}...` : 'NOT SET');
   
   if (!apiKey) {
     throw new Error('API key is required');
@@ -477,24 +616,14 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
 
     const forecastData: OpenWeatherMapForecastResponse = await forecastResponse.json();
 
-    // Process forecast data to get daily forecasts (filter to noon readings)
-    const dailyForecasts = forecastData.list
-      .filter((_, index) => index % 8 === 0) // Every 8th item (approximately daily at noon)
-      .slice(1, 4) // Take next 3 days
-      .map((forecast, index) => {
-        const date = new Date(forecast.dt * 1000);
-        const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-        
-        return {
-          day: dayNames[date.getDay()],
-          temp: Math.round(forecast.main.temp),
-          condition: mapWeatherCondition(forecast.weather[0].main),
-          description: forecast.weather[0].description,
-        };
-      });
+    // Process forecast data to get daily high/low temperatures
+    const dailyForecasts = processDailyForecast(forecastData);
 
     // Calculate current moon phase
     const moonPhase = calculateMoonPhase();
+
+    // Fetch UV Index data
+    const { uvIndex, uvDescription } = await fetchUVIndex(lat, lon, apiKey);
 
     return {
       current: {
@@ -506,6 +635,11 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
         windDisplay: formatWindDisplay(currentData.wind.speed, currentData.wind.deg, currentData.wind.gust),
         location: displayName, // Use the geocoded display name
         description: currentData.weather[0].description,
+        sunrise: currentData.sys.sunrise ? formatTime(currentData.sys.sunrise) : 'N/A',
+        sunset: currentData.sys.sunset ? formatTime(currentData.sys.sunset) : 'N/A',
+        dewPoint: calculateDewPoint(currentData.main.temp, currentData.main.humidity),
+        uvIndex,
+        uvDescription,
       },
       forecast: dailyForecasts,
       moonPhase
@@ -538,10 +672,9 @@ const getLocationNotFoundError = (locationQuery: LocationQuery): string => {
 export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherData> => {
   // Debug logging for API key
   console.log('🔍 [DEBUG] fetchWeatherByLocation called');
-  console.log('🔍 [DEBUG] API Key received:', apiKey ? `${apiKey.substring(0, 8)}...${apiKey.substring(-4)}` : 'NULL/UNDEFINED');
+  console.log('🔍 [DEBUG] API Key received:', apiKey ? `${apiKey.substring(0, 8)}...` : 'NULL/UNDEFINED');
   console.log('🔍 [DEBUG] API Key length:', apiKey ? apiKey.length : 0);
   console.log('🔍 [DEBUG] API Key type:', typeof apiKey);
-  console.log('🔍 [DEBUG] Environment variable NEXT_PUBLIC_OPENWEATHERMAP_API_KEY:', process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY ? `${process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY.substring(0, 8)}...` : 'NOT SET');
   
   if (!apiKey) {
     throw new Error('API key is required');
@@ -558,10 +691,6 @@ export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherDat
         try {
           const { latitude, longitude } = position.coords;
           
-          if (!apiKey) {
-            throw new Error('Weather API key is required.');
-          }
-
           // Fetch current weather by coordinates
           const currentResponse = await fetch(
             `${BASE_URL}/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=imperial`
@@ -585,20 +714,10 @@ export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherDat
           const forecastData: OpenWeatherMapForecastResponse = await forecastResponse.json();
 
           // Process forecast data
-          const dailyForecasts = forecastData.list
-            .filter((_, index) => index % 8 === 0)
-            .slice(1, 4)
-            .map((forecast, index) => {
-              const date = new Date(forecast.dt * 1000);
-              const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-              
-              return {
-                day: dayNames[date.getDay()],
-                temp: Math.round(forecast.main.temp),
-                condition: mapWeatherCondition(forecast.weather[0].main),
-                description: forecast.weather[0].description,
-              };
-            });
+          const dailyForecasts = processDailyForecast(forecastData);
+
+          // Fetch UV Index data
+          const { uvIndex, uvDescription } = await fetchUVIndex(latitude, longitude, apiKey);
 
           const weatherData: WeatherData = {
             current: {
@@ -610,6 +729,11 @@ export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherDat
               windDisplay: formatWindDisplay(currentData.wind.speed, currentData.wind.deg, currentData.wind.gust),
               location: `${currentData.name}, ${currentData.sys.country}`,
               description: currentData.weather[0].description,
+              sunrise: currentData.sys.sunrise ? formatTime(currentData.sys.sunrise) : 'N/A',
+              sunset: currentData.sys.sunset ? formatTime(currentData.sys.sunset) : 'N/A',
+              dewPoint: calculateDewPoint(currentData.main.temp, currentData.main.humidity),
+              uvIndex,
+              uvDescription,
             },
             forecast: dailyForecasts,
             moonPhase: calculateMoonPhase()
