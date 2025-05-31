@@ -209,13 +209,24 @@ export default function WeatherApp() {
     }
 
     // Try to load cached location first, fallback to San Francisco if none found
-    if (!hasSearched) {
+    if (!hasSearched && !loading) {
       const loadedFromCache = loadCachedLocation()
       if (!loadedFromCache) {
+        console.log('🔍 [DEBUG] No cached location found, defaulting to San Francisco for both dark and Miami Vice modes')
         handleSearch("San Francisco, CA", false, true) // Default location for first-time users, bypass rate limit
       }
     }
-  }, [hasSearched])
+  }, [hasSearched, loading])
+
+  // Ensure default location loads properly when theme changes on first visit
+  useEffect(() => {
+    // If no weather data and no search has happened, ensure we load San Francisco
+    // This handles cases where theme switching might interfere with initial load
+    if (!weather && !hasSearched && !loading && !error) {
+      console.log('🔍 [DEBUG] Theme-aware check: Loading San Francisco as default for', isDarkMode ? 'dark mode' : 'Miami Vice mode')
+      handleSearch("San Francisco, CA", false, true)
+    }
+  }, [isDarkMode, weather, hasSearched, loading, error])
 
   const handleSearch = async (locationInput: string, fromCache: boolean = false, bypassRateLimit: boolean = false) => {
     if (!API_KEY) {
@@ -607,14 +618,14 @@ export default function WeatherApp() {
         )}
 
         {/* Welcome message for first-time users */}
-        {!hasSearched && !loading && (
+        {!hasSearched && !loading && !weather && !error && (
           <div className="text-center py-8 relative z-10">
             <div className={`${themeClasses.secondaryText} mb-4`}>
               <div className="text-2xl mb-2">🌤️</div>
               <div className="text-lg uppercase tracking-wider">WELCOME TO 16-BIT WEATHER</div>
             </div>
-            <div className={`text-sm ${themeClasses.accentText} uppercase tracking-wider mb-4`}>
-              MULTIPLE FORMAT SUPPORT • 10 SEARCHES/HOUR
+            <div className={`text-sm ${themeClasses.accentText} uppercase tracking-wider mb-4 ${themeClasses.miamiViceGlow}`}>
+              {!isDarkMode && 'MIAMI VICE MODE • '}MULTIPLE FORMAT SUPPORT
             </div>
             <div className={`text-xs ${themeClasses.secondaryText} space-y-1`}>
               <div>► ZIP CODES: 90210, 10001</div>
