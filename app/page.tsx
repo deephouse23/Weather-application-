@@ -9,6 +9,12 @@ import WeatherSearch from "@/components/weather-search"
 // Get the API key from environment variables
 const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY
 
+// Debug logging for API key status
+console.log('🔍 [DEBUG] App startup - checking API key');
+console.log('🔍 [DEBUG] process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY:', API_KEY ? `${API_KEY.substring(0, 8)}...${API_KEY.substring(-4)}` : 'NOT SET');
+console.log('🔍 [DEBUG] API_KEY length:', API_KEY ? API_KEY.length : 0);
+console.log('🔍 [DEBUG] API_KEY type:', typeof API_KEY);
+
 interface WeatherData {
   current: {
     temp: number;

@@ -438,8 +438,15 @@ const calculateMoonPhase = (): MoonPhaseInfo => {
 };
 
 export const fetchWeatherData = async (locationInput: string, apiKey: string): Promise<WeatherData> => {
+  // Debug logging for API key
+  console.log('🔍 [DEBUG] fetchWeatherData called');
+  console.log('🔍 [DEBUG] API Key received:', apiKey ? `${apiKey.substring(0, 8)}...${apiKey.substring(-4)}` : 'NULL/UNDEFINED');
+  console.log('🔍 [DEBUG] API Key length:', apiKey ? apiKey.length : 0);
+  console.log('🔍 [DEBUG] API Key type:', typeof apiKey);
+  console.log('🔍 [DEBUG] Environment variable NEXT_PUBLIC_OPENWEATHERMAP_API_KEY:', process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY ? `${process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY.substring(0, 8)}...` : 'NOT SET');
+  
   if (!apiKey) {
-    throw new Error('Weather API key is required.');
+    throw new Error('API key is required');
   }
 
   const locationQuery = parseLocationInput(locationInput);
@@ -529,6 +536,17 @@ const getLocationNotFoundError = (locationQuery: LocationQuery): string => {
 
 // Function to get user's location and fetch weather
 export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherData> => {
+  // Debug logging for API key
+  console.log('🔍 [DEBUG] fetchWeatherByLocation called');
+  console.log('🔍 [DEBUG] API Key received:', apiKey ? `${apiKey.substring(0, 8)}...${apiKey.substring(-4)}` : 'NULL/UNDEFINED');
+  console.log('🔍 [DEBUG] API Key length:', apiKey ? apiKey.length : 0);
+  console.log('🔍 [DEBUG] API Key type:', typeof apiKey);
+  console.log('🔍 [DEBUG] Environment variable NEXT_PUBLIC_OPENWEATHERMAP_API_KEY:', process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY ? `${process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY.substring(0, 8)}...` : 'NOT SET');
+  
+  if (!apiKey) {
+    throw new Error('API key is required');
+  }
+
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error('Geolocation is not supported by this browser.'));
