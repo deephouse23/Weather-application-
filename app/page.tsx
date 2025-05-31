@@ -6,14 +6,19 @@ import { cn } from "@/lib/utils"
 import { fetchWeatherData, fetchWeatherByLocation } from "@/lib/weather-api"
 import WeatherSearch from "@/components/weather-search"
 
-// Get the API key from environment variables
-const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY
+// Get the API key from environment variables with fallback
+const NEXT_PUBLIC_API_KEY = process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY
+const PRIVATE_API_KEY = process.env.OPENWEATHERMAP_API_KEY
+const API_KEY = NEXT_PUBLIC_API_KEY || PRIVATE_API_KEY
 
 // Debug logging for API key status
-console.log('🔍 [DEBUG] App startup - checking API key');
-console.log('🔍 [DEBUG] process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY:', API_KEY ? `${API_KEY.substring(0, 8)}...${API_KEY.substring(-4)}` : 'NOT SET');
+console.log('🔍 [DEBUG] App startup - checking API key sources');
+console.log('🔍 [DEBUG] NEXT_PUBLIC_OPENWEATHERMAP_API_KEY:', NEXT_PUBLIC_API_KEY ? `${NEXT_PUBLIC_API_KEY.substring(0, 8)}...${NEXT_PUBLIC_API_KEY.substring(-4)}` : 'NOT SET');
+console.log('🔍 [DEBUG] OPENWEATHERMAP_API_KEY:', PRIVATE_API_KEY ? `${PRIVATE_API_KEY.substring(0, 8)}...${PRIVATE_API_KEY.substring(-4)}` : 'NOT SET');
+console.log('🔍 [DEBUG] Final API_KEY used:', API_KEY ? `${API_KEY.substring(0, 8)}...${API_KEY.substring(-4)}` : 'NOT SET');
 console.log('🔍 [DEBUG] API_KEY length:', API_KEY ? API_KEY.length : 0);
 console.log('🔍 [DEBUG] API_KEY type:', typeof API_KEY);
+console.log('🔍 [DEBUG] Source used:', NEXT_PUBLIC_API_KEY ? 'NEXT_PUBLIC_OPENWEATHERMAP_API_KEY' : (PRIVATE_API_KEY ? 'OPENWEATHERMAP_API_KEY' : 'NONE'));
 
 interface WeatherData {
   current: {
