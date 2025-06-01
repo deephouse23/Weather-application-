@@ -32,8 +32,9 @@ interface WeatherData {
     sunrise: string; // Formatted sunrise time (e.g., "6:23 am")
     sunset: string; // Formatted sunset time (e.g., "7:45 pm")
     dewPoint: number; // Dew point in Fahrenheit
-    uvIndex: number; // UV Index (0-11+)
+    uvIndex: number; // UV Index (0-11+) - current real-time value
     uvDescription: string; // UV intensity description (Low/Moderate/High/Very High/Extreme)
+    pressure: number; // Atmospheric pressure in hPa/mb
   };
   forecast: Array<{
     day: string;
@@ -567,6 +568,27 @@ export default function WeatherApp() {
                   <div className={`text-lg font-bold ${themeClasses.successText} ${themeClasses.miamiViceGlow}`}>{weather.current.uvIndex}</div>
                   <div className={`text-xs ${themeClasses.secondaryText} mt-1`}>{weather.current.uvDescription}</div>
                 </div>
+                
+                {/* Pressure Display - spans two columns */}
+                <div className={`col-span-2 ${themeClasses.background} p-4 border ${themeClasses.secondaryText} text-center ${!isDarkMode ? 'border-[#ffd700] shadow-[0_0_15px_#ffd700]' : ''}`} 
+                     style={!isDarkMode ? { 
+                       borderColor: '#ffd700',
+                       background: 'linear-gradient(135deg, #332900, #4d3d00)',
+                       boxShadow: '0 0 20px #ffd700, inset 0 0 15px rgba(255, 215, 0, 0.1)'
+                     } : { borderColor: '#4ecdc4' }}>
+                  <div className={`text-xs ${themeClasses.secondaryText} mb-2 uppercase tracking-wider`}>BAROMETRIC PRESSURE</div>
+                  <div className="flex items-center justify-center space-x-3">
+                    {/* 16-bit Pressure Gauge */}
+                    <div className="relative">
+                      <PressureGauge pressure={weather.current.pressure} isDarkMode={isDarkMode} />
+                    </div>
+                    <div>
+                      <div className={`text-xl font-bold ${themeClasses.successText} ${themeClasses.miamiViceGlow}`}>{weather.current.pressure}</div>
+                      <div className={`text-xs ${themeClasses.secondaryText} uppercase tracking-wider`}>hPa</div>
+                      <div className={`text-xs ${themeClasses.secondaryText} opacity-80`}>({Math.round(weather.current.pressure * 0.02953)} inHg)</div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Sunrise/Sunset Info */}
@@ -869,24 +891,109 @@ function SunriseIcon() {
 // 16-bit pixel art sunset icon
 function SunsetIcon() {
   return (
-    <div className="relative w-8 h-8" style={{ imageRendering: "pixelated" as const }}>
-      {/* Ground line */}
-      <div className="absolute bottom-0 left-0 w-full h-1 bg-[#4ecdc4]"></div>
+    <div className="w-5 h-5 relative">
+      {/* Sunset rays */}
+      <div className="absolute top-0 left-1 w-0.5 h-1 bg-[#ff6b6b]"></div>
+      <div className="absolute top-0 right-1 w-0.5 h-1 bg-[#ff6b6b]"></div>
+      <div className="absolute top-1 left-0 w-1 h-0.5 bg-[#ff6b6b]"></div>
+      <div className="absolute top-1 right-0 w-1 h-0.5 bg-[#ff6b6b]"></div>
       
-      {/* Sun (positioned as if setting) */}
-      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-4 h-2 bg-[#ff6b6b] rounded-t-full"></div>
-      <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-3 h-1.5 bg-[#ff4757] rounded-t-full"></div>
+      {/* Sun (lower position for sunset) */}
+      <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-[#ff6b6b] rounded-full"></div>
+      <div className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#ff9999] rounded-full"></div>
       
-      {/* Horizontal rays */}
-      <div className="absolute bottom-1 left-1 w-1.5 h-0.5 bg-[#ff6b6b]"></div>
-      <div className="absolute bottom-1 right-1 w-1.5 h-0.5 bg-[#ff6b6b]"></div>
-      <div className="absolute bottom-2 left-0.5 w-1 h-0.5 bg-[#ff6b6b]"></div>
-      <div className="absolute bottom-2 right-0.5 w-1 h-0.5 bg-[#ff6b6b]"></div>
+      {/* Horizon line */}
+      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#4ecdc4]"></div>
+    </div>
+  )
+}
+
+// 16-bit Pressure Gauge Component
+function PressureGauge({ pressure, isDarkMode }: { pressure: number; isDarkMode: boolean }) {
+  // Pressure ranges for visual indication
+  // Low: < 1000 hPa, Normal: 1000-1020 hPa, High: > 1020 hPa
+  const getPressureLevel = (pressure: number): 'low' | 'normal' | 'high' => {
+    if (pressure < 1000) return 'low';
+    if (pressure > 1020) return 'high';
+    return 'normal';
+  };
+
+  const pressureLevel = getPressureLevel(pressure);
+  
+  // Calculate gauge fill percentage (normalized between 980-1040 hPa range)
+  const minPressure = 980;
+  const maxPressure = 1040;
+  const fillPercentage = Math.max(0, Math.min(100, ((pressure - minPressure) / (maxPressure - minPressure)) * 100));
+
+  // Color schemes for different pressure levels
+  const getGaugeColors = () => {
+    if (!isDarkMode) {
+      // Miami Vice colors
+      switch (pressureLevel) {
+        case 'low': return { fill: '#ff1493', bg: '#4a0e4e', border: '#ff007f' };
+        case 'high': return { fill: '#00ffff', bg: '#1a0033', border: '#00d4ff' };
+        default: return { fill: '#ffd700', bg: '#332900', border: '#ffcc02' };
+      }
+    } else {
+      // Dark mode colors
+      switch (pressureLevel) {
+        case 'low': return { fill: '#ff6b6b', bg: '#2d1b1b', border: '#ff4444' };
+        case 'high': return { fill: '#4ecdc4', bg: '#1a2d2b', border: '#36b3aa' };
+        default: return { fill: '#ffe66d', bg: '#2d2b1a', border: '#ffcc02' };
+      }
+    }
+  };
+
+  const colors = getGaugeColors();
+
+  return (
+    <div className="relative w-12 h-8">
+      {/* Gauge Background */}
+      <div 
+        className="absolute inset-0 border-2 rounded-sm"
+        style={{ 
+          backgroundColor: colors.bg,
+          borderColor: colors.border,
+          boxShadow: `0 0 8px ${colors.border}`
+        }}
+      >
+        {/* Gauge Fill */}
+        <div 
+          className="absolute bottom-0 left-0 rounded-sm transition-all duration-300"
+          style={{ 
+            width: '100%',
+            height: `${fillPercentage}%`,
+            backgroundColor: colors.fill,
+            boxShadow: `inset 0 0 4px ${colors.fill}`
+          }}
+        />
+        
+        {/* Gauge Markers */}
+        <div className="absolute top-0 left-0 w-full h-full">
+          {/* Top marker */}
+          <div 
+            className="absolute top-0 left-0 w-full h-0.5 opacity-60"
+            style={{ backgroundColor: colors.border }}
+          />
+          {/* Middle marker */}
+          <div 
+            className="absolute top-1/2 left-0 w-full h-0.5 opacity-40 transform -translate-y-1/2"
+            style={{ backgroundColor: colors.border }}
+          />
+          {/* Bottom marker */}
+          <div 
+            className="absolute bottom-0 left-0 w-full h-0.5 opacity-60"
+            style={{ backgroundColor: colors.border }}
+          />
+        </div>
+      </div>
       
-      {/* Downward arrow indicating sunset */}
-      <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-0.5 h-2 bg-[#4ecdc4]"></div>
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 translate-y-0.5">
-        <div className="w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-[#4ecdc4]"></div>
+      {/* Pressure Status Indicator */}
+      <div className="absolute -right-2 top-1/2 transform -translate-y-1/2">
+        <div 
+          className="w-1.5 h-1.5 rounded-full animate-pulse"
+          style={{ backgroundColor: colors.fill }}
+        />
       </div>
     </div>
   );

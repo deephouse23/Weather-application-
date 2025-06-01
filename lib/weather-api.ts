@@ -11,8 +11,9 @@ interface WeatherData {
     sunrise: string; // Formatted sunrise time (e.g., "6:23 am")
     sunset: string; // Formatted sunset time (e.g., "7:45 pm")
     dewPoint: number; // Dew point in Fahrenheit
-    uvIndex: number; // UV Index (0-11+)
+    uvIndex: number; // UV Index (0-11+) - current real-time value
     uvDescription: string; // UV intensity description (Low/Moderate/High/Very High/Extreme)
+    pressure: number; // Atmospheric pressure in hPa
   };
   forecast: Array<{
     day: string;
@@ -33,6 +34,7 @@ interface OpenWeatherMapCurrentResponse {
   main: {
     temp: number;
     humidity: number;
+    pressure: number; // Atmospheric pressure in hPa
   };
   weather: Array<{
     main: string;
@@ -555,8 +557,9 @@ const processDailyForecast = (forecastData: OpenWeatherMapForecastResponse) => {
 };
 
 // Fetch UV Index data
-const fetchUVIndex = async (lat: number, lon: number, apiKey: string): Promise<{ uvIndex: number; uvDescription: string }> => {
+const fetchCurrentWeatherData = async (lat: number, lon: number, apiKey: string): Promise<{ uvIndex: number; uvDescription: string }> => {
   try {
+    // Use free UV Index API to get current UV index
     const response = await fetch(
       `${BASE_URL}/uvi?lat=${lat}&lon=${lon}&appid=${apiKey}`
     );
@@ -572,7 +575,7 @@ const fetchUVIndex = async (lat: number, lon: number, apiKey: string): Promise<{
     
     return { uvIndex, uvDescription };
   } catch (error) {
-    console.warn('Failed to fetch UV Index:', error);
+    console.warn('Failed to fetch current UV Index:', error);
     return { uvIndex: 0, uvDescription: 'N/A' };
   }
 };
@@ -623,7 +626,7 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
     const moonPhase = calculateMoonPhase();
 
     // Fetch UV Index data
-    const { uvIndex, uvDescription } = await fetchUVIndex(lat, lon, apiKey);
+    const { uvIndex, uvDescription } = await fetchCurrentWeatherData(lat, lon, apiKey);
 
     return {
       current: {
@@ -640,6 +643,7 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
         dewPoint: calculateDewPoint(currentData.main.temp, currentData.main.humidity),
         uvIndex,
         uvDescription,
+        pressure: currentData.main.pressure,
       },
       forecast: dailyForecasts,
       moonPhase
@@ -717,7 +721,7 @@ export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherDat
           const dailyForecasts = processDailyForecast(forecastData);
 
           // Fetch UV Index data
-          const { uvIndex, uvDescription } = await fetchUVIndex(latitude, longitude, apiKey);
+          const { uvIndex, uvDescription } = await fetchCurrentWeatherData(latitude, longitude, apiKey);
 
           const weatherData: WeatherData = {
             current: {
@@ -734,6 +738,7 @@ export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherDat
               dewPoint: calculateDewPoint(currentData.main.temp, currentData.main.humidity),
               uvIndex,
               uvDescription,
+              pressure: currentData.main.pressure,
             },
             forecast: dailyForecasts,
             moonPhase: calculateMoonPhase()
