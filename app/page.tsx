@@ -64,13 +64,11 @@ export default function WeatherApp() {
   const [remainingSearches, setRemainingSearches] = useState(10)
   const [rateLimitError, setRateLimitError] = useState<string>("")
   const [isDarkMode, setIsDarkMode] = useState(true) // Default to dark mode
-  const [pressureUnit, setPressureUnit] = useState<'hPa' | 'inHg' | 'auto'>('auto') // User preference for pressure units
 
   // localStorage keys
   const CACHE_KEY = 'weather-app-last-location'
   const RATE_LIMIT_KEY = 'weather-app-rate-limit'
   const THEME_KEY = 'weather-app-theme'
-  const PRESSURE_UNIT_KEY = 'weather-app-pressure-unit'
   const MAX_REQUESTS_PER_HOUR = 10
   const COOLDOWN_SECONDS = 2
 
@@ -103,77 +101,10 @@ export default function WeatherApp() {
     saveTheme(newTheme)
   }
 
-  // Pressure unit management functions
-  const getStoredPressureUnit = (): 'hPa' | 'inHg' | 'auto' => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        const stored = localStorage.getItem(PRESSURE_UNIT_KEY)
-        return stored ? JSON.parse(stored) : 'auto' // Default to auto (region-based)
-      }
-    } catch (error) {
-      console.warn('Failed to get stored pressure unit:', error)
-    }
-    return 'auto' // Default to auto
-  }
-
-  const savePressureUnit = (unit: 'hPa' | 'inHg' | 'auto') => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.setItem(PRESSURE_UNIT_KEY, JSON.stringify(unit))
-      }
-    } catch (error) {
-      console.warn('Failed to save pressure unit:', error)
-    }
-  }
-
-  const togglePressureUnit = () => {
-    const units: ('hPa' | 'inHg' | 'auto')[] = ['auto', 'hPa', 'inHg']
-    const currentIndex = units.indexOf(pressureUnit)
-    const newUnit = units[(currentIndex + 1) % units.length]
-    setPressureUnit(newUnit)
-    savePressureUnit(newUnit)
-  }
-
-  // Get display pressure based on user preference
-  const getDisplayPressure = (): { value: string; unit: string; description: string } => {
-    if (!weather) return { value: '---', unit: '', description: '' }
-    
-    const country = weather.current.country
-    const pressure = weather.current.pressure
-    
-    let unit: 'hPa' | 'inHg'
-    let description: string
-    
-    if (pressureUnit === 'auto') {
-      unit = country === 'US' ? 'inHg' : 'hPa'
-      description = `Auto (${country === 'US' ? 'US' : 'Intl'})`
-    } else {
-      unit = pressureUnit
-      description = pressureUnit.toUpperCase()
-    }
-    
-    if (unit === 'inHg') {
-      const pressureInHg = pressure * 0.02953
-      return {
-        value: pressureInHg.toFixed(2),
-        unit: 'inHg',
-        description
-      }
-    } else {
-      return {
-        value: Math.round(pressure).toString(),
-        unit: 'hPa',
-        description
-      }
-    }
-  }
-
-  // Load theme and pressure unit on mount
+  // Load theme on mount
   useEffect(() => {
     const storedTheme = getStoredTheme()
-    const storedPressureUnit = getStoredPressureUnit()
     setIsDarkMode(storedTheme)
-    setPressureUnit(storedPressureUnit)
   }, [])
 
   // Rate limiting functions
@@ -491,29 +422,6 @@ export default function WeatherApp() {
         )}
       </button>
 
-      {/* Pressure Unit Toggle Button */}
-      {weather && (
-        <button
-          onClick={togglePressureUnit}
-          className={`fixed top-4 right-20 z-50 p-2 px-3 ${themeClasses.cardBg} border-2 ${themeClasses.borderColor} 
-                     hover:bg-[#00d4ff] hover:text-[#1a1a2e] transition-all duration-200 pixel-font text-xs ${!isDarkMode ? themeClasses.miamiViceBorder : ''}`}
-          style={{ 
-            imageRendering: "pixelated",
-            ...(isDarkMode ? {} : {
-              background: 'linear-gradient(135deg, #ff007f, #8a2be2, #00ffff)',
-              boxShadow: '0 0 15px #ff007f, inset 0 0 15px rgba(255, 0, 127, 0.3)'
-            })
-          }}
-          aria-label="Toggle pressure units"
-          title={`Current: ${getDisplayPressure().description}. Click to cycle units.`}
-        >
-          <div className="text-center">
-            <div className="font-bold">{getDisplayPressure().unit}</div>
-            <div className="text-[8px] opacity-75">{pressureUnit === 'auto' ? 'AUTO' : 'MANUAL'}</div>
-          </div>
-        </button>
-      )}
-
       {/* Moon Phase Watermark */}
       {showingWeather && (
         <MoonPhaseWatermark 
@@ -625,38 +533,38 @@ export default function WeatherApp() {
 
               {/* Stats */}
               <div className="grid grid-cols-2 gap-3 mt-6">
-                <div className={`${themeClasses.background} p-3 border ${themeClasses.secondaryText} text-center ${!isDarkMode ? 'border-[#00ffff] shadow-[0_0_10px_#00ffff]' : ''}`} 
+                <div className={`${themeClasses.background} p-3 border ${themeClasses.secondaryText} text-center ${!isDarkMode ? 'border-[#ff1493] shadow-[0_0_10px_#ff1493]' : ''}`} 
                      style={!isDarkMode ? { 
-                       borderColor: '#00ffff',
+                       borderColor: '#ff1493',
                        background: 'linear-gradient(135deg, #1a0033, #2d1b69)',
-                       boxShadow: '0 0 15px #00ffff, inset 0 0 10px rgba(0, 255, 255, 0.1)'
+                       boxShadow: '0 0 15px #ff1493, inset 0 0 10px rgba(255, 20, 147, 0.1)'
                      } : { borderColor: '#4ecdc4' }}>
                   <div className={`text-xs ${themeClasses.secondaryText} mb-1`}>HUMIDITY</div>
                   <div className={`text-lg font-bold ${themeClasses.successText} ${themeClasses.miamiViceGlow}`}>{weather.current.humidity}%</div>
                 </div>
-                <div className={`${themeClasses.background} p-3 border ${themeClasses.secondaryText} text-center ${!isDarkMode ? 'border-[#00ffff] shadow-[0_0_10px_#00ffff]' : ''}`} 
+                <div className={`${themeClasses.background} p-3 border ${themeClasses.secondaryText} text-center ${!isDarkMode ? 'border-[#ff1493] shadow-[0_0_10px_#ff1493]' : ''}`} 
                      style={!isDarkMode ? { 
-                       borderColor: '#00ffff',
+                       borderColor: '#ff1493',
                        background: 'linear-gradient(135deg, #1a0033, #2d1b69)',
-                       boxShadow: '0 0 15px #00ffff, inset 0 0 10px rgba(0, 255, 255, 0.1)'
+                       boxShadow: '0 0 15px #ff1493, inset 0 0 10px rgba(255, 20, 147, 0.1)'
                      } : { borderColor: '#4ecdc4' }}>
                   <div className={`text-xs ${themeClasses.secondaryText} mb-1`}>WIND</div>
                   <div dangerouslySetInnerHTML={{ __html: formatWindDisplayHTML(weather.current.windDisplay) }}></div>
                 </div>
-                <div className={`${themeClasses.background} p-3 border ${themeClasses.secondaryText} text-center ${!isDarkMode ? 'border-[#00ffff] shadow-[0_0_10px_#00ffff]' : ''}`} 
+                <div className={`${themeClasses.background} p-3 border ${themeClasses.secondaryText} text-center ${!isDarkMode ? 'border-[#ff1493] shadow-[0_0_10px_#ff1493]' : ''}`} 
                      style={!isDarkMode ? { 
-                       borderColor: '#00ffff',
+                       borderColor: '#ff1493',
                        background: 'linear-gradient(135deg, #1a0033, #2d1b69)',
-                       boxShadow: '0 0 15px #00ffff, inset 0 0 10px rgba(0, 255, 255, 0.1)'
+                       boxShadow: '0 0 15px #ff1493, inset 0 0 10px rgba(255, 20, 147, 0.1)'
                      } : { borderColor: '#4ecdc4' }}>
                   <div className={`text-xs ${themeClasses.secondaryText} mb-1`}>DEW POINT</div>
                   <div className={`text-lg font-bold ${themeClasses.successText} ${themeClasses.miamiViceGlow}`}>{weather.current.dewPoint}°</div>
                 </div>
-                <div className={`${themeClasses.background} p-3 border ${themeClasses.secondaryText} text-center ${!isDarkMode ? 'border-[#00ffff] shadow-[0_0_10px_#00ffff]' : ''}`} 
+                <div className={`${themeClasses.background} p-3 border ${themeClasses.secondaryText} text-center ${!isDarkMode ? 'border-[#ff1493] shadow-[0_0_10px_#ff1493]' : ''}`} 
                      style={!isDarkMode ? { 
-                       borderColor: '#00ffff',
+                       borderColor: '#ff1493',
                        background: 'linear-gradient(135deg, #1a0033, #2d1b69)',
-                       boxShadow: '0 0 15px #00ffff, inset 0 0 10px rgba(0, 255, 255, 0.1)'
+                       boxShadow: '0 0 15px #ff1493, inset 0 0 10px rgba(255, 20, 147, 0.1)'
                      } : { borderColor: '#4ecdc4' }}>
                   <div className={`text-xs ${themeClasses.secondaryText} mb-1`}>UV INDEX</div>
                   <div className={`text-lg font-bold ${themeClasses.successText} ${themeClasses.miamiViceGlow}`}>{weather.current.uvIndex}</div>
@@ -676,13 +584,13 @@ export default function WeatherApp() {
                     <div className="relative">
                       <PressureGauge 
                         pressure={weather.current.pressure} 
-                        unit={getDisplayPressure().unit as 'hPa' | 'inHg'}
+                        unit={weather.current.country === 'US' ? 'inHg' : 'hPa'}
                         isDarkMode={isDarkMode} 
                       />
                     </div>
                     <div>
-                      <div className={`text-xl font-bold ${themeClasses.successText} ${themeClasses.miamiViceGlow}`}>{getDisplayPressure().value}</div>
-                      <div className={`text-xs ${themeClasses.secondaryText} uppercase tracking-wider`}>{getDisplayPressure().description}</div>
+                      <div className={`text-xl font-bold ${themeClasses.successText} ${themeClasses.miamiViceGlow}`}>{weather.current.pressureDisplay.split(' ')[0]}</div>
+                      <div className={`text-xs ${themeClasses.secondaryText} uppercase tracking-wider`}>{weather.current.pressureDisplay.split(' ')[1]}</div>
                     </div>
                   </div>
                 </div>

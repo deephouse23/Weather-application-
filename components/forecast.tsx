@@ -22,13 +22,13 @@ export default function Forecast({ forecast, isDarkMode = true }: ForecastProps)
     itemBg: isDarkMode ? 'bg-[#1a1a2e]' : 'bg-gradient-to-br from-[#2d1b69] to-[#4a0e4e]',
     itemHover: isDarkMode ? 'hover:bg-[#1f2347]' : 'hover:bg-gradient-to-br hover:from-[#4a0e4e] hover:to-[#6a1b9a]',
     borderColor: isDarkMode ? 'border-[#00d4ff]' : 'border-[#ff1493]', // Hot pink borders
-    itemBorder: isDarkMode ? 'border-[#4ecdc4]' : 'border-[#00ffff]', // Electric cyan
+    itemBorder: isDarkMode ? 'border-[#4ecdc4]' : 'border-[#ff1493]', // Pink borders for individual cards
     headerText: isDarkMode ? 'text-[#00d4ff]' : 'text-[#ff007f]', // Hot pink headers
     primaryText: isDarkMode ? 'text-[#4ecdc4]' : 'text-[#00ffff]', // Electric cyan
     temperatureText: isDarkMode ? 'text-[#ffe66d]' : 'text-[#ff1493]', // Hot pink temperature
     lowTempText: isDarkMode ? 'text-[#4ecdc4]' : 'text-[#00ffff]', // Electric cyan
     miamiViceGlow: isDarkMode ? '' : 'drop-shadow-[0_0_8px_#ff007f]',
-    miamiViceBorder: isDarkMode ? '' : 'shadow-[0_0_15px_#00ffff]',
+    miamiViceBorder: isDarkMode ? '' : 'shadow-[0_0_15px_#ff1493]', // Pink shadow for Miami Vice
   }
 
   return (
@@ -54,8 +54,8 @@ function ForecastCard({ day, themeClasses, isDarkMode }: { day: ForecastDay; the
     <div className={`${themeClasses.itemBg} p-3 border ${themeClasses.itemBorder} text-center ${themeClasses.itemHover} transition-colors duration-200 ${!isDarkMode ? themeClasses.miamiViceBorder : ''}`}
          style={!isDarkMode ? {
            background: 'linear-gradient(135deg, #2d1b69, #4a0e4e)',
-           boxShadow: '0 0 20px #00ffff, inset 0 0 15px rgba(0, 255, 255, 0.1)',
-           borderColor: '#00ffff'
+           boxShadow: '0 0 20px #ff1493, inset 0 0 15px rgba(255, 20, 147, 0.1)',
+           borderColor: '#ff1493'
          } : {}}>
       <div className={`text-xs font-bold ${themeClasses.primaryText} mb-2 uppercase tracking-wider ${themeClasses.miamiViceGlow}`}>
         {day.day}
