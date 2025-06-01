@@ -49,9 +49,9 @@ export default function WeatherSearch({
     borderColor: isDarkMode ? 'border-[#00d4ff]' : 'border-[#ff1493]', // Hot pink borders
     hoverBorder: isDarkMode ? 'focus:border-[#ffe66d]' : 'focus:border-[#00ffff]',
     buttonBg: isDarkMode ? 'bg-[#16213e]' : 'bg-[#2d1b69]',
-    buttonBorder: isDarkMode ? 'border-[#4ecdc4]' : 'border-[#00ffff]',
+    buttonBorder: isDarkMode ? 'border-[#4ecdc4]' : 'border-[#ff1493]', // Pink border for Miami Vice
     buttonText: isDarkMode ? 'text-[#4ecdc4]' : 'text-[#00ffff]',
-    buttonHover: isDarkMode ? 'hover:bg-[#4ecdc4] hover:text-[#1a1a2e]' : 'hover:bg-[#00ffff] hover:text-[#1a0033]',
+    buttonHover: isDarkMode ? 'hover:bg-[#4ecdc4] hover:text-[#1a1a2e]' : 'hover:bg-[#ff1493] hover:text-[#1a0033]', // Pink hover for Miami Vice
     errorBg: isDarkMode ? 'bg-[#1a1a2e]' : 'bg-[#4a0e4e]',
     errorText: 'text-[#ff6b6b]',
     warningText: isDarkMode ? 'text-[#ffe66d]' : 'text-[#ff1493]',
@@ -119,7 +119,7 @@ export default function WeatherSearch({
             fontFamily: "monospace",
             ...(isDarkMode ? {} : {
               background: 'linear-gradient(135deg, #2d1b69, #4a0e4e)',
-              boxShadow: '0 0 20px #00ffff, inset 0 0 15px rgba(0, 255, 255, 0.1)',
+              boxShadow: '0 0 20px #ff1493, inset 0 0 15px rgba(255, 20, 147, 0.1)',
               textShadow: '0 0 8px #00ffff'
             })
           }}
