@@ -34,7 +34,9 @@ interface WeatherData {
     dewPoint: number; // Dew point in Fahrenheit
     uvIndex: number; // UV Index (0-11+) - current real-time value
     uvDescription: string; // UV intensity description (Low/Moderate/High/Very High/Extreme)
-    pressure: number; // Atmospheric pressure in hPa/mb
+    pressure: number; // Atmospheric pressure in hPa
+    pressureDisplay: string; // Formatted pressure with regional units
+    country: string; // Country code (e.g., "US", "GB", "CA")
   };
   forecast: Array<{
     day: string;
@@ -62,11 +64,13 @@ export default function WeatherApp() {
   const [remainingSearches, setRemainingSearches] = useState(10)
   const [rateLimitError, setRateLimitError] = useState<string>("")
   const [isDarkMode, setIsDarkMode] = useState(true) // Default to dark mode
+  const [pressureUnit, setPressureUnit] = useState<'hPa' | 'inHg' | 'auto'>('auto') // User preference for pressure units
 
   // localStorage keys
   const CACHE_KEY = 'weather-app-last-location'
   const RATE_LIMIT_KEY = 'weather-app-rate-limit'
   const THEME_KEY = 'weather-app-theme'
+  const PRESSURE_UNIT_KEY = 'weather-app-pressure-unit'
   const MAX_REQUESTS_PER_HOUR = 10
   const COOLDOWN_SECONDS = 2
 
@@ -99,10 +103,77 @@ export default function WeatherApp() {
     saveTheme(newTheme)
   }
 
-  // Load theme on mount
+  // Pressure unit management functions
+  const getStoredPressureUnit = (): 'hPa' | 'inHg' | 'auto' => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const stored = localStorage.getItem(PRESSURE_UNIT_KEY)
+        return stored ? JSON.parse(stored) : 'auto' // Default to auto (region-based)
+      }
+    } catch (error) {
+      console.warn('Failed to get stored pressure unit:', error)
+    }
+    return 'auto' // Default to auto
+  }
+
+  const savePressureUnit = (unit: 'hPa' | 'inHg' | 'auto') => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem(PRESSURE_UNIT_KEY, JSON.stringify(unit))
+      }
+    } catch (error) {
+      console.warn('Failed to save pressure unit:', error)
+    }
+  }
+
+  const togglePressureUnit = () => {
+    const units: ('hPa' | 'inHg' | 'auto')[] = ['auto', 'hPa', 'inHg']
+    const currentIndex = units.indexOf(pressureUnit)
+    const newUnit = units[(currentIndex + 1) % units.length]
+    setPressureUnit(newUnit)
+    savePressureUnit(newUnit)
+  }
+
+  // Get display pressure based on user preference
+  const getDisplayPressure = (): { value: string; unit: string; description: string } => {
+    if (!weather) return { value: '---', unit: '', description: '' }
+    
+    const country = weather.current.country
+    const pressure = weather.current.pressure
+    
+    let unit: 'hPa' | 'inHg'
+    let description: string
+    
+    if (pressureUnit === 'auto') {
+      unit = country === 'US' ? 'inHg' : 'hPa'
+      description = `Auto (${country === 'US' ? 'US' : 'Intl'})`
+    } else {
+      unit = pressureUnit
+      description = pressureUnit.toUpperCase()
+    }
+    
+    if (unit === 'inHg') {
+      const pressureInHg = pressure * 0.02953
+      return {
+        value: pressureInHg.toFixed(2),
+        unit: 'inHg',
+        description
+      }
+    } else {
+      return {
+        value: Math.round(pressure).toString(),
+        unit: 'hPa',
+        description
+      }
+    }
+  }
+
+  // Load theme and pressure unit on mount
   useEffect(() => {
     const storedTheme = getStoredTheme()
+    const storedPressureUnit = getStoredPressureUnit()
     setIsDarkMode(storedTheme)
+    setPressureUnit(storedPressureUnit)
   }, [])
 
   // Rate limiting functions
@@ -357,7 +428,7 @@ export default function WeatherApp() {
     accentText: isDarkMode ? 'text-[#ff6b6b]' : 'text-[#ff1493]', // Bright pink
     secondaryText: isDarkMode ? 'text-[#4ecdc4]' : 'text-[#00ffff]', // Electric cyan
     warningText: 'text-[#ff6b6b]', // Keep warning red consistent
-    successText: isDarkMode ? 'text-[#ffe66d]' : 'text-[#00ffff]', // Cyan for success in Miami Vice
+    successText: isDarkMode ? 'text-[#ffe66d]' : 'text-[#ff1493]', // Pink for success in Miami Vice
     miamiViceGlow: isDarkMode ? '' : 'drop-shadow-[0_0_10px_#ff007f] text-shadow-[0_0_10px_#ff007f]',
     miamiViceText: isDarkMode ? '' : 'text-[#ff007f]',
     miamiViceBorder: isDarkMode ? '' : 'border-[#00ffff] shadow-[0_0_15px_#00ffff]',
@@ -374,13 +445,13 @@ export default function WeatherApp() {
       const gustPart = parts[1].replace(')', ''); // e.g., "18 mph"
       
       return `
-        <div class="text-lg font-bold ${isDarkMode ? 'text-[#ffe66d]' : 'text-[#00ffff]'} ${!isDarkMode ? themeClasses.miamiViceGlow : ''}" ${!isDarkMode ? 'style="text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff"' : ''}>${mainWind}</div>
+        <div class="text-lg font-bold ${isDarkMode ? 'text-[#ffe66d]' : 'text-[#ff1493]'} ${!isDarkMode ? themeClasses.miamiViceGlow : ''}" ${!isDarkMode ? 'style="text-shadow: 0 0 10px #ff1493, 0 0 20px #ff1493"' : ''}>${mainWind}</div>
         <div class="text-xs ${isDarkMode ? 'text-[#4ecdc4]' : 'text-[#ff1493]'} mt-1 opacity-80 ${!isDarkMode ? themeClasses.miamiViceGlow : ''}">Gusts ${gustPart}</div>
       `;
     }
     
     // For wind without gusts, return normal formatting
-    return `<div class="text-lg font-bold ${isDarkMode ? 'text-[#ffe66d]' : 'text-[#00ffff]'} ${!isDarkMode ? themeClasses.miamiViceGlow : ''}" ${!isDarkMode ? 'style="text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff"' : ''}>${windDisplay}</div>`;
+    return `<div class="text-lg font-bold ${isDarkMode ? 'text-[#ffe66d]' : 'text-[#ff1493]'} ${!isDarkMode ? themeClasses.miamiViceGlow : ''}" ${!isDarkMode ? 'style="text-shadow: 0 0 10px #ff1493, 0 0 20px #ff1493"' : ''}>${windDisplay}</div>`;
   };
 
   return (
@@ -419,6 +490,29 @@ export default function WeatherApp() {
           </div>
         )}
       </button>
+
+      {/* Pressure Unit Toggle Button */}
+      {weather && (
+        <button
+          onClick={togglePressureUnit}
+          className={`fixed top-4 right-20 z-50 p-2 px-3 ${themeClasses.cardBg} border-2 ${themeClasses.borderColor} 
+                     hover:bg-[#00d4ff] hover:text-[#1a1a2e] transition-all duration-200 pixel-font text-xs ${!isDarkMode ? themeClasses.miamiViceBorder : ''}`}
+          style={{ 
+            imageRendering: "pixelated",
+            ...(isDarkMode ? {} : {
+              background: 'linear-gradient(135deg, #ff007f, #8a2be2, #00ffff)',
+              boxShadow: '0 0 15px #ff007f, inset 0 0 15px rgba(255, 0, 127, 0.3)'
+            })
+          }}
+          aria-label="Toggle pressure units"
+          title={`Current: ${getDisplayPressure().description}. Click to cycle units.`}
+        >
+          <div className="text-center">
+            <div className="font-bold">{getDisplayPressure().unit}</div>
+            <div className="text-[8px] opacity-75">{pressureUnit === 'auto' ? 'AUTO' : 'MANUAL'}</div>
+          </div>
+        </button>
+      )}
 
       {/* Moon Phase Watermark */}
       {showingWeather && (
@@ -570,22 +664,25 @@ export default function WeatherApp() {
                 </div>
                 
                 {/* Pressure Display - spans two columns */}
-                <div className={`col-span-2 ${themeClasses.background} p-4 border ${themeClasses.secondaryText} text-center ${!isDarkMode ? 'border-[#ffd700] shadow-[0_0_15px_#ffd700]' : ''}`} 
+                <div className={`col-span-2 ${themeClasses.background} p-4 border ${themeClasses.secondaryText} text-center ${!isDarkMode ? 'border-[#ff1493] shadow-[0_0_15px_#ff1493]' : ''}`} 
                      style={!isDarkMode ? { 
-                       borderColor: '#ffd700',
-                       background: 'linear-gradient(135deg, #332900, #4d3d00)',
-                       boxShadow: '0 0 20px #ffd700, inset 0 0 15px rgba(255, 215, 0, 0.1)'
+                       borderColor: '#ff1493',
+                       background: 'linear-gradient(135deg, #4a0e4e, #2d1b69)',
+                       boxShadow: '0 0 20px #ff1493, inset 0 0 15px rgba(255, 20, 147, 0.1)'
                      } : { borderColor: '#4ecdc4' }}>
                   <div className={`text-xs ${themeClasses.secondaryText} mb-2 uppercase tracking-wider`}>BAROMETRIC PRESSURE</div>
                   <div className="flex items-center justify-center space-x-3">
                     {/* 16-bit Pressure Gauge */}
                     <div className="relative">
-                      <PressureGauge pressure={weather.current.pressure} isDarkMode={isDarkMode} />
+                      <PressureGauge 
+                        pressure={weather.current.pressure} 
+                        unit={getDisplayPressure().unit as 'hPa' | 'inHg'}
+                        isDarkMode={isDarkMode} 
+                      />
                     </div>
                     <div>
-                      <div className={`text-xl font-bold ${themeClasses.successText} ${themeClasses.miamiViceGlow}`}>{weather.current.pressure}</div>
-                      <div className={`text-xs ${themeClasses.secondaryText} uppercase tracking-wider`}>hPa</div>
-                      <div className={`text-xs ${themeClasses.secondaryText} opacity-80`}>({Math.round(weather.current.pressure * 0.02953)} inHg)</div>
+                      <div className={`text-xl font-bold ${themeClasses.successText} ${themeClasses.miamiViceGlow}`}>{getDisplayPressure().value}</div>
+                      <div className={`text-xs ${themeClasses.secondaryText} uppercase tracking-wider`}>{getDisplayPressure().description}</div>
                     </div>
                   </div>
                 </div>
@@ -909,21 +1006,40 @@ function SunsetIcon() {
 }
 
 // 16-bit Pressure Gauge Component
-function PressureGauge({ pressure, isDarkMode }: { pressure: number; isDarkMode: boolean }) {
-  // Pressure ranges for visual indication
-  // Low: < 1000 hPa, Normal: 1000-1020 hPa, High: > 1020 hPa
-  const getPressureLevel = (pressure: number): 'low' | 'normal' | 'high' => {
-    if (pressure < 1000) return 'low';
-    if (pressure > 1020) return 'high';
-    return 'normal';
+function PressureGauge({ pressure, unit, isDarkMode }: { pressure: number; unit: 'hPa' | 'inHg'; isDarkMode: boolean }) {
+  // Convert pressure to display unit
+  const displayPressure = unit === 'inHg' ? pressure * 0.02953 : pressure;
+  
+  // Pressure ranges for visual indication (adjusted for unit)
+  const getPressureLevel = (pressure: number, unit: 'hPa' | 'inHg'): 'low' | 'normal' | 'high' => {
+    if (unit === 'inHg') {
+      // inHg ranges: Low < 29.53, Normal 29.53-30.12, High > 30.12
+      if (pressure < 29.53) return 'low';
+      if (pressure > 30.12) return 'high';
+      return 'normal';
+    } else {
+      // hPa ranges: Low < 1000, Normal 1000-1020, High > 1020
+      if (pressure < 1000) return 'low';
+      if (pressure > 1020) return 'high';
+      return 'normal';
+    }
   };
 
-  const pressureLevel = getPressureLevel(pressure);
+  const pressureLevel = getPressureLevel(displayPressure, unit);
   
-  // Calculate gauge fill percentage (normalized between 980-1040 hPa range)
-  const minPressure = 980;
-  const maxPressure = 1040;
-  const fillPercentage = Math.max(0, Math.min(100, ((pressure - minPressure) / (maxPressure - minPressure)) * 100));
+  // Calculate gauge fill percentage (normalized for each unit)
+  let fillPercentage: number;
+  if (unit === 'inHg') {
+    // inHg range: 28.90 - 30.70 inHg
+    const minPressure = 28.90;
+    const maxPressure = 30.70;
+    fillPercentage = Math.max(0, Math.min(100, ((displayPressure - minPressure) / (maxPressure - minPressure)) * 100));
+  } else {
+    // hPa range: 980-1040 hPa
+    const minPressure = 980;
+    const maxPressure = 1040;
+    fillPercentage = Math.max(0, Math.min(100, ((displayPressure - minPressure) / (maxPressure - minPressure)) * 100));
+  }
 
   // Color schemes for different pressure levels
   const getGaugeColors = () => {
@@ -932,7 +1048,7 @@ function PressureGauge({ pressure, isDarkMode }: { pressure: number; isDarkMode:
       switch (pressureLevel) {
         case 'low': return { fill: '#ff1493', bg: '#4a0e4e', border: '#ff007f' };
         case 'high': return { fill: '#00ffff', bg: '#1a0033', border: '#00d4ff' };
-        default: return { fill: '#ffd700', bg: '#332900', border: '#ffcc02' };
+        default: return { fill: '#ff69b4', bg: '#4a0e4e', border: '#ff1493' };
       }
     } else {
       // Dark mode colors

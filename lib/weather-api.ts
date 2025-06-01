@@ -14,6 +14,8 @@ interface WeatherData {
     uvIndex: number; // UV Index (0-11+) - current real-time value
     uvDescription: string; // UV intensity description (Low/Moderate/High/Very High/Extreme)
     pressure: number; // Atmospheric pressure in hPa
+    pressureDisplay: string; // Formatted pressure with regional units
+    country: string; // Country code (e.g., "US", "GB", "CA")
   };
   forecast: Array<{
     day: string;
@@ -580,6 +582,41 @@ const fetchCurrentWeatherData = async (lat: number, lon: number, apiKey: string)
   }
 };
 
+// Pressure formatting utilities
+const formatPressureByRegion = (pressureHPa: number, countryCode: string, userPreference?: 'hPa' | 'inHg'): string => {
+  // Check user preference first, then fall back to regional default
+  const useInchesOfMercury = userPreference === 'inHg' || (userPreference === undefined && countryCode === 'US');
+  
+  if (useInchesOfMercury) {
+    // Convert hPa to inches of mercury
+    const pressureInHg = pressureHPa * 0.02953;
+    return `${pressureInHg.toFixed(2)} inHg`;
+  } else {
+    // Use hPa/mb for international
+    return `${Math.round(pressureHPa)} hPa`;
+  }
+};
+
+const getPressureUnit = (countryCode: string, userPreference?: 'hPa' | 'inHg'): 'hPa' | 'inHg' => {
+  if (userPreference) return userPreference;
+  return countryCode === 'US' ? 'inHg' : 'hPa';
+};
+
+const formatPressureValue = (pressureHPa: number, unit: 'hPa' | 'inHg'): { value: number; display: string } => {
+  if (unit === 'inHg') {
+    const pressureInHg = pressureHPa * 0.02953;
+    return {
+      value: pressureInHg,
+      display: pressureInHg.toFixed(2)
+    };
+  } else {
+    return {
+      value: pressureHPa,
+      display: Math.round(pressureHPa).toString()
+    };
+  }
+};
+
 export const fetchWeatherData = async (locationInput: string, apiKey: string): Promise<WeatherData> => {
   // Debug logging for API key
   console.log('🔍 [DEBUG] fetchWeatherData called');
@@ -644,6 +681,8 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
         uvIndex,
         uvDescription,
         pressure: currentData.main.pressure,
+        pressureDisplay: formatPressureByRegion(currentData.main.pressure, currentData.sys.country),
+        country: currentData.sys.country
       },
       forecast: dailyForecasts,
       moonPhase
@@ -739,6 +778,8 @@ export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherDat
               uvIndex,
               uvDescription,
               pressure: currentData.main.pressure,
+              pressureDisplay: formatPressureByRegion(currentData.main.pressure, currentData.sys.country),
+              country: currentData.sys.country
             },
             forecast: dailyForecasts,
             moonPhase: calculateMoonPhase()
