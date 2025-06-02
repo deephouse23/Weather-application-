@@ -1,3 +1,14 @@
+/**
+ * Weather API Module - OpenWeatherMap Integration
+ * 
+ * This module provides comprehensive weather data fetching capabilities with:
+ * - Real weather data from OpenWeatherMap API
+ * - Enhanced location search (ZIP, City+State, City+Country)
+ * - Timezone-aware sunrise/sunset times
+ * - Wind direction with compass notation
+ * - UV Index, pressure, and moon phase calculations
+ */
+
 interface WeatherData {
   current: {
     temp: number;
@@ -80,10 +91,30 @@ interface GeocodingResponse {
   state?: string;
 }
 
+interface LocationQuery {
+  query: string;
+  type: 'zip' | 'city_state' | 'city_country' | 'city_only';
+  city?: string;
+  state?: string;
+  country?: string;
+  zipCode?: string;
+}
+
+interface MoonPhaseInfo {
+  phase: string;
+  illumination: number;
+  emoji: string;
+  phaseAngle: number;
+}
+
 const BASE_URL = 'https://api.openweathermap.org/data/2.5';
 const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
 
-// Convert wind degrees to compass direction
+/**
+ * Convert wind degrees to 8-point compass direction
+ * @param degrees - Wind direction in degrees (0-360)
+ * @returns Compass direction abbreviation (N, NE, E, SE, S, SW, W, NW)
+ */
 const getCompassDirection = (degrees: number): string => {
   if (degrees < 0 || degrees > 360) {
     return 'N'; // Default fallback
@@ -105,7 +136,13 @@ const getCompassDirection = (degrees: number): string => {
   return 'N'; // Fallback
 };
 
-// Format Unix timestamp to readable time with timezone offset (e.g., "5:38 am", "8:14 pm")
+/**
+ * Format Unix timestamp to readable time with timezone offset
+ * This function properly handles timezone conversion for accurate local times
+ * @param timestamp - Unix timestamp from OpenWeatherMap API
+ * @param timezoneOffset - Timezone offset in seconds from UTC (optional)
+ * @returns Formatted time string (e.g., "5:38 am", "8:14 pm")
+ */
 const formatTime = (timestamp: number, timezoneOffset?: number): string => {
   // Convert timestamp to milliseconds and apply timezone offset
   const utcTime = timestamp * 1000;
@@ -125,7 +162,12 @@ const formatTime = (timestamp: number, timezoneOffset?: number): string => {
   return `${displayHours}:${paddedMinutes} ${ampm}`;
 };
 
-// Calculate dew point from temperature (°F) and humidity (%)
+/**
+ * Calculate dew point from temperature and humidity using Magnus formula
+ * @param tempF - Temperature in Fahrenheit
+ * @param humidity - Relative humidity percentage (0-100)
+ * @returns Dew point in Fahrenheit
+ */
 const calculateDewPoint = (tempF: number, humidity: number): number => {
   // Convert Fahrenheit to Celsius for calculation
   const tempC = (tempF - 32) * 5/9;
@@ -179,16 +221,6 @@ const formatWindDisplay = (speed: number, direction?: number, gust?: number): st
   
   return windDisplay;
 };
-
-// Location format detection and parsing
-interface LocationQuery {
-  query: string;
-  type: 'zip' | 'city_state' | 'city_country' | 'city_only';
-  city?: string;
-  state?: string;
-  country?: string;
-  zipCode?: string;
-}
 
 // Normalize input by trimming whitespace and handling special characters
 const normalizeInput = (input: string): string => {
@@ -572,7 +604,6 @@ const fetchCurrentWeatherData = async (lat: number, lon: number, apiKey: string)
     );
 
     if (!response.ok) {
-      console.warn('UV Index API error:', response.status);
       return { uvIndex: 0, uvDescription: 'N/A' };
     }
 
@@ -582,7 +613,6 @@ const fetchCurrentWeatherData = async (lat: number, lon: number, apiKey: string)
     
     return { uvIndex, uvDescription };
   } catch (error) {
-    console.warn('Failed to fetch current UV Index:', error);
     return { uvIndex: 0, uvDescription: 'N/A' };
   }
 };
@@ -623,12 +653,6 @@ const formatPressureValue = (pressureHPa: number, unit: 'hPa' | 'inHg'): { value
 };
 
 export const fetchWeatherData = async (locationInput: string, apiKey: string): Promise<WeatherData> => {
-  // Debug logging for API key
-  console.log('🔍 [DEBUG] fetchWeatherData called');
-  console.log('🔍 [DEBUG] API Key received:', apiKey ? `${apiKey.substring(0, 8)}...` : 'NULL/UNDEFINED');
-  console.log('🔍 [DEBUG] API Key length:', apiKey ? apiKey.length : 0);
-  console.log('🔍 [DEBUG] API Key type:', typeof apiKey);
-  
   if (!apiKey) {
     throw new Error('API key is required');
   }
@@ -718,12 +742,6 @@ const getLocationNotFoundError = (locationQuery: LocationQuery): string => {
 
 // Function to get user's location and fetch weather
 export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherData> => {
-  // Debug logging for API key
-  console.log('🔍 [DEBUG] fetchWeatherByLocation called');
-  console.log('🔍 [DEBUG] API Key received:', apiKey ? `${apiKey.substring(0, 8)}...` : 'NULL/UNDEFINED');
-  console.log('🔍 [DEBUG] API Key length:', apiKey ? apiKey.length : 0);
-  console.log('🔍 [DEBUG] API Key type:', typeof apiKey);
-  
   if (!apiKey) {
     throw new Error('API key is required');
   }

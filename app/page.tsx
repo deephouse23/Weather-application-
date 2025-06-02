@@ -10,15 +10,6 @@ import Forecast from "@/components/forecast"
 // Get the API key from environment variables
 const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY || process.env.OPENWEATHERMAP_API_KEY;
 
-// Debug logging for API key status
-console.log('🔍 [DEBUG] App startup - checking API key sources');
-console.log('🔍 [DEBUG] NEXT_PUBLIC_OPENWEATHERMAP_API_KEY:', process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY ? `${process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY.substring(0, 8)}...` : 'NOT SET');
-console.log('🔍 [DEBUG] OPENWEATHERMAP_API_KEY:', process.env.OPENWEATHERMAP_API_KEY ? `${process.env.OPENWEATHERMAP_API_KEY.substring(0, 8)}...` : 'NOT SET');
-console.log('🔍 [DEBUG] Final API_KEY used:', API_KEY ? `${API_KEY.substring(0, 8)}...` : 'NOT SET');
-console.log('🔍 [DEBUG] API_KEY length:', API_KEY ? API_KEY.length : 0);
-console.log('🔍 [DEBUG] API_KEY type:', typeof API_KEY);
-console.log('🔍 [DEBUG] Source used:', process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY ? 'NEXT_PUBLIC_OPENWEATHERMAP_API_KEY' : (process.env.OPENWEATHERMAP_API_KEY ? 'OPENWEATHERMAP_API_KEY' : 'NONE'));
-
 interface WeatherData {
   current: {
     temp: number;
@@ -186,7 +177,6 @@ export default function WeatherApp() {
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
         localStorage.setItem(CACHE_KEY, location)
-        console.log('🔍 [DEBUG] Silently saved location to cache:', location)
       }
     } catch (error) {
       console.warn('Failed to save location to cache:', error)
@@ -199,27 +189,27 @@ export default function WeatherApp() {
       try {
         if (typeof window !== 'undefined' && window.localStorage) {
           const cachedLocation = localStorage.getItem(CACHE_KEY)
-          if (cachedLocation && !hasSearched) {
-            console.log('🔍 [DEBUG] Silently loading cached location:', cachedLocation)
-            handleSearch(cachedLocation, true, true) // true indicates this is from cache, true bypasses rate limit
-            return true
+          if (cachedLocation) {
+            setLastSearchTerm(cachedLocation)
+            handleSearch(cachedLocation, true, true) // Load from cache with rate limit bypass
+            return
           }
         }
       } catch (error) {
         console.warn('Failed to load cached location:', error)
       }
-      return false
+      
+      // No cached location found, use San Francisco as default
+      const defaultLocation = 'San Francisco, CA'
+      setLastSearchTerm(defaultLocation)
+      handleSearch(defaultLocation, true, true) // Load default with rate limit bypass
     }
 
-    // Try to load cached location first, fallback to San Francisco if none found
-    if (!hasSearched && !loading) {
-      const loadedFromCache = loadCachedLocation()
-      if (!loadedFromCache) {
-        console.log('🔍 [DEBUG] No cached location found, defaulting to San Francisco for both dark and Miami Vice modes')
-        handleSearch("San Francisco, CA", false, true) // Default location for first-time users, bypass rate limit
-      }
+    // Theme-aware default loading
+    if (!hasSearched) {
+      loadCachedLocation()
     }
-  }, [hasSearched, loading])
+  }, [hasSearched, isDarkMode]) // Include isDarkMode in dependencies for theme-aware loading
 
   // Ensure default location loads properly when theme changes on first visit
   useEffect(() => {
