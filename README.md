@@ -1,6 +1,6 @@
 # 16-bit Weather App
 
-A retro-style weather application with pixel art graphics and comprehensive location search capabilities. Built with Next.js, TypeScript, and Tailwind CSS.
+A retro-style weather application with pixel art graphics, comprehensive location search capabilities, and the **world's first 16-bit doppler radar**. Built with Next.js, TypeScript, and Tailwind CSS.
 
 ## 🚀 Features
 
@@ -32,6 +32,14 @@ A retro-style weather application with pixel art graphics and comprehensive loca
 - **Loading states** with retro-styled indicators
 - **Error handling** with contextual suggestions
 - **Responsive design** for all screen sizes
+
+### 📡 16-bit Doppler Radar (NEW in v0.0.5)
+- **Authentic retro gaming aesthetics** with chunky 8x8 pixel blocks
+- **Real precipitation data** from OpenWeatherMap with 6-frame animation
+- **Multiple color themes**: NES Classic, Game Boy, Miami Vice, Retro Dark
+- **Interactive controls**: Play/pause, refresh, frame counter
+- **Pixel-perfect rendering** with no anti-aliasing or gradients
+- **Storm movement animation** showing weather progression over time
 
 ## 🏗️ Technical Architecture
 
@@ -165,7 +173,14 @@ const parseLocationInput = (input: string): LocationQuery => {
 
 ## 🔄 Version History
 
-### v0.0.4 (Current) - Timezone Fix
+### v0.0.5 (Current) - 16-bit Doppler Radar
+- 🚀 **NEW**: World's first 16-bit style doppler radar for weather apps
+- 📡 **Added**: Real-time precipitation visualization with retro aesthetics
+- 🎮 **Enhanced**: Multiple radar color themes (NES, Game Boy, Miami Vice)
+- ⚡ **Improved**: Canvas-based rendering with pixel-perfect graphics
+- 🔧 **Integration**: OpenWeatherMap One Call API 3.0 for precipitation data
+
+### v0.0.4 - Timezone Fix
 - ✅ **Fixed**: Critical timezone bug for sunrise/sunset
 - ✅ **Added**: Vercel Analytics integration
 - ✅ **Improved**: Location-accurate time display

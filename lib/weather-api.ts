@@ -27,6 +27,8 @@ interface WeatherData {
     pressure: number; // Atmospheric pressure in hPa
     pressureDisplay: string; // Formatted pressure with regional units
     country: string; // Country code (e.g., "US", "GB", "CA")
+    lat: number; // Latitude coordinates for radar
+    lon: number; // Longitude coordinates for radar
   };
   forecast: Array<{
     day: string;
@@ -711,7 +713,9 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
         uvDescription,
         pressure: currentData.main.pressure,
         pressureDisplay: formatPressureByRegion(currentData.main.pressure, currentData.sys.country),
-        country: currentData.sys.country
+        country: currentData.sys.country,
+        lat,
+        lon
       },
       forecast: dailyForecasts,
       moonPhase
@@ -802,7 +806,9 @@ export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherDat
               uvDescription,
               pressure: currentData.main.pressure,
               pressureDisplay: formatPressureByRegion(currentData.main.pressure, currentData.sys.country),
-              country: currentData.sys.country
+              country: currentData.sys.country,
+              lat: latitude,
+              lon: longitude
             },
             forecast: dailyForecasts,
             moonPhase: calculateMoonPhase()

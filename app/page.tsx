@@ -6,9 +6,10 @@ import { cn } from "@/lib/utils"
 import { fetchWeatherData, fetchWeatherByLocation } from "@/lib/weather-api"
 import WeatherSearch from "@/components/weather-search"
 import Forecast from "@/components/forecast"
+import RadarDisplay from "@/components/radar-display"
 
 // Get the API key from environment variables
-const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY || process.env.OPENWEATHERMAP_API_KEY;
+const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
 
 interface WeatherData {
   current: {
@@ -28,6 +29,8 @@ interface WeatherData {
     pressure: number; // Atmospheric pressure in hPa
     pressureDisplay: string; // Formatted pressure with regional units
     country: string; // Country code (e.g., "US", "GB", "CA")
+    lat: number; // Latitude coordinates for radar
+    lon: number; // Longitude coordinates for radar
   };
   forecast: Array<{
     day: string;
@@ -55,6 +58,7 @@ export default function WeatherApp() {
   const [remainingSearches, setRemainingSearches] = useState(10)
   const [rateLimitError, setRateLimitError] = useState<string>("")
   const [isDarkMode, setIsDarkMode] = useState(true) // Default to dark mode
+  const [showRadar, setShowRadar] = useState(false) // New state for radar toggle
 
   // localStorage keys
   const CACHE_KEY = 'weather-app-last-location'
@@ -617,6 +621,32 @@ export default function WeatherApp() {
 
             {/* Forecast */}
             <Forecast forecast={weather.forecast} isDarkMode={isDarkMode} />
+
+            {/* Radar Toggle Button */}
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => setShowRadar(!showRadar)}
+                className={`inline-block px-4 py-2 border-2 ${themeClasses.borderColor} ${themeClasses.text} 
+                           hover:${themeClasses.successText} transition-all duration-200 font-bold uppercase tracking-wider text-sm
+                           ${!isDarkMode ? 'border-[#00ffff] hover:text-[#00ffff] shadow-[0_0_15px_#00ffff]' : ''} ${themeClasses.miamiViceGlow}`}
+                style={{ imageRendering: "pixelated" }}
+              >
+                {showRadar ? '📡 HIDE RADAR' : '📡 SHOW DOPPLER RADAR'}
+              </button>
+            </div>
+
+            {/* 16-bit Doppler Radar */}
+            {showRadar && API_KEY && (
+              <div className="mt-4">
+                <RadarDisplay 
+                  lat={weather.current.lat}
+                  lon={weather.current.lon}
+                  apiKey={API_KEY}
+                  isDarkMode={isDarkMode}
+                  locationName={weather.current.location}
+                />
+              </div>
+            )}
 
             {/* Moon Phase Info */}
             <div className="mt-4 text-center">
