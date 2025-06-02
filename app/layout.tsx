@@ -2,6 +2,7 @@ import type React from "react"
 import "./globals.css"
 import type { Metadata } from "next"
 import { Share_Tech_Mono } from "next/font/google"
+import { Analytics } from '@vercel/analytics/react'
 
 const shareTechMono = Share_Tech_Mono({
   weight: "400",
@@ -63,7 +64,10 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#1a1a2e" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
       </head>
-      <body className={shareTechMono.className}>{children}</body>
+      <body className={shareTechMono.className}>
+        {children}
+        <Analytics />
+      </body>
     </html>
   )
 }
