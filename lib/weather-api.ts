@@ -53,6 +53,7 @@ interface OpenWeatherMapCurrentResponse {
     sunrise: number; // Unix timestamp
     sunset: number; // Unix timestamp
   };
+  timezone: number; // Timezone offset in seconds from UTC
 }
 
 interface OpenWeatherMapForecastResponse {
@@ -104,11 +105,15 @@ const getCompassDirection = (degrees: number): string => {
   return 'N'; // Fallback
 };
 
-// Format Unix timestamp to readable time (e.g., "5:38 am", "8:14 pm")
-const formatTime = (timestamp: number): string => {
-  const date = new Date(timestamp * 1000);
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
+// Format Unix timestamp to readable time with timezone offset (e.g., "5:38 am", "8:14 pm")
+const formatTime = (timestamp: number, timezoneOffset?: number): string => {
+  // Convert timestamp to milliseconds and apply timezone offset
+  const utcTime = timestamp * 1000;
+  const localTime = timezoneOffset ? utcTime + (timezoneOffset * 1000) : utcTime;
+  
+  const date = new Date(localTime);
+  const hours = date.getUTCHours(); // Use UTC methods since we've already applied the offset
+  const minutes = date.getUTCMinutes();
   
   // Convert to 12-hour format
   const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
@@ -675,8 +680,8 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
         windDisplay: formatWindDisplay(currentData.wind.speed, currentData.wind.deg, currentData.wind.gust),
         location: displayName, // Use the geocoded display name
         description: currentData.weather[0].description,
-        sunrise: currentData.sys.sunrise ? formatTime(currentData.sys.sunrise) : 'N/A',
-        sunset: currentData.sys.sunset ? formatTime(currentData.sys.sunset) : 'N/A',
+        sunrise: currentData.sys.sunrise ? formatTime(currentData.sys.sunrise, currentData.timezone) : 'N/A',
+        sunset: currentData.sys.sunset ? formatTime(currentData.sys.sunset, currentData.timezone) : 'N/A',
         dewPoint: calculateDewPoint(currentData.main.temp, currentData.main.humidity),
         uvIndex,
         uvDescription,
@@ -772,8 +777,8 @@ export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherDat
               windDisplay: formatWindDisplay(currentData.wind.speed, currentData.wind.deg, currentData.wind.gust),
               location: `${currentData.name}, ${currentData.sys.country}`,
               description: currentData.weather[0].description,
-              sunrise: currentData.sys.sunrise ? formatTime(currentData.sys.sunrise) : 'N/A',
-              sunset: currentData.sys.sunset ? formatTime(currentData.sys.sunset) : 'N/A',
+              sunrise: currentData.sys.sunrise ? formatTime(currentData.sys.sunrise, currentData.timezone) : 'N/A',
+              sunset: currentData.sys.sunset ? formatTime(currentData.sys.sunset, currentData.timezone) : 'N/A',
               dewPoint: calculateDewPoint(currentData.main.temp, currentData.main.humidity),
               uvIndex,
               uvDescription,

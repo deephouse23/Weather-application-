@@ -1,6 +1,6 @@
 {
   "name": "16-bit-weather",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A retro 16-bit style weather application with pixel art graphics and comprehensive location search",
   "private": true,
   "scripts": {
