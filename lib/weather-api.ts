@@ -679,53 +679,24 @@ const formatPressureValue = (pressureHPa: number, unit: 'hPa' | 'inHg'): { value
 // Enhanced UV Index fetching with time-aware logic
 const fetchCurrentWeatherData = async (lat: number, lon: number, apiKey: string): Promise<{ uvIndex: number; uvDescription: string }> => {
   try {
-    // Get current time for time-aware UV logic
-    const now = new Date();
-    const currentHour = now.getUTCHours();
-    
-    // Fetch basic weather data to get sunrise/sunset times
-    const weatherResponse = await fetch(
-      `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`
-    );
-    
-    let isDayTime = true; // Default assumption
-    if (weatherResponse.ok) {
-      const weatherData = await weatherResponse.json();
-      const sunrise = weatherData.sys?.sunrise;
-      const sunset = weatherData.sys?.sunset;
-      const timezone = weatherData.timezone || 0;
-      
-      if (sunrise && sunset) {
-        const currentTime = Math.floor(Date.now() / 1000);
-        const localSunrise = sunrise + timezone;
-        const localSunset = sunset + timezone;
-        const localCurrentTime = currentTime + timezone;
-        
-        // Check if current time is between sunrise and sunset (local time)
-        isDayTime = localCurrentTime >= localSunrise && localCurrentTime <= localSunset;
-      }
-    }
-    
-    // If it's nighttime, return 0 UV index
-    if (!isDayTime) {
-      return { uvIndex: 0, uvDescription: 'None (Nighttime)' };
-    }
-    
-    // Fetch UV Index data from API
-    const uvResponse = await fetch(
-      `${BASE_URL}/uvi?lat=${lat}&lon=${lon}&appid=${apiKey}`
+    // Use One Call API 2.5 which includes UV Index in current weather
+    const oneCallResponse = await fetch(
+      `${BASE_URL}/onecall?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial&exclude=minutely,daily,alerts`
     );
 
-    if (!uvResponse.ok) {
+    if (!oneCallResponse.ok) {
       return { uvIndex: 0, uvDescription: 'N/A' };
     }
 
-    const uvData = await uvResponse.json();
-    const uvIndex = Math.round(uvData.value || 0);
+    const oneCallData = await oneCallResponse.json();
+    
+    // Get UV Index from One Call API current data
+    const uvIndex = Math.round(oneCallData.current?.uvi || 0);
     const uvDescription = getUVDescription(uvIndex);
     
     return { uvIndex, uvDescription };
   } catch (error) {
+    console.warn('Failed to fetch UV Index from One Call API:', error);
     return { uvIndex: 0, uvDescription: 'N/A' };
   }
 };
