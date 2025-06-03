@@ -90,11 +90,12 @@ export default function Forecast({ forecast, theme = 'dark' }: ForecastProps) {
   const themeClasses = getThemeClasses(theme)
 
   return (
-    <div className={`${themeClasses.cardBg} p-4 rounded-none border-2 ${themeClasses.borderColor} pixel-shadow ${themeClasses.specialBorder}`}
+    <div className={`${themeClasses.cardBg} p-3 sm:p-4 lg:p-6 rounded-none border-2 sm:border-4 ${themeClasses.borderColor} pixel-shadow ${themeClasses.specialBorder}`}
          style={themeClasses.cardStyle}>
-      <h2 className={`text-lg font-bold mb-4 ${themeClasses.headerText} uppercase tracking-wider ${themeClasses.glow}`}
-          style={{ textShadow: themeClasses.cardStyle.textShadow }}>3-DAY FORECAST</h2>
-      <div className="grid grid-cols-3 gap-3">
+      <h2 className={`text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4 ${themeClasses.headerText} uppercase tracking-wider ${themeClasses.glow} text-center`}
+          style={{ textShadow: themeClasses.cardStyle.textShadow }}>5-DAY FORECAST</h2>
+      {/* Mobile responsive grid - stack on very small screens, 3 cols on mobile+, 5 cols on desktop */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 lg:gap-4">
         {forecast.map((day, index) => (
           <ForecastCard key={index} day={day} themeClasses={themeClasses} theme={theme} />
         ))}
@@ -105,31 +106,47 @@ export default function Forecast({ forecast, theme = 'dark' }: ForecastProps) {
 
 function ForecastCard({ day, themeClasses, theme }: { day: ForecastDay; themeClasses: any; theme: ThemeType }) {
   return (
-    <div className={`${themeClasses.itemBg} p-3 border ${themeClasses.itemBorder} text-center ${themeClasses.itemHover} transition-colors duration-200 ${themeClasses.specialBorder}`}
+    <div className={`${themeClasses.itemBg} p-2 sm:p-3 border ${themeClasses.itemBorder} text-center ${themeClasses.itemHover} transition-colors duration-200 ${themeClasses.specialBorder}
+                    min-h-[120px] sm:min-h-[140px] lg:min-h-[160px] flex flex-col justify-between`}
          style={themeClasses.itemStyle}>
-      <div className={`text-xs font-bold ${themeClasses.primaryText} mb-2 uppercase tracking-wider ${themeClasses.glow}`}>
-        {day.day}
+      {/* Day of week - Mobile responsive */}
+      <div className={`text-xs sm:text-sm font-bold ${themeClasses.primaryText} mb-1 sm:mb-2 uppercase tracking-wider ${themeClasses.glow} break-words`}>
+        <span className="sm:hidden">{day.day.substring(0, 3)}</span>
+        <span className="hidden sm:inline">{day.day}</span>
       </div>
       
-      <div className="flex justify-center mb-3">
+      {/* Weather icon - Mobile responsive */}
+      <div className="flex justify-center mb-2 sm:mb-3 flex-grow items-center">
         <WeatherIcon condition={day.condition} size="small" />
       </div>
       
-      {/* High/Low Temperature Display */}
-      <div className="mb-2">
-        <div className={`text-lg font-bold ${themeClasses.temperatureText} mb-1 pixel-glow ${themeClasses.glow}`}
+      {/* Temperature display - Mobile optimized */}
+      <div className="space-y-1">
+        <div className={`text-sm sm:text-base lg:text-lg font-bold ${themeClasses.temperatureText} pixel-glow ${themeClasses.glow}`}
              style={theme !== 'dark' ? {
                textShadow: theme === 'tron' ? '0 0 10px #00FFFF, 0 0 20px #00FFFF' : '0 0 10px #ff1493, 0 0 20px #ff1493'
              } : {}}>
-          {day.highTemp}°
+          {Math.round(day.highTemp)}°
         </div>
-        <div className={`text-sm ${themeClasses.lowTempText} opacity-80 font-medium ${themeClasses.glow}`}>
-          {day.lowTemp}°
+        <div className={`text-xs sm:text-sm ${themeClasses.lowTempText} opacity-80 font-medium ${themeClasses.glow}`}>
+          {Math.round(day.lowTemp)}°
         </div>
       </div>
       
-      <div className={`text-xs ${themeClasses.primaryText} capitalize truncate px-1 ${themeClasses.glow}`} title={day.description}>
-        {day.description}
+      {/* Weather description - Mobile responsive with better overflow handling */}
+      <div className={`text-xs ${themeClasses.primaryText} capitalize mt-1 sm:mt-2 ${themeClasses.glow} break-words hyphens-auto leading-tight`} 
+           title={day.description}
+           style={{ 
+             fontSize: "clamp(10px, 2vw, 12px)",
+             lineHeight: "1.2"
+           }}>
+        {/* Show abbreviated description on small screens */}
+        <span className="sm:hidden">
+          {day.description.length > 12 ? `${day.description.substring(0, 10)}...` : day.description}
+        </span>
+        <span className="hidden sm:inline">
+          {day.description.length > 20 ? `${day.description.substring(0, 18)}...` : day.description}
+        </span>
       </div>
     </div>
   );

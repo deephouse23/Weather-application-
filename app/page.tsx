@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { fetchWeatherData, fetchWeatherByLocation } from "@/lib/weather-api"
@@ -10,7 +10,9 @@ import RadarDisplay from "@/components/radar-display"
 import PageWrapper from "@/components/page-wrapper"
 
 // Get API key from environment variables for production deployment
-const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY || "";
+// LOCAL DEV ONLY - HARDCODED API KEY REMOVED FOR DEPLOYMENT
+// const HARDCODED_API_KEY_LOCAL_DEV = "4e1e5cc03e86ace38e8fe0e2e7c6b421";
+const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY;
 
 // Theme types
 type ThemeType = 'dark' | 'miami' | 'tron';
@@ -71,7 +73,7 @@ function WeatherApp() {
   const [showRadar, setShowRadar] = useState(false) // New state for radar toggle
 
   // localStorage keys
-  const CACHE_KEY = 'weather-app-last-location'
+  const CACHE_KEY = 'bitweather_city'
   const RATE_LIMIT_KEY = 'weather-app-rate-limit'
   const MAX_REQUESTS_PER_HOUR = 10
   const COOLDOWN_SECONDS = 2
@@ -250,13 +252,14 @@ function WeatherApp() {
     }
   }
 
-  // Load cached location and fetch weather on first mount
+  // Enhanced caching with better UX flow
   useEffect(() => {
     const loadCachedLocation = () => {
       try {
         if (typeof window !== 'undefined' && window.localStorage) {
           const cachedLocation = localStorage.getItem(CACHE_KEY)
           if (cachedLocation) {
+            // Load cached city preference
             setLastSearchTerm(cachedLocation)
             handleSearch(cachedLocation, true, true) // Load from cache with rate limit bypass
             return
@@ -266,8 +269,15 @@ function WeatherApp() {
         console.warn('Failed to load cached location:', error)
       }
       
-      // If no cached location, set a default
-      setCurrentLocation("Search for a location to see weather")
+      // For new users: show welcome screen briefly, then load San Francisco
+      setHasSearched(false) // Ensure welcome screen shows initially
+      
+      // Auto-load San Francisco after a brief welcome screen display
+      setTimeout(() => {
+        const defaultCity = "San Francisco, CA"
+        setLastSearchTerm(defaultCity)
+        handleSearch(defaultCity, true, true) // Load default city with rate limit bypass
+      }, 2000) // 2 second delay to show welcome screen
     }
 
     loadCachedLocation()
@@ -280,6 +290,12 @@ function WeatherApp() {
   const handleSearch = async (locationInput: string, fromCache: boolean = false, bypassRateLimit: boolean = false) => {
     if (!locationInput.trim()) {
       setError("Please enter a location")
+      return
+    }
+
+    // Check if API key is available
+    if (!API_KEY) {
+      setError("🔑 API key not configured. Please set NEXT_PUBLIC_OPENWEATHERMAP_API_KEY environment variable.")
       return
     }
 
@@ -315,12 +331,36 @@ function WeatherApp() {
         setRemainingSearches(remaining)
       }
 
-      // Save to cache (silent)
+      // Save to cache (silent) - now using bitweather_city key
       if (!fromCache) {
         saveLocationToCache(locationInput)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch weather data")
+      // Enhanced error handling with friendly fallbacks
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch weather data"
+      
+      // If this was our default San Francisco load and it failed, try a different fallback
+      if (locationInput.includes("San Francisco") && fromCache) {
+        console.warn("San Francisco default failed, trying New York as fallback")
+        try {
+          const fallbackData = await fetchWeatherData("New York, NY", API_KEY)
+          setWeather(fallbackData)
+          setLastSearchTerm("New York, NY")
+          saveLocationToCache("New York, NY")
+          return
+        } catch (fallbackErr) {
+          setError("🌡️ Weather services are temporarily unavailable. Please try again in a moment.")
+        }
+      } else {
+        // User search failed - show friendly error
+        if (errorMessage.includes("not found") || errorMessage.includes("404")) {
+          setError(`🔍 Location "${locationInput}" not found. Please try a different city name, ZIP code, or format.`)
+        } else if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
+          setError("🌐 Network connection issue. Please check your internet and try again.")
+        } else {
+          setError("🌡️ Weather data temporarily unavailable. Please try again in a moment.")
+        }
+      }
       setWeather(null)
     } finally {
       setLoading(false)
@@ -330,6 +370,12 @@ function WeatherApp() {
   const handleLocationSearch = async () => {
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by this browser")
+      return
+    }
+
+    // Check if API key is available
+    if (!API_KEY) {
+      setError("🔑 API key not configured. Please set NEXT_PUBLIC_OPENWEATHERMAP_API_KEY environment variable.")
       return
     }
 
@@ -492,196 +538,252 @@ function WeatherApp() {
   };
 
   return (
-    <div className={`min-h-screen ${themeClasses.background} p-4 flex flex-col items-center relative overflow-x-hidden`}>
+    <div className={`min-h-screen ${themeClasses.background} relative overflow-x-hidden`}>
       {/* Tron Light Cycle Watermark - only in Tron theme */}
       {currentTheme === 'tron' && <TronLightCycleWatermark />}
       
-      {/* Hero Section */}
-      <div className="w-full max-w-6xl mx-auto text-center mb-8">
-        <div className="mb-6">
-          <h1 className={`text-4xl md:text-6xl font-bold mb-4 font-mono uppercase tracking-wider ${themeClasses.headerText} ${themeClasses.glow}`}>
-            16-BIT WEATHER
-          </h1>
-        </div>
-
-        {/* Weather Search Component */}
-        <div className="mb-8">
-          <WeatherSearch
-            onSearch={handleSearchWrapper}
-            onLocationSearch={handleLocationSearch}
-            isLoading={loading}
-            error={error}
-            isDisabled={isOnCooldown || remainingSearches <= 0}
-            rateLimitError={rateLimitError}
-            theme={currentTheme}
-          />
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="w-full max-w-6xl mx-auto">
-        {/* Error Display */}
-        {error && (
-          <div className={`${themeClasses.cardBg} p-6 border-4 pixel-border text-center ${themeClasses.borderColor} mb-6`}>
-            <p className={`${themeClasses.accentText} font-mono text-lg font-bold`}>⚠ ERROR</p>
-            <p className={`${themeClasses.text} mt-2`}>{error}</p>
+      {/* Mobile-optimized main container with proper responsive padding */}
+      <div className="w-full min-h-screen flex flex-col items-center px-2 sm:px-4 py-4">
+        {/* Hero Section - Mobile responsive */}
+        <div className="w-full max-w-7xl mx-auto text-center mb-6 sm:mb-8">
+          <div className="mb-4 sm:mb-6">
+            <h1 className={`text-2xl sm:text-4xl md:text-6xl font-bold mb-2 sm:mb-4 font-mono uppercase tracking-wider ${themeClasses.headerText} ${themeClasses.glow} break-words`}>
+              16-BIT WEATHER
+            </h1>
           </div>
-        )}
 
-        {weather && (
-          <div className="space-y-6">
-            {/* Current Weather Display */}
-            <div className={`${themeClasses.cardBg} p-8 border-4 pixel-border ${themeClasses.borderColor} ${themeClasses.specialBorder} text-center`}>
-              <div className="mb-6">
-                <h2 className={`text-3xl font-bold mb-2 font-mono uppercase tracking-wider ${themeClasses.headerText}`}>
-                  {weather.current.location}
-                </h2>
-                <p className={`${themeClasses.secondaryText} font-mono text-sm`}>
-                  {weather.current.country} • Current Conditions
-                </p>
+          {/* Weather Search Component - Mobile optimized */}
+          <div className="mb-6 sm:mb-8 w-full">
+            <WeatherSearch
+              onSearch={handleSearchWrapper}
+              onLocationSearch={handleLocationSearch}
+              isLoading={loading}
+              error={error}
+              isDisabled={isOnCooldown || remainingSearches <= 0}
+              rateLimitError={rateLimitError}
+              theme={currentTheme}
+            />
+          </div>
+        </div>
+
+        {/* Main Content - Mobile responsive container */}
+        <div className="w-full max-w-7xl mx-auto">
+          {/* Error Display - Mobile optimized */}
+          {error && (
+            <div className={`${themeClasses.cardBg} p-3 sm:p-6 border-2 sm:border-4 pixel-border text-center ${themeClasses.borderColor} mb-4 sm:mb-6 mx-2 sm:mx-0`}>
+              <p className={`${themeClasses.accentText} font-mono text-sm sm:text-lg font-bold`}>⚠ ERROR</p>
+              <p className={`${themeClasses.text} mt-1 sm:mt-2 text-xs sm:text-base break-words`}>{error}</p>
+            </div>
+          )}
+
+          {weather && (
+            <div className="space-y-4 sm:space-y-6">
+              {/* Current Weather Display - Mobile responsive */}
+              <div className={`${themeClasses.cardBg} p-4 sm:p-6 lg:p-8 border-2 sm:border-4 pixel-border ${themeClasses.borderColor} ${themeClasses.specialBorder} text-center mx-2 sm:mx-0`}>
+                <div className="mb-4 sm:mb-6">
+                  <h2 className={`text-lg sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 font-mono uppercase tracking-wider ${themeClasses.headerText} break-words px-2`}>
+                    {weather.current.location}
+                  </h2>
+                  <p className={`${themeClasses.secondaryText} font-mono text-xs sm:text-sm`}>
+                    {weather.current.country} • Current Conditions
+                  </p>
+                </div>
+
+                {/* Mobile-optimized weather cards grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+                  {/* Temperature & Condition - Mobile optimized */}
+                  <div className={`${themeClasses.background} p-3 sm:p-4 lg:p-6 border-2 ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder} min-h-0`}
+                       style={{ borderColor: themeClasses.borderColor }}>
+                    <div className="flex items-center justify-center mb-2 sm:mb-4">
+                      <WeatherIcon condition={weather.current.condition} size="large" />
+                    </div>
+                    <div className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${themeClasses.headerText} font-mono mb-1 sm:mb-2`}>
+                      {Math.round(weather.current.temp)}°
+                    </div>
+                    <div className={`${themeClasses.text} font-mono text-xs sm:text-sm uppercase tracking-wider break-words px-1`}>
+                      {weather.current.description}
+                    </div>
+                  </div>
+
+                  {/* Weather Details - Mobile responsive */}
+                  <div className={`${themeClasses.background} p-3 sm:p-4 lg:p-6 border-2 ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder}`}
+                       style={{ borderColor: themeClasses.borderColor }}>
+                    <div className="space-y-2 sm:space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className={`${themeClasses.text} font-mono text-xs sm:text-sm`}>Humidity:</span>
+                        <span className={`${themeClasses.headerText} font-mono font-bold text-xs sm:text-sm`}>{weather.current.humidity}%</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className={`${themeClasses.text} font-mono text-xs sm:text-sm`}>Wind:</span>
+                        <span className={`${themeClasses.headerText} font-mono font-bold text-xs sm:text-sm break-words text-right flex-1 ml-2`}
+                              dangerouslySetInnerHTML={{ __html: formatWindDisplayHTML(weather.current.windDisplay) }} />
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className={`${themeClasses.text} font-mono text-xs sm:text-sm`}>Dew Point:</span>
+                        <span className={`${themeClasses.headerText} font-mono font-bold text-xs sm:text-sm`}>{Math.round(weather.current.dewPoint)}°</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className={`${themeClasses.text} font-mono text-xs sm:text-sm`}>Pressure:</span>
+                        <span className={`${themeClasses.headerText} font-mono font-bold text-xs break-words text-right`}>{weather.current.pressureDisplay}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* UV Index & Atmospheric - Mobile optimized */}
+                  <div className={`${themeClasses.background} p-3 sm:p-4 lg:p-6 border-2 ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder}`}
+                       style={{ borderColor: themeClasses.borderColor }}>
+                    <div className="space-y-3 sm:space-y-4">
+                      <div>
+                        <div className={`${themeClasses.text} font-mono text-xs sm:text-sm mb-1`}>UV Index</div>
+                        <div className={`text-xl sm:text-2xl font-bold ${themeClasses.headerText} font-mono`}>
+                          {weather.current.uvIndex}
+                        </div>
+                        <div className={`${themeClasses.secondaryText} font-mono text-xs uppercase tracking-wider break-words`}>
+                          {weather.current.uvDescription}
+                        </div>
+                      </div>
+                      <PressureGauge 
+                        pressure={weather.current.pressure} 
+                        unit={getPressureUnit(weather.current.country)} 
+                        theme={currentTheme} 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sun & Moon Section - Mobile responsive */}
+                <div className={`${themeClasses.background} p-2 sm:p-4 border border-2 ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder}`}
+                     style={{ borderColor: themeClasses.borderColor }}>
+                  <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4 lg:space-x-8 px-2 py-2 sm:py-3">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                      <SunriseIcon />
+                      <div>
+                        <div className={`${themeClasses.text} font-mono text-xs sm:text-sm`}>Sunrise</div>
+                        <div className={`${themeClasses.headerText} font-mono font-bold text-xs sm:text-base`}>{weather.current.sunrise}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                      <SunsetIcon />
+                      <div>
+                        <div className={`${themeClasses.text} font-mono text-xs sm:text-sm`}>Sunset</div>
+                        <div className={`${themeClasses.headerText} font-mono font-bold text-xs sm:text-base`}>{weather.current.sunset}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                      <MoonPhaseWatermark 
+                        phase={weather.moonPhase.phase}
+                        phaseAngle={weather.moonPhase.phaseAngle}
+                        illumination={weather.moonPhase.illumination}
+                        theme={currentTheme}
+                      />
+                      <div>
+                        <div className={`${themeClasses.text} font-mono text-xs sm:text-sm`}>Moon Phase</div>
+                        <div className={`${themeClasses.headerText} font-mono font-bold text-xs break-words text-center`}>
+                          {weather.moonPhase.phase} ({weather.moonPhase.illumination}%)
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                {/* Temperature & Condition */}
-                <div className={`${themeClasses.background} p-6 border-2 ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder}`}
-                     style={{ borderColor: themeClasses.borderColor }}>
-                  <div className="flex items-center justify-center mb-4">
-                    <WeatherIcon condition={weather.current.condition} size="large" />
-                  </div>
-                  <div className={`text-5xl font-bold ${themeClasses.headerText} font-mono mb-2`}>
-                    {Math.round(weather.current.temp)}°
-                  </div>
-                  <div className={`${themeClasses.text} font-mono text-sm uppercase tracking-wider`}>
-                    {weather.current.description}
-                  </div>
-                </div>
-
-                {/* Weather Details */}
-                <div className={`${themeClasses.background} p-6 border-2 ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder}`}
-                     style={{ borderColor: themeClasses.borderColor }}>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className={`${themeClasses.text} font-mono text-sm`}>Humidity:</span>
-                      <span className={`${themeClasses.headerText} font-mono font-bold`}>{weather.current.humidity}%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className={`${themeClasses.text} font-mono text-sm`}>Wind:</span>
-                      <span className={`${themeClasses.headerText} font-mono font-bold`}
-                            dangerouslySetInnerHTML={{ __html: formatWindDisplayHTML(weather.current.windDisplay) }} />
-                    </div>
-                    <div className="flex justify-between">
-                      <span className={`${themeClasses.text} font-mono text-sm`}>Dew Point:</span>
-                      <span className={`${themeClasses.headerText} font-mono font-bold`}>{Math.round(weather.current.dewPoint)}°</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className={`${themeClasses.text} font-mono text-sm`}>Pressure:</span>
-                      <span className={`${themeClasses.headerText} font-mono font-bold text-xs`}>{weather.current.pressureDisplay}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* UV Index & Atmospheric */}
-                <div className={`${themeClasses.background} p-6 border-2 ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder}`}
-                     style={{ borderColor: themeClasses.borderColor }}>
-                  <div className="space-y-4">
-                    <div>
-                      <div className={`${themeClasses.text} font-mono text-sm mb-1`}>UV Index</div>
-                      <div className={`text-2xl font-bold ${themeClasses.headerText} font-mono`}>
-                        {weather.current.uvIndex}
-                      </div>
-                      <div className={`${themeClasses.secondaryText} font-mono text-xs uppercase tracking-wider`}>
-                        {weather.current.uvDescription}
-                      </div>
-                    </div>
-                    <PressureGauge 
-                      pressure={weather.current.pressure} 
-                      unit={getPressureUnit(weather.current.country)} 
-                      theme={currentTheme} 
-                    />
-                  </div>
-                </div>
+              {/* 5-Day Forecast - Mobile optimized */}
+              <div className="mx-2 sm:mx-0">
+                <Forecast forecast={weather.forecast} theme={currentTheme} />
               </div>
 
-              {/* Sun & Moon Section */}
-              <div className={`col-span-2 ${themeClasses.background} p-4 border ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder}`}
-                   style={{ borderColor: themeClasses.borderColor }}>
-                <div className="flex justify-center space-x-8 px-4 py-3">
-                  <div className="flex items-center space-x-3">
-                    <SunriseIcon />
-                    <div>
-                      <div className={`${themeClasses.text} font-mono text-sm`}>Sunrise</div>
-                      <div className={`${themeClasses.headerText} font-mono font-bold`}>{weather.current.sunrise}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <SunsetIcon />
-                    <div>
-                      <div className={`${themeClasses.text} font-mono text-sm`}>Sunset</div>
-                      <div className={`${themeClasses.headerText} font-mono font-bold`}>{weather.current.sunset}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <MoonPhaseWatermark 
-                      phase={weather.moonPhase.phase}
-                      phaseAngle={weather.moonPhase.phaseAngle}
-                      illumination={weather.moonPhase.illumination}
+              {/* Radar Toggle - Mobile friendly button */}
+              <div className="text-center mb-4 sm:mb-6">
+                <button
+                  onClick={() => setShowRadar(!showRadar)}
+                  className={`px-4 sm:px-6 py-2 sm:py-3 border-2 sm:border-4 text-sm sm:text-lg font-mono font-bold uppercase tracking-wider transition-all duration-300 ${themeClasses.borderColor} ${themeClasses.cardBg} ${themeClasses.headerText} touch-manipulation min-h-[44px]`}
+                >
+                  {showRadar ? '📡 HIDE RADAR' : '📡 SHOW DOPPLER RADAR'}
+                </button>
+              </div>
+
+              {/* Expanded Doppler Radar Display - Mobile responsive */}
+              {showRadar && API_KEY && (
+                <div className="w-full mx-2 sm:mx-0">
+                  <div className="w-full max-w-7xl mx-auto">
+                    <RadarDisplay
+                      lat={weather.current.lat}
+                      lon={weather.current.lon}
+                      apiKey={API_KEY}
                       theme={currentTheme}
+                      locationName={weather.current.location}
                     />
-                    <div>
-                      <div className={`${themeClasses.text} font-mono text-sm`}>Moon Phase</div>
-                      <div className={`${themeClasses.headerText} font-mono font-bold text-xs`}>
-                        {weather.moonPhase.phase} ({weather.moonPhase.illumination}%)
-                      </div>
-                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
+          )}
 
-            {/* 5-Day Forecast */}
-            <Forecast forecast={weather.forecast} theme={currentTheme} />
-
-            {/* Radar Toggle */}
-            <div className="text-center mb-6">
-              <button
-                onClick={() => setShowRadar(!showRadar)}
-                className={`px-6 py-3 border-4 text-lg font-mono font-bold uppercase tracking-wider transition-all duration-300 ${themeClasses.borderColor} ${themeClasses.cardBg} ${themeClasses.headerText}`}
-              >
-                {showRadar ? '📡 HIDE RADAR' : '📡 SHOW DOPPLER RADAR'}
-              </button>
-            </div>
-
-            {/* Expanded Doppler Radar Display - Now Below Forecast */}
-            {showRadar && API_KEY && (
-              <div className="w-full">
-                <div className="w-full max-w-6xl mx-auto">
-                  <RadarDisplay
-                    lat={weather.current.lat}
-                    lon={weather.current.lon}
-                    apiKey={API_KEY}
-                    theme={currentTheme}
-                    locationName={weather.current.location}
-                  />
+          {/* Enhanced Welcome Message - Mobile responsive */}
+          {!weather && !loading && (
+            <div className={`${themeClasses.cardBg} p-4 sm:p-6 lg:p-8 border-2 sm:border-4 pixel-border text-center ${themeClasses.borderColor} ${themeClasses.specialBorder} mx-2 sm:mx-0`}>
+              {/* Enhanced ASCII Art Header - Mobile responsive */}
+              <div className={`${themeClasses.headerText} font-mono text-xs sm:text-sm mb-4 sm:mb-6 whitespace-pre-line ${themeClasses.glow} overflow-x-auto`}>
+                <div className="hidden sm:block">
+{`    ██████   ████ ████████      ██   ██ ████████  ██████  ████████ ██   ██ ████████ ██████  
+    ██   ██   ██    ██   ██      ██   ██ ██       ██    ██    ██    ██   ██ ██       ██   ██ 
+    ██████    ██    ██   ██      ██ █ ██ █████    ███████     ██    ███████ █████    ██████  
+    ██   ██   ██    ██   ██      ██ █ ██ ██       ██    ██    ██    ██   ██ ██       ██   ██ 
+    ██████   ████    ██   ██      ███ ███  ████████ ██    ██    ██    ██   ██ ████████ ██   ██`}
+                </div>
+                <div className="block sm:hidden text-center">
+                  <div className={`text-lg font-bold ${themeClasses.headerText}`}>16-BIT WEATHER</div>
                 </div>
               </div>
-            )}
-          </div>
-        )}
+              
+              <h3 className={`text-xl sm:text-2xl lg:text-4xl font-bold mb-4 sm:mb-6 font-mono uppercase tracking-wider ${themeClasses.headerText} ${themeClasses.glow} animate-pulse break-words px-2`}>
+                🌟 WELCOME TO BIT WEATHER 🌟
+              </h3>
+              
+              <div className={`${themeClasses.text} mb-6 sm:mb-8 font-mono text-sm sm:text-base lg:text-lg space-y-2 sm:space-y-3 px-2`}>
+                <p>🎮 Experience weather data like it's 1985!</p>
+                <p>📊 Real-time meteorological data with authentic retro styling</p>
+                <p className="hidden sm:block">🌈 Choose from Dark, Miami Vice, or Tron themes</p>
+                <p className="hidden sm:block">📡 Complete with Doppler radar and 5-day forecasts</p>
+              </div>
+              
+              <div className={`${themeClasses.cardBg} p-3 sm:p-4 lg:p-6 border-2 ${themeClasses.borderColor} mb-6 sm:mb-8 max-w-xl mx-auto ${themeClasses.specialBorder}`}>
+                <div className={`${themeClasses.successText} font-mono text-sm sm:text-base font-bold mb-3 sm:mb-4 animate-pulse`}>
+                  🔍 SEARCH OPTIONS AVAILABLE:
+                </div>
+                <div className={`${themeClasses.text} font-mono text-xs sm:text-sm space-y-1 sm:space-y-2`}>
+                  <p>📍 <strong>City names:</strong> "Paris", "Tokyo", "London"</p>
+                  <p>🏢 <strong>City + State:</strong> "Austin, TX", "Miami, FL"</p>
+                  <p>🌍 <strong>City + Country:</strong> "Toronto, Canada"</p>
+                  <p>📮 <strong>ZIP/Postal:</strong> "90210", "10001"</p>
+                  <p className="hidden sm:block">📍 <strong>Coordinates:</strong> "40.7128,-74.0060"</p>
+                </div>
+              </div>
 
-        {/* Welcome Message for First-Time Users */}
-        {!hasSearched && (
-          <div className={`${themeClasses.cardBg} p-8 border-4 pixel-border text-center ${themeClasses.borderColor} ${themeClasses.specialBorder}`}>
-            <h3 className={`text-2xl font-bold mb-4 font-mono uppercase tracking-wider ${themeClasses.headerText}`}>
-              🎮 Welcome to 16-Bit Weather! 🎮
-            </h3>
-            <p className={`${themeClasses.text} mb-4 font-mono`}>
-              Experience weather data like it's 1985! Get authentic retro weather with pixel-perfect styling.
-            </p>
-            <div className={`${themeClasses.successText} font-mono text-sm`}>
-              🔍 Search for any location above to begin your retro weather journey!
+              {hasSearched ? (
+                <div className={`${themeClasses.headerText} font-mono text-sm sm:text-base animate-pulse`}>
+                  🌡️ Loading your weather data...
+                </div>
+              ) : (
+                <div className="space-y-2 sm:space-y-3">
+                  <div className={`${themeClasses.headerText} font-mono text-sm sm:text-base animate-pulse`}>
+                    ⚡ INITIALIZING WEATHER SYSTEMS ⚡
+                  </div>
+                  <div className={`${themeClasses.secondaryText} font-mono text-xs sm:text-sm`}>
+                    Auto-loading San Francisco as default location...
+                  </div>
+                </div>
+              )}
+
+              {/* Retro Loading Animation - Mobile responsive */}
+              <div className="mt-4 sm:mt-6 flex justify-center space-x-2">
+                <div className={`w-2 h-2 sm:w-3 sm:h-3 ${themeClasses.cardBg} border ${themeClasses.borderColor} animate-pulse`}></div>
+                <div className={`w-2 h-2 sm:w-3 sm:h-3 ${themeClasses.cardBg} border ${themeClasses.borderColor} animate-pulse`} style={{animationDelay: '0.2s'}}></div>
+                <div className={`w-2 h-2 sm:w-3 sm:h-3 ${themeClasses.cardBg} border ${themeClasses.borderColor} animate-pulse`} style={{animationDelay: '0.4s'}}></div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Tron Animated Grid Background */}
@@ -926,9 +1028,9 @@ function PressureGauge({ pressure, unit, theme }: { pressure: number; unit: 'hPa
         }
       case 'tron':
         switch (pressureLevel) {
-          case 'low': return { fill: '#FF1744', bg: '#330011', border: '#FF1744' } // Bright neon red for warnings/low pressure
-          case 'high': return { fill: '#00FFFF', bg: '#003333', border: '#00FFFF' } // Electric cyan for high pressure
-          default: return { fill: '#00FFFF', bg: '#001111', border: '#00FFFF' } // Electric cyan for normal
+          case 'low': return { fill: '#FF1744', bg: '#330011', border: '#FF1744' }
+          case 'high': return { fill: '#00FFFF', bg: '#003333', border: '#00FFFF' }
+          default: return { fill: '#00FFFF', bg: '#001111', border: '#00FFFF' }
         }
     }
   }

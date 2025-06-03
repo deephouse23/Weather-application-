@@ -540,7 +540,7 @@ export default function CloudTypesPage() {
 
         {/* Cloud Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto mb-12">
-          {filteredClouds.map((cloud, index) => (
+          {filteredClouds.map((cloud) => (
             <React.Fragment key={cloud.id}>
               {/* Cloud Card */}
               <div>
@@ -600,11 +600,11 @@ export default function CloudTypesPage() {
                 </div>
               </div>
 
-              {/* Full-Width Expanded Details - Appears Right After Clicked Card */}
+              {/* Expanded Details - Appears DIRECTLY BELOW this specific card */}
               {expandedCloudId === cloud.id && (
-                <div className="col-span-full">
+                <div className="col-span-full mt-6">
                   <div 
-                    className={`${themeClasses.cardBg} mt-6 p-8 border-2 transition-all duration-500 ease-in-out overflow-hidden w-full`}
+                    className={`${themeClasses.cardBg} p-8 border-2 transition-all duration-500 ease-in-out overflow-hidden w-full`}
                     style={{ 
                       borderColor: themeClasses.shadowColor,
                       boxShadow: `0 0 25px ${themeClasses.shadowColor}`,
