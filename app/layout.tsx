@@ -11,14 +11,14 @@ const shareTechMono = Share_Tech_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "16-Bit Weather - Retro Weather App with Doppler Radar",
-  description: "Experience weather like it's 1985! 16-bit retro weather app with world's first 16-bit doppler radar, Miami Vice themes, and authentic pixel graphics. Get real-time weather data with nostalgic style.",
-  keywords: "16-bit weather, retro weather app, doppler radar, miami vice theme, pixel weather, 80s weather, retro radar, weather terminal, 16-bit graphics",
+  title: "16-Bit Weather Education Platform - Retro Weather Learning",
+  description: "Explore weather like it's 1985! Comprehensive 16-bit weather education platform with doppler radar, cloud atlas, weather systems, fun facts, and educational games. Learn meteorology with authentic pixel graphics.",
+  keywords: "16-bit weather, retro weather education, doppler radar, cloud types, weather systems, meteorology learning, educational games, pixel weather, weather facts, atmospheric science",
   generator: 'Next.js',
-  applicationName: '16-Bit Weather',
-  authors: [{ name: 'Weather Terminal Systems' }],
-  creator: 'Weather Terminal Systems',
-  publisher: 'Weather Terminal Systems',
+  applicationName: '16-Bit Weather Education Platform',
+  authors: [{ name: 'Weather Education Systems' }],
+  creator: 'Weather Education Systems',
+  publisher: 'Weather Education Systems',
   formatDetection: {
     email: false,
     address: false,
@@ -29,16 +29,16 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: '16-Bit Weather - Retro Weather App with Doppler Radar',
-    description: 'Experience weather like it\'s 1985! 16-bit retro weather app with world\'s first 16-bit doppler radar, Miami Vice themes, and authentic pixel graphics.',
+    title: '16-Bit Weather Education Platform - Learn Weather Like It\'s 1985',
+    description: 'Comprehensive weather education with 16-bit doppler radar, cloud atlas, weather systems, and retro-styled learning games.',
     url: 'https://16-bit-weather.vercel.app',
-    siteName: '16-Bit Weather',
+    siteName: '16-Bit Weather Education',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: '16-Bit Weather App Screenshot',
+        alt: '16-Bit Weather Education Platform Screenshot',
       },
     ],
     locale: 'en_US',
@@ -46,8 +46,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: '16-Bit Weather - Retro Weather App',
-    description: 'Experience weather like it\'s 1985! 16-bit retro weather with doppler radar.',
+    title: '16-Bit Weather Education Platform',
+    description: 'Learn weather and meteorology through authentic 16-bit retro experience.',
     images: ['/og-image.png'],
     creator: '@weather16bit',
   },
@@ -111,11 +111,11 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "WebApplication",
-              "name": "16-Bit Weather",
-              "description": "Experience weather like it's 1985! 16-bit retro weather app with world's first 16-bit doppler radar, Miami Vice themes, and authentic pixel graphics.",
+              "@type": "EducationalOrganization",
+              "name": "16-Bit Weather Education Platform",
+              "description": "Comprehensive weather education platform with 16-bit retro styling, covering meteorology, cloud types, weather systems, and interactive learning.",
               "url": "https://16-bit-weather.vercel.app",
-              "applicationCategory": "WeatherApplication",
+              "applicationCategory": "EducationalApplication",
               "operatingSystem": "Web Browser",
               "offers": {
                 "@type": "Offer",
@@ -124,18 +124,33 @@ export default function RootLayout({
               },
               "author": {
                 "@type": "Organization",
-                "name": "Weather Terminal Systems"
+                "name": "Weather Education Systems"
               },
               "screenshot": "https://16-bit-weather.vercel.app/og-image.png",
+              "educationalCredentialAwarded": "Weather Knowledge Certificate",
+              "educationalLevel": "All Levels",
+              "learningResourceType": [
+                "Interactive Tutorial",
+                "Educational Game",
+                "Reference Material",
+                "Simulation"
+              ],
+              "teaches": [
+                "Meteorology",
+                "Cloud Formation",
+                "Weather Systems",
+                "Atmospheric Science",
+                "Weather Prediction"
+              ],
               "featureList": [
-                "Real-time weather data",
-                "16-bit doppler radar",
-                "Miami Vice retro theme",
-                "Dark mode support",
-                "Location search",
-                "5-day forecast",
-                "Pixel art graphics",
-                "Mobile responsive"
+                "Real-time weather data with 16-bit doppler radar",
+                "Comprehensive cloud type atlas with pixel art",
+                "Weather systems education and simulations",
+                "Interactive weather facts and statistics", 
+                "Educational weather games and quizzes",
+                "Miami Vice and Dark retro themes",
+                "Mobile responsive design",
+                "Authentic 8-bit graphics and styling"
               ],
               "browserRequirements": "Requires JavaScript. Modern web browser recommended.",
               "permissions": "geolocation (optional)"

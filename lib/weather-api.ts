@@ -28,7 +28,7 @@ interface WeatherData {
     pressureDisplay: string; // Formatted pressure with regional units
     country: string; // Country code (e.g., "US", "GB", "CA")
     lat: number; // Latitude coordinates for radar
-    lon: number; // Longitude coordinates for radar
+    lon: number;
   };
   forecast: Array<{
     day: string;
@@ -199,29 +199,66 @@ const getUVDescription = (uvIndex: number): string => {
   return 'Extreme';
 };
 
-// Format wind display with direction and speed
-const formatWindDisplay = (speed: number, direction?: number, gust?: number): string => {
-  const roundedSpeed = Math.round(speed);
+// Enhanced wind display formatting with proper unit handling
+const formatWindDisplay = (speed: number, direction?: number, gust?: number, countryCode?: string): string => {
+  // Determine unit system based on country
+  const useMetric = shouldUseMetricUnits(countryCode || 'US');
   
-  // Handle calm conditions
-  if (roundedSpeed === 0) {
+  // Convert speed if needed (OpenWeatherMap returns in meters/sec by default, but we request imperial)
+  // When using imperial units, API returns mph; when metric, it returns m/s
+  let displaySpeed = speed;
+  let speedUnit = useMetric ? 'km/h' : 'mph';
+  
+  // Format wind speed
+  if (displaySpeed < 1) {
     return 'Calm';
   }
   
-  // If no direction data, just show speed
-  if (direction === undefined || direction === null) {
-    return `${roundedSpeed} mph`;
+  let windString = '';
+  
+  // Add direction if available
+  if (direction !== undefined) {
+    const compassDirection = getCompassDirection(direction);
+    windString += `${compassDirection} `;
   }
   
-  const compassDirection = getCompassDirection(direction);
-  let windDisplay = `${compassDirection} ${roundedSpeed} mph`;
+  // Add wind speed
+  windString += `${Math.round(displaySpeed)} ${speedUnit}`;
   
-  // Add gust information if available and significant
-  if (gust && Math.round(gust) > roundedSpeed + 3) {
-    windDisplay += ` (gusts ${Math.round(gust)} mph)`;
+  // Add gust information if significant
+  if (gust && gust > speed * 1.2) {
+    windString += ` (gusts ${Math.round(gust)} ${speedUnit})`;
   }
   
-  return windDisplay;
+  return windString;
+};
+
+// Determine if country should use metric units
+const shouldUseMetricUnits = (countryCode: string): boolean => {
+  // Countries that primarily use imperial units
+  const imperialCountries = ['US', 'LR', 'MM']; // US, Liberia, Myanmar
+  return !imperialCountries.includes(countryCode);
+};
+
+// Enhanced temperature formatting
+const formatTemperature = (temp: number, countryCode: string): { value: number; unit: string; display: string } => {
+  const useMetric = shouldUseMetricUnits(countryCode);
+  
+  if (useMetric) {
+    // Convert Fahrenheit to Celsius if needed
+    const tempC = (temp - 32) * 5/9;
+    return {
+      value: tempC,
+      unit: '°C',
+      display: `${Math.round(tempC)}°C`
+    };
+  } else {
+    return {
+      value: temp,
+      unit: '°F', 
+      display: `${Math.round(temp)}°F`
+    };
+  }
 };
 
 // Normalize input by trimming whitespace and handling special characters
@@ -597,46 +634,31 @@ const processDailyForecast = (forecastData: OpenWeatherMapForecastResponse) => {
     });
 };
 
-// Fetch UV Index data
-const fetchCurrentWeatherData = async (lat: number, lon: number, apiKey: string): Promise<{ uvIndex: number; uvDescription: string }> => {
-  try {
-    // Use free UV Index API to get current UV index
-    const response = await fetch(
-      `${BASE_URL}/uvi?lat=${lat}&lon=${lon}&appid=${apiKey}`
-    );
-
-    if (!response.ok) {
-      return { uvIndex: 0, uvDescription: 'N/A' };
-    }
-
-    const data = await response.json();
-    const uvIndex = Math.round(data.value || 0);
-    const uvDescription = getUVDescription(uvIndex);
-    
-    return { uvIndex, uvDescription };
-  } catch (error) {
-    return { uvIndex: 0, uvDescription: 'N/A' };
-  }
-};
-
-// Pressure formatting utilities
+// Enhanced pressure formatting utilities with better regional support
 const formatPressureByRegion = (pressureHPa: number, countryCode: string, userPreference?: 'hPa' | 'inHg'): string => {
   // Check user preference first, then fall back to regional default
-  const useInchesOfMercury = userPreference === 'inHg' || (userPreference === undefined && countryCode === 'US');
+  const useInchesOfMercury = userPreference === 'inHg' || (userPreference === undefined && shouldUseInchesOfMercury(countryCode));
   
   if (useInchesOfMercury) {
-    // Convert hPa to inches of mercury
+    // Convert hPa to inches of mercury using precise formula
     const pressureInHg = pressureHPa * 0.02953;
-    return `${pressureInHg.toFixed(2)} inHg`;
+    return `${pressureInHg.toFixed(2)} in`;
   } else {
-    // Use hPa/mb for international
+    // Use hPa/mb for international (most common worldwide)
     return `${Math.round(pressureHPa)} hPa`;
   }
 };
 
+// Determine if country should use inches of mercury
+const shouldUseInchesOfMercury = (countryCode: string): boolean => {
+  // Countries that primarily use inches of mercury for atmospheric pressure
+  const inHgCountries = ['US', 'CA', 'PR', 'VI', 'GU', 'AS', 'MP']; // US, Canada, US territories
+  return inHgCountries.includes(countryCode);
+};
+
 const getPressureUnit = (countryCode: string, userPreference?: 'hPa' | 'inHg'): 'hPa' | 'inHg' => {
   if (userPreference) return userPreference;
-  return countryCode === 'US' ? 'inHg' : 'hPa';
+  return shouldUseInchesOfMercury(countryCode) ? 'inHg' : 'hPa';
 };
 
 const formatPressureValue = (pressureHPa: number, unit: 'hPa' | 'inHg'): { value: number; display: string } => {
@@ -651,6 +673,60 @@ const formatPressureValue = (pressureHPa: number, unit: 'hPa' | 'inHg'): { value
       value: pressureHPa,
       display: Math.round(pressureHPa).toString()
     };
+  }
+};
+
+// Enhanced UV Index fetching with time-aware logic
+const fetchCurrentWeatherData = async (lat: number, lon: number, apiKey: string): Promise<{ uvIndex: number; uvDescription: string }> => {
+  try {
+    // Get current time for time-aware UV logic
+    const now = new Date();
+    const currentHour = now.getUTCHours();
+    
+    // Fetch basic weather data to get sunrise/sunset times
+    const weatherResponse = await fetch(
+      `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`
+    );
+    
+    let isDayTime = true; // Default assumption
+    if (weatherResponse.ok) {
+      const weatherData = await weatherResponse.json();
+      const sunrise = weatherData.sys?.sunrise;
+      const sunset = weatherData.sys?.sunset;
+      const timezone = weatherData.timezone || 0;
+      
+      if (sunrise && sunset) {
+        const currentTime = Math.floor(Date.now() / 1000);
+        const localSunrise = sunrise + timezone;
+        const localSunset = sunset + timezone;
+        const localCurrentTime = currentTime + timezone;
+        
+        // Check if current time is between sunrise and sunset (local time)
+        isDayTime = localCurrentTime >= localSunrise && localCurrentTime <= localSunset;
+      }
+    }
+    
+    // If it's nighttime, return 0 UV index
+    if (!isDayTime) {
+      return { uvIndex: 0, uvDescription: 'None (Nighttime)' };
+    }
+    
+    // Fetch UV Index data from API
+    const uvResponse = await fetch(
+      `${BASE_URL}/uvi?lat=${lat}&lon=${lon}&appid=${apiKey}`
+    );
+
+    if (!uvResponse.ok) {
+      return { uvIndex: 0, uvDescription: 'N/A' };
+    }
+
+    const uvData = await uvResponse.json();
+    const uvIndex = Math.round(uvData.value || 0);
+    const uvDescription = getUVDescription(uvIndex);
+    
+    return { uvIndex, uvDescription };
+  } catch (error) {
+    return { uvIndex: 0, uvDescription: 'N/A' };
   }
 };
 
@@ -703,7 +779,7 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
         humidity: currentData.main.humidity,
         wind: Math.round(currentData.wind.speed),
         windDirection: currentData.wind.deg,
-        windDisplay: formatWindDisplay(currentData.wind.speed, currentData.wind.deg, currentData.wind.gust),
+        windDisplay: formatWindDisplay(currentData.wind.speed, currentData.wind.deg, currentData.wind.gust, currentData.sys.country),
         location: displayName, // Use the geocoded display name
         description: currentData.weather[0].description,
         sunrise: currentData.sys.sunrise ? formatTime(currentData.sys.sunrise, currentData.timezone) : 'N/A',
@@ -796,7 +872,7 @@ export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherDat
               humidity: currentData.main.humidity,
               wind: Math.round(currentData.wind.speed),
               windDirection: currentData.wind.deg,
-              windDisplay: formatWindDisplay(currentData.wind.speed, currentData.wind.deg, currentData.wind.gust),
+              windDisplay: formatWindDisplay(currentData.wind.speed, currentData.wind.deg, currentData.wind.gust, currentData.sys.country),
               location: `${currentData.name}, ${currentData.sys.country}`,
               description: currentData.weather[0].description,
               sunrise: currentData.sys.sunrise ? formatTime(currentData.sys.sunrise, currentData.timezone) : 'N/A',

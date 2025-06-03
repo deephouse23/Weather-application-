@@ -7,9 +7,19 @@ import { fetchWeatherData, fetchWeatherByLocation } from "@/lib/weather-api"
 import WeatherSearch from "@/components/weather-search"
 import Forecast from "@/components/forecast"
 import RadarDisplay from "@/components/radar-display"
+import PageWrapper from "@/components/page-wrapper"
 
-// Get the API key from environment variables
-const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
+// Get API key from environment variables for production deployment
+const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY || "";
+
+// Theme types
+type ThemeType = 'dark' | 'miami' | 'tron';
+
+// Helper function to determine pressure unit (matches weather API logic)
+const getPressureUnit = (countryCode: string): 'hPa' | 'inHg' => {
+  const inHgCountries = ['US', 'CA', 'PR', 'VI', 'GU', 'AS', 'MP'];
+  return inHgCountries.includes(countryCode) ? 'inHg' : 'hPa';
+};
 
 interface WeatherData {
   current: {
@@ -47,7 +57,7 @@ interface WeatherData {
   };
 }
 
-export default function WeatherApp() {
+function WeatherApp() {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>("")
@@ -57,50 +67,103 @@ export default function WeatherApp() {
   const [isOnCooldown, setIsOnCooldown] = useState(false)
   const [remainingSearches, setRemainingSearches] = useState(10)
   const [rateLimitError, setRateLimitError] = useState<string>("")
-  const [isDarkMode, setIsDarkMode] = useState(true) // Default to dark mode
+  const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark') // Changed from isDarkMode to currentTheme
   const [showRadar, setShowRadar] = useState(false) // New state for radar toggle
 
   // localStorage keys
   const CACHE_KEY = 'weather-app-last-location'
   const RATE_LIMIT_KEY = 'weather-app-rate-limit'
-  const THEME_KEY = 'weather-app-theme'
   const MAX_REQUESTS_PER_HOUR = 10
   const COOLDOWN_SECONDS = 2
 
-  // Theme management functions
-  const getStoredTheme = (): boolean => {
+  // Enhanced theme management functions
+  const getStoredTheme = (): ThemeType => {
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
-        const stored = localStorage.getItem(THEME_KEY)
-        return stored ? JSON.parse(stored) : true // Default to dark mode
+        const stored = localStorage.getItem('weather-edu-theme') // Use same key as navigation
+        if (stored && ['dark', 'miami', 'tron'].includes(stored)) {
+          return stored as ThemeType
+        }
       }
     } catch (error) {
       console.warn('Failed to get stored theme:', error)
     }
-    return true // Default to dark mode
+    return 'dark' // Default to dark theme
   }
 
-  const saveTheme = (isDark: boolean) => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.setItem(THEME_KEY, JSON.stringify(isDark))
+  // Load theme on mount and sync with navigation
+  useEffect(() => {
+    const storedTheme = getStoredTheme()
+    setCurrentTheme(storedTheme)
+    
+    // Listen for theme changes from navigation
+    const handleStorageChange = () => {
+      const newTheme = getStoredTheme()
+      setCurrentTheme(newTheme)
+    }
+    
+    window.addEventListener('storage', handleStorageChange)
+    
+    // Poll for theme changes (in case of same-tab changes)
+    const interval = setInterval(() => {
+      const newTheme = getStoredTheme()
+      if (newTheme !== currentTheme) {
+        setCurrentTheme(newTheme)
       }
-    } catch (error) {
-      console.warn('Failed to save theme:', error)
+    }, 100)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      clearInterval(interval)
+    }
+  }, [currentTheme])
+
+  // Enhanced theme classes for three themes with authentic Tron movie colors
+  const getThemeClasses = (theme: ThemeType) => {
+    switch (theme) {
+      case 'dark':
+        return {
+          background: 'bg-[#0a0a1a]',
+          cardBg: 'bg-[#16213e]',
+          borderColor: 'border-[#00d4ff]',
+          text: 'text-[#e0e0e0]',
+          headerText: 'text-[#00d4ff]',
+          secondaryText: 'text-[#a0a0a0]',
+          accentText: 'text-[#ff6b6b]',
+          successText: 'text-[#ffe66d]',
+          glow: '',
+          specialBorder: ''
+        }
+      case 'miami':
+        return {
+          background: 'bg-gradient-to-br from-[#2d1b69] via-[#11001c] to-[#0f0026]',
+          cardBg: 'bg-gradient-to-br from-[#4a0e4e] via-[#2d1b69] to-[#1a0033]',
+          borderColor: 'border-[#ff1493]',
+          text: 'text-[#00ffff]',
+          headerText: 'text-[#ff007f]',
+          secondaryText: 'text-[#b0d4f1]',
+          accentText: 'text-[#ff1493]',
+          successText: 'text-[#ff1493]',
+          glow: 'drop-shadow-[0_0_10px_#ff007f]',
+          specialBorder: 'shadow-[0_0_15px_#ff1493]'
+        }
+      case 'tron':
+        return {
+          background: 'bg-[#000000]',
+          cardBg: 'bg-[#000000]',
+          borderColor: 'border-[#00FFFF]',      // Electric cyan blue - authentic 80s Tron
+          text: 'text-[#FFFFFF]',               // Bright white with blue glow
+          headerText: 'text-[#00FFFF]',         // Electric cyan for headers
+          secondaryText: 'text-[#88CCFF]',      // Light cyan for secondary text
+          accentText: 'text-[#FF1744]',         // Bright neon red for alerts/warnings
+          successText: 'text-[#00FFFF]',        // Cyan for success states
+          glow: 'drop-shadow-[0_0_15px_#00FFFF]',
+          specialBorder: 'shadow-[0_0_20px_#00FFFF]'
+        }
     }
   }
 
-  const toggleTheme = () => {
-    const newTheme = !isDarkMode
-    setIsDarkMode(newTheme)
-    saveTheme(newTheme)
-  }
-
-  // Load theme on mount
-  useEffect(() => {
-    const storedTheme = getStoredTheme()
-    setIsDarkMode(storedTheme)
-  }, [])
+  const themeClasses = getThemeClasses(currentTheme)
 
   // Rate limiting functions
   const getRateLimitData = () => {
@@ -203,842 +266,698 @@ export default function WeatherApp() {
         console.warn('Failed to load cached location:', error)
       }
       
-      // No cached location found, use San Francisco as default
-      const defaultLocation = 'San Francisco, CA'
-      setLastSearchTerm(defaultLocation)
-      handleSearch(defaultLocation, true, true) // Load default with rate limit bypass
+      // If no cached location, set a default
+      setCurrentLocation("Search for a location to see weather")
     }
 
-    // Theme-aware default loading
-    if (!hasSearched) {
-      loadCachedLocation()
-    }
-  }, [hasSearched, isDarkMode]) // Include isDarkMode in dependencies for theme-aware loading
+    loadCachedLocation()
+  }, [])
 
-  // Ensure default location loads properly when theme changes on first visit
-  useEffect(() => {
-    // If no weather data and no search has happened, ensure we load San Francisco
-    // This handles cases where theme switching might interfere with initial load
-    if (!weather && !hasSearched && !loading && !error) {
-      console.log('🔍 [DEBUG] Theme-aware check: Loading San Francisco as default for', isDarkMode ? 'dark mode' : 'Miami Vice mode')
-      handleSearch("San Francisco, CA", false, true)
-    }
-  }, [isDarkMode, weather, hasSearched, loading, error])
+  const handleSearchWrapper = (locationInput: string) => {
+    handleSearch(locationInput)
+  }
 
   const handleSearch = async (locationInput: string, fromCache: boolean = false, bypassRateLimit: boolean = false) => {
-    if (!API_KEY) {
-      setError("API key not configured. Please check your environment variables.")
+    if (!locationInput.trim()) {
+      setError("Please enter a location")
       return
     }
 
-    // Clear any previous rate limit errors
-    setRateLimitError("")
-
-    // Check rate limiting (unless bypassing for initial load)
+    // Check rate limit only for non-cached requests
     if (!bypassRateLimit) {
       const rateLimitCheck = checkRateLimit()
       if (!rateLimitCheck.allowed) {
         setRateLimitError(rateLimitCheck.message || "Rate limit exceeded")
-        setRemainingSearches(rateLimitCheck.remaining)
-        return
-      }
-
-      // Check cooldown
-      if (isOnCooldown) {
-        setRateLimitError("Please wait a moment before searching again.")
         return
       }
     }
 
     setLoading(true)
     setError("")
+    setRateLimitError("")
     setHasSearched(true)
-    setLastSearchTerm(locationInput)
-
-    // Set cooldown (unless bypassing for initial load)
-    if (!bypassRateLimit) {
-      setIsOnCooldown(true)
-      setTimeout(() => {
-        setIsOnCooldown(false)
-      }, COOLDOWN_SECONDS * 1000)
-    }
+    setCurrentLocation(locationInput)
+    
+    // Show cooldown state
+    setIsOnCooldown(true)
+    setTimeout(() => setIsOnCooldown(false), COOLDOWN_SECONDS * 1000)
 
     try {
+      // Fix API call - fetchWeatherData expects (locationInput, apiKey)
       const weatherData = await fetchWeatherData(locationInput, API_KEY)
       setWeather(weatherData)
-      setCurrentLocation(weatherData.current.location)
-      
-      // Always save to cache (silently, regardless of source)
-      saveLocationToCache(locationInput)
+      setLastSearchTerm(locationInput)
 
-      // Record the request for rate limiting (unless bypassing)
+      // Record the request for rate limiting (only for non-cached)
       if (!bypassRateLimit) {
         recordRequest()
         const { remaining } = checkRateLimit()
         setRemainingSearches(remaining)
       }
+
+      // Save to cache (silent)
+      if (!fromCache) {
+        saveLocationToCache(locationInput)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch weather data")
       setWeather(null)
-      setCurrentLocation("")
     } finally {
       setLoading(false)
     }
   }
 
   const handleLocationSearch = async () => {
-    if (!API_KEY) {
-      setError("API key not configured. Please check your environment variables.")
+    if (!navigator.geolocation) {
+      setError("Geolocation is not supported by this browser")
       return
     }
 
-    // Clear any previous rate limit errors
-    setRateLimitError("")
-
-    // Check rate limiting
+    // Check rate limit
     const rateLimitCheck = checkRateLimit()
     if (!rateLimitCheck.allowed) {
       setRateLimitError(rateLimitCheck.message || "Rate limit exceeded")
-      setRemainingSearches(rateLimitCheck.remaining)
-      return
-    }
-
-    // Check cooldown
-    if (isOnCooldown) {
-      setRateLimitError("Please wait a moment before searching again.")
       return
     }
 
     setLoading(true)
     setError("")
+    setRateLimitError("")
     setHasSearched(true)
-    setLastSearchTerm("your location")
-
-    // Set cooldown
+    setCurrentLocation("Getting your location...")
+    
+    // Show cooldown state
     setIsOnCooldown(true)
-    setTimeout(() => {
-      setIsOnCooldown(false)
-    }, COOLDOWN_SECONDS * 1000)
+    setTimeout(() => setIsOnCooldown(false), COOLDOWN_SECONDS * 1000)
 
     try {
+      // Fix API call - fetchWeatherByLocation expects only (apiKey)
       const weatherData = await fetchWeatherByLocation(API_KEY)
       setWeather(weatherData)
       setCurrentLocation(weatherData.current.location)
-      
-      // Save the actual location name to cache (silently)
-      saveLocationToCache(weatherData.current.location)
+      setLastSearchTerm(weatherData.current.location)
 
       // Record the request for rate limiting
       recordRequest()
       const { remaining } = checkRateLimit()
       setRemainingSearches(remaining)
+
+      // Save to cache (silent)
+      saveLocationToCache(weatherData.current.location)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to get location weather")
-      setCurrentLocation("")
+      setError(err instanceof Error ? err.message : "Failed to fetch weather data")
+      setWeather(null)
     } finally {
       setLoading(false)
     }
   }
 
-  const showingWeather = weather && !loading && !error
-
-  // Theme-based color classes
-  const themeClasses = {
-    background: isDarkMode ? 'bg-[#1a1a2e]' : 'bg-gradient-to-br from-[#2d1b69] via-[#11001c] to-[#0f0026]',
-    text: isDarkMode ? 'text-[#e0e0e0]' : 'text-[#00ffff]',
-    cardBg: isDarkMode ? 'bg-[#16213e]' : 'bg-gradient-to-br from-[#4a0e4e] via-[#2d1b69] to-[#1a0033]',
-    inputBg: isDarkMode ? 'bg-[#16213e]' : 'bg-[#1a0033]',
-    borderColor: isDarkMode ? 'border-[#00d4ff]' : 'border-[#ff1493]', // Hot pink borders in Miami Vice mode
-    headerText: isDarkMode ? 'text-[#00d4ff]' : 'text-[#ff007f]', // Hot pink for headers
-    accentText: isDarkMode ? 'text-[#ff6b6b]' : 'text-[#ff1493]', // Bright pink
-    secondaryText: isDarkMode ? 'text-[#4ecdc4]' : 'text-[#00ffff]', // Electric cyan
-    warningText: 'text-[#ff6b6b]', // Keep warning red consistent
-    successText: isDarkMode ? 'text-[#ffe66d]' : 'text-[#ff1493]', // Pink for success in Miami Vice
-    miamiViceGlow: isDarkMode ? '' : 'drop-shadow-[0_0_10px_#ff007f] text-shadow-[0_0_10px_#ff007f]',
-    miamiViceText: isDarkMode ? '' : 'text-[#ff007f]',
-    miamiViceBorder: isDarkMode ? '' : 'border-[#00ffff] shadow-[0_0_15px_#00ffff]',
-    gradientBg: isDarkMode ? '' : 'bg-gradient-to-r from-[#ff007f] via-[#8a2be2] to-[#00ffff]',
+  const formatWindDisplayHTML = (windDisplay: string): string => {
+    // Convert wind display to HTML for colored wind speeds
+    return windDisplay.replace(/(\d+)\s*(mph|km\/h)/gi, '<span class="wind-speed">$1 $2</span>')
   }
 
-  // Format wind display with smaller gust text
-  const formatWindDisplayHTML = (windDisplay: string): string => {
-    // Check if the wind display contains gust information
-    if (windDisplay.includes('(gusts ')) {
-      // Split the wind display to separate main wind and gust info
-      const parts = windDisplay.split(' (gusts ');
-      const mainWind = parts[0]; // e.g., "SW 12 mph"
-      const gustPart = parts[1].replace(')', ''); // e.g., "18 mph"
-      
-      return `
-        <div class="text-lg font-bold ${isDarkMode ? 'text-[#ffe66d]' : 'text-[#ff1493]'} ${!isDarkMode ? themeClasses.miamiViceGlow : ''}" ${!isDarkMode ? 'style="text-shadow: 0 0 10px #ff1493, 0 0 20px #ff1493"' : ''}>${mainWind}</div>
-        <div class="text-xs ${isDarkMode ? 'text-[#4ecdc4]' : 'text-[#ff1493]'} mt-1 opacity-80 ${!isDarkMode ? themeClasses.miamiViceGlow : ''}">Gusts ${gustPart}</div>
-      `;
-    }
+  // Tron Animated Grid Background Component - Same as PageWrapper
+  const TronGridBackground = () => {
+    if (currentTheme !== 'tron') return null;
     
-    // For wind without gusts, return normal formatting
-    return `<div class="text-lg font-bold ${isDarkMode ? 'text-[#ffe66d]' : 'text-[#ff1493]'} ${!isDarkMode ? themeClasses.miamiViceGlow : ''}" ${!isDarkMode ? 'style="text-shadow: 0 0 10px #ff1493, 0 0 20px #ff1493"' : ''}>${windDisplay}</div>`;
+    return (
+      <>
+        <style jsx>{`
+          @keyframes tronWave {
+            0% {
+              transform: translateY(100vh);
+              opacity: 0.8;
+            }
+            50% {
+              opacity: 1;
+            }
+            100% {
+              transform: translateY(-100vh);
+              opacity: 0.8;
+            }
+          }
+
+          .tron-grid-base {
+            background-image: 
+              linear-gradient(rgba(0, 255, 255, 0.2) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0, 255, 255, 0.2) 1px, transparent 1px);
+            background-size: 50px 50px;
+          }
+
+          .tron-grid-detail {
+            background-image: 
+              linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 10px 10px;
+          }
+
+          .tron-wave {
+            background: linear-gradient(
+              to top,
+              transparent 0%,
+              rgba(0, 255, 255, 0.6) 45%,
+              rgba(0, 255, 255, 0.8) 50%,
+              rgba(0, 255, 255, 0.6) 55%,
+              transparent 100%
+            );
+            height: 200px;
+            width: 100%;
+            animation: tronWave 3.5s infinite linear;
+            filter: blur(2px);
+          }
+
+          .tron-wave-glow {
+            background: linear-gradient(
+              to top,
+              transparent 0%,
+              rgba(0, 255, 255, 0.3) 40%,
+              rgba(0, 255, 255, 0.5) 50%,
+              rgba(0, 255, 255, 0.3) 60%,
+              transparent 100%
+            );
+            height: 300px;
+            width: 100%;
+            animation: tronWave 3.5s infinite linear;
+            animation-delay: 0.2s;
+            filter: blur(4px);
+          }
+
+          .tron-pulse-grid {
+            background-image: 
+              linear-gradient(rgba(0, 255, 255, 0.3) 2px, transparent 2px),
+              linear-gradient(90deg, rgba(0, 255, 255, 0.3) 2px, transparent 2px);
+            background-size: 50px 50px;
+            animation: tronGridPulse 3.5s infinite linear;
+          }
+
+          @keyframes tronGridPulse {
+            0%, 100% {
+              opacity: 0.1;
+            }
+            50% {
+              opacity: 0.3;
+            }
+          }
+        `}</style>
+        
+        <div className="fixed inset-0 pointer-events-none z-0">
+          {/* Base static grid */}
+          <div className="absolute inset-0 tron-grid-base opacity-15" />
+          
+          {/* Detail grid */}
+          <div className="absolute inset-0 tron-grid-detail opacity-8" />
+          
+          {/* Pulsing grid overlay */}
+          <div className="absolute inset-0 tron-pulse-grid" />
+          
+          {/* Animated wave effect */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="tron-wave absolute left-0 right-0" />
+          </div>
+          
+          {/* Secondary wave with glow */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="tron-wave-glow absolute left-0 right-0" />
+          </div>
+          
+          {/* Subtle corner accent lines */}
+          <div className="absolute top-0 left-0 w-32 h-32 border-l-2 border-t-2 border-[#00FFFF] opacity-30"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 border-r-2 border-t-2 border-[#00FFFF] opacity-30"></div>
+          <div className="absolute bottom-0 left-0 w-32 h-32 border-l-2 border-b-2 border-[#00FFFF] opacity-30"></div>
+          <div className="absolute bottom-0 right-0 w-32 h-32 border-r-2 border-b-2 border-[#00FFFF] opacity-30"></div>
+        </div>
+      </>
+    );
   };
 
   return (
-    <div className={`min-h-screen ${themeClasses.background} ${themeClasses.text} p-4 pixel-font relative transition-colors duration-300`}>
-      {/* Theme Toggle Button */}
-      <button
-        onClick={toggleTheme}
-        className={`fixed top-4 right-4 z-50 p-3 ${themeClasses.cardBg} border-2 ${themeClasses.borderColor} 
-                   hover:bg-[#00d4ff] hover:text-[#1a1a2e] transition-all duration-200 pixel-font ${!isDarkMode ? themeClasses.miamiViceBorder : ''}`}
-        style={{ 
-          imageRendering: "pixelated",
-          ...(isDarkMode ? {} : {
-            background: 'linear-gradient(135deg, #ff007f, #8a2be2, #00ffff)',
-            boxShadow: '0 0 20px #ff007f, inset 0 0 20px rgba(255, 0, 127, 0.3)'
-          })
-        }}
-        aria-label={isDarkMode ? "Switch to Miami Vice mode" : "Switch to dark mode"}
-        title={isDarkMode ? "Switch to Miami Vice mode" : "Switch to dark mode"}
-      >
-        {isDarkMode ? (
-          // Miami Vice icon for switching to light mode
-          <div className="relative w-6 h-6">
-            <div className="absolute inset-1 bg-[#ff007f] rounded-full" style={{ boxShadow: '0 0 10px #ff007f' }}></div>
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-[#00ffff] rounded-full"></div>
-            {/* Neon rays */}
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0.5 h-1.5 bg-[#ff1493]"></div>
-            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0.5 h-1.5 bg-[#ff1493]"></div>
-            <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-1.5 h-0.5 bg-[#00ffff]"></div>
-            <div className="absolute top-1/2 right-0 transform -translate-y-1/2 w-1.5 h-0.5 bg-[#00ffff]"></div>
-          </div>
-        ) : (
-          // Dark mode moon icon
-          <div className="relative w-6 h-6">
-            <div className="absolute inset-0 bg-[#4ecdc4] rounded-full opacity-80"></div>
-            <div className="absolute top-1 right-1 w-4 h-4 bg-[#1a1a2e] rounded-full"></div>
-          </div>
-        )}
-      </button>
+    <div className={`min-h-screen ${themeClasses.background} p-4 flex flex-col items-center relative overflow-x-hidden`}>
+      {/* Tron Light Cycle Watermark - only in Tron theme */}
+      {currentTheme === 'tron' && <TronLightCycleWatermark />}
+      
+      {/* Hero Section */}
+      <div className="w-full max-w-6xl mx-auto text-center mb-8">
+        <div className="mb-6">
+          <h1 className={`text-4xl md:text-6xl font-bold mb-4 font-mono uppercase tracking-wider ${themeClasses.headerText} ${themeClasses.glow}`}>
+            16-BIT WEATHER
+          </h1>
+        </div>
 
-      {/* Moon Phase Watermark */}
-      {showingWeather && (
-        <MoonPhaseWatermark 
-          phase={weather.moonPhase.phase}
-          phaseAngle={weather.moonPhase.phaseAngle}
-          illumination={weather.moonPhase.illumination}
-          isDarkMode={isDarkMode}
-        />
-      )}
-
-      <div className="max-w-md mx-auto relative z-10">
-        {/* Header */}
-        <header className="text-center mb-8 pt-4 relative z-10">
-          <h1 className={`text-3xl font-bold tracking-wider ${themeClasses.headerText} pixel-glow mb-2 ${themeClasses.miamiViceGlow}`}>16-BIT WEATHER</h1>
-          
-          {/* Miami Vice Mode Indicator (only in light mode) */}
-          {!isDarkMode && (
-            <div className="mb-2">
-              <div className={`text-sm ${themeClasses.miamiViceText} uppercase tracking-wider font-bold ${themeClasses.miamiViceGlow}`} 
-                   style={{ 
-                     fontFamily: 'monospace',
-                     textShadow: '0 0 10px #ff007f, 0 0 20px #ff007f, 0 0 30px #ff007f',
-                     filter: 'drop-shadow(0 0 5px #ff007f)'
-                   }}>
-                🌴 MIAMI VICE MODE 🌴
-              </div>
-            </div>
-          )}
-
-          {/* Rate Limit Error Message */}
-          {rateLimitError && (
-            <div className={`mb-3 p-2 ${themeClasses.cardBg} border ${themeClasses.warningText} text-sm ${!isDarkMode ? themeClasses.miamiViceBorder : ''}`} 
-                 style={{ borderColor: '#ff6b6b' }}>
-              ⚠ {rateLimitError}
-            </div>
-          )}
-          
-          {/* Current Location Display */}
-          {currentLocation && (
-            <div className="mb-2">
-              <div className={`text-lg ${themeClasses.accentText} font-bold uppercase tracking-wider ${themeClasses.miamiViceGlow}`}>
-                {currentLocation}
-              </div>
-            </div>
-          )}
-          
-          {/* Loading indicator */}
-          {loading && lastSearchTerm && (
-            <div className={`text-sm ${themeClasses.secondaryText} mb-2 ${themeClasses.miamiViceGlow}`}>
-              {lastSearchTerm === "your location" ? "🔍 DETECTING LOCATION..." : `🔍 SEARCHING: ${lastSearchTerm.toUpperCase()}`}
-            </div>
-          )}
-          
-          {/* Error state location info */}
-          {!currentLocation && lastSearchTerm && !loading && error && (
-            <div className={`text-xs ${themeClasses.warningText} mb-2`}>
-              ❌ FAILED: {lastSearchTerm.toUpperCase()}
-            </div>
-          )}
-        </header>
-
-        {/* Search Component */}
-        <div className="relative z-10">
+        {/* Weather Search Component */}
+        <div className="mb-8">
           <WeatherSearch
-            onSearch={handleSearch}
+            onSearch={handleSearchWrapper}
             onLocationSearch={handleLocationSearch}
             isLoading={loading}
             error={error}
             isDisabled={isOnCooldown || remainingSearches <= 0}
             rateLimitError={rateLimitError}
-            isDarkMode={isDarkMode}
+            theme={currentTheme}
           />
         </div>
+      </div>
 
-        {/* Loading State */}
-        {loading && (
-          <div className="text-center py-8 relative z-10">
-            <Loader2 className={`w-12 h-12 mx-auto animate-spin ${themeClasses.headerText}`} />
-            <p className={`mt-4 text-xl ${themeClasses.headerText} uppercase tracking-wider`}>LOADING...</p>
-            <p className={`mt-2 text-sm ${themeClasses.secondaryText}`}>
-              {lastSearchTerm === "your location" ? "Getting your location..." : `Searching for: ${lastSearchTerm}`}
-            </p>
+      {/* Main Content */}
+      <div className="w-full max-w-6xl mx-auto">
+        {/* Error Display */}
+        {error && (
+          <div className={`${themeClasses.cardBg} p-6 border-4 pixel-border text-center ${themeClasses.borderColor} mb-6`}>
+            <p className={`${themeClasses.accentText} font-mono text-lg font-bold`}>⚠ ERROR</p>
+            <p className={`${themeClasses.text} mt-2`}>{error}</p>
           </div>
         )}
 
-        {/* Weather Display */}
-        {showingWeather && (
-          <div className="relative z-10">
-            {/* Current Weather */}
-            <div className={`${themeClasses.cardBg} p-6 rounded-none mb-6 border-2 ${themeClasses.borderColor} pixel-shadow relative ${!isDarkMode ? themeClasses.miamiViceBorder : ''}`}
-                 style={!isDarkMode ? {
-                   boxShadow: '0 0 30px #ff007f, 0 0 60px rgba(255, 0, 127, 0.3), inset 0 0 30px rgba(138, 43, 226, 0.2)'
-                 } : {}}>
-              <div className="flex flex-col items-center justify-center mb-4">
-                {/* Weather Icon Container - ensure perfect centering */}
-                <div className="flex justify-center items-center mb-4 w-full">
-                  <WeatherIcon condition={weather.current.condition} size="large" />
-                </div>
-                {/* Temperature Display - ensure perfect centering */}
-                <div className="flex justify-center items-center w-full">
-                  <div className={`text-6xl font-bold ${themeClasses.headerText} pixel-glow mb-2 ${themeClasses.miamiViceGlow}`}
-                       style={!isDarkMode ? {
-                         textShadow: '0 0 20px #ff007f, 0 0 40px #ff007f, 0 0 60px #ff007f'
-                       } : {}}>{weather.current.temp}°</div>
-                </div>
-                <div className={`text-lg uppercase tracking-wider ${themeClasses.accentText} mb-1 text-center ${themeClasses.miamiViceGlow}`}>{weather.current.condition}</div>
-                <div className={`text-xs ${themeClasses.secondaryText} capitalize text-center ${themeClasses.miamiViceGlow}`}>{weather.current.description}</div>
+        {weather && (
+          <div className="space-y-6">
+            {/* Current Weather Display */}
+            <div className={`${themeClasses.cardBg} p-8 border-4 pixel-border ${themeClasses.borderColor} ${themeClasses.specialBorder} text-center`}>
+              <div className="mb-6">
+                <h2 className={`text-3xl font-bold mb-2 font-mono uppercase tracking-wider ${themeClasses.headerText}`}>
+                  {weather.current.location}
+                </h2>
+                <p className={`${themeClasses.secondaryText} font-mono text-sm`}>
+                  {weather.current.country} • Current Conditions
+                </p>
               </div>
 
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-3 mt-6">
-                <div className={`${themeClasses.background} p-3 border ${themeClasses.secondaryText} text-center ${!isDarkMode ? 'border-[#ff1493] shadow-[0_0_10px_#ff1493]' : ''}`} 
-                     style={!isDarkMode ? { 
-                       borderColor: '#ff1493',
-                       background: 'linear-gradient(135deg, #1a0033, #2d1b69)',
-                       boxShadow: '0 0 15px #ff1493, inset 0 0 10px rgba(255, 20, 147, 0.1)'
-                     } : { borderColor: '#4ecdc4' }}>
-                  <div className={`text-xs ${themeClasses.secondaryText} mb-1`}>HUMIDITY</div>
-                  <div className={`text-lg font-bold ${themeClasses.successText} ${themeClasses.miamiViceGlow}`}>{weather.current.humidity}%</div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {/* Temperature & Condition */}
+                <div className={`${themeClasses.background} p-6 border-2 ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder}`}
+                     style={{ borderColor: themeClasses.borderColor }}>
+                  <div className="flex items-center justify-center mb-4">
+                    <WeatherIcon condition={weather.current.condition} size="large" />
+                  </div>
+                  <div className={`text-5xl font-bold ${themeClasses.headerText} font-mono mb-2`}>
+                    {Math.round(weather.current.temp)}°
+                  </div>
+                  <div className={`${themeClasses.text} font-mono text-sm uppercase tracking-wider`}>
+                    {weather.current.description}
+                  </div>
                 </div>
-                <div className={`${themeClasses.background} p-3 border ${themeClasses.secondaryText} text-center ${!isDarkMode ? 'border-[#ff1493] shadow-[0_0_10px_#ff1493]' : ''}`} 
-                     style={!isDarkMode ? { 
-                       borderColor: '#ff1493',
-                       background: 'linear-gradient(135deg, #1a0033, #2d1b69)',
-                       boxShadow: '0 0 15px #ff1493, inset 0 0 10px rgba(255, 20, 147, 0.1)'
-                     } : { borderColor: '#4ecdc4' }}>
-                  <div className={`text-xs ${themeClasses.secondaryText} mb-1`}>WIND</div>
-                  <div dangerouslySetInnerHTML={{ __html: formatWindDisplayHTML(weather.current.windDisplay) }}></div>
-                </div>
-                <div className={`${themeClasses.background} p-3 border ${themeClasses.secondaryText} text-center ${!isDarkMode ? 'border-[#ff1493] shadow-[0_0_10px_#ff1493]' : ''}`} 
-                     style={!isDarkMode ? { 
-                       borderColor: '#ff1493',
-                       background: 'linear-gradient(135deg, #1a0033, #2d1b69)',
-                       boxShadow: '0 0 15px #ff1493, inset 0 0 10px rgba(255, 20, 147, 0.1)'
-                     } : { borderColor: '#4ecdc4' }}>
-                  <div className={`text-xs ${themeClasses.secondaryText} mb-1`}>DEW POINT</div>
-                  <div className={`text-lg font-bold ${themeClasses.successText} ${themeClasses.miamiViceGlow}`}>{weather.current.dewPoint}°</div>
-                </div>
-                <div className={`${themeClasses.background} p-3 border ${themeClasses.secondaryText} text-center ${!isDarkMode ? 'border-[#ff1493] shadow-[0_0_10px_#ff1493]' : ''}`} 
-                     style={!isDarkMode ? { 
-                       borderColor: '#ff1493',
-                       background: 'linear-gradient(135deg, #1a0033, #2d1b69)',
-                       boxShadow: '0 0 15px #ff1493, inset 0 0 10px rgba(255, 20, 147, 0.1)'
-                     } : { borderColor: '#4ecdc4' }}>
-                  <div className={`text-xs ${themeClasses.secondaryText} mb-1`}>UV INDEX</div>
-                  <div className={`text-lg font-bold ${themeClasses.successText} ${themeClasses.miamiViceGlow}`}>{weather.current.uvIndex}</div>
-                  <div className={`text-xs ${themeClasses.secondaryText} mt-1`}>{weather.current.uvDescription}</div>
-                </div>
-                
-                {/* Pressure Display - spans two columns */}
-                <div className={`col-span-2 ${themeClasses.background} p-4 border ${themeClasses.secondaryText} text-center ${!isDarkMode ? 'border-[#ff1493] shadow-[0_0_15px_#ff1493]' : ''}`} 
-                     style={!isDarkMode ? { 
-                       borderColor: '#ff1493',
-                       background: 'linear-gradient(135deg, #4a0e4e, #2d1b69)',
-                       boxShadow: '0 0 20px #ff1493, inset 0 0 15px rgba(255, 20, 147, 0.1)'
-                     } : { borderColor: '#4ecdc4' }}>
-                  <div className={`text-xs ${themeClasses.secondaryText} mb-2 uppercase tracking-wider`}>BAROMETRIC PRESSURE</div>
-                  <div className="flex items-center justify-center space-x-3">
-                    {/* 16-bit Pressure Gauge */}
-                    <div className="relative">
-                      <PressureGauge 
-                        pressure={weather.current.pressure} 
-                        unit={weather.current.country === 'US' ? 'inHg' : 'hPa'}
-                        isDarkMode={isDarkMode} 
-                      />
+
+                {/* Weather Details */}
+                <div className={`${themeClasses.background} p-6 border-2 ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder}`}
+                     style={{ borderColor: themeClasses.borderColor }}>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className={`${themeClasses.text} font-mono text-sm`}>Humidity:</span>
+                      <span className={`${themeClasses.headerText} font-mono font-bold`}>{weather.current.humidity}%</span>
                     </div>
+                    <div className="flex justify-between">
+                      <span className={`${themeClasses.text} font-mono text-sm`}>Wind:</span>
+                      <span className={`${themeClasses.headerText} font-mono font-bold`}
+                            dangerouslySetInnerHTML={{ __html: formatWindDisplayHTML(weather.current.windDisplay) }} />
+                    </div>
+                    <div className="flex justify-between">
+                      <span className={`${themeClasses.text} font-mono text-sm`}>Dew Point:</span>
+                      <span className={`${themeClasses.headerText} font-mono font-bold`}>{Math.round(weather.current.dewPoint)}°</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className={`${themeClasses.text} font-mono text-sm`}>Pressure:</span>
+                      <span className={`${themeClasses.headerText} font-mono font-bold text-xs`}>{weather.current.pressureDisplay}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* UV Index & Atmospheric */}
+                <div className={`${themeClasses.background} p-6 border-2 ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder}`}
+                     style={{ borderColor: themeClasses.borderColor }}>
+                  <div className="space-y-4">
                     <div>
-                      <div className={`text-xl font-bold ${themeClasses.successText} ${themeClasses.miamiViceGlow}`}>{weather.current.pressureDisplay.split(' ')[0]}</div>
-                      <div className={`text-xs ${themeClasses.secondaryText} uppercase tracking-wider`}>{weather.current.pressureDisplay.split(' ')[1]}</div>
+                      <div className={`${themeClasses.text} font-mono text-sm mb-1`}>UV Index</div>
+                      <div className={`text-2xl font-bold ${themeClasses.headerText} font-mono`}>
+                        {weather.current.uvIndex}
+                      </div>
+                      <div className={`${themeClasses.secondaryText} font-mono text-xs uppercase tracking-wider`}>
+                        {weather.current.uvDescription}
+                      </div>
                     </div>
+                    <PressureGauge 
+                      pressure={weather.current.pressure} 
+                      unit={getPressureUnit(weather.current.country)} 
+                      theme={currentTheme} 
+                    />
                   </div>
                 </div>
               </div>
 
-              {/* Sunrise/Sunset Info */}
-              <div className="mt-4">
-                <div className={`flex justify-center space-x-8 px-4 py-3 ${themeClasses.background} border ${themeClasses.secondaryText} ${!isDarkMode ? 'border-[#ff1493] shadow-[0_0_15px_#ff1493]' : ''}`} 
-                     style={!isDarkMode ? { 
-                       borderColor: '#ff1493',
-                       background: 'linear-gradient(135deg, #2d1b69, #4a0e4e)',
-                       boxShadow: '0 0 20px #ff1493, inset 0 0 15px rgba(255, 20, 147, 0.2)'
-                     } : { borderColor: '#4ecdc4' }}>
-                  {/* Sunrise */}
-                  <div className="flex items-center space-x-2">
+              {/* Sun & Moon Section */}
+              <div className={`col-span-2 ${themeClasses.background} p-4 border ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder}`}
+                   style={{ borderColor: themeClasses.borderColor }}>
+                <div className="flex justify-center space-x-8 px-4 py-3">
+                  <div className="flex items-center space-x-3">
                     <SunriseIcon />
-                    <div className="text-center">
-                      <div className={`text-xs ${themeClasses.secondaryText} uppercase tracking-wider`}>SUNRISE</div>
-                      <div className={`text-sm font-bold ${themeClasses.successText} ${themeClasses.miamiViceGlow}`}>{weather.current.sunrise}</div>
+                    <div>
+                      <div className={`${themeClasses.text} font-mono text-sm`}>Sunrise</div>
+                      <div className={`${themeClasses.headerText} font-mono font-bold`}>{weather.current.sunrise}</div>
                     </div>
                   </div>
-
-                  {/* Sunset */}
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-3">
                     <SunsetIcon />
-                    <div className="text-center">
-                      <div className={`text-xs ${themeClasses.secondaryText} uppercase tracking-wider`}>SUNSET</div>
-                      <div className={`text-sm font-bold ${themeClasses.accentText} ${themeClasses.miamiViceGlow}`}>{weather.current.sunset}</div>
+                    <div>
+                      <div className={`${themeClasses.text} font-mono text-sm`}>Sunset</div>
+                      <div className={`${themeClasses.headerText} font-mono font-bold`}>{weather.current.sunset}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <MoonPhaseWatermark 
+                      phase={weather.moonPhase.phase}
+                      phaseAngle={weather.moonPhase.phaseAngle}
+                      illumination={weather.moonPhase.illumination}
+                      theme={currentTheme}
+                    />
+                    <div>
+                      <div className={`${themeClasses.text} font-mono text-sm`}>Moon Phase</div>
+                      <div className={`${themeClasses.headerText} font-mono font-bold text-xs`}>
+                        {weather.moonPhase.phase} ({weather.moonPhase.illumination}%)
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Forecast */}
-            <Forecast forecast={weather.forecast} isDarkMode={isDarkMode} />
+            {/* 5-Day Forecast */}
+            <Forecast forecast={weather.forecast} theme={currentTheme} />
 
-            {/* Radar Toggle Button */}
-            <div className="mt-4 text-center">
+            {/* Radar Toggle */}
+            <div className="text-center mb-6">
               <button
                 onClick={() => setShowRadar(!showRadar)}
-                className={`inline-block px-4 py-2 border-2 ${themeClasses.borderColor} ${themeClasses.text} 
-                           hover:${themeClasses.successText} transition-all duration-200 font-bold uppercase tracking-wider text-sm
-                           ${!isDarkMode ? 'border-[#00ffff] hover:text-[#00ffff] shadow-[0_0_15px_#00ffff]' : ''} ${themeClasses.miamiViceGlow}`}
-                style={{ imageRendering: "pixelated" }}
+                className={`px-6 py-3 border-4 text-lg font-mono font-bold uppercase tracking-wider transition-all duration-300 ${themeClasses.borderColor} ${themeClasses.cardBg} ${themeClasses.headerText}`}
               >
                 {showRadar ? '📡 HIDE RADAR' : '📡 SHOW DOPPLER RADAR'}
               </button>
             </div>
 
-            {/* 16-bit Doppler Radar */}
+            {/* Expanded Doppler Radar Display - Now Below Forecast */}
             {showRadar && API_KEY && (
-              <div className="mt-4">
-                <RadarDisplay 
-                  lat={weather.current.lat}
-                  lon={weather.current.lon}
-                  apiKey={API_KEY}
-                  isDarkMode={isDarkMode}
-                  locationName={weather.current.location}
-                />
-              </div>
-            )}
-
-            {/* Moon Phase Info */}
-            <div className="mt-4 text-center">
-              <div className={`inline-block ${themeClasses.background} border ${themeClasses.secondaryText} px-3 py-2 ${!isDarkMode ? 'border-[#8a2be2] shadow-[0_0_15px_#8a2be2]' : ''}`} 
-                   style={!isDarkMode ? { 
-                     borderColor: '#8a2be2',
-                     background: 'linear-gradient(135deg, #4a0e4e, #2d1b69)',
-                     boxShadow: '0 0 15px #8a2be2, inset 0 0 10px rgba(138, 43, 226, 0.2)'
-                   } : { borderColor: '#4ecdc4' }}>
-                <div className={`text-xs ${themeClasses.secondaryText} uppercase tracking-wider ${themeClasses.miamiViceGlow}`}>
-                  🌙 LUNAR: {weather.moonPhase.phase} • {weather.moonPhase.illumination}% LIT
+              <div className="w-full">
+                <div className="w-full max-w-6xl mx-auto">
+                  <RadarDisplay
+                    lat={weather.current.lat}
+                    lon={weather.current.lon}
+                    apiKey={API_KEY}
+                    theme={currentTheme}
+                    locationName={weather.current.location}
+                  />
                 </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
-        {/* Welcome message for first-time users */}
-        {!hasSearched && !loading && !weather && !error && (
-          <div className="text-center py-8 relative z-10">
-            <div className={`${themeClasses.secondaryText} mb-4`}>
-              <div className="text-2xl mb-2">🌤️</div>
-              <div className="text-lg uppercase tracking-wider">WELCOME TO 16-BIT WEATHER</div>
-            </div>
-            <div className={`text-sm ${themeClasses.accentText} uppercase tracking-wider mb-4 ${themeClasses.miamiViceGlow}`}>
-              {!isDarkMode && 'MIAMI VICE MODE • '}MULTIPLE FORMAT SUPPORT
-            </div>
-            <div className={`text-xs ${themeClasses.secondaryText} space-y-1`}>
-              <div>► ZIP CODES: 90210, 10001</div>
-              <div>► US CITIES: Los Angeles, CA</div>
-              <div>► INTERNATIONAL: London, UK</div>
-              <div>► OR USE YOUR LOCATION</div>
+        {/* Welcome Message for First-Time Users */}
+        {!hasSearched && (
+          <div className={`${themeClasses.cardBg} p-8 border-4 pixel-border text-center ${themeClasses.borderColor} ${themeClasses.specialBorder}`}>
+            <h3 className={`text-2xl font-bold mb-4 font-mono uppercase tracking-wider ${themeClasses.headerText}`}>
+              🎮 Welcome to 16-Bit Weather! 🎮
+            </h3>
+            <p className={`${themeClasses.text} mb-4 font-mono`}>
+              Experience weather data like it's 1985! Get authentic retro weather with pixel-perfect styling.
+            </p>
+            <div className={`${themeClasses.successText} font-mono text-sm`}>
+              🔍 Search for any location above to begin your retro weather journey!
             </div>
           </div>
         )}
-
-        {/* Footer */}
-        <footer className={`mt-8 text-center text-xs ${themeClasses.secondaryText} relative z-10`}>
-          {!API_KEY && (
-            <div className={`${themeClasses.warningText} text-center`}>
-              ⚠ API KEY NOT CONFIGURED
-            </div>
-          )}
-        </footer>
       </div>
+
+      {/* Tron Animated Grid Background */}
+      <TronGridBackground />
     </div>
   )
 }
 
-// Custom 8-bit style weather icons
-function WeatherIcon({ condition, size }: { condition: string; size: "small" | "large" }) {
-  const sizeClass = size === "large" ? "w-20 h-20" : "w-8 h-8"
-
-  const iconStyle = {
-    imageRendering: "pixelated" as const,
-    filter: "contrast(1.2) saturate(1.3)",
-  }
-
-  switch (condition.toLowerCase()) {
-    case "sunny":
-      return (
-        <div className={cn("relative mx-auto", sizeClass)} style={iconStyle}>
-          <div className="absolute inset-1 bg-[#ffe66d] rounded-full"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3/5 h-3/5 bg-[#ffcc02] rounded-full"></div>
-          {/* Sun rays - contained within boundary */}
-          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0.5 h-2 bg-[#ffe66d]"></div>
-          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0.5 h-2 bg-[#ffe66d]"></div>
-          <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-2 h-0.5 bg-[#ffe66d]"></div>
-          <div className="absolute top-1/2 right-0 transform -translate-y-1/2 w-2 h-0.5 bg-[#ffe66d]"></div>
-        </div>
-      )
-    case "cloudy":
-      return (
-        <div className={cn("relative mx-auto", sizeClass)} style={iconStyle}>
-          <div className="absolute bottom-0 left-0 w-3/4 h-3/4 bg-[#e0e0e0] rounded-full"></div>
-          <div className="absolute top-0 right-0 w-3/4 h-3/4 bg-[#b0b0b0] rounded-full"></div>
-          <div className="absolute top-1/4 left-1/4 w-1/2 h-1/2 bg-[#d0d0d0] rounded-full"></div>
-        </div>
-      )
-    case "rainy":
-      return (
-        <div className={cn("relative mx-auto", sizeClass)} style={iconStyle}>
-          {/* Cloud */}
-          <div className="absolute top-0 left-0 w-3/4 h-1/2 bg-[#6c7b7f] rounded-full"></div>
-          <div className="absolute top-1/4 right-0 w-3/4 h-1/2 bg-[#5a6c70] rounded-full"></div>
-          {/* Rain drops */}
-          <div className="absolute bottom-0 left-1/4 w-1 h-1/3 bg-[#00d4ff]"></div>
-          <div className="absolute bottom-0 left-1/2 w-1 h-1/4 bg-[#00d4ff]"></div>
-          <div className="absolute bottom-0 right-1/4 w-1 h-1/3 bg-[#00d4ff]"></div>
-        </div>
-      )
-    case "snowy":
-      return (
-        <div className={cn("relative mx-auto", sizeClass)} style={iconStyle}>
-          {/* Cloud */}
-          <div className="absolute top-0 left-0 w-3/4 h-1/2 bg-[#d0d0d0] rounded-full"></div>
-          <div className="absolute top-1/4 right-0 w-3/4 h-1/2 bg-[#b8b8b8] rounded-full"></div>
-          {/* Snow flakes */}
-          <div className="absolute bottom-1 left-1/4 w-2 h-2 bg-white transform rotate-45"></div>
-          <div className="absolute bottom-0 left-1/2 w-2 h-2 bg-white transform rotate-45"></div>
-          <div className="absolute bottom-1 right-1/4 w-2 h-2 bg-white transform rotate-45"></div>
-        </div>
-      )
-    default:
-      return (
-        <div className={cn("relative mx-auto", sizeClass)} style={iconStyle}>
-          <div className="absolute inset-0 bg-[#ffe66d] rounded-full"></div>
-        </div>
-      )
-  }
+export default function HomePage() {
+  return (
+    <PageWrapper>
+      <WeatherApp />
+    </PageWrapper>
+  )
 }
 
-// Moon Phase Watermark Component
-function MoonPhaseWatermark({ phase, phaseAngle, illumination, isDarkMode }: { 
+// Component definitions remain the same...
+function WeatherIcon({ condition, size }: { condition: string; size: "small" | "large" }) {
+  const iconSize = size === "large" ? "w-16 h-16" : "w-8 h-8"
+  
+  // Map weather conditions to retro-style icons
+  const getWeatherIcon = (condition: string) => {
+    const cond = condition.toLowerCase()
+    
+    // Sunny/Clear conditions
+    if (cond.includes('clear') || cond.includes('sunny')) {
+      return { icon: '☀️', color: '#ffeb3b', bg: '#ff8f00', border: '#f57f17' }
+    }
+    
+    // Cloudy conditions
+    if (cond.includes('cloud') || cond.includes('overcast')) {
+      return { icon: '☁️', color: '#90a4ae', bg: '#546e7a', border: '#37474f' }
+    }
+    
+    // Rainy conditions
+    if (cond.includes('rain') || cond.includes('drizzle')) {
+      return { icon: '🌧️', color: '#42a5f5', bg: '#1e88e5', border: '#1565c0' }
+    }
+    
+    // Stormy conditions
+    if (cond.includes('thunder') || cond.includes('storm')) {
+      return { icon: '⛈️', color: '#5c6bc0', bg: '#3f51b5', border: '#303f9f' }
+    }
+    
+    // Snowy conditions
+    if (cond.includes('snow') || cond.includes('blizzard')) {
+      return { icon: '❄️', color: '#e3f2fd', bg: '#90caf9', border: '#42a5f5' }
+    }
+    
+    // Foggy/Misty conditions
+    if (cond.includes('fog') || cond.includes('mist') || cond.includes('haze')) {
+      return { icon: '🌫️', color: '#bdbdbd', bg: '#757575', border: '#424242' }
+    }
+    
+    // Windy conditions
+    if (cond.includes('wind')) {
+      return { icon: '💨', color: '#81c784', bg: '#66bb6a', border: '#4caf50' }
+    }
+    
+    // Default fallback
+    return { icon: '🌤️', color: '#ff69b4', bg: '#4a0e4e', border: '#ff1493' }
+  }
+
+  const { icon, color, bg, border } = getWeatherIcon(condition)
+
+  return (
+    <div 
+      className={`${iconSize} rounded-lg border-2 flex items-center justify-center text-2xl pixel-border`}
+      style={{ 
+        backgroundColor: bg,
+        borderColor: border,
+        boxShadow: `0 0 10px ${color}33`
+      }}
+    >
+      {icon}
+    </div>
+  )
+}
+
+function MoonPhaseWatermark({ phase, phaseAngle, illumination, theme }: { 
   phase: string; 
   phaseAngle: number; 
   illumination: number; 
-  isDarkMode: boolean; 
+  theme: ThemeType; 
 }) {
   return (
-    <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-0">
-      <div className={`opacity-[0.06] transform scale-125 translate-x-8 translate-y-4 ${isDarkMode ? 'text-[#4ecdc4]' : 'text-[#e0e0e0]'}`}>
-        <MoonSVG phase={phase} phaseAngle={phaseAngle} illumination={illumination} />
-      </div>
+    <div className="w-8 h-8">
+      <MoonSVG phase={phase} phaseAngle={phaseAngle} illumination={illumination} />
     </div>
-  );
+  )
 }
 
-// Custom SVG Moon Phase Component
 function MoonSVG({ phase, phaseAngle, illumination }: { 
   phase: string; 
   phaseAngle: number; 
   illumination: number; 
 }) {
-  const radius = 80;
-  const centerX = 100;
-  const centerY = 100;
   
-  // Simplified moon phase visualization using emoji-style approach
   const getMoonShape = () => {
-    if (phase === 'New Moon') {
-      return (
-        <circle
-          cx={centerX}
-          cy={centerY}
-          r={radius}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="3"
-          opacity="0.3"
-        />
-      );
+    // Normalize phase angle to 0-360
+    const normalizedAngle = ((phaseAngle % 360) + 360) % 360
+    
+    // Define moon phases based on angle ranges
+    if (normalizedAngle < 45 || normalizedAngle >= 315) {
+      return { emoji: '🌑', name: 'New Moon' }
+    } else if (normalizedAngle >= 45 && normalizedAngle < 90) {
+      return { emoji: '🌒', name: 'Waxing Crescent' }
+    } else if (normalizedAngle >= 90 && normalizedAngle < 135) {
+      return { emoji: '🌓', name: 'First Quarter' }
+    } else if (normalizedAngle >= 135 && normalizedAngle < 180) {
+      return { emoji: '🌔', name: 'Waxing Gibbous' }
+    } else if (normalizedAngle >= 180 && normalizedAngle < 225) {
+      return { emoji: '🌕', name: 'Full Moon' }
+    } else if (normalizedAngle >= 225 && normalizedAngle < 270) {
+      return { emoji: '🌖', name: 'Waning Gibbous' }
+    } else if (normalizedAngle >= 270 && normalizedAngle < 315) {
+      return { emoji: '🌗', name: 'Last Quarter' }
+    } else {
+      return { emoji: '🌘', name: 'Waning Crescent' }
     }
-    
-    if (phase === 'Full Moon') {
-      return (
-        <circle
-          cx={centerX}
-          cy={centerY}
-          r={radius}
-          fill="currentColor"
-          opacity="0.3"
-        />
-      );
-    }
-    
-    // For crescent and gibbous phases, use a simple approach
-    const isWaxing = phaseAngle <= 180;
-    const phaseProgress = phaseAngle <= 180 ? phaseAngle / 180 : (360 - phaseAngle) / 180;
-    
-    // Calculate illuminated width
-    const illuminatedWidth = radius * 2 * (illumination / 100);
-    
-    return (
-      <g>
-        {/* Moon outline */}
-        <circle
-          cx={centerX}
-          cy={centerY}
-          r={radius}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          opacity="0.2"
-        />
-        
-        {/* Illuminated portion */}
-        <ellipse
-          cx={isWaxing ? centerX - radius + illuminatedWidth/2 : centerX + radius - illuminatedWidth/2}
-          cy={centerY}
-          rx={illuminatedWidth/2}
-          ry={radius}
-          fill="currentColor"
-          opacity="0.25"
-        />
-      </g>
-    );
-  };
+  }
+
+  const moonPhase = getMoonShape()
 
   return (
-    <svg width="200" height="200" viewBox="0 0 200 200" className="text-[#4ecdc4]">
-      <defs>
-        <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="currentColor" stopOpacity="0.1" />
-          <stop offset="70%" stopColor="currentColor" stopOpacity="0.05" />
-          <stop offset="100%" stopColor="transparent" />
-        </radialGradient>
-      </defs>
-      
-      {/* Glow effect */}
-      <circle
-        cx={centerX}
-        cy={centerY}
-        r={radius + 20}
-        fill="url(#moonGlow)"
-      />
-      
-      {/* Moon shape */}
-      {getMoonShape()}
-      
-      {/* Phase name and illumination - positioned below */}
-      <text
-        x={centerX}
-        y={centerY + radius + 25}
-        textAnchor="middle"
-        className="fill-current text-[10px] font-mono uppercase tracking-wider opacity-40"
-      >
-        {phase.replace(' ', '\u00A0')}
-      </text>
-      <text
-        x={centerX}
-        y={centerY + radius + 38}
-        textAnchor="middle"
-        className="fill-current text-[9px] font-mono opacity-30"
-      >
-        {illumination}% ILLUMINATED
-      </text>
-    </svg>
-  );
-}
-
-// 16-bit pixel art sunrise icon
-function SunriseIcon() {
-  return (
-    <div className="relative w-8 h-8" style={{ imageRendering: "pixelated" as const }}>
-      {/* Ground line */}
-      <div className="absolute bottom-0 left-0 w-full h-1 bg-[#4ecdc4]"></div>
-      
-      {/* Sun */}
-      <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-[#ffe66d] rounded-full"></div>
-      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-[#ffcc02] rounded-full"></div>
-      
-      {/* Sun rays */}
-      <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 w-0.5 h-2 bg-[#ffe66d]"></div>
-      <div className="absolute bottom-2 left-2 w-1.5 h-0.5 bg-[#ffe66d] transform rotate-45 origin-right"></div>
-      <div className="absolute bottom-2 right-2 w-1.5 h-0.5 bg-[#ffe66d] transform -rotate-45 origin-left"></div>
-      
-      {/* Upward arrow indicating sunrise */}
-      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0.5 h-2 bg-[#4ecdc4]"></div>
-      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-0.5">
-        <div className="w-0 h-0 border-l-2 border-r-2 border-b-2 border-transparent border-b-[#4ecdc4]"></div>
-      </div>
-    </div>
-  );
-}
-
-// 16-bit pixel art sunset icon
-function SunsetIcon() {
-  return (
-    <div className="w-5 h-5 relative">
-      {/* Sunset rays */}
-      <div className="absolute top-0 left-1 w-0.5 h-1 bg-[#ff6b6b]"></div>
-      <div className="absolute top-0 right-1 w-0.5 h-1 bg-[#ff6b6b]"></div>
-      <div className="absolute top-1 left-0 w-1 h-0.5 bg-[#ff6b6b]"></div>
-      <div className="absolute top-1 right-0 w-1 h-0.5 bg-[#ff6b6b]"></div>
-      
-      {/* Sun (lower position for sunset) */}
-      <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-[#ff6b6b] rounded-full"></div>
-      <div className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#ff9999] rounded-full"></div>
-      
-      {/* Horizon line */}
-      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#4ecdc4]"></div>
+    <div className="w-8 h-8 flex items-center justify-center text-lg">
+      {moonPhase.emoji}
     </div>
   )
 }
 
-// 16-bit Pressure Gauge Component
-function PressureGauge({ pressure, unit, isDarkMode }: { pressure: number; unit: 'hPa' | 'inHg'; isDarkMode: boolean }) {
-  // Convert pressure to display unit
-  const displayPressure = unit === 'inHg' ? pressure * 0.02953 : pressure;
-  
-  // Pressure ranges for visual indication (adjusted for unit)
-  const getPressureLevel = (pressure: number, unit: 'hPa' | 'inHg'): 'low' | 'normal' | 'high' => {
-    if (unit === 'inHg') {
-      // inHg ranges: Low < 29.53, Normal 29.53-30.12, High > 30.12
-      if (pressure < 29.53) return 'low';
-      if (pressure > 30.12) return 'high';
-      return 'normal';
-    } else {
-      // hPa ranges: Low < 1000, Normal 1000-1020, High > 1020
-      if (pressure < 1000) return 'low';
-      if (pressure > 1020) return 'high';
-      return 'normal';
-    }
-  };
-
-  const pressureLevel = getPressureLevel(displayPressure, unit);
-  
-  // Calculate gauge fill percentage (normalized for each unit)
-  let fillPercentage: number;
-  if (unit === 'inHg') {
-    // inHg range: 28.90 - 30.70 inHg
-    const minPressure = 28.90;
-    const maxPressure = 30.70;
-    fillPercentage = Math.max(0, Math.min(100, ((displayPressure - minPressure) / (maxPressure - minPressure)) * 100));
-  } else {
-    // hPa range: 980-1040 hPa
-    const minPressure = 980;
-    const maxPressure = 1040;
-    fillPercentage = Math.max(0, Math.min(100, ((displayPressure - minPressure) / (maxPressure - minPressure)) * 100));
-  }
-
-  // Color schemes for different pressure levels
-  const getGaugeColors = () => {
-    if (!isDarkMode) {
-      // Miami Vice colors
-      switch (pressureLevel) {
-        case 'low': return { fill: '#ff1493', bg: '#4a0e4e', border: '#ff007f' };
-        case 'high': return { fill: '#00ffff', bg: '#1a0033', border: '#00d4ff' };
-        default: return { fill: '#ff69b4', bg: '#4a0e4e', border: '#ff1493' };
-      }
-    } else {
-      // Dark mode colors
-      switch (pressureLevel) {
-        case 'low': return { fill: '#ff6b6b', bg: '#2d1b1b', border: '#ff4444' };
-        case 'high': return { fill: '#4ecdc4', bg: '#1a2d2b', border: '#36b3aa' };
-        default: return { fill: '#ffe66d', bg: '#2d2b1a', border: '#ffcc02' };
-      }
-    }
-  };
-
-  const colors = getGaugeColors();
-
+function SunriseIcon() {
   return (
-    <div className="relative w-12 h-8">
-      {/* Gauge Background */}
-      <div 
-        className="absolute inset-0 border-2 rounded-sm"
-        style={{ 
-          backgroundColor: colors.bg,
-          borderColor: colors.border,
-          boxShadow: `0 0 8px ${colors.border}`
-        }}
-      >
-        {/* Gauge Fill */}
-        <div 
-          className="absolute bottom-0 left-0 rounded-sm transition-all duration-300"
-          style={{ 
-            width: '100%',
-            height: `${fillPercentage}%`,
-            backgroundColor: colors.fill,
-            boxShadow: `inset 0 0 4px ${colors.fill}`
-          }}
-        />
-        
-        {/* Gauge Markers */}
-        <div className="absolute top-0 left-0 w-full h-full">
-          {/* Top marker */}
-          <div 
-            className="absolute top-0 left-0 w-full h-0.5 opacity-60"
-            style={{ backgroundColor: colors.border }}
-          />
-          {/* Middle marker */}
-          <div 
-            className="absolute top-1/2 left-0 w-full h-0.5 opacity-40 transform -translate-y-1/2"
-            style={{ backgroundColor: colors.border }}
-          />
-          {/* Bottom marker */}
-          <div 
-            className="absolute bottom-0 left-0 w-full h-0.5 opacity-60"
-            style={{ backgroundColor: colors.border }}
-          />
-        </div>
+    <div className="w-8 h-8 relative">
+      <svg viewBox="0 0 24 24" className="w-full h-full text-orange-400">
+        <circle cx="12" cy="12" r="3" fill="currentColor"/>
+        <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M8 20h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M6 18h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    </div>
+  )
+}
+
+function SunsetIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4">
+      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2"/>
+      <path d="M12 8l0-4M12 20l0-4M20 12l-4 0M8 12l-4 0" stroke="currentColor" strokeWidth="2"/>
+      <path d="M16.24 7.76l-1.41 1.41M9.17 14.83l-1.41 1.41M16.24 16.24l-1.41-1.41M9.17 9.17l-1.41-1.41" stroke="currentColor" strokeWidth="2"/>
+      <path d="M4 20h16" stroke="currentColor" strokeWidth="2"/>
+    </svg>
+  )
+}
+
+// 16-bit Tron Light Cycle Watermark - only appears in Tron theme
+function TronLightCycleWatermark() {
+  return (
+    <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.15]">
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+        <svg 
+          viewBox="0 0 200 100" 
+          className="w-80 h-40 tron-pulse"
+        >
+          {/* Light cycle body - pixelated style */}
+          <rect x="80" y="40" width="40" height="20" fill="none" stroke="#00FFFF" strokeWidth="2"/>
+          <rect x="70" y="45" width="10" height="10" fill="none" stroke="#00FFFF" strokeWidth="2"/>
+          <rect x="120" y="45" width="10" height="10" fill="none" stroke="#00FFFF" strokeWidth="2"/>
+          
+          {/* Wheels */}
+          <circle cx="90" cy="65" r="8" fill="none" stroke="#00FFFF" strokeWidth="2"/>
+          <circle cx="110" cy="65" r="8" fill="none" stroke="#00FFFF" strokeWidth="2"/>
+          
+          {/* Light trail - glowing effect */}
+          <rect x="40" y="50" width="30" height="4" fill="#00FFFF" opacity="0.8"/>
+          <rect x="20" y="52" width="20" height="2" fill="#00FFFF" opacity="0.6"/>
+          <rect x="0" y="53" width="20" height="1" fill="#00FFFF" opacity="0.4"/>
+          
+          {/* Grid lines */}
+          <line x1="0" y1="75" x2="200" y2="75" stroke="#00FFFF" strokeWidth="1" opacity="0.5"/>
+          <line x1="0" y1="25" x2="200" y2="25" stroke="#00FFFF" strokeWidth="1" opacity="0.3"/>
+          
+          {/* Vertical grid */}
+          <line x1="50" y1="0" x2="50" y2="100" stroke="#00FFFF" strokeWidth="1" opacity="0.3"/>
+          <line x1="150" y1="0" x2="150" y2="100" stroke="#00FFFF" strokeWidth="1" opacity="0.3"/>
+        </svg>
       </div>
       
-      {/* Pressure Status Indicator */}
-      <div className="absolute -right-2 top-1/2 transform -translate-y-1/2">
+      {/* Additional grid pattern */}
+      <div className="absolute inset-0" style={{
+        backgroundImage: `
+          linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px)
+        `,
+        backgroundSize: '40px 40px'
+      }} />
+    </div>
+  )
+}
+
+function PressureGauge({ pressure, unit, theme }: { pressure: number; unit: 'hPa' | 'inHg'; theme: ThemeType }) {
+  
+  // Convert pressure to the display unit if needed
+  const displayPressure = unit === 'inHg' ? pressure * 0.02953 : pressure;
+  
+  // Determine pressure level and color
+  const getPressureLevel = (pressure: number, unit: 'hPa' | 'inHg'): 'low' | 'normal' | 'high' => {
+    if (unit === 'hPa') {
+      if (pressure < 1013) return 'low'
+      if (pressure > 1020) return 'high'
+      return 'normal'
+    } else {
+      // inHg thresholds
+      if (pressure < 29.92) return 'low'
+      if (pressure > 30.20) return 'high'
+      return 'normal'
+    }
+  }
+
+  const pressureLevel = getPressureLevel(displayPressure, unit)
+  
+  // Calculate gauge position (0-100%)
+  const minPressure = unit === 'hPa' ? 980 : 28.9
+  const maxPressure = unit === 'hPa' ? 1050 : 31.0
+  const normalizedPressure = Math.max(0, Math.min(100, 
+    ((displayPressure - minPressure) / (maxPressure - minPressure)) * 100
+  ))
+
+  const getGaugeColors = () => {
+    switch (theme) {
+      case 'dark':
+        switch (pressureLevel) {
+          case 'low': return { fill: '#ff6b6b', bg: '#4a1520', border: '#ff1439' }
+          case 'high': return { fill: '#51cf66', bg: '#1a4a25', border: '#2dd14c' }
+          default: return { fill: '#74c0fc', bg: '#1a2a4a', border: '#339af0' }
+        }
+      case 'miami':
+        switch (pressureLevel) {
+          case 'low': return { fill: '#ff1493', bg: '#4a0e2e', border: '#ff1493' }
+          case 'high': return { fill: '#00ff7f', bg: '#0e4a2e', border: '#00ff7f' }
+          default: return { fill: '#00ffff', bg: '#0e2a4a', border: '#00ffff' }
+        }
+      case 'tron':
+        switch (pressureLevel) {
+          case 'low': return { fill: '#FF1744', bg: '#330011', border: '#FF1744' } // Bright neon red for warnings/low pressure
+          case 'high': return { fill: '#00FFFF', bg: '#003333', border: '#00FFFF' } // Electric cyan for high pressure
+          default: return { fill: '#00FFFF', bg: '#001111', border: '#00FFFF' } // Electric cyan for normal
+        }
+    }
+  }
+
+  const colors = getGaugeColors()
+
+  return (
+    <div className="flex flex-col items-center space-y-1">
+      <div className="text-xs font-mono" style={{ color: colors.fill }}>
+        Pressure
+      </div>
+      <div 
+        className="w-12 h-2 border rounded-full relative overflow-hidden"
+        style={{ 
+          backgroundColor: colors.bg,
+          borderColor: colors.border
+        }}
+      >
         <div 
-          className="w-1.5 h-1.5 rounded-full animate-pulse"
-          style={{ backgroundColor: colors.fill }}
+          className="h-full transition-all duration-500 rounded-full"
+          style={{ 
+            width: `${normalizedPressure}%`,
+            backgroundColor: colors.fill
+          }}
         />
       </div>
+      <div className="text-xs font-mono font-bold" style={{ color: colors.fill }}>
+        {displayPressure.toFixed(unit === 'hPa' ? 0 : 2)} {unit}
+      </div>
     </div>
-  );
+  )
 }

@@ -1,13 +1,16 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Loader2, Zap, RotateCcw, Palette, Plus, Minus, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
+import { RotateCcw, Plus, Minus, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
+
+// Theme types
+type ThemeType = 'dark' | 'miami' | 'tron';
 
 interface RadarProps {
   lat: number
   lon: number
   apiKey: string
-  isDarkMode: boolean
+  theme: ThemeType
   locationName?: string
 }
 
@@ -50,7 +53,7 @@ interface CityLandmark {
  * - Geographic context with nearby cities
  * - 24-hour rainfall totals
  */
-export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationName }: RadarProps) {
+export default function RadarDisplay({ lat, lon, apiKey, theme, locationName }: RadarProps) {
   const [radarFrames, setRadarFrames] = useState<RadarFrame[]>([])
   const [currentFrame, setCurrentFrame] = useState(0)
   const [isPlaying, setIsPlaying] = useState(true)
@@ -65,9 +68,9 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
   const animationRef = useRef<NodeJS.Timeout | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  // Enhanced grid size with zoom support
+  // Enhanced grid size with zoom support - LARGER for full-width layout
   const GRID_SIZE = 20 // 20x20 grid for enhanced detail
-  const PIXEL_SIZE = 10 // 10x10 pixel blocks for perfect chunky feel
+  const PIXEL_SIZE = 15 // 15x15 pixel blocks for bigger, more prominent radar
 
   // Zoom ranges in kilometers
   const ZOOM_RANGES = {
@@ -76,7 +79,7 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
     wide: 75       // 75km - wide area view
   }
 
-  // Auto-matched color palettes based on app theme
+  // Enhanced color palettes for all three themes
   const colorPalettes = {
     // Dark theme colors - EXACT MATCH with main app
     dark: {
@@ -120,11 +123,35 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
       heavySnow: '#00f5ff',    // Deep cyan
       severeSnow: '#87ceeb',   // Sky blue
       mixed: '#9370db'         // Purple mix
+    },
+    // NEW: Tron theme colors - Electric cyan and bright neon red inspired by 1982 movie
+    tron: {
+      name: 'TRON SYSTEM',
+      background: '#000000',   // Pure black like Tron's digital world
+      grid: '#001111',         // Dark cyan grid lines
+      scanline: '#002222',     // Brighter cyan scanlines
+      border: '#00FFFF',       // Electric cyan blue border - authentic 80s
+      text: '#FFFFFF',         // Pure white text
+      accent: '#00FFFF',       // Electric cyan accent
+      // Precipitation intensity colors with authentic Tron aesthetic
+      none: '#000000',         // Pure black for no precipitation
+      lightRain: '#0088CC',    // Light electric cyan
+      moderateRain: '#00AADD', // Medium electric cyan
+      heavyRain: '#00FFFF',    // Bright electric cyan
+      severeRain: '#66FFFF',   // Very bright electric cyan
+      extremeRain: '#AAFFFF',  // Glowing electric cyan
+      lightSnow: '#FF6644',    // Neon red for snow (MCP programs)
+      moderateSnow: '#FF8844', // Brighter neon red
+      heavySnow: '#FFAA44',    // Full neon red/orange
+      severeSnow: '#FFCC44',   // Glowing neon red/orange
+      mixed: '#FF1744'         // Bright neon red for mixed/warnings
     }
   }
 
   // Auto-select theme based on app theme
-  const currentPalette = isDarkMode ? colorPalettes.dark : colorPalettes.miami
+  const currentPalette = theme === 'dark' ? colorPalettes.dark : 
+                         theme === 'miami' ? colorPalettes.miami : 
+                         colorPalettes.tron
 
   // Major cities with 8-bit landmark data
   const getCityLandmarks = (): CityLandmark[] => {
@@ -733,7 +760,7 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
     if (isHydrated) {
       renderRadarFrame()
     }
-  }, [currentFrame, radarFrames, isDarkMode, zoomLevel, panOffset, isHydrated])
+  }, [currentFrame, radarFrames, theme, zoomLevel, panOffset, isHydrated])
 
   // Blinking animation for city marker (only after hydration)
   useEffect(() => {
@@ -766,14 +793,14 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
   }, [isPlaying, radarFrames.length, hasPrecipitation, isHydrated])
 
   const themeClasses = {
-    background: isDarkMode ? 'bg-[#0a0a1a]' : 'bg-gradient-to-br from-[#2d1b69] via-[#11001c] to-[#0f0026]',
-    cardBg: isDarkMode ? 'bg-[#16213e]' : 'bg-gradient-to-br from-[#4a0e4e] via-[#2d1b69] to-[#1a0033]',
-    borderColor: isDarkMode ? 'border-[#00d4ff]' : 'border-[#ff1493]',
-    text: isDarkMode ? 'text-[#e0e0e0]' : 'text-[#00ffff]',
-    headerText: isDarkMode ? 'text-[#00d4ff]' : 'text-[#ff007f]',
-    accentText: isDarkMode ? 'text-[#ff6b6b]' : 'text-[#ff1493]',
-    successText: isDarkMode ? 'text-[#ffe66d]' : 'text-[#ff1493]',
-    miamiViceGlow: isDarkMode ? '' : 'drop-shadow-[0_0_10px_#ff007f]'
+    background: theme === 'dark' ? 'bg-[#0a0a1a]' : theme === 'miami' ? 'bg-gradient-to-br from-[#2d1b69] via-[#11001c] to-[#0f0026]' : 'bg-[#000000]',
+    cardBg: theme === 'dark' ? 'bg-[#16213e]' : theme === 'miami' ? 'bg-gradient-to-br from-[#4a0e4e] via-[#2d1b69] to-[#1a0033]' : 'bg-[#000000]',
+    borderColor: theme === 'dark' ? 'border-[#00d4ff]' : theme === 'miami' ? 'border-[#ff1493]' : 'border-[#00FFFF]',
+    text: theme === 'dark' ? 'text-[#e0e0e0]' : theme === 'miami' ? 'text-[#00ffff]' : 'text-[#FFFFFF]',
+    headerText: theme === 'dark' ? 'text-[#00d4ff]' : theme === 'miami' ? 'text-[#ff007f]' : 'text-[#00FFFF]',
+    accentText: theme === 'dark' ? 'text-[#ff6b6b]' : theme === 'miami' ? 'text-[#ff1493]' : 'text-[#00FFFF]',
+    successText: theme === 'dark' ? 'text-[#ffe66d]' : theme === 'miami' ? 'text-[#ff1493]' : 'text-[#FFCC00]',
+    miamiViceGlow: theme === 'dark' ? '' : theme === 'miami' ? 'drop-shadow-[0_0_10px_#ff007f]' : 'drop-shadow-[0_0_10px_#00FFFF]'
   }
 
   const formatTime = (timestamp: number): string => {
@@ -787,21 +814,21 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
     return (
       <div className={`${themeClasses.cardBg} p-6 border-4 pixel-border relative`}
            style={{ 
-             borderColor: currentPalette.border,
-             boxShadow: `0 0 20px ${currentPalette.border}`,
-             background: `linear-gradient(135deg, ${currentPalette.background}, ${currentPalette.grid})`
+             borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF',
+             boxShadow: `0 0 20px ${theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF'}, inset 0 0 20px rgba(${theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF'.slice(1).match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(', ')}, 0.1)`,
+             background: `linear-gradient(135deg, ${theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000'}, ${theme === 'dark' ? '#1a4a4a' : theme === 'miami' ? '#1a0040' : '#002244'})`
            }}>
         <div className="flex items-center justify-center h-48">
           <div className="text-center">
             <div className="mb-4">
               <div className="w-16 h-3 border-2 overflow-hidden"
-                   style={{ borderColor: currentPalette.border, background: currentPalette.background }}>
+                   style={{ borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF', background: theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000' }}>
                 <div className="h-full"
-                     style={{ background: currentPalette.accent, width: '50%' }}></div>
+                     style={{ background: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF', width: '50%' }}></div>
               </div>
             </div>
             <div className="text-sm font-mono uppercase tracking-wider"
-                 style={{ color: currentPalette.text }}>
+                 style={{ color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF' }}>
               LOADING RADAR
             </div>
           </div>
@@ -811,21 +838,21 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
   }
 
   return (
-    <div className="flex justify-center w-full">
-      <div className={`${themeClasses.cardBg} p-6 border-4 pixel-border relative max-w-fit`}
+    <div className="w-full">
+      <div className={`${themeClasses.cardBg} p-6 border-4 pixel-border relative w-full`}
            style={{ 
-             borderColor: currentPalette.border,
-             boxShadow: `0 0 20px ${currentPalette.border}, inset 0 0 20px rgba(${currentPalette.border.slice(1).match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(', ')}, 0.1)`,
-             background: `linear-gradient(135deg, ${currentPalette.background}, ${currentPalette.grid})`
+             borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF',
+             boxShadow: `0 0 20px ${theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF'}, inset 0 0 20px rgba(${theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF'.slice(1).match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(', ')}, 0.1)`,
+             background: `linear-gradient(135deg, ${theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000'}, ${theme === 'dark' ? '#1a4a4a' : theme === 'miami' ? '#1a0040' : '#002244'})`
            }}>
         
         {/* Enhanced 16-bit Header without version */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 animate-pulse" style={{ backgroundColor: currentPalette.accent }}></div>
+              <div className="w-3 h-3 animate-pulse" style={{ backgroundColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF' }}></div>
               <h3 className="text-lg font-bold uppercase tracking-wider font-mono"
-                  style={{ color: currentPalette.text, textShadow: `0 0 8px ${currentPalette.accent}` }}>
+                  style={{ color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF', textShadow: `0 0 8px ${theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF'}` }}>
                 DOPPLER RADAR
               </h3>
             </div>
@@ -837,9 +864,9 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
                 disabled={isLoading}
                 className="flex items-center space-x-1 px-2 py-1 text-xs font-mono border-2"
                 style={{ 
-                  borderColor: currentPalette.border,
-                  color: currentPalette.text,
-                  background: currentPalette.background
+                  borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF',
+                  color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF',
+                  background: theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000'
                 }}
               >
                 <RotateCcw className="w-3 h-3" />
@@ -851,10 +878,10 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
           {/* Enhanced Location and Zoom Info - Centered with 24hr Rainfall */}
           <div className="flex items-center justify-center text-xs font-mono uppercase tracking-wider mb-2">
             <div className="text-center">
-              <div style={{ color: currentPalette.accent }}>
+              <div style={{ color: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff007f' : '#00FFFF' }}>
                 LOCATION: {locationName || `${lat.toFixed(2)}°N ${Math.abs(lon).toFixed(2)}°${lon < 0 ? 'W' : 'E'}`}
               </div>
-              <div style={{ color: currentPalette.text }} className="mt-1">
+              <div style={{ color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF' }} className="mt-1">
                 24HR RAIN: {rainfall24h.toFixed(2)} IN • ZOOM: {zoomLevel.toUpperCase()} ({ZOOM_RANGES[zoomLevel]}KM)
               </div>
             </div>
@@ -867,17 +894,17 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
             <div className="text-center">
               <div className="mb-4 flex justify-center">
                 <div className="w-16 h-3 border-2 overflow-hidden"
-                     style={{ borderColor: currentPalette.border, background: currentPalette.background }}>
+                     style={{ borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF', background: theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000' }}>
                   <div className="h-full animate-pulse"
-                       style={{ background: currentPalette.accent, width: '70%' }}></div>
+                       style={{ background: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF', width: '70%' }}></div>
                 </div>
               </div>
               <div className="text-sm font-mono uppercase tracking-wider"
-                   style={{ color: currentPalette.text }}>
+                   style={{ color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF' }}>
                 INITIALIZING RADAR
               </div>
               <div className="text-xs font-mono mt-1"
-                   style={{ color: currentPalette.accent }}>
+                   style={{ color: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff007f' : '#00FFFF' }}>
                 ████████████▓▓░░ 75%
               </div>
             </div>
@@ -887,11 +914,11 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
         {/* Error State */}
         {error && (
           <div className="text-center p-4 border-2"
-               style={{ borderColor: currentPalette.accent, background: currentPalette.background }}>
-            <div className="text-sm font-mono font-bold" style={{ color: currentPalette.accent }}>
+               style={{ borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF', background: theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000' }}>
+            <div className="text-sm font-mono font-bold" style={{ color: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff007f' : '#00FFFF' }}>
               ⚠ RADAR OFFLINE
             </div>
-            <div className="text-xs font-mono mt-1" style={{ color: currentPalette.text }}>
+            <div className="text-xs font-mono mt-1" style={{ color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF' }}>
               {error}
             </div>
             <div className="flex justify-center mt-2">
@@ -899,9 +926,9 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
                 onClick={() => fetchRadarData()}
                 className="px-3 py-1 border-2 text-xs font-mono"
                 style={{ 
-                  borderColor: currentPalette.border,
-                  color: currentPalette.text,
-                  background: currentPalette.background
+                  borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF',
+                  color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF',
+                  background: theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000'
                 }}
               >
                 RETRY SCAN
@@ -917,21 +944,21 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
             {!hasPrecipitation && (
               <div className="text-center mb-4 p-3 border-2"
                    style={{ 
-                     borderColor: currentPalette.border,
-                     background: currentPalette.background,
-                     color: currentPalette.accent
+                     borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF',
+                     background: theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000',
+                     color: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff007f' : '#00FFFF'
                    }}>
                 <div className="text-sm font-mono font-bold uppercase tracking-wider">
                   ✓ NO PRECIPITATION DETECTED
                 </div>
-                <div className="text-xs font-mono mt-1" style={{ color: currentPalette.text }}>
+                <div className="text-xs font-mono mt-1" style={{ color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF' }}>
                   CLEAR CONDITIONS IN {ZOOM_RANGES[zoomLevel]}KM RANGE
                 </div>
               </div>
             )}
 
-            <div className="flex items-start space-x-4">
-              {/* Left Panel - Enhanced Radar Canvas */}
+            <div className="flex items-start justify-center space-x-6">
+              {/* Left Panel - Enhanced Radar Canvas - Centered */}
               <div className="relative">
                 {/* Zoom Controls */}
                 <div className="absolute top-2 left-2 z-10 flex flex-col space-y-1">
@@ -940,9 +967,9 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
                     disabled={zoomLevel === 'city'}
                     className="w-8 h-8 border-2 flex items-center justify-center text-xs font-mono font-bold"
                     style={{ 
-                      borderColor: currentPalette.border,
-                      color: currentPalette.text,
-                      background: currentPalette.background,
+                      borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF',
+                      color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF',
+                      background: theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000',
                       opacity: zoomLevel === 'city' ? 0.5 : 1
                     }}
                   >
@@ -953,9 +980,9 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
                     disabled={zoomLevel === 'wide'}
                     className="w-8 h-8 border-2 flex items-center justify-center text-xs font-mono font-bold"
                     style={{ 
-                      borderColor: currentPalette.border,
-                      color: currentPalette.text,
-                      background: currentPalette.background,
+                      borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF',
+                      color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF',
+                      background: theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000',
                       opacity: zoomLevel === 'wide' ? 0.5 : 1
                     }}
                   >
@@ -971,9 +998,9 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
                       onClick={() => handlePan('up')}
                       className="w-6 h-6 border-2 flex items-center justify-center"
                       style={{ 
-                        borderColor: currentPalette.border,
-                        color: currentPalette.text,
-                        background: currentPalette.background
+                        borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF',
+                        color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF',
+                        background: theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000'
                       }}
                     >
                       <ChevronUp className="w-3 h-3" />
@@ -984,9 +1011,9 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
                       onClick={() => handlePan('left')}
                       className="w-6 h-6 border-2 flex items-center justify-center"
                       style={{ 
-                        borderColor: currentPalette.border,
-                        color: currentPalette.text,
-                        background: currentPalette.background
+                        borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF',
+                        color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF',
+                        background: theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000'
                       }}
                     >
                       <ChevronLeft className="w-3 h-3" />
@@ -995,9 +1022,9 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
                       onClick={handleRecenter}
                       className="w-6 h-6 border-2 flex items-center justify-center text-xs font-mono font-bold"
                       style={{ 
-                        borderColor: currentPalette.accent,
-                        color: currentPalette.accent,
-                        background: currentPalette.background
+                        borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF',
+                        color: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff007f' : '#00FFFF',
+                        background: theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000'
                       }}
                     >
                       ●
@@ -1006,9 +1033,9 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
                       onClick={() => handlePan('right')}
                       className="w-6 h-6 border-2 flex items-center justify-center"
                       style={{ 
-                        borderColor: currentPalette.border,
-                        color: currentPalette.text,
-                        background: currentPalette.background
+                        borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF',
+                        color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF',
+                        background: theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000'
                       }}
                     >
                       <ChevronRight className="w-3 h-3" />
@@ -1019,9 +1046,9 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
                       onClick={() => handlePan('down')}
                       className="w-6 h-6 border-2 flex items-center justify-center"
                       style={{ 
-                        borderColor: currentPalette.border,
-                        color: currentPalette.text,
-                        background: currentPalette.background
+                        borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF',
+                        color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF',
+                        background: theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000'
                       }}
                     >
                       <ChevronDown className="w-3 h-3" />
@@ -1030,12 +1057,12 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
                   </div>
                 </div>
 
-                {/* Clean Radar Canvas - No overlays */}
-                <div className="border-4 p-3 relative"
+                {/* Clean Radar Canvas - Larger and more prominent */}
+                <div className="border-4 p-4 relative"
                      style={{ 
-                       borderColor: currentPalette.border,
-                       background: currentPalette.background,
-                       boxShadow: `inset 0 0 20px ${currentPalette.grid}`
+                       borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF',
+                       background: theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000',
+                       boxShadow: `inset 0 0 20px ${theme === 'dark' ? '#1a4a4a' : theme === 'miami' ? '#1a0040' : '#002244'}`
                      }}>
                   <canvas
                     ref={canvasRef}
@@ -1052,69 +1079,69 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
                   
                   {/* Enhanced corner brackets */}
                   <div className="absolute top-1 left-1 w-6 h-6 border-l-2 border-t-2"
-                       style={{ borderColor: currentPalette.accent }}></div>
+                       style={{ borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF' }}></div>
                   <div className="absolute top-1 right-1 w-6 h-6 border-r-2 border-t-2"
-                       style={{ borderColor: currentPalette.accent }}></div>
+                       style={{ borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF' }}></div>
                   <div className="absolute bottom-1 left-1 w-6 h-6 border-l-2 border-b-2"
-                       style={{ borderColor: currentPalette.accent }}></div>
+                       style={{ borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF' }}></div>
                   <div className="absolute bottom-1 right-1 w-6 h-6 border-r-2 border-b-2"
-                       style={{ borderColor: currentPalette.accent }}></div>
+                       style={{ borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF' }}></div>
                 </div>
               </div>
               
-              {/* Right Panel - Compact Radar Info */}
-              <div className="flex flex-col space-y-2 min-w-[160px]">
-                {/* Radar Status - Compact */}
-                <div className="border-2 p-2"
+              {/* Right Panel - Enhanced Radar Info */}
+              <div className="flex flex-col space-y-3 min-w-[180px]">
+                {/* Radar Status */}
+                <div className="border-2 p-3"
                      style={{ 
-                       borderColor: currentPalette.border,
-                       background: currentPalette.background
+                       borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF',
+                       background: theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000'
                      }}>
-                  <div className="text-xs font-mono font-bold mb-1"
-                       style={{ color: currentPalette.accent }}>
-                    STATUS
+                  <div className="text-sm font-mono font-bold mb-2"
+                       style={{ color: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff007f' : '#00FFFF' }}>
+                    RADAR STATUS
                   </div>
-                  <div className="text-xs font-mono space-y-0.5"
-                       style={{ color: currentPalette.text }}>
-                    <div className="text-[10px]">{hasPrecipitation ? 'PRECIPITATION' : 'CLEAR SKIES'}</div>
-                    <div className="text-[10px]">SYSTEM: ONLINE</div>
-                    <div className="text-[10px]">TIME: {formatTime(Date.now() / 1000)}</div>
+                  <div className="text-xs font-mono space-y-1"
+                       style={{ color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF' }}>
+                    <div>{hasPrecipitation ? 'PRECIPITATION DETECTED' : 'CLEAR CONDITIONS'}</div>
+                    <div>SYSTEM: ONLINE</div>
+                    <div>TIME: {formatTime(Date.now() / 1000)}</div>
                   </div>
                 </div>
 
-                {/* View Settings - Compact */}
-                <div className="border-2 p-2"
+                {/* View Settings */}
+                <div className="border-2 p-3"
                      style={{ 
-                       borderColor: currentPalette.border,
-                       background: currentPalette.background
+                       borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF',
+                       background: theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000'
                      }}>
-                  <div className="text-xs font-mono font-bold mb-1"
-                       style={{ color: currentPalette.accent }}>
-                    VIEW
+                  <div className="text-sm font-mono font-bold mb-2"
+                       style={{ color: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff007f' : '#00FFFF' }}>
+                    VIEW SETTINGS
                   </div>
-                  <div className="text-xs font-mono space-y-0.5"
-                       style={{ color: currentPalette.text }}>
-                    <div className="text-[10px]">RANGE: {ZOOM_RANGES[zoomLevel]}KM</div>
-                    <div className="text-[10px]">ZOOM: {zoomLevel.toUpperCase()}</div>
-                    <div className="text-[10px]">PAN: {panOffset.x !== 0 || panOffset.y !== 0 ? `${panOffset.x},${panOffset.y}` : 'CENTER'}</div>
+                  <div className="text-xs font-mono space-y-1"
+                       style={{ color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF' }}>
+                    <div>RANGE: {ZOOM_RANGES[zoomLevel]}KM</div>
+                    <div>ZOOM: {zoomLevel.toUpperCase()}</div>
+                    <div>PAN: {panOffset.x !== 0 || panOffset.y !== 0 ? `${panOffset.x},${panOffset.y}` : 'CENTER'}</div>
                   </div>
                 </div>
 
-                {/* Animation - Compact */}
-                <div className="border-2 p-2"
+                {/* Animation Control */}
+                <div className="border-2 p-3"
                      style={{ 
-                       borderColor: currentPalette.border,
-                       background: currentPalette.background
+                       borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF',
+                       background: theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000'
                      }}>
-                  <div className="text-xs font-mono font-bold mb-1"
-                       style={{ color: currentPalette.accent }}>
+                  <div className="text-sm font-mono font-bold mb-2"
+                       style={{ color: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff007f' : '#00FFFF' }}>
                     ANIMATION
                   </div>
-                  <div className="text-xs font-mono space-y-0.5"
-                       style={{ color: currentPalette.text }}>
-                    <div className="text-[10px]">FRAME: {currentFrame + 1}/{radarFrames.length}</div>
-                    <div className="text-[10px]">TIME: {formatTime(radarFrames[currentFrame]?.timestamp || 0)}</div>
-                    <div className="text-[10px]">MODE: {isPlaying ? 'PLAYING' : 'PAUSED'}</div>
+                  <div className="text-xs font-mono space-y-1"
+                       style={{ color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF' }}>
+                    <div>FRAME: {currentFrame + 1}/{radarFrames.length}</div>
+                    <div>TIME: {formatTime(radarFrames[currentFrame]?.timestamp || 0)}</div>
+                    <div>MODE: {isPlaying ? 'PLAYING' : 'PAUSED'}</div>
                   </div>
                 </div>
               </div>
@@ -1124,57 +1151,57 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
             <div className="flex justify-center mt-3">
               <div className="border-2 p-2 flex items-center space-x-4"
                    style={{ 
-                     borderColor: currentPalette.border,
-                     background: currentPalette.background
+                     borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF',
+                     background: theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000'
                    }}>
                 <div className="text-xs font-mono font-bold mr-2"
-                     style={{ color: currentPalette.accent }}>
+                     style={{ color: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff007f' : '#00FFFF' }}>
                   INTENSITY:
                 </div>
                 
                 <div className="flex items-center space-x-1">
                   <div className="w-3 h-3 border" 
                        style={{ 
-                         backgroundColor: currentPalette.lightRain, 
-                         borderColor: currentPalette.border 
+                         backgroundColor: theme === 'dark' ? '#336699' : theme === 'miami' ? '#ff69b4' : '#0088BB', 
+                         borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF' 
                        }}></div>
-                  <span className="text-xs font-mono" style={{ color: currentPalette.text }}>LIGHT</span>
+                  <span className="text-xs font-mono" style={{ color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF' }}>LIGHT</span>
                 </div>
                 
                 <div className="flex items-center space-x-1">
                   <div className="w-3 h-3 border" 
                        style={{ 
-                         backgroundColor: currentPalette.moderateRain, 
-                         borderColor: currentPalette.border 
+                         backgroundColor: theme === 'dark' ? '#5599bb' : theme === 'miami' ? '#ff1493' : '#00AADD', 
+                         borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF' 
                        }}></div>
-                  <span className="text-xs font-mono" style={{ color: currentPalette.text }}>MODERATE</span>
+                  <span className="text-xs font-mono" style={{ color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF' }}>MODERATE</span>
                 </div>
                 
                 <div className="flex items-center space-x-1">
                   <div className="w-3 h-3 border" 
                        style={{ 
-                         backgroundColor: currentPalette.heavyRain, 
-                         borderColor: currentPalette.border 
+                         backgroundColor: theme === 'dark' ? '#77bbdd' : theme === 'miami' ? '#ff007f' : '#00CCFF', 
+                         borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF' 
                        }}></div>
-                  <span className="text-xs font-mono" style={{ color: currentPalette.text }}>HEAVY</span>
+                  <span className="text-xs font-mono" style={{ color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF' }}>HEAVY</span>
                 </div>
                 
                 <div className="flex items-center space-x-1">
                   <div className="w-3 h-3 border" 
                        style={{ 
-                         backgroundColor: currentPalette.severeRain, 
-                         borderColor: currentPalette.border 
+                         backgroundColor: theme === 'dark' ? '#99ddff' : theme === 'miami' ? '#ff0066' : '#00FFFF', 
+                         borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF' 
                        }}></div>
-                  <span className="text-xs font-mono" style={{ color: currentPalette.text }}>SEVERE</span>
+                  <span className="text-xs font-mono" style={{ color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF' }}>SEVERE</span>
                 </div>
 
                 <div className="flex items-center space-x-1">
                   <div className="w-3 h-3 border" 
                        style={{ 
-                         backgroundColor: currentPalette.lightSnow, 
-                         borderColor: currentPalette.border 
+                         backgroundColor: theme === 'dark' ? '#6a7a7a' : theme === 'miami' ? '#40e0d0' : '#FF6600', 
+                         borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF' 
                        }}></div>
-                  <span className="text-xs font-mono" style={{ color: currentPalette.text }}>SNOW</span>
+                  <span className="text-xs font-mono" style={{ color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF' }}>SNOW</span>
                 </div>
               </div>
             </div>
@@ -1187,16 +1214,16 @@ export default function RadarDisplay({ lat, lon, apiKey, isDarkMode, locationNam
                     onClick={() => setIsPlaying(!isPlaying)}
                     className="px-3 py-1 border-2 text-xs font-mono"
                     style={{ 
-                      borderColor: currentPalette.border,
-                      color: currentPalette.text,
-                      background: currentPalette.background
+                      borderColor: theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF',
+                      color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF',
+                      background: theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : '#000000'
                     }}
                   >
                     {isPlaying ? '⏸ PAUSE' : '▶ PLAY'}
                   </button>
                 )}
                 
-                <div className="text-xs font-mono" style={{ color: currentPalette.text }}>
+                <div className="text-xs font-mono" style={{ color: theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : '#FFFFFF' }}>
                   ENHANCED MODE • {radarFrames.length} FRAMES
                 </div>
               </div>
