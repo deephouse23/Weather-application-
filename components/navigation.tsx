@@ -148,7 +148,7 @@ export default function Navigation({ currentTheme, onThemeChange }: NavigationPr
         <div className="relative">
           <button
             onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
-            className="flex items-center justify-center space-x-2 px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 min-w-[120px] h-[32px]"
+            className="flex items-center justify-center space-x-2 px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 min-w-[80px] h-[32px]"
             style={{
               borderColor: themeColors.border,
               backgroundColor: themeColors.background,
@@ -156,13 +156,13 @@ export default function Navigation({ currentTheme, onThemeChange }: NavigationPr
               boxShadow: currentTheme === 'tron' ? `0 0 10px ${themeColors.accent}` : 'none'
             }}
           >
-            <span>🎮 PIXEL MODE</span>
+            <span>🎮 THEMES</span>
             <ChevronDown className="w-3 h-3" />
           </button>
           
           {/* Theme Dropdown Menu */}
           {isThemeDropdownOpen && (
-            <div className="absolute top-full right-0 mt-1 border-2 z-50 min-w-[120px]"
+            <div className="absolute top-full right-0 mt-1 border-2 z-50 min-w-[100px]"
                  style={{
                    backgroundColor: themeColors.background,
                    borderColor: themeColors.border,
@@ -260,7 +260,7 @@ export default function Navigation({ currentTheme, onThemeChange }: NavigationPr
             <div className="mt-3 pt-3 border-t-2" style={{ borderColor: themeColors.border }}>
               <div className="text-xs font-mono font-bold uppercase tracking-wider mb-2"
                    style={{ color: themeColors.accent }}>
-                🎮 PIXEL MODE:
+                🎮 THEMES:
               </div>
               <div className="space-y-1">
                 {(['dark', 'miami', 'tron'] as ThemeType[]).map((theme) => (

@@ -601,13 +601,13 @@ const processDailyForecast = (forecastData: OpenWeatherMapForecastResponse) => {
     dailyData[dateKey].descriptions.push(item.weather[0].description);
   });
 
-  // Convert to forecast array, excluding today and taking next 3 days
+  // Convert to forecast array, excluding today and taking next 5 days
   const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
   const today = new Date().toDateString();
   
   return Object.entries(dailyData)
     .filter(([dateKey]) => dateKey !== today) // Exclude today
-    .slice(0, 3) // Take next 3 days
+    .slice(0, 5) // Take next 5 days
     .map(([dateKey, data]) => {
       const highTemp = Math.round(Math.max(...data.temps));
       const lowTemp = Math.round(Math.min(...data.temps));
