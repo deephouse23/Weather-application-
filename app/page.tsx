@@ -8,10 +8,9 @@ import WeatherSearch from "@/components/weather-search"
 import Forecast from "@/components/forecast"
 import RadarDisplay from "@/components/radar-display"
 import PageWrapper from "@/components/page-wrapper"
+import { Analytics } from "@vercel/analytics/react"
 
 // Get API key from environment variables for production deployment
-// LOCAL DEV ONLY - HARDCODED API KEY REMOVED FOR DEPLOYMENT
-// const HARDCODED_API_KEY_LOCAL_DEV = "4e1e5cc03e86ace38e8fe0e2e7c6b421";
 const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY;
 
 // Theme types
@@ -252,14 +251,14 @@ function WeatherApp() {
     }
   }
 
-  // Enhanced caching with better UX flow
+  // Enhanced caching with better UX flow - NO AUTO-LOADING
   useEffect(() => {
     const loadCachedLocation = () => {
       try {
         if (typeof window !== 'undefined' && window.localStorage) {
           const cachedLocation = localStorage.getItem(CACHE_KEY)
           if (cachedLocation) {
-            // Load cached city preference
+            // Load cached city preference only if user returns
             setLastSearchTerm(cachedLocation)
             handleSearch(cachedLocation, true, true) // Load from cache with rate limit bypass
             return
@@ -269,15 +268,9 @@ function WeatherApp() {
         console.warn('Failed to load cached location:', error)
       }
       
-      // For new users: show welcome screen briefly, then load San Francisco
-      setHasSearched(false) // Ensure welcome screen shows initially
-      
-      // Auto-load San Francisco after a brief welcome screen display
-      setTimeout(() => {
-        const defaultCity = "San Francisco, CA"
-        setLastSearchTerm(defaultCity)
-        handleSearch(defaultCity, true, true) // Load default city with rate limit bypass
-      }, 2000) // 2 second delay to show welcome screen
+      // For new users: show welcome screen only - NO AUTO-LOADING
+      setHasSearched(false) // Ensure welcome screen shows
+      // Removed automatic San Francisco loading for v0.1.3
     }
 
     loadCachedLocation()
@@ -295,7 +288,7 @@ function WeatherApp() {
 
     // Check if API key is available
     if (!API_KEY) {
-      setError("🔑 API key not configured. Please set NEXT_PUBLIC_OPENWEATHERMAP_API_KEY environment variable.")
+      setError("🔧 Weather service is temporarily unavailable. Please try again later or contact support.")
       return
     }
 
@@ -375,7 +368,7 @@ function WeatherApp() {
 
     // Check if API key is available
     if (!API_KEY) {
-      setError("🔑 API key not configured. Please set NEXT_PUBLIC_OPENWEATHERMAP_API_KEY environment variable.")
+      setError("🔧 Weather service is temporarily unavailable. Please try again later or contact support.")
       return
     }
 
@@ -722,14 +715,19 @@ function WeatherApp() {
           {/* Enhanced Welcome Message - Mobile responsive */}
           {!weather && !loading && (
             <div className={`${themeClasses.cardBg} p-4 sm:p-6 lg:p-8 border-2 sm:border-4 pixel-border text-center ${themeClasses.borderColor} ${themeClasses.specialBorder} mx-2 sm:mx-0`}>
-              {/* Enhanced ASCII Art Header - Mobile responsive */}
+              {/* Cool ASCII Art Header - BIT WEATHER */}
               <div className={`${themeClasses.headerText} font-mono text-xs sm:text-sm mb-4 sm:mb-6 whitespace-pre-line ${themeClasses.glow} overflow-x-auto`}>
                 <div className="hidden sm:block">
-{`    ██████   ████ ████████      ██   ██ ████████  ██████  ████████ ██   ██ ████████ ██████  
-    ██   ██   ██    ██   ██      ██   ██ ██       ██    ██    ██    ██   ██ ██       ██   ██ 
-    ██████    ██    ██   ██      ██ █ ██ █████    ███████     ██    ███████ █████    ██████  
-    ██   ██   ██    ██   ██      ██ █ ██ ██       ██    ██    ██    ██   ██ ██       ██   ██ 
-    ██████   ████    ██   ██      ███ ███  ████████ ██    ██    ██    ██   ██ ████████ ██   ██`}
+{`  ▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄      ▄     ▄   ▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄   ▄     ▄   ▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄  
+ ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░░▌    ▐░▌   ▐░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░▌   ▐░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ 
+ ▐░█▀▀▀█░▌ ▐░█▀▀▀▀▀  ▀▀▀▀█░█▀▀      ▐░▌ ▐░▌  ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  ▐░▌   ▐░▌ ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  
+ ▐░▌   ▐░▌ ▐░▌           ▐░▌        ▐░▌▐░▌   ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  ▐░▌   ▐░▌ ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  
+ ▐░█▄▄▄█░▌ ▐░█▄▄▄▄▄      ▐░▌        ▐░▌░▌    ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░▌   ▐░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ 
+ ▐░░░░░░░▌  ▐░░░░░░▌     ▐░▌        ▐░▌ ▐░▌  ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  ▐░▌   ▐░▌ ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  
+ ▐░█▀▀▀█░▌       ▐░▌     ▐░▌        ▐░▌  ▐░▌ ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  ▐░█▄▄▄█░▌ ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  
+ ▐░▌   ▐░▌  ▄▄▄▄▄█░▌     ▐░▌        ▐░▌   ▐░▌▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░▌  ▐░░░░░░░▌ ▐░░░░░░░▌ 
+  ▀     ▀  ▐░░░░░░░▌     ▀          ▀     ▀  ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀    ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀  
+         ▀▀▀▀▀▀▀▀                                                                                                 `}
                 </div>
                 <div className="block sm:hidden text-center">
                   <div className={`text-lg font-bold ${themeClasses.headerText}`}>16-BIT WEATHER</div>
@@ -737,19 +735,19 @@ function WeatherApp() {
               </div>
               
               <h3 className={`text-xl sm:text-2xl lg:text-4xl font-bold mb-4 sm:mb-6 font-mono uppercase tracking-wider ${themeClasses.headerText} ${themeClasses.glow} animate-pulse break-words px-2`}>
-                🌟 WELCOME TO BIT WEATHER 🌟
+                🌟 RETRO WEATHER TERMINAL 🌟
               </h3>
               
               <div className={`${themeClasses.text} mb-6 sm:mb-8 font-mono text-sm sm:text-base lg:text-lg space-y-2 sm:space-y-3 px-2`}>
                 <p>🎮 Experience weather data like it's 1985!</p>
-                <p>📊 Real-time meteorological data with authentic retro styling</p>
-                <p className="hidden sm:block">🌈 Choose from Dark, Miami Vice, or Tron themes</p>
-                <p className="hidden sm:block">📡 Complete with Doppler radar and 5-day forecasts</p>
+                <p>📊 Real-time meteorological data with pixel-perfect styling</p>
+                <p className="hidden sm:block">🌈 Choose from Dark Terminal, Miami Vice, or Tron Grid themes</p>
+                <p className="hidden sm:block">📡 Complete with Doppler radar and atmospheric analysis</p>
               </div>
               
               <div className={`${themeClasses.cardBg} p-3 sm:p-4 lg:p-6 border-2 ${themeClasses.borderColor} mb-6 sm:mb-8 max-w-xl mx-auto ${themeClasses.specialBorder}`}>
                 <div className={`${themeClasses.successText} font-mono text-sm sm:text-base font-bold mb-3 sm:mb-4 animate-pulse`}>
-                  🔍 SEARCH OPTIONS AVAILABLE:
+                  🔍 LOCATION SEARCH PROTOCOLS:
                 </div>
                 <div className={`${themeClasses.text} font-mono text-xs sm:text-sm space-y-1 sm:space-y-2`}>
                   <p>📍 <strong>City names:</strong> "Paris", "Tokyo", "London"</p>
@@ -760,20 +758,14 @@ function WeatherApp() {
                 </div>
               </div>
 
-              {hasSearched ? (
-                <div className={`${themeClasses.headerText} font-mono text-sm sm:text-base animate-pulse`}>
-                  🌡️ Loading your weather data...
+              <div className="space-y-2 sm:space-y-3">
+                <div className={`${themeClasses.headerText} font-mono text-lg sm:text-xl font-bold animate-pulse`}>
+                  ⚡ SELECT A CITY TO BEGIN YOUR WEATHER QUEST ⚡
                 </div>
-              ) : (
-                <div className="space-y-2 sm:space-y-3">
-                  <div className={`${themeClasses.headerText} font-mono text-sm sm:text-base animate-pulse`}>
-                    ⚡ INITIALIZING WEATHER SYSTEMS ⚡
-                  </div>
-                  <div className={`${themeClasses.secondaryText} font-mono text-xs sm:text-sm`}>
-                    Auto-loading San Francisco as default location...
-                  </div>
+                <div className={`${themeClasses.secondaryText} font-mono text-xs sm:text-sm`}>
+                  Caching enabled • Return visits will load your last searched location
                 </div>
-              )}
+              </div>
 
               {/* Retro Loading Animation - Mobile responsive */}
               <div className="mt-4 sm:mt-6 flex justify-center space-x-2">
