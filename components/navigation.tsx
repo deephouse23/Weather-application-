@@ -65,7 +65,7 @@ export default function Navigation({ currentTheme, onThemeChange }: NavigationPr
     { href: "/", label: "HOME", icon: Home },
     { href: "/cloud-types", label: "CLOUD TYPES", icon: Cloud },
     { href: "/weather-systems", label: "WEATHER SYSTEMS", icon: Zap },
-    { href: "/fun-facts", label: "FUN FACTS", icon: BookOpen },
+    { href: "/fun-facts", label: "16-BIT TAKES", icon: BookOpen },
     { href: "/games", label: "GAMES", icon: Gamepad2 },
     { href: "/about", label: "ABOUT", icon: Info }
   ]
@@ -148,7 +148,7 @@ export default function Navigation({ currentTheme, onThemeChange }: NavigationPr
         <div className="relative">
           <button
             onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
-            className="flex items-center justify-center space-x-2 px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] h-[32px]"
+            className="flex items-center justify-center space-x-2 px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] h-[32px] whitespace-nowrap"
             style={{
               borderColor: themeColors.border,
               backgroundColor: themeColors.background,

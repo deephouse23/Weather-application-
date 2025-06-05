@@ -8,7 +8,10 @@ import WeatherSearch from "@/components/weather-search"
 import Forecast from "@/components/forecast"
 import RadarDisplay from "@/components/radar-display"
 import PageWrapper from "@/components/page-wrapper"
+import HistoricalChart from "@/components/historical-chart"
 import { Analytics } from "@vercel/analytics/react"
+import Link from "next/link"
+import { Cloud, Zap, Flame } from "lucide-react"
 
 // Get API key from environment variables for production deployment
 const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY;
@@ -65,26 +68,127 @@ function WeatherApp() {
   const [hasSearched, setHasSearched] = useState(false)
   const [lastSearchTerm, setLastSearchTerm] = useState<string>("")
   const [currentLocation, setCurrentLocation] = useState<string>("")
+  const [locationInput, setLocationInput] = useState<string>("")
   const [isOnCooldown, setIsOnCooldown] = useState(false)
   const [remainingSearches, setRemainingSearches] = useState(10)
   const [rateLimitError, setRateLimitError] = useState<string>("")
-  const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark') // Changed from isDarkMode to currentTheme
-  const [showRadar, setShowRadar] = useState(false) // New state for radar toggle
+  const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark')
+  const [showRadar, setShowRadar] = useState(false)
+  const [historicalData, setHistoricalData] = useState<any>(null)
+  const [showHistoricalChart, setShowHistoricalChart] = useState(false)
+  const [isClient, setIsClient] = useState(false)
 
   // localStorage keys
   const CACHE_KEY = 'bitweather_city'
+  const WEATHER_KEY = 'bitweather_weather_data'
+  const CACHE_TIMESTAMP_KEY = 'bitweather_cache_timestamp'
   const RATE_LIMIT_KEY = 'weather-app-rate-limit'
   const MAX_REQUESTS_PER_HOUR = 10
   const COOLDOWN_SECONDS = 2
 
+  // Rate limiting for API calls (5 per minute max)
+  const RATE_LIMIT_WINDOW = 60000 // 1 minute
+  const MAX_REQUESTS = 5
+
+  // Client-side mount effect
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Load cached location function
+  const loadCachedLocation = () => {
+    if (!isClient) return
+    try {
+      const cachedLocation = localStorage.getItem(CACHE_KEY)
+      if (cachedLocation) {
+        setLocationInput(cachedLocation)
+        setCurrentLocation(cachedLocation)
+      }
+    } catch (error) {
+      console.warn('Failed to load cached location:', error)
+    }
+  }
+
+  // Load theme function
+  const loadTheme = () => {
+    if (!isClient) return
+    const storedTheme = getStoredTheme()
+    setCurrentTheme(storedTheme)
+  }
+
+  // Set data function (for cached weather data)
+  const setData = (weatherData: WeatherData) => {
+    setWeather(weatherData)
+    setError("")
+  }
+
+  // Load cached data and theme on component mount
+  useEffect(() => {
+    if (!isClient) return
+    
+    loadCachedLocation()
+    loadTheme()
+    
+    // Check for existing cached data when component mounts
+    const checkCacheAndLoad = () => {
+      try {
+        const cachedLocationData = localStorage.getItem(CACHE_KEY)
+        const cachedWeatherData = localStorage.getItem(WEATHER_KEY)
+        const cacheTimestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY)
+        
+        if (cachedLocationData && cachedWeatherData && cacheTimestamp) {
+          const cacheAge = Date.now() - parseInt(cacheTimestamp)
+          
+          // Only auto-load if cache is fresh (less than 10 minutes) and user had a previous session
+          if (cacheAge < 10 * 60 * 1000) {
+            const weather = JSON.parse(cachedWeatherData)
+            setData(weather)
+            setLocationInput(cachedLocationData)
+            setHasSearched(true)
+          }
+        }
+      } catch (error) {
+        console.warn('Cache check failed:', error)
+      }
+    }
+    
+    checkCacheAndLoad()
+  }, [isClient])
+
+  // Load historical weather data for today's date
+  useEffect(() => {
+    const loadHistoricalData = async () => {
+      try {
+        const today = new Date()
+        const month = String(today.getMonth() + 1).padStart(2, '0')
+        const day = String(today.getDate()).padStart(2, '0')
+        const currentYear = today.getFullYear()
+        const startYear = currentYear - 30
+        
+        // Use New York as default location for historical data
+        const response = await fetch(
+          `https://archive-api.open-meteo.com/v1/archive?latitude=40.7128&longitude=-74.0060&start_date=${startYear}-${month}-${day}&end_date=${currentYear}-${month}-${day}&daily=temperature_2m_max,temperature_2m_min&timezone=auto`
+        )
+        
+        if (response.ok) {
+          const data = await response.json()
+          setHistoricalData(data)
+        }
+      } catch (error) {
+        console.warn('Historical data unavailable:', error)
+      }
+    }
+    
+    loadHistoricalData()
+  }, [])
+
   // Enhanced theme management functions
   const getStoredTheme = (): ThemeType => {
+    if (!isClient) return 'dark'
     try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        const stored = localStorage.getItem('weather-edu-theme') // Use same key as navigation
-        if (stored && ['dark', 'miami', 'tron'].includes(stored)) {
-          return stored as ThemeType
-        }
+      const stored = localStorage.getItem('weather-edu-theme')
+      if (stored && ['dark', 'miami', 'tron'].includes(stored)) {
+        return stored as ThemeType
       }
     } catch (error) {
       console.warn('Failed to get stored theme:', error)
@@ -94,6 +198,8 @@ function WeatherApp() {
 
   // Load theme on mount and sync with navigation
   useEffect(() => {
+    if (!isClient) return
+    
     const storedTheme = getStoredTheme()
     setCurrentTheme(storedTheme)
     
@@ -117,7 +223,7 @@ function WeatherApp() {
       window.removeEventListener('storage', handleStorageChange)
       clearInterval(interval)
     }
-  }, [currentTheme])
+  }, [isClient, currentTheme])
 
   // Enhanced theme classes for three themes with authentic Tron movie colors
   const getThemeClasses = (theme: ThemeType) => {
@@ -168,12 +274,11 @@ function WeatherApp() {
 
   // Rate limiting functions
   const getRateLimitData = () => {
+    if (!isClient) return { requests: [], lastReset: Date.now() }
     try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        const data = localStorage.getItem(RATE_LIMIT_KEY)
-        if (data) {
-          return JSON.parse(data)
-        }
+      const data = localStorage.getItem(RATE_LIMIT_KEY)
+      if (data) {
+        return JSON.parse(data)
       }
     } catch (error) {
       console.warn('Failed to get rate limit data:', error)
@@ -182,10 +287,9 @@ function WeatherApp() {
   }
 
   const saveRateLimitData = (data: { requests: number[], lastReset: number }) => {
+    if (!isClient) return
     try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(data))
-      }
+      localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(data))
     } catch (error) {
       console.warn('Failed to save rate limit data:', error)
     }
@@ -236,45 +340,31 @@ function WeatherApp() {
 
   // Update remaining searches on mount and after each request
   useEffect(() => {
+    if (!isClient) return
     const { remaining } = checkRateLimit()
     setRemainingSearches(remaining)
-  }, [])
+  }, [isClient])
 
   // Save location to cache (silent)
   const saveLocationToCache = (location: string) => {
+    if (!isClient) return
     try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.setItem(CACHE_KEY, location)
-      }
+      localStorage.setItem(CACHE_KEY, location)
     } catch (error) {
       console.warn('Failed to save location to cache:', error)
     }
   }
 
-  // Enhanced caching with better UX flow - NO AUTO-LOADING
-  useEffect(() => {
-    const loadCachedLocation = () => {
-      try {
-        if (typeof window !== 'undefined' && window.localStorage) {
-          const cachedLocation = localStorage.getItem(CACHE_KEY)
-          if (cachedLocation) {
-            // Load cached city preference only if user returns
-            setLastSearchTerm(cachedLocation)
-            handleSearch(cachedLocation, true, true) // Load from cache with rate limit bypass
-            return
-          }
-        }
-      } catch (error) {
-        console.warn('Failed to load cached location:', error)
-      }
-      
-      // For new users: show welcome screen only - NO AUTO-LOADING
-      setHasSearched(false) // Ensure welcome screen shows
-      // Removed automatic San Francisco loading for v0.1.3
+  // Save weather data to cache
+  const saveWeatherToCache = (weatherData: WeatherData) => {
+    if (!isClient) return
+    try {
+      localStorage.setItem(WEATHER_KEY, JSON.stringify(weatherData))
+      localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString())
+    } catch (error) {
+      console.warn('Failed to save weather data to cache:', error)
     }
-
-    loadCachedLocation()
-  }, [])
+  }
 
   const handleSearchWrapper = (locationInput: string) => {
     handleSearch(locationInput)
@@ -328,6 +418,9 @@ function WeatherApp() {
       if (!fromCache) {
         saveLocationToCache(locationInput)
       }
+
+      // Save weather data to cache
+      saveWeatherToCache(weatherData)
     } catch (err) {
       // Enhanced error handling with friendly fallbacks
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch weather data"
@@ -439,15 +532,15 @@ function WeatherApp() {
 
           .tron-grid-base {
             background-image: 
-              linear-gradient(rgba(0, 255, 255, 0.2) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0, 255, 255, 0.2) 1px, transparent 1px);
+              linear-gradient(rgba(0, 220, 255, 0.18) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0, 220, 255, 0.18) 1px, transparent 1px);
             background-size: 50px 50px;
           }
 
           .tron-grid-detail {
             background-image: 
-              linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+              linear-gradient(rgba(0, 240, 255, 0.08) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0, 240, 255, 0.08) 1px, transparent 1px);
             background-size: 10px 10px;
           }
 
@@ -455,9 +548,9 @@ function WeatherApp() {
             background: linear-gradient(
               to top,
               transparent 0%,
-              rgba(0, 255, 255, 0.6) 45%,
-              rgba(0, 255, 255, 0.8) 50%,
-              rgba(0, 255, 255, 0.6) 55%,
+              rgba(0, 204, 255, 0.4) 45%,
+              rgba(0, 240, 255, 0.6) 50%,
+              rgba(0, 204, 255, 0.4) 55%,
               transparent 100%
             );
             height: 200px;
@@ -470,9 +563,9 @@ function WeatherApp() {
             background: linear-gradient(
               to top,
               transparent 0%,
-              rgba(0, 255, 255, 0.3) 40%,
-              rgba(0, 255, 255, 0.5) 50%,
-              rgba(0, 255, 255, 0.3) 60%,
+              rgba(0, 220, 255, 0.2) 40%,
+              rgba(0, 240, 255, 0.35) 50%,
+              rgba(0, 220, 255, 0.2) 60%,
               transparent 100%
             );
             height: 300px;
@@ -484,8 +577,8 @@ function WeatherApp() {
 
           .tron-pulse-grid {
             background-image: 
-              linear-gradient(rgba(0, 255, 255, 0.3) 2px, transparent 2px),
-              linear-gradient(90deg, rgba(0, 255, 255, 0.3) 2px, transparent 2px);
+              linear-gradient(rgba(0, 220, 255, 0.25) 2px, transparent 2px),
+              linear-gradient(90deg, rgba(0, 220, 255, 0.25) 2px, transparent 2px);
             background-size: 50px 50px;
             animation: tronGridPulse 3.5s infinite linear;
           }
@@ -521,10 +614,10 @@ function WeatherApp() {
           </div>
           
           {/* Subtle corner accent lines */}
-          <div className="absolute top-0 left-0 w-32 h-32 border-l-2 border-t-2 border-[#00FFFF] opacity-30"></div>
-          <div className="absolute top-0 right-0 w-32 h-32 border-r-2 border-t-2 border-[#00FFFF] opacity-30"></div>
-          <div className="absolute bottom-0 left-0 w-32 h-32 border-l-2 border-b-2 border-[#00FFFF] opacity-30"></div>
-          <div className="absolute bottom-0 right-0 w-32 h-32 border-r-2 border-b-2 border-[#00FFFF] opacity-30"></div>
+          <div className="absolute top-0 left-0 w-32 h-32 border-l-2 border-t-2 border-[#00DCFF] opacity-25"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 border-r-2 border-t-2 border-[#00DCFF] opacity-25"></div>
+          <div className="absolute bottom-0 left-0 w-32 h-32 border-l-2 border-b-2 border-[#00DCFF] opacity-25"></div>
+          <div className="absolute bottom-0 right-0 w-32 h-32 border-r-2 border-b-2 border-[#00DCFF] opacity-25"></div>
         </div>
       </>
     );
@@ -685,6 +778,16 @@ function WeatherApp() {
                 <Forecast forecast={weather.forecast} theme={currentTheme} />
               </div>
 
+              {/* Historical Data Chart Widget */}
+              <div className="mx-2 sm:mx-0">
+                <HistoricalChart 
+                  currentTheme={currentTheme}
+                  latitude={weather.current.lat}
+                  longitude={weather.current.lon}
+                  locationName={weather.current.location}
+                />
+              </div>
+
               {/* Radar Toggle - Mobile friendly button */}
               <div className="text-center mb-4 sm:mb-6">
                 <button
@@ -709,6 +812,42 @@ function WeatherApp() {
                   </div>
                 </div>
               )}
+
+              {/* Quick Access Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                <Link 
+                  href="/cloud-types" 
+                  className={`${themeClasses.cardBg} ${themeClasses.borderColor} border-2 p-4 hover:scale-105 transition-all duration-300 ${themeClasses.glow}`}
+                >
+                  <div className={`${themeClasses.headerText} text-center`}>
+                    <Cloud className="w-8 h-8 mx-auto mb-2" />
+                    <div className="font-bold text-sm uppercase tracking-wider">Cloud Atlas</div>
+                    <div className={`${themeClasses.secondaryText} text-xs mt-1`}>Identify Cloud Types</div>
+                  </div>
+                </Link>
+                
+                <Link 
+                  href="/weather-systems" 
+                  className={`${themeClasses.cardBg} ${themeClasses.borderColor} border-2 p-4 hover:scale-105 transition-all duration-300 ${themeClasses.glow}`}
+                >
+                  <div className={`${themeClasses.headerText} text-center`}>
+                    <Zap className="w-8 h-8 mx-auto mb-2" />
+                    <div className="font-bold text-sm uppercase tracking-wider">Weather Systems</div>
+                    <div className={`${themeClasses.secondaryText} text-xs mt-1`}>Interactive Database</div>
+                  </div>
+                </Link>
+
+                <Link 
+                  href="/fun-facts" 
+                  className={`${themeClasses.cardBg} ${themeClasses.borderColor} border-2 p-4 hover:scale-105 transition-all duration-300 ${themeClasses.glow}`}
+                >
+                  <div className={`${themeClasses.headerText} text-center`}>
+                    <Flame className="w-8 h-8 mx-auto mb-2" />
+                    <div className="font-bold text-sm uppercase tracking-wider">16-Bit Takes</div>
+                    <div className={`${themeClasses.secondaryText} text-xs mt-1`}>Weather Phenomena</div>
+                  </div>
+                </Link>
+              </div>
             </div>
           )}
 
@@ -931,48 +1070,108 @@ function SunsetIcon() {
   )
 }
 
-// 16-bit Tron Light Cycle Watermark - only appears in Tron theme
+// Authentic Tron Light Cycle with Blue Tracer Beam - pixelated design
 function TronLightCycleWatermark() {
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.15]">
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-        <svg 
-          viewBox="0 0 200 100" 
-          className="w-80 h-40 tron-pulse"
-        >
-          {/* Light cycle body - pixelated style */}
-          <rect x="80" y="40" width="40" height="20" fill="none" stroke="#00FFFF" strokeWidth="2"/>
-          <rect x="70" y="45" width="10" height="10" fill="none" stroke="#00FFFF" strokeWidth="2"/>
-          <rect x="120" y="45" width="10" height="10" fill="none" stroke="#00FFFF" strokeWidth="2"/>
-          
-          {/* Wheels */}
-          <circle cx="90" cy="65" r="8" fill="none" stroke="#00FFFF" strokeWidth="2"/>
-          <circle cx="110" cy="65" r="8" fill="none" stroke="#00FFFF" strokeWidth="2"/>
-          
-          {/* Light trail - glowing effect */}
-          <rect x="40" y="50" width="30" height="4" fill="#00FFFF" opacity="0.8"/>
-          <rect x="20" y="52" width="20" height="2" fill="#00FFFF" opacity="0.6"/>
-          <rect x="0" y="53" width="20" height="1" fill="#00FFFF" opacity="0.4"/>
-          
-          {/* Grid lines */}
-          <line x1="0" y1="75" x2="200" y2="75" stroke="#00FFFF" strokeWidth="1" opacity="0.5"/>
-          <line x1="0" y1="25" x2="200" y2="25" stroke="#00FFFF" strokeWidth="1" opacity="0.3"/>
-          
-          {/* Vertical grid */}
-          <line x1="50" y1="0" x2="50" y2="100" stroke="#00FFFF" strokeWidth="1" opacity="0.3"/>
-          <line x1="150" y1="0" x2="150" y2="100" stroke="#00FFFF" strokeWidth="1" opacity="0.3"/>
-        </svg>
-      </div>
+    <>
+      <style jsx>{`
+        @keyframes lightCycleGlow {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 1; }
+        }
+        
+        @keyframes tracerBeam {
+          0% { transform: translateX(-400px) scaleX(0.5); opacity: 0; }
+          20% { opacity: 1; }
+          80% { opacity: 1; }
+          100% { transform: translateX(400px) scaleX(1.5); opacity: 0; }
+        }
+        
+        .light-cycle-glow {
+          animation: lightCycleGlow 2s infinite ease-in-out;
+          filter: drop-shadow(0 0 8px #00DCFF) drop-shadow(0 0 15px #0080FF);
+        }
+        
+        .tracer-beam {
+          animation: tracerBeam 8s infinite linear;
+        }
+      `}</style>
       
-      {/* Additional grid pattern */}
-      <div className="absolute inset-0" style={{
-        backgroundImage: `
-          linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px)
-        `,
-        backgroundSize: '40px 40px'
-      }} />
-    </div>
+      <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.12]">
+        {/* Main Light Cycle positioned in bottom right */}
+        <div className="absolute bottom-20 right-20 light-cycle-glow">
+          <svg viewBox="0 0 120 60" className="w-32 h-16">
+            {/* Light Cycle Body - Authentic pixelated design */}
+            {/* Main chassis */}
+            <rect x="35" y="25" width="50" height="8" fill="#00DCFF" stroke="#00F0FF" strokeWidth="0.5"/>
+            
+            {/* Driver section */}
+            <rect x="50" y="17" width="20" height="8" fill="#00DCFF" stroke="#00F0FF" strokeWidth="0.5"/>
+            <rect x="55" y="12" width="10" height="5" fill="#0080FF" stroke="#00DCFF" strokeWidth="0.5"/>
+            
+            {/* Front cowling */}
+            <rect x="25" y="27" width="10" height="4" fill="#00F0FF" stroke="#FFFFFF" strokeWidth="0.5"/>
+            <rect x="20" y="28" width="5" height="2" fill="#00DCFF"/>
+            
+            {/* Rear section */}
+            <rect x="85" y="27" width="15" height="4" fill="#00F0FF" stroke="#FFFFFF" strokeWidth="0.5"/>
+            <rect x="100" y="28" width="8" height="2" fill="#00DCFF"/>
+            
+            {/* Wheels - pixelated circles */}
+            <rect x="32" y="33" width="8" height="8" fill="none" stroke="#00DCFF" strokeWidth="1"/>
+            <rect x="34" y="35" width="4" height="4" fill="#00F0FF"/>
+            
+            <rect x="80" y="33" width="8" height="8" fill="none" stroke="#00DCFF" strokeWidth="1"/>
+            <rect x="82" y="35" width="4" height="4" fill="#00F0FF"/>
+            
+            {/* Light strips on cycle */}
+            <rect x="25" y="23" width="75" height="1" fill="#00F0FF" opacity="0.8"/>
+            <rect x="25" y="37" width="75" height="1" fill="#00F0FF" opacity="0.8"/>
+            
+            {/* Headlight */}
+            <rect x="18" y="29" width="2" height="2" fill="#FFFFFF"/>
+            <rect x="16" y="30" width="2" height="1" fill="#00F0FF"/>
+          </svg>
+        </div>
+        
+        {/* Animated Blue Tracer Beam */}
+        <div className="absolute bottom-28 right-0 w-full overflow-hidden">
+          <div className="tracer-beam relative">
+            {/* Main beam */}
+            <div 
+              className="absolute h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent"
+              style={{ 
+                width: '300px',
+                background: 'linear-gradient(90deg, transparent 0%, #00DCFF 20%, #00F0FF 50%, #00DCFF 80%, transparent 100%)',
+                boxShadow: '0 0 8px #00DCFF, 0 0 15px #0080FF'
+              }}
+            />
+            {/* Secondary glow beam */}
+            <div 
+              className="absolute h-2 -mt-0.5 bg-gradient-to-r from-transparent via-blue-300 to-transparent opacity-60"
+              style={{ 
+                width: '300px',
+                background: 'linear-gradient(90deg, transparent 0%, rgba(0, 220, 255, 0.4) 25%, rgba(0, 240, 255, 0.6) 50%, rgba(0, 220, 255, 0.4) 75%, transparent 100%)',
+                filter: 'blur(2px)'
+              }}
+            />
+          </div>
+        </div>
+        
+        {/* Grid floor pattern beneath cycle */}
+        <div className="absolute bottom-0 left-0 w-full h-32" style={{
+          backgroundImage: `
+            linear-gradient(rgba(0, 220, 255, 0.15) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 220, 255, 0.15) 1px, transparent 1px)
+          `,
+          backgroundSize: '30px 30px',
+          mask: 'linear-gradient(to top, black 0%, transparent 100%)'
+        }} />
+        
+        {/* Horizon line */}
+        <div className="absolute bottom-16 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-40" />
+      </div>
+    </>
   )
 }
 
