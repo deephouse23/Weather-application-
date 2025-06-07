@@ -73,7 +73,7 @@ export default function GamesPage() {
     {
       id: 'missile-command',
       title: 'MISSILE COMMAND',
-      emoji: '🚀',
+      emoji: '🛡️',
       description: 'Defend your cities from incoming missiles with precise defensive shooting.',
       url: '/missile-command-game.html',
       color: '#00ffff'
