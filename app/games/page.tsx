@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import PageWrapper from "@/components/page-wrapper"
+import { ExternalLink } from "lucide-react"
 
-// Theme types to match main app
 type ThemeType = 'dark' | 'miami' | 'tron';
 
 export default function GamesPage() {
@@ -63,7 +63,9 @@ export default function GamesPage() {
           headerText: 'text-[#00d4ff]',
           secondaryText: 'text-[#a0a0a0]',
           shadowColor: '#00d4ff',
-          glow: 'drop-shadow-[0_0_10px_#00d4ff]'
+          glow: 'drop-shadow-[0_0_10px_#00d4ff]',
+          hoverBg: 'hover:bg-[#1a2a4a]',
+          accentBg: 'bg-[#00d4ff]'
         }
       case 'miami':
         return {
@@ -74,7 +76,9 @@ export default function GamesPage() {
           headerText: 'text-[#ff007f]',
           secondaryText: 'text-[#b0d4f1]',
           shadowColor: '#ff1493',
-          glow: 'drop-shadow-[0_0_10px_#ff007f]'
+          glow: 'drop-shadow-[0_0_10px_#ff007f]',
+          hoverBg: 'hover:bg-[#6a1e6e]',
+          accentBg: 'bg-[#ff1493]'
         }
       case 'tron':
         return {
@@ -85,36 +89,100 @@ export default function GamesPage() {
           headerText: 'text-[#00FFFF]',
           secondaryText: 'text-[#88CCFF]',
           shadowColor: '#00FFFF',
-          glow: 'drop-shadow-[0_0_15px_#00FFFF]'
+          glow: 'drop-shadow-[0_0_15px_#00FFFF]',
+          hoverBg: 'hover:bg-[#001111]',
+          accentBg: 'bg-[#00FFFF]'
         }
     }
   }
 
   const themeClasses = getThemeClasses(currentTheme)
 
+  const games = [
+    {
+      id: 'snake',
+      title: 'RETRO SNAKE',
+      emoji: '🐍',
+      description: 'Classic Snake game with green neon graphics, WASD/arrow controls, and score tracking.',
+      url: '/snake-game.html',
+      color: '#00ff41'
+    },
+    {
+      id: 'tetris',
+      title: 'RETRO TETRIS',
+      emoji: '🔲',
+      description: 'Complete Tetris with all 7 piece types, rotation, line clearing, and level progression.',
+      url: '/tetris-game.html',
+      color: '#00ffff'
+    },
+    {
+      id: 'pacman',
+      title: 'PAC-MAZE',
+      emoji: '👾',
+      description: 'Pac-Man style maze game with ghost AI, dot collection, and power pellets.',
+      url: '/pacman-game.html',
+      color: '#ffff00'
+    }
+  ]
+
   return (
     <PageWrapper>
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-12">
           <h1 className={`text-4xl md:text-6xl font-bold mb-4 font-mono uppercase tracking-wider ${themeClasses.headerText} ${themeClasses.glow}`}>
-            WEATHER GAMES
+            RETRO ARCADE
           </h1>
           <p className={`text-lg ${themeClasses.secondaryText} font-mono mb-6`}>
-            Educational mini-games with authentic arcade styling
+            🎮 Classic 16-bit style games with authentic retro feel
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto">
-          <div className={`${themeClasses.cardBg} p-8 border-4 ${themeClasses.borderColor} text-center`}
-               style={{ boxShadow: `0 0 15px ${themeClasses.shadowColor}` }}>
-            <div className="text-6xl mb-4">🎮</div>
-            <h2 className={`text-2xl font-bold mb-4 font-mono uppercase tracking-wider ${themeClasses.headerText}`}>
-              COMING SOON
-            </h2>
-            <p className={`${themeClasses.text} font-mono text-sm`}>
-              Weather-themed educational games including cloud identification challenges, 
-              storm tracking puzzles, and atmospheric pressure prediction mini-games.
-            </p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {games.map((game) => (
+            <a
+              key={game.id}
+              href={game.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${themeClasses.cardBg} border-4 ${themeClasses.borderColor} transition-all duration-300 ${themeClasses.hoverBg} cursor-pointer block transform hover:scale-105`}
+              style={{ boxShadow: `0 0 15px ${themeClasses.shadowColor}33` }}
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-4xl">{game.emoji}</div>
+                  <ExternalLink className="w-6 h-6" style={{ color: themeClasses.shadowColor }} />
+                </div>
+                
+                <h3 className={`font-mono font-bold text-xl uppercase tracking-wider mb-2 ${themeClasses.headerText}`}>
+                  {game.title}
+                </h3>
+                
+                <p className={`${themeClasses.text} font-mono text-sm mb-4`}>
+                  {game.description}
+                </p>
+                
+                <div className={`w-full ${themeClasses.accentBg} text-black font-mono font-bold py-2 px-4 border-2 border-current transition-all duration-200 text-center`}>
+                  PLAY NOW
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+
+        <div className="text-center mt-12">
+          <div className={`${themeClasses.cardBg} border-2 ${themeClasses.borderColor} p-6 max-w-2xl mx-auto`}
+               style={{ boxShadow: `0 0 10px ${themeClasses.shadowColor}33` }}>
+            <h3 className={`font-mono font-bold text-lg uppercase tracking-wider mb-4 ${themeClasses.headerText}`}>
+              🕹️ GAME FEATURES
+            </h3>
+            <div className={`${themeClasses.text} font-mono text-sm space-y-2`}>
+              <p>✨ Authentic 16-bit retro styling with neon effects</p>
+              <p>🎨 Orbitron font for genuine retro atmosphere</p>
+              <p>🎮 Fully functional gameplay mechanics</p>
+              <p>🏆 Score tracking and game over screens</p>
+              <p>⌨️ Responsive keyboard controls</p>
+              <p>🚀 No external dependencies - pure HTML5 games</p>
+            </div>
           </div>
         </div>
       </div>
