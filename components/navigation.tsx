@@ -4,9 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Menu, X, Cloud, Zap, BookOpen, Gamepad2, Info, Home, ChevronDown } from "lucide-react"
-
-// Theme types to match main app
-type ThemeType = 'dark' | 'miami' | 'tron';
+import { ThemeType, themeUtils, APP_CONSTANTS } from "@/lib/utils"
 
 interface NavigationProps {
   currentTheme: ThemeType
@@ -24,42 +22,8 @@ export default function Navigation({ currentTheme, onThemeChange }: NavigationPr
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false)
   const pathname = usePathname()
 
-  // Enhanced theme colors for three themes with authentic Tron movie colors
-  const getThemeColors = (theme: ThemeType) => {
-    switch (theme) {
-      case 'dark':
-        return {
-          background: '#0a0a1a',
-          cardBg: '#16213e',
-          border: '#00d4ff',
-          text: '#e0e0e0',
-          accent: '#00d4ff',
-          hoverBg: '#1a2a4a'
-        }
-      case 'miami':
-        return {
-          background: '#0a0025',
-          cardBg: '#4a0e4e',
-          border: '#ff1493',
-          text: '#00ffff',
-          accent: '#ff1493',
-          hoverBg: '#6a1e6e'
-        }
-      case 'tron':
-        return {
-          background: '#000000',
-          cardBg: '#000000',
-          border: '#00FFFF',           // Electric cyan blue - authentic 80s Tron
-          text: '#FFFFFF',             // Bright white with cyan glow
-          accent: '#00FFFF',           // Electric cyan for main UI
-          hoverBg: '#001111',
-          warning: '#FF1744',          // Bright neon red for warnings/MCP programs
-          special: '#00FFFF'           // Electric cyan for special features
-        }
-    }
-  }
-
-  const themeColors = getThemeColors(currentTheme)
+  // Use centralized theme colors
+  const themeColors = themeUtils.getThemeColors(currentTheme)
 
   const navItems = [
     { href: "/", label: "HOME", icon: Home },
@@ -70,14 +34,8 @@ export default function Navigation({ currentTheme, onThemeChange }: NavigationPr
     { href: "/about", label: "ABOUT", icon: Info }
   ]
 
-  // Get theme display info for dropdown options
-  const getThemeDisplay = (theme: ThemeType) => {
-    switch (theme) {
-      case 'dark': return { label: 'DARK', emoji: '🌙' }
-      case 'miami': return { label: 'MIAMI', emoji: '🌴' }
-      case 'tron': return { label: 'TRON', emoji: '⚡' }
-    }
-  }
+  // Use centralized theme display utility
+  const getThemeDisplay = themeUtils.getThemeDisplay
 
   const handleThemeSelect = (theme: ThemeType) => {
     onThemeChange(theme)
@@ -174,7 +132,7 @@ export default function Navigation({ currentTheme, onThemeChange }: NavigationPr
                    borderColor: themeColors.border,
                    boxShadow: `0 4px 20px ${themeColors.border}33`
                  }}>
-              {(['dark', 'miami', 'tron'] as ThemeType[]).map((theme) => (
+              {Object.values(APP_CONSTANTS.THEMES).map((theme) => (
                 <button
                   key={theme}
                   onClick={() => handleThemeSelect(theme)}

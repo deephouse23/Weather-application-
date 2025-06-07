@@ -110,6 +110,7 @@ interface MoonPhaseInfo {
 }
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5';
+const BASE_URL_V3 = 'https://api.openweathermap.org/data/3.0';
 const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
 
 /**
@@ -679,24 +680,25 @@ const formatPressureValue = (pressureHPa: number, unit: 'hPa' | 'inHg'): { value
 // Enhanced UV Index fetching with time-aware logic
 const fetchCurrentWeatherData = async (lat: number, lon: number, apiKey: string): Promise<{ uvIndex: number; uvDescription: string }> => {
   try {
-    // Use One Call API 2.5 which includes UV Index in current weather
+    // Use One Call API 3.0 which includes real-time UV Index
     const oneCallResponse = await fetch(
-      `${BASE_URL}/onecall?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial&exclude=minutely,daily,alerts`
+      `${BASE_URL_V3}/onecall?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial&exclude=minutely,daily,alerts`
     );
 
     if (!oneCallResponse.ok) {
+      console.warn('Failed to fetch UV Index from One Call API 3.0 - Status:', oneCallResponse.status);
       return { uvIndex: 0, uvDescription: 'N/A' };
     }
 
     const oneCallData = await oneCallResponse.json();
     
-    // Get UV Index from One Call API current data
+    // Get UV Index from One Call API 3.0 current data
     const uvIndex = Math.round(oneCallData.current?.uvi || 0);
     const uvDescription = getUVDescription(uvIndex);
     
     return { uvIndex, uvDescription };
   } catch (error) {
-    console.warn('Failed to fetch UV Index from One Call API:', error);
+    console.warn('Failed to fetch UV Index from One Call API 3.0:', error);
     return { uvIndex: 0, uvDescription: 'N/A' };
   }
 };

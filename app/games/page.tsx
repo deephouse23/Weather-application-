@@ -3,35 +3,19 @@
 import { useState, useEffect } from "react"
 import PageWrapper from "@/components/page-wrapper"
 import { ExternalLink } from "lucide-react"
-
-type ThemeType = 'dark' | 'miami' | 'tron';
+import { ThemeType, themeUtils, APP_CONSTANTS } from "@/lib/utils"
 
 export default function GamesPage() {
-  const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark')
+  const [currentTheme, setCurrentTheme] = useState<ThemeType>(APP_CONSTANTS.THEMES.DARK)
 
-  // Theme management - sync with PageWrapper
-  const getStoredTheme = (): ThemeType => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        const stored = localStorage.getItem('weather-edu-theme')
-        if (stored && ['dark', 'miami', 'tron'].includes(stored)) {
-          return stored as ThemeType
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to get stored theme:', error)
-    }
-    return 'dark'
-  }
-
-  // Load and sync theme
+  // Load and sync theme using centralized utilities
   useEffect(() => {
-    const storedTheme = getStoredTheme()
+    const storedTheme = themeUtils.getStoredTheme()
     setCurrentTheme(storedTheme)
     
     // Listen for theme changes
     const handleStorageChange = () => {
-      const newTheme = getStoredTheme()
+      const newTheme = themeUtils.getStoredTheme()
       setCurrentTheme(newTheme)
     }
     
@@ -39,7 +23,7 @@ export default function GamesPage() {
     
     // Poll for theme changes
     const interval = setInterval(() => {
-      const newTheme = getStoredTheme()
+      const newTheme = themeUtils.getStoredTheme()
       if (newTheme !== currentTheme) {
         setCurrentTheme(newTheme)
       }
@@ -51,52 +35,7 @@ export default function GamesPage() {
     }
   }, [currentTheme])
 
-  // Theme classes to match main app
-  const getThemeClasses = (theme: ThemeType) => {
-    switch (theme) {
-      case 'dark':
-        return {
-          background: 'bg-[#0a0a1a]',
-          cardBg: 'bg-[#16213e]',
-          borderColor: 'border-[#00d4ff]',
-          text: 'text-[#e0e0e0]',
-          headerText: 'text-[#00d4ff]',
-          secondaryText: 'text-[#a0a0a0]',
-          shadowColor: '#00d4ff',
-          glow: 'drop-shadow-[0_0_10px_#00d4ff]',
-          hoverBg: 'hover:bg-[#1a2a4a]',
-          accentBg: 'bg-[#00d4ff]'
-        }
-      case 'miami':
-        return {
-          background: 'bg-gradient-to-br from-[#2d1b69] via-[#11001c] to-[#0f0026]',
-          cardBg: 'bg-gradient-to-br from-[#4a0e4e] via-[#2d1b69] to-[#1a0033]',
-          borderColor: 'border-[#ff1493]',
-          text: 'text-[#00ffff]',
-          headerText: 'text-[#ff007f]',
-          secondaryText: 'text-[#b0d4f1]',
-          shadowColor: '#ff1493',
-          glow: 'drop-shadow-[0_0_10px_#ff007f]',
-          hoverBg: 'hover:bg-[#6a1e6e]',
-          accentBg: 'bg-[#ff1493]'
-        }
-      case 'tron':
-        return {
-          background: 'bg-[#000000]',
-          cardBg: 'bg-[#000000]',
-          borderColor: 'border-[#00FFFF]',
-          text: 'text-[#FFFFFF]',
-          headerText: 'text-[#00FFFF]',
-          secondaryText: 'text-[#88CCFF]',
-          shadowColor: '#00FFFF',
-          glow: 'drop-shadow-[0_0_15px_#00FFFF]',
-          hoverBg: 'hover:bg-[#001111]',
-          accentBg: 'bg-[#00FFFF]'
-        }
-    }
-  }
-
-  const themeClasses = getThemeClasses(currentTheme)
+  const themeClasses = themeUtils.getThemeClasses(currentTheme)
 
   const games = [
     {

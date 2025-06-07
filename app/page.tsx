@@ -4,6 +4,23 @@ import React, { useState, useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { fetchWeatherData, fetchWeatherByLocation } from "@/lib/weather-api"
+
+// Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
+// The main weather API handles UV index estimation for free accounts
+
+const formatPressureByRegion = (pressureHPa: number, countryCode: string): string => {
+  const shouldUseInchesOfMercury = (countryCode: string): boolean => {
+    const inHgCountries = ['US', 'CA', 'PR', 'VI', 'GU', 'AS', 'MP'];
+    return inHgCountries.includes(countryCode);
+  };
+
+  if (shouldUseInchesOfMercury(countryCode)) {
+    const inHg = pressureHPa * 0.02953;
+    return `${inHg.toFixed(2)} inHg`;
+  } else {
+    return `${Math.round(pressureHPa)} hPa`;
+  }
+};
 import WeatherSearch from "@/components/weather-search"
 import Forecast from "@/components/forecast"
 import RadarDisplay from "@/components/radar-display"
@@ -130,7 +147,7 @@ function WeatherApp() {
     loadTheme()
     
     // Check for existing cached data when component mounts
-    const checkCacheAndLoad = () => {
+    const checkCacheAndLoad = async () => {
       try {
         const cachedLocationData = localStorage.getItem(CACHE_KEY)
         const cachedWeatherData = localStorage.getItem(WEATHER_KEY)
@@ -142,6 +159,10 @@ function WeatherApp() {
           // Only auto-load if cache is fresh (less than 10 minutes) and user had a previous session
           if (cacheAge < 10 * 60 * 1000) {
             const weather = JSON.parse(cachedWeatherData)
+            
+            // Note: UV index selective refresh removed since One Call API 2.5 was deprecated
+            // UV index is now estimated by the main weather API function
+            
             setData(weather)
             setLocationInput(cachedLocationData)
             setHasSearched(true)

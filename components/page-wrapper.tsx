@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Navigation from "./navigation"
-
-// Theme types to match main app
-type ThemeType = 'dark' | 'miami' | 'tron';
+import { ThemeType, themeUtils, APP_CONSTANTS } from "@/lib/utils"
 
 interface PageWrapperProps {
   children: React.ReactNode
@@ -17,72 +15,29 @@ interface PageWrapperProps {
  * across all pages in the education platform
  */
 export default function PageWrapper({ children }: PageWrapperProps) {
-  const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark')
-
-  // Theme management
-  const THEME_KEY = 'weather-edu-theme'
-
-  const getStoredTheme = (): ThemeType => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        const stored = localStorage.getItem(THEME_KEY)
-        if (stored && ['dark', 'miami', 'tron'].includes(stored)) {
-          return stored as ThemeType
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to get stored theme:', error)
-    }
-    return 'dark' // Default to dark theme
-  }
-
-  const saveTheme = (theme: ThemeType) => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.setItem(THEME_KEY, theme)
-      }
-    } catch (error) {
-      console.warn('Failed to save theme:', error)
-    }
-  }
+  const [currentTheme, setCurrentTheme] = useState<ThemeType>(APP_CONSTANTS.THEMES.DARK)
 
   const setTheme = (theme: ThemeType) => {
     setCurrentTheme(theme)
-    saveTheme(theme)
+    themeUtils.setStoredTheme(theme)
   }
 
   // Load theme on mount
   useEffect(() => {
-    const storedTheme = getStoredTheme()
+    const storedTheme = themeUtils.getStoredTheme()
     setCurrentTheme(storedTheme)
   }, [])
 
-  // Enhanced theme classes for three themes with authentic Tron colors
-  const getThemeClasses = (theme: ThemeType) => {
-    switch (theme) {
-      case 'dark':
-        return {
-          background: 'bg-gradient-to-br from-[#0a0a1a] via-[#16213e] to-[#1a2a4a]',
-          textColor: 'text-[#e0e0e0]'
-        }
-      case 'miami':
-        return {
-          background: 'bg-gradient-to-br from-[#2d1b69] via-[#11001c] to-[#0f0026]',
-          textColor: 'text-[#00ffff]'
-        }
-      case 'tron':
-        return {
-          background: 'bg-gradient-to-br from-[#000000] via-[#000000] to-[#000000]',
-          textColor: 'text-[#FFFFFF]'
-        }
-    }
+  // Use centralized theme classes
+  const themeColors = themeUtils.getThemeColors(currentTheme)
+  const themeClasses = {
+    background: `bg-[${themeColors.background}]`,
+    textColor: `text-[${themeColors.text}]`
   }
-
-  const themeClasses = getThemeClasses(currentTheme)
 
   // Tron Animated Grid Background Component
   const TronGridBackground = () => {
-    if (currentTheme !== 'tron') return null;
+    if (currentTheme !== APP_CONSTANTS.THEMES.TRON) return null;
     
     return (
       <>
