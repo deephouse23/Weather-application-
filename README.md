@@ -1,14 +1,27 @@
-# 🌪️ BitWeather v0.1.4 "Weather Phenomena & History Edition"
+# 🌪️ BitWeather v0.2.1 "Navigation & Games Update"
 **The Ultimate 16-Bit Weather Education & Gaming Platform**
 
-![Version](https://img.shields.io/badge/version-0.1.4-brightgreen)
+![Version](https://img.shields.io/badge/version-0.2.1-brightgreen)
 ![Theme](https://img.shields.io/badge/themes-Dark%20%7C%20Miami%20%7C%20Tron-blueviolet)
 ![API](https://img.shields.io/badge/APIs-OpenWeatherMap%20%7C%20Open--Meteo-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ---
 
-## 🎮 What's NEW in v0.1.4 "Weather Phenomena & History Edition"
+## 🎮 What's NEW in v0.2.1 "Navigation & Games Update"
+
+### 🎯 Navigation Improvements
+- **Reorganized Menu**: Games section moved next to About page
+- **Streamlined Access**: Better navigation flow and user experience
+- **Consistent Styling**: Maintained theme support across all menu items
+
+### 🎮 Games Section Updates
+- **Curated Selection**: Focused on core weather-themed games
+- **Featured Games**:
+  - 🎮 Retro Tetris
+  - 🚀 Retro Asteroids
+  - ⛈️ Weather Trivia
+- **Enhanced Performance**: Optimized game loading and responsiveness
 
 ### ⚡ EXTREME WEATHER PHENOMENA DATABASE
 Discover the most violent and fascinating weather events on Earth:
