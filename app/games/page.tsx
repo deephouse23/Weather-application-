@@ -39,14 +39,6 @@ export default function GamesPage() {
 
   const games = [
     {
-      id: 'snake',
-      title: 'RETRO SNAKE',
-      emoji: '🐍',
-      description: 'Classic Snake game with green neon graphics, WASD/arrow controls, and score tracking.',
-      url: '/snake-game.html',
-      color: '#00ff41'
-    },
-    {
       id: 'tetris',
       title: 'RETRO TETRIS',
       emoji: '🔲',
@@ -55,28 +47,12 @@ export default function GamesPage() {
       color: '#00ffff'
     },
     {
-      id: 'pacman',
-      title: 'PAC-MAZE',
-      emoji: '👾',
-      description: 'Pac-Man style maze game with ghost AI, dot collection, and power pellets.',
-      url: '/pacman-game.html',
-      color: '#ffff00'
-    },
-    {
       id: 'asteroids',
       title: 'RETRO ASTEROIDS',
       emoji: '🚀',
       description: 'Classic space shooter with physics-based movement, asteroid splitting, and level progression.',
       url: '/asteroids-game.html',
       color: '#00ff41'
-    },
-    {
-      id: 'missile-command',
-      title: 'MISSILE COMMAND',
-      emoji: '🛡️',
-      description: 'Defend your cities from incoming missiles with precise defensive shooting.',
-      url: '/missile-command-game.html',
-      color: '#00ffff'
     },
     {
       id: 'weather-trivia',
