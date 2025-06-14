@@ -251,42 +251,45 @@ function WeatherApp() {
     switch (theme) {
       case 'dark':
         return {
-          background: 'bg-[#0a0a1a]',
-          cardBg: 'bg-[#16213e]',
+          background: 'bg-[#0f0f0f]',
+          cardBg: 'bg-[#0f0f0f]',
           borderColor: 'border-[#00d4ff]',
           text: 'text-[#e0e0e0]',
           headerText: 'text-[#00d4ff]',
-          secondaryText: 'text-[#a0a0a0]',
-          accentText: 'text-[#ff6b6b]',
-          successText: 'text-[#ffe66d]',
-          glow: '',
-          specialBorder: ''
+          secondaryText: 'text-[#e0e0e0]',
+          accentText: 'text-[#00d4ff]',
+          successText: 'text-[#00ff00]',
+          glow: 'glow-dark',
+          specialBorder: 'border-[#00d4ff]',
+          buttonHover: 'hover:bg-[#00d4ff] hover:text-[#0f0f0f]'
         }
       case 'miami':
         return {
-          background: 'bg-gradient-to-br from-[#2d1b69] via-[#11001c] to-[#0f0026]',
-          cardBg: 'bg-gradient-to-br from-[#4a0e4e] via-[#2d1b69] to-[#1a0033]',
+          background: 'bg-[#0a0025]',
+          cardBg: 'bg-[#0a0025]',
           borderColor: 'border-[#ff1493]',
           text: 'text-[#00ffff]',
-          headerText: 'text-[#ff007f]',
-          secondaryText: 'text-[#b0d4f1]',
+          headerText: 'text-[#ff1493]',
+          secondaryText: 'text-[#00ffff]',
           accentText: 'text-[#ff1493]',
-          successText: 'text-[#ff1493]',
-          glow: 'drop-shadow-[0_0_10px_#ff007f]',
-          specialBorder: 'shadow-[0_0_15px_#ff1493]'
+          successText: 'text-[#00ff00]',
+          glow: 'glow-miami',
+          specialBorder: 'border-[#ff1493]',
+          buttonHover: 'hover:bg-[#ff1493] hover:text-[#0a0025]'
         }
       case 'tron':
         return {
-          background: 'bg-[#000000]',
-          cardBg: 'bg-[#000000]',
-          borderColor: 'border-[#00FFFF]',      // Electric cyan blue - authentic 80s Tron
-          text: 'text-[#FFFFFF]',               // Bright white with blue glow
-          headerText: 'text-[#00FFFF]',         // Electric cyan for headers
-          secondaryText: 'text-[#88CCFF]',      // Light cyan for secondary text
-          accentText: 'text-[#FF1744]',         // Bright neon red for alerts/warnings
-          successText: 'text-[#00FFFF]',        // Cyan for success states
-          glow: 'drop-shadow-[0_0_15px_#00FFFF]',
-          specialBorder: 'shadow-[0_0_20px_#00FFFF]'
+          background: 'bg-black',
+          cardBg: 'bg-black',
+          borderColor: 'border-[#00FFFF]',
+          text: 'text-white',
+          headerText: 'text-[#00FFFF]',
+          secondaryText: 'text-[#00FFFF]',
+          accentText: 'text-[#00FFFF]',
+          successText: 'text-[#00ff00]',
+          glow: 'glow-tron',
+          specialBorder: 'border-[#00FFFF]',
+          buttonHover: 'hover:bg-[#00FFFF] hover:text-black'
         }
     }
   }
@@ -696,6 +699,27 @@ function WeatherApp() {
                   </p>
                 </div>
 
+                {/* Historical Records */}
+                {historicalData && (
+                  <div className={`${themeClasses.background} p-3 sm:p-4 border-2 ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder} mb-4 sm:mb-6`}
+                       style={{ borderColor: themeClasses.borderColor }}>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className={`${themeClasses.text} font-mono text-xs sm:text-sm mb-1`}>Record High</div>
+                        <div className={`${themeClasses.headerText} font-mono font-bold text-sm sm:text-base`}>
+                          {Math.round(historicalData.daily.temperature_2m_max[0])}° ({new Date(historicalData.daily.time[0]).getFullYear()})
+                        </div>
+                      </div>
+                      <div>
+                        <div className={`${themeClasses.text} font-mono text-xs sm:text-sm mb-1`}>Record Low</div>
+                        <div className={`${themeClasses.headerText} font-mono font-bold text-sm sm:text-base`}>
+                          {Math.round(historicalData.daily.temperature_2m_min[0])}° ({new Date(historicalData.daily.time[0]).getFullYear()})
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Mobile-optimized weather cards grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
                   {/* Temperature & Condition - Mobile optimized */}
@@ -759,7 +783,7 @@ function WeatherApp() {
                 </div>
 
                 {/* Sun & Moon Section - Mobile responsive */}
-                <div className={`${themeClasses.background} p-2 sm:p-4 border border-2 ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder}`}
+                <div className={`${themeClasses.background} p-2 sm:p-4 border border-2 ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder} mb-4 sm:mb-6`}
                      style={{ borderColor: themeClasses.borderColor }}>
                   <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4 lg:space-x-8 px-2 py-2 sm:py-3">
                     <div className="flex items-center space-x-2 sm:space-x-3">
@@ -792,6 +816,15 @@ function WeatherApp() {
                     </div>
                   </div>
                 </div>
+
+                {/* Doppler Radar Button */}
+                <Link href="/radar" className="block">
+                  <button
+                    className={`w-full px-4 sm:px-6 py-2 sm:py-3 border-2 sm:border-4 text-sm sm:text-lg font-mono font-bold uppercase tracking-wider transition-all duration-300 ${themeClasses.borderColor} ${themeClasses.cardBg} ${themeClasses.headerText} touch-manipulation min-h-[44px] hover:${themeClasses.buttonHover}`}
+                  >
+                    📡 VIEW DOPPLER RADAR
+                  </button>
+                </Link>
               </div>
 
               {/* 5-Day Forecast - Mobile optimized */}
@@ -886,7 +919,7 @@ function WeatherApp() {
  ▐░░░░░░░▌  ▐░░░░░░▌     ▐░▌        ▐░▌ ▐░▌  ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  ▐░▌   ▐░▌ ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  
  ▐░█▀▀▀█░▌       ▐░▌     ▐░▌        ▐░▌  ▐░▌ ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  ▐░█▄▄▄█░▌ ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  
  ▐░▌   ▐░▌  ▄▄▄▄▄█░▌     ▐░▌        ▐░▌   ▐░▌▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░▌  ▐░░░░░░░▌ ▐░░░░░░░▌ 
-  ▀     ▀  ▐░░░░░░░▌     ▀          ▀     ▀  ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀    ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀  
+  ▀     ▀  ▐░░░░░░▌     ▀          ▀     ▀  ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀    ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀  
          ▀▀▀▀▀▀▀▀                                                                                                 `}
                 </div>
                 <div className="block sm:hidden text-center">
