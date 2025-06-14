@@ -1,0 +1,240 @@
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+// Application Constants
+export const APP_CONSTANTS = {
+  THEMES: {
+    DARK: 'dark' as const,
+    MIAMI: 'miami' as const,
+    TRON: 'tron' as const,
+  },
+  STORAGE_KEYS: {
+    THEME: 'weather-edu-theme',
+    WEATHER_CACHE: 'bitweather_weather_data',
+    WEATHER_CITY: 'bitweather_city',
+    CACHE_TIMESTAMP: 'bitweather_cache_timestamp',
+    RATE_LIMIT: 'weather-app-rate-limit',
+    SNAKE_SCORES: 'snakeHighScores',
+    TETRIS_SCORES: 'tetrisHighScores',
+    PACMAN_SCORES: 'pacmanHighScores',
+  },
+  RATE_LIMITS: {
+    MAX_REQUESTS_PER_HOUR: 10,
+    COOLDOWN_SECONDS: 2,
+    RATE_LIMIT_WINDOW: 60000, // 1 minute
+    MAX_REQUESTS: 5
+  },
+  CACHE: {
+    EXPIRY_MINUTES: 10,
+  }
+} as const
+
+export type ThemeType = typeof APP_CONSTANTS.THEMES[keyof typeof APP_CONSTANTS.THEMES]
+
+// Theme color definitions
+export const THEME_COLORS = {
+  [APP_CONSTANTS.THEMES.DARK]: {
+    background: "#0a0a1a",
+    cardBg: "#16213e",
+    border: "#00d4ff",
+    text: "#e0e0e0",
+    header: "#00d4ff",
+    secondary: "#a0a0a0",
+    shadow: "#00d4ff",
+    hover: "#1a1a2e",
+    accent: "#4ecdc4",
+    hoverBg: "#1a2a4a",
+    headerText: "#00d4ff",
+    secondaryText: "#a0a0a0",
+    success: "#4ecdc4",
+    warning: "#ff6b6b",
+    error: "#ff4444"
+  },
+  [APP_CONSTANTS.THEMES.MIAMI]: {
+    background: "#2d1b69",
+    cardBg: "#4a0e4e",
+    border: "#ff1493",
+    text: "#00ffff",
+    header: "#ff1493",
+    secondary: "#ff69b4",
+    shadow: "#ff1493",
+    hover: "#1a0033",
+    accent: "#00ffff",
+    hoverBg: "#6a1e6e",
+    headerText: "#ff007f",
+    secondaryText: "#b0d4f1",
+    success: "#ff69b4",
+    warning: "#ff69b4",
+    error: "#ff1493"
+  },
+  [APP_CONSTANTS.THEMES.TRON]: {
+    background: "#000000",
+    cardBg: "#000000",
+    border: "#00FFFF",
+    text: "#FFFFFF",
+    header: "#00FFFF",
+    secondary: "#88CCFF",
+    shadow: "#00FFFF",
+    hover: "#001111",
+    accent: "#88CCFF",
+    hoverBg: "#001111",
+    headerText: "#00FFFF",
+    secondaryText: "#88CCFF",
+    success: "#00FFFF",
+    warning: "#FF6B6B",
+    error: "#FF4444"
+  }
+} as const
+
+// Safe localStorage access with error handling
+export const safeLocalStorage = {
+  get: (key: string): string | null => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        return localStorage.getItem(key)
+      }
+    } catch (error) {
+      console.warn(`Failed to get localStorage key "${key}":`, error)
+    }
+    return null
+  },
+
+  set: (key: string, value: string): boolean => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem(key, value)
+        return true
+      }
+    } catch (error) {
+      console.warn(`Failed to set localStorage key "${key}":`, error)
+    }
+    return false
+  },
+
+  remove: (key: string): boolean => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.removeItem(key)
+        return true
+      }
+    } catch (error) {
+      console.warn(`Failed to remove localStorage key "${key}":`, error)
+    }
+    return false
+  }
+}
+
+// Theme management utilities
+export const themeUtils = {
+  getStoredTheme: (): ThemeType => {
+    const stored = safeLocalStorage.get(APP_CONSTANTS.STORAGE_KEYS.THEME)
+    if (stored && Object.values(APP_CONSTANTS.THEMES).includes(stored as ThemeType)) {
+      return stored as ThemeType
+    }
+    return APP_CONSTANTS.THEMES.DARK
+  },
+
+  setStoredTheme: (theme: ThemeType): boolean => {
+    return safeLocalStorage.set(APP_CONSTANTS.STORAGE_KEYS.THEME, theme)
+  },
+
+  getThemeColors: (theme: ThemeType) => THEME_COLORS[theme],
+
+  getThemeClasses: (theme: ThemeType) => {
+    const colors = THEME_COLORS[theme]
+    return {
+      background: theme === APP_CONSTANTS.THEMES.MIAMI ? 'bg-gradient-to-br from-[#2d1b69] via-[#11001c] to-[#0f0026]' : theme === APP_CONSTANTS.THEMES.TRON ? 'bg-black' : 'bg-[#0a0a1a]',
+      cardBg: `bg-[${colors.cardBg}]`,
+      borderColor: `border-[${colors.border}]`,
+      text: `text-[${colors.text}]`,
+      headerText: `text-[${colors.header}]`,
+      secondaryText: `text-[${colors.secondary}]`,
+      shadowColor: colors.shadow,
+      glow: `shadow-[0_0_15px_${colors.shadow}33]`,
+      hoverBg: `hover:bg-[${colors.hover}]`,
+      accentBg: `bg-[${colors.accent}]`,
+      accentText: `text-[${colors.accent}]`,
+      successText: `text-[${colors.success}]`,
+      warningText: `text-[${colors.warning}]`,
+      errorText: `text-[${colors.error || '#ff4444'}]`,
+      placeholderText: `placeholder-[${colors.secondary}]`,
+      hoverBorder: `hover:border-[${colors.hover}]`,
+      specialBorder: `border-[${colors.accent}]`,
+      inputStyle: `bg-[${colors.cardBg}] border-[${colors.border}] text-[${colors.text}] placeholder-[${colors.secondary}]`,
+      buttonBg: `bg-[${colors.cardBg}]`,
+      buttonBorder: `border-[${colors.border}]`,
+      buttonText: `text-[${colors.text}]`,
+      buttonHover: `hover:bg-[${colors.hover}] hover:text-[${colors.accent}]`,
+      errorBg: `bg-[${colors.cardBg}]`,
+      buttonStyle: theme === APP_CONSTANTS.THEMES.MIAMI ? {
+        background: 'linear-gradient(45deg, #ff1493, #00ffff)',
+        color: '#ffffff'
+      } : theme === APP_CONSTANTS.THEMES.TRON ? {
+        background: 'linear-gradient(45deg, #00FFFF, #88CCFF)',
+        color: '#000000'
+      } : {
+        background: 'linear-gradient(45deg, #00d4ff, #4ecdc4)',
+        color: '#ffffff'
+      }
+    }
+  },
+
+  getThemeDisplay: (theme: ThemeType) => {
+    switch (theme) {
+      case APP_CONSTANTS.THEMES.DARK: return { label: 'DARK', emoji: '🌙' }
+      case APP_CONSTANTS.THEMES.MIAMI: return { label: 'MIAMI', emoji: '🌴' }
+      case APP_CONSTANTS.THEMES.TRON: return { label: 'TRON', emoji: '⚡' }
+    }
+  }
+}
+
+// Validation utilities
+export const validation = {
+  isValidTheme: (theme: string): theme is ThemeType => {
+    return Object.values(APP_CONSTANTS.THEMES).includes(theme as ThemeType)
+  },
+
+  isValidEmail: (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  },
+
+  isValidUrl: (url: string): boolean => {
+    try {
+      new URL(url)
+      return true
+    } catch {
+      return false
+    }
+  }
+}
+
+// Date and time utilities
+export const dateUtils = {
+  formatTimestamp: (timestamp: number): string => {
+    return new Date(timestamp).toLocaleString()
+  },
+
+  isExpired: (timestamp: number, expiryMinutes: number = APP_CONSTANTS.CACHE.EXPIRY_MINUTES): boolean => {
+    const now = Date.now()
+    const expiry = timestamp + (expiryMinutes * 60 * 1000)
+    return now > expiry
+  },
+
+  getCurrentTimestamp: (): number => Date.now()
+}
+
+// Error handling utilities
+export const errorUtils = {
+  logError: (context: string, error: unknown): void => {
+    console.error(`[${context}]`, error)
+  },
+
+  createErrorMessage: (context: string, fallback: string = 'An error occurred'): string => {
+    return `${context}: ${fallback}`
+  }
+}
