@@ -1,21 +1,35 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import PageWrapper from "@/components/page-wrapper"
-import { ArrowLeft } from "lucide-react"
-import { ThemeType, themeUtils, APP_CONSTANTS } from "@/lib/utils"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { themeUtils, APP_CONSTANTS } from "@/lib/utils"
+import RadarDisplay from "@/components/radar-display"
+
+// Theme types
+type ThemeType = 'dark' | 'miami' | 'tron';
 
 export default function RadarPage() {
   const [currentTheme, setCurrentTheme] = useState<ThemeType>(APP_CONSTANTS.THEMES.DARK)
-  const themeClasses = themeUtils.getThemeClasses(currentTheme)
+  const [isClient, setIsClient] = useState(false)
+  const router = useRouter()
 
-  // Load and sync theme using centralized utilities
+  // Get API key from environment variables
+  const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY
+
+  // Client-side mount effect
   useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Load theme on mount and sync with navigation
+  useEffect(() => {
+    if (!isClient) return
+    
     const storedTheme = themeUtils.getStoredTheme()
     setCurrentTheme(storedTheme)
     
-    // Listen for theme changes
+    // Listen for theme changes from navigation
     const handleStorageChange = () => {
       const newTheme = themeUtils.getStoredTheme()
       setCurrentTheme(newTheme)
@@ -23,7 +37,7 @@ export default function RadarPage() {
     
     window.addEventListener('storage', handleStorageChange)
     
-    // Poll for theme changes
+    // Poll for theme changes (in case of same-tab changes)
     const interval = setInterval(() => {
       const newTheme = themeUtils.getStoredTheme()
       if (newTheme !== currentTheme) {
@@ -35,66 +49,105 @@ export default function RadarPage() {
       window.removeEventListener('storage', handleStorageChange)
       clearInterval(interval)
     }
-  }, [currentTheme])
+  }, [isClient, currentTheme])
+
+  // Get theme classes
+  const themeClasses = themeUtils.getThemeClasses(currentTheme)
+
+  // Get location from URL parameters
+  const [location, setLocation] = useState<{ lat: number; lon: number; name: string } | null>(null)
+
+  useEffect(() => {
+    if (!isClient) return
+
+    // Get location from URL parameters
+    const params = new URLSearchParams(window.location.search)
+    const lat = parseFloat(params.get('lat') || '')
+    const lon = parseFloat(params.get('lon') || '')
+    const name = params.get('name') || ''
+
+    if (!isNaN(lat) && !isNaN(lon)) {
+      setLocation({ lat, lon, name })
+    } else {
+      // Redirect to home if no location provided
+      router.push('/')
+    }
+  }, [isClient, router])
+
+  if (!isClient || !location) {
+    return null // Don't render anything during SSR or while loading
+  }
 
   return (
-    <PageWrapper>
-      <div className="container mx-auto px-4 py-8">
+    <div className={`min-h-screen ${themeClasses.background} text-white p-4 sm:p-6 lg:p-8`}>
+      <div className="max-w-7xl mx-auto">
         {/* Back Button */}
-        <Link 
-          href="/"
-          className={`inline-flex items-center space-x-2 px-4 py-2 border-2 text-sm font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 mb-6 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`}
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>BACK TO WEATHER</span>
+        <Link href="/" className="inline-block mb-6">
+          <button
+            className={`px-4 sm:px-6 py-2 sm:py-3 border-2 sm:border-4 text-sm sm:text-lg font-mono font-bold uppercase tracking-wider transition-all duration-300 ${themeClasses.borderColor} ${themeClasses.cardBg} ${themeClasses.headerText} touch-manipulation min-h-[44px] hover:${themeClasses.buttonHover}`}
+          >
+            ← BACK TO WEATHER
+          </button>
         </Link>
 
-        {/* Radar Container */}
-        <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden border-4 border-gray-800">
-          {/* Modern Radar Display */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-white text-center">
-              <h2 className="text-2xl font-bold mb-2">Modern Doppler Radar</h2>
-              <p className="text-gray-400">Coming soon: Professional-grade weather radar visualization</p>
+        {/* Radar Display */}
+        <div className={`${themeClasses.cardBg} p-4 sm:p-6 lg:p-8 border-2 sm:border-4 pixel-border ${themeClasses.borderColor} ${themeClasses.specialBorder} text-center`}>
+          <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 font-mono uppercase tracking-wider ${themeClasses.headerText}`}>
+            DOPPLER RADAR
+          </h1>
+          
+          <div className="mb-4 sm:mb-6">
+            <p className={`${themeClasses.secondaryText} font-mono text-sm sm:text-base`}>
+              {location.name}
+            </p>
+          </div>
+
+          {/* Radar Display Component */}
+          <div className="w-full aspect-square max-w-3xl mx-auto">
+            <RadarDisplay
+              lat={location.lat}
+              lon={location.lon}
+              apiKey={API_KEY || ''}
+              theme={currentTheme}
+              locationName={location.name}
+            />
+          </div>
+
+          {/* Radar Features */}
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
+              <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Base Reflectivity</h3>
+              <p className={`${themeClasses.text} text-sm`}>
+                Shows precipitation intensity using a color scale from light to heavy.
+              </p>
+            </div>
+            <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
+              <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Velocity</h3>
+              <p className={`${themeClasses.text} text-sm`}>
+                Displays wind speed and direction using Doppler effect measurements.
+              </p>
+            </div>
+            <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
+              <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Precipitation</h3>
+              <p className={`${themeClasses.text} text-sm`}>
+                Shows different types of precipitation (rain, snow, mixed) with intensity levels.
+              </p>
             </div>
           </div>
 
-          {/* Radar Controls */}
-          <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center">
-            <div className="flex space-x-2">
-              <button className="px-3 py-1 bg-blue-600 text-white rounded text-sm">Base Reflectivity</button>
-              <button className="px-3 py-1 bg-gray-700 text-white rounded text-sm">Velocity</button>
-              <button className="px-3 py-1 bg-gray-700 text-white rounded text-sm">Precipitation</button>
-            </div>
-            <div className="flex space-x-2">
-              <button className="px-3 py-1 bg-gray-700 text-white rounded text-sm">Play</button>
-              <button className="px-3 py-1 bg-gray-700 text-white rounded text-sm">Loop</button>
-            </div>
-          </div>
-        </div>
-
-        {/* Radar Information */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className={`p-6 border-2 ${themeClasses.borderColor} ${themeClasses.background}`}>
-            <h3 className={`text-xl font-bold mb-4 ${themeClasses.headerText}`}>Radar Features</h3>
-            <ul className={`space-y-2 ${themeClasses.text}`}>
-              <li>• Real-time precipitation tracking</li>
-              <li>• Storm cell identification</li>
-              <li>• Wind speed and direction</li>
-              <li>• Severe weather alerts</li>
-            </ul>
-          </div>
-          <div className={`p-6 border-2 ${themeClasses.borderColor} ${themeClasses.background}`}>
-            <h3 className={`text-xl font-bold mb-4 ${themeClasses.headerText}`}>Coming Soon</h3>
-            <ul className={`space-y-2 ${themeClasses.text}`}>
-              <li>• Enhanced radar visualization</li>
-              <li>• Historical radar data</li>
-              <li>• Custom radar layers</li>
-              <li>• Mobile-optimized controls</li>
+          {/* Upcoming Features */}
+          <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder} mt-8`}>
+            <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Coming Soon</h3>
+            <ul className={`${themeClasses.text} text-sm space-y-2`}>
+              <li>• Storm cell tracking and warnings</li>
+              <li>• Lightning strike overlay</li>
+              <li>• Temperature and wind overlays</li>
+              <li>• Enhanced city markers and landmarks</li>
+              <li>• Customizable radar layers</li>
             </ul>
           </div>
         </div>
       </div>
-    </PageWrapper>
+    </div>
   )
 } 

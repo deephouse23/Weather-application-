@@ -688,141 +688,75 @@ function WeatherApp() {
 
           {weather && (
             <div className="space-y-4 sm:space-y-6">
-              {/* Current Weather Display - Mobile responsive */}
-              <div className={`${themeClasses.cardBg} p-4 sm:p-6 lg:p-8 border-2 sm:border-4 pixel-border ${themeClasses.borderColor} ${themeClasses.specialBorder} text-center mx-2 sm:mx-0`}>
+              {/* Current Weather */}
+              <div className={`${themeClasses.cardBg} p-4 sm:p-6 lg:p-8 border-2 sm:border-4 pixel-border ${themeClasses.borderColor} ${themeClasses.specialBorder} text-center`}>
+                <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 font-mono uppercase tracking-wider ${themeClasses.headerText}`}>
+                  CURRENT CONDITIONS
+                </h2>
+                
                 <div className="mb-4 sm:mb-6">
-                  <h2 className={`text-lg sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 font-mono uppercase tracking-wider ${themeClasses.headerText} break-words px-2`}>
+                  <p className={`${themeClasses.secondaryText} font-mono text-sm sm:text-base`}>
                     {weather.current.location}
-                  </h2>
-                  <p className={`${themeClasses.secondaryText} font-mono text-xs sm:text-sm`}>
-                    {weather.current.country} • Current Conditions
                   </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
+                    <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Temperature</h3>
+                    <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
+                      {weather.current.temp}°C
+                    </p>
+                  </div>
+                  <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
+                    <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Conditions</h3>
+                    <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
+                      {weather.current.description}
+                    </p>
+                  </div>
+                  <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
+                    <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Wind</h3>
+                    <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
+                      {weather.current.wind} km/h
+                    </p>
+                    <p className={`${themeClasses.secondaryText} text-sm`}>
+                      {weather.current.windDisplay}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Historical Records */}
                 {historicalData && (
-                  <div className={`${themeClasses.background} p-3 sm:p-4 border-2 ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder} mb-4 sm:mb-6`}
-                       style={{ borderColor: themeClasses.borderColor }}>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <div className={`${themeClasses.text} font-mono text-xs sm:text-sm mb-1`}>Record High</div>
-                        <div className={`${themeClasses.headerText} font-mono font-bold text-sm sm:text-base`}>
-                          {Math.round(historicalData.daily.temperature_2m_max[0])}° ({new Date(historicalData.daily.time[0]).getFullYear()})
-                        </div>
-                      </div>
-                      <div>
-                        <div className={`${themeClasses.text} font-mono text-xs sm:text-sm mb-1`}>Record Low</div>
-                        <div className={`${themeClasses.headerText} font-mono font-bold text-sm sm:text-base`}>
-                          {Math.round(historicalData.daily.temperature_2m_min[0])}° ({new Date(historicalData.daily.time[0]).getFullYear()})
-                        </div>
-                      </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                    <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
+                      <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Record High</h3>
+                      <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
+                        {historicalData.daily.temperature_2m_max[0]}°C
+                      </p>
+                      <p className={`${themeClasses.secondaryText} text-sm`}>
+                        Set in {new Date(historicalData.daily.time[0]).getFullYear()}
+                      </p>
+                    </div>
+                    <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
+                      <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Record Low</h3>
+                      <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
+                        {historicalData.daily.temperature_2m_min[0]}°C
+                      </p>
+                      <p className={`${themeClasses.secondaryText} text-sm`}>
+                        Set in {new Date(historicalData.daily.time[0]).getFullYear()}
+                      </p>
                     </div>
                   </div>
                 )}
 
-                {/* Mobile-optimized weather cards grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-                  {/* Temperature & Condition - Mobile optimized */}
-                  <div className={`${themeClasses.background} p-3 sm:p-4 lg:p-6 border-2 ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder} min-h-0`}
-                       style={{ borderColor: themeClasses.borderColor }}>
-                    <div className="flex items-center justify-center mb-2 sm:mb-4">
-                      <WeatherIcon condition={weather.current.condition} size="large" />
-                    </div>
-                    <div className={`text-3xl sm:text-4xl lg:text-5xl font-bold ${themeClasses.headerText} font-mono mb-1 sm:mb-2`}>
-                      {Math.round(weather.current.temp)}°
-                    </div>
-                    <div className={`${themeClasses.text} font-mono text-xs sm:text-sm uppercase tracking-wider break-words px-1`}>
-                      {weather.current.description}
-                    </div>
-                  </div>
-
-                  {/* Weather Details - Mobile responsive */}
-                  <div className={`${themeClasses.background} p-3 sm:p-4 lg:p-6 border-2 ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder}`}
-                       style={{ borderColor: themeClasses.borderColor }}>
-                    <div className="space-y-2 sm:space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className={`${themeClasses.text} font-mono text-xs sm:text-sm`}>Humidity:</span>
-                        <span className={`${themeClasses.headerText} font-mono font-bold text-xs sm:text-sm`}>{weather.current.humidity}%</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className={`${themeClasses.text} font-mono text-xs sm:text-sm`}>Wind:</span>
-                        <span className={`${themeClasses.headerText} font-mono font-bold text-xs sm:text-sm break-words text-right flex-1 ml-2`}
-                              dangerouslySetInnerHTML={{ __html: formatWindDisplayHTML(weather.current.windDisplay) }} />
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className={`${themeClasses.text} font-mono text-xs sm:text-sm`}>Dew Point:</span>
-                        <span className={`${themeClasses.headerText} font-mono font-bold text-xs sm:text-sm`}>{Math.round(weather.current.dewPoint)}°</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className={`${themeClasses.text} font-mono text-xs sm:text-sm`}>Pressure:</span>
-                        <span className={`${themeClasses.headerText} font-mono font-bold text-xs break-words text-right`}>{weather.current.pressureDisplay}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* UV Index & Atmospheric - Mobile optimized */}
-                  <div className={`${themeClasses.background} p-3 sm:p-4 lg:p-6 border-2 ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder}`}
-                       style={{ borderColor: themeClasses.borderColor }}>
-                    <div className="space-y-3 sm:space-y-4">
-                      <div>
-                        <div className={`${themeClasses.text} font-mono text-xs sm:text-sm mb-1`}>UV Index</div>
-                        <div className={`text-xl sm:text-2xl font-bold ${themeClasses.headerText} font-mono`}>
-                          {weather.current.uvIndex}
-                        </div>
-                        <div className={`${themeClasses.secondaryText} font-mono text-xs uppercase tracking-wider break-words`}>
-                          {weather.current.uvDescription}
-                        </div>
-                      </div>
-                      <PressureGauge 
-                        pressure={weather.current.pressure} 
-                        unit={getPressureUnit(weather.current.country)} 
-                        theme={currentTheme} 
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Sun & Moon Section - Mobile responsive */}
-                <div className={`${themeClasses.background} p-2 sm:p-4 border border-2 ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder} mb-4 sm:mb-6`}
-                     style={{ borderColor: themeClasses.borderColor }}>
-                  <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4 lg:space-x-8 px-2 py-2 sm:py-3">
-                    <div className="flex items-center space-x-2 sm:space-x-3">
-                      <SunriseIcon />
-                      <div>
-                        <div className={`${themeClasses.text} font-mono text-xs sm:text-sm`}>Sunrise</div>
-                        <div className={`${themeClasses.headerText} font-mono font-bold text-xs sm:text-base`}>{weather.current.sunrise}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2 sm:space-x-3">
-                      <SunsetIcon />
-                      <div>
-                        <div className={`${themeClasses.text} font-mono text-xs sm:text-sm`}>Sunset</div>
-                        <div className={`${themeClasses.headerText} font-mono font-bold text-xs sm:text-base`}>{weather.current.sunset}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2 sm:space-x-3">
-                      <MoonPhaseWatermark 
-                        phase={weather.moonPhase.phase}
-                        phaseAngle={weather.moonPhase.phaseAngle}
-                        illumination={weather.moonPhase.illumination}
-                        theme={currentTheme}
-                      />
-                      <div>
-                        <div className={`${themeClasses.text} font-mono text-xs sm:text-sm`}>Moon Phase</div>
-                        <div className={`${themeClasses.headerText} font-mono font-bold text-xs break-words text-center`}>
-                          {weather.moonPhase.phase} ({weather.moonPhase.illumination}%)
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Doppler Radar Button */}
-                <Link href="/radar" className="block">
+                <Link 
+                  href={`/radar?lat=${weather.current.lat}&lon=${weather.current.lon}&name=${encodeURIComponent(weather.current.location)}`}
+                  className="inline-block"
+                >
                   <button
-                    className={`w-full px-4 sm:px-6 py-2 sm:py-3 border-2 sm:border-4 text-sm sm:text-lg font-mono font-bold uppercase tracking-wider transition-all duration-300 ${themeClasses.borderColor} ${themeClasses.cardBg} ${themeClasses.headerText} touch-manipulation min-h-[44px] hover:${themeClasses.buttonHover}`}
+                    className={`px-4 sm:px-6 py-2 sm:py-3 border-2 sm:border-4 text-sm sm:text-lg font-mono font-bold uppercase tracking-wider transition-all duration-300 ${themeClasses.borderColor} ${themeClasses.cardBg} ${themeClasses.headerText} touch-manipulation min-h-[44px] hover:${themeClasses.buttonHover}`}
                   >
-                    📡 VIEW DOPPLER RADAR
+                    View Doppler Radar
                   </button>
                 </Link>
               </div>

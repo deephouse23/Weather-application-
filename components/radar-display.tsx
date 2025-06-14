@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { RotateCcw, Plus, Minus, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
+import { themeUtils } from '@/lib/utils'
 
 // Theme types
 type ThemeType = 'dark' | 'miami' | 'tron';
@@ -26,6 +27,7 @@ interface RadarFrame {
   precipitationData: PrecipitationData[][]
   isLoading: boolean
   hasRealData: boolean
+  url?: string // RainViewer radar tile URL
 }
 
 // City landmark data for 16-bit icons
@@ -36,6 +38,75 @@ interface CityLandmark {
   icon: string // Pixel art representation
   type: 'major' | 'nearby' | 'current'
   landmark?: string // Optional landmark description
+}
+
+// Enhanced color palettes for all three themes
+const colorPalettes = {
+  // Dark theme colors - EXACT MATCH with main app
+  dark: {
+    name: 'DARK MODE',
+    background: '#0f0f0f',
+    grid: '#1a4a4a',
+    scanline: '#2a5a5a',
+    border: '#00d4ff',      // EXACT MATCH: Same as main app dark theme border
+    text: '#e0e0e0',
+    accent: '#00d4ff',      // EXACT MATCH: Same as main app dark theme accent
+    // Precipitation intensity colors
+    none: '#001122',
+    lightRain: '#336699',    // Light blue
+    moderateRain: '#5599bb', // Medium blue  
+    heavyRain: '#77bbdd',    // Bright blue
+    severeRain: '#99ddff',   // Very bright blue
+    extremeRain: '#bbffff',  // Near white blue
+    lightSnow: '#6a7a7a',    // Light gray
+    moderateSnow: '#8a9a9a', // Medium gray
+    heavySnow: '#aababa',    // Bright gray
+    severeSnow: '#ccdddd',   // Very bright gray
+    mixed: '#7ab0ba'         // Blue-gray mix
+  },
+  // Miami Vice theme colors - EXACT MATCH with main app
+  miami: {
+    name: 'MIAMI VICE',
+    background: '#0a0025',
+    grid: '#1a0040',
+    scanline: '#2a0055', 
+    border: '#ff1493',      // EXACT MATCH: Same as main app Miami Vice border  
+    text: '#00ffff',
+    accent: '#ff1493',      // EXACT MATCH: Same as main app Miami Vice accent
+    none: '#0f0033',
+    lightRain: '#ff69b4',    // Light pink
+    moderateRain: '#ff1493', // Hot pink - EXACT MATCH
+    heavyRain: '#ff007f',    // Deep pink
+    severeRain: '#ff0066',   // Bright magenta
+    extremeRain: '#ff3399',  // Neon pink
+    lightSnow: '#40e0d0',    // Light cyan
+    moderateSnow: '#00ffff', // Bright cyan
+    heavySnow: '#00f5ff',    // Deep cyan
+    severeSnow: '#87ceeb',   // Sky blue
+    mixed: '#9370db'         // Purple mix
+  },
+  // NEW: Tron theme colors - Electric cyan and bright neon red inspired by 1982 movie
+  tron: {
+    name: 'TRON SYSTEM',
+    background: '#000000',   // Pure black like Tron's digital world
+    grid: '#001111',         // Dark cyan grid lines
+    scanline: '#002222',     // Brighter cyan scanlines
+    border: '#00FFFF',       // Electric cyan blue border - authentic 80s
+    text: '#FFFFFF',         // Pure white text
+    accent: '#00FFFF',       // Electric cyan accent
+    // Precipitation intensity colors with authentic Tron aesthetic
+    none: '#000000',         // Pure black for no precipitation
+    lightRain: '#0088CC',    // Light electric cyan
+    moderateRain: '#00AADD', // Medium electric cyan
+    heavyRain: '#00FFFF',    // Bright electric cyan
+    severeRain: '#66FFFF',   // Very bright electric cyan
+    extremeRain: '#AAFFFF',  // Glowing electric cyan
+    lightSnow: '#FF6644',    // Neon red for snow (MCP programs)
+    moderateSnow: '#FF8844', // Brighter neon red
+    heavySnow: '#FFAA44',    // Full neon red/orange
+    severeSnow: '#FFCC44',   // Glowing neon red/orange
+    mixed: '#FF1744'         // Bright neon red for mixed/warnings
+  }
 }
 
 /**
@@ -67,6 +138,8 @@ export default function RadarDisplay({ lat, lon, apiKey, theme, locationName }: 
   const [isHydrated, setIsHydrated] = useState(false)
   const animationRef = useRef<NodeJS.Timeout | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [radarType, setRadarType] = useState<'reflectivity' | 'velocity' | 'precipitation'>('reflectivity')
+  const themeClasses = themeUtils.getThemeClasses(theme)
 
   // Enhanced grid size with zoom support - LARGER for full-width layout
   const GRID_SIZE = 20 // 20x20 grid for enhanced detail
@@ -77,75 +150,6 @@ export default function RadarDisplay({ lat, lon, apiKey, theme, locationName }: 
     city: 15,      // 15km - city level detail
     regional: 35,  // 35km - regional weather patterns  
     wide: 75       // 75km - wide area view
-  }
-
-  // Enhanced color palettes for all three themes
-  const colorPalettes = {
-    // Dark theme colors - EXACT MATCH with main app
-    dark: {
-      name: 'DARK MODE',
-      background: '#0f0f0f',
-      grid: '#1a4a4a',
-      scanline: '#2a5a5a',
-      border: '#00d4ff',      // EXACT MATCH: Same as main app dark theme border
-      text: '#e0e0e0',
-      accent: '#00d4ff',      // EXACT MATCH: Same as main app dark theme accent
-      // Precipitation intensity colors
-      none: '#001122',
-      lightRain: '#336699',    // Light blue
-      moderateRain: '#5599bb', // Medium blue  
-      heavyRain: '#77bbdd',    // Bright blue
-      severeRain: '#99ddff',   // Very bright blue
-      extremeRain: '#bbffff',  // Near white blue
-      lightSnow: '#6a7a7a',    // Light gray
-      moderateSnow: '#8a9a9a', // Medium gray
-      heavySnow: '#aababa',    // Bright gray
-      severeSnow: '#ccdddd',   // Very bright gray
-      mixed: '#7ab0ba'         // Blue-gray mix
-    },
-    // Miami Vice theme colors - EXACT MATCH with main app
-    miami: {
-      name: 'MIAMI VICE',
-      background: '#0a0025',
-      grid: '#1a0040',
-      scanline: '#2a0055', 
-      border: '#ff1493',      // EXACT MATCH: Same as main app Miami Vice border  
-      text: '#00ffff',
-      accent: '#ff1493',      // EXACT MATCH: Same as main app Miami Vice accent
-      none: '#0f0033',
-      lightRain: '#ff69b4',    // Light pink
-      moderateRain: '#ff1493', // Hot pink - EXACT MATCH
-      heavyRain: '#ff007f',    // Deep pink
-      severeRain: '#ff0066',   // Bright magenta
-      extremeRain: '#ff3399',  // Neon pink
-      lightSnow: '#40e0d0',    // Light cyan
-      moderateSnow: '#00ffff', // Bright cyan
-      heavySnow: '#00f5ff',    // Deep cyan
-      severeSnow: '#87ceeb',   // Sky blue
-      mixed: '#9370db'         // Purple mix
-    },
-    // NEW: Tron theme colors - Electric cyan and bright neon red inspired by 1982 movie
-    tron: {
-      name: 'TRON SYSTEM',
-      background: '#000000',   // Pure black like Tron's digital world
-      grid: '#001111',         // Dark cyan grid lines
-      scanline: '#002222',     // Brighter cyan scanlines
-      border: '#00FFFF',       // Electric cyan blue border - authentic 80s
-      text: '#FFFFFF',         // Pure white text
-      accent: '#00FFFF',       // Electric cyan accent
-      // Precipitation intensity colors with authentic Tron aesthetic
-      none: '#000000',         // Pure black for no precipitation
-      lightRain: '#0088CC',    // Light electric cyan
-      moderateRain: '#00AADD', // Medium electric cyan
-      heavyRain: '#00FFFF',    // Bright electric cyan
-      severeRain: '#66FFFF',   // Very bright electric cyan
-      extremeRain: '#AAFFFF',  // Glowing electric cyan
-      lightSnow: '#FF6644',    // Neon red for snow (MCP programs)
-      moderateSnow: '#FF8844', // Brighter neon red
-      heavySnow: '#FFAA44',    // Full neon red/orange
-      severeSnow: '#FFCC44',   // Glowing neon red/orange
-      mixed: '#FF1744'         // Bright neon red for mixed/warnings
-    }
   }
 
   // Auto-select theme based on app theme
@@ -292,7 +296,7 @@ export default function RadarDisplay({ lat, lon, apiKey, theme, locationName }: 
     }
   }
 
-  // Fetch real precipitation data with enhanced processing including 24h rainfall
+  // Fetch real radar data from RainViewer API
   const fetchRadarData = async () => {
     if (!isHydrated) return // Don't fetch until client-side hydration is complete
     
@@ -318,9 +322,39 @@ export default function RadarDisplay({ lat, lon, apiKey, theme, locationName }: 
 
       setHasPrecipitation(hasPrecip)
 
+      // Fetch RainViewer radar data
+      const rainViewerResponse = await fetch(
+        `https://api.rainviewer.com/public/weather-maps.json?lat=${lat}&lon=${lon}&zoom=${zoomLevel === 'city' ? 8 : zoomLevel === 'regional' ? 6 : 4}`
+      )
+
+      if (!rainViewerResponse.ok) {
+        throw new Error('Failed to fetch radar data')
+      }
+
+      const rainViewerData = await rainViewerResponse.json()
+      
+      // Process radar frames
+      const frames: RadarFrame[] = rainViewerData.radar.past.map((frame: any) => ({
+        timestamp: frame.time,
+        precipitationData: [], // We'll use the tile URL instead
+        isLoading: false,
+        hasRealData: true,
+        url: frame.path
+      }))
+
+      // Add current frame
+      frames.push({
+        timestamp: rainViewerData.radar.nowcast,
+        precipitationData: [],
+        isLoading: false,
+        hasRealData: true,
+        url: rainViewerData.radar.nowcast
+      })
+
+      setRadarFrames(frames)
+      setCurrentFrame(frames.length - 1) // Start with most recent frame
+
       // Calculate 24-hour rainfall total
-      // Use current rain data as baseline (OpenWeatherMap doesn't provide 24h historical in free tier)
-      // For realistic display, we'll estimate based on current conditions
       let rainfall24hTotal = 0
       if (currentRain > 0) {
         // Estimate 24h rainfall based on current hourly rate and weather conditions
@@ -344,173 +378,17 @@ export default function RadarDisplay({ lat, lon, apiKey, theme, locationName }: 
       rainfall24hTotal = Math.min(rainfall24hTotal * 0.0394, 10) // Cap at 10 inches max
       setRainfall24h(rainfall24hTotal)
 
-      // Use fixed timestamp for consistent server/client rendering during hydration
-      const now = isHydrated ? Math.floor(Date.now() / 1000) : 1700000000 // Fixed timestamp during SSR
-      const frames: RadarFrame[] = []
-
-      // Create 8 frames for smoother animation
-      for (let i = 7; i >= 0; i--) {
-        const timestamp = now - (i * 450) // 7.5-minute intervals for smoother progression
-        
-        if (hasPrecip) {
-          // If there's precipitation, create realistic radar patterns with intensity
-          const precipitationData = generateEnhancedRadarPattern(
-            currentRain, 
-            currentSnow, 
-            timestamp, 
-            i === 0 // Most recent frame gets strongest signal
-          )
-          frames.push({
-            timestamp,
-            precipitationData,
-            isLoading: false,
-            hasRealData: true
-          })
-        } else {
-          // No precipitation - show clear radar
-          const precipitationData = generateClearRadarPattern(timestamp)
-          frames.push({
-            timestamp,
-            precipitationData,
-            isLoading: false,
-            hasRealData: true
-          })
-        }
-      }
-
-      setRadarFrames(frames)
-      setCurrentFrame(frames.length - 1) // Start with most recent frame
-    } catch (err) {
-      setError("Radar system offline")
-      setRainfall24h(0)
-      // Generate clear pattern as fallback
-      generateClearRadarFallback()
+    } catch (error) {
+      console.error('Radar data fetch error:', error)
+      setError('Failed to load radar data. Using simulated data instead.')
+      
+      // Fallback to simulated data
+      const fallbackFrames = generateClearRadarFallback()
+      setRadarFrames(fallbackFrames)
+      setCurrentFrame(0)
     } finally {
       setIsLoading(false)
     }
-  }
-
-  // Enhanced radar pattern generation with realistic intensity scaling
-  const generateEnhancedRadarPattern = (rainMM: number, snowMM: number, timestamp: number, isCurrent: boolean): PrecipitationData[][] => {
-    const grid: PrecipitationData[][] = []
-    
-    // Calculate grid bounds based on zoom and pan
-    const range = ZOOM_RANGES[zoomLevel]
-    const cellKm = range / GRID_SIZE
-    
-    // Create storm center around location with pan offset
-    const centerX = (GRID_SIZE / 2) + panOffset.x
-    const centerY = (GRID_SIZE / 2) + panOffset.y
-    
-    // Use deterministic seed for consistent server/client rendering
-    const seed = timestamp + lat + lon
-    
-    for (let y = 0; y < GRID_SIZE; y++) {
-      grid[y] = []
-      for (let x = 0; x < GRID_SIZE; x++) {
-        const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2)
-        
-        // Calculate base intensity from API data with realistic scaling
-        const totalPrecip = rainMM + snowMM
-        const realIntensity = totalPrecip // Store real mm/h value
-        let intensity = 0
-        let precipType: 'rain' | 'snow' | 'mixed' | 'none' = 'none'
-        
-        if (totalPrecip > 0) {
-          // Determine precipitation type
-          if (snowMM > rainMM * 0.7) {
-            precipType = 'snow'
-          } else if (snowMM > 0 && rainMM > 0) {
-            precipType = 'mixed'
-          } else {
-            precipType = 'rain'
-          }
-          
-          // Create realistic precipitation patterns based on distance and intensity
-          let distanceMultiplier = 1
-          if (distance < 2) {
-            // Storm center - strongest
-            distanceMultiplier = 1.0
-          } else if (distance < 4) {
-            // Inner ring - strong
-            distanceMultiplier = 0.8
-          } else if (distance < 6) {
-            // Outer ring - moderate
-            distanceMultiplier = 0.6
-          } else if (distance < 8) {
-            // Edge - light
-            distanceMultiplier = 0.3
-          } else {
-            // Distant scattered
-            // Use deterministic pseudo-random based on position and seed
-            const pseudoRandom = ((seed + x * 7 + y * 13) % 100) / 100
-            distanceMultiplier = pseudoRandom < 0.2 ? 0.1 : 0
-          }
-          
-          // Calculate intensity based on real precipitation and distance
-          const adjustedIntensity = totalPrecip * distanceMultiplier
-          
-          // Map to discrete intensity levels (0-9)
-          if (adjustedIntensity > 0.1) intensity = 1  // Light
-          if (adjustedIntensity > 0.5) intensity = 2  // Light-moderate
-          if (adjustedIntensity > 1.0) intensity = 3  // Moderate
-          if (adjustedIntensity > 2.0) intensity = 4  // Moderate-heavy
-          if (adjustedIntensity > 3.5) intensity = 5  // Heavy
-          if (adjustedIntensity > 5.0) intensity = 6  // Heavy-severe
-          if (adjustedIntensity > 7.5) intensity = 7  // Severe
-          if (adjustedIntensity > 10.0) intensity = 8 // Very severe
-          if (adjustedIntensity > 15.0) intensity = 9 // Extreme
-          
-          // Add temporal variation for animation (deterministic)
-          const timeVariation = Math.sin((timestamp / 300) + (x + y) * 0.3) * 0.3
-          if (timeVariation > 0.2 && intensity > 0) {
-            intensity = Math.min(9, intensity + 1)
-          } else if (timeVariation < -0.2 && intensity > 1) {
-            intensity = Math.max(0, intensity - 1)
-          }
-          
-          // Add realistic noise (deterministic)
-          const noiseValue = ((seed + x * 11 + y * 17) % 100) / 100
-          if (noiseValue < 0.1) {
-            intensity = Math.max(0, intensity + (noiseValue > 0.05 ? 1 : -1))
-          }
-          
-          // Current frame enhancement
-          if (isCurrent && intensity > 0) {
-            const enhanceValue = ((seed + x * 19 + y * 23) % 100) / 100
-            intensity = Math.min(9, intensity + Math.floor(enhanceValue * 2))
-          }
-        }
-        
-        grid[y][x] = {
-          timestamp,
-          intensity,
-          type: precipType,
-          realIntensity
-        }
-      }
-    }
-    
-    return grid
-  }
-
-  // Generate clear radar pattern
-  const generateClearRadarPattern = (timestamp?: number): PrecipitationData[][] => {
-    const grid: PrecipitationData[][] = []
-    const ts = timestamp || (isHydrated ? Date.now() / 1000 : 1700000000)
-    
-    for (let y = 0; y < GRID_SIZE; y++) {
-      grid[y] = []
-      for (let x = 0; x < GRID_SIZE; x++) {
-        grid[y][x] = {
-          timestamp: ts,
-          intensity: 0,
-          type: 'none'
-        }
-      }
-    }
-    
-    return grid
   }
 
   // Generate clear radar as fallback
@@ -522,194 +400,97 @@ export default function RadarDisplay({ lat, lon, apiKey, theme, locationName }: 
       const timestamp = now - (i * 450)
       frames.push({
         timestamp,
-        precipitationData: generateClearRadarPattern(timestamp),
+        precipitationData: [],
         isLoading: false,
         hasRealData: false
       })
     }
     
-    setRadarFrames(frames)
-    setHasPrecipitation(false)
-    setCurrentFrame(frames.length - 1)
+    return frames
   }
 
-  // Enhanced rendering with advanced precipitation intensity colors and city markers
+  // Render radar frame with real data
   const renderRadarFrame = () => {
     const canvas = canvasRef.current
-    if (!canvas || radarFrames.length === 0) return
+    if (!canvas) return
 
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const frame = radarFrames[currentFrame]
-    if (!frame) return
-
-    // Clear canvas with authentic background
+    // Clear canvas
     ctx.fillStyle = currentPalette.background
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    // Disable smoothing for pixel-perfect rendering
-    ctx.imageSmoothingEnabled = false
-
-    // Draw enhanced precipitation data with intensity-based colors
-    for (let y = 0; y < GRID_SIZE; y++) {
-      for (let x = 0; x < GRID_SIZE; x++) {
-        const cell = frame.precipitationData[y]?.[x]
-        if (!cell || cell.intensity === 0) continue
-
-        // Get enhanced color based on intensity and precipitation type
-        let color = currentPalette.none
-        
-        if (cell.type === 'snow') {
-          // Snow color mapping
-          switch (cell.intensity) {
-            case 1: case 2: color = currentPalette.lightSnow; break
-            case 3: case 4: color = currentPalette.moderateSnow; break
-            case 5: case 6: color = currentPalette.heavySnow; break
-            case 7: case 8: case 9: color = currentPalette.severeSnow; break
-          }
-        } else if (cell.type === 'mixed') {
-          // Mixed precipitation
-          color = currentPalette.mixed
-        } else {
-          // Rain color mapping with enhanced intensity levels
-          switch (cell.intensity) {
-            case 1: color = currentPalette.lightRain; break
-            case 2: case 3: color = currentPalette.moderateRain; break
-            case 4: case 5: color = currentPalette.heavyRain; break
-            case 6: case 7: color = currentPalette.severeRain; break
-            case 8: case 9: color = currentPalette.extremeRain; break
-          }
-        }
-
-        // Draw chunky pixel block
-        ctx.fillStyle = color
-        ctx.fillRect(
-          x * PIXEL_SIZE,
-          y * PIXEL_SIZE,
-          PIXEL_SIZE,
-          PIXEL_SIZE
-        )
-
-        // Add subtle intensity glow for severe weather
-        if (cell.intensity >= 7) {
-          ctx.shadowColor = color
-          ctx.shadowBlur = 1
-          ctx.fillRect(
-            x * PIXEL_SIZE,
-            y * PIXEL_SIZE,
-            PIXEL_SIZE,
-            PIXEL_SIZE
-          )
-          ctx.shadowBlur = 0
-        }
-      }
-    }
-
-    // Add enhanced scanlines for CRT effect
-    ctx.strokeStyle = currentPalette.scanline
-    ctx.lineWidth = 0.5
-    ctx.globalAlpha = 0.25
-    
-    for (let y = 0; y < canvas.height; y += 3) {
-      ctx.beginPath()
-      ctx.moveTo(0, y)
-      ctx.lineTo(canvas.width, y)
-      ctx.stroke()
-    }
-    
-    ctx.globalAlpha = 1.0
-
-    // Draw enhanced grid overlay
+    // Draw grid
     ctx.strokeStyle = currentPalette.grid
     ctx.lineWidth = 1
-    ctx.globalAlpha = 0.3
-    
-    // Grid lines every 5 pixels for better visibility
-    for (let x = 0; x <= GRID_SIZE; x += 5) {
-      const pixelX = x * PIXEL_SIZE
+    for (let i = 0; i <= GRID_SIZE; i++) {
+      // Vertical lines
       ctx.beginPath()
-      ctx.moveTo(pixelX, 0)
-      ctx.lineTo(pixelX, canvas.height)
+      ctx.moveTo(i * PIXEL_SIZE, 0)
+      ctx.lineTo(i * PIXEL_SIZE, canvas.height)
       ctx.stroke()
-    }
-    
-    for (let y = 0; y <= GRID_SIZE; y += 5) {
-      const pixelY = y * PIXEL_SIZE
-      ctx.beginPath()
-      ctx.moveTo(0, pixelY)
-      ctx.lineTo(canvas.width, pixelY)
-      ctx.stroke()
-    }
-    
-    ctx.globalAlpha = 1.0
 
-    // Render city landmarks and markers
-    const cityLandmarks = getCityLandmarks()
-    cityLandmarks.forEach(landmark => {
-      const coords = latLonToGridCoords(landmark.lat, landmark.lon)
+      // Horizontal lines
+      ctx.beginPath()
+      ctx.moveTo(0, i * PIXEL_SIZE)
+      ctx.lineTo(canvas.width, i * PIXEL_SIZE)
+      ctx.stroke()
+    }
+
+    // Draw radar data
+    const currentRadarFrame = radarFrames[currentFrame]
+    if (currentRadarFrame?.url) {
+      // Load and draw radar tile
+      const img = new Image()
+      img.crossOrigin = "anonymous"
+      img.src = `https://tilecache.rainviewer.com/v2/radar/${currentRadarFrame.timestamp}/256/${zoomLevel === 'city' ? 8 : zoomLevel === 'regional' ? 6 : 4}/${lat}/${lon}/2/1_1.png`
       
-      // Only render if within visible grid
-      if (coords.x >= 0 && coords.x < GRID_SIZE && coords.y >= 0 && coords.y < GRID_SIZE) {
-        // Render landmark icon
-        renderLandmarkIcon(ctx, landmark, coords.x, coords.y)
+      img.onload = () => {
+        // Calculate position to center the radar image
+        const x = (canvas.width - img.width) / 2
+        const y = (canvas.height - img.height) / 2
         
-        // Add city name label for major cities and current location
-        if (landmark.type === 'current' || (landmark.type === 'major' && zoomLevel !== 'city')) {
-          const pixelX = coords.x * PIXEL_SIZE
-          const pixelY = coords.y * PIXEL_SIZE
-          
-          // Draw city name background
-          const textWidth = landmark.name.length * 4
-          ctx.fillStyle = currentPalette.background
-          ctx.globalAlpha = 0.8
-          ctx.fillRect(pixelX - textWidth/2 - 2, pixelY - 18, textWidth + 4, 8)
-          ctx.globalAlpha = 1.0
-          
-          // Draw city name (centered)
-          renderPixelText(
-            ctx, 
-            landmark.name, 
-            pixelX, 
-            pixelY - 12, 
-            landmark.type === 'current' ? currentPalette.accent : currentPalette.text
-          )
-          
-          // Draw landmark description for current location
-          if (landmark.type === 'current' && landmark.landmark) {
-            renderPixelText(
-              ctx, 
-              landmark.landmark, 
-              pixelX, 
-              pixelY + 8, // Moved up since no rainfall text
-              currentPalette.accent,
-              0.8
-            )
-          }
-        }
+        // Draw radar image with transparency
+        ctx.globalAlpha = 0.7
+        ctx.drawImage(img, x, y)
+        ctx.globalAlpha = 1.0
       }
+    }
+
+    // Draw city markers
+    const landmarks = getCityLandmarks()
+    landmarks.forEach(landmark => {
+      const coords = latLonToGridCoords(landmark.lat, landmark.lon)
+      renderLandmarkIcon(ctx, landmark, coords.x, coords.y)
     })
 
-    // Draw enhanced center crosshair (location marker) - this is separate from city markers
-    const centerX = ((GRID_SIZE / 2) + panOffset.x) * PIXEL_SIZE
-    const centerY = ((GRID_SIZE / 2) + panOffset.y) * PIXEL_SIZE
+    // Draw radar info
+    renderPixelText(ctx, `ZOOM: ${zoomLevel.toUpperCase()}`, canvas.width / 2, 20, currentPalette.text, 1.5)
+    renderPixelText(ctx, `TIME: ${formatTime(currentRadarFrame?.timestamp || Date.now() / 1000)}`, canvas.width / 2, 40, currentPalette.text, 1.5)
     
-    ctx.strokeStyle = currentPalette.accent
-    ctx.lineWidth = 1
-    ctx.globalAlpha = 0.6
+    // Draw precipitation legend
+    const legendY = canvas.height - 60
+    renderPixelText(ctx, 'PRECIPITATION INTENSITY', canvas.width / 2, legendY, currentPalette.text, 1.2)
     
-    // Cross pattern for radar center
-    ctx.beginPath()
-    ctx.moveTo(centerX - 6, centerY)
-    ctx.lineTo(centerX + 6, centerY)
-    ctx.stroke()
+    // Draw color scale
+    const scaleWidth = 200
+    const scaleX = (canvas.width - scaleWidth) / 2
+    const scaleHeight = 10
+    const gradient = ctx.createLinearGradient(scaleX, 0, scaleX + scaleWidth, 0)
     
-    ctx.beginPath()
-    ctx.moveTo(centerX, centerY - 6)
-    ctx.lineTo(centerX, centerY + 6)
-    ctx.stroke()
+    gradient.addColorStop(0, currentPalette.lightRain)
+    gradient.addColorStop(0.25, currentPalette.moderateRain)
+    gradient.addColorStop(0.5, currentPalette.heavyRain)
+    gradient.addColorStop(0.75, currentPalette.severeRain)
+    gradient.addColorStop(1, currentPalette.extremeRain)
     
-    ctx.globalAlpha = 1.0
+    ctx.fillStyle = gradient
+    ctx.fillRect(scaleX, legendY + 10, scaleWidth, scaleHeight)
+    
+    // Draw scale labels
+    renderPixelText(ctx, 'LIGHT', scaleX, legendY + 30, currentPalette.text, 1)
+    renderPixelText(ctx, 'HEAVY', scaleX + scaleWidth, legendY + 30, currentPalette.text, 1)
   }
 
   // Enhanced zoom controls
@@ -791,17 +572,6 @@ export default function RadarDisplay({ lat, lon, apiKey, theme, locationName }: 
       }
     }
   }, [isPlaying, radarFrames.length, hasPrecipitation, isHydrated])
-
-  const themeClasses = {
-    background: theme === 'dark' ? 'bg-[#0a0a1a]' : theme === 'miami' ? 'bg-gradient-to-br from-[#2d1b69] via-[#11001c] to-[#0f0026]' : 'bg-[#000000]',
-    cardBg: theme === 'dark' ? 'bg-[#16213e]' : theme === 'miami' ? 'bg-gradient-to-br from-[#4a0e4e] via-[#2d1b69] to-[#1a0033]' : 'bg-[#000000]',
-    borderColor: theme === 'dark' ? 'border-[#00d4ff]' : theme === 'miami' ? 'border-[#ff1493]' : 'border-[#00FFFF]',
-    text: theme === 'dark' ? 'text-[#e0e0e0]' : theme === 'miami' ? 'text-[#00ffff]' : 'text-[#FFFFFF]',
-    headerText: theme === 'dark' ? 'text-[#00d4ff]' : theme === 'miami' ? 'text-[#ff007f]' : 'text-[#00FFFF]',
-    accentText: theme === 'dark' ? 'text-[#ff6b6b]' : theme === 'miami' ? 'text-[#ff1493]' : 'text-[#00FFFF]',
-    successText: theme === 'dark' ? 'text-[#ffe66d]' : theme === 'miami' ? 'text-[#ff1493]' : 'text-[#FFCC00]',
-    miamiViceGlow: theme === 'dark' ? '' : theme === 'miami' ? 'drop-shadow-[0_0_10px_#ff007f]' : 'drop-shadow-[0_0_10px_#00FFFF]'
-  }
 
   const formatTime = (timestamp: number): string => {
     if (!isHydrated) return '00:00' // Consistent server-side render
