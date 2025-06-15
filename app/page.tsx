@@ -687,97 +687,103 @@ function WeatherApp() {
 
                 <div className="flex flex-col items-center">
                   {/* Current Conditions Section */}
-                  <div className="grid grid-cols-3 gap-4 mb-8">
-                    {/* Row 1 */}
-                    <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
-                      <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Temperature</h3>
-                      <div className="text-2xl font-bold text-white">
-                        {weather.main.temp.toFixed(1)}°{weather.sys.country === 'US' ? 'F' : 'C'}
+                  {weather ? (
+                    <div className="grid grid-cols-3 gap-4 mb-8">
+                      {/* Row 1 */}
+                      <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
+                        <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Temperature</h3>
+                        <div className="text-2xl font-bold text-white">
+                          {weather.main.temp.toFixed(1)}°{weather.sys.country === 'US' ? 'F' : 'C'}
+                        </div>
+                        <div className="text-sm text-gray-300">
+                          Feels like {weather.main.feels_like.toFixed(1)}°
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-300">
-                        Feels like {weather.main.feels_like.toFixed(1)}°
-                      </div>
-                    </div>
 
-                    <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
-                      <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Conditions</h3>
-                      <div className="flex items-center justify-center gap-2">
-                        <WeatherIcon condition={weather.weather[0].main} size="small" />
-                        <span className="text-white">{weather.weather[0].description}</span>
+                      <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
+                        <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Conditions</h3>
+                        <div className="flex items-center justify-center gap-2">
+                          <WeatherIcon condition={weather.weather[0].main} size="small" />
+                          <span className="text-white">{weather.weather[0].description}</span>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
-                      <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Wind</h3>
-                      <div className="text-white">
-                        {weather.wind.speed} {weather.sys.country === 'US' ? 'mph' : 'm/s'}
+                      <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
+                        <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Wind</h3>
+                        <div className="text-white">
+                          {weather.wind.speed} {weather.sys.country === 'US' ? 'mph' : 'm/s'}
+                        </div>
+                        <div className="text-sm text-gray-300">
+                          {weather.wind.deg}° {weather.wind.gust ? `Gusts ${weather.wind.gust}` : ''}
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-300">
-                        {weather.wind.deg}° {weather.wind.gust ? `Gusts ${weather.wind.gust}` : ''}
-                      </div>
-                    </div>
 
-                    {/* Row 2 */}
-                    <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
-                      <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Sun Times</h3>
-                      <div className="flex items-center justify-center gap-2 text-white">
-                        <SunriseIcon />
-                        <span>{new Date(weather.sys.sunrise * 1000).toLocaleTimeString()}</span>
+                      {/* Row 2 */}
+                      <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
+                        <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Sun Times</h3>
+                        <div className="flex items-center justify-center gap-2 text-white">
+                          <SunriseIcon />
+                          <span>{new Date(weather.sys.sunrise * 1000).toLocaleTimeString()}</span>
+                        </div>
+                        <div className="flex items-center justify-center gap-2 text-white mt-1">
+                          <SunsetIcon />
+                          <span>{new Date(weather.sys.sunset * 1000).toLocaleTimeString()}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-center gap-2 text-white mt-1">
-                        <SunsetIcon />
-                        <span>{new Date(weather.sys.sunset * 1000).toLocaleTimeString()}</span>
-                      </div>
-                    </div>
 
-                    <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
-                      <h3 className="text-sm font-bold text-[#00d4ff] mb-2">UV Index</h3>
-                      <div className="text-white">
-                        {weather.uvi.toFixed(1)}
+                      <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
+                        <h3 className="text-sm font-bold text-[#00d4ff] mb-2">UV Index</h3>
+                        <div className="text-white">
+                          {weather.uvi.toFixed(1)}
+                        </div>
+                        <div className="text-sm text-gray-300">
+                          {weather.uvi <= 2 ? 'Low' : weather.uvi <= 5 ? 'Moderate' : weather.uvi <= 7 ? 'High' : weather.uvi <= 10 ? 'Very High' : 'Extreme'}
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-300">
-                        {weather.uvi <= 2 ? 'Low' : weather.uvi <= 5 ? 'Moderate' : weather.uvi <= 7 ? 'High' : weather.uvi <= 10 ? 'Very High' : 'Extreme'}
-                      </div>
-                    </div>
 
-                    <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
-                      <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Moon Phase</h3>
-                      <div className="text-white">
-                        {weather.moon.phase}
+                      <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
+                        <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Moon Phase</h3>
+                        <div className="text-white">
+                          {weather.moon.phase}
+                        </div>
+                        <div className="text-sm text-gray-300">
+                          {weather.moon.illumination.toFixed(0)}% Illuminated
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-300">
-                        {weather.moon.illumination.toFixed(0)}% Illuminated
-                      </div>
-                    </div>
 
-                    {/* Row 3 - New AQI and Pollen Count boxes */}
-                    <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
-                      <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Air Quality</h3>
-                      <div className="text-white">
-                        {weather.aqi}
+                      {/* Row 3 - New AQI and Pollen Count boxes */}
+                      <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
+                        <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Air Quality</h3>
+                        <div className="text-white">
+                          {weather.aqi}
+                        </div>
+                        <div className={`text-sm ${getAQIColor(weather.aqi)}`}>
+                          {getAQIDescription(weather.aqi)}
+                        </div>
                       </div>
-                      <div className={`text-sm ${getAQIColor(weather.aqi)}`}>
-                        {getAQIDescription(weather.aqi)}
-                      </div>
-                    </div>
 
-                    <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
-                      <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Pollen Count</h3>
-                      {weather.pollen ? (
-                        <>
-                          <div className="text-white">
-                            {weather.pollen.tree ? `Tree: ${weather.pollen.tree}` : ''}
-                          </div>
-                          <div className="text-sm text-gray-300">
-                            {weather.pollen.grass ? `Grass: ${weather.pollen.grass}` : ''}
-                            {weather.pollen.weed ? ` Weed: ${weather.pollen.weed}` : ''}
-                          </div>
-                        </>
-                      ) : (
-                        <div className="text-sm text-gray-300">No data available</div>
-                      )}
+                      <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
+                        <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Pollen Count</h3>
+                        {weather.pollen ? (
+                          <>
+                            <div className="text-white">
+                              {weather.pollen.tree ? `Tree: ${weather.pollen.tree}` : ''}
+                            </div>
+                            <div className="text-sm text-gray-300">
+                              {weather.pollen.grass ? `Grass: ${weather.pollen.grass}` : ''}
+                              {weather.pollen.weed ? ` Weed: ${weather.pollen.weed}` : ''}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-sm text-gray-300">No data available</div>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  ) : loading ? (
+                    <div className="flex justify-center items-center h-48">
+                      <Loader2 className="h-8 w-8 animate-spin text-[#00d4ff]" />
+                    </div>
+                  ) : null}
                 </div>
 
                 {/* 5-Day Forecast - Mobile optimized */}
