@@ -709,10 +709,11 @@ function WeatherApp() {
                     </div>
                   </div>
 
-                  {/* Weather Details - Mobile responsive */}
+                  {/* Humidity Box with Health Features */}
                   <div className={`${themeClasses.background} p-3 sm:p-4 lg:p-6 border-2 ${themeClasses.secondaryText} text-center ${themeClasses.specialBorder}`}
                        style={{ borderColor: themeClasses.borderColor }}>
                     <div className="space-y-2 sm:space-y-3">
+                      {/* Existing Weather Data */}
                       <div className="flex justify-between items-center">
                         <span className={`${themeClasses.text} font-mono text-xs sm:text-sm`}>Humidity:</span>
                         <span className={`${themeClasses.headerText} font-mono font-bold text-xs sm:text-sm`}>{weather.current.humidity}%</span>
@@ -729,6 +730,42 @@ function WeatherApp() {
                       <div className="flex justify-between items-center">
                         <span className={`${themeClasses.text} font-mono text-xs sm:text-sm`}>Pressure:</span>
                         <span className={`${themeClasses.headerText} font-mono font-bold text-xs break-words text-right`}>{weather.current.pressureDisplay}</span>
+                      </div>
+
+                      {/* Air Quality Section */}
+                      <div className="pt-2 border-t-2" style={{ borderColor: themeClasses.borderColor }}>
+                        <div className="flex justify-between items-center">
+                          <span className={`${themeClasses.text} font-mono text-xs sm:text-sm`}>Air Quality:</span>
+                          <div className="flex items-center gap-2">
+                            <div className={`w-3 h-3 rounded-full ${getAQIColor(weather.airQuality.aqi)}`} />
+                            <span className={`${themeClasses.headerText} font-mono font-bold text-xs sm:text-sm`}>
+                              {weather.airQuality.aqi}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-left mt-1">
+                          <span className={`${themeClasses.secondaryText} font-mono text-xs`}>
+                            {getHealthRecommendation(weather.airQuality.aqi)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Pollen Section */}
+                      <div className="pt-2 border-t-2" style={{ borderColor: themeClasses.borderColor }}>
+                        <div className="flex justify-between items-center">
+                          <span className={`${themeClasses.text} font-mono text-xs sm:text-sm`}>Pollen:</span>
+                          <div className="flex items-center gap-2">
+                            <div className={`w-3 h-3 rounded-full ${getPollenLevel(Math.max(weather.pollen.tree, weather.pollen.grass, weather.pollen.weed)).color}`} />
+                            <span className={`${themeClasses.headerText} font-mono font-bold text-xs sm:text-sm`}>
+                              {getPollenLevel(Math.max(weather.pollen.tree, weather.pollen.grass, weather.pollen.weed)).text}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-left mt-1">
+                          <span className={`${themeClasses.secondaryText} font-mono text-xs`}>
+                            {getSeasonalRecommendation(weather.pollen.season)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1286,3 +1323,45 @@ function PressureGauge({ pressure, unit, theme }: { pressure: number; unit: 'hPa
     </div>
   )
 }
+
+// Helper functions for air quality and pollen data
+const getAQIColor = (aqi: number): string => {
+  if (aqi <= 50) return 'bg-green-500';
+  if (aqi <= 100) return 'bg-yellow-500';
+  if (aqi <= 150) return 'bg-orange-500';
+  if (aqi <= 200) return 'bg-red-500';
+  if (aqi <= 300) return 'bg-purple-500';
+  return 'bg-red-700';
+};
+
+const getHealthRecommendation = (aqi: number): string => {
+  if (aqi <= 50) return 'Good air quality. Enjoy outdoor activities.';
+  if (aqi <= 100) return 'Moderate air quality. Sensitive groups should limit outdoor activities.';
+  if (aqi <= 150) return 'Unhealthy for sensitive groups. Limit outdoor activities.';
+  if (aqi <= 200) return 'Unhealthy. Reduce outdoor activities.';
+  if (aqi <= 300) return 'Very unhealthy. Avoid outdoor activities.';
+  return 'Hazardous. Stay indoors.';
+};
+
+const getPollenLevel = (count: number): { text: string; color: string } => {
+  if (count <= 2.4) return { text: 'Low', color: 'bg-green-500' };
+  if (count <= 4.8) return { text: 'Moderate', color: 'bg-yellow-500' };
+  if (count <= 7.2) return { text: 'High', color: 'bg-orange-500' };
+  if (count <= 9.6) return { text: 'Very High', color: 'bg-red-500' };
+  return { text: 'Extreme', color: 'bg-red-700' };
+};
+
+const getSeasonalRecommendation = (season: string): string => {
+  switch (season.toLowerCase()) {
+    case 'spring':
+      return 'Tree pollen is high. Consider keeping windows closed and using air filters.';
+    case 'summer':
+      return 'Grass pollen is prevalent. Shower after outdoor activities.';
+    case 'fall':
+      return 'Weed pollen is high. Limit outdoor activities on windy days.';
+    case 'winter':
+      return 'Pollen levels are generally low. Indoor allergens may be more concerning.';
+    default:
+      return 'Check local pollen forecasts for current conditions.';
+  }
+};

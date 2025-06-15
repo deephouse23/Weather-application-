@@ -125,8 +125,9 @@ interface MoonPhaseInfo {
   phaseAngle: number;
 }
 
-const BASE_URL = 'https://api.openweathermap.org/data/2.5';
+const BASE_URL = 'https://api.openweathermap.org/data/3.0';
 const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
+const AIR_QUALITY_URL = 'https://api.openweathermap.org/data/2.5/air_pollution';
 
 /**
  * Convert wind degrees to 8-point compass direction
@@ -695,131 +696,130 @@ const formatPressureValue = (pressureHPa: number, unit: 'hPa' | 'inHg'): { value
 // Enhanced UV Index fetching with time-aware logic
 const fetchCurrentWeatherData = async (lat: number, lon: number, apiKey: string): Promise<{ uvIndex: number; uvDescription: string }> => {
   try {
-    // Use One Call API 2.5 which includes UV Index in current weather
-    const oneCallResponse = await fetch(
-      `${BASE_URL}/onecall?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial&exclude=minutely,daily,alerts`
+    const response = await fetch(
+      `${BASE_URL}/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,daily,alerts&appid=${apiKey}`
     );
-
-    if (!oneCallResponse.ok) {
-      return { uvIndex: 0, uvDescription: 'N/A' };
-    }
-
-    const oneCallData = await oneCallResponse.json();
+    const data = await response.json();
     
-    // Get UV Index from One Call API current data
-    const uvIndex = Math.round(oneCallData.current?.uvi || 0);
+    // Get UV index from the current data
+    const uvIndex = data.current.uvi || 0;
     const uvDescription = getUVDescription(uvIndex);
     
     return { uvIndex, uvDescription };
   } catch (error) {
-    console.warn('Failed to fetch UV Index from One Call API:', error);
+    console.error('Error fetching UV data:', error);
     return { uvIndex: 0, uvDescription: 'N/A' };
   }
 };
 
-export const fetchWeatherData = async (locationInput: string, apiKey: string): Promise<WeatherData> => {
-  if (!apiKey) {
-    throw new Error('API key is required');
-  }
-
-  const locationQuery = parseLocationInput(locationInput);
-  
+// Fetch air quality data
+const fetchAirQualityData = async (lat: number, lon: number, apiKey: string): Promise<{
+  aqi: number;
+  pollution: {
+    pm2_5: number;
+    pm10: number;
+    o3: number;
+  };
+}> => {
   try {
-    // First, geocode the location to get coordinates
+    const response = await fetch(
+      `${AIR_QUALITY_URL}?lat=${lat}&lon=${lon}&appid=${apiKey}`
+    );
+    const data = await response.json();
+    
+    return {
+      aqi: data.list[0].main.aqi,
+      pollution: {
+        pm2_5: data.list[0].components.pm2_5,
+        pm10: data.list[0].components.pm10,
+        o3: data.list[0].components.o3
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching air quality data:', error);
+    return {
+      aqi: 0,
+      pollution: {
+        pm2_5: 0,
+        pm10: 0,
+        o3: 0
+      }
+    };
+  }
+};
+
+export const fetchWeatherData = async (locationInput: string, apiKey: string): Promise<WeatherData> => {
+  try {
+    // Parse location input
+    const locationQuery = parseLocationInput(locationInput);
+  
+    // Get coordinates
     const { lat, lon, displayName } = await geocodeLocation(locationQuery, apiKey);
     
-    // Fetch current weather using coordinates
-    const currentResponse = await fetch(
-      `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`
+    // Fetch current weather and forecast data using One Call API 3.0
+    const weatherResponse = await fetch(
+      `${BASE_URL}/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,alerts&units=imperial&appid=${apiKey}`
     );
-
-    if (!currentResponse.ok) {
-      throw new Error(`Weather API error: ${currentResponse.status}`);
-    }
-
-    const currentData: OpenWeatherMapCurrentResponse = await currentResponse.json();
-
-    // Fetch 5-day forecast using coordinates
-    const forecastResponse = await fetch(
-      `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`
-    );
-
-    if (!forecastResponse.ok) {
-      throw new Error(`Forecast API error: ${forecastResponse.status}`);
-    }
-
-    const forecastData: OpenWeatherMapForecastResponse = await forecastResponse.json();
-
-    // Process forecast data to get daily high/low temperatures
-    const dailyForecasts = processDailyForecast(forecastData);
-
-    // Calculate current moon phase
-    const moonPhase = calculateMoonPhase();
-
-    // Fetch UV Index data
-    const { uvIndex, uvDescription } = await fetchCurrentWeatherData(lat, lon, apiKey);
-
+    const weatherData = await weatherResponse.json();
+    
     // Fetch air quality data
-    const airQualityResponse = await fetch(
-      `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,daily,alerts&appid=${apiKey}`
-    );
-    const airQualityData = await airQualityResponse.json();
-
-    // Fetch pollen data
-    const pollenResponse = await fetch(
-      `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,daily,alerts&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
-    );
-    const pollenData = await pollenResponse.json();
-
+    const airQualityData = await fetchAirQualityData(lat, lon, apiKey);
+    
     // Determine current season based on month
     const month = new Date().getMonth();
     const season = month >= 2 && month <= 4 ? 'spring' :
                   month >= 5 && month <= 7 ? 'summer' :
                   month >= 8 && month <= 10 ? 'fall' : 'winter';
-
+    
+    // Process the current weather data
+    const current = weatherData.current;
+    const countryCode = weatherData.timezone.split('/')[0];
+    
     return {
       current: {
-        temp: Math.round(currentData.main.temp),
-        condition: mapWeatherCondition(currentData.weather[0].main),
-        humidity: currentData.main.humidity,
-        wind: Math.round(currentData.wind.speed),
-        windDirection: currentData.wind.deg,
-        windDisplay: formatWindDisplay(currentData.wind.speed, currentData.wind.deg, currentData.wind.gust, currentData.sys.country),
-        location: displayName, // Use the geocoded display name
-        description: currentData.weather[0].description,
-        sunrise: currentData.sys.sunrise ? formatTime(currentData.sys.sunrise, currentData.timezone) : 'N/A',
-        sunset: currentData.sys.sunset ? formatTime(currentData.sys.sunset, currentData.timezone) : 'N/A',
-        dewPoint: calculateDewPoint(currentData.main.temp, currentData.main.humidity),
-        uvIndex,
-        uvDescription,
-        pressure: currentData.main.pressure,
-        pressureDisplay: formatPressureByRegion(currentData.main.pressure, currentData.sys.country),
-        country: currentData.sys.country,
+        temp: Math.round(current.temp),
+        condition: current.weather[0].main,
+        humidity: current.humidity,
+        wind: current.wind_speed,
+        windDirection: current.wind_deg,
+        windDisplay: formatWindDisplay(current.wind_speed, current.wind_deg, current.wind_gust, countryCode),
+        location: displayName,
+        description: current.weather[0].description,
+        sunrise: formatTime(current.sunrise, weatherData.timezone_offset),
+        sunset: formatTime(current.sunset, weatherData.timezone_offset),
+        dewPoint: calculateDewPoint(current.temp, current.humidity),
+        uvIndex: current.uvi || 0,
+        uvDescription: getUVDescription(current.uvi || 0),
+        pressure: current.pressure,
+        pressureDisplay: formatPressureByRegion(current.pressure, countryCode),
+        country: countryCode,
         lat,
         lon
       },
-      forecast: dailyForecasts,
-      moonPhase,
-      airQuality: {
-        aqi: airQualityData.current.aqi || 0,
-        pollution: {
-          pm2_5: airQualityData.current.pm2_5 || 0,
-          pm10: airQualityData.current.pm10 || 0,
-          o3: airQualityData.current.o3 || 0
-        }
+      forecast: weatherData.daily.slice(0, 5).map((day: any) => ({
+        day: new Date(day.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' }),
+        highTemp: Math.round(day.temp.max),
+        lowTemp: Math.round(day.temp.min),
+        condition: day.weather[0].main,
+        description: day.weather[0].description
+      })),
+      moonPhase: {
+        phase: getMoonPhaseName(weatherData.daily[0].moon_phase),
+        illumination: Math.round(weatherData.daily[0].moon_phase * 100),
+        emoji: getMoonEmoji(weatherData.daily[0].moon_phase),
+        phaseAngle: Math.round(weatherData.daily[0].moon_phase * 360)
       },
+      airQuality: airQualityData,
       pollen: {
-        tree: pollenData.current.pollen?.tree || 0,
-        grass: pollenData.current.pollen?.grass || 0,
-        weed: pollenData.current.pollen?.weed || 0,
+        tree: 0, // Pollen data not available in current API
+        grass: 0,
+        weed: 0,
         season
       }
     };
   } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error('Failed to fetch weather data. Please try again.');
+    console.error('Error fetching weather data:', error);
+    throw error;
   }
 };
 
@@ -885,10 +885,7 @@ export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherDat
           const { uvIndex, uvDescription } = await fetchCurrentWeatherData(latitude, longitude, apiKey);
 
           // Fetch air quality data
-          const airQualityResponse = await fetch(
-            `https://api.openweathermap.org/data/3.0/onecall?lat=${latitude}&lon=${longitude}&exclude=minutely,hourly,daily,alerts&appid=${apiKey}`
-          );
-          const airQualityData = await airQualityResponse.json();
+          const airQualityData = await fetchAirQualityData(latitude, longitude, apiKey);
 
           // Fetch pollen data
           const pollenResponse = await fetch(
@@ -925,14 +922,7 @@ export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherDat
             },
             forecast: dailyForecasts,
             moonPhase: calculateMoonPhase(),
-            airQuality: {
-              aqi: airQualityData.current.aqi || 0,
-              pollution: {
-                pm2_5: airQualityData.current.pm2_5 || 0,
-                pm10: airQualityData.current.pm10 || 0,
-                o3: airQualityData.current.o3 || 0
-              }
-            },
+            airQuality: airQualityData,
             pollen: {
               tree: pollenData.current.pollen?.tree || 0,
               grass: pollenData.current.pollen?.grass || 0,
@@ -968,4 +958,26 @@ export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherDat
       }
     );
   });
+};
+
+const getMoonPhaseName = (phase: number): string => {
+  if (phase === 0 || phase === 1) return 'New Moon';
+  if (phase < 0.25) return 'Waxing Crescent';
+  if (phase === 0.25) return 'First Quarter';
+  if (phase < 0.5) return 'Waxing Gibbous';
+  if (phase === 0.5) return 'Full Moon';
+  if (phase < 0.75) return 'Waning Gibbous';
+  if (phase === 0.75) return 'Last Quarter';
+  return 'Waning Crescent';
+};
+
+const getMoonEmoji = (phase: number): string => {
+  if (phase === 0 || phase === 1) return '🌑';
+  if (phase < 0.25) return '🌒';
+  if (phase === 0.25) return '🌓';
+  if (phase < 0.5) return '🌔';
+  if (phase === 0.5) return '🌕';
+  if (phase < 0.75) return '🌖';
+  if (phase === 0.75) return '🌗';
+  return '🌘';
 }; 
