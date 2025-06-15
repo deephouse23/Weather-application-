@@ -14,6 +14,9 @@ import { Analytics } from "@vercel/analytics/react"
 import Link from "next/link"
 import { Cloud, Zap, Flame } from "lucide-react"
 import WeatherSearch from "@/components/weather-search"
+import WeatherDisplay from "@/components/weather-display"
+import { APP_CONSTANTS } from "@/lib/utils"
+import { getStoredTheme } from "@/lib/utils"
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
 // The main weather API handles UV index estimation for free accounts
@@ -34,6 +37,11 @@ const formatPressureByRegion = (pressureHPa: number, countryCode: string): strin
 
 // Get API key from environment variables for production deployment
 const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
+
+// Validate API key
+if (!API_KEY) {
+  console.error('OpenWeather API key is missing!');
+}
 
 // Theme types
 type ThemeType = 'dark' | 'miami' | 'tron';

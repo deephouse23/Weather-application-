@@ -86,6 +86,16 @@ const BASE_URL = 'https://api.openweathermap.org/data/2.5';
 const BASE_URL_V3 = 'https://api.openweathermap.org/data/3.0';
 const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
 
+// Validate API key
+const validateApiKey = () => {
+  const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
+  if (!apiKey) {
+    console.error('OpenWeather API key is missing!');
+    throw new Error('API key not configured');
+  }
+  return apiKey;
+};
+
 /**
  * Convert wind degrees to 8-point compass direction
  * @param degrees - Wind direction in degrees (0-360)
@@ -658,16 +668,19 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
   console.log('Fetching weather data for:', locationInput);
   
   try {
+    // Validate API key
+    const validApiKey = validateApiKey();
+    
     // Parse location input
     const locationQuery = parseLocationInput(locationInput);
     console.log('Parsed location query:', locationQuery);
 
     // Geocode location
-    const { lat, lon, displayName } = await geocodeLocation(locationQuery, apiKey);
+    const { lat, lon, displayName } = await geocodeLocation(locationQuery, validApiKey);
     console.log('Geocoded location:', { lat, lon, displayName });
 
     // Fetch current weather
-    const currentWeatherUrl = `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`;
+    const currentWeatherUrl = `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${validApiKey}&units=imperial`;
     console.log('Fetching current weather from:', currentWeatherUrl);
     
     const currentWeatherResponse = await fetch(currentWeatherUrl);
@@ -678,7 +691,7 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
     console.log('Current weather response:', currentWeatherData);
 
     // Fetch forecast
-    const forecastUrl = `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`;
+    const forecastUrl = `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${validApiKey}&units=imperial`;
     console.log('Fetching forecast from:', forecastUrl);
     
     const forecastResponse = await fetch(forecastUrl);
@@ -760,6 +773,7 @@ const getLocationNotFoundError = (locationQuery: LocationQuery): string => {
 
 // Function to get user's location and fetch weather
 export const fetchWeatherByLocation = async (coords: string): Promise<WeatherData> => {
+  const apiKey = validateApiKey();
   const [latitude, longitude] = coords.split(',').map(Number)
   
   if (isNaN(latitude) || isNaN(longitude)) {
@@ -768,7 +782,7 @@ export const fetchWeatherByLocation = async (coords: string): Promise<WeatherDat
 
   try {
     // Fetch current weather
-    const currentWeatherUrl = `${BASE_URL}/weather?lat=${latitude}&lon=${longitude}&appid=${process.env.NEXT_PUBLIC_WEATHER_API_KEY}&units=imperial`
+    const currentWeatherUrl = `${BASE_URL}/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=imperial`
     console.log('Fetching current weather from:', currentWeatherUrl)
     
     const currentWeatherResponse = await fetch(currentWeatherUrl)
@@ -779,7 +793,7 @@ export const fetchWeatherByLocation = async (coords: string): Promise<WeatherDat
     console.log('Current weather response:', currentWeatherData)
 
     // Fetch forecast
-    const forecastUrl = `${BASE_URL}/forecast?lat=${latitude}&lon=${longitude}&appid=${process.env.NEXT_PUBLIC_WEATHER_API_KEY}&units=imperial`
+    const forecastUrl = `${BASE_URL}/forecast?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=imperial`
     console.log('Fetching forecast from:', forecastUrl)
     
     const forecastResponse = await fetch(forecastUrl)
