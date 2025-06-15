@@ -16,6 +16,12 @@ export interface WeatherData {
     pressure: number; // Atmospheric pressure in hPa
     pressureDisplay: string; // Formatted pressure with regional units
     country: string; // Country code (e.g., "US", "GB", "CA")
+    aqi: number;
+    pollen?: {
+      tree: string;
+      grass: string;
+      weed: string;
+    };
     lat: number; // Latitude coordinates for radar
     lon: number; // Longitude coordinates for radar
   };

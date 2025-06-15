@@ -44,6 +44,31 @@ const getPressureUnit = (countryCode: string): 'hPa' | 'inHg' => {
   return inHgCountries.includes(countryCode) ? 'inHg' : 'hPa';
 };
 
+// Add AQI helper functions
+const getAQIColor = (aqi: number): string => {
+  if (aqi <= 50) return 'text-green-500';
+  if (aqi <= 100) return 'text-yellow-500';
+  if (aqi <= 150) return 'text-orange-500';
+  if (aqi <= 200) return 'text-red-500';
+  return 'text-purple-500';
+};
+
+const getAQIDescription = (aqi: number): string => {
+  if (aqi <= 50) return 'Good';
+  if (aqi <= 100) return 'Moderate';
+  if (aqi <= 150) return 'Unhealthy for Sensitive Groups';
+  if (aqi <= 200) return 'Unhealthy';
+  return 'Very Unhealthy';
+};
+
+const getAQIRecommendation = (aqi: number): string => {
+  if (aqi <= 50) return 'Air quality is satisfactory. Enjoy outdoor activities.';
+  if (aqi <= 100) return 'Air quality is acceptable. Consider limiting prolonged outdoor exertion.';
+  if (aqi <= 150) return 'Sensitive groups should reduce outdoor activities.';
+  if (aqi <= 200) return 'Everyone should reduce outdoor activities.';
+  return 'Avoid outdoor activities. Stay indoors if possible.';
+};
+
 function WeatherApp() {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(false)
@@ -727,9 +752,41 @@ function WeatherApp() {
                   </div>
                 </div>
 
+                {/* Air Quality Index */}
+                <div className="mt-4 w-full max-w-2xl">
+                  <div className="text-sm text-gray-500">Air Quality Index</div>
+                  <div className={`text-lg font-semibold ${getAQIColor(weather.current.aqi)}`}>
+                    {weather.current.aqi} - {getAQIDescription(weather.current.aqi)}
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    {getAQIRecommendation(weather.current.aqi)}
+                  </div>
+                </div>
+
+                {/* Pollen Index */}
+                {weather.current.pollen && (
+                  <div className="mt-4 w-full max-w-2xl">
+                    <div className="text-sm text-gray-500">Pollen Index</div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <div className="text-sm">Tree</div>
+                        <div className="font-semibold">{weather.current.pollen.tree}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm">Grass</div>
+                        <div className="font-semibold">{weather.current.pollen.grass}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm">Weed</div>
+                        <div className="font-semibold">{weather.current.pollen.weed}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* 5-Day Forecast - Mobile optimized */}
                 <div className="mx-2 sm:mx-0">
-                  <Forecast forecast={weather.forecast} theme={currentTheme} />
+                  <Forecast forecast={weather.forecast.slice(0, 5)} theme={currentTheme} />
                 </div>
               </div>
 
