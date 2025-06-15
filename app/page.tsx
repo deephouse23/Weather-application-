@@ -10,45 +10,9 @@ import { Search } from 'lucide-react'
 import { WeatherData } from '@/lib/types'
 import Forecast from "@/components/forecast"
 import PageWrapper from "@/components/page-wrapper"
-import HistoricalChart from "@/components/historical-chart"
 import { Analytics } from "@vercel/analytics/react"
 import Link from "next/link"
 import { Cloud, Zap, Flame } from "lucide-react"
-import { useThemeClasses } from '@/lib/theme'
-import { getThemeClasses } from '@/lib/theme'
-import { useRateLimit } from '@/lib/rate-limit'
-import { useLocationCache } from '@/lib/location-cache'
-import { useSearchHistory } from '@/lib/search-history'
-import { useErrorHandling } from '@/lib/error-handling'
-import { useLoadingState } from '@/lib/loading-state'
-import { useGeolocation } from '@/lib/geolocation'
-import { useWeatherCache } from '@/lib/weather-cache'
-import { useHistoricalData } from '@/lib/historical-data'
-import { useWeatherEffects } from '@/lib/weather-effects'
-import { useWeatherSounds } from '@/lib/weather-sounds'
-import { useWeatherAnimations } from '@/lib/weather-animations'
-import { useWeatherNotifications } from '@/lib/weather-notifications'
-import { useWeatherPreferences } from '@/lib/weather-preferences'
-import { useWeatherStats } from '@/lib/weather-stats'
-import { useWeatherEducation } from '@/lib/weather-education'
-import { useWeatherGames } from '@/lib/weather-games'
-import { useWeatherFacts } from '@/lib/weather-facts'
-import { useWeatherNews } from '@/lib/weather-news'
-import { useWeatherAlerts } from '@/lib/weather-alerts'
-import { useWeatherMaps } from '@/lib/weather-maps'
-import { useWeatherSatellite } from '@/lib/weather-satellite'
-import { useWeatherModels } from '@/lib/weather-models'
-import { useWeatherForecast } from '@/lib/weather-forecast'
-import { useWeatherCurrent } from '@/lib/weather-current'
-import { useWeatherHistorical } from '@/lib/weather-historical'
-import { useWeatherClimate } from '@/lib/weather-climate'
-import { useWeatherSeasons } from '@/lib/weather-seasons'
-import { useWeatherEvents } from '@/lib/weather-events'
-import { useWeatherPhenomena } from '@/lib/weather-phenomena'
-import { useWeatherSystems } from '@/lib/weather-systems'
-import { useWeatherAtmosphere } from '@/lib/weather-atmosphere'
-import { useWeatherOcean } from '@/lib/weather-ocean'
-import { useWeatherSpace } from '@/lib/weather-space'
 import WeatherSearch from "@/components/weather-search"
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
@@ -92,8 +56,6 @@ function WeatherApp() {
   const [remainingSearches, setRemainingSearches] = useState(10)
   const [rateLimitError, setRateLimitError] = useState<string>("")
   const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark')
-  const [historicalData, setHistoricalData] = useState<any>(null)
-  const [showHistoricalChart, setShowHistoricalChart] = useState(false)
   const [isClient, setIsClient] = useState(false)
 
   // localStorage keys
@@ -176,33 +138,6 @@ function WeatherApp() {
     
     checkCacheAndLoad()
   }, [isClient])
-
-  // Load historical weather data for today's date
-  useEffect(() => {
-    const loadHistoricalData = async () => {
-      try {
-        const today = new Date()
-        const month = String(today.getMonth() + 1).padStart(2, '0')
-        const day = String(today.getDate()).padStart(2, '0')
-        const currentYear = today.getFullYear()
-        const startYear = currentYear - 30
-        
-        // Use New York as default location for historical data
-        const response = await fetch(
-          `https://archive-api.open-meteo.com/v1/archive?latitude=40.7128&longitude=-74.0060&start_date=${startYear}-${month}-${day}&end_date=${currentYear}-${month}-${day}&daily=temperature_2m_max,temperature_2m_min&timezone=auto`
-        )
-        
-        if (response.ok) {
-          const data = await response.json()
-          setHistoricalData(data)
-        }
-      } catch (error) {
-        console.warn('Historical data unavailable:', error)
-      }
-    }
-    
-    loadHistoricalData()
-  }, [])
 
   // Enhanced theme management functions
   const getStoredTheme = (): ThemeType => {
@@ -663,18 +598,6 @@ function WeatherApp() {
             </h1>
           </div>
 
-          {/* Weather Search Component - Mobile optimized */}
-          <div className="mb-6 sm:mb-8 w-full">
-            <WeatherSearch
-              onSearch={handleSearchWrapper}
-              onLocationSearch={handleLocationSearch}
-              isLoading={loading}
-              error={error}
-              isDisabled={isOnCooldown || remainingSearches <= 0}
-              rateLimitError={rateLimitError}
-              theme={currentTheme}
-            />
-          </div>
         </div>
 
         {/* Main Content - Mobile responsive container */}
@@ -768,64 +691,10 @@ function WeatherApp() {
                   </div>
                 </div>
 
-                {/* Historical Records */}
-                {historicalData && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                    <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
-                      <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Record High</h3>
-                      <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
-                        {weather.current.country === 'US' ? 
-                          Math.round(historicalData.daily.temperature_2m_max[0] * 9/5 + 32) + '°F' :
-                          Math.round(historicalData.daily.temperature_2m_max[0]) + '°C'
-                        }
-                      </p>
-                      <p className={`${themeClasses.secondaryText} text-sm`}>
-                        Set in {new Date(historicalData.daily.time[0]).getFullYear()}
-                      </p>
-                    </div>
-                    <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
-                      <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Record Low</h3>
-                      <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
-                        {weather.current.country === 'US' ? 
-                          Math.round(historicalData.daily.temperature_2m_min[0] * 9/5 + 32) + '°F' :
-                          Math.round(historicalData.daily.temperature_2m_min[0]) + '°C'
-                        }
-                      </p>
-                      <p className={`${themeClasses.secondaryText} text-sm`}>
-                        Set in {new Date(historicalData.daily.time[0]).getFullYear()}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Doppler Radar Button */}
-                <div className="text-center mb-4 sm:mb-6">
-                  <Link
-                    href={`/radar?lat=${weather.current.lat}&lon=${weather.current.lon}&name=${encodeURIComponent(weather.current.location)}`}
-                    className="inline-block"
-                  >
-                    <button
-                      className={`px-4 sm:px-6 py-2 sm:py-3 border-2 sm:border-4 text-sm sm:text-lg font-mono font-bold uppercase tracking-wider transition-all duration-300 ${themeClasses.borderColor} ${themeClasses.cardBg} ${themeClasses.headerText} touch-manipulation min-h-[44px] hover:${themeClasses.buttonHover}`}
-                    >
-                      View Doppler Radar
-                    </button>
-                  </Link>
+                {/* 5-Day Forecast - Mobile optimized */}
+                <div className="mx-2 sm:mx-0">
+                  <Forecast forecast={weather.forecast} theme={currentTheme} />
                 </div>
-              </div>
-
-              {/* 5-Day Forecast - Mobile optimized */}
-              <div className="mx-2 sm:mx-0">
-                <Forecast forecast={weather.forecast} theme={currentTheme} />
-              </div>
-
-              {/* Historical Data Chart Widget */}
-              <div className="mx-2 sm:mx-0">
-                <HistoricalChart 
-                  currentTheme={currentTheme}
-                  latitude={weather.current.lat}
-                  longitude={weather.current.lon}
-                  locationName={weather.current.location}
-                />
               </div>
 
               {/* Quick Access Cards */}
