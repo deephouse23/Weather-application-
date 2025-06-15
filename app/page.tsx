@@ -355,139 +355,101 @@ function WeatherApp() {
     handleSearch(locationInput)
   }
 
-  const handleSearch = async (locationInput: string, fromCache: boolean = false, bypassRateLimit: boolean = false) => {
-    if (!locationInput.trim()) {
-      setError("Please enter a location")
-      return
-    }
-
-    // Check if API key is available
-    if (!API_KEY) {
-      setError("🔧 Weather service is temporarily unavailable. Please try again later or contact support.")
-      return
-    }
-
-    // Check rate limit only for non-cached requests
-    if (!bypassRateLimit) {
-      const rateLimitCheck = checkRateLimit()
-      if (!rateLimitCheck.allowed) {
-        setRateLimitError(rateLimitCheck.message || "Rate limit exceeded")
-        return
-      }
-    }
-
-    setLoading(true)
-    setError("")
-    setRateLimitError("")
-    setHasSearched(true)
-    setCurrentLocation(locationInput)
-    
-    // Show cooldown state
-    setIsOnCooldown(true)
-    setTimeout(() => setIsOnCooldown(false), COOLDOWN_SECONDS * 1000)
-
+  // Helper function to safely get weather data
+  const getWeatherData = <T>(path: string, defaultValue: T): T => {
     try {
-      // Fix API call - fetchWeatherData expects (locationInput, apiKey)
-      const weatherData = await fetchWeatherData(locationInput, API_KEY)
-      setWeather(weatherData)
-      setLastSearchTerm(locationInput)
-
-      // Record the request for rate limiting (only for non-cached)
-      if (!bypassRateLimit) {
-        recordRequest()
-        const { remaining } = checkRateLimit()
-        setRemainingSearches(remaining)
-      }
-
-      // Save to cache (silent) - now using bitweather_city key
-      if (!fromCache) {
-        saveLocationToCache(locationInput)
-      }
-
-      // Save weather data to cache
-      saveWeatherToCache(weatherData)
-    } catch (err) {
-      // Enhanced error handling with friendly fallbacks
-      const errorMessage = err instanceof Error ? err.message : "Failed to fetch weather data"
+      if (!weather) return defaultValue;
       
-      // If this was our default San Francisco load and it failed, try a different fallback
-      if (locationInput.includes("San Francisco") && fromCache) {
-        console.warn("San Francisco default failed, trying New York as fallback")
-        try {
-          const fallbackData = await fetchWeatherData("New York, NY", API_KEY)
-          setWeather(fallbackData)
-          setLastSearchTerm("New York, NY")
-          saveLocationToCache("New York, NY")
-          return
-        } catch (fallbackErr) {
-          setError("🌡️ Weather services are temporarily unavailable. Please try again in a moment.")
-        }
-      } else {
-        // User search failed - show friendly error
-        if (errorMessage.includes("not found") || errorMessage.includes("404")) {
-          setError(`🔍 Location "${locationInput}" not found. Please try a different city name, ZIP code, or format.`)
-        } else if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
-          setError("🌐 Network connection issue. Please check your internet and try again.")
-        } else {
-          setError("🌡️ Weather data temporarily unavailable. Please try again in a moment.")
+      const keys = path.split('.');
+      let value: any = weather;
+      
+      for (const key of keys) {
+        if (value === null || value === undefined) return defaultValue;
+        value = value[key];
+      }
+      
+      return value ?? defaultValue;
+    } catch (error) {
+      console.error(`Error accessing weather data at path ${path}:`, error);
+      return defaultValue;
+    }
+  };
+
+  // Enhanced error handling for weather data
+  const handleWeatherError = (error: any) => {
+    console.error('Weather data error:', error);
+    setError(error.message || 'Failed to load weather data');
+    setWeather(null);
+  };
+
+  // Enhanced search handler with error handling
+  const handleSearch = async (locationInput: string, fromCache: boolean = false, bypassRateLimit: boolean = false) => {
+    try {
+      setLoading(true);
+      setError("");
+      
+      // Check rate limit
+      if (!bypassRateLimit) {
+        const rateLimit = checkRateLimit();
+        if (!rateLimit.allowed) {
+          setRateLimitError(rateLimit.message || 'Rate limit exceeded');
+          return;
         }
       }
-      setWeather(null)
-    } finally {
-      setLoading(false)
-    }
-  }
 
+      // Fetch weather data
+      const weatherData = await fetchWeatherData(locationInput, API_KEY || '');
+      console.log('Weather data:', weatherData); // Debug log
+
+      if (!weatherData) {
+        throw new Error('No weather data received');
+      }
+
+      setWeather(weatherData);
+      setHasSearched(true);
+      setLastSearchTerm(locationInput);
+      setCurrentLocation(locationInput);
+      
+      // Cache the data
+      saveLocationToCache(locationInput);
+      saveWeatherToCache(weatherData);
+      
+      // Record the request
+      recordRequest();
+    } catch (error) {
+      handleWeatherError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Enhanced location search with error handling
   const handleLocationSearch = async () => {
-    if (!navigator.geolocation) {
-      setError("Geolocation is not supported by this browser")
-      return
-    }
-
-    // Check if API key is available
-    if (!API_KEY) {
-      setError("🔧 Weather service is temporarily unavailable. Please try again later or contact support.")
-      return
-    }
-
-    // Check rate limit
-    const rateLimitCheck = checkRateLimit()
-    if (!rateLimitCheck.allowed) {
-      setRateLimitError(rateLimitCheck.message || "Rate limit exceeded")
-      return
-    }
-
-    setLoading(true)
-    setError("")
-    setRateLimitError("")
-    setHasSearched(true)
-    setCurrentLocation("Getting your location...")
-    
-    // Show cooldown state
-    setIsOnCooldown(true)
-    setTimeout(() => setIsOnCooldown(false), COOLDOWN_SECONDS * 1000)
-
     try {
-      // Fix API call - fetchWeatherByLocation expects only (apiKey)
-      const weatherData = await fetchWeatherByLocation(API_KEY)
-      setWeather(weatherData)
-      setCurrentLocation(weatherData.current.location)
-      setLastSearchTerm(weatherData.current.location)
+      setLoading(true);
+      setError("");
+      
+      const weatherData = await fetchWeatherByLocation(API_KEY || '');
+      console.log('Location weather data:', weatherData); // Debug log
 
-      // Record the request for rate limiting
-      recordRequest()
-      const { remaining } = checkRateLimit()
-      setRemainingSearches(remaining)
+      if (!weatherData) {
+        throw new Error('No weather data received for location');
+      }
 
-      // Save to cache (silent)
-      saveLocationToCache(weatherData.current.location)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch weather data")
-      setWeather(null)
+      setWeather(weatherData);
+      setHasSearched(true);
+      
+      // Cache the data
+      saveWeatherToCache(weatherData);
+      
+      // Record the request
+      recordRequest();
+    } catch (error) {
+      handleWeatherError(error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const formatWindDisplayHTML = (windDisplay: string): string => {
     // Convert wind display to HTML for colored wind speeds
@@ -693,28 +655,28 @@ function WeatherApp() {
                       <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
                         <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Temperature</h3>
                         <div className="text-2xl font-bold text-white">
-                          {weather.main.temp.toFixed(1)}°{weather.sys.country === 'US' ? 'F' : 'C'}
+                          {getWeatherData('main.temp', 0).toFixed(1)}°{getWeatherData('sys.country') === 'US' ? 'F' : 'C'}
                         </div>
                         <div className="text-sm text-gray-300">
-                          Feels like {weather.main.feels_like.toFixed(1)}°
+                          Feels like {getWeatherData('main.feels_like', 0).toFixed(1)}°
                         </div>
                       </div>
 
                       <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
                         <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Conditions</h3>
                         <div className="flex items-center justify-center gap-2">
-                          <WeatherIcon condition={weather.weather[0].main} size="small" />
-                          <span className="text-white">{weather.weather[0].description}</span>
+                          <WeatherIcon condition={getWeatherData('weather.0.main', 'Clear')} size="small" />
+                          <span className="text-white">{getWeatherData('weather.0.description', 'Loading...')}</span>
                         </div>
                       </div>
 
                       <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
                         <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Wind</h3>
                         <div className="text-white">
-                          {weather.wind.speed} {weather.sys.country === 'US' ? 'mph' : 'm/s'}
+                          {getWeatherData('wind.speed', 0)} {getWeatherData('sys.country') === 'US' ? 'mph' : 'm/s'}
                         </div>
                         <div className="text-sm text-gray-300">
-                          {weather.wind.deg}° {weather.wind.gust ? `Gusts ${weather.wind.gust}` : ''}
+                          {getWeatherData('wind.deg', 0)}° {getWeatherData('wind.gust') ? `Gusts ${getWeatherData('wind.gust')}` : ''}
                         </div>
                       </div>
 
@@ -723,31 +685,31 @@ function WeatherApp() {
                         <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Sun Times</h3>
                         <div className="flex items-center justify-center gap-2 text-white">
                           <SunriseIcon />
-                          <span>{new Date(weather.sys.sunrise * 1000).toLocaleTimeString()}</span>
+                          <span>{new Date(getWeatherData('sys.sunrise', 0) * 1000).toLocaleTimeString()}</span>
                         </div>
                         <div className="flex items-center justify-center gap-2 text-white mt-1">
                           <SunsetIcon />
-                          <span>{new Date(weather.sys.sunset * 1000).toLocaleTimeString()}</span>
+                          <span>{new Date(getWeatherData('sys.sunset', 0) * 1000).toLocaleTimeString()}</span>
                         </div>
                       </div>
 
                       <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
                         <h3 className="text-sm font-bold text-[#00d4ff] mb-2">UV Index</h3>
                         <div className="text-white">
-                          {weather.uvi.toFixed(1)}
+                          {getWeatherData('uvi', 0).toFixed(1)}
                         </div>
                         <div className="text-sm text-gray-300">
-                          {weather.uvi <= 2 ? 'Low' : weather.uvi <= 5 ? 'Moderate' : weather.uvi <= 7 ? 'High' : weather.uvi <= 10 ? 'Very High' : 'Extreme'}
+                          {getWeatherData('uvi', 0) <= 2 ? 'Low' : getWeatherData('uvi', 0) <= 5 ? 'Moderate' : getWeatherData('uvi', 0) <= 7 ? 'High' : getWeatherData('uvi', 0) <= 10 ? 'Very High' : 'Extreme'}
                         </div>
                       </div>
 
                       <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
                         <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Moon Phase</h3>
                         <div className="text-white">
-                          {weather.moon.phase}
+                          {getWeatherData('moon.phase', 'Loading...')}
                         </div>
                         <div className="text-sm text-gray-300">
-                          {weather.moon.illumination.toFixed(0)}% Illuminated
+                          {getWeatherData('moon.illumination', 0).toFixed(0)}% Illuminated
                         </div>
                       </div>
 
@@ -755,23 +717,23 @@ function WeatherApp() {
                       <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
                         <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Air Quality</h3>
                         <div className="text-white">
-                          {weather.aqi}
+                          {getWeatherData('aqi', 0)}
                         </div>
-                        <div className={`text-sm ${getAQIColor(weather.aqi)}`}>
-                          {getAQIDescription(weather.aqi)}
+                        <div className={`text-sm ${getAQIColor(getWeatherData('aqi', 0))}`}>
+                          {getAQIDescription(getWeatherData('aqi', 0))}
                         </div>
                       </div>
 
                       <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
                         <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Pollen Count</h3>
-                        {weather.pollen ? (
+                        {getWeatherData('pollen') ? (
                           <>
                             <div className="text-white">
-                              {weather.pollen.tree ? `Tree: ${weather.pollen.tree}` : ''}
+                              {getWeatherData('pollen.tree') ? `Tree: ${getWeatherData('pollen.tree')}` : ''}
                             </div>
                             <div className="text-sm text-gray-300">
-                              {weather.pollen.grass ? `Grass: ${weather.pollen.grass}` : ''}
-                              {weather.pollen.weed ? ` Weed: ${weather.pollen.weed}` : ''}
+                              {getWeatherData('pollen.grass') ? `Grass: ${getWeatherData('pollen.grass')}` : ''}
+                              {getWeatherData('pollen.weed') ? ` Weed: ${getWeatherData('pollen.weed')}` : ''}
                             </div>
                           </>
                         ) : (
