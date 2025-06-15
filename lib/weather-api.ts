@@ -697,7 +697,7 @@ const formatPressureValue = (pressureHPa: number, unit: 'hPa' | 'inHg'): { value
 const fetchCurrentWeatherData = async (lat: number, lon: number, apiKey: string): Promise<{ uvIndex: number; uvDescription: string }> => {
   try {
     const response = await fetch(
-      `${BASE_URL}/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,daily,alerts&appid=${apiKey}`
+      `${BASE_URL}/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,daily,alerts&units=imperial&appid=${apiKey}`
     );
     const data = await response.json();
     
@@ -856,42 +856,21 @@ export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherDat
         try {
           const { latitude, longitude } = position.coords;
           
-          // Fetch current weather by coordinates
+          // Fetch current weather by coordinates using One Call API 3.0
           const currentResponse = await fetch(
-            `${BASE_URL}/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=imperial`
+            `${BASE_URL}/onecall?lat=${latitude}&lon=${longitude}&exclude=minutely,hourly,alerts&units=imperial&appid=${apiKey}`
           );
 
           if (!currentResponse.ok) {
             throw new Error(`Weather API error: ${currentResponse.status}`);
           }
 
-          const currentData: OpenWeatherMapCurrentResponse = await currentResponse.json();
-          
-          // Fetch forecast by coordinates
-          const forecastResponse = await fetch(
-            `${BASE_URL}/forecast?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=imperial`
-          );
-
-          if (!forecastResponse.ok) {
-            throw new Error(`Forecast API error: ${forecastResponse.status}`);
-          }
-
-          const forecastData: OpenWeatherMapForecastResponse = await forecastResponse.json();
-
-          // Process forecast data
-          const dailyForecasts = processDailyForecast(forecastData);
-
-          // Fetch UV Index data
-          const { uvIndex, uvDescription } = await fetchCurrentWeatherData(latitude, longitude, apiKey);
+          const weatherData = await currentResponse.json();
+          const current = weatherData.current;
+          const countryCode = weatherData.timezone.split('/')[0];
 
           // Fetch air quality data
           const airQualityData = await fetchAirQualityData(latitude, longitude, apiKey);
-
-          // Fetch pollen data
-          const pollenResponse = await fetch(
-            `https://api.openweathermap.org/data/3.0/onecall?lat=${latitude}&lon=${longitude}&exclude=minutely,hourly,daily,alerts&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
-          );
-          const pollenData = await pollenResponse.json();
 
           // Determine current season based on month
           const month = new Date().getMonth();
@@ -899,39 +878,50 @@ export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherDat
                         month >= 5 && month <= 7 ? 'summer' :
                         month >= 8 && month <= 10 ? 'fall' : 'winter';
 
-          const weatherData: WeatherData = {
+          const weatherDataResponse: WeatherData = {
             current: {
-              temp: Math.round(currentData.main.temp),
-              condition: mapWeatherCondition(currentData.weather[0].main),
-              humidity: currentData.main.humidity,
-              wind: Math.round(currentData.wind.speed),
-              windDirection: currentData.wind.deg,
-              windDisplay: formatWindDisplay(currentData.wind.speed, currentData.wind.deg, currentData.wind.gust, currentData.sys.country),
-              location: `${currentData.name}, ${currentData.sys.country}`,
-              description: currentData.weather[0].description,
-              sunrise: currentData.sys.sunrise ? formatTime(currentData.sys.sunrise, currentData.timezone) : 'N/A',
-              sunset: currentData.sys.sunset ? formatTime(currentData.sys.sunset, currentData.timezone) : 'N/A',
-              dewPoint: calculateDewPoint(currentData.main.temp, currentData.main.humidity),
-              uvIndex,
-              uvDescription,
-              pressure: currentData.main.pressure,
-              pressureDisplay: formatPressureByRegion(currentData.main.pressure, currentData.sys.country),
-              country: currentData.sys.country,
+              temp: Math.round(current.temp),
+              condition: current.weather[0].main,
+              humidity: current.humidity,
+              wind: current.wind_speed,
+              windDirection: current.wind_deg,
+              windDisplay: formatWindDisplay(current.wind_speed, current.wind_deg, current.wind_gust, countryCode),
+              location: `${weatherData.name || 'Current Location'}, ${countryCode}`,
+              description: current.weather[0].description,
+              sunrise: formatTime(current.sunrise, weatherData.timezone_offset),
+              sunset: formatTime(current.sunset, weatherData.timezone_offset),
+              dewPoint: calculateDewPoint(current.temp, current.humidity),
+              uvIndex: current.uvi || 0,
+              uvDescription: getUVDescription(current.uvi || 0),
+              pressure: current.pressure,
+              pressureDisplay: formatPressureByRegion(current.pressure, countryCode),
+              country: countryCode,
               lat: latitude,
               lon: longitude
             },
-            forecast: dailyForecasts,
-            moonPhase: calculateMoonPhase(),
+            forecast: weatherData.daily.slice(0, 5).map((day: any) => ({
+              day: new Date(day.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' }),
+              highTemp: Math.round(day.temp.max),
+              lowTemp: Math.round(day.temp.min),
+              condition: day.weather[0].main,
+              description: day.weather[0].description
+            })),
+            moonPhase: {
+              phase: getMoonPhaseName(weatherData.daily[0].moon_phase),
+              illumination: Math.round(weatherData.daily[0].moon_phase * 100),
+              emoji: getMoonEmoji(weatherData.daily[0].moon_phase),
+              phaseAngle: Math.round(weatherData.daily[0].moon_phase * 360)
+            },
             airQuality: airQualityData,
             pollen: {
-              tree: pollenData.current.pollen?.tree || 0,
-              grass: pollenData.current.pollen?.grass || 0,
-              weed: pollenData.current.pollen?.weed || 0,
+              tree: 0, // Pollen data not available in current API
+              grass: 0,
+              weed: 0,
               season
             }
           };
 
-          resolve(weatherData);
+          resolve(weatherDataResponse);
         } catch (error) {
           reject(error);
         }
