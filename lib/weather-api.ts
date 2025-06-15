@@ -9,6 +9,13 @@
  * - UV Index, pressure, and moon phase calculations
  */
 
+interface PollenData {
+  tree: number;
+  grass: number;
+  weed: number;
+  season: string;
+}
+
 interface WeatherData {
   current: {
     temp: number;
@@ -43,6 +50,15 @@ interface WeatherData {
     emoji: string; // Unicode moon symbol
     phaseAngle: number; // Phase angle in degrees (0-360)
   };
+  airQuality: {
+    aqi: number;
+    pollution: {
+      pm2_5: number;
+      pm10: number;
+      o3: number;
+    };
+  };
+  pollen: PollenData;
 }
 
 interface OpenWeatherMapCurrentResponse {
@@ -743,6 +759,24 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
     // Fetch UV Index data
     const { uvIndex, uvDescription } = await fetchCurrentWeatherData(lat, lon, apiKey);
 
+    // Fetch air quality data
+    const airQualityResponse = await fetch(
+      `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,daily,alerts&appid=${apiKey}`
+    );
+    const airQualityData = await airQualityResponse.json();
+
+    // Fetch pollen data
+    const pollenResponse = await fetch(
+      `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,daily,alerts&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
+    );
+    const pollenData = await pollenResponse.json();
+
+    // Determine current season based on month
+    const month = new Date().getMonth();
+    const season = month >= 2 && month <= 4 ? 'spring' :
+                  month >= 5 && month <= 7 ? 'summer' :
+                  month >= 8 && month <= 10 ? 'fall' : 'winter';
+
     return {
       current: {
         temp: Math.round(currentData.main.temp),
@@ -765,7 +799,21 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
         lon
       },
       forecast: dailyForecasts,
-      moonPhase
+      moonPhase,
+      airQuality: {
+        aqi: airQualityData.current.aqi || 0,
+        pollution: {
+          pm2_5: airQualityData.current.pm2_5 || 0,
+          pm10: airQualityData.current.pm10 || 0,
+          o3: airQualityData.current.o3 || 0
+        }
+      },
+      pollen: {
+        tree: pollenData.current.pollen?.tree || 0,
+        grass: pollenData.current.pollen?.grass || 0,
+        weed: pollenData.current.pollen?.weed || 0,
+        season
+      }
     };
   } catch (error) {
     if (error instanceof Error) {
@@ -836,6 +884,24 @@ export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherDat
           // Fetch UV Index data
           const { uvIndex, uvDescription } = await fetchCurrentWeatherData(latitude, longitude, apiKey);
 
+          // Fetch air quality data
+          const airQualityResponse = await fetch(
+            `https://api.openweathermap.org/data/3.0/onecall?lat=${latitude}&lon=${longitude}&exclude=minutely,hourly,daily,alerts&appid=${apiKey}`
+          );
+          const airQualityData = await airQualityResponse.json();
+
+          // Fetch pollen data
+          const pollenResponse = await fetch(
+            `https://api.openweathermap.org/data/3.0/onecall?lat=${latitude}&lon=${longitude}&exclude=minutely,hourly,daily,alerts&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
+          );
+          const pollenData = await pollenResponse.json();
+
+          // Determine current season based on month
+          const month = new Date().getMonth();
+          const season = month >= 2 && month <= 4 ? 'spring' :
+                        month >= 5 && month <= 7 ? 'summer' :
+                        month >= 8 && month <= 10 ? 'fall' : 'winter';
+
           const weatherData: WeatherData = {
             current: {
               temp: Math.round(currentData.main.temp),
@@ -858,7 +924,21 @@ export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherDat
               lon: longitude
             },
             forecast: dailyForecasts,
-            moonPhase: calculateMoonPhase()
+            moonPhase: calculateMoonPhase(),
+            airQuality: {
+              aqi: airQualityData.current.aqi || 0,
+              pollution: {
+                pm2_5: airQualityData.current.pm2_5 || 0,
+                pm10: airQualityData.current.pm10 || 0,
+                o3: airQualityData.current.o3 || 0
+              }
+            },
+            pollen: {
+              tree: pollenData.current.pollen?.tree || 0,
+              grass: pollenData.current.pollen?.grass || 0,
+              weed: pollenData.current.pollen?.weed || 0,
+              season
+            }
           };
 
           resolve(weatherData);

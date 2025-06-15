@@ -12,6 +12,8 @@ import HistoricalChart from "@/components/historical-chart"
 import { Analytics } from "@vercel/analytics/react"
 import Link from "next/link"
 import { Cloud, Zap, Flame } from "lucide-react"
+import AirQuality from '@/components/air-quality'
+import PollenCount from '@/components/pollen-count'
 
 // Get API key from environment variables for production deployment
 const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY;
@@ -24,6 +26,14 @@ const getPressureUnit = (countryCode: string): 'hPa' | 'inHg' => {
   const inHgCountries = ['US', 'CA', 'PR', 'VI', 'GU', 'AS', 'MP'];
   return inHgCountries.includes(countryCode) ? 'inHg' : 'hPa';
 };
+
+interface DailyForecast {
+  day: string;
+  highTemp: number;
+  lowTemp: number;
+  condition: string;
+  description: string;
+}
 
 interface WeatherData {
   current: {
@@ -46,18 +56,26 @@ interface WeatherData {
     lat: number; // Latitude coordinates for radar
     lon: number; // Longitude coordinates for radar
   };
-  forecast: Array<{
-    day: string;
-    highTemp: number;
-    lowTemp: number;
-    condition: string;
-    description: string;
-  }>;
+  forecast: DailyForecast[];
   moonPhase: {
     phase: string; // Phase name (e.g., "Waxing Crescent")
     illumination: number; // Percentage of illumination (0-100)
     emoji: string; // Unicode moon symbol
     phaseAngle: number; // Phase angle in degrees (0-360)
+  };
+  airQuality: {
+    aqi: number;
+    pollution: {
+      pm2_5: number;
+      pm10: number;
+      o3: number;
+    };
+  };
+  pollen: {
+    tree: number;
+    grass: number;
+    weed: number;
+    season: string;
   };
 }
 
@@ -848,6 +866,20 @@ function WeatherApp() {
                   </div>
                 </Link>
               </div>
+
+              {/* Air Quality and Pollen Count Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <AirQuality
+                  aqi={weather.airQuality.aqi}
+                  pollution={weather.airQuality.pollution}
+                  theme={currentTheme}
+                />
+                <PollenCount
+                  pollen={weather.pollen}
+                  season={weather.pollen.season}
+                  theme={currentTheme}
+                />
+              </div>
             </div>
           )}
 
@@ -865,7 +897,7 @@ function WeatherApp() {
  ▐░░░░░░░▌  ▐░░░░░░▌     ▐░▌        ▐░▌ ▐░▌  ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  ▐░▌   ▐░▌ ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  
  ▐░█▀▀▀█░▌       ▐░▌     ▐░▌        ▐░▌  ▐░▌ ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  ▐░█▄▄▄█░▌ ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  
  ▐░▌   ▐░▌  ▄▄▄▄▄█░▌     ▐░▌        ▐░▌   ▐░▌▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░▌  ▐░░░░░░░▌ ▐░░░░░░░▌ 
-  ▀     ▀  ▐░░░░░░░▌     ▀          ▀     ▀  ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀    ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀  
+  ▀     ▀  ▐░░░░░░▌     ▀          ▀     ▀  ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀    ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀  
          ▀▀▀▀▀▀▀▀                                                                                                 `}
                 </div>
                 <div className="block sm:hidden text-center">
