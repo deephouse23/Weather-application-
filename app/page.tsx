@@ -701,25 +701,68 @@ function WeatherApp() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  {/* Temperature */}
                   <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
                     <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Temperature</h3>
                     <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
-                      {weather.current.temp}°C
+                      {weather.current.temp}°F
                     </p>
                   </div>
+
+                  {/* Conditions */}
                   <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
                     <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Conditions</h3>
                     <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
                       {weather.current.description}
                     </p>
                   </div>
+
+                  {/* Wind */}
                   <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
                     <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Wind</h3>
                     <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
-                      {weather.current.wind} km/h
+                      {weather.current.wind} mph
                     </p>
                     <p className={`${themeClasses.secondaryText} text-sm`}>
                       {weather.current.windDisplay}
+                    </p>
+                  </div>
+
+                  {/* Sunrise/Sunset */}
+                  <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
+                    <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Sun Times</h3>
+                    <div className="space-y-2">
+                      <p className={`${themeClasses.text} text-lg`}>
+                        🌅 {weather.current.sunrise}
+                      </p>
+                      <p className={`${themeClasses.text} text-lg`}>
+                        🌇 {weather.current.sunset}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* UV Index */}
+                  <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
+                    <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>UV Index</h3>
+                    <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
+                      {weather.current.uvIndex}
+                    </p>
+                    <p className={`${themeClasses.secondaryText} text-sm`}>
+                      {weather.current.uvDescription}
+                    </p>
+                  </div>
+
+                  {/* Moon Phase */}
+                  <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
+                    <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Moon Phase</h3>
+                    <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
+                      {weather.moonPhase.emoji}
+                    </p>
+                    <p className={`${themeClasses.secondaryText} text-sm`}>
+                      {weather.moonPhase.phase}
+                    </p>
+                    <p className={`${themeClasses.secondaryText} text-xs`}>
+                      {weather.moonPhase.illumination}% illuminated
                     </p>
                   </div>
                 </div>

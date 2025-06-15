@@ -126,10 +126,10 @@ function ForecastCard({ day, themeClasses, theme }: { day: ForecastDay; themeCla
              style={theme !== 'dark' ? {
                textShadow: theme === 'tron' ? '0 0 10px #00FFFF, 0 0 20px #00FFFF' : '0 0 10px #ff1493, 0 0 20px #ff1493'
              } : {}}>
-          {Math.round(day.highTemp)}°
+          {Math.round(day.highTemp)}°F
         </div>
         <div className={`text-xs sm:text-sm ${themeClasses.lowTempText} opacity-80 font-medium ${themeClasses.glow}`}>
-          {Math.round(day.lowTemp)}°
+          {Math.round(day.lowTemp)}°F
         </div>
       </div>
       

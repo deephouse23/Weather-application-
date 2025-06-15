@@ -671,68 +671,42 @@ const fetchCurrentWeatherData = async (lat: number, lon: number, apiKey: string)
 };
 
 export const fetchWeatherData = async (locationInput: string, apiKey: string): Promise<WeatherData> => {
-  if (!apiKey) {
-    throw new Error('API key is required')
-  }
-
-  // Check cache first
-  const cached = getCachedWeatherData()
-  if (cached.data && cached.location === locationInput && !cached.isStale) {
-    return cached.data
-  }
-
-  const locationQuery = parseLocationInput(locationInput)
-  
   try {
-    // Deduplicate geocoding requests
-    const { lat, lon, displayName } = await deduplicateRequest(
-      `geocode_${locationInput}`,
-      () => geocodeLocation(locationQuery, apiKey)
-    )
+    // Parse location input
+    const locationQuery = parseLocationInput(locationInput);
     
-    // Deduplicate weather data requests
-    const currentData = await deduplicateRequest(
-      `current_${lat}_${lon}`,
-      () => withRetry(async () => {
-        const response = await fetch(
-          `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`
-        )
-
-        if (!response.ok) {
-          throw new Error(`Weather API error: ${response.status}`)
-        }
-
-        return response.json()
-      })
-    )
-
-    // Deduplicate forecast requests
-    const forecastData = await deduplicateRequest(
-      `forecast_${lat}_${lon}`,
-      () => withRetry(async () => {
-        const response = await fetch(
-          `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`
-        )
-
-        if (!response.ok) {
-          throw new Error(`Forecast API error: ${response.status}`)
-        }
-
-        return response.json()
-      })
-    )
-
-    // Process forecast data to get daily high/low temperatures
-    const dailyForecasts = processDailyForecast(forecastData)
-
-    // Calculate current moon phase
-    const moonPhase = calculateMoonPhase()
-
-    // Fetch UV Index data with retry
-    const { uvIndex, uvDescription } = await withRetry(() => 
-      fetchCurrentWeatherData(lat, lon, apiKey)
-    )
-
+    // Geocode location
+    const { lat, lon, displayName } = await geocodeLocation(locationQuery, apiKey);
+    
+    // Fetch current weather with imperial units
+    const currentResponse = await fetch(
+      `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`
+    );
+    
+    if (!currentResponse.ok) {
+      throw new Error('Failed to fetch current weather data');
+    }
+    
+    const currentData = await currentResponse.json();
+    
+    // Fetch UV Index and description
+    const { uvIndex, uvDescription } = await fetchCurrentWeatherData(lat, lon, apiKey);
+    
+    // Calculate moon phase
+    const moonPhase = calculateMoonPhase();
+    
+    // Process forecast data
+    const forecastResponse = await fetch(
+      `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`
+    );
+    
+    if (!forecastResponse.ok) {
+      throw new Error('Failed to fetch forecast data');
+    }
+    
+    const forecastData = await forecastResponse.json();
+    const dailyForecasts = processDailyForecast(forecastData);
+    
     const weatherData: WeatherData = {
       current: {
         temp: Math.round(currentData.main.temp),
@@ -756,19 +730,19 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
       },
       forecast: dailyForecasts,
       moonPhase
-    }
+    };
 
     // Cache the weather data
-    cacheWeatherData(locationInput, weatherData)
+    cacheWeatherData(locationInput, weatherData);
 
-    return weatherData
+    return weatherData;
   } catch (error) {
     if (error instanceof Error) {
-      throw error
+      throw error;
     }
-    throw new Error('Failed to fetch weather data. Please try again.')
+    throw new Error('Failed to fetch weather data. Please try again.');
   }
-}
+};
 
 // Generate helpful error messages based on location type
 const getLocationNotFoundError = (locationQuery: LocationQuery): string => {
