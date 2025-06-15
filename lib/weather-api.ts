@@ -208,23 +208,31 @@ const shouldUseMetricUnits = (countryCode: string): boolean => {
   return !imperialCountries.includes(countryCode);
 };
 
+// Temperature conversion functions
+const celsiusToFahrenheit = (celsius: number): number => Math.round((celsius * 9/5) + 32);
+const fahrenheitToCelsius = (fahrenheit: number): number => Math.round((fahrenheit - 32) * 5/9);
+
+// Location-based unit detection
+const isUSALocation = (country: string): boolean => country === 'US' || country === 'USA';
+const shouldUseFahrenheit = (countryCode: string): boolean => isUSALocation(countryCode);
+
 // Enhanced temperature formatting
 const formatTemperature = (temp: number, countryCode: string): { value: number; unit: string; display: string } => {
-  const useMetric = shouldUseMetricUnits(countryCode);
+  const useF = shouldUseFahrenheit(countryCode);
   
-  if (useMetric) {
-    // Convert Fahrenheit to Celsius if needed
-    const tempC = (temp - 32) * 5/9;
+  if (useF) {
+    return {
+      value: temp,
+      unit: '°F',
+      display: `${Math.round(temp)}°F`
+    };
+  } else {
+    // Convert to Celsius if needed
+    const tempC = fahrenheitToCelsius(temp);
     return {
       value: tempC,
       unit: '°C',
-      display: `${Math.round(tempC)}°C`
-    };
-  } else {
-    return {
-      value: temp,
-      unit: '°F', 
-      display: `${Math.round(temp)}°F`
+      display: `${tempC}°C`
     };
   }
 };
@@ -542,64 +550,32 @@ const calculateMoonPhase = (): MoonPhaseInfo => {
 };
 
 // Process 5-day forecast data to extract daily high/low temperatures
-const processDailyForecast = (forecastData: OpenWeatherMapForecastResponse) => {
-  const dailyData: { [key: string]: { 
-    temps: number[]; 
-    conditions: string[]; 
-    descriptions: string[]; 
-    date: Date;
-  } } = {};
-
-  // Group forecast data by day
-  forecastData.list.forEach((item) => {
-    const date = new Date(item.dt * 1000);
-    const dateKey = date.toDateString(); // Use date string as key
-    
-    if (!dailyData[dateKey]) {
-      dailyData[dateKey] = {
-        temps: [],
-        conditions: [],
-        descriptions: [],
-        date: date
-      };
-    }
-    
-    dailyData[dateKey].temps.push(item.main.temp);
-    dailyData[dateKey].conditions.push(item.weather[0].main);
-    dailyData[dateKey].descriptions.push(item.weather[0].description);
-  });
-
-  // Convert to forecast array, excluding today and taking next 5 days
-  const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-  const today = new Date().toDateString();
+const processDailyForecast = (forecastData: OpenWeatherMapForecastResponse, useFahrenheit: boolean) => {
+  const dailyTemps: { [key: string]: { high: number; low: number; condition: string; description: string } } = {};
   
-  return Object.entries(dailyData)
-    .filter(([dateKey]) => dateKey !== today) // Exclude today
-    .slice(0, 5) // Take next 5 days
-    .map(([dateKey, data]) => {
-      const highTemp = Math.round(Math.max(...data.temps));
-      const lowTemp = Math.round(Math.min(...data.temps));
-      
-      // Use the most common condition for the day
-      const conditionCounts: { [key: string]: number } = {};
-      data.conditions.forEach(condition => {
-        conditionCounts[condition] = (conditionCounts[condition] || 0) + 1;
-      });
-      const dominantCondition = Object.entries(conditionCounts)
-        .sort(([,a], [,b]) => b - a)[0][0];
-      
-      // Use the first description for the dominant condition
-      const conditionIndex = data.conditions.findIndex(c => c === dominantCondition);
-      const description = data.descriptions[conditionIndex];
-      
-      return {
-        day: dayNames[data.date.getDay()],
-        highTemp,
-        lowTemp,
-        condition: mapWeatherCondition(dominantCondition),
-        description
+  forecastData.list.forEach((item) => {
+    const date = new Date(item.dt * 1000).toLocaleDateString('en-US', { weekday: 'long' });
+    
+    if (!dailyTemps[date]) {
+      dailyTemps[date] = {
+        high: item.main.temp_max,
+        low: item.main.temp_min,
+        condition: item.weather[0].main,
+        description: item.weather[0].description
       };
-    });
+    } else {
+      dailyTemps[date].high = Math.max(dailyTemps[date].high, item.main.temp_max);
+      dailyTemps[date].low = Math.min(dailyTemps[date].low, item.main.temp_min);
+    }
+  });
+  
+  return Object.entries(dailyTemps).map(([day, data]) => ({
+    day,
+    highTemp: useFahrenheit ? Math.round(data.high) : fahrenheitToCelsius(data.high),
+    lowTemp: useFahrenheit ? Math.round(data.low) : fahrenheitToCelsius(data.low),
+    condition: mapWeatherCondition(data.condition),
+    description: data.description
+  }));
 };
 
 // Enhanced pressure formatting utilities with better regional support
@@ -678,7 +654,7 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
     // Geocode location
     const { lat, lon, displayName } = await geocodeLocation(locationQuery, apiKey);
     
-    // Fetch current weather with imperial units
+    // Fetch current weather with imperial units (we'll convert based on location)
     const currentResponse = await fetch(
       `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`
     );
@@ -688,6 +664,8 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
     }
     
     const currentData = await currentResponse.json();
+    const countryCode = currentData.sys.country;
+    const useFahrenheit = shouldUseFahrenheit(countryCode);
     
     // Fetch UV Index and description
     const { uvIndex, uvDescription } = await fetchCurrentWeatherData(lat, lon, apiKey);
@@ -705,7 +683,7 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
     }
     
     const forecastData = await forecastResponse.json();
-    const dailyForecasts = processDailyForecast(forecastData);
+    const dailyForecasts = processDailyForecast(forecastData, useFahrenheit);
     
     const weatherData: WeatherData = {
       current: {
@@ -714,7 +692,7 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
         humidity: currentData.main.humidity,
         wind: Math.round(currentData.wind.speed),
         windDirection: currentData.wind.deg,
-        windDisplay: formatWindDisplay(currentData.wind.speed, currentData.wind.deg, currentData.wind.gust, currentData.sys.country),
+        windDisplay: formatWindDisplay(currentData.wind.speed, currentData.wind.deg, currentData.wind.gust, countryCode),
         location: displayName,
         description: currentData.weather[0].description,
         sunrise: currentData.sys.sunrise ? formatTime(currentData.sys.sunrise, currentData.timezone) : 'N/A',
@@ -723,8 +701,8 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
         uvIndex,
         uvDescription,
         pressure: currentData.main.pressure,
-        pressureDisplay: formatPressureByRegion(currentData.main.pressure, currentData.sys.country),
-        country: currentData.sys.country,
+        pressureDisplay: formatPressureByRegion(currentData.main.pressure, countryCode),
+        country: countryCode,
         lat,
         lon
       },
@@ -810,7 +788,7 @@ export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherDat
           )
 
           // Process forecast data
-          const dailyForecasts = processDailyForecast(forecastData)
+          const dailyForecasts = processDailyForecast(forecastData, shouldUseFahrenheit(currentData.sys.country))
 
           // Fetch UV Index data with retry
           const { uvIndex, uvDescription } = await withRetry(() => 

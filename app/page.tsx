@@ -705,7 +705,7 @@ function WeatherApp() {
                   <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
                     <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Temperature</h3>
                     <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
-                      {weather.current.temp}°F
+                      {weather.current.temp}{weather.current.country === 'US' ? '°F' : '°C'}
                     </p>
                   </div>
 
@@ -721,7 +721,7 @@ function WeatherApp() {
                   <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
                     <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Wind</h3>
                     <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
-                      {weather.current.wind} mph
+                      {weather.current.wind} {weather.current.country === 'US' ? 'mph' : 'km/h'}
                     </p>
                     <p className={`${themeClasses.secondaryText} text-sm`}>
                       {weather.current.windDisplay}
@@ -792,16 +792,18 @@ function WeatherApp() {
                 )}
 
                 {/* Doppler Radar Button */}
-                <Link 
-                  href={`/radar?lat=${weather.current.lat}&lon=${weather.current.lon}&name=${encodeURIComponent(weather.current.location)}`}
-                  className="inline-block"
-                >
-                  <button
-                    className={`px-4 sm:px-6 py-2 sm:py-3 border-2 sm:border-4 text-sm sm:text-lg font-mono font-bold uppercase tracking-wider transition-all duration-300 ${themeClasses.borderColor} ${themeClasses.cardBg} ${themeClasses.headerText} touch-manipulation min-h-[44px] hover:${themeClasses.buttonHover}`}
+                <div className="text-center mb-4 sm:mb-6">
+                  <Link
+                    href={`/radar?lat=${weather.current.lat}&lon=${weather.current.lon}&name=${encodeURIComponent(weather.current.location)}`}
+                    className="inline-block"
                   >
-                    View Doppler Radar
-                  </button>
-                </Link>
+                    <button
+                      className={`px-4 sm:px-6 py-2 sm:py-3 border-2 sm:border-4 text-sm sm:text-lg font-mono font-bold uppercase tracking-wider transition-all duration-300 ${themeClasses.borderColor} ${themeClasses.cardBg} ${themeClasses.headerText} touch-manipulation min-h-[44px] hover:${themeClasses.buttonHover}`}
+                    >
+                      View Doppler Radar
+                    </button>
+                  </Link>
+                </div>
               </div>
 
               {/* 5-Day Forecast - Mobile optimized */}
