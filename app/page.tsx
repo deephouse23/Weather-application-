@@ -773,7 +773,10 @@ function WeatherApp() {
                     <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
                       <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Record High</h3>
                       <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
-                        {historicalData.daily.temperature_2m_max[0]}°C
+                        {weather.current.country === 'US' ? 
+                          Math.round(historicalData.daily.temperature_2m_max[0] * 9/5 + 32) + '°F' :
+                          Math.round(historicalData.daily.temperature_2m_max[0]) + '°C'
+                        }
                       </p>
                       <p className={`${themeClasses.secondaryText} text-sm`}>
                         Set in {new Date(historicalData.daily.time[0]).getFullYear()}
@@ -782,7 +785,10 @@ function WeatherApp() {
                     <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
                       <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Record Low</h3>
                       <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
-                        {historicalData.daily.temperature_2m_min[0]}°C
+                        {weather.current.country === 'US' ? 
+                          Math.round(historicalData.daily.temperature_2m_min[0] * 9/5 + 32) + '°F' :
+                          Math.round(historicalData.daily.temperature_2m_min[0]) + '°C'
+                        }
                       </p>
                       <p className={`${themeClasses.secondaryText} text-sm`}>
                         Set in {new Date(historicalData.daily.time[0]).getFullYear()}
