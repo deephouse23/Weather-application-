@@ -76,6 +76,12 @@ interface MoonPhaseInfo {
   phaseAngle: number;
 }
 
+interface WindData {
+  speed: number;
+  direction?: string;
+  gust?: number;
+}
+
 const BASE_URL = 'https://api.openweathermap.org/data/2.5';
 const BASE_URL_V3 = 'https://api.openweathermap.org/data/3.0';
 const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
@@ -216,9 +222,11 @@ const fahrenheitToCelsius = (fahrenheit: number): number => Math.round((fahrenhe
 const isUSALocation = (country: string): boolean => country === 'US' || country === 'USA';
 const shouldUseFahrenheit = (countryCode: string): boolean => isUSALocation(countryCode);
 
-// Enhanced temperature formatting
+// Enhanced temperature formatting with proper unit handling
 const formatTemperature = (temp: number, countryCode: string): { value: number; unit: string; display: string } => {
+  console.log('Formatting temperature:', { temp, countryCode });
   const useF = shouldUseFahrenheit(countryCode);
+  console.log('Using Fahrenheit:', useF);
   
   if (useF) {
     return {
@@ -647,78 +655,90 @@ const fetchCurrentWeatherData = async (lat: number, lon: number, apiKey: string)
 };
 
 export const fetchWeatherData = async (locationInput: string, apiKey: string): Promise<WeatherData> => {
+  console.log('Fetching weather data for:', locationInput);
+  
   try {
     // Parse location input
     const locationQuery = parseLocationInput(locationInput);
-    
+    console.log('Parsed location query:', locationQuery);
+
     // Geocode location
     const { lat, lon, displayName } = await geocodeLocation(locationQuery, apiKey);
+    console.log('Geocoded location:', { lat, lon, displayName });
+
+    // Fetch current weather
+    const currentWeatherUrl = `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`;
+    console.log('Fetching current weather from:', currentWeatherUrl);
     
-    // Fetch current weather with imperial units (we'll convert based on location)
-    const currentResponse = await fetch(
-      `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`
-    );
-    
-    if (!currentResponse.ok) {
-      throw new Error('Failed to fetch current weather data');
+    const currentWeatherResponse = await fetch(currentWeatherUrl);
+    if (!currentWeatherResponse.ok) {
+      throw new Error(`Current weather API call failed: ${currentWeatherResponse.status}`);
     }
+    const currentWeatherData = await currentWeatherResponse.json();
+    console.log('Current weather response:', currentWeatherData);
+
+    // Fetch forecast
+    const forecastUrl = `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`;
+    console.log('Fetching forecast from:', forecastUrl);
     
-    const currentData = await currentResponse.json();
-    const countryCode = currentData.sys.country;
+    const forecastResponse = await fetch(forecastUrl);
+    if (!forecastResponse.ok) {
+      throw new Error(`Forecast API call failed: ${forecastResponse.status}`);
+    }
+    const forecastData = await forecastResponse.json();
+    console.log('Forecast response:', forecastData);
+
+    // Process and validate data
+    const countryCode = currentWeatherData.sys.country;
     const useFahrenheit = shouldUseFahrenheit(countryCode);
-    
-    // Fetch UV Index and description
-    const { uvIndex, uvDescription } = await fetchCurrentWeatherData(lat, lon, apiKey);
-    
+    console.log('Using Fahrenheit:', useFahrenheit);
+
+    // Format temperature with proper unit handling
+    const temp = formatTemperature(currentWeatherData.main.temp, countryCode);
+    console.log('Formatted temperature:', temp);
+
+    // Process forecast data
+    const forecast = processDailyForecast(forecastData, useFahrenheit);
+    console.log('Processed forecast:', forecast);
+
     // Calculate moon phase
     const moonPhase = calculateMoonPhase();
-    
-    // Process forecast data
-    const forecastResponse = await fetch(
-      `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`
-    );
-    
-    if (!forecastResponse.ok) {
-      throw new Error('Failed to fetch forecast data');
-    }
-    
-    const forecastData = await forecastResponse.json();
-    const dailyForecasts = processDailyForecast(forecastData, useFahrenheit);
-    
+    console.log('Moon phase:', moonPhase);
+
+    // Construct weather data object
     const weatherData: WeatherData = {
-      current: {
-        temp: Math.round(currentData.main.temp),
-        condition: mapWeatherCondition(currentData.weather[0].main),
-        humidity: currentData.main.humidity,
-        wind: Math.round(currentData.wind.speed),
-        windDirection: currentData.wind.deg,
-        windDisplay: formatWindDisplay(currentData.wind.speed, currentData.wind.deg, currentData.wind.gust, countryCode),
-        location: displayName,
-        description: currentData.weather[0].description,
-        sunrise: currentData.sys.sunrise ? formatTime(currentData.sys.sunrise, currentData.timezone) : 'N/A',
-        sunset: currentData.sys.sunset ? formatTime(currentData.sys.sunset, currentData.timezone) : 'N/A',
-        dewPoint: calculateDewPoint(currentData.main.temp, currentData.main.humidity),
-        uvIndex,
-        uvDescription,
-        pressure: currentData.main.pressure,
-        pressureDisplay: formatPressureByRegion(currentData.main.pressure, countryCode),
-        country: countryCode,
-        lat,
-        lon
-      },
-      forecast: dailyForecasts,
-      moonPhase
+      location: displayName,
+      country: countryCode,
+      temperature: temp.value,
+      unit: temp.unit,
+      condition: currentWeatherData.weather[0].main,
+      description: currentWeatherData.weather[0].description,
+      humidity: currentWeatherData.main.humidity,
+      wind: {
+        speed: currentWeatherData.wind.speed,
+        direction: currentWeatherData.wind.deg ? getCompassDirection(currentWeatherData.wind.deg) : undefined,
+        gust: currentWeatherData.wind.gust
+      } as WindData,
+      pressure: formatPressureByRegion(currentWeatherData.main.pressure, countryCode),
+      sunrise: formatTime(currentWeatherData.sys.sunrise, currentWeatherData.timezone),
+      sunset: formatTime(currentWeatherData.sys.sunset, currentWeatherData.timezone),
+      forecast: forecast,
+      moonPhase: moonPhase,
+      uvIndex: 0, // Placeholder - will be updated if available
+      aqi: 0, // Placeholder - will be updated if available
+      pollen: {
+        tree: 0,
+        grass: 0,
+        weed: 0
+      }
     };
 
-    // Cache the weather data
-    cacheWeatherData(locationInput, weatherData);
-
+    console.log('Final weather data:', weatherData);
     return weatherData;
+
   } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error('Failed to fetch weather data. Please try again.');
+    console.error('Error fetching weather data:', error);
+    throw error;
   }
 };
 

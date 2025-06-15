@@ -70,6 +70,7 @@ const getAQIRecommendation = (aqi: number): string => {
 };
 
 function WeatherApp() {
+  const { theme } = useTheme()
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>("")
@@ -80,7 +81,6 @@ function WeatherApp() {
   const [isOnCooldown, setIsOnCooldown] = useState(false)
   const [remainingSearches, setRemainingSearches] = useState(10)
   const [rateLimitError, setRateLimitError] = useState<string>("")
-  const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark')
   const [isClient, setIsClient] = useState(false)
 
   // localStorage keys
@@ -355,22 +355,13 @@ function WeatherApp() {
     handleSearch(locationInput)
   }
 
-  // Helper function to safely get weather data
-  const getWeatherData = <T>(path: string, defaultValue: T): T => {
+  // Helper function to safely access weather data
+  const getWeatherData = <T,>(path: string, defaultValue: T): T => {
     try {
-      if (!weather) return defaultValue;
-      
-      const keys = path.split('.');
-      let value: any = weather;
-      
-      for (const key of keys) {
-        if (value === null || value === undefined) return defaultValue;
-        value = value[key];
-      }
-      
+      const value = path.split('.').reduce((obj, key) => obj?.[key], weather as any);
       return value ?? defaultValue;
     } catch (error) {
-      console.error(`Error accessing weather data at path ${path}:`, error);
+      console.error('Error accessing weather data:', error);
       return defaultValue;
     }
   };
@@ -384,25 +375,37 @@ function WeatherApp() {
 
   // Enhanced search handler with error handling
   const handleSearch = async (locationInput: string, fromCache: boolean = false, bypassRateLimit: boolean = false) => {
-    try {
-      setLoading(true);
-      setError("");
-      
-      // Check rate limit
-      if (!bypassRateLimit) {
-        const rateLimit = checkRateLimit();
-        if (!rateLimit.allowed) {
-          setRateLimitError(rateLimit.message || 'Rate limit exceeded');
-          return;
-        }
-      }
+    console.log('Starting search for:', locationInput);
+    
+    if (!locationInput.trim()) {
+      setError("Please enter a location");
+      return;
+    }
 
-      // Fetch weather data
+    if (!bypassRateLimit) {
+      const rateLimitCheck = checkRateLimit();
+      if (!rateLimitCheck.allowed) {
+        setRateLimitError(rateLimitCheck.message || "Rate limit exceeded");
+        return;
+      }
+    }
+
+    setLoading(true);
+    setError("");
+    setRateLimitError("");
+
+    try {
+      console.log('Fetching weather data...');
       const weatherData = await fetchWeatherData(locationInput, API_KEY || '');
-      console.log('Weather data:', weatherData); // Debug log
+      console.log('Weather data received:', weatherData);
 
       if (!weatherData) {
         throw new Error('No weather data received');
+      }
+
+      // Validate required data
+      if (!weatherData.temperature || !weatherData.condition) {
+        throw new Error('Invalid weather data received');
       }
 
       setWeather(weatherData);
@@ -410,13 +413,16 @@ function WeatherApp() {
       setLastSearchTerm(locationInput);
       setCurrentLocation(locationInput);
       
-      // Cache the data
+      // Save to cache
       saveLocationToCache(locationInput);
       saveWeatherToCache(weatherData);
       
-      // Record the request
+      // Record API call
       recordRequest();
+      
+      console.log('Search completed successfully');
     } catch (error) {
+      console.error('Search error:', error);
       handleWeatherError(error);
     } finally {
       setLoading(false);
@@ -571,297 +577,195 @@ function WeatherApp() {
   };
 
   return (
-    <div className={`min-h-screen ${themeClasses.background} relative overflow-x-hidden`}>
-      {/* Tron Light Cycle Watermark - only in Tron theme */}
-      {currentTheme === 'tron' && <TronLightCycleWatermark />}
-      
-      {/* Mobile-optimized main container with proper responsive padding */}
-      <div className="w-full min-h-screen flex flex-col items-center px-2 sm:px-4 py-4">
-        {/* Hero Section - Mobile responsive */}
-        <div className="w-full max-w-7xl mx-auto text-center mb-6 sm:mb-8">
-          <div className="mb-4 sm:mb-6">
-            <h1 className={`text-2xl sm:text-4xl md:text-6xl font-bold mb-2 sm:mb-4 font-mono uppercase tracking-wider ${themeClasses.headerText} ${themeClasses.glow} break-words`}>
-              16-BIT WEATHER
+    <PageWrapper>
+      <div className={cn(
+        "min-h-screen",
+        theme === "dark" && "bg-gradient-to-b from-gray-900 to-black",
+        theme === "miami" && "bg-gradient-to-b from-pink-900 to-purple-900",
+        theme === "tron" && "bg-gradient-to-b from-black to-blue-900"
+      )}>
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className={cn(
+              "text-3xl font-bold",
+              theme === "dark" && "text-blue-500",
+              theme === "miami" && "text-pink-500",
+              theme === "tron" && "text-cyan-500"
+            )}>
+              Weather App
             </h1>
+            <ThemeToggle />
           </div>
 
-        </div>
+          <WeatherSearch
+            onSearch={handleSearch}
+            onLocationSearch={handleLocationSearch}
+            isLoading={loading}
+            error={error}
+            rateLimitError={rateLimitError}
+            isDisabled={isOnCooldown}
+            theme={theme}
+          />
 
-        {/* Main Content - Mobile responsive container */}
-        <div className="w-full max-w-7xl mx-auto">
-          {/* Search Bar - Restored */}
-          <div className="p-4 sm:p-6">
-            <div className="max-w-2xl mx-auto">
-              <div className="flex flex-col sm:flex-row gap-2">
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    value={locationInput}
-                    onChange={(e) => setLocationInput(e.target.value)}
-                    placeholder="Enter ZIP, City+State, or City+Country..."
-                    className="w-full px-4 py-2 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        handleSearchWrapper(locationInput);
-                      }
-                    }}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleSearchWrapper(locationInput)}
-                    disabled={loading || isOnCooldown}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
-                  >
-                    {loading ? <Loader2 className="animate-spin" /> : <Search />}
-                  </button>
-                  <button
-                    onClick={handleLocationSearch}
-                    disabled={loading || isOnCooldown}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50"
-                  >
-                    Use My Location
-                  </button>
-                </div>
-              </div>
-              {error && (
-                <div className="mt-2 text-red-500 text-sm">{error}</div>
-              )}
-              {rateLimitError && (
-                <div className="mt-2 text-yellow-500 text-sm">{rateLimitError}</div>
-              )}
-            </div>
-          </div>
-
-          {weather && (
-            <div className="space-y-4 sm:space-y-6">
-              {/* Current Weather */}
-              <div className={`${themeClasses.cardBg} p-4 sm:p-6 lg:p-8 border-2 sm:border-4 pixel-border ${themeClasses.borderColor} ${themeClasses.specialBorder} text-center`}>
-                <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 font-mono uppercase tracking-wider ${themeClasses.headerText}`}>
-                  CURRENT CONDITIONS
-                </h2>
-                
-                <div className="mb-4 sm:mb-6">
-                  <p className={`${themeClasses.secondaryText} font-mono text-sm sm:text-base`}>
-                    {weather.current.location}
-                  </p>
-                </div>
-
-                <div className="flex flex-col items-center">
-                  {/* Current Conditions Section */}
-                  {weather ? (
-                    <div className="grid grid-cols-3 gap-4 mb-8">
-                      {/* Row 1 */}
-                      <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
-                        <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Temperature</h3>
-                        <div className="text-2xl font-bold text-white">
-                          {getWeatherData('main.temp', 0).toFixed(1)}°{getWeatherData('sys.country') === 'US' ? 'F' : 'C'}
-                        </div>
-                        <div className="text-sm text-gray-300">
-                          Feels like {getWeatherData('main.feels_like', 0).toFixed(1)}°
-                        </div>
-                      </div>
-
-                      <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
-                        <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Conditions</h3>
-                        <div className="flex items-center justify-center gap-2">
-                          <WeatherIcon condition={getWeatherData('weather.0.main', 'Clear')} size="small" />
-                          <span className="text-white">{getWeatherData('weather.0.description', 'Loading...')}</span>
-                        </div>
-                      </div>
-
-                      <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
-                        <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Wind</h3>
-                        <div className="text-white">
-                          {getWeatherData('wind.speed', 0)} {getWeatherData('sys.country') === 'US' ? 'mph' : 'm/s'}
-                        </div>
-                        <div className="text-sm text-gray-300">
-                          {getWeatherData('wind.deg', 0)}° {getWeatherData('wind.gust') ? `Gusts ${getWeatherData('wind.gust')}` : ''}
-                        </div>
-                      </div>
-
-                      {/* Row 2 */}
-                      <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
-                        <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Sun Times</h3>
-                        <div className="flex items-center justify-center gap-2 text-white">
-                          <SunriseIcon />
-                          <span>{new Date(getWeatherData('sys.sunrise', 0) * 1000).toLocaleTimeString()}</span>
-                        </div>
-                        <div className="flex items-center justify-center gap-2 text-white mt-1">
-                          <SunsetIcon />
-                          <span>{new Date(getWeatherData('sys.sunset', 0) * 1000).toLocaleTimeString()}</span>
-                        </div>
-                      </div>
-
-                      <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
-                        <h3 className="text-sm font-bold text-[#00d4ff] mb-2">UV Index</h3>
-                        <div className="text-white">
-                          {getWeatherData('uvi', 0).toFixed(1)}
-                        </div>
-                        <div className="text-sm text-gray-300">
-                          {getWeatherData('uvi', 0) <= 2 ? 'Low' : getWeatherData('uvi', 0) <= 5 ? 'Moderate' : getWeatherData('uvi', 0) <= 7 ? 'High' : getWeatherData('uvi', 0) <= 10 ? 'Very High' : 'Extreme'}
-                        </div>
-                      </div>
-
-                      <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
-                        <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Moon Phase</h3>
-                        <div className="text-white">
-                          {getWeatherData('moon.phase', 'Loading...')}
-                        </div>
-                        <div className="text-sm text-gray-300">
-                          {getWeatherData('moon.illumination', 0).toFixed(0)}% Illuminated
-                        </div>
-                      </div>
-
-                      {/* Row 3 - New AQI and Pollen Count boxes */}
-                      <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
-                        <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Air Quality</h3>
-                        <div className="text-white">
-                          {getWeatherData('aqi', 0)}
-                        </div>
-                        <div className={`text-sm ${getAQIColor(getWeatherData('aqi', 0))}`}>
-                          {getAQIDescription(getWeatherData('aqi', 0))}
-                        </div>
-                      </div>
-
-                      <div className="bg-black/50 backdrop-blur-sm border border-[#00d4ff] p-4 rounded-lg text-center">
-                        <h3 className="text-sm font-bold text-[#00d4ff] mb-2">Pollen Count</h3>
-                        {getWeatherData('pollen') ? (
-                          <>
-                            <div className="text-white">
-                              {getWeatherData('pollen.tree') ? `Tree: ${getWeatherData('pollen.tree')}` : ''}
-                            </div>
-                            <div className="text-sm text-gray-300">
-                              {getWeatherData('pollen.grass') ? `Grass: ${getWeatherData('pollen.grass')}` : ''}
-                              {getWeatherData('pollen.weed') ? ` Weed: ${getWeatherData('pollen.weed')}` : ''}
-                            </div>
-                          </>
-                        ) : (
-                          <div className="text-sm text-gray-300">No data available</div>
-                        )}
-                      </div>
-                    </div>
-                  ) : loading ? (
-                    <div className="flex justify-center items-center h-48">
-                      <Loader2 className="h-8 w-8 animate-spin text-[#00d4ff]" />
-                    </div>
-                  ) : null}
-                </div>
-
-                {/* 5-Day Forecast - Mobile optimized */}
-                <div className="mx-2 sm:mx-0">
-                  <Forecast forecast={weather.forecast.slice(0, 5)} theme={currentTheme} />
-                </div>
-              </div>
-
-              {/* Quick Access Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                <Link 
-                  href="/cloud-types" 
-                  className={`${themeClasses.cardBg} ${themeClasses.borderColor} border-2 p-4 hover:scale-105 transition-all duration-300 ${themeClasses.glow}`}
-                >
-                  <div className={`${themeClasses.headerText} text-center`}>
-                    <Cloud className="w-8 h-8 mx-auto mb-2" />
-                    <div className="font-bold text-sm uppercase tracking-wider">Cloud Atlas</div>
-                    <div className={`${themeClasses.secondaryText} text-xs mt-1`}>Identify Cloud Types</div>
-                  </div>
-                </Link>
-                
-                <Link 
-                  href="/weather-systems" 
-                  className={`${themeClasses.cardBg} ${themeClasses.borderColor} border-2 p-4 hover:scale-105 transition-all duration-300 ${themeClasses.glow}`}
-                >
-                  <div className={`${themeClasses.headerText} text-center`}>
-                    <Zap className="w-8 h-8 mx-auto mb-2" />
-                    <div className="font-bold text-sm uppercase tracking-wider">Weather Systems</div>
-                    <div className={`${themeClasses.secondaryText} text-xs mt-1`}>Interactive Database</div>
-                  </div>
-                </Link>
-
-                <Link 
-                  href="/fun-facts" 
-                  className={`${themeClasses.cardBg} ${themeClasses.borderColor} border-2 p-4 hover:scale-105 transition-all duration-300 ${themeClasses.glow}`}
-                >
-                  <div className={`${themeClasses.headerText} text-center`}>
-                    <Flame className="w-8 h-8 mx-auto mb-2" />
-                    <div className="font-bold text-sm uppercase tracking-wider">16-Bit Takes</div>
-                    <div className={`${themeClasses.secondaryText} text-xs mt-1`}>Weather Phenomena</div>
-                  </div>
-                </Link>
-              </div>
+          {loading && (
+            <div className="flex justify-center items-center mt-8">
+              <Loader2 className={cn(
+                "h-8 w-8 animate-spin",
+                theme === "dark" && "text-blue-500",
+                theme === "miami" && "text-pink-500",
+                theme === "tron" && "text-cyan-500"
+              )} />
+              <span className="ml-2 text-white">Loading weather data...</span>
             </div>
           )}
 
-          {/* Enhanced Welcome Message - Mobile responsive */}
-          {!weather && !loading && (
-            <div className={`${themeClasses.cardBg} p-4 sm:p-6 lg:p-8 border-2 sm:border-4 pixel-border text-center ${themeClasses.borderColor} ${themeClasses.specialBorder} mx-2 sm:mx-0`}>
-              {/* Cool ASCII Art Header - BIT WEATHER */}
-              <div className={`${themeClasses.headerText} font-mono text-xs sm:text-sm mb-4 sm:mb-6 whitespace-pre-line ${themeClasses.glow} overflow-x-auto`}>
-                <div className="hidden sm:block">
-{`  ▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄      ▄     ▄   ▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄   ▄     ▄   ▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄  
- ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░░▌    ▐░▌   ▐░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░▌   ▐░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ 
- ▐░█▀▀▀█░▌ ▐░█▀▀▀▀▀  ▀▀▀▀█░█▀▀      ▐░▌ ▐░▌  ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  ▐░▌   ▐░▌ ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  
- ▐░▌   ▐░▌ ▐░▌           ▐░▌        ▐░▌▐░▌   ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  ▐░▌   ▐░▌ ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  
- ▐░█▄▄▄█░▌ ▐░█▄▄▄▄▄      ▐░▌        ▐░▌░▌    ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░▌   ▐░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ 
- ▐░░░░░░░▌  ▐░░░░░░▌     ▐░▌        ▐░▌ ▐░▌  ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  ▐░▌   ▐░▌ ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  
- ▐░█▀▀▀█░▌       ▐░▌     ▐░▌        ▐░▌  ▐░▌ ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  ▐░█▄▄▄█░▌ ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  
- ▐░▌   ▐░▌  ▄▄▄▄▄█░▌     ▐░▌        ▐░▌   ▐░▌▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░▌  ▐░░░░░░░▌ ▐░░░░░░░▌ 
-  ▀     ▀  ▐░░░░░░▌     ▀          ▀     ▀  ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀    ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀  
-         ▀▀▀▀▀▀▀▀                                                                                                 `}
+          {error && (
+            <div className="text-red-500 text-center mt-4">
+              {error}
+            </div>
+          )}
+
+          {rateLimitError && (
+            <div className="text-yellow-500 text-center mt-4">
+              {rateLimitError}
+            </div>
+          )}
+
+          {weather && !loading && !error && (
+            <div className="space-y-4 sm:space-y-6">
+              {/* Current Weather */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Temperature Box */}
+                <div className={cn(
+                  "p-4 rounded-lg",
+                  theme === "dark" && "bg-gray-800",
+                  theme === "miami" && "bg-pink-900/50",
+                  theme === "tron" && "bg-black/50 border border-cyan-500"
+                )}>
+                  <h2 className="text-xl font-semibold mb-2 text-white">Temperature</h2>
+                  <p className="text-3xl font-bold text-white">{weather.temperature}{weather.unit}</p>
                 </div>
-                <div className="block sm:hidden text-center">
-                  <div className={`text-lg font-bold ${themeClasses.headerText}`}>16-BIT WEATHER</div>
+
+                {/* Conditions Box */}
+                <div className={cn(
+                  "p-4 rounded-lg",
+                  theme === "dark" && "bg-gray-800",
+                  theme === "miami" && "bg-pink-900/50",
+                  theme === "tron" && "bg-black/50 border border-cyan-500"
+                )}>
+                  <h2 className="text-xl font-semibold mb-2 text-white">Conditions</h2>
+                  <p className="text-lg text-white">{weather.condition}</p>
+                  <p className="text-sm text-gray-400">{weather.description}</p>
                 </div>
-              </div>
-              
-              <h3 className={`text-xl sm:text-2xl lg:text-4xl font-bold mb-4 sm:mb-6 font-mono uppercase tracking-wider ${themeClasses.headerText} ${themeClasses.glow} animate-pulse break-words px-2`}>
-                🌟 RETRO WEATHER TERMINAL 🌟
-              </h3>
-              
-              <div className={`${themeClasses.text} mb-6 sm:mb-8 font-mono text-sm sm:text-base lg:text-lg space-y-2 sm:space-y-3 px-2`}>
-                <p>🎮 Experience weather data like it's 1985!</p>
-                <p>📊 Real-time meteorological data with pixel-perfect styling</p>
-                <p className="hidden sm:block">🌈 Choose from Dark Terminal, Miami Vice, or Tron Grid themes</p>
-                <p className="hidden sm:block">📡 Complete with Doppler radar and atmospheric analysis</p>
-              </div>
-              
-              <div className={`${themeClasses.cardBg} p-3 sm:p-4 lg:p-6 border-2 ${themeClasses.borderColor} mb-6 sm:mb-8 max-w-xl mx-auto ${themeClasses.specialBorder}`}>
-                <div className={`${themeClasses.successText} font-mono text-sm sm:text-base font-bold mb-3 sm:mb-4 animate-pulse`}>
-                  🔍 LOCATION SEARCH PROTOCOLS:
-                </div>
-                <div className={`${themeClasses.text} font-mono text-xs sm:text-sm space-y-1 sm:space-y-2`}>
-                  <p>📍 <strong>City names:</strong> "Paris", "Tokyo", "London"</p>
-                  <p>🏢 <strong>City + State:</strong> "Austin, TX", "Miami, FL"</p>
-                  <p>🌍 <strong>City + Country:</strong> "Toronto, Canada"</p>
-                  <p>📮 <strong>ZIP/Postal:</strong> "90210", "10001"</p>
-                  <p className="hidden sm:block">📍 <strong>Coordinates:</strong> "40.7128,-74.0060"</p>
+
+                {/* Wind Box */}
+                <div className={cn(
+                  "p-4 rounded-lg",
+                  theme === "dark" && "bg-gray-800",
+                  theme === "miami" && "bg-pink-900/50",
+                  theme === "tron" && "bg-black/50 border border-cyan-500"
+                )}>
+                  <h2 className="text-xl font-semibold mb-2 text-white">Wind</h2>
+                  <p className="text-lg text-white">
+                    {weather.wind.direction ? `${weather.wind.direction} ` : ''}
+                    {weather.wind.speed} mph
+                    {weather.wind.gust ? ` (gusts ${weather.wind.gust} mph)` : ''}
+                  </p>
                 </div>
               </div>
 
-              <div className="space-y-2 sm:space-y-3">
-                <div className={`${themeClasses.headerText} font-mono text-lg sm:text-xl font-bold animate-pulse`}>
-                  ⚡ SELECT A CITY TO BEGIN YOUR WEATHER QUEST ⚡
+              {/* Sun Times, UV Index, Moon Phase */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Sun Times Box */}
+                <div className={cn(
+                  "p-4 rounded-lg",
+                  theme === "dark" && "bg-gray-800",
+                  theme === "miami" && "bg-pink-900/50",
+                  theme === "tron" && "bg-black/50 border border-cyan-500"
+                )}>
+                  <h2 className="text-xl font-semibold mb-2 text-white">Sun Times</h2>
+                  <p className="text-white">Sunrise: {weather.sunrise}</p>
+                  <p className="text-white">Sunset: {weather.sunset}</p>
                 </div>
-                <div className={`${themeClasses.secondaryText} font-mono text-xs sm:text-sm`}>
-                  Caching enabled • Return visits will load your last searched location
+
+                {/* UV Index Box */}
+                <div className={cn(
+                  "p-4 rounded-lg",
+                  theme === "dark" && "bg-gray-800",
+                  theme === "miami" && "bg-pink-900/50",
+                  theme === "tron" && "bg-black/50 border border-cyan-500"
+                )}>
+                  <h2 className="text-xl font-semibold mb-2 text-white">UV Index</h2>
+                  <p className="text-lg text-white">{weather.uvIndex}</p>
+                </div>
+
+                {/* Moon Phase Box */}
+                <div className={cn(
+                  "p-4 rounded-lg",
+                  theme === "dark" && "bg-gray-800",
+                  theme === "miami" && "bg-pink-900/50",
+                  theme === "tron" && "bg-black/50 border border-cyan-500"
+                )}>
+                  <h2 className="text-xl font-semibold mb-2 text-white">Moon Phase</h2>
+                  <p className="text-lg text-white">{weather.moonPhase.phase}</p>
+                  <p className="text-sm text-gray-400">
+                    {weather.moonPhase.illumination}% illuminated
+                  </p>
                 </div>
               </div>
 
-              {/* Retro Loading Animation - Mobile responsive */}
-              <div className="mt-4 sm:mt-6 flex justify-center space-x-2">
-                <div className={`w-2 h-2 sm:w-3 sm:h-3 ${themeClasses.cardBg} border ${themeClasses.borderColor} animate-pulse`}></div>
-                <div className={`w-2 h-2 sm:w-3 sm:h-3 ${themeClasses.cardBg} border ${themeClasses.borderColor} animate-pulse`} style={{animationDelay: '0.2s'}}></div>
-                <div className={`w-2 h-2 sm:w-3 sm:h-3 ${themeClasses.cardBg} border ${themeClasses.borderColor} animate-pulse`} style={{animationDelay: '0.4s'}}></div>
+              {/* AQI and Pollen Count */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* AQI Box */}
+                <div className={cn(
+                  "p-4 rounded-lg",
+                  theme === "dark" && "bg-gray-800",
+                  theme === "miami" && "bg-pink-900/50",
+                  theme === "tron" && "bg-black/50 border border-cyan-500"
+                )}>
+                  <h2 className="text-xl font-semibold mb-2 text-white">Air Quality</h2>
+                  <p className={`text-lg ${getAQIColor(weather.aqi)}`}>
+                    {weather.aqi} - {getAQIDescription(weather.aqi)}
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    {getAQIRecommendation(weather.aqi)}
+                  </p>
+                </div>
+
+                {/* Pollen Count Box */}
+                <div className={cn(
+                  "p-4 rounded-lg",
+                  theme === "dark" && "bg-gray-800",
+                  theme === "miami" && "bg-pink-900/50",
+                  theme === "tron" && "bg-black/50 border border-cyan-500"
+                )}>
+                  <h2 className="text-xl font-semibold mb-2 text-white">Pollen Count</h2>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <p className="text-sm text-gray-400">Tree</p>
+                      <p className="text-lg text-white">{weather.pollen.tree}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">Grass</p>
+                      <p className="text-lg text-white">{weather.pollen.grass}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">Weed</p>
+                      <p className="text-lg text-white">{weather.pollen.weed}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
+
+              {/* Forecast */}
+              <Forecast forecast={weather.forecast} theme={theme} />
             </div>
           )}
         </div>
       </div>
-
-      {/* Tron Animated Grid Background */}
-      <TronGridBackground />
-    </div>
-  )
+      <Analytics />
+    </PageWrapper>
+  );
 }
 
 export default function HomePage() {
