@@ -685,104 +685,90 @@ function WeatherApp() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                  {/* Temperature */}
-                  <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
-                    <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Temperature</h3>
-                    <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
-                      {weather.current.temp}{weather.current.country === 'US' ? '°F' : '°C'}
-                    </p>
-                  </div>
-
-                  {/* Conditions */}
-                  <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
-                    <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Conditions</h3>
-                    <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
-                      {weather.current.description}
-                    </p>
-                  </div>
-
-                  {/* Wind */}
-                  <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
-                    <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Wind</h3>
-                    <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
-                      {weather.current.wind} {weather.current.country === 'US' ? 'mph' : 'km/h'}
-                    </p>
-                    <p className={`${themeClasses.secondaryText} text-sm`}>
-                      {weather.current.windDisplay}
-                    </p>
-                  </div>
-
-                  {/* Sunrise/Sunset */}
-                  <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
-                    <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Sun Times</h3>
-                    <div className="space-y-2">
-                      <p className={`${themeClasses.text} text-lg`}>
-                        🌅 {weather.current.sunrise}
-                      </p>
-                      <p className={`${themeClasses.text} text-lg`}>
-                        🌇 {weather.current.sunset}
-                      </p>
+                <div className="flex flex-col items-center">
+                  {/* Row 1: Temperature, Conditions, Wind */}
+                  <div className="grid grid-cols-3 gap-4 w-full max-w-2xl mb-4">
+                    <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
+                      <div className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Temperature</div>
+                      <div className={`${themeClasses.text} text-2xl sm:text-3xl`}>
+                        {Math.round(weather.current.temp)}{weather.current.country === 'US' ? '°F' : '°C'}
+                      </div>
+                    </div>
+                    <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
+                      <div className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Conditions</div>
+                      <div className={`${themeClasses.text} text-2xl sm:text-3xl`}>
+                        {weather.current.description}
+                      </div>
+                    </div>
+                    <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
+                      <div className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Wind</div>
+                      <div className={`${themeClasses.text} text-2xl sm:text-3xl`}>
+                        {weather.current.wind} {weather.current.country === 'US' ? 'mph' : 'km/h'}
+                      </div>
+                      <div className={`${themeClasses.secondaryText} text-sm`}>
+                        {weather.current.windDisplay}
+                      </div>
                     </div>
                   </div>
 
-                  {/* UV Index */}
-                  <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
-                    <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>UV Index</h3>
-                    <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
-                      {weather.current.uvIndex}
-                    </p>
-                    <p className={`${themeClasses.secondaryText} text-sm`}>
-                      {weather.current.uvDescription}
-                    </p>
-                  </div>
-
-                  {/* Moon Phase */}
-                  <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
-                    <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Moon Phase</h3>
-                    <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
-                      {weather.moonPhase.emoji}
-                    </p>
-                    <p className={`${themeClasses.secondaryText} text-sm`}>
-                      {weather.moonPhase.phase}
-                    </p>
-                    <p className={`${themeClasses.secondaryText} text-xs`}>
-                      {weather.moonPhase.illumination}% illuminated
-                    </p>
-                  </div>
-                </div>
-
-                {/* Air Quality Index */}
-                <div className="mt-4 w-full max-w-2xl">
-                  <div className="text-sm text-gray-500">Air Quality Index</div>
-                  <div className={`text-lg font-semibold ${getAQIColor(weather.current.aqi)}`}>
-                    {weather.current.aqi} - {getAQIDescription(weather.current.aqi)}
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    {getAQIRecommendation(weather.current.aqi)}
-                  </div>
-                </div>
-
-                {/* Pollen Index */}
-                {weather.current.pollen && (
-                  <div className="mt-4 w-full max-w-2xl">
-                    <div className="text-sm text-gray-500">Pollen Index</div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <div className="text-sm">Tree</div>
-                        <div className="font-semibold">{weather.current.pollen.tree}</div>
+                  {/* Row 2: Sun Times, UV Index, Moon Phase */}
+                  <div className="grid grid-cols-3 gap-4 w-full max-w-2xl mb-4">
+                    <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
+                      <div className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Sun Times</div>
+                      <div className={`${themeClasses.text} text-sm text-cyan-500`}>
+                        <div>↑ {weather.current.sunrise}</div>
+                        <div>↓ {weather.current.sunset}</div>
                       </div>
-                      <div>
-                        <div className="text-sm">Grass</div>
-                        <div className="font-semibold">{weather.current.pollen.grass}</div>
+                    </div>
+                    <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
+                      <div className={`${themeClasses.headerText} font-mono text-lg mb-2`}>UV Index</div>
+                      <div className={`${themeClasses.text} text-2xl sm:text-3xl`}>
+                        {weather.current.uvIndex}
                       </div>
-                      <div>
-                        <div className="text-sm">Weed</div>
-                        <div className="font-semibold">{weather.current.pollen.weed}</div>
+                      <div className={`${themeClasses.secondaryText} text-sm`}>
+                        {weather.current.uvDescription}
+                      </div>
+                    </div>
+                    <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
+                      <div className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Moon Phase</div>
+                      <div className={`${themeClasses.text} text-2xl sm:text-3xl`}>
+                        {weather.moonPhase.emoji}
+                      </div>
+                      <div className={`${themeClasses.secondaryText} text-sm`}>
+                        {weather.moonPhase.phase}
+                      </div>
+                      <div className={`${themeClasses.secondaryText} text-xs`}>
+                        {weather.moonPhase.illumination}% illuminated
                       </div>
                     </div>
                   </div>
-                )}
+
+                  {/* Row 3: AQI and Pollen Count */}
+                  <div className="grid grid-cols-2 gap-4 w-full max-w-2xl">
+                    {/* AQI Box */}
+                    <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
+                      <div className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Air Quality</div>
+                      <div className={`${themeClasses.text} text-2xl font-bold ${getAQIColor(weather.current.aqi)}`}>
+                        {weather.current.aqi}
+                      </div>
+                      <div className={`${themeClasses.secondaryText} text-sm`}>
+                        {getAQIDescription(weather.current.aqi)}
+                      </div>
+                    </div>
+
+                    {/* Pollen Count Box */}
+                    {weather.current.pollen && (
+                      <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
+                        <div className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Pollen Count</div>
+                        <div className={`${themeClasses.text} text-sm text-cyan-500`}>
+                          <div>Tree: {weather.current.pollen.tree}</div>
+                          <div>Grass: {weather.current.pollen.grass}</div>
+                          <div>Weed: {weather.current.pollen.weed}</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 {/* 5-Day Forecast - Mobile optimized */}
                 <div className="mx-2 sm:mx-0">
