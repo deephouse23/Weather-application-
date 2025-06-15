@@ -4,6 +4,52 @@ import React, { useState, useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { fetchWeatherData, fetchWeatherByLocation } from "@/lib/weather-api"
+import { useTheme } from '@/components/theme-provider'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { Search } from 'lucide-react'
+import { WeatherData } from '@/lib/types'
+import Forecast from "@/components/forecast"
+import PageWrapper from "@/components/page-wrapper"
+import HistoricalChart from "@/components/historical-chart"
+import { Analytics } from "@vercel/analytics/react"
+import Link from "next/link"
+import { Cloud, Zap, Flame } from "lucide-react"
+import { useThemeClasses } from '@/lib/theme'
+import { getThemeClasses } from '@/lib/theme'
+import { useRateLimit } from '@/lib/rate-limit'
+import { useLocationCache } from '@/lib/location-cache'
+import { useSearchHistory } from '@/lib/search-history'
+import { useErrorHandling } from '@/lib/error-handling'
+import { useLoadingState } from '@/lib/loading-state'
+import { useGeolocation } from '@/lib/geolocation'
+import { useWeatherCache } from '@/lib/weather-cache'
+import { useHistoricalData } from '@/lib/historical-data'
+import { useWeatherEffects } from '@/lib/weather-effects'
+import { useWeatherSounds } from '@/lib/weather-sounds'
+import { useWeatherAnimations } from '@/lib/weather-animations'
+import { useWeatherNotifications } from '@/lib/weather-notifications'
+import { useWeatherPreferences } from '@/lib/weather-preferences'
+import { useWeatherStats } from '@/lib/weather-stats'
+import { useWeatherEducation } from '@/lib/weather-education'
+import { useWeatherGames } from '@/lib/weather-games'
+import { useWeatherFacts } from '@/lib/weather-facts'
+import { useWeatherNews } from '@/lib/weather-news'
+import { useWeatherAlerts } from '@/lib/weather-alerts'
+import { useWeatherMaps } from '@/lib/weather-maps'
+import { useWeatherSatellite } from '@/lib/weather-satellite'
+import { useWeatherModels } from '@/lib/weather-models'
+import { useWeatherForecast } from '@/lib/weather-forecast'
+import { useWeatherCurrent } from '@/lib/weather-current'
+import { useWeatherHistorical } from '@/lib/weather-historical'
+import { useWeatherClimate } from '@/lib/weather-climate'
+import { useWeatherSeasons } from '@/lib/weather-seasons'
+import { useWeatherEvents } from '@/lib/weather-events'
+import { useWeatherPhenomena } from '@/lib/weather-phenomena'
+import { useWeatherSystems } from '@/lib/weather-systems'
+import { useWeatherAtmosphere } from '@/lib/weather-atmosphere'
+import { useWeatherOcean } from '@/lib/weather-ocean'
+import { useWeatherSpace } from '@/lib/weather-space'
+import WeatherSearch from "@/components/weather-search"
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
 // The main weather API handles UV index estimation for free accounts
@@ -21,17 +67,9 @@ const formatPressureByRegion = (pressureHPa: number, countryCode: string): strin
     return `${Math.round(pressureHPa)} hPa`;
   }
 };
-import WeatherSearch from "@/components/weather-search"
-import Forecast from "@/components/forecast"
-import RadarDisplay from "@/components/radar-display"
-import PageWrapper from "@/components/page-wrapper"
-import HistoricalChart from "@/components/historical-chart"
-import { Analytics } from "@vercel/analytics/react"
-import Link from "next/link"
-import { Cloud, Zap, Flame } from "lucide-react"
 
 // Get API key from environment variables for production deployment
-const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY;
+const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
 
 // Theme types
 type ThemeType = 'dark' | 'miami' | 'tron';
@@ -41,42 +79,6 @@ const getPressureUnit = (countryCode: string): 'hPa' | 'inHg' => {
   const inHgCountries = ['US', 'CA', 'PR', 'VI', 'GU', 'AS', 'MP'];
   return inHgCountries.includes(countryCode) ? 'inHg' : 'hPa';
 };
-
-interface WeatherData {
-  current: {
-    temp: number;
-    condition: string;
-    humidity: number;
-    wind: number;
-    windDirection?: number; // Wind direction in degrees
-    windDisplay: string; // Formatted wind display (e.g., "SW 6 mph" or "Calm")
-    location: string;
-    description: string;
-    sunrise: string; // Formatted sunrise time (e.g., "6:23 am")
-    sunset: string; // Formatted sunset time (e.g., "7:45 pm")
-    dewPoint: number; // Dew point in Fahrenheit
-    uvIndex: number; // UV Index (0-11+) - current real-time value
-    uvDescription: string; // UV intensity description (Low/Moderate/High/Very High/Extreme)
-    pressure: number; // Atmospheric pressure in hPa
-    pressureDisplay: string; // Formatted pressure with regional units
-    country: string; // Country code (e.g., "US", "GB", "CA")
-    lat: number; // Latitude coordinates for radar
-    lon: number; // Longitude coordinates for radar
-  };
-  forecast: Array<{
-    day: string;
-    highTemp: number;
-    lowTemp: number;
-    condition: string;
-    description: string;
-  }>;
-  moonPhase: {
-    phase: string; // Phase name (e.g., "Waxing Crescent")
-    illumination: number; // Percentage of illumination (0-100)
-    emoji: string; // Unicode moon symbol
-    phaseAngle: number; // Phase angle in degrees (0-360)
-  };
-}
 
 function WeatherApp() {
   const [weather, setWeather] = useState<WeatherData | null>(null)
@@ -90,7 +92,6 @@ function WeatherApp() {
   const [remainingSearches, setRemainingSearches] = useState(10)
   const [rateLimitError, setRateLimitError] = useState<string>("")
   const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark')
-  const [showRadar, setShowRadar] = useState(false)
   const [historicalData, setHistoricalData] = useState<any>(null)
   const [showHistoricalChart, setShowHistoricalChart] = useState(false)
   const [isClient, setIsClient] = useState(false)
@@ -826,31 +827,6 @@ function WeatherApp() {
                   locationName={weather.current.location}
                 />
               </div>
-
-              {/* Radar Toggle - Mobile friendly button */}
-              <div className="text-center mb-4 sm:mb-6">
-                <button
-                  onClick={() => setShowRadar(!showRadar)}
-                  className={`px-4 sm:px-6 py-2 sm:py-3 border-2 sm:border-4 text-sm sm:text-lg font-mono font-bold uppercase tracking-wider transition-all duration-300 ${themeClasses.borderColor} ${themeClasses.cardBg} ${themeClasses.headerText} touch-manipulation min-h-[44px]`}
-                >
-                  {showRadar ? '📡 HIDE RADAR' : '📡 SHOW DOPPLER RADAR'}
-                </button>
-              </div>
-
-              {/* Expanded Doppler Radar Display - Mobile responsive */}
-              {showRadar && API_KEY && (
-                <div className="w-full mx-2 sm:mx-0">
-                  <div className="w-full max-w-7xl mx-auto">
-                    <RadarDisplay
-                      lat={weather.current.lat}
-                      lon={weather.current.lon}
-                      apiKey={API_KEY}
-                      theme={currentTheme}
-                      locationName={weather.current.location}
-                    />
-                  </div>
-                </div>
-              )}
 
               {/* Quick Access Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
