@@ -82,6 +82,7 @@ function WeatherApp() {
   const [remainingSearches, setRemainingSearches] = useState(10)
   const [rateLimitError, setRateLimitError] = useState<string>("")
   const [isClient, setIsClient] = useState(false)
+  const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark')
 
   // localStorage keys
   const CACHE_KEY = 'bitweather_city'
@@ -181,7 +182,6 @@ function WeatherApp() {
   // Load theme on mount and sync with navigation
   useEffect(() => {
     if (!isClient) return
-    
     const storedTheme = getStoredTheme()
     setCurrentTheme(storedTheme)
     
@@ -431,31 +431,46 @@ function WeatherApp() {
 
   // Enhanced location search with error handling
   const handleLocationSearch = async () => {
-    try {
-      setLoading(true);
-      setError("");
-      
-      const weatherData = await fetchWeatherByLocation(API_KEY || '');
-      console.log('Location weather data:', weatherData); // Debug log
-
-      if (!weatherData) {
-        throw new Error('No weather data received for location');
-      }
-
-      setWeather(weatherData);
-      setHasSearched(true);
-      
-      // Cache the data
-      saveWeatherToCache(weatherData);
-      
-      // Record the request
-      recordRequest();
-    } catch (error) {
-      handleWeatherError(error);
-    } finally {
-      setLoading(false);
+    if (!navigator.geolocation) {
+      setError("Geolocation is not supported by your browser")
+      return
     }
-  };
+
+    setLoading(true)
+    setError("")
+
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
+        })
+      })
+
+      const { latitude, longitude } = position.coords
+      console.log("Got coordinates:", { latitude, longitude })
+
+      const weatherData = await fetchWeatherByLocation(`${latitude},${longitude}`)
+      console.log("Weather data received:", weatherData)
+
+      if (weatherData) {
+        setWeather(weatherData)
+        setHasSearched(true)
+        setError("")
+        saveLocationToCache(`${latitude},${longitude}`)
+        saveWeatherToCache(weatherData)
+        recordRequest()
+      } else {
+        setError("Failed to fetch weather data for your location")
+      }
+    } catch (error) {
+      console.error("Location error:", error)
+      setError(error instanceof Error ? error.message : "Failed to get your location")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const formatWindDisplayHTML = (windDisplay: string): string => {
     // Convert wind display to HTML for colored wind speeds

@@ -759,115 +759,86 @@ const getLocationNotFoundError = (locationQuery: LocationQuery): string => {
 };
 
 // Function to get user's location and fetch weather
-export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherData> => {
-  if (!apiKey) {
-    throw new Error('API key is required')
+export const fetchWeatherByLocation = async (coords: string): Promise<WeatherData> => {
+  const [latitude, longitude] = coords.split(',').map(Number)
+  
+  if (isNaN(latitude) || isNaN(longitude)) {
+    throw new Error('Invalid coordinates')
   }
 
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Geolocation is not supported by this browser.'))
-      return
+  try {
+    // Fetch current weather
+    const currentWeatherUrl = `${BASE_URL}/weather?lat=${latitude}&lon=${longitude}&appid=${process.env.NEXT_PUBLIC_WEATHER_API_KEY}&units=imperial`
+    console.log('Fetching current weather from:', currentWeatherUrl)
+    
+    const currentWeatherResponse = await fetch(currentWeatherUrl)
+    if (!currentWeatherResponse.ok) {
+      throw new Error(`Current weather API call failed: ${currentWeatherResponse.status}`)
+    }
+    const currentWeatherData = await currentWeatherResponse.json()
+    console.log('Current weather response:', currentWeatherData)
+
+    // Fetch forecast
+    const forecastUrl = `${BASE_URL}/forecast?lat=${latitude}&lon=${longitude}&appid=${process.env.NEXT_PUBLIC_WEATHER_API_KEY}&units=imperial`
+    console.log('Fetching forecast from:', forecastUrl)
+    
+    const forecastResponse = await fetch(forecastUrl)
+    if (!forecastResponse.ok) {
+      throw new Error(`Forecast API call failed: ${forecastResponse.status}`)
+    }
+    const forecastData = await forecastResponse.json()
+    console.log('Forecast response:', forecastData)
+
+    // Process and validate data
+    const countryCode = currentWeatherData.sys.country
+    const useFahrenheit = shouldUseFahrenheit(countryCode)
+    console.log('Using Fahrenheit:', useFahrenheit)
+
+    // Format temperature with proper unit handling
+    const temp = formatTemperature(currentWeatherData.main.temp, countryCode)
+    console.log('Formatted temperature:', temp)
+
+    // Process forecast data
+    const forecast = processDailyForecast(forecastData, useFahrenheit)
+    console.log('Processed forecast:', forecast)
+
+    // Calculate moon phase
+    const moonPhase = calculateMoonPhase()
+    console.log('Moon phase:', moonPhase)
+
+    // Construct weather data object
+    const weatherData: WeatherData = {
+      location: `${currentWeatherData.name}, ${currentWeatherData.sys.country}`,
+      country: countryCode,
+      temperature: temp.value,
+      unit: temp.unit,
+      condition: currentWeatherData.weather[0].main,
+      description: currentWeatherData.weather[0].description,
+      humidity: currentWeatherData.main.humidity,
+      wind: {
+        speed: currentWeatherData.wind.speed,
+        direction: currentWeatherData.wind.deg ? getCompassDirection(currentWeatherData.wind.deg) : undefined,
+        gust: currentWeatherData.wind.gust
+      },
+      pressure: formatPressureByRegion(currentWeatherData.main.pressure, countryCode),
+      sunrise: formatTime(currentWeatherData.sys.sunrise, currentWeatherData.timezone),
+      sunset: formatTime(currentWeatherData.sys.sunset, currentWeatherData.timezone),
+      forecast: forecast,
+      moonPhase: moonPhase,
+      uvIndex: 0, // Placeholder - will be updated if available
+      aqi: 0, // Placeholder - will be updated if available
+      pollen: {
+        tree: 0,
+        grass: 0,
+        weed: 0
+      }
     }
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords
-          
-          // Deduplicate current weather request
-          const currentData = await deduplicateRequest(
-            `current_${latitude}_${longitude}`,
-            () => withRetry(async () => {
-              const response = await fetch(
-                `${BASE_URL}/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=imperial`
-              )
+    console.log('Final weather data:', weatherData)
+    return weatherData
 
-              if (!response.ok) {
-                throw new Error(`Weather API error: ${response.status}`)
-              }
-
-              return response.json()
-            })
-          )
-          
-          // Deduplicate forecast request
-          const forecastData = await deduplicateRequest(
-            `forecast_${latitude}_${longitude}`,
-            () => withRetry(async () => {
-              const response = await fetch(
-                `${BASE_URL}/forecast?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=imperial`
-              )
-
-              if (!response.ok) {
-                throw new Error(`Forecast API error: ${response.status}`)
-              }
-
-              return response.json()
-            })
-          )
-
-          // Process forecast data
-          const dailyForecasts = processDailyForecast(forecastData, shouldUseFahrenheit(currentData.sys.country))
-
-          // Fetch UV Index data with retry
-          const { uvIndex, uvDescription } = await withRetry(() => 
-            fetchCurrentWeatherData(latitude, longitude, apiKey)
-          )
-
-          const weatherData: WeatherData = {
-            current: {
-              temp: Math.round(currentData.main.temp),
-              condition: mapWeatherCondition(currentData.weather[0].main),
-              humidity: currentData.main.humidity,
-              wind: Math.round(currentData.wind.speed),
-              windDirection: currentData.wind.deg,
-              windDisplay: formatWindDisplay(currentData.wind.speed, currentData.wind.deg, currentData.wind.gust, currentData.sys.country),
-              location: `${currentData.name}, ${currentData.sys.country}`,
-              description: currentData.weather[0].description,
-              sunrise: currentData.sys.sunrise ? formatTime(currentData.sys.sunrise, currentData.timezone) : 'N/A',
-              sunset: currentData.sys.sunset ? formatTime(currentData.sys.sunset, currentData.timezone) : 'N/A',
-              dewPoint: calculateDewPoint(currentData.main.temp, currentData.main.humidity),
-              uvIndex,
-              uvDescription,
-              pressure: currentData.main.pressure,
-              pressureDisplay: formatPressureByRegion(currentData.main.pressure, currentData.sys.country),
-              country: currentData.sys.country,
-              lat: latitude,
-              lon: longitude
-            },
-            forecast: dailyForecasts,
-            moonPhase: calculateMoonPhase()
-          }
-
-          // Cache the weather data
-          cacheWeatherData(weatherData.current.location, weatherData)
-
-          resolve(weatherData)
-        } catch (error) {
-          reject(error)
-        }
-      },
-      (error) => {
-        let errorMessage = 'Failed to get your location.'
-        
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = 'Location access denied. Please enter a location manually.'
-            break
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Location information unavailable.'
-            break
-          case error.TIMEOUT:
-            errorMessage = 'Location request timed out.'
-            break
-        }
-        
-        reject(new Error(errorMessage))
-      },
-      {
-        timeout: 10000, // 10 seconds timeout
-      }
-    )
-  })
+  } catch (error) {
+    console.error('Error fetching weather data:', error)
+    throw error
+  }
 } 
