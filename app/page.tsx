@@ -602,13 +602,49 @@ function WeatherApp() {
 
         {/* Main Content - Mobile responsive container */}
         <div className="w-full max-w-7xl mx-auto">
-          {/* Error Display - Mobile optimized */}
-          {error && (
-            <div className={`${themeClasses.cardBg} p-3 sm:p-6 border-2 sm:border-4 pixel-border text-center ${themeClasses.borderColor} mb-4 sm:mb-6 mx-2 sm:mx-0`}>
-              <p className={`${themeClasses.accentText} font-mono text-sm sm:text-lg font-bold`}>⚠ ERROR</p>
-              <p className={`${themeClasses.text} mt-1 sm:mt-2 text-xs sm:text-base break-words`}>{error}</p>
+          {/* Search Bar - Restored */}
+          <div className="p-4 sm:p-6">
+            <div className="max-w-2xl mx-auto">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={locationInput}
+                    onChange={(e) => setLocationInput(e.target.value)}
+                    placeholder="Enter ZIP, City+State, or City+Country..."
+                    className="w-full px-4 py-2 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSearchWrapper(locationInput);
+                      }
+                    }}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleSearchWrapper(locationInput)}
+                    disabled={loading || isOnCooldown}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                  >
+                    {loading ? <Loader2 className="animate-spin" /> : <Search />}
+                  </button>
+                  <button
+                    onClick={handleLocationSearch}
+                    disabled={loading || isOnCooldown}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50"
+                  >
+                    Use My Location
+                  </button>
+                </div>
+              </div>
+              {error && (
+                <div className="mt-2 text-red-500 text-sm">{error}</div>
+              )}
+              {rateLimitError && (
+                <div className="mt-2 text-yellow-500 text-sm">{rateLimitError}</div>
+              )}
             </div>
-          )}
+          </div>
 
           {weather && (
             <div className="space-y-4 sm:space-y-6">
