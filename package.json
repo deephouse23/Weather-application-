@@ -1,6 +1,6 @@
 {
   "name": "16-bit-weather",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "A retro 16-bit weather education platform with pixel art graphics, comprehensive location search, authentic doppler radar, cloud atlas, interactive weather systems database, extreme weather phenomena collection, historical weather data, interactive games with high score tracking, and authentic 16-bit gaming experience",
   "private": true,
   "scripts": {
