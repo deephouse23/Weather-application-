@@ -19,7 +19,6 @@ interface NavigationProps {
  */
 export default function Navigation({ currentTheme, onThemeChange }: NavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false)
   const pathname = usePathname()
 
   // Use centralized theme classes
@@ -33,14 +32,6 @@ export default function Navigation({ currentTheme, onThemeChange }: NavigationPr
     { href: "/games", label: "GAMES", icon: Gamepad2 },
     { href: "/about", label: "ABOUT", icon: Info }
   ]
-
-  // Use centralized theme display utility
-  const getThemeDisplay = themeUtils.getThemeDisplay
-
-  const handleThemeSelect = (theme: ThemeType) => {
-    onThemeChange(theme)
-    setIsThemeDropdownOpen(false)
-  }
 
   return (
     <nav className={`w-full border-b-4 pixel-border relative z-50 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
@@ -78,39 +69,6 @@ export default function Navigation({ currentTheme, onThemeChange }: NavigationPr
               </Link>
             )
           })}
-        </div>
-        
-        {/* Theme Selector - TOP RIGHT */}
-        <div className="relative">
-          <button
-            onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
-            className={`flex items-center justify-center space-x-2 px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] h-[32px] whitespace-nowrap ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg} ${
-              currentTheme === APP_CONSTANTS.THEMES.TRON ? themeClasses.glow : ''
-            }`}
-          >
-            <span>PIXEL MODE</span>
-            <ChevronDown className="w-3 h-3" />
-          </button>
-          
-          {/* Theme Dropdown Menu */}
-          {isThemeDropdownOpen && (
-            <div className={`absolute top-full right-0 mt-1 border-2 z-50 min-w-[120px] ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
-              {Object.values(APP_CONSTANTS.THEMES).map((theme) => (
-                <button
-                  key={theme}
-                  onClick={() => handleThemeSelect(theme)}
-                  className={`w-full flex items-center space-x-2 px-3 py-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 h-[32px] ${
-                    currentTheme === theme 
-                      ? `${themeClasses.accentBg} text-black`
-                      : `${themeClasses.background} ${themeClasses.text} ${themeClasses.hoverBg}`
-                  }`}
-                >
-                  <span>{getThemeDisplay(theme).emoji}</span>
-                  <span>{getThemeDisplay(theme).label}</span>
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       </div>
 
@@ -159,32 +117,6 @@ export default function Navigation({ currentTheme, onThemeChange }: NavigationPr
                 </Link>
               )
             })}
-            
-            {/* Mobile Theme Selector */}
-            <div className={`mt-3 pt-3 border-t-2 ${themeClasses.borderColor}`}>
-              <div className={`text-xs font-mono font-bold uppercase tracking-wider mb-2 ${themeClasses.accentText}`}>
-                PIXEL MODE:
-              </div>
-              <div className="space-y-1">
-                {Object.values(APP_CONSTANTS.THEMES).map((theme) => (
-                  <button
-                    key={theme}
-                    onClick={() => {
-                      handleThemeSelect(theme)
-                      setIsMobileMenuOpen(false)
-                    }}
-                    className={`flex items-center space-x-3 p-2 border text-xs font-mono font-bold uppercase tracking-wider w-full h-[40px] ${
-                      currentTheme === theme 
-                        ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black`
-                        : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text}`
-                    }`}
-                  >
-                    <span>{getThemeDisplay(theme).emoji}</span>
-                    <span>{getThemeDisplay(theme).label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       )}

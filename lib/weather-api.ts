@@ -638,29 +638,65 @@ const formatPressureValue = (pressureHPa: number, unit: 'hPa' | 'inHg'): { value
   }
 };
 
-// Enhanced UV Index fetching with time-aware logic
-const fetchCurrentWeatherData = async (lat: number, lon: number, apiKey: string): Promise<{ uvIndex: number; uvDescription: string }> => {
+// Add UV Index API endpoint with detailed debugging
+const fetchUVIndex = async (lat: number, lon: number, apiKey: string): Promise<number> => {
+  console.log('=== UV INDEX DEBUG ===');
+  console.log('Coordinates:', { lat, lon });
+  
+  const uvApiUrl = `${BASE_URL}/uvi?lat=${lat}&lon=${lon}&appid=${apiKey}`;
+  console.log('UV API URL:', uvApiUrl);
+  
   try {
-    // Use One Call API 3.0 which includes real-time UV Index
-    const oneCallResponse = await fetch(
-      `${BASE_URL_V3}/onecall?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial&exclude=minutely,daily,alerts`
-    );
-
-    if (!oneCallResponse.ok) {
-      console.warn('Failed to fetch UV Index from One Call API 3.0 - Status:', oneCallResponse.status);
-      return { uvIndex: 0, uvDescription: 'N/A' };
+    const response = await fetch(uvApiUrl);
+    console.log('UV API Response Status:', response.status);
+    
+    if (!response.ok) {
+      console.error('UV Index API failed:', response.status, response.statusText);
+      return 0;
     }
-
-    const oneCallData = await oneCallResponse.json();
     
-    // Get UV Index from One Call API 3.0 current data
-    const uvIndex = Math.round(oneCallData.current?.uvi || 0);
-    const uvDescription = getUVDescription(uvIndex);
+    const data = await response.json();
+    console.log('UV API Response Data:', data);
     
-    return { uvIndex, uvDescription };
+    // Check both possible properties for UV index
+    const uvIndex = data.value || data.uvi || 0;
+    console.log('UV Index value:', uvIndex);
+    
+    if (!uvIndex) {
+      console.error('UV Index not found in response');
+      return 0;
+    }
+    
+    return Math.round(uvIndex);
   } catch (error) {
-    console.warn('Failed to fetch UV Index from One Call API 3.0:', error);
-    return { uvIndex: 0, uvDescription: 'N/A' };
+    console.error('UV Index API error:', error);
+    return 0;
+  }
+};
+
+// Add Pollen API endpoint
+const fetchPollenData = async (lat: number, lon: number, apiKey: string): Promise<{ tree: number; grass: number; weed: number }> => {
+  try {
+    // Using OpenWeather Air Pollution API for pollen data
+    const response = await fetch(`${BASE_URL}/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`);
+    console.log('Pollen API Response:', response);
+    if (!response.ok) {
+      console.warn('Pollen API failed:', response.status);
+      return { tree: 0, grass: 0, weed: 0 };
+    }
+    const data = await response.json();
+    console.log('Pollen data:', data);
+    // Extract pollen data from response
+    const pollenData = {
+      tree: data.components?.pm10 || 0,
+      grass: data.components?.pm2_5 || 0,
+      weed: data.components?.co || 0
+    };
+    console.log('Processed pollen counts:', pollenData);
+    return pollenData;
+  } catch (error) {
+    console.warn('Pollen API error:', error);
+    return { tree: 0, grass: 0, weed: 0 };
   }
 };
 
@@ -718,6 +754,15 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
     const moonPhase = calculateMoonPhase();
     console.log('Moon phase:', moonPhase);
 
+    // Fetch UV Index with debugging
+    console.log('=== FETCHING UV INDEX ===');
+    const uvIndex = await fetchUVIndex(lat, lon, validApiKey);
+    console.log('UV Index fetched:', uvIndex);
+
+    // Fetch Pollen data
+    const pollenData = await fetchPollenData(lat, lon, validApiKey);
+    console.log('Weather Data - Pollen:', pollenData);
+
     // Construct weather data object
     const weatherData: WeatherData = {
       location: displayName,
@@ -737,13 +782,9 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
       sunset: formatTime(currentWeatherData.sys.sunset, currentWeatherData.timezone),
       forecast: forecast,
       moonPhase: moonPhase,
-      uvIndex: 0, // Placeholder - will be updated if available
+      uvIndex,
       aqi: 0, // Placeholder - will be updated if available
-      pollen: {
-        tree: 0,
-        grass: 0,
-        weed: 0
-      }
+      pollen: pollenData,
     };
 
     console.log('Final weather data:', weatherData);

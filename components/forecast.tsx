@@ -97,7 +97,7 @@ export default function Forecast({ forecast, theme = 'dark' }: ForecastProps) {
           style={{ textShadow: themeClasses.cardStyle.textShadow }}>5-DAY FORECAST</h2>
       {/* Mobile responsive grid - stack on very small screens, 3 cols on mobile+, 5 cols on desktop */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 lg:gap-4">
-        {forecast.map((day, index) => (
+        {forecast.slice(0, 5).map((day, index) => (
           <ForecastCard key={index} day={day} themeClasses={themeClasses} theme={theme} />
         ))}
       </div>
