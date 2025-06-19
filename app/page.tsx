@@ -681,6 +681,33 @@ function WeatherApp() {
     );
   };
 
+  // Helper function to format location display
+  const formatLocationDisplay = (location: string, country: string): string => {
+    // Handle edge cases for long city names
+    const maxLength = 30;
+    if (location.length > maxLength) {
+      return `${location.substring(0, maxLength - 3)}...`;
+    }
+    return location;
+  };
+
+  // Helper function to get moon phase icon
+  const getMoonPhaseIcon = (phase: string): string => {
+    const phaseLower = phase.toLowerCase();
+    
+    if (phaseLower.includes('new')) return '●';
+    if (phaseLower.includes('waxing crescent')) return '🌒';
+    if (phaseLower.includes('first quarter')) return '🌓';
+    if (phaseLower.includes('waxing gibbous')) return '🌔';
+    if (phaseLower.includes('full')) return '🌕';
+    if (phaseLower.includes('waning gibbous')) return '🌖';
+    if (phaseLower.includes('last quarter')) return '🌗';
+    if (phaseLower.includes('waning crescent')) return '🌘';
+    
+    // Fallback for any other phases
+    return '🌑';
+  };
+
   return (
     <PageWrapper>
       <div className={cn(
@@ -703,6 +730,30 @@ function WeatherApp() {
             isDisabled={isOnCooldown}
             theme={theme}
           />
+
+          {/* Location Display */}
+          {weather && !loading && !error && (
+            <div className="text-center mt-6 mb-6">
+              <div className={cn(
+                "inline-block p-4 rounded-lg border-2 shadow-lg",
+                theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
+              )}>
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-2xl">📍</span>
+                  <p className={cn(
+                    "text-xl font-bold uppercase tracking-wider pixel-font",
+                    theme === "dark" && "text-blue-400",
+                    theme === "miami" && "text-pink-400",
+                    theme === "tron" && "text-cyan-400"
+                  )} style={{ fontFamily: "monospace" }}>
+                    {formatLocationDisplay(weather.location, weather.country)}, {weather.country}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* 16-Bit Welcome Message */}
           {!weather && !loading && !error && (
@@ -833,10 +884,15 @@ function WeatherApp() {
                   theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
                 )}>
                   <h2 className="text-xl font-semibold mb-2 text-white">Moon Phase</h2>
-                  <p className="text-lg text-white font-semibold">{weather.moonPhase.phase}</p>
-                  <p className="text-sm text-gray-300 font-medium">
-                    {weather.moonPhase.illumination}% illuminated
-                  </p>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-2xl">{getMoonPhaseIcon(weather.moonPhase.phase)}</span>
+                      <p className="text-lg text-white font-semibold">{weather.moonPhase.phase}</p>
+                    </div>
+                    <p className="text-sm text-gray-300 font-medium">
+                      {weather.moonPhase.illumination}% illuminated
+                    </p>
+                  </div>
                 </div>
               </div>
 
