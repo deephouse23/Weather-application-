@@ -50,13 +50,13 @@ const getPressureUnit = (countryCode: string): 'hPa' | 'inHg' => {
   return inHgCountries.includes(countryCode) ? 'inHg' : 'hPa';
 };
 
-// Add AQI helper functions
+// Add AQI helper functions with better contrast
 const getAQIColor = (aqi: number): string => {
-  if (aqi <= 50) return 'text-green-500';
-  if (aqi <= 100) return 'text-yellow-500';
-  if (aqi <= 150) return 'text-orange-500';
-  if (aqi <= 200) return 'text-red-500';
-  return 'text-purple-500';
+  if (aqi <= 50) return 'text-green-400 font-semibold';
+  if (aqi <= 100) return 'text-yellow-400 font-semibold';
+  if (aqi <= 150) return 'text-orange-400 font-semibold';
+  if (aqi <= 200) return 'text-red-400 font-semibold';
+  return 'text-purple-400 font-semibold';
 };
 
 const getAQIDescription = (aqi: number): string => {
@@ -89,14 +89,17 @@ function WeatherApp() {
   const [rateLimitError, setRateLimitError] = useState<string>("")
   const [isClient, setIsClient] = useState(false)
   const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark')
+  const [searchCache, setSearchCache] = useState<Map<string, { data: WeatherData; timestamp: number }>>(new Map())
 
   // localStorage keys
   const CACHE_KEY = 'bitweather_city'
   const WEATHER_KEY = 'bitweather_weather_data'
   const CACHE_TIMESTAMP_KEY = 'bitweather_cache_timestamp'
   const RATE_LIMIT_KEY = 'weather-app-rate-limit'
+  const SEARCH_CACHE_KEY = 'weather-search-cache'
   const MAX_REQUESTS_PER_HOUR = 10
   const COOLDOWN_SECONDS = 2
+  const SEARCH_CACHE_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
 
   // Rate limiting for API calls (5 per minute max)
   const RATE_LIMIT_WINDOW = 60000 // 1 minute
@@ -106,6 +109,13 @@ function WeatherApp() {
   useEffect(() => {
     setIsClient(true)
   }, [])
+
+  // Initialize search cache on mount
+  useEffect(() => {
+    if (isClient) {
+      setSearchCache(getSearchCache())
+    }
+  }, [isClient])
 
   // Load cached location function
   const loadCachedLocation = () => {
@@ -357,6 +367,61 @@ function WeatherApp() {
     }
   }
 
+  // Search cache management functions
+  const getSearchCache = (): Map<string, { data: WeatherData; timestamp: number }> => {
+    if (!isClient) return new Map()
+    try {
+      const cached = localStorage.getItem(SEARCH_CACHE_KEY)
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        const map = new Map<string, { data: WeatherData; timestamp: number }>()
+        // Clean up expired entries
+        const now = Date.now()
+        for (const [key, value] of Object.entries(parsed)) {
+          if (typeof value === 'object' && value !== null && 'data' in value && 'timestamp' in value) {
+            const cacheEntry = value as { data: WeatherData; timestamp: number }
+            if (now - cacheEntry.timestamp < SEARCH_CACHE_DURATION) {
+              map.set(key, cacheEntry)
+            }
+          }
+        }
+        return map
+      }
+    } catch (error) {
+      console.warn('Failed to get search cache:', error)
+    }
+    return new Map()
+  }
+
+  const saveSearchCache = (cache: Map<string, { data: WeatherData; timestamp: number }>) => {
+    if (!isClient) return
+    try {
+      const obj = Object.fromEntries(cache)
+      localStorage.setItem(SEARCH_CACHE_KEY, JSON.stringify(obj))
+    } catch (error) {
+      console.warn('Failed to save search cache:', error)
+    }
+  }
+
+  const addToSearchCache = (searchTerm: string, weatherData: WeatherData) => {
+    const cache = getSearchCache()
+    cache.set(searchTerm.toLowerCase().trim(), {
+      data: weatherData,
+      timestamp: Date.now()
+    })
+    saveSearchCache(cache)
+    setSearchCache(cache)
+  }
+
+  const getFromSearchCache = (searchTerm: string): WeatherData | null => {
+    const cache = getSearchCache()
+    const cached = cache.get(searchTerm.toLowerCase().trim())
+    if (cached && Date.now() - cached.timestamp < SEARCH_CACHE_DURATION) {
+      return cached.data
+    }
+    return null
+  }
+
   const handleSearchWrapper = (locationInput: string) => {
     handleSearch(locationInput)
   }
@@ -388,6 +453,12 @@ function WeatherApp() {
       return;
     }
 
+    // Minimum search length check
+    if (locationInput.trim().length < 3) {
+      setError("Please enter at least 3 characters");
+      return;
+    }
+
     if (!bypassRateLimit) {
       const rateLimitCheck = checkRateLimit();
       if (!rateLimitCheck.allowed) {
@@ -402,6 +473,16 @@ function WeatherApp() {
 
     try {
       console.log('Fetching weather data...');
+      const cachedWeather = getFromSearchCache(locationInput);
+      if (cachedWeather) {
+        console.log('Weather data found in cache');
+        setWeather(cachedWeather);
+        setHasSearched(true);
+        setLastSearchTerm(locationInput);
+        setCurrentLocation(locationInput);
+        return;
+      }
+
       const weatherData = await fetchWeatherData(locationInput, API_KEY || '');
       console.log('Weather data received:', weatherData);
 
@@ -425,6 +506,9 @@ function WeatherApp() {
       
       // Record API call
       recordRequest();
+      
+      // Add to search cache
+      addToSearchCache(locationInput, weatherData);
       
       console.log('Search completed successfully');
     } catch (error) {
@@ -606,15 +690,7 @@ function WeatherApp() {
         theme === "tron" && "bg-gradient-to-b from-black to-blue-900"
       )}>
         <div className="container mx-auto px-4 py-8">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className={cn(
-              "text-3xl font-bold",
-              theme === "dark" && "text-blue-500",
-              theme === "miami" && "text-pink-500",
-              theme === "tron" && "text-cyan-500"
-            )}>
-              Weather App
-            </h1>
+          <div className="flex justify-end items-center mb-8">
             <ThemeToggle />
           </div>
 
@@ -627,6 +703,27 @@ function WeatherApp() {
             isDisabled={isOnCooldown}
             theme={theme}
           />
+
+          {/* 16-Bit Welcome Message */}
+          {!weather && !loading && !error && (
+            <div className="text-center mt-8 mb-8">
+              <div className={cn(
+                "inline-block p-6 rounded-lg border-2 shadow-lg",
+                theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
+              )}>
+                <p className={cn(
+                  "text-2xl font-bold uppercase tracking-wider pixel-font",
+                  theme === "dark" && "text-blue-400",
+                  theme === "miami" && "text-pink-400",
+                  theme === "tron" && "text-cyan-400"
+                )} style={{ fontFamily: "monospace" }}>
+                  🌤️ Select a location to begin your forecast adventure!
+                </p>
+              </div>
+            </div>
+          )}
 
           {loading && (
             <div className="flex justify-center items-center mt-8">
@@ -658,10 +755,10 @@ function WeatherApp() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* Temperature Box */}
                 <div className={cn(
-                  "p-4 rounded-lg",
-                  theme === "dark" && "bg-gray-800",
-                  theme === "miami" && "bg-pink-900/50",
-                  theme === "tron" && "bg-black/50 border border-cyan-500"
+                  "p-4 rounded-lg text-center border-2 shadow-lg",
+                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
                 )}>
                   <h2 className="text-xl font-semibold mb-2 text-white">Temperature</h2>
                   <p className="text-3xl font-bold text-white">{weather.temperature}{weather.unit}</p>
@@ -669,10 +766,10 @@ function WeatherApp() {
 
                 {/* Conditions Box */}
                 <div className={cn(
-                  "p-4 rounded-lg",
-                  theme === "dark" && "bg-gray-800",
-                  theme === "miami" && "bg-pink-900/50",
-                  theme === "tron" && "bg-black/50 border border-cyan-500"
+                  "p-4 rounded-lg text-center border-2 shadow-lg",
+                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
                 )}>
                   <h2 className="text-xl font-semibold mb-2 text-white">Conditions</h2>
                   <p className="text-lg text-white">{weather.condition}</p>
@@ -681,10 +778,10 @@ function WeatherApp() {
 
                 {/* Wind Box */}
                 <div className={cn(
-                  "p-4 rounded-lg",
-                  theme === "dark" && "bg-gray-800",
-                  theme === "miami" && "bg-pink-900/50",
-                  theme === "tron" && "bg-black/50 border border-cyan-500"
+                  "p-4 rounded-lg text-center border-2 shadow-lg",
+                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
                 )}>
                   <h2 className="text-xl font-semibold mb-2 text-white">Wind</h2>
                   <p className="text-lg text-white">
@@ -699,37 +796,45 @@ function WeatherApp() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* Sun Times Box */}
                 <div className={cn(
-                  "p-4 rounded-lg",
-                  theme === "dark" && "bg-gray-800",
-                  theme === "miami" && "bg-pink-900/50",
-                  theme === "tron" && "bg-black/50 border border-cyan-500"
+                  "p-4 rounded-lg text-center border-2 shadow-lg",
+                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
                 )}>
                   <h2 className="text-xl font-semibold mb-2 text-white">Sun Times</h2>
-                  <p className="text-white">Sunrise: {weather.sunrise}</p>
-                  <p className="text-white">Sunset: {weather.sunset}</p>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-yellow-400">☀️</span>
+                      <p className="text-white">Sunrise: {weather.sunrise}</p>
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-orange-400">🌅</span>
+                      <p className="text-white">Sunset: {weather.sunset}</p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* UV Index Box */}
                 <div className={cn(
-                  "p-4 rounded-lg",
-                  theme === "dark" && "bg-gray-800",
-                  theme === "miami" && "bg-pink-900/50",
-                  theme === "tron" && "bg-black/50 border border-cyan-500"
+                  "p-4 rounded-lg text-center border-2 shadow-lg",
+                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
                 )}>
                   <h2 className="text-xl font-semibold mb-2 text-white">UV Index</h2>
-                  <p className="text-lg text-white">{weather.uvIndex}</p>
+                  <p className="text-lg text-white font-bold">{weather.uvIndex}</p>
                 </div>
 
                 {/* Moon Phase Box */}
                 <div className={cn(
-                  "p-4 rounded-lg",
-                  theme === "dark" && "bg-gray-800",
-                  theme === "miami" && "bg-pink-900/50",
-                  theme === "tron" && "bg-black/50 border border-cyan-500"
+                  "p-4 rounded-lg text-center border-2 shadow-lg",
+                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
                 )}>
                   <h2 className="text-xl font-semibold mb-2 text-white">Moon Phase</h2>
-                  <p className="text-lg text-white">{weather.moonPhase.phase}</p>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-lg text-white font-semibold">{weather.moonPhase.phase}</p>
+                  <p className="text-sm text-gray-300 font-medium">
                     {weather.moonPhase.illumination}% illuminated
                   </p>
                 </div>
@@ -739,40 +844,40 @@ function WeatherApp() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* AQI Box */}
                 <div className={cn(
-                  "p-4 rounded-lg",
-                  theme === "dark" && "bg-gray-800",
-                  theme === "miami" && "bg-pink-900/50",
-                  theme === "tron" && "bg-black/50 border border-cyan-500"
+                  "p-4 rounded-lg text-center border-2 shadow-lg",
+                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
                 )}>
                   <h2 className="text-xl font-semibold mb-2 text-white">Air Quality</h2>
                   <p className={`text-lg ${getAQIColor(weather.aqi)}`}>
                     {weather.aqi} - {getAQIDescription(weather.aqi)}
                   </p>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-gray-300 font-medium">
                     {getAQIRecommendation(weather.aqi)}
                   </p>
                 </div>
 
                 {/* Pollen Count Box */}
                 <div className={cn(
-                  "p-4 rounded-lg",
-                  theme === "dark" && "bg-gray-800",
-                  theme === "miami" && "bg-pink-900/50",
-                  theme === "tron" && "bg-black/50 border border-cyan-500"
+                  "p-4 rounded-lg text-center border-2 shadow-lg",
+                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
                 )}>
                   <h2 className="text-xl font-semibold mb-2 text-white">Pollen Count</h2>
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <p className="text-sm text-gray-400">Tree</p>
-                      <p className="text-lg text-white">{weather.pollen.tree}</p>
+                      <p className="text-sm text-gray-300 font-medium">Tree</p>
+                      <p className="text-lg text-white font-bold">{weather.pollen.tree}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-400">Grass</p>
-                      <p className="text-lg text-white">{weather.pollen.grass}</p>
+                      <p className="text-sm text-gray-300 font-medium">Grass</p>
+                      <p className="text-lg text-white font-bold">{weather.pollen.grass}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-400">Weed</p>
-                      <p className="text-lg text-white">{weather.pollen.weed}</p>
+                      <p className="text-sm text-gray-300 font-medium">Weed</p>
+                      <p className="text-lg text-white font-bold">{weather.pollen.weed}</p>
                     </div>
                   </div>
                 </div>

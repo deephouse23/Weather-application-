@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Search, MapPin, Loader2 } from "lucide-react"
 import { useDebounce } from "@/lib/hooks"
-import { ThemeType, themeUtils, APP_CONSTANTS } from "@/lib/utils"
+import { ThemeType, APP_CONSTANTS } from "@/lib/utils"
 
 interface WeatherSearchProps {
   onSearch: (location: string) => void;
@@ -29,10 +29,81 @@ export default function WeatherSearch({
     if (value.trim() && !isLoading && !isDisabled) {
       onSearch(value.trim())
     }
-  }, 300)
+  }, 500, 3) // 500ms delay, 3 character minimum
 
-  // Use centralized theme classes
-  const themeClasses = themeUtils.getThemeClasses(theme)
+  // Local theme classes function
+  const getThemeClasses = (theme: ThemeType) => {
+    switch (theme) {
+      case 'dark':
+        return {
+          background: 'bg-[#0f0f0f]',
+          cardBg: 'bg-[#0f0f0f]',
+          borderColor: 'border-[#00d4ff]',
+          text: 'text-[#e0e0e0]',
+          headerText: 'text-[#00d4ff]',
+          secondaryText: 'text-[#e0e0e0]',
+          accentText: 'text-[#00d4ff]',
+          successText: 'text-[#00ff00]',
+          glow: 'glow-dark',
+          specialBorder: 'border-[#00d4ff]',
+          buttonHover: 'hover:bg-[#00d4ff] hover:text-[#0f0f0f]',
+          placeholderText: 'placeholder-[#a0a0a0]',
+          hoverBorder: 'hover:border-[#00d4ff]',
+          buttonBg: 'bg-[#0f0f0f]',
+          buttonBorder: 'border-[#00d4ff]',
+          buttonText: 'text-[#e0e0e0]',
+          errorBg: 'bg-[#1a0f0f]',
+          errorText: 'text-[#ff4444]',
+          warningText: 'text-[#ff6b6b]'
+        }
+      case 'miami':
+        return {
+          background: 'bg-[#0a0025]',
+          cardBg: 'bg-[#0a0025]',
+          borderColor: 'border-[#ff1493]',
+          text: 'text-[#00ffff]',
+          headerText: 'text-[#ff1493]',
+          secondaryText: 'text-[#00ffff]',
+          accentText: 'text-[#ff1493]',
+          successText: 'text-[#00ff00]',
+          glow: 'glow-miami',
+          specialBorder: 'border-[#ff1493]',
+          buttonHover: 'hover:bg-[#ff1493] hover:text-[#0a0025]',
+          placeholderText: 'placeholder-[#b0d4f1]',
+          hoverBorder: 'hover:border-[#ff1493]',
+          buttonBg: 'bg-[#0a0025]',
+          buttonBorder: 'border-[#ff1493]',
+          buttonText: 'text-[#00ffff]',
+          errorBg: 'bg-[#1a0025]',
+          errorText: 'text-[#ff1493]',
+          warningText: 'text-[#ff69b4]'
+        }
+      case 'tron':
+        return {
+          background: 'bg-black',
+          cardBg: 'bg-black',
+          borderColor: 'border-[#00FFFF]',
+          text: 'text-white',
+          headerText: 'text-[#00FFFF]',
+          secondaryText: 'text-[#00FFFF]',
+          accentText: 'text-[#00FFFF]',
+          successText: 'text-[#00ff00]',
+          glow: 'glow-tron',
+          specialBorder: 'border-[#00FFFF]',
+          buttonHover: 'hover:bg-[#00FFFF] hover:text-black',
+          placeholderText: 'placeholder-[#88CCFF]',
+          hoverBorder: 'hover:border-[#00FFFF]',
+          buttonBg: 'bg-black',
+          buttonBorder: 'border-[#00FFFF]',
+          buttonText: 'text-white',
+          errorBg: 'bg-[#001111]',
+          errorText: 'text-[#FF4444]',
+          warningText: 'text-[#FF6B6B]'
+        }
+    }
+  }
+
+  const themeClasses = getThemeClasses(theme)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()

@@ -640,18 +640,77 @@ const formatPressureValue = (pressureHPa: number, unit: 'hPa' | 'inHg'): { value
 
 // Add UV Index API endpoint with detailed debugging
 const fetchUVIndex = async (lat: number, lon: number, apiKey: string): Promise<number> => {
-  console.log('=== UV INDEX DEBUG ===');
+  console.log('=== UV INDEX NIGHTTIME DEBUG ===');
   console.log('Coordinates:', { lat, lon });
   
-  const uvApiUrl = `${BASE_URL}/uvi?lat=${lat}&lon=${lon}&appid=${apiKey}`;
-  console.log('UV API URL:', uvApiUrl);
-  
   try {
+    // First, get current weather data to determine if it's day or night
+    const currentWeatherUrl = `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`;
+    console.log('Getting current weather for UV calculation:', currentWeatherUrl);
+    
+    const currentResponse = await fetch(currentWeatherUrl);
+    if (!currentResponse.ok) {
+      console.error('Current weather API failed for UV calculation:', currentResponse.status);
+      return 0;
+    }
+    
+    const currentData = await currentResponse.json();
+    console.log('Current weather data for UV calculation:', currentData);
+    
+    // Extract sunrise, sunset, and timezone data
+    const sunrise = currentData.sys.sunrise;
+    const sunset = currentData.sys.sunset;
+    const timezone = currentData.timezone;
+    const currentTime = currentData.dt;
+    
+    console.log('Sunrise timestamp:', sunrise);
+    console.log('Sunset timestamp:', sunset);
+    console.log('Current time timestamp:', currentTime);
+    console.log('Timezone offset (seconds):', timezone);
+    
+    // Calculate local times
+    const localCurrentTime = currentTime + timezone;
+    const localSunrise = sunrise + timezone;
+    const localSunset = sunset + timezone;
+    
+    console.log('Local current time:', new Date(localCurrentTime * 1000).toLocaleString('en-US', {timeZone: 'UTC'}));
+    console.log('Local sunrise time:', new Date(localSunrise * 1000).toLocaleString('en-US', {timeZone: 'UTC'}));
+    console.log('Local sunset time:', new Date(localSunset * 1000).toLocaleString('en-US', {timeZone: 'UTC'}));
+    
+    // Check if it's currently day or night
+    const isDaytime = localCurrentTime >= localSunrise && localCurrentTime <= localSunset;
+    console.log('Is currently daytime?', isDaytime);
+    
+    // If it's nighttime, return 0 immediately
+    if (!isDaytime) {
+      console.log('UV Index: 0 (nighttime)');
+      return 0;
+    }
+    
+    // If it's daytime, fetch the actual UV index
+    console.log('Fetching UV Index for daytime...');
+    const uvApiUrl = `${BASE_URL}/uvi?lat=${lat}&lon=${lon}&appid=${apiKey}`;
+    console.log('UV API URL:', uvApiUrl);
+    
     const response = await fetch(uvApiUrl);
     console.log('UV API Response Status:', response.status);
     
     if (!response.ok) {
       console.error('UV Index API failed:', response.status, response.statusText);
+      
+      // Try alternative endpoint for UV Index
+      const altUvUrl = `${BASE_URL_V3}/onecall?lat=${lat}&lon=${lon}&exclude=current,minutely,hourly,daily,alerts&appid=${apiKey}`;
+      console.log('Trying alternative UV API URL:', altUvUrl);
+      
+      const altResponse = await fetch(altUvUrl);
+      if (altResponse.ok) {
+        const altData = await altResponse.json();
+        console.log('Alternative UV API Response:', altData);
+        const uvIndex = altData.current?.uvi || 0;
+        console.log('Alternative UV Index value:', uvIndex);
+        return Math.round(uvIndex);
+      }
+      
       return 0;
     }
     
@@ -667,32 +726,48 @@ const fetchUVIndex = async (lat: number, lon: number, apiKey: string): Promise<n
       return 0;
     }
     
-    return Math.round(uvIndex);
+    const roundedUV = Math.round(uvIndex);
+    console.log('Final UV Index (rounded):', roundedUV);
+    return roundedUV;
+    
   } catch (error) {
     console.error('UV Index API error:', error);
     return 0;
   }
 };
 
-// Add Pollen API endpoint
+// Add Pollen API endpoint with better debugging
 const fetchPollenData = async (lat: number, lon: number, apiKey: string): Promise<{ tree: number; grass: number; weed: number }> => {
+  console.log('=== POLLEN DATA DEBUG ===');
+  console.log('Coordinates:', { lat, lon });
+  
   try {
     // Using OpenWeather Air Pollution API for pollen data
-    const response = await fetch(`${BASE_URL}/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`);
-    console.log('Pollen API Response:', response);
+    const pollenUrl = `${BASE_URL}/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`;
+    console.log('Pollen API URL:', pollenUrl);
+    
+    const response = await fetch(pollenUrl);
+    console.log('Pollen API Response Status:', response.status);
+    console.log('Pollen API Response Headers:', Object.fromEntries(response.headers.entries()));
+    
     if (!response.ok) {
-      console.warn('Pollen API failed:', response.status);
+      console.warn('Pollen API failed:', response.status, response.statusText);
       return { tree: 0, grass: 0, weed: 0 };
     }
+    
     const data = await response.json();
-    console.log('Pollen data:', data);
-    // Extract pollen data from response
+    console.log('Pollen API Response Data:', data);
+    
+    // Extract pollen data from response - OpenWeather doesn't provide specific pollen data
+    // This is a placeholder - we'll need to find a different API for real pollen data
     const pollenData = {
       tree: data.components?.pm10 || 0,
       grass: data.components?.pm2_5 || 0,
       weed: data.components?.co || 0
     };
-    console.log('Processed pollen counts:', pollenData);
+    console.log('Processed pollen counts (placeholder):', pollenData);
+    console.log('Note: OpenWeather API does not provide specific pollen data. Consider using Breezometer API for real pollen data.');
+    
     return pollenData;
   } catch (error) {
     console.warn('Pollen API error:', error);

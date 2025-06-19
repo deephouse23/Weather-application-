@@ -4,12 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Menu, X, Cloud, Zap, BookOpen, Gamepad2, Info, Home, ChevronDown } from "lucide-react"
-import { ThemeType, themeUtils, APP_CONSTANTS } from "@/lib/utils"
-
-interface NavigationProps {
-  currentTheme: ThemeType
-  onThemeChange: (theme: ThemeType) => void
-}
+import { useTheme } from "@/components/theme-provider"
 
 /**
  * 16-Bit Weather Education Platform Navigation
@@ -17,12 +12,62 @@ interface NavigationProps {
  * Features authentic retro styling with pixel-perfect borders
  * and three-theme support (Dark/Miami/Tron) for the expanded education platform
  */
-export default function Navigation({ currentTheme, onThemeChange }: NavigationProps) {
+export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
+  const { theme } = useTheme()
 
-  // Use centralized theme classes
-  const themeClasses = themeUtils.getThemeClasses(currentTheme)
+  // Local theme classes function for better light mode support
+  const getThemeClasses = (theme: string) => {
+    switch (theme) {
+      case 'dark':
+        return {
+          background: 'bg-[#0a0a1a]',
+          text: 'text-[#e0e0e0]',
+          borderColor: 'border-[#00d4ff]',
+          accentBg: 'bg-[#00d4ff]',
+          accentText: 'text-[#00d4ff]',
+          cardBg: 'bg-[#0f0f0f]',
+          hoverBg: 'hover:bg-[#00d4ff] hover:text-[#0a0a1a]',
+          glow: 'glow-dark'
+        }
+      case 'miami':
+        return {
+          background: 'bg-[#2d1b69]',
+          text: 'text-[#00ffff]',
+          borderColor: 'border-[#ff1493]',
+          accentBg: 'bg-[#ff1493]',
+          accentText: 'text-[#ff1493]',
+          cardBg: 'bg-[#4a0e4e]',
+          hoverBg: 'hover:bg-[#ff1493] hover:text-[#2d1b69]',
+          glow: 'glow-miami'
+        }
+      case 'tron':
+        return {
+          background: 'bg-black',
+          text: 'text-white',
+          borderColor: 'border-[#00FFFF]',
+          accentBg: 'bg-[#00FFFF]',
+          accentText: 'text-[#00FFFF]',
+          cardBg: 'bg-black',
+          hoverBg: 'hover:bg-[#00FFFF] hover:text-black',
+          glow: 'glow-tron'
+        }
+      default:
+        return {
+          background: 'bg-[#0a0a1a]',
+          text: 'text-[#e0e0e0]',
+          borderColor: 'border-[#00d4ff]',
+          accentBg: 'bg-[#00d4ff]',
+          accentText: 'text-[#00d4ff]',
+          cardBg: 'bg-[#0f0f0f]',
+          hoverBg: 'hover:bg-[#00d4ff] hover:text-[#0a0a1a]',
+          glow: 'glow-dark'
+        }
+    }
+  }
+
+  const themeClasses = getThemeClasses(theme)
 
   const navItems = [
     { href: "/", label: "HOME", icon: Home },
