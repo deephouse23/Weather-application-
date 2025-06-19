@@ -1,24 +1,19 @@
 export interface WeatherData {
-  current: {
-    temp: number;
-    condition: string;
-    humidity: number;
-    wind: number;
-    windDirection?: number; // Wind direction in degrees
-    windDisplay: string; // Formatted wind display (e.g., "SW 6 mph" or "Calm")
-    location: string;
-    description: string;
-    sunrise: string; // Formatted sunrise time (e.g., "6:23 am")
-    sunset: string; // Formatted sunset time (e.g., "7:45 pm")
-    dewPoint: number; // Dew point in Fahrenheit
-    uvIndex: number; // UV Index (0-11+) - current real-time value
-    uvDescription: string; // UV intensity description (Low/Moderate/High/Very High/Extreme)
-    pressure: number; // Atmospheric pressure in hPa
-    pressureDisplay: string; // Formatted pressure with regional units
-    country: string; // Country code (e.g., "US", "GB", "CA")
-    lat: number; // Latitude coordinates for radar
-    lon: number; // Longitude coordinates for radar
+  location: string;
+  country: string;
+  temperature: number;
+  unit: string;
+  condition: string;
+  description: string;
+  humidity: number;
+  wind: {
+    speed: number;
+    direction?: string;
+    gust?: number;
   };
+  pressure: string;
+  sunrise: string;
+  sunset: string;
   forecast: Array<{
     day: string;
     highTemp: number;
@@ -27,10 +22,17 @@ export interface WeatherData {
     description: string;
   }>;
   moonPhase: {
-    phase: string; // Phase name (e.g., "Waxing Crescent")
-    illumination: number; // Percentage of illumination (0-100)
-    emoji: string; // Unicode moon symbol
-    phaseAngle: number; // Phase angle in degrees (0-360)
+    phase: string;
+    illumination: number;
+    emoji: string;
+    phaseAngle: number;
+  };
+  uvIndex: number;
+  aqi: number;
+  pollen: {
+    tree: number;
+    grass: number;
+    weed: number;
   };
 }
 

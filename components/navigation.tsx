@@ -4,12 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Menu, X, Cloud, Zap, BookOpen, Gamepad2, Info, Home, ChevronDown } from "lucide-react"
-import { ThemeType, themeUtils, APP_CONSTANTS } from "@/lib/utils"
-
-interface NavigationProps {
-  currentTheme: ThemeType
-  onThemeChange: (theme: ThemeType) => void
-}
+import { useTheme } from "@/components/theme-provider"
 
 /**
  * 16-Bit Weather Education Platform Navigation
@@ -17,13 +12,62 @@ interface NavigationProps {
  * Features authentic retro styling with pixel-perfect borders
  * and three-theme support (Dark/Miami/Tron) for the expanded education platform
  */
-export default function Navigation({ currentTheme, onThemeChange }: NavigationProps) {
+export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false)
   const pathname = usePathname()
+  const { theme } = useTheme()
 
-  // Use centralized theme classes
-  const themeClasses = themeUtils.getThemeClasses(currentTheme)
+  // Local theme classes function for better light mode support
+  const getThemeClasses = (theme: string) => {
+    switch (theme) {
+      case 'dark':
+        return {
+          background: 'bg-[#0a0a1a]',
+          text: 'text-[#e0e0e0]',
+          borderColor: 'border-[#00d4ff]',
+          accentBg: 'bg-[#00d4ff]',
+          accentText: 'text-[#00d4ff]',
+          cardBg: 'bg-[#0f0f0f]',
+          hoverBg: 'hover:bg-[#00d4ff] hover:text-[#0a0a1a]',
+          glow: 'glow-dark'
+        }
+      case 'miami':
+        return {
+          background: 'bg-[#2d1b69]',
+          text: 'text-[#00ffff]',
+          borderColor: 'border-[#ff1493]',
+          accentBg: 'bg-[#ff1493]',
+          accentText: 'text-[#ff1493]',
+          cardBg: 'bg-[#4a0e4e]',
+          hoverBg: 'hover:bg-[#ff1493] hover:text-[#2d1b69]',
+          glow: 'glow-miami'
+        }
+      case 'tron':
+        return {
+          background: 'bg-black',
+          text: 'text-white',
+          borderColor: 'border-[#00FFFF]',
+          accentBg: 'bg-[#00FFFF]',
+          accentText: 'text-[#00FFFF]',
+          cardBg: 'bg-black',
+          hoverBg: 'hover:bg-[#00FFFF] hover:text-black',
+          glow: 'glow-tron'
+        }
+      default:
+        return {
+          background: 'bg-[#0a0a1a]',
+          text: 'text-[#e0e0e0]',
+          borderColor: 'border-[#00d4ff]',
+          accentBg: 'bg-[#00d4ff]',
+          accentText: 'text-[#00d4ff]',
+          cardBg: 'bg-[#0f0f0f]',
+          hoverBg: 'hover:bg-[#00d4ff] hover:text-[#0a0a1a]',
+          glow: 'glow-dark'
+        }
+    }
+  }
+
+  const themeClasses = getThemeClasses(theme)
 
   const navItems = [
     { href: "/", label: "HOME", icon: Home },
@@ -33,14 +77,6 @@ export default function Navigation({ currentTheme, onThemeChange }: NavigationPr
     { href: "/games", label: "GAMES", icon: Gamepad2 },
     { href: "/about", label: "ABOUT", icon: Info }
   ]
-
-  // Use centralized theme display utility
-  const getThemeDisplay = themeUtils.getThemeDisplay
-
-  const handleThemeSelect = (theme: ThemeType) => {
-    onThemeChange(theme)
-    setIsThemeDropdownOpen(false)
-  }
 
   return (
     <nav className={`w-full border-b-4 pixel-border relative z-50 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
@@ -78,39 +114,6 @@ export default function Navigation({ currentTheme, onThemeChange }: NavigationPr
               </Link>
             )
           })}
-        </div>
-        
-        {/* Theme Selector - TOP RIGHT */}
-        <div className="relative">
-          <button
-            onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
-            className={`flex items-center justify-center space-x-2 px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] h-[32px] whitespace-nowrap ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg} ${
-              currentTheme === APP_CONSTANTS.THEMES.TRON ? themeClasses.glow : ''
-            }`}
-          >
-            <span>PIXEL MODE</span>
-            <ChevronDown className="w-3 h-3" />
-          </button>
-          
-          {/* Theme Dropdown Menu */}
-          {isThemeDropdownOpen && (
-            <div className={`absolute top-full right-0 mt-1 border-2 z-50 min-w-[120px] ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
-              {Object.values(APP_CONSTANTS.THEMES).map((theme) => (
-                <button
-                  key={theme}
-                  onClick={() => handleThemeSelect(theme)}
-                  className={`w-full flex items-center space-x-2 px-3 py-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 h-[32px] ${
-                    currentTheme === theme 
-                      ? `${themeClasses.accentBg} text-black`
-                      : `${themeClasses.background} ${themeClasses.text} ${themeClasses.hoverBg}`
-                  }`}
-                >
-                  <span>{getThemeDisplay(theme).emoji}</span>
-                  <span>{getThemeDisplay(theme).label}</span>
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       </div>
 
@@ -159,32 +162,6 @@ export default function Navigation({ currentTheme, onThemeChange }: NavigationPr
                 </Link>
               )
             })}
-            
-            {/* Mobile Theme Selector */}
-            <div className={`mt-3 pt-3 border-t-2 ${themeClasses.borderColor}`}>
-              <div className={`text-xs font-mono font-bold uppercase tracking-wider mb-2 ${themeClasses.accentText}`}>
-                PIXEL MODE:
-              </div>
-              <div className="space-y-1">
-                {Object.values(APP_CONSTANTS.THEMES).map((theme) => (
-                  <button
-                    key={theme}
-                    onClick={() => {
-                      handleThemeSelect(theme)
-                      setIsMobileMenuOpen(false)
-                    }}
-                    className={`flex items-center space-x-3 p-2 border text-xs font-mono font-bold uppercase tracking-wider w-full h-[40px] ${
-                      currentTheme === theme 
-                        ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black`
-                        : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text}`
-                    }`}
-                  >
-                    <span>{getThemeDisplay(theme).emoji}</span>
-                    <span>{getThemeDisplay(theme).label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       )}

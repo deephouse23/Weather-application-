@@ -11,6 +11,7 @@ interface ForecastDay {
   lowTemp: number;
   condition: string;
   description: string;
+  country?: string; // Add country code for unit determination
 }
 
 interface ForecastProps {
@@ -96,7 +97,7 @@ export default function Forecast({ forecast, theme = 'dark' }: ForecastProps) {
           style={{ textShadow: themeClasses.cardStyle.textShadow }}>5-DAY FORECAST</h2>
       {/* Mobile responsive grid - stack on very small screens, 3 cols on mobile+, 5 cols on desktop */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 lg:gap-4">
-        {forecast.map((day, index) => (
+        {forecast.slice(0, 5).map((day, index) => (
           <ForecastCard key={index} day={day} themeClasses={themeClasses} theme={theme} />
         ))}
       </div>
@@ -105,6 +106,9 @@ export default function Forecast({ forecast, theme = 'dark' }: ForecastProps) {
 }
 
 function ForecastCard({ day, themeClasses, theme }: { day: ForecastDay; themeClasses: any; theme: ThemeType }) {
+  const isUSALocation = day.country === 'US' || day.country === 'USA';
+  const tempUnit = isUSALocation ? '°F' : '°C';
+
   return (
     <div className={`${themeClasses.itemBg} p-2 sm:p-3 border ${themeClasses.itemBorder} text-center ${themeClasses.itemHover} transition-colors duration-200 ${themeClasses.specialBorder}
                     min-h-[120px] sm:min-h-[140px] lg:min-h-[160px] flex flex-col justify-between`}
@@ -126,10 +130,10 @@ function ForecastCard({ day, themeClasses, theme }: { day: ForecastDay; themeCla
              style={theme !== 'dark' ? {
                textShadow: theme === 'tron' ? '0 0 10px #00FFFF, 0 0 20px #00FFFF' : '0 0 10px #ff1493, 0 0 20px #ff1493'
              } : {}}>
-          {Math.round(day.highTemp)}°
+          {Math.round(day.highTemp)}{tempUnit}
         </div>
         <div className={`text-xs sm:text-sm ${themeClasses.lowTempText} opacity-80 font-medium ${themeClasses.glow}`}>
-          {Math.round(day.lowTemp)}°
+          {Math.round(day.lowTemp)}{tempUnit}
         </div>
       </div>
       
