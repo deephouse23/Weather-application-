@@ -1,11 +1,11 @@
-# 🌟 16-Bit Weather v0.2.4
+# 🌟 16-Bit Weather v0.2.5
 
 **Experience weather data like it's 1985!**
 
 A retro-styled weather application that combines modern meteorological data with authentic 16-bit gaming aesthetics. Get comprehensive weather information displayed through a nostalgic terminal interface with pixel-perfect styling.
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-16bitweather.co-brightgreen)](https://www.16bitweather.co/)
-[![Version](https://img.shields.io/badge/Version-0.2.4-blue)](https://github.com/deephouse23/Weather-application-/releases)
+[![Version](https://img.shields.io/badge/Version-0.2.5-blue)](https://github.com/deephouse23/Weather-application-/releases)
 [![React](https://img.shields.io/badge/React-18+-61dafb)](https://reactjs.org/)
 
 ## 🌐 Live Application
@@ -265,6 +265,21 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - **📖 Documentation** - Complete guide in this README
 - **🌐 Live Demo** - [16bitweather.co](https://www.16bitweather.co/)
 - **📱 Mobile Testing** - Works on all modern devices
+
+---
+
+## 🚀 Version 0.2.5 Highlights
+
+### ✨ New Features
+- **📍 Prominent location display** - Added city/state or city/country display with 16-bit terminal styling
+- **🌙 Moon phase artwork** - Dynamic moon phase icons (New Moon, Waxing Crescent, First Quarter, etc.)
+- **🎯 Improved location visibility** - Better user orientation with prominent location indicators
+- **🎨 Enhanced visual consistency** - Moon phase icons match sunrise/sunset styling
+
+### 🔧 Technical Improvements
+- **📱 Better mobile layout** - Improved spacing and alignment for location display
+- **🎮 Authentic 16-bit styling** - Location pin icon and terminal-style formatting
+- **⚡ Dynamic updates** - Location display updates automatically with search changes
 
 ---
 
