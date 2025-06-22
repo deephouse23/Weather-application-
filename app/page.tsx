@@ -967,23 +967,26 @@ function WeatherApp() {
                 )}>
                   <h2 className="text-xl font-semibold mb-2 text-white">Pollen Count</h2>
                   <div className="grid grid-cols-3 gap-2">
+                    {/* Tree Group */}
                     <div>
-                      <p className="text-sm text-gray-300 font-medium">Tree</p>
-                      <p className={`text-lg ${getPollenColor(weather.pollen.tree)}`}>
-                        {weather.pollen.tree}
-                      </p>
+                      <p className="text-sm text-gray-300 font-medium mb-1">Tree</p>
+                      {Object.entries(weather.pollen.tree).map(([plant, category]) => (
+                        <p key={plant} className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>
+                      ))}
                     </div>
+                    {/* Grass Group */}
                     <div>
-                      <p className="text-sm text-gray-300 font-medium">Grass</p>
-                      <p className={`text-lg ${getPollenColor(weather.pollen.grass)}`}>
-                        {weather.pollen.grass}
-                      </p>
+                      <p className="text-sm text-gray-300 font-medium mb-1">Grass</p>
+                      {Object.entries(weather.pollen.grass).map(([plant, category]) => (
+                        <p key={plant} className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>
+                      ))}
                     </div>
+                    {/* Weed Group */}
                     <div>
-                      <p className="text-sm text-gray-300 font-medium">Weed</p>
-                      <p className={`text-lg ${getPollenColor(weather.pollen.weed)}`}>
-                        {weather.pollen.weed}
-                      </p>
+                      <p className="text-sm text-gray-300 font-medium mb-1">Weed</p>
+                      {Object.entries(weather.pollen.weed).map(([plant, category]) => (
+                        <p key={plant} className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>
+                      ))}
                     </div>
                   </div>
                 </div>

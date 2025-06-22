@@ -30,9 +30,9 @@ export interface WeatherData {
   uvIndex: number;
   aqi: number;
   pollen: {
-    tree: number | string;
-    grass: number | string;
-    weed: number | string;
+    tree: Record<string, string>;
+    grass: Record<string, string>;
+    weed: Record<string, string>;
   };
 }
 

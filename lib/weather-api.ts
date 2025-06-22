@@ -806,91 +806,57 @@ const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: stri
             if (value <= 8) return 'High';
             return 'Very High';
           };
-          
-          // Helper function to get the highest pollen value from a group of plants
-          const getHighestPollenValue = (plants: any[], plantTypes: string[]): number => {
-            const relevantPlants = plants?.filter((p: any) => 
-              plantTypes.some(type => p.code?.includes(type) || p.displayName?.includes(type))
-            ) || [];
-            
-            console.log('Relevant plants for group:', plantTypes, relevantPlants);
-            
-            const maxValue = Math.max(
-              ...relevantPlants.map((p: any) => p.indexInfo?.value || 0)
-            );
-            
-            return maxValue > 0 ? maxValue : 0;
-          };
-          
-          // Extract from pollenTypeInfo (existing logic)
-          const treePollen = dailyInfo.pollenTypeInfo?.find((p: any) => p.code === 'TREE');
-          const grassPollen = dailyInfo.pollenTypeInfo?.find((p: any) => p.code === 'GRASS');
-          const weedPollen = dailyInfo.pollenTypeInfo?.find((p: any) => p.code === 'WEED');
-          
-          console.log('PollenTypeInfo - Tree pollen object:', treePollen);
-          console.log('PollenTypeInfo - Grass pollen object:', grassPollen);
-          console.log('PollenTypeInfo - Weed pollen object:', weedPollen);
-          
-          // Extract from plantInfo (new logic)
-          const plantInfo = dailyInfo.plantInfo || [];
-          
-          // Tree plants: MAPLE, ELM, COTTONWOOD, ALDER, BIRCH, ASH, PINE, OAK, JUNIPER
+
+          // Plant code groupings
           const treePlants = ['MAPLE', 'ELM', 'COTTONWOOD', 'ALDER', 'BIRCH', 'ASH', 'PINE', 'OAK', 'JUNIPER'];
-          const treePlantValue = getHighestPollenValue(plantInfo, treePlants);
-          
-          // Grass plants: GRAMINALES
           const grassPlants = ['GRAMINALES'];
-          const grassPlantValue = getHighestPollenValue(plantInfo, grassPlants);
-          
-          // Weed plants: RAGWEED and other weeds
           const weedPlants = ['RAGWEED', 'WEED'];
-          const weedPlantValue = getHighestPollenValue(plantInfo, weedPlants);
-          
-          console.log('PlantInfo - Tree plant value:', treePlantValue);
-          console.log('PlantInfo - Grass plant value:', grassPlantValue);
-          console.log('PlantInfo - Weed plant value:', weedPlantValue);
-          
-          // Combine data from both sources, preferring plantInfo when available
-          const treeValue = treePlantValue || treePollen?.indexInfo?.value || 0;
-          const grassValue = grassPlantValue || grassPollen?.indexInfo?.value || 0;
-          const weedValue = weedPlantValue || weedPollen?.indexInfo?.value || 0;
-          
-          console.log('Combined - Tree value:', treeValue);
-          console.log('Combined - Grass value:', grassValue);
-          console.log('Combined - Weed value:', weedValue);
-          
-          // Extract categories - use indexInfo.category if available, otherwise convert value to category
-          const treeCategory = treePollen?.indexInfo?.category || getPollenCategory(treeValue);
-          const grassCategory = grassPollen?.indexInfo?.category || getPollenCategory(grassValue);
-          const weedCategory = weedPollen?.indexInfo?.category || getPollenCategory(weedValue);
-          
-          console.log('Tree pollen category:', treeCategory);
-          console.log('Grass pollen category:', grassCategory);
-          console.log('Weed pollen category:', weedCategory);
-          
-          // Log additional info for debugging
-          if (treePollen) {
-            console.log('Tree pollen has indexInfo:', !!treePollen.indexInfo);
-            console.log('Tree pollen indexInfo:', treePollen.indexInfo);
-          }
-          if (grassPollen) {
-            console.log('Grass pollen has indexInfo:', !!grassPollen.indexInfo);
-            console.log('Grass pollen indexInfo:', grassPollen.indexInfo);
-          }
-          if (weedPollen) {
-            console.log('Weed pollen has indexInfo:', !!weedPollen.indexInfo);
-            console.log('Weed pollen indexInfo:', weedPollen.indexInfo);
-          }
-          
-          // Log plantInfo details for debugging
-          console.log('All plants with indexInfo:', plantInfo.filter((p: any) => p.indexInfo));
-          
-          const pollenData = {
-            tree: treeCategory,
-            grass: grassCategory,
-            weed: weedCategory
+
+          // Helper to extract all plants of a group
+          const extractPlantCategories = (plants: any[], group: string[]): Record<string, string> => {
+            const result: Record<string, string> = {};
+            plants?.forEach((p: any) => {
+              const code = p.code || p.displayName || '';
+              if (group.some(type => code.includes(type))) {
+                const value = p.indexInfo?.value || 0;
+                const category = p.indexInfo?.category || getPollenCategory(value);
+                result[p.displayName || code] = category;
+              }
+            });
+            return result;
           };
-          
+
+          const plantInfo = dailyInfo.plantInfo || [];
+          const treeBreakdown = extractPlantCategories(plantInfo, treePlants);
+          const grassBreakdown = extractPlantCategories(plantInfo, grassPlants);
+          const weedBreakdown = extractPlantCategories(plantInfo, weedPlants);
+
+          // Fallback to pollenTypeInfo if no plantInfo for a group
+          const pollenTypeTree = dailyInfo.pollenTypeInfo?.find((p: any) => p.code === 'TREE');
+          const pollenTypeGrass = dailyInfo.pollenTypeInfo?.find((p: any) => p.code === 'GRASS');
+          const pollenTypeWeed = dailyInfo.pollenTypeInfo?.find((p: any) => p.code === 'WEED');
+
+          if (Object.keys(treeBreakdown).length === 0 && pollenTypeTree) {
+            treeBreakdown['Tree'] = pollenTypeTree.indexInfo?.category || getPollenCategory(pollenTypeTree.indexInfo?.value || 0);
+          }
+          if (Object.keys(grassBreakdown).length === 0 && pollenTypeGrass) {
+            grassBreakdown['Grass'] = pollenTypeGrass.indexInfo?.category || getPollenCategory(pollenTypeGrass.indexInfo?.value || 0);
+          }
+          if (Object.keys(weedBreakdown).length === 0 && pollenTypeWeed) {
+            weedBreakdown['Weed'] = pollenTypeWeed.indexInfo?.category || getPollenCategory(pollenTypeWeed.indexInfo?.value || 0);
+          }
+
+          // Log for debugging
+          console.log('Tree breakdown:', treeBreakdown);
+          console.log('Grass breakdown:', grassBreakdown);
+          console.log('Weed breakdown:', weedBreakdown);
+
+          const pollenData = {
+            tree: treeBreakdown,
+            grass: grassBreakdown,
+            weed: weedBreakdown
+          };
+
           console.log('Final parsed pollen data from Google API:', pollenData);
           return pollenData;
         } else {
