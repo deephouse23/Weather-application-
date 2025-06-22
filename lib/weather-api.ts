@@ -963,11 +963,8 @@ const fetchAirQualityData = async (lat: number, lon: number): Promise<{ aqi: num
     console.log('Google Air Quality API Response Data:', responseData);
     console.log('Full Google Air Quality API Response:', JSON.stringify(responseData, null, 2));
     
-    // Parse AQI value and category with detailed logging
-    const currentConditions = responseData?.currentConditions;
-    console.log('Current Conditions:', currentConditions);
-    
-    const indexes = currentConditions?.[0]?.indexes;
+    // Parse AQI value and category with correct data path
+    const indexes = responseData?.indexes;
     console.log('Indexes:', indexes);
     
     const aqiValue = indexes?.[0]?.aqi || 0;
