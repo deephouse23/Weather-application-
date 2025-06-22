@@ -1,0 +1,202 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global mobile-first responsive base styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  /* Enable smooth scrolling */
+  scroll-behavior: smooth;
+  /* Prevent horizontal scrolling */
+  overflow-x: hidden;
+}
+
+body {
+  /* Prevent horizontal scrolling */
+  overflow-x: hidden;
+  /* Improve text rendering on mobile */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Better touch scrolling on mobile */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile-optimized pixel border styles */
+.pixel-border {
+  /* Smoother borders on high-DPI displays */
+  border-style: solid;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* Responsive wind speed styling */
+.wind-speed {
+  color: inherit;
+  font-weight: bold;
+  /* Ensure text wraps on mobile */
+  word-break: break-word;
+}
+
+/* Mobile touch improvements */
+button {
+  /* Better touch targets for mobile */
+  min-height: 44px;
+  /* Prevent tap highlight on mobile */
+  -webkit-tap-highlight-color: transparent;
+  /* Improve touch responsiveness */
+  touch-action: manipulation;
+}
+
+/* Mobile-optimized text scaling */
+@media (max-width: 640px) {
+  /* Ensure readable text on small screens */
+  body {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  
+  /* Better spacing for mobile cards */
+  .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 1rem;
+  }
+  
+  /* Mobile-friendly grid adjustments */
+  .grid {
+    gap: 0.75rem;
+  }
+  
+  /* Ensure images don't overflow */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 641px) and (max-width: 1024px) {
+  body {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1025px) {
+  body {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+}
+
+/* Better overflow handling for long text */
+.break-words {
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* Improved focus states for accessibility */
+button:focus,
+input:focus,
+[tabindex]:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* Mobile navigation improvements */
+@media (max-width: 768px) {
+  /* Ensure navigation elements are touch-friendly */
+  nav a, nav button {
+    min-height: 48px;
+    padding: 12px 16px;
+  }
+}
+
+/* Prevent text selection on touch devices for better UX */
+.select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Better scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Mobile-optimized animations */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.pixel-font {
+  font-family: "Courier New", "Monaco", "Lucida Console", monospace;
+  letter-spacing: 1px;
+  image-rendering: pixelated;
+}
+
+.pixel-glow {
+  text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
+}
+
+.pixel-shadow {
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.8), 8px 8px 0 rgba(0, 212, 255, 0.3);
+}
+
+/* Scanline effect */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(transparent 50%, rgba(0, 212, 255, 0.03) 50%);
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* CRT flicker animation */
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.98;
+  }
+}
+
+body {
+  animation: flicker 0.15s infinite linear;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

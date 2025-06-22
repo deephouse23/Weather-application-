@@ -1,0 +1,20 @@
+﻿# dependencies
+/node_modules
+node_modules/
+
+# next.js
+/.next/
+.next/
+
+# environment variables
+.env.local
+.env
+
+# TEMPORARY DEBUG FILES - NEVER COMMIT THESE
+local-dev-config.ts
+lib/weather-api-debug.ts
+DEBUG-USAGE-EXAMPLE.md
+components/api-test.tsx
+
+# git filter-branch artifacts
+.git-rewrite/
