@@ -1,8 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Search, MapPin, Loader2 } from "lucide-react"
-import { useDebounce } from "@/lib/hooks"
 import { ThemeType, APP_CONSTANTS } from "@/lib/utils"
 
 interface WeatherSearchProps {
@@ -25,11 +24,6 @@ export default function WeatherSearch({
   theme = APP_CONSTANTS.THEMES.DARK
 }: WeatherSearchProps) {
   const [searchTerm, setSearchTerm] = useState("")
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useDebounce<string>((value) => {
-    if (value.trim() && !isLoading && !isDisabled) {
-      onSearch(value.trim())
-    }
-  }, 500, 3) // 500ms delay, 3 character minimum
 
   // Local theme classes function
   const getThemeClasses = (theme: ThemeType) => {
@@ -137,10 +131,7 @@ export default function WeatherSearch({
           <input
             type="text"
             value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value)
-              setDebouncedSearchTerm(e.target.value)
-            }}
+            onChange={(e) => setSearchTerm(e.target.value)}
             placeholder={isDisabled ? "Rate limit reached..." : "ZIP, City+State, or City+Country..."}
             disabled={controlsDisabled}
             className={`w-full px-3 sm:px-4 py-3 sm:py-4 pr-10 sm:pr-12 ${themeClasses.cardBg} border-2 ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.placeholderText} 
@@ -170,7 +161,7 @@ export default function WeatherSearch({
       </form>
 
       {/* Location Button - Mobile friendly */}
-      <div className="flex items-center justify-center mb-3 sm:mb-4 px-2 sm:px-0">
+      <div className="flex justify-center px-2 sm:px-0">
         <button
           onClick={handleLocationClick}
           disabled={controlsDisabled}
@@ -193,16 +184,16 @@ export default function WeatherSearch({
       </div>
 
       {/* Error Display - Mobile responsive */}
-      {(error && !rateLimitError) && (
+      {(error || rateLimitError) && (
         <div className={`p-3 sm:p-4 mx-2 sm:mx-0 ${themeClasses.errorBg} border ${themeClasses.errorText} 
                       text-xs sm:text-sm text-center pixel-font ${themeClasses.specialBorder}`}>
           <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
             <span>⚠</span>
-            <span className="uppercase tracking-wider break-words">{error}</span>
+            <span className="uppercase tracking-wider break-words">{error || rateLimitError}</span>
           </div>
           
           {/* Interactive suggestions based on error type - Mobile optimized */}
-          {error.includes('not found') && (
+          {error?.includes('not found') && (
             <div className="space-y-2">
               <div className={`text-xs ${themeClasses.secondaryText} normal-case`}>
                 Try these format examples:
@@ -236,19 +227,19 @@ export default function WeatherSearch({
             </div>
           )}
           
-          {error.includes('API key') && (
+          {error?.includes('API key') && (
             <div className={`text-xs ${themeClasses.secondaryText} normal-case mt-2 break-words`}>
               Please configure your OpenWeatherMap API key in the environment variables.
             </div>
           )}
           
-          {error.includes('location') && error.includes('denied') && (
+          {error?.includes('location') && error?.includes('denied') && (
             <div className={`text-xs ${themeClasses.secondaryText} normal-case mt-2 break-words`}>
               Location access was denied. Try searching manually or enable location permissions.
             </div>
           )}
           
-          {(error.includes('network') || error.includes('fetch')) && (
+          {(error?.includes('network') || error?.includes('fetch')) && (
             <div className={`text-xs ${themeClasses.secondaryText} normal-case mt-2 break-words`}>
               Network error. Please check your internet connection and try again.
             </div>
