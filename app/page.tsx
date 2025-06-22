@@ -99,6 +99,19 @@ const getAQIRecommendation = (aqi: number): string => {
   return 'Avoid outdoor activities. Stay indoors if possible.';
 };
 
+// Add pollen category color helper
+const getPollenColor = (category: string | number): string => {
+  const cat = typeof category === 'string' ? category.toLowerCase() : category.toString();
+  
+  if (cat === 'no data' || cat === '0') return 'text-gray-400 font-semibold';
+  if (cat === 'low' || cat === '1' || cat === '2') return 'text-green-400 font-semibold';
+  if (cat === 'moderate' || cat === '3' || cat === '4' || cat === '5') return 'text-yellow-400 font-semibold';
+  if (cat === 'high' || cat === '6' || cat === '7' || cat === '8') return 'text-orange-400 font-semibold';
+  if (cat === 'very high' || cat === '9' || cat === '10') return 'text-red-400 font-semibold';
+  
+  return 'text-white font-semibold'; // Default fallback
+};
+
 function WeatherApp() {
   const { theme } = useTheme()
   const [weather, setWeather] = useState<WeatherData | null>(null)
@@ -956,15 +969,21 @@ function WeatherApp() {
                   <div className="grid grid-cols-3 gap-2">
                     <div>
                       <p className="text-sm text-gray-300 font-medium">Tree</p>
-                      <p className="text-lg text-white font-bold">{weather.pollen.tree}</p>
+                      <p className={`text-lg ${getPollenColor(weather.pollen.tree)}`}>
+                        {weather.pollen.tree}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-300 font-medium">Grass</p>
-                      <p className="text-lg text-white font-bold">{weather.pollen.grass}</p>
+                      <p className={`text-lg ${getPollenColor(weather.pollen.grass)}`}>
+                        {weather.pollen.grass}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-300 font-medium">Weed</p>
-                      <p className="text-lg text-white font-bold">{weather.pollen.weed}</p>
+                      <p className={`text-lg ${getPollenColor(weather.pollen.weed)}`}>
+                        {weather.pollen.weed}
+                      </p>
                     </div>
                   </div>
                 </div>

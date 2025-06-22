@@ -766,7 +766,7 @@ const fetchUVIndex = async (lat: number, lon: number, apiKey: string): Promise<n
 };
 
 // Add Pollen API endpoint with real Google Pollen API
-const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: string): Promise<{ tree: number; grass: number; weed: number }> => {
+const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: string): Promise<{ tree: string; grass: string; weed: string }> => {
   console.log('=== POLLEN DATA DEBUG ===');
   console.log('Coordinates:', { lat, lon });
   console.log('OpenWeather API Key available:', !!openWeatherApiKey);
@@ -806,14 +806,23 @@ const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: stri
           console.log('Grass pollen object:', grassPollen);
           console.log('Weed pollen object:', weedPollen);
           
-          // Extract values - only use indexInfo.value if it exists, otherwise 0
-          const treeValue = treePollen?.indexInfo?.value || 0;
-          const grassValue = grassPollen?.indexInfo?.value || 0;
-          const weedValue = weedPollen?.indexInfo?.value || 0;
+          // Helper function to convert pollen value to category
+          const getPollenCategory = (value: number): string => {
+            if (value === 0) return 'No Data';
+            if (value <= 2) return 'Low';
+            if (value <= 5) return 'Moderate';
+            if (value <= 8) return 'High';
+            return 'Very High';
+          };
           
-          console.log('Tree pollen value:', treeValue);
-          console.log('Grass pollen value:', grassValue);
-          console.log('Weed pollen value:', weedValue);
+          // Extract categories - use indexInfo.category if available, otherwise convert value to category
+          const treeCategory = treePollen?.indexInfo?.category || getPollenCategory(treePollen?.indexInfo?.value || 0);
+          const grassCategory = grassPollen?.indexInfo?.category || getPollenCategory(grassPollen?.indexInfo?.value || 0);
+          const weedCategory = weedPollen?.indexInfo?.category || getPollenCategory(weedPollen?.indexInfo?.value || 0);
+          
+          console.log('Tree pollen category:', treeCategory);
+          console.log('Grass pollen category:', grassCategory);
+          console.log('Weed pollen category:', weedCategory);
           
           // Log additional info for debugging
           if (treePollen) {
@@ -830,9 +839,9 @@ const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: stri
           }
           
           const pollenData = {
-            tree: treeValue,
-            grass: grassValue,
-            weed: weedValue
+            tree: treeCategory,
+            grass: grassCategory,
+            weed: weedCategory
           };
           
           console.log('Final parsed pollen data from Google API:', pollenData);
@@ -862,7 +871,7 @@ const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: stri
     
     if (!response.ok) {
       console.warn('OpenWeather Air Pollution API failed:', response.status, response.statusText);
-      return { tree: 0, grass: 0, weed: 0 };
+      return { tree: 'No Data', grass: 'No Data', weed: 'No Data' };
     }
     
     const data = await response.json();
@@ -876,10 +885,18 @@ const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: stri
     console.log('Air quality fallback data:', { airQualityIndex, pm10, pm2_5 });
     
     // Simple fallback based on air quality (not seasonal estimates)
+    const getPollenCategory = (value: number): string => {
+      if (value === 0) return 'No Data';
+      if (value <= 2) return 'Low';
+      if (value <= 5) return 'Moderate';
+      if (value <= 8) return 'High';
+      return 'Very High';
+    };
+    
     const pollenData = {
-      tree: Math.min(Math.round(airQualityIndex * 10), 100),
-      grass: Math.min(Math.round(airQualityIndex * 8), 100),
-      weed: Math.min(Math.round(airQualityIndex * 6), 100)
+      tree: getPollenCategory(Math.min(Math.round(airQualityIndex * 10), 100)),
+      grass: getPollenCategory(Math.min(Math.round(airQualityIndex * 8), 100)),
+      weed: getPollenCategory(Math.min(Math.round(airQualityIndex * 6), 100))
     };
     
     console.log('Fallback pollen data (air quality based):', pollenData);
@@ -890,7 +907,7 @@ const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: stri
   } catch (error) {
     console.warn('OpenWeather Air Pollution API error:', error);
     console.log('Returning default pollen values');
-    return { tree: 0, grass: 0, weed: 0 };
+    return { tree: 'No Data', grass: 'No Data', weed: 'No Data' };
   }
 };
 
