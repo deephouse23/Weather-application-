@@ -925,9 +925,20 @@ const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: stri
 };
 
 // Fetch Air Quality from Google Air Quality API
-const fetchAirQualityData = async (lat: number, lon: number): Promise<{ aqi: number; category: string }> => {
+const fetchAirQualityData = async (lat: number, lon: number, cityName?: string): Promise<{ aqi: number; category: string }> => {
   console.log('=== FETCHING AIR QUALITY DATA ===');
-  console.log('Coordinates:', { lat, lon });
+  console.log('=== AIR QUALITY COORDINATE DEBUG ===');
+  console.log('City being searched:', cityName || 'Unknown');
+  console.log('Coordinates passed to Air Quality API:', { latitude: lat, longitude: lon });
+  
+  // Store previous coordinates for comparison (in a simple way for debugging)
+  const previousCoordinates = (globalThis as any).lastAirQualityCoordinates;
+  console.log('Previous coordinates (if cached):', previousCoordinates);
+  
+  // Update stored coordinates
+  (globalThis as any).lastAirQualityCoordinates = { latitude: lat, longitude: lon };
+  
+  console.log('Fetching Air Quality for:', cityName || 'Unknown', 'at coordinates:', lat, lon);
   
   const googleApiKey = validateGooglePollenApiKey();
   console.log('Google Air Quality API Key available:', !!googleApiKey);
@@ -1048,7 +1059,7 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
     console.log('Weather Data - Pollen:', pollenData);
 
     // Fetch Air Quality data
-    const airQualityData = await fetchAirQualityData(lat, lon);
+    const airQualityData = await fetchAirQualityData(lat, lon, displayName);
     console.log('Weather Data - Air Quality:', airQualityData);
 
     // Construct weather data object
@@ -1161,7 +1172,7 @@ export const fetchWeatherByLocation = async (coords: string): Promise<WeatherDat
     console.log('Weather Data - Pollen:', pollenData);
 
     // Fetch Air Quality data
-    const airQualityData = await fetchAirQualityData(latitude, longitude);
+    const airQualityData = await fetchAirQualityData(latitude, longitude, `${currentWeatherData.name}, ${currentWeatherData.sys.country}`);
     console.log('Weather Data - Air Quality:', airQualityData);
 
     // Construct weather data object
