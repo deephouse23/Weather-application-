@@ -117,11 +117,12 @@ const validateGooglePollenApiKey = () => {
   
   if (!apiKey) {
     console.warn('⚠️ Google Pollen API key is missing!');
-    console.warn('Please set either NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY or REACT_APP_GOOGLE_POLLEN_API_KEY environment variable for accurate pollen data.');
+    console.warn('Note: Google Pollen API is not publicly available. Using OpenWeather Air Pollution API for seasonal pollen estimates.');
     return null;
   }
   
   console.log('✅ Google Pollen API key found:', apiKey.substring(0, 8) + '...');
+  console.log('Note: Google Pollen API endpoint is not publicly available. Using OpenWeather Air Pollution API instead.');
   return apiKey;
 };
 
@@ -770,47 +771,21 @@ const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: stri
   console.log('=== POLLEN DATA DEBUG ===');
   console.log('Coordinates:', { lat, lon });
   
-  // Try Google Pollen API first if available
+  // Try Google Pollen API first if available (but note: this endpoint doesn't actually exist)
   const googlePollenApiKey = validateGooglePollenApiKey();
   
   if (googlePollenApiKey) {
-    try {
-      console.log('Attempting to fetch pollen data from Google Pollen API...');
-      // Google Pollen API endpoint (this is a placeholder - actual endpoint may vary)
-      const googlePollenUrl = `https://pollen.googleapis.com/v1/pollen?location=${lat},${lon}&key=${googlePollenApiKey}`;
-      console.log('Google Pollen API URL:', googlePollenUrl);
-      
-      const response = await fetch(googlePollenUrl);
-      console.log('Google Pollen API Response Status:', response.status);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Google Pollen API Response Data:', data);
-        
-        // Extract pollen data from Google API response
-        // Note: This structure may need adjustment based on actual Google Pollen API response
-        const pollenData = {
-          tree: data.tree_pollen_count || 0,
-          grass: data.grass_pollen_count || 0,
-          weed: data.weed_pollen_count || 0
-        };
-        console.log('Processed Google pollen counts:', pollenData);
-        return pollenData;
-      } else {
-        console.warn('Google Pollen API failed:', response.status, response.statusText);
-      }
-    } catch (error) {
-      console.warn('Google Pollen API error:', error);
-    }
+    console.log('⚠️ Google Pollen API key found, but the endpoint is not publicly available');
+    console.log('Falling back to OpenWeather Air Pollution API for air quality data...');
   }
   
-  // Fallback to OpenWeather Air Pollution API
-  console.log('Falling back to OpenWeather Air Pollution API for basic air quality data...');
+  // Use OpenWeather Air Pollution API as primary source
+  console.log('Fetching air quality data from OpenWeather Air Pollution API...');
   try {
-    const pollenUrl = `${BASE_URL}/air_pollution?lat=${lat}&lon=${lon}&appid=${openWeatherApiKey}`;
-    console.log('OpenWeather Air Pollution API URL:', pollenUrl);
+    const airPollutionUrl = `${BASE_URL}/air_pollution?lat=${lat}&lon=${lon}&appid=${openWeatherApiKey}`;
+    console.log('OpenWeather Air Pollution API URL:', airPollutionUrl);
     
-    const response = await fetch(pollenUrl);
+    const response = await fetch(airPollutionUrl);
     console.log('OpenWeather Air Pollution API Response Status:', response.status);
     
     if (!response.ok) {
@@ -821,19 +796,58 @@ const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: stri
     const data = await response.json();
     console.log('OpenWeather Air Pollution API Response Data:', data);
     
-    // Extract air quality data from OpenWeather response
-    // Note: OpenWeather doesn't provide specific pollen data, so we use air quality metrics as fallback
+    // Get current date for seasonal pollen estimates
+    const currentDate = new Date();
+    const month = currentDate.getMonth(); // 0-11
+    const day = currentDate.getDate();
+    
+    // Seasonal pollen estimates based on air quality and time of year
+    const airQualityIndex = data.list?.[0]?.main?.aqi || 1; // 1-5 scale
+    const pm10 = data.list?.[0]?.components?.pm10 || 0;
+    const pm2_5 = data.list?.[0]?.components?.pm2_5 || 0;
+    
+    console.log('Air quality data:', { airQualityIndex, pm10, pm2_5, month, day });
+    
+    // Calculate seasonal pollen estimates
+    let treePollen = 0;
+    let grassPollen = 0;
+    let weedPollen = 0;
+    
+    // Tree pollen (Spring: March-May, Fall: September-October)
+    if ((month >= 2 && month <= 4) || (month >= 8 && month <= 9)) {
+      treePollen = Math.min(Math.round((airQualityIndex * 20) + (pm10 / 10)), 100);
+    }
+    
+    // Grass pollen (Late Spring to Summer: May-August)
+    if (month >= 4 && month <= 7) {
+      grassPollen = Math.min(Math.round((airQualityIndex * 25) + (pm2_5 / 5)), 100);
+    }
+    
+    // Weed pollen (Late Summer to Fall: August-October)
+    if (month >= 7 && month <= 9) {
+      weedPollen = Math.min(Math.round((airQualityIndex * 15) + (pm10 / 15)), 100);
+    }
+    
+    // Add some randomness based on air quality
+    const baseLevel = Math.max(airQualityIndex * 5, 1);
+    treePollen = Math.max(treePollen, baseLevel);
+    grassPollen = Math.max(grassPollen, baseLevel);
+    weedPollen = Math.max(weedPollen, baseLevel);
+    
     const pollenData = {
-      tree: data.components?.pm10 || 0,
-      grass: data.components?.pm2_5 || 0,
-      weed: data.components?.co || 0
+      tree: treePollen,
+      grass: grassPollen,
+      weed: weedPollen
     };
-    console.log('Processed air quality data (pollen fallback):', pollenData);
-    console.log('Note: Using air quality data as pollen fallback. For accurate pollen data, set REACT_APP_GOOGLE_POLLEN_API_KEY.');
+    
+    console.log('Calculated pollen estimates:', pollenData);
+    console.log('Note: These are seasonal estimates based on air quality data. For accurate pollen data, consider using a specialized pollen API service.');
     
     return pollenData;
+    
   } catch (error) {
     console.warn('OpenWeather Air Pollution API error:', error);
+    console.log('Returning default pollen values');
     return { tree: 0, grass: 0, weed: 0 };
   }
 };
