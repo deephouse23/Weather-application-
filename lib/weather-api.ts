@@ -88,21 +88,40 @@ const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
 
 // Validate API key
 const validateApiKey = () => {
-  const apiKey = process.env.REACT_APP_OPENWEATHER_API_KEY;
+  // Debug environment variables
+  console.log('🔍 ENVIRONMENT VARIABLE DEBUG:');
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('REACT_APP_OPENWEATHER_API_KEY:', process.env.REACT_APP_OPENWEATHER_API_KEY ? 'SET' : 'MISSING');
+  console.log('NEXT_PUBLIC_OPENWEATHER_API_KEY:', process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY ? 'SET' : 'MISSING');
+  console.log('All env vars starting with REACT_APP_:', Object.keys(process.env).filter(key => key.startsWith('REACT_APP_')));
+  console.log('All env vars starting with NEXT_PUBLIC_:', Object.keys(process.env).filter(key => key.startsWith('NEXT_PUBLIC_')));
+  
+  // Try both variable names for compatibility
+  const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || process.env.REACT_APP_OPENWEATHER_API_KEY;
+  
   if (!apiKey) {
-    console.error('OpenWeather API key is missing! Please set REACT_APP_OPENWEATHER_API_KEY environment variable.');
+    console.error('❌ OpenWeather API key is missing!');
+    console.error('Please set either NEXT_PUBLIC_OPENWEATHER_API_KEY or REACT_APP_OPENWEATHER_API_KEY environment variable.');
+    console.error('For Next.js, use NEXT_PUBLIC_OPENWEATHER_API_KEY');
     throw new Error('OpenWeather API key not configured');
   }
+  
+  console.log('✅ OpenWeather API key found:', apiKey.substring(0, 8) + '...');
   return apiKey;
 };
 
 // Validate Google Pollen API key
 const validateGooglePollenApiKey = () => {
-  const apiKey = process.env.REACT_APP_GOOGLE_POLLEN_API_KEY;
+  // Try both variable names for compatibility
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY || process.env.REACT_APP_GOOGLE_POLLEN_API_KEY;
+  
   if (!apiKey) {
-    console.warn('Google Pollen API key is missing! Please set REACT_APP_GOOGLE_POLLEN_API_KEY environment variable for accurate pollen data.');
+    console.warn('⚠️ Google Pollen API key is missing!');
+    console.warn('Please set either NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY or REACT_APP_GOOGLE_POLLEN_API_KEY environment variable for accurate pollen data.');
     return null;
   }
+  
+  console.log('✅ Google Pollen API key found:', apiKey.substring(0, 8) + '...');
   return apiKey;
 };
 

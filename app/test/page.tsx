@@ -27,8 +27,11 @@ export default function TestPage() {
       <div style={{ marginBottom: '20px' }}>
         <h2>🔑 Environment Variables Test</h2>
         <p>NODE_ENV: {process.env.NODE_ENV || 'NOT SET'}</p>
-        <p>OpenWeather API Key: {process.env.REACT_APP_OPENWEATHER_API_KEY ? 'SET' : 'MISSING'}</p>
-        <p>Google Pollen API Key: {process.env.REACT_APP_GOOGLE_POLLEN_API_KEY ? 'SET' : 'MISSING'}</p>
+        <p>NEXT_PUBLIC_OPENWEATHER_API_KEY: {process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY ? 'SET' : 'MISSING'}</p>
+        <p>REACT_APP_OPENWEATHER_API_KEY: {process.env.REACT_APP_OPENWEATHER_API_KEY ? 'SET' : 'MISSING'}</p>
+        <p>NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY: {process.env.NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY ? 'SET' : 'MISSING'}</p>
+        <p>REACT_APP_GOOGLE_POLLEN_API_KEY: {process.env.REACT_APP_GOOGLE_POLLEN_API_KEY ? 'SET' : 'MISSING'}</p>
+        <p>Final OpenWeather API Key: {(process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || process.env.REACT_APP_OPENWEATHER_API_KEY) ? 'SET' : 'MISSING'}</p>
         <p>Debug Mode: {process.env.NODE_ENV === 'development' ? 'YES' : 'NO'}</p>
       </div>
 
@@ -42,6 +45,7 @@ export default function TestPage() {
         <h2>🌐 Network Test</h2>
         <p>Testing basic network functionality...</p>
         <div id="network-status">Testing network...</div>
+        <p>API Environment Test: <a href="/api/env-test" target="_blank" style={{ color: '#00ff00' }}>Click here</a></p>
       </div>
 
       <div style={{ marginBottom: '20px' }}>
@@ -91,7 +95,15 @@ export default function TestPage() {
           // Client-side diagnostic tests
           console.log('🧪 Test page loaded');
           console.log('Environment:', '${process.env.NODE_ENV}');
-          console.log('API Key:', '${process.env.REACT_APP_OPENWEATHER_API_KEY ? 'SET' : 'MISSING'}');
+          console.log('NEXT_PUBLIC_OPENWEATHER_API_KEY:', '${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY ? 'SET' : 'MISSING'}');
+          console.log('REACT_APP_OPENWEATHER_API_KEY:', '${process.env.REACT_APP_OPENWEATHER_API_KEY ? 'SET' : 'MISSING'}');
+          console.log('NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY:', '${process.env.NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY ? 'SET' : 'MISSING'}');
+          console.log('REACT_APP_GOOGLE_POLLEN_API_KEY:', '${process.env.REACT_APP_GOOGLE_POLLEN_API_KEY ? 'SET' : 'MISSING'}');
+          console.log('Final API Key:', '${(process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || process.env.REACT_APP_OPENWEATHER_API_KEY) ? 'SET' : 'MISSING'}');
+          
+          // Show all environment variables (for debugging)
+          console.log('🔍 All environment variables:');
+          ${Object.keys(process.env).map(key => `console.log('${key}:', '${process.env[key] ? 'SET' : 'MISSING'}');`).join('\n          ')}
           
           // Test debug configuration
           try {

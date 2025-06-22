@@ -38,16 +38,32 @@ const formatPressureByRegion = (pressureHPa: number, countryCode: string): strin
 };
 
 // Get API key from environment variables for production deployment
-const API_KEY = process.env.REACT_APP_OPENWEATHER_API_KEY;
+// Try both NEXT_PUBLIC_ (Next.js) and REACT_APP_ (Create React App) prefixes for compatibility
+const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || process.env.REACT_APP_OPENWEATHER_API_KEY;
+
+// Debug environment variables
+console.log('🔍 MAIN PAGE ENVIRONMENT DEBUG:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('NEXT_PUBLIC_OPENWEATHER_API_KEY:', process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY ? 'SET' : 'MISSING');
+console.log('REACT_APP_OPENWEATHER_API_KEY:', process.env.REACT_APP_OPENWEATHER_API_KEY ? 'SET' : 'MISSING');
+console.log('Final API_KEY:', API_KEY ? 'SET' : 'MISSING');
 
 // Validate API key
 if (!API_KEY) {
-  console.error('OpenWeather API key is missing! Please set REACT_APP_OPENWEATHER_API_KEY environment variable.');
+  console.error('❌ OpenWeather API key is missing!');
+  console.error('Please set either NEXT_PUBLIC_OPENWEATHER_API_KEY or REACT_APP_OPENWEATHER_API_KEY environment variable.');
+  console.error('For Next.js, use NEXT_PUBLIC_OPENWEATHER_API_KEY');
+} else {
+  console.log('✅ OpenWeather API key found:', API_KEY.substring(0, 8) + '...');
 }
 
 // Check for Google Pollen API key
-if (!process.env.REACT_APP_GOOGLE_POLLEN_API_KEY) {
-  console.warn('Google Pollen API key is missing! Please set REACT_APP_GOOGLE_POLLEN_API_KEY environment variable for accurate pollen data.');
+const GOOGLE_POLLEN_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY || process.env.REACT_APP_GOOGLE_POLLEN_API_KEY;
+if (!GOOGLE_POLLEN_API_KEY) {
+  console.warn('⚠️ Google Pollen API key is missing!');
+  console.warn('Please set either NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY or REACT_APP_GOOGLE_POLLEN_API_KEY environment variable for accurate pollen data.');
+} else {
+  console.log('✅ Google Pollen API key found:', GOOGLE_POLLEN_API_KEY.substring(0, 8) + '...');
 }
 
 // Theme types
