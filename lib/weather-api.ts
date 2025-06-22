@@ -669,93 +669,61 @@ const formatPressureValue = (pressureHPa: number, unit: 'hPa' | 'inHg'): { value
 
 // Add UV Index API endpoint with detailed debugging
 const fetchUVIndex = async (lat: number, lon: number, apiKey: string): Promise<number> => {
-  console.log('=== UV INDEX NIGHTTIME DEBUG ===');
+  console.log('=== UV INDEX REAL-TIME DEBUG ===');
   console.log('Coordinates:', { lat, lon });
   
   try {
-    // First, get current weather data to determine if it's day or night
-    const currentWeatherUrl = `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`;
-    console.log('Getting current weather for UV calculation:', currentWeatherUrl);
+    // Use One Call API 3.0 for real-time UV data
+    const oneCallUrl = `${BASE_URL_V3}/onecall?lat=${lat}&lon=${lon}&exclude=minutely,daily,alerts&appid=${apiKey}`;
+    console.log('One Call API URL for UV Index:', oneCallUrl);
     
-    const currentResponse = await fetch(currentWeatherUrl);
-    if (!currentResponse.ok) {
-      console.error('Current weather API failed for UV calculation:', currentResponse.status);
-      return 0;
-    }
-    
-    const currentData = await currentResponse.json();
-    console.log('Current weather data for UV calculation:', currentData);
-    
-    // Extract sunrise, sunset, and timezone data
-    const sunrise = currentData.sys.sunrise;
-    const sunset = currentData.sys.sunset;
-    const timezone = currentData.timezone;
-    const currentTime = currentData.dt;
-    
-    console.log('Sunrise timestamp:', sunrise);
-    console.log('Sunset timestamp:', sunset);
-    console.log('Current time timestamp:', currentTime);
-    console.log('Timezone offset (seconds):', timezone);
-    
-    // Calculate local times
-    const localCurrentTime = currentTime + timezone;
-    const localSunrise = sunrise + timezone;
-    const localSunset = sunset + timezone;
-    
-    console.log('Local current time:', new Date(localCurrentTime * 1000).toLocaleString('en-US', {timeZone: 'UTC'}));
-    console.log('Local sunrise time:', new Date(localSunrise * 1000).toLocaleString('en-US', {timeZone: 'UTC'}));
-    console.log('Local sunset time:', new Date(localSunset * 1000).toLocaleString('en-US', {timeZone: 'UTC'}));
-    
-    // Check if it's currently day or night
-    const isDaytime = localCurrentTime >= localSunrise && localCurrentTime <= localSunset;
-    console.log('Is currently daytime?', isDaytime);
-    
-    // If it's nighttime, return 0 immediately
-    if (!isDaytime) {
-      console.log('UV Index: 0 (nighttime)');
-      return 0;
-    }
-    
-    // If it's daytime, fetch the actual UV index
-    console.log('Fetching UV Index for daytime...');
-    const uvApiUrl = `${BASE_URL}/uvi?lat=${lat}&lon=${lon}&appid=${apiKey}`;
-    console.log('UV API URL:', uvApiUrl);
-    
-    const response = await fetch(uvApiUrl);
-    console.log('UV API Response Status:', response.status);
+    const response = await fetch(oneCallUrl);
+    console.log('One Call API Response Status:', response.status);
     
     if (!response.ok) {
-      console.error('UV Index API failed:', response.status, response.statusText);
+      console.error('One Call API failed for UV Index:', response.status, response.statusText);
       
-      // Try alternative endpoint for UV Index
-      const altUvUrl = `${BASE_URL_V3}/onecall?lat=${lat}&lon=${lon}&exclude=current,minutely,hourly,daily,alerts&appid=${apiKey}`;
-      console.log('Trying alternative UV API URL:', altUvUrl);
+      // Fallback to basic UV endpoint (daily maximum)
+      console.log('Falling back to basic UV endpoint (daily maximum)...');
+      const fallbackUrl = `${BASE_URL}/uvi?lat=${lat}&lon=${lon}&appid=${apiKey}`;
+      const fallbackResponse = await fetch(fallbackUrl);
       
-      const altResponse = await fetch(altUvUrl);
-      if (altResponse.ok) {
-        const altData = await altResponse.json();
-        console.log('Alternative UV API Response:', altData);
-        const uvIndex = altData.current?.uvi || 0;
-        console.log('Alternative UV Index value:', uvIndex);
-        return Math.round(uvIndex);
+      if (fallbackResponse.ok) {
+        const fallbackData = await fallbackResponse.json();
+        const dailyMaxUV = fallbackData.value || fallbackData.uvi || 0;
+        console.log('Fallback daily maximum UV Index:', dailyMaxUV);
+        
+        // Estimate current UV based on time of day (rough approximation)
+        const now = new Date();
+        const hour = now.getHours();
+        const currentUV = estimateCurrentUVFromDailyMax(dailyMaxUV, hour);
+        console.log('Estimated current UV from daily max:', currentUV);
+        return Math.round(currentUV);
       }
       
       return 0;
     }
     
     const data = await response.json();
-    console.log('UV API Response Data:', data);
+    console.log('One Call API Response Data:', data);
     
-    // Check both possible properties for UV index
-    const uvIndex = data.value || data.uvi || 0;
-    console.log('UV Index value:', uvIndex);
+    // Get current UV index from the current conditions
+    const currentUV = data.current?.uvi || 0;
+    console.log('Current UV Index from One Call API:', currentUV);
     
-    if (!uvIndex) {
-      console.error('UV Index not found in response');
+    if (currentUV === 0) {
+      // Check if it's nighttime
+      const currentTime = data.current?.dt || Date.now() / 1000;
+      const timezone = data.timezone_offset || 0;
+      const localTime = currentTime + timezone;
+      const localHour = new Date(localTime * 1000).getHours();
+      
+      console.log('Local hour:', localHour);
+      console.log('UV Index: 0 (likely nighttime)');
       return 0;
     }
     
-    const roundedUV = Math.round(uvIndex);
+    const roundedUV = Math.round(currentUV);
     console.log('Final UV Index (rounded):', roundedUV);
     return roundedUV;
     
@@ -763,6 +731,28 @@ const fetchUVIndex = async (lat: number, lon: number, apiKey: string): Promise<n
     console.error('UV Index API error:', error);
     return 0;
   }
+};
+
+// Helper function to estimate current UV from daily maximum based on time of day
+const estimateCurrentUVFromDailyMax = (dailyMaxUV: number, hour: number): number => {
+  // UV is typically highest around solar noon (12-2 PM)
+  // This is a rough approximation based on typical UV patterns
+  if (hour < 6 || hour > 18) return 0; // Nighttime
+  
+  // Create a bell curve approximation for UV throughout the day
+  const peakHour = 13; // Peak UV around 1 PM
+  const standardDeviation = 3; // Spread of the curve
+  
+  // Calculate how far we are from peak hour
+  const distanceFromPeak = Math.abs(hour - peakHour);
+  
+  // Use a simplified normal distribution approximation
+  const uvMultiplier = Math.exp(-(distanceFromPeak * distanceFromPeak) / (2 * standardDeviation * standardDeviation));
+  
+  const estimatedUV = dailyMaxUV * uvMultiplier;
+  console.log(`UV estimation: hour=${hour}, dailyMax=${dailyMaxUV}, multiplier=${uvMultiplier.toFixed(3)}, estimated=${estimatedUV.toFixed(2)}`);
+  
+  return Math.max(0, estimatedUV);
 };
 
 // Add Pollen API endpoint with real Google Pollen API
@@ -924,12 +914,13 @@ const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: stri
   }
 };
 
-// Fetch Air Quality from Google Air Quality API
+// Fetch Air Quality from Google Air Quality API with enhanced debugging and fallbacks
 const fetchAirQualityData = async (lat: number, lon: number, cityName?: string): Promise<{ aqi: number; category: string }> => {
   console.log('=== FETCHING AIR QUALITY DATA ===');
   console.log('=== AIR QUALITY COORDINATE DEBUG ===');
   console.log('City being searched:', cityName || 'Unknown');
   console.log('Coordinates passed to Air Quality API:', { latitude: lat, longitude: lon });
+  console.log('Timestamp:', new Date().toISOString());
   
   // Store previous coordinates for comparison (in a simple way for debugging)
   const previousCoordinates = (globalThis as any).lastAirQualityCoordinates;
@@ -943,56 +934,195 @@ const fetchAirQualityData = async (lat: number, lon: number, cityName?: string):
   const googleApiKey = validateGooglePollenApiKey();
   console.log('Google Air Quality API Key available:', !!googleApiKey);
   
-  if (!googleApiKey) {
-    console.warn('No Google Air Quality API key found. Returning default AQI.');
-    return { aqi: 0, category: 'No Data' };
+  // Try Google Air Quality API first
+  if (googleApiKey) {
+    try {
+      const url = `https://airquality.googleapis.com/v1/currentConditions:lookup?key=${googleApiKey}`;
+      const payload = JSON.stringify({ location: { latitude: lat, longitude: lon } });
+      
+      console.log('Google Air Quality API URL:', url);
+      console.log('Google Air Quality API Payload:', payload);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload
+      });
+      
+      console.log('Google Air Quality API Response Status:', response.status);
+      console.log('Google Air Quality API Response Headers:', Object.fromEntries(response.headers.entries()));
+      
+      if (response.ok) {
+        const responseData = await response.json();
+        console.log('Google Air Quality API Response Data:', responseData);
+        console.log('Full Google Air Quality API Response:', JSON.stringify(responseData, null, 2));
+        
+        // Parse AQI value and category with correct data path
+        const indexes = responseData?.indexes;
+        console.log('Google AQI Indexes:', indexes);
+        
+        const aqiValue = indexes?.[0]?.aqi || 0;
+        const aqiCategory = indexes?.[0]?.category || 'No Data';
+        
+        console.log('Google AQI value extracted:', aqiValue);
+        console.log('Google AQI category extracted:', aqiCategory);
+        
+        // Check if we have additional AQI information
+        const additionalInfo = responseData?.indexes?.[0];
+        if (additionalInfo) {
+          console.log('Google AQI additional info:', {
+            displayName: additionalInfo.displayName,
+            aqiDisplay: additionalInfo.aqiDisplay,
+            category: additionalInfo.category,
+            dominantPollutant: additionalInfo.dominantPollutant
+          });
+        }
+        
+        const finalAirQualityObject = { aqi: aqiValue, category: aqiCategory };
+        console.log('Final Google air quality object:', finalAirQualityObject);
+        
+        return finalAirQualityObject;
+        
+      } else {
+        console.error('Google Air Quality API failed:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('Google API Error response:', errorText);
+      }
+    } catch (error) {
+      console.error('Google Air Quality API error:', error);
+    }
+  } else {
+    console.warn('No Google Air Quality API key found.');
   }
   
+  // Fallback to OpenWeather Air Pollution API
+  console.log('🔄 Falling back to OpenWeather Air Pollution API...');
   try {
-    const url = `https://airquality.googleapis.com/v1/currentConditions:lookup?key=${googleApiKey}`;
-    const payload = JSON.stringify({ location: { latitude: lat, longitude: lon } });
+    const openWeatherApiKey = validateApiKey();
+    const airPollutionUrl = `${BASE_URL}/air_pollution?lat=${lat}&lon=${lon}&appid=${openWeatherApiKey}`;
+    console.log('OpenWeather Air Pollution API URL:', airPollutionUrl);
     
-    console.log('Air Quality API URL and payload:', url, payload);
+    const response = await fetch(airPollutionUrl);
+    console.log('OpenWeather Air Pollution API Response Status:', response.status);
     
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: payload
-    });
-    
-    console.log('Google Air Quality API Response Status:', response.status);
-    console.log('Google Air Quality API Response Headers:', Object.fromEntries(response.headers.entries()));
-    
-    if (!response.ok) {
-      console.error('Google Air Quality API failed:', response.status, response.statusText);
-      const errorText = await response.text();
-      console.error('Error response:', errorText);
-      return { aqi: 0, category: 'No Data' };
+    if (response.ok) {
+      const data = await response.json();
+      console.log('OpenWeather Air Pollution API Response Data:', data);
+      
+      // OpenWeather uses a different AQI scale (1-5)
+      const openWeatherAQI = data.list?.[0]?.main?.aqi || 1;
+      const components = data.list?.[0]?.components || {};
+      
+      console.log('OpenWeather AQI (1-5 scale):', openWeatherAQI);
+      console.log('OpenWeather components:', components);
+      
+      // Convert OpenWeather AQI (1-5) to US EPA AQI scale (0-500)
+      const convertedAQI = convertOpenWeatherAQIToEPA(openWeatherAQI, components);
+      const category = getAQICategory(convertedAQI);
+      
+      console.log('Converted OpenWeather AQI to EPA scale:', convertedAQI);
+      console.log('AQI Category:', category);
+      
+      return { aqi: convertedAQI, category };
+      
+    } else {
+      console.error('OpenWeather Air Pollution API failed:', response.status, response.statusText);
     }
-    
-    const responseData = await response.json();
-    console.log('Google Air Quality API Response Data:', responseData);
-    console.log('Full Google Air Quality API Response:', JSON.stringify(responseData, null, 2));
-    
-    // Parse AQI value and category with correct data path
-    const indexes = responseData?.indexes;
-    console.log('Indexes:', indexes);
-    
-    const aqiValue = indexes?.[0]?.aqi || 0;
-    const aqiCategory = indexes?.[0]?.category || 'No Data';
-    
-    console.log('AQI value extracted:', aqiValue);
-    console.log('AQI category extracted:', aqiCategory);
-    
-    const finalAirQualityObject = { aqi: aqiValue, category: aqiCategory };
-    console.log('Final air quality object:', finalAirQualityObject);
-    
-    return finalAirQualityObject;
-    
   } catch (error) {
-    console.error('Google Air Quality API error:', error);
-    return { aqi: 0, category: 'No Data' };
+    console.error('OpenWeather Air Pollution API error:', error);
   }
+  
+  // Final fallback
+  console.warn('All AQI APIs failed. Returning default values.');
+  return { aqi: 0, category: 'No Data' };
+};
+
+// Convert OpenWeather AQI (1-5) to US EPA AQI scale (0-500)
+const convertOpenWeatherAQIToEPA = (openWeatherAQI: number, components: any): number => {
+  // OpenWeather AQI scale: 1=Good, 2=Fair, 3=Moderate, 4=Poor, 5=Very Poor
+  // US EPA AQI scale: 0-50=Good, 51-100=Moderate, 101-150=Unhealthy for Sensitive Groups, etc.
+  
+  const aqiRanges = {
+    1: { min: 0, max: 50 },      // Good
+    2: { min: 51, max: 100 },    // Fair/Moderate
+    3: { min: 101, max: 150 },   // Moderate/Unhealthy for Sensitive Groups
+    4: { min: 151, max: 200 },   // Poor/Unhealthy
+    5: { min: 201, max: 300 }    // Very Poor/Very Unhealthy
+  };
+  
+  const range = aqiRanges[openWeatherAQI as keyof typeof aqiRanges] || aqiRanges[1];
+  
+  // Use PM2.5 and PM10 values if available for more accurate conversion
+  if (components.pm2_5 && components.pm10) {
+    const pm25AQI = calculateEPAFromPM25(components.pm2_5);
+    const pm10AQI = calculateEPAFromPM10(components.pm10);
+    
+    console.log('PM2.5 AQI calculation:', { pm25: components.pm2_5, aqi: pm25AQI });
+    console.log('PM10 AQI calculation:', { pm10: components.pm10, aqi: pm10AQI });
+    
+    // Return the higher of the two (worst case)
+    return Math.max(pm25AQI, pm10AQI);
+  }
+  
+  // Fallback to range-based conversion
+  const convertedAQI = Math.round((range.min + range.max) / 2);
+  console.log(`OpenWeather AQI ${openWeatherAQI} converted to EPA AQI: ${convertedAQI} (range: ${range.min}-${range.max})`);
+  
+  return convertedAQI;
+};
+
+// Calculate EPA AQI from PM2.5 concentration
+const calculateEPAFromPM25 = (pm25: number): number => {
+  // EPA PM2.5 breakpoints (μg/m³)
+  const breakpoints = [
+    { low: 0, high: 12.0, aqiLow: 0, aqiHigh: 50 },
+    { low: 12.1, high: 35.4, aqiLow: 51, aqiHigh: 100 },
+    { low: 35.5, high: 55.4, aqiLow: 101, aqiHigh: 150 },
+    { low: 55.5, high: 150.4, aqiLow: 151, aqiHigh: 200 },
+    { low: 150.5, high: 250.4, aqiLow: 201, aqiHigh: 300 },
+    { low: 250.5, high: 350.4, aqiLow: 301, aqiHigh: 400 },
+    { low: 350.5, high: 500.4, aqiLow: 401, aqiHigh: 500 }
+  ];
+  
+  for (const bp of breakpoints) {
+    if (pm25 >= bp.low && pm25 <= bp.high) {
+      return Math.round(((bp.aqiHigh - bp.aqiLow) / (bp.high - bp.low)) * (pm25 - bp.low) + bp.aqiLow);
+    }
+  }
+  
+  return 500; // Above 500.4 μg/m³
+};
+
+// Calculate EPA AQI from PM10 concentration
+const calculateEPAFromPM10 = (pm10: number): number => {
+  // EPA PM10 breakpoints (μg/m³)
+  const breakpoints = [
+    { low: 0, high: 54, aqiLow: 0, aqiHigh: 50 },
+    { low: 55, high: 154, aqiLow: 51, aqiHigh: 100 },
+    { low: 155, high: 254, aqiLow: 101, aqiHigh: 150 },
+    { low: 255, high: 354, aqiLow: 151, aqiHigh: 200 },
+    { low: 355, high: 424, aqiLow: 201, aqiHigh: 300 },
+    { low: 425, high: 504, aqiLow: 301, aqiHigh: 400 },
+    { low: 505, high: 604, aqiLow: 401, aqiHigh: 500 }
+  ];
+  
+  for (const bp of breakpoints) {
+    if (pm10 >= bp.low && pm10 <= bp.high) {
+      return Math.round(((bp.aqiHigh - bp.aqiLow) / (bp.high - bp.low)) * (pm10 - bp.low) + bp.aqiLow);
+    }
+  }
+  
+  return 500; // Above 604 μg/m³
+};
+
+// Get AQI category based on EPA scale
+const getAQICategory = (aqi: number): string => {
+  if (aqi <= 50) return 'Good';
+  if (aqi <= 100) return 'Moderate';
+  if (aqi <= 150) return 'Unhealthy for Sensitive Groups';
+  if (aqi <= 200) return 'Unhealthy';
+  if (aqi <= 300) return 'Very Unhealthy';
+  return 'Hazardous';
 };
 
 export const fetchWeatherData = async (locationInput: string, apiKey: string): Promise<WeatherData> => {
