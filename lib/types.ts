@@ -29,6 +29,7 @@ export interface WeatherData {
   };
   uvIndex: number;
   aqi: number;
+  aqiCategory?: string;
   pollen: {
     tree: Record<string, string>;
     grass: Record<string, string>;

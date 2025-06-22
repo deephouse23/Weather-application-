@@ -766,7 +766,7 @@ const fetchUVIndex = async (lat: number, lon: number, apiKey: string): Promise<n
 };
 
 // Add Pollen API endpoint with real Google Pollen API
-const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: string): Promise<{ tree: string; grass: string; weed: string }> => {
+const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: string): Promise<{ tree: Record<string, string>; grass: Record<string, string>; weed: Record<string, string> }> => {
   console.log('=== POLLEN DATA DEBUG ===');
   console.log('Coordinates:', { lat, lon });
   console.log('OpenWeather API Key available:', !!openWeatherApiKey);
@@ -884,7 +884,7 @@ const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: stri
     
     if (!response.ok) {
       console.warn('OpenWeather Air Pollution API failed:', response.status, response.statusText);
-      return { tree: 'No Data', grass: 'No Data', weed: 'No Data' };
+      return { tree: { 'Tree': 'No Data' }, grass: { 'Grass': 'No Data' }, weed: { 'Weed': 'No Data' } };
     }
     
     const data = await response.json();
@@ -907,9 +907,9 @@ const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: stri
     };
     
     const pollenData = {
-      tree: getPollenCategory(Math.min(Math.round(airQualityIndex * 10), 100)),
-      grass: getPollenCategory(Math.min(Math.round(airQualityIndex * 8), 100)),
-      weed: getPollenCategory(Math.min(Math.round(airQualityIndex * 6), 100))
+      tree: { 'Tree': getPollenCategory(Math.min(Math.round(airQualityIndex * 10), 100)) },
+      grass: { 'Grass': getPollenCategory(Math.min(Math.round(airQualityIndex * 8), 100)) },
+      weed: { 'Weed': getPollenCategory(Math.min(Math.round(airQualityIndex * 6), 100)) }
     };
     
     console.log('Fallback pollen data (air quality based):', pollenData);
@@ -920,7 +920,38 @@ const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: stri
   } catch (error) {
     console.warn('OpenWeather Air Pollution API error:', error);
     console.log('Returning default pollen values');
-    return { tree: 'No Data', grass: 'No Data', weed: 'No Data' };
+    return { tree: { 'Tree': 'No Data' }, grass: { 'Grass': 'No Data' }, weed: { 'Weed': 'No Data' } };
+  }
+};
+
+// Fetch Air Quality from Google Air Quality API
+const fetchAirQualityData = async (lat: number, lon: number): Promise<{ aqi: number; category: string }> => {
+  const googleApiKey = validateGooglePollenApiKey();
+  if (!googleApiKey) {
+    console.warn('No Google Air Quality API key found. Returning default AQI.');
+    return { aqi: 0, category: 'No Data' };
+  }
+  try {
+    const url = `https://airquality.googleapis.com/v1/currentConditions:lookup?key=${googleApiKey}`;
+    const body = JSON.stringify({ location: { latitude: lat, longitude: lon } });
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body
+    });
+    if (!response.ok) {
+      console.error('Google Air Quality API failed:', response.status, response.statusText);
+      return { aqi: 0, category: 'No Data' };
+    }
+    const data = await response.json();
+    console.log('Google Air Quality API Response:', data);
+    // Parse AQI value and category
+    const aqi = data?.currentConditions?.[0]?.indexes?.[0]?.aqi || 0;
+    const category = data?.currentConditions?.[0]?.indexes?.[0]?.category || 'No Data';
+    return { aqi, category };
+  } catch (error) {
+    console.error('Google Air Quality API error:', error);
+    return { aqi: 0, category: 'No Data' };
   }
 };
 
@@ -987,6 +1018,10 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
     const pollenData = await fetchPollenData(lat, lon, validApiKey);
     console.log('Weather Data - Pollen:', pollenData);
 
+    // Fetch Air Quality data
+    const airQualityData = await fetchAirQualityData(lat, lon);
+    console.log('Weather Data - Air Quality:', airQualityData);
+
     // Construct weather data object
     const weatherData: WeatherData = {
       location: displayName,
@@ -1007,7 +1042,8 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
       forecast: forecast,
       moonPhase: moonPhase,
       uvIndex,
-      aqi: 0, // Placeholder - will be updated if available
+      aqi: airQualityData.aqi,
+      aqiCategory: airQualityData.category,
       pollen: pollenData,
     };
 
@@ -1095,6 +1131,10 @@ export const fetchWeatherByLocation = async (coords: string): Promise<WeatherDat
     const pollenData = await fetchPollenData(latitude, longitude, apiKey);
     console.log('Weather Data - Pollen:', pollenData);
 
+    // Fetch Air Quality data
+    const airQualityData = await fetchAirQualityData(latitude, longitude);
+    console.log('Weather Data - Air Quality:', airQualityData);
+
     // Construct weather data object
     const weatherData: WeatherData = {
       location: `${currentWeatherData.name}, ${currentWeatherData.sys.country}`,
@@ -1115,7 +1155,8 @@ export const fetchWeatherByLocation = async (coords: string): Promise<WeatherDat
       forecast: forecast,
       moonPhase: moonPhase,
       uvIndex: uvIndex,
-      aqi: 0, // Placeholder - will be updated if available
+      aqi: airQualityData.aqi,
+      aqiCategory: airQualityData.category,
       pollen: pollenData,
     }
 
