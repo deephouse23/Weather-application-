@@ -769,18 +769,21 @@ const fetchUVIndex = async (lat: number, lon: number, apiKey: string): Promise<n
 const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: string): Promise<{ tree: number; grass: number; weed: number }> => {
   console.log('=== POLLEN DATA DEBUG ===');
   console.log('Coordinates:', { lat, lon });
+  console.log('OpenWeather API Key available:', !!openWeatherApiKey);
   
   // Use real Google Pollen API
   const googlePollenApiKey = validateGooglePollenApiKey();
+  console.log('Google Pollen API Key available:', !!googlePollenApiKey);
   
   if (googlePollenApiKey) {
     try {
-      console.log('Fetching real pollen data from Google Pollen API...');
+      console.log('🔍 Attempting to fetch real pollen data from Google Pollen API...');
       const googlePollenUrl = `https://pollen.googleapis.com/v1/forecast:lookup?key=${googlePollenApiKey}&location.latitude=${lat}&location.longitude=${lon}&days=1`;
       console.log('Google Pollen API URL:', googlePollenUrl);
       
       const response = await fetch(googlePollenUrl);
       console.log('Google Pollen API Response Status:', response.status);
+      console.log('Google Pollen API Response Headers:', Object.fromEntries(response.headers.entries()));
       
       if (response.ok) {
         const data = await response.json();
@@ -843,7 +846,7 @@ const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: stri
   }
   
   // Fallback to OpenWeather Air Pollution API only if Google API fails
-  console.log('Falling back to OpenWeather Air Pollution API for basic air quality data...');
+  console.log('🔄 Falling back to OpenWeather Air Pollution API for basic air quality data...');
   try {
     const airPollutionUrl = `${BASE_URL}/air_pollution?lat=${lat}&lon=${lon}&appid=${openWeatherApiKey}`;
     console.log('OpenWeather Air Pollution API URL:', airPollutionUrl);
@@ -1046,6 +1049,16 @@ export const fetchWeatherByLocation = async (coords: string): Promise<WeatherDat
     const moonPhase = calculateMoonPhase()
     console.log('Moon phase:', moonPhase)
 
+    // Fetch UV Index with debugging
+    console.log('=== FETCHING UV INDEX ===');
+    const uvIndex = await fetchUVIndex(latitude, longitude, apiKey);
+    console.log('UV Index fetched:', uvIndex);
+
+    // Fetch Pollen data
+    console.log('=== FETCHING POLLEN DATA ===');
+    const pollenData = await fetchPollenData(latitude, longitude, apiKey);
+    console.log('Weather Data - Pollen:', pollenData);
+
     // Construct weather data object
     const weatherData: WeatherData = {
       location: `${currentWeatherData.name}, ${currentWeatherData.sys.country}`,
@@ -1065,13 +1078,9 @@ export const fetchWeatherByLocation = async (coords: string): Promise<WeatherDat
       sunset: formatTime(currentWeatherData.sys.sunset, currentWeatherData.timezone),
       forecast: forecast,
       moonPhase: moonPhase,
-      uvIndex: 0, // Placeholder - will be updated if available
+      uvIndex: uvIndex,
       aqi: 0, // Placeholder - will be updated if available
-      pollen: {
-        tree: 0,
-        grass: 0,
-        weed: 0
-      }
+      pollen: pollenData,
     }
 
     console.log('Final weather data:', weatherData)

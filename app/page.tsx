@@ -17,7 +17,6 @@ import WeatherSearch from "@/components/weather-search"
 import { APP_CONSTANTS } from "@/lib/utils"
 
 // TEMPORARY DEBUG IMPORTS - REMOVE BEFORE PRODUCTION
-import { fetchWeatherDataDebug, fetchWeatherByLocationDebug } from '@/lib/weather-api-debug'
 import ApiTest from '@/components/api-test'
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
@@ -508,7 +507,11 @@ function WeatherApp() {
         return;
       }
 
-      const weatherData = await fetchWeatherDataDebug(locationInput);
+      if (!API_KEY) {
+        throw new Error('OpenWeather API key is not configured');
+      }
+
+      const weatherData = await fetchWeatherData(locationInput, API_KEY);
       console.log('Weather data received:', weatherData);
 
       if (!weatherData) {
