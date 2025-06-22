@@ -797,36 +797,42 @@ const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: stri
         if (dailyInfo) {
           console.log('Pollen Type Info:', dailyInfo.pollenTypeInfo);
           
-          // Extract individual pollen values with detailed logging
-          const treePollen = dailyInfo.pollenTypeInfo?.find((p: any) => p.type === 'TREE');
-          const grassPollen = dailyInfo.pollenTypeInfo?.find((p: any) => p.type === 'GRASS');
-          const weedPollen = dailyInfo.pollenTypeInfo?.find((p: any) => p.type === 'WEED');
+          // Extract individual pollen values with correct field names
+          const treePollen = dailyInfo.pollenTypeInfo?.find((p: any) => p.code === 'TREE');
+          const grassPollen = dailyInfo.pollenTypeInfo?.find((p: any) => p.code === 'GRASS');
+          const weedPollen = dailyInfo.pollenTypeInfo?.find((p: any) => p.code === 'WEED');
           
           console.log('Tree pollen object:', treePollen);
           console.log('Grass pollen object:', grassPollen);
           console.log('Weed pollen object:', weedPollen);
           
-          const treeValue = treePollen?.indexInfo?.category || 0;
-          const grassValue = grassPollen?.indexInfo?.category || 0;
-          const weedValue = weedPollen?.indexInfo?.category || 0;
+          // Extract values - only use indexInfo.value if it exists, otherwise 0
+          const treeValue = treePollen?.indexInfo?.value || 0;
+          const grassValue = grassPollen?.indexInfo?.value || 0;
+          const weedValue = weedPollen?.indexInfo?.value || 0;
           
           console.log('Tree pollen value:', treeValue);
           console.log('Grass pollen value:', grassValue);
           console.log('Weed pollen value:', weedValue);
           
-          // Try alternative extraction paths if the above returns zeros
-          const treeValueAlt = treePollen?.indexInfo?.index || treePollen?.indexInfo?.value || treePollen?.category || 0;
-          const grassValueAlt = grassPollen?.indexInfo?.index || grassPollen?.indexInfo?.value || grassPollen?.category || 0;
-          const weedValueAlt = weedPollen?.indexInfo?.index || weedPollen?.indexInfo?.value || weedPollen?.category || 0;
-          
-          console.log('Alternative tree pollen value:', treeValueAlt);
-          console.log('Alternative grass pollen value:', grassValueAlt);
-          console.log('Alternative weed pollen value:', weedValueAlt);
+          // Log additional info for debugging
+          if (treePollen) {
+            console.log('Tree pollen has indexInfo:', !!treePollen.indexInfo);
+            console.log('Tree pollen indexInfo:', treePollen.indexInfo);
+          }
+          if (grassPollen) {
+            console.log('Grass pollen has indexInfo:', !!grassPollen.indexInfo);
+            console.log('Grass pollen indexInfo:', grassPollen.indexInfo);
+          }
+          if (weedPollen) {
+            console.log('Weed pollen has indexInfo:', !!weedPollen.indexInfo);
+            console.log('Weed pollen indexInfo:', weedPollen.indexInfo);
+          }
           
           const pollenData = {
-            tree: treeValue || treeValueAlt,
-            grass: grassValue || grassValueAlt,
-            weed: weedValue || weedValueAlt
+            tree: treeValue,
+            grass: grassValue,
+            weed: weedValue
           };
           
           console.log('Final parsed pollen data from Google API:', pollenData);
