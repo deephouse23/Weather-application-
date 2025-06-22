@@ -970,23 +970,53 @@ function WeatherApp() {
                     {/* Tree Group */}
                     <div>
                       <p className="text-sm text-gray-300 font-medium mb-1">Tree</p>
-                      {Object.entries(weather.pollen.tree).map(([plant, category]) => (
-                        <p key={plant} className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>
-                      ))}
+                      {(() => {
+                        const treeData = Object.entries(weather.pollen.tree).filter(([_, category]) => category !== 'No Data');
+                        if (treeData.length === 0) {
+                          return <p className="text-sm text-gray-400">No Data</p>;
+                        } else if (treeData.length === 1) {
+                          const [plant, category] = treeData[0];
+                          return <p className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>;
+                        } else {
+                          return treeData.map(([plant, category]) => (
+                            <p key={plant} className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>
+                          ));
+                        }
+                      })()}
                     </div>
                     {/* Grass Group */}
                     <div>
                       <p className="text-sm text-gray-300 font-medium mb-1">Grass</p>
-                      {Object.entries(weather.pollen.grass).map(([plant, category]) => (
-                        <p key={plant} className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>
-                      ))}
+                      {(() => {
+                        const grassData = Object.entries(weather.pollen.grass).filter(([_, category]) => category !== 'No Data');
+                        if (grassData.length === 0) {
+                          return <p className="text-sm text-gray-400">No Data</p>;
+                        } else if (grassData.length === 1) {
+                          const [plant, category] = grassData[0];
+                          return <p className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>;
+                        } else {
+                          return grassData.map(([plant, category]) => (
+                            <p key={plant} className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>
+                          ));
+                        }
+                      })()}
                     </div>
                     {/* Weed Group */}
                     <div>
                       <p className="text-sm text-gray-300 font-medium mb-1">Weed</p>
-                      {Object.entries(weather.pollen.weed).map(([plant, category]) => (
-                        <p key={plant} className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>
-                      ))}
+                      {(() => {
+                        const weedData = Object.entries(weather.pollen.weed).filter(([_, category]) => category !== 'No Data');
+                        if (weedData.length === 0) {
+                          return <p className="text-sm text-gray-400">No Data</p>;
+                        } else if (weedData.length === 1) {
+                          const [plant, category] = weedData[0];
+                          return <p className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>;
+                        } else {
+                          return weedData.map(([plant, category]) => (
+                            <p key={plant} className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>
+                          ));
+                        }
+                      })()}
                     </div>
                   </div>
                 </div>
