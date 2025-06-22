@@ -4,6 +4,20 @@ import React, { useState, useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { fetchWeatherData, fetchWeatherByLocation } from "@/lib/weather-api"
+import { useTheme } from '@/components/theme-provider'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { Search } from 'lucide-react'
+import { WeatherData } from '@/lib/types'
+import Forecast from "@/components/forecast"
+import PageWrapper from "@/components/page-wrapper"
+import { Analytics } from "@vercel/analytics/react"
+import Link from "next/link"
+import { Cloud, Zap, Flame } from "lucide-react"
+import WeatherSearch from "@/components/weather-search"
+import { APP_CONSTANTS } from "@/lib/utils"
+
+// TEMPORARY DEBUG IMPORTS - REMOVE BEFORE PRODUCTION
+// import ApiTest from '@/components/api-test'
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
 // The main weather API handles UV index estimation for free accounts
@@ -21,17 +35,35 @@ const formatPressureByRegion = (pressureHPa: number, countryCode: string): strin
     return `${Math.round(pressureHPa)} hPa`;
   }
 };
-import WeatherSearch from "@/components/weather-search"
-import Forecast from "@/components/forecast"
-import RadarDisplay from "@/components/radar-display"
-import PageWrapper from "@/components/page-wrapper"
-import HistoricalChart from "@/components/historical-chart"
-import { Analytics } from "@vercel/analytics/react"
-import Link from "next/link"
-import { Cloud, Zap, Flame } from "lucide-react"
 
 // Get API key from environment variables for production deployment
-const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY;
+// Try both NEXT_PUBLIC_ (Next.js) and REACT_APP_ (Create React App) prefixes for compatibility
+const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || process.env.REACT_APP_OPENWEATHER_API_KEY;
+
+// Debug environment variables
+console.log('🔍 MAIN PAGE ENVIRONMENT DEBUG:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('NEXT_PUBLIC_OPENWEATHER_API_KEY:', process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY ? 'SET' : 'MISSING');
+console.log('REACT_APP_OPENWEATHER_API_KEY:', process.env.REACT_APP_OPENWEATHER_API_KEY ? 'SET' : 'MISSING');
+console.log('Final API_KEY:', API_KEY ? 'SET' : 'MISSING');
+
+// Validate API key
+if (!API_KEY) {
+  console.error('❌ OpenWeather API key is missing!');
+  console.error('Please set either NEXT_PUBLIC_OPENWEATHER_API_KEY or REACT_APP_OPENWEATHER_API_KEY environment variable.');
+  console.error('For Next.js, use NEXT_PUBLIC_OPENWEATHER_API_KEY');
+} else {
+  console.log('✅ OpenWeather API key found:', API_KEY.substring(0, 8) + '...');
+}
+
+// Check for Google Pollen API key
+const GOOGLE_POLLEN_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY || process.env.REACT_APP_GOOGLE_POLLEN_API_KEY;
+if (!GOOGLE_POLLEN_API_KEY) {
+  console.warn('⚠️ Google Pollen API key is missing!');
+  console.warn('Please set either NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY or REACT_APP_GOOGLE_POLLEN_API_KEY environment variable for real pollen data.');
+} else {
+  console.log('✅ Google Pollen API key found:', GOOGLE_POLLEN_API_KEY.substring(0, 8) + '...');
+}
 
 // Theme types
 type ThemeType = 'dark' | 'miami' | 'tron';
@@ -42,43 +74,46 @@ const getPressureUnit = (countryCode: string): 'hPa' | 'inHg' => {
   return inHgCountries.includes(countryCode) ? 'inHg' : 'hPa';
 };
 
-interface WeatherData {
-  current: {
-    temp: number;
-    condition: string;
-    humidity: number;
-    wind: number;
-    windDirection?: number; // Wind direction in degrees
-    windDisplay: string; // Formatted wind display (e.g., "SW 6 mph" or "Calm")
-    location: string;
-    description: string;
-    sunrise: string; // Formatted sunrise time (e.g., "6:23 am")
-    sunset: string; // Formatted sunset time (e.g., "7:45 pm")
-    dewPoint: number; // Dew point in Fahrenheit
-    uvIndex: number; // UV Index (0-11+) - current real-time value
-    uvDescription: string; // UV intensity description (Low/Moderate/High/Very High/Extreme)
-    pressure: number; // Atmospheric pressure in hPa
-    pressureDisplay: string; // Formatted pressure with regional units
-    country: string; // Country code (e.g., "US", "GB", "CA")
-    lat: number; // Latitude coordinates for radar
-    lon: number; // Longitude coordinates for radar
-  };
-  forecast: Array<{
-    day: string;
-    highTemp: number;
-    lowTemp: number;
-    condition: string;
-    description: string;
-  }>;
-  moonPhase: {
-    phase: string; // Phase name (e.g., "Waxing Crescent")
-    illumination: number; // Percentage of illumination (0-100)
-    emoji: string; // Unicode moon symbol
-    phaseAngle: number; // Phase angle in degrees (0-360)
-  };
-}
+// Add AQI helper functions with better contrast
+const getAQIColor = (aqi: number): string => {
+  if (aqi <= 50) return 'text-green-400 font-semibold';
+  if (aqi <= 100) return 'text-yellow-400 font-semibold';
+  if (aqi <= 150) return 'text-orange-400 font-semibold';
+  if (aqi <= 200) return 'text-red-400 font-semibold';
+  return 'text-purple-400 font-semibold';
+};
+
+const getAQIDescription = (aqi: number): string => {
+  if (aqi <= 50) return 'Good';
+  if (aqi <= 100) return 'Moderate';
+  if (aqi <= 150) return 'Unhealthy for Sensitive Groups';
+  if (aqi <= 200) return 'Unhealthy';
+  return 'Very Unhealthy';
+};
+
+const getAQIRecommendation = (aqi: number): string => {
+  if (aqi <= 50) return 'Air quality is satisfactory. Enjoy outdoor activities.';
+  if (aqi <= 100) return 'Air quality is acceptable. Consider limiting prolonged outdoor exertion.';
+  if (aqi <= 150) return 'Sensitive groups should reduce outdoor activities.';
+  if (aqi <= 200) return 'Everyone should reduce outdoor activities.';
+  return 'Avoid outdoor activities. Stay indoors if possible.';
+};
+
+// Add pollen category color helper
+const getPollenColor = (category: string | number): string => {
+  const cat = typeof category === 'string' ? category.toLowerCase() : category.toString();
+  
+  if (cat === 'no data' || cat === '0') return 'text-gray-400 font-semibold';
+  if (cat === 'low' || cat === '1' || cat === '2') return 'text-green-400 font-semibold';
+  if (cat === 'moderate' || cat === '3' || cat === '4' || cat === '5') return 'text-yellow-400 font-semibold';
+  if (cat === 'high' || cat === '6' || cat === '7' || cat === '8') return 'text-orange-400 font-semibold';
+  if (cat === 'very high' || cat === '9' || cat === '10') return 'text-red-400 font-semibold';
+  
+  return 'text-white font-semibold'; // Default fallback
+};
 
 function WeatherApp() {
+  const { theme } = useTheme()
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>("")
@@ -89,19 +124,19 @@ function WeatherApp() {
   const [isOnCooldown, setIsOnCooldown] = useState(false)
   const [remainingSearches, setRemainingSearches] = useState(10)
   const [rateLimitError, setRateLimitError] = useState<string>("")
-  const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark')
-  const [showRadar, setShowRadar] = useState(false)
-  const [historicalData, setHistoricalData] = useState<any>(null)
-  const [showHistoricalChart, setShowHistoricalChart] = useState(false)
   const [isClient, setIsClient] = useState(false)
+  const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark')
+  const [searchCache, setSearchCache] = useState<Map<string, { data: WeatherData; timestamp: number }>>(new Map())
 
   // localStorage keys
   const CACHE_KEY = 'bitweather_city'
   const WEATHER_KEY = 'bitweather_weather_data'
   const CACHE_TIMESTAMP_KEY = 'bitweather_cache_timestamp'
   const RATE_LIMIT_KEY = 'weather-app-rate-limit'
+  const SEARCH_CACHE_KEY = 'weather-search-cache'
   const MAX_REQUESTS_PER_HOUR = 10
   const COOLDOWN_SECONDS = 2
+  const SEARCH_CACHE_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
 
   // Rate limiting for API calls (5 per minute max)
   const RATE_LIMIT_WINDOW = 60000 // 1 minute
@@ -111,6 +146,13 @@ function WeatherApp() {
   useEffect(() => {
     setIsClient(true)
   }, [])
+
+  // Initialize search cache on mount
+  useEffect(() => {
+    if (isClient) {
+      setSearchCache(getSearchCache())
+    }
+  }, [isClient])
 
   // Load cached location function
   const loadCachedLocation = () => {
@@ -176,33 +218,6 @@ function WeatherApp() {
     checkCacheAndLoad()
   }, [isClient])
 
-  // Load historical weather data for today's date
-  useEffect(() => {
-    const loadHistoricalData = async () => {
-      try {
-        const today = new Date()
-        const month = String(today.getMonth() + 1).padStart(2, '0')
-        const day = String(today.getDate()).padStart(2, '0')
-        const currentYear = today.getFullYear()
-        const startYear = currentYear - 30
-        
-        // Use New York as default location for historical data
-        const response = await fetch(
-          `https://archive-api.open-meteo.com/v1/archive?latitude=40.7128&longitude=-74.0060&start_date=${startYear}-${month}-${day}&end_date=${currentYear}-${month}-${day}&daily=temperature_2m_max,temperature_2m_min&timezone=auto`
-        )
-        
-        if (response.ok) {
-          const data = await response.json()
-          setHistoricalData(data)
-        }
-      } catch (error) {
-        console.warn('Historical data unavailable:', error)
-      }
-    }
-    
-    loadHistoricalData()
-  }, [])
-
   // Enhanced theme management functions
   const getStoredTheme = (): ThemeType => {
     if (!isClient) return 'dark'
@@ -220,7 +235,6 @@ function WeatherApp() {
   // Load theme on mount and sync with navigation
   useEffect(() => {
     if (!isClient) return
-    
     const storedTheme = getStoredTheme()
     setCurrentTheme(storedTheme)
     
@@ -390,139 +404,200 @@ function WeatherApp() {
     }
   }
 
+  // Search cache management functions
+  const getSearchCache = (): Map<string, { data: WeatherData; timestamp: number }> => {
+    if (!isClient) return new Map()
+    try {
+      const cached = localStorage.getItem(SEARCH_CACHE_KEY)
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        const map = new Map<string, { data: WeatherData; timestamp: number }>()
+        // Clean up expired entries
+        const now = Date.now()
+        for (const [key, value] of Object.entries(parsed)) {
+          if (typeof value === 'object' && value !== null && 'data' in value && 'timestamp' in value) {
+            const cacheEntry = value as { data: WeatherData; timestamp: number }
+            if (now - cacheEntry.timestamp < SEARCH_CACHE_DURATION) {
+              map.set(key, cacheEntry)
+            }
+          }
+        }
+        return map
+      }
+    } catch (error) {
+      console.warn('Failed to get search cache:', error)
+    }
+    return new Map()
+  }
+
+  const saveSearchCache = (cache: Map<string, { data: WeatherData; timestamp: number }>) => {
+    if (!isClient) return
+    try {
+      const obj = Object.fromEntries(cache)
+      localStorage.setItem(SEARCH_CACHE_KEY, JSON.stringify(obj))
+    } catch (error) {
+      console.warn('Failed to save search cache:', error)
+    }
+  }
+
+  const addToSearchCache = (searchTerm: string, weatherData: WeatherData) => {
+    const cache = getSearchCache()
+    cache.set(searchTerm.toLowerCase().trim(), {
+      data: weatherData,
+      timestamp: Date.now()
+    })
+    saveSearchCache(cache)
+    setSearchCache(cache)
+  }
+
+  const getFromSearchCache = (searchTerm: string): WeatherData | null => {
+    const cache = getSearchCache()
+    const cached = cache.get(searchTerm.toLowerCase().trim())
+    if (cached && Date.now() - cached.timestamp < SEARCH_CACHE_DURATION) {
+      return cached.data
+    }
+    return null
+  }
+
   const handleSearchWrapper = (locationInput: string) => {
     handleSearch(locationInput)
   }
 
+  // Helper function to safely access weather data
+  const getWeatherData = <T,>(path: string, defaultValue: T): T => {
+    try {
+      const value = path.split('.').reduce((obj, key) => obj?.[key], weather as any);
+      return value ?? defaultValue;
+    } catch (error) {
+      console.error('Error accessing weather data:', error);
+      return defaultValue;
+    }
+  };
+
+  // Enhanced error handling for weather data
+  const handleWeatherError = (error: any) => {
+    console.error('Weather data error:', error);
+    setError(error.message || 'Failed to load weather data');
+    setWeather(null);
+  };
+
+  // Enhanced search handler with error handling
   const handleSearch = async (locationInput: string, fromCache: boolean = false, bypassRateLimit: boolean = false) => {
+    console.log('Starting search for:', locationInput);
+    
     if (!locationInput.trim()) {
-      setError("Please enter a location")
-      return
+      setError("Please enter a location");
+      return;
     }
 
-    // Check if API key is available
-    if (!API_KEY) {
-      setError("🔧 Weather service is temporarily unavailable. Please try again later or contact support.")
-      return
+    // Minimum search length check
+    if (locationInput.trim().length < 3) {
+      setError("Please enter at least 3 characters");
+      return;
     }
 
-    // Check rate limit only for non-cached requests
     if (!bypassRateLimit) {
-      const rateLimitCheck = checkRateLimit()
+      const rateLimitCheck = checkRateLimit();
       if (!rateLimitCheck.allowed) {
-        setRateLimitError(rateLimitCheck.message || "Rate limit exceeded")
-        return
+        setRateLimitError(rateLimitCheck.message || "Rate limit exceeded");
+        return;
       }
     }
 
-    setLoading(true)
-    setError("")
-    setRateLimitError("")
-    setHasSearched(true)
-    setCurrentLocation(locationInput)
-    
-    // Show cooldown state
-    setIsOnCooldown(true)
-    setTimeout(() => setIsOnCooldown(false), COOLDOWN_SECONDS * 1000)
+    setLoading(true);
+    setError("");
+    setRateLimitError("");
 
     try {
-      // Fix API call - fetchWeatherData expects (locationInput, apiKey)
-      const weatherData = await fetchWeatherData(locationInput, API_KEY)
-      setWeather(weatherData)
-      setLastSearchTerm(locationInput)
-
-      // Record the request for rate limiting (only for non-cached)
-      if (!bypassRateLimit) {
-        recordRequest()
-        const { remaining } = checkRateLimit()
-        setRemainingSearches(remaining)
+      console.log('Fetching weather data...');
+      const cachedWeather = getFromSearchCache(locationInput);
+      if (cachedWeather) {
+        console.log('Weather data found in cache');
+        setWeather(cachedWeather);
+        setHasSearched(true);
+        setLastSearchTerm(locationInput);
+        setCurrentLocation(locationInput);
+        return;
       }
 
-      // Save to cache (silent) - now using bitweather_city key
-      if (!fromCache) {
-        saveLocationToCache(locationInput)
+      if (!API_KEY) {
+        throw new Error('OpenWeather API key is not configured');
       }
 
-      // Save weather data to cache
-      saveWeatherToCache(weatherData)
-    } catch (err) {
-      // Enhanced error handling with friendly fallbacks
-      const errorMessage = err instanceof Error ? err.message : "Failed to fetch weather data"
+      const weatherData = await fetchWeatherData(locationInput, API_KEY);
+      console.log('Weather data received:', weatherData);
+
+      if (!weatherData) {
+        throw new Error('No weather data received');
+      }
+
+      // Validate required data
+      if (!weatherData.temperature || !weatherData.condition) {
+        throw new Error('Invalid weather data received');
+      }
+
+      setWeather(weatherData);
+      setHasSearched(true);
+      setLastSearchTerm(locationInput);
+      setCurrentLocation(locationInput);
       
-      // If this was our default San Francisco load and it failed, try a different fallback
-      if (locationInput.includes("San Francisco") && fromCache) {
-        console.warn("San Francisco default failed, trying New York as fallback")
-        try {
-          const fallbackData = await fetchWeatherData("New York, NY", API_KEY)
-          setWeather(fallbackData)
-          setLastSearchTerm("New York, NY")
-          saveLocationToCache("New York, NY")
-          return
-        } catch (fallbackErr) {
-          setError("🌡️ Weather services are temporarily unavailable. Please try again in a moment.")
-        }
-      } else {
-        // User search failed - show friendly error
-        if (errorMessage.includes("not found") || errorMessage.includes("404")) {
-          setError(`🔍 Location "${locationInput}" not found. Please try a different city name, ZIP code, or format.`)
-        } else if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
-          setError("🌐 Network connection issue. Please check your internet and try again.")
-        } else {
-          setError("🌡️ Weather data temporarily unavailable. Please try again in a moment.")
-        }
-      }
-      setWeather(null)
+      // Save to cache
+      saveLocationToCache(locationInput);
+      saveWeatherToCache(weatherData);
+      
+      // Record API call
+      recordRequest();
+      
+      // Add to search cache
+      addToSearchCache(locationInput, weatherData);
+      
+      console.log('Search completed successfully');
+    } catch (error) {
+      console.error('Search error:', error);
+      handleWeatherError(error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
+  // Enhanced location search with error handling
   const handleLocationSearch = async () => {
     if (!navigator.geolocation) {
-      setError("Geolocation is not supported by this browser")
-      return
-    }
-
-    // Check if API key is available
-    if (!API_KEY) {
-      setError("🔧 Weather service is temporarily unavailable. Please try again later or contact support.")
-      return
-    }
-
-    // Check rate limit
-    const rateLimitCheck = checkRateLimit()
-    if (!rateLimitCheck.allowed) {
-      setRateLimitError(rateLimitCheck.message || "Rate limit exceeded")
+      setError("Geolocation is not supported by your browser")
       return
     }
 
     setLoading(true)
     setError("")
-    setRateLimitError("")
-    setHasSearched(true)
-    setCurrentLocation("Getting your location...")
-    
-    // Show cooldown state
-    setIsOnCooldown(true)
-    setTimeout(() => setIsOnCooldown(false), COOLDOWN_SECONDS * 1000)
 
     try {
-      // Fix API call - fetchWeatherByLocation expects only (apiKey)
-      const weatherData = await fetchWeatherByLocation(API_KEY)
-      setWeather(weatherData)
-      setCurrentLocation(weatherData.current.location)
-      setLastSearchTerm(weatherData.current.location)
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
+        })
+      })
 
-      // Record the request for rate limiting
-      recordRequest()
-      const { remaining } = checkRateLimit()
-      setRemainingSearches(remaining)
+      const { latitude, longitude } = position.coords
+      console.log("Got coordinates:", { latitude, longitude })
 
-      // Save to cache (silent)
-      saveLocationToCache(weatherData.current.location)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch weather data")
-      setWeather(null)
+      const weatherData = await fetchWeatherByLocation(`${latitude},${longitude}`)
+      console.log("Weather data received:", weatherData)
+
+      if (weatherData) {
+        setWeather(weatherData)
+        setHasSearched(true)
+        setError("")
+        saveLocationToCache(`${latitude},${longitude}`)
+        saveWeatherToCache(weatherData)
+        recordRequest()
+      } else {
+        setError("Failed to fetch weather data for your location")
+      }
+    } catch (error) {
+      console.error("Location error:", error)
+      setError(error instanceof Error ? error.message : "Failed to get your location")
     } finally {
       setLoading(false)
     }
@@ -647,275 +722,320 @@ function WeatherApp() {
     );
   };
 
+  // Helper function to format location display
+  const formatLocationDisplay = (location: string, country: string): string => {
+    // Handle edge cases for long city names
+    const maxLength = 30;
+    if (location.length > maxLength) {
+      return `${location.substring(0, maxLength - 3)}...`;
+    }
+    return location;
+  };
+
+  // Helper function to get moon phase icon
+  const getMoonPhaseIcon = (phase: string): string => {
+    const phaseLower = phase.toLowerCase();
+    
+    if (phaseLower.includes('new')) return '●';
+    if (phaseLower.includes('waxing crescent')) return '🌒';
+    if (phaseLower.includes('first quarter')) return '🌓';
+    if (phaseLower.includes('waxing gibbous')) return '🌔';
+    if (phaseLower.includes('full')) return '🌕';
+    if (phaseLower.includes('waning gibbous')) return '🌖';
+    if (phaseLower.includes('last quarter')) return '🌗';
+    if (phaseLower.includes('waning crescent')) return '🌘';
+    
+    // Fallback for any other phases
+    return '🌑';
+  };
+
   return (
-    <div className={`min-h-screen ${themeClasses.background} relative overflow-x-hidden`}>
-      {/* Tron Light Cycle Watermark - only in Tron theme */}
-      {currentTheme === 'tron' && <TronLightCycleWatermark />}
-      
-      {/* Mobile-optimized main container with proper responsive padding */}
-      <div className="w-full min-h-screen flex flex-col items-center px-2 sm:px-4 py-4">
-        {/* Hero Section - Mobile responsive */}
-        <div className="w-full max-w-7xl mx-auto text-center mb-6 sm:mb-8">
-          <div className="mb-4 sm:mb-6">
-            <h1 className={`text-2xl sm:text-4xl md:text-6xl font-bold mb-2 sm:mb-4 font-mono uppercase tracking-wider ${themeClasses.headerText} ${themeClasses.glow} break-words`}>
-              16-BIT WEATHER
-            </h1>
+    <PageWrapper>
+      <div className={cn(
+        "min-h-screen",
+        theme === "dark" && "bg-gradient-to-b from-gray-900 to-black",
+        theme === "miami" && "bg-gradient-to-b from-pink-900 to-purple-900",
+        theme === "tron" && "bg-gradient-to-b from-black to-blue-900"
+      )}>
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-end items-center mb-8">
+            <ThemeToggle />
           </div>
 
-          {/* Weather Search Component - Mobile optimized */}
-          <div className="mb-6 sm:mb-8 w-full">
-            <WeatherSearch
-              onSearch={handleSearchWrapper}
-              onLocationSearch={handleLocationSearch}
-              isLoading={loading}
-              error={error}
-              isDisabled={isOnCooldown || remainingSearches <= 0}
-              rateLimitError={rateLimitError}
-              theme={currentTheme}
-            />
-          </div>
-        </div>
+          {/* TEMPORARY API TEST - REMOVE BEFORE PRODUCTION */}
+          {/* <ApiTest /> */}
 
-        {/* Main Content - Mobile responsive container */}
-        <div className="w-full max-w-7xl mx-auto">
-          {/* Error Display - Mobile optimized */}
-          {error && (
-            <div className={`${themeClasses.cardBg} p-3 sm:p-6 border-2 sm:border-4 pixel-border text-center ${themeClasses.borderColor} mb-4 sm:mb-6 mx-2 sm:mx-0`}>
-              <p className={`${themeClasses.accentText} font-mono text-sm sm:text-lg font-bold`}>⚠ ERROR</p>
-              <p className={`${themeClasses.text} mt-1 sm:mt-2 text-xs sm:text-base break-words`}>{error}</p>
+          <WeatherSearch
+            onSearch={handleSearch}
+            onLocationSearch={handleLocationSearch}
+            isLoading={loading}
+            error={error}
+            rateLimitError={rateLimitError}
+            isDisabled={isOnCooldown}
+            theme={theme}
+          />
+
+          {/* Location Display */}
+          {weather && !loading && !error && (
+            <div className="text-center mt-6 mb-6">
+              <div className={cn(
+                "inline-block p-4 rounded-lg border-2 shadow-lg",
+                theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
+              )}>
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-2xl">📍</span>
+                  <p className={cn(
+                    "text-xl font-bold uppercase tracking-wider pixel-font",
+                    theme === "dark" && "text-blue-400",
+                    theme === "miami" && "text-pink-400",
+                    theme === "tron" && "text-cyan-400"
+                  )} style={{ fontFamily: "monospace" }}>
+                    {formatLocationDisplay(weather.location, weather.country)}, {weather.country}
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
-          {weather && (
+          {/* 16-Bit Welcome Message */}
+          {!weather && !loading && !error && (
+            <div className="text-center mt-8 mb-8">
+              <div className={cn(
+                "inline-block p-6 rounded-lg border-2 shadow-lg",
+                theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
+              )}>
+                <p className={cn(
+                  "text-2xl font-bold uppercase tracking-wider pixel-font",
+                  theme === "dark" && "text-blue-400",
+                  theme === "miami" && "text-pink-400",
+                  theme === "tron" && "text-cyan-400"
+                )} style={{ fontFamily: "monospace" }}>
+                  Select a location to begin your forecast adventure!
+                </p>
+              </div>
+            </div>
+          )}
+
+          {loading && (
+            <div className="flex justify-center items-center mt-8">
+              <Loader2 className={cn(
+                "h-8 w-8 animate-spin",
+                theme === "dark" && "text-blue-500",
+                theme === "miami" && "text-pink-500",
+                theme === "tron" && "text-cyan-500"
+              )} />
+              <span className="ml-2 text-white">Loading weather data...</span>
+            </div>
+          )}
+
+          {error && (
+            <div className="text-red-500 text-center mt-4">
+              {error}
+            </div>
+          )}
+
+          {rateLimitError && (
+            <div className="text-yellow-500 text-center mt-4">
+              {rateLimitError}
+            </div>
+          )}
+
+          {weather && !loading && !error && (
             <div className="space-y-4 sm:space-y-6">
               {/* Current Weather */}
-              <div className={`${themeClasses.cardBg} p-4 sm:p-6 lg:p-8 border-2 sm:border-4 pixel-border ${themeClasses.borderColor} ${themeClasses.specialBorder} text-center`}>
-                <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 font-mono uppercase tracking-wider ${themeClasses.headerText}`}>
-                  CURRENT CONDITIONS
-                </h2>
-                
-                <div className="mb-4 sm:mb-6">
-                  <p className={`${themeClasses.secondaryText} font-mono text-sm sm:text-base`}>
-                    {weather.current.location}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Temperature Box */}
+                <div className={cn(
+                  "p-4 rounded-lg text-center border-2 shadow-lg",
+                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
+                )}>
+                  <h2 className="text-xl font-semibold mb-2 text-white">Temperature</h2>
+                  <p className="text-3xl font-bold text-white">{weather.temperature}{weather.unit}</p>
+                </div>
+
+                {/* Conditions Box */}
+                <div className={cn(
+                  "p-4 rounded-lg text-center border-2 shadow-lg",
+                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
+                )}>
+                  <h2 className="text-xl font-semibold mb-2 text-white">Conditions</h2>
+                  <p className="text-lg text-white">{weather.condition}</p>
+                  <p className="text-sm text-gray-400">{weather.description}</p>
+                </div>
+
+                {/* Wind Box */}
+                <div className={cn(
+                  "p-4 rounded-lg text-center border-2 shadow-lg",
+                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
+                )}>
+                  <h2 className="text-xl font-semibold mb-2 text-white">Wind</h2>
+                  <p className="text-lg text-white">
+                    {weather.wind.direction ? `${weather.wind.direction} ` : ''}
+                    {weather.wind.speed} mph
+                    {weather.wind.gust ? ` (gusts ${weather.wind.gust} mph)` : ''}
+                  </p>
+                </div>
+              </div>
+
+              {/* Sun Times, UV Index, Moon Phase */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Sun Times Box */}
+                <div className={cn(
+                  "p-4 rounded-lg text-center border-2 shadow-lg",
+                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
+                )}>
+                  <h2 className="text-xl font-semibold mb-2 text-white">Sun Times</h2>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-yellow-400">☀️</span>
+                      <p className="text-white">Sunrise: {weather.sunrise}</p>
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-orange-400">🌅</span>
+                      <p className="text-white">Sunset: {weather.sunset}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* UV Index Box */}
+                <div className={cn(
+                  "p-4 rounded-lg text-center border-2 shadow-lg",
+                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
+                )}>
+                  <h2 className="text-xl font-semibold mb-2 text-white">UV Index</h2>
+                  <p className="text-lg text-white font-bold">{weather.uvIndex}</p>
+                </div>
+
+                {/* Moon Phase Box */}
+                <div className={cn(
+                  "p-4 rounded-lg text-center border-2 shadow-lg",
+                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
+                )}>
+                  <h2 className="text-xl font-semibold mb-2 text-white">Moon Phase</h2>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-2xl">{getMoonPhaseIcon(weather.moonPhase.phase)}</span>
+                      <p className="text-lg text-white font-semibold">{weather.moonPhase.phase}</p>
+                    </div>
+                    <p className="text-sm text-gray-300 font-medium">
+                      {weather.moonPhase.illumination}% illuminated
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* AQI and Pollen Count */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* AQI Box */}
+                <div className={cn(
+                  "p-4 rounded-lg text-center border-2 shadow-lg",
+                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
+                )}>
+                  <h2 className="text-xl font-semibold mb-2 text-white">Air Quality</h2>
+                  <p className={`text-lg ${getAQIColor(weather.aqi)}`}>
+                    {weather.aqi} - {getAQIDescription(weather.aqi)}
+                  </p>
+                  <p className="text-sm text-gray-300 font-medium">
+                    {getAQIRecommendation(weather.aqi)}
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                  <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
-                    <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Temperature</h3>
-                    <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
-                      {weather.current.temp}°C
-                    </p>
-                  </div>
-                  <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
-                    <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Conditions</h3>
-                    <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
-                      {weather.current.description}
-                    </p>
-                  </div>
-                  <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
-                    <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Wind</h3>
-                    <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
-                      {weather.current.wind} km/h
-                    </p>
-                    <p className={`${themeClasses.secondaryText} text-sm`}>
-                      {weather.current.windDisplay}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Historical Records */}
-                {historicalData && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                    <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
-                      <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Record High</h3>
-                      <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
-                        {historicalData.daily.temperature_2m_max[0]}°C
-                      </p>
-                      <p className={`${themeClasses.secondaryText} text-sm`}>
-                        Set in {new Date(historicalData.daily.time[0]).getFullYear()}
-                      </p>
+                {/* Pollen Count Box */}
+                <div className={cn(
+                  "p-4 rounded-lg text-center border-2 shadow-lg",
+                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
+                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
+                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
+                )}>
+                  <h2 className="text-xl font-semibold mb-2 text-white">Pollen Count</h2>
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* Tree Group */}
+                    <div>
+                      <p className="text-sm text-gray-300 font-medium mb-1">Tree</p>
+                      {(() => {
+                        const treeData = Object.entries(weather.pollen.tree).filter(([_, category]) => category !== 'No Data');
+                        if (treeData.length === 0) {
+                          return <p className="text-sm text-gray-400">No Data</p>;
+                        } else if (treeData.length === 1) {
+                          const [plant, category] = treeData[0];
+                          return <p className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>;
+                        } else {
+                          return treeData.map(([plant, category]) => (
+                            <p key={plant} className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>
+                          ));
+                        }
+                      })()}
                     </div>
-                    <div className={`${themeClasses.background} p-4 border-2 ${themeClasses.secondaryText} ${themeClasses.specialBorder}`}>
-                      <h3 className={`${themeClasses.headerText} font-mono text-lg mb-2`}>Record Low</h3>
-                      <p className={`${themeClasses.text} text-2xl sm:text-3xl`}>
-                        {historicalData.daily.temperature_2m_min[0]}°C
-                      </p>
-                      <p className={`${themeClasses.secondaryText} text-sm`}>
-                        Set in {new Date(historicalData.daily.time[0]).getFullYear()}
-                      </p>
+                    {/* Grass Group */}
+                    <div>
+                      <p className="text-sm text-gray-300 font-medium mb-1">Grass</p>
+                      {(() => {
+                        const grassData = Object.entries(weather.pollen.grass).filter(([_, category]) => category !== 'No Data');
+                        if (grassData.length === 0) {
+                          return <p className="text-sm text-gray-400">No Data</p>;
+                        } else if (grassData.length === 1) {
+                          const [plant, category] = grassData[0];
+                          return <p className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>;
+                        } else {
+                          return grassData.map(([plant, category]) => (
+                            <p key={plant} className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>
+                          ));
+                        }
+                      })()}
+                    </div>
+                    {/* Weed Group */}
+                    <div>
+                      <p className="text-sm text-gray-300 font-medium mb-1">Weed</p>
+                      {(() => {
+                        const weedData = Object.entries(weather.pollen.weed).filter(([_, category]) => category !== 'No Data');
+                        if (weedData.length === 0) {
+                          return <p className="text-sm text-gray-400">No Data</p>;
+                        } else if (weedData.length === 1) {
+                          const [plant, category] = weedData[0];
+                          return <p className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>;
+                        } else {
+                          return weedData.map(([plant, category]) => (
+                            <p key={plant} className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>
+                          ));
+                        }
+                      })()}
                     </div>
                   </div>
-                )}
-
-                {/* Doppler Radar Button */}
-                <Link 
-                  href={`/radar?lat=${weather.current.lat}&lon=${weather.current.lon}&name=${encodeURIComponent(weather.current.location)}`}
-                  className="inline-block"
-                >
-                  <button
-                    className={`px-4 sm:px-6 py-2 sm:py-3 border-2 sm:border-4 text-sm sm:text-lg font-mono font-bold uppercase tracking-wider transition-all duration-300 ${themeClasses.borderColor} ${themeClasses.cardBg} ${themeClasses.headerText} touch-manipulation min-h-[44px] hover:${themeClasses.buttonHover}`}
-                  >
-                    View Doppler Radar
-                  </button>
-                </Link>
-              </div>
-
-              {/* 5-Day Forecast - Mobile optimized */}
-              <div className="mx-2 sm:mx-0">
-                <Forecast forecast={weather.forecast} theme={currentTheme} />
-              </div>
-
-              {/* Historical Data Chart Widget */}
-              <div className="mx-2 sm:mx-0">
-                <HistoricalChart 
-                  currentTheme={currentTheme}
-                  latitude={weather.current.lat}
-                  longitude={weather.current.lon}
-                  locationName={weather.current.location}
-                />
-              </div>
-
-              {/* Radar Toggle - Mobile friendly button */}
-              <div className="text-center mb-4 sm:mb-6">
-                <button
-                  onClick={() => setShowRadar(!showRadar)}
-                  className={`px-4 sm:px-6 py-2 sm:py-3 border-2 sm:border-4 text-sm sm:text-lg font-mono font-bold uppercase tracking-wider transition-all duration-300 ${themeClasses.borderColor} ${themeClasses.cardBg} ${themeClasses.headerText} touch-manipulation min-h-[44px]`}
-                >
-                  {showRadar ? '📡 HIDE RADAR' : '📡 SHOW DOPPLER RADAR'}
-                </button>
-              </div>
-
-              {/* Expanded Doppler Radar Display - Mobile responsive */}
-              {showRadar && API_KEY && (
-                <div className="w-full mx-2 sm:mx-0">
-                  <div className="w-full max-w-7xl mx-auto">
-                    <RadarDisplay
-                      lat={weather.current.lat}
-                      lon={weather.current.lon}
-                      apiKey={API_KEY}
-                      theme={currentTheme}
-                      locationName={weather.current.location}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Quick Access Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                <Link 
-                  href="/cloud-types" 
-                  className={`${themeClasses.cardBg} ${themeClasses.borderColor} border-2 p-4 hover:scale-105 transition-all duration-300 ${themeClasses.glow}`}
-                >
-                  <div className={`${themeClasses.headerText} text-center`}>
-                    <Cloud className="w-8 h-8 mx-auto mb-2" />
-                    <div className="font-bold text-sm uppercase tracking-wider">Cloud Atlas</div>
-                    <div className={`${themeClasses.secondaryText} text-xs mt-1`}>Identify Cloud Types</div>
-                  </div>
-                </Link>
-                
-                <Link 
-                  href="/weather-systems" 
-                  className={`${themeClasses.cardBg} ${themeClasses.borderColor} border-2 p-4 hover:scale-105 transition-all duration-300 ${themeClasses.glow}`}
-                >
-                  <div className={`${themeClasses.headerText} text-center`}>
-                    <Zap className="w-8 h-8 mx-auto mb-2" />
-                    <div className="font-bold text-sm uppercase tracking-wider">Weather Systems</div>
-                    <div className={`${themeClasses.secondaryText} text-xs mt-1`}>Interactive Database</div>
-                  </div>
-                </Link>
-
-                <Link 
-                  href="/fun-facts" 
-                  className={`${themeClasses.cardBg} ${themeClasses.borderColor} border-2 p-4 hover:scale-105 transition-all duration-300 ${themeClasses.glow}`}
-                >
-                  <div className={`${themeClasses.headerText} text-center`}>
-                    <Flame className="w-8 h-8 mx-auto mb-2" />
-                    <div className="font-bold text-sm uppercase tracking-wider">16-Bit Takes</div>
-                    <div className={`${themeClasses.secondaryText} text-xs mt-1`}>Weather Phenomena</div>
-                  </div>
-                </Link>
-              </div>
-            </div>
-          )}
-
-          {/* Enhanced Welcome Message - Mobile responsive */}
-          {!weather && !loading && (
-            <div className={`${themeClasses.cardBg} p-4 sm:p-6 lg:p-8 border-2 sm:border-4 pixel-border text-center ${themeClasses.borderColor} ${themeClasses.specialBorder} mx-2 sm:mx-0`}>
-              {/* Cool ASCII Art Header - BIT WEATHER */}
-              <div className={`${themeClasses.headerText} font-mono text-xs sm:text-sm mb-4 sm:mb-6 whitespace-pre-line ${themeClasses.glow} overflow-x-auto`}>
-                <div className="hidden sm:block">
-{`  ▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄      ▄     ▄   ▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄   ▄     ▄   ▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄  
- ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░░▌    ▐░▌   ▐░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░▌   ▐░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ 
- ▐░█▀▀▀█░▌ ▐░█▀▀▀▀▀  ▀▀▀▀█░█▀▀      ▐░▌ ▐░▌  ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  ▐░▌   ▐░▌ ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  
- ▐░▌   ▐░▌ ▐░▌           ▐░▌        ▐░▌▐░▌   ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  ▐░▌   ▐░▌ ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  
- ▐░█▄▄▄█░▌ ▐░█▄▄▄▄▄      ▐░▌        ▐░▌░▌    ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░▌   ▐░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ 
- ▐░░░░░░░▌  ▐░░░░░░▌     ▐░▌        ▐░▌ ▐░▌  ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  ▐░▌   ▐░▌ ▐░█▀▀▀▀▀  ▐░█▀▀▀▀▀  
- ▐░█▀▀▀█░▌       ▐░▌     ▐░▌        ▐░▌  ▐░▌ ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  ▐░█▄▄▄█░▌ ▐░█▄▄▄▄▄  ▐░█▄▄▄▄▄  
- ▐░▌   ▐░▌  ▄▄▄▄▄█░▌     ▐░▌        ▐░▌   ▐░▌▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░▌  ▐░░░░░░░▌ ▐░░░░░░░▌ 
-  ▀     ▀  ▐░░░░░░▌     ▀          ▀     ▀  ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀    ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀  
-         ▀▀▀▀▀▀▀▀                                                                                                 `}
-                </div>
-                <div className="block sm:hidden text-center">
-                  <div className={`text-lg font-bold ${themeClasses.headerText}`}>16-BIT WEATHER</div>
-                </div>
-              </div>
-              
-              <h3 className={`text-xl sm:text-2xl lg:text-4xl font-bold mb-4 sm:mb-6 font-mono uppercase tracking-wider ${themeClasses.headerText} ${themeClasses.glow} animate-pulse break-words px-2`}>
-                🌟 RETRO WEATHER TERMINAL 🌟
-              </h3>
-              
-              <div className={`${themeClasses.text} mb-6 sm:mb-8 font-mono text-sm sm:text-base lg:text-lg space-y-2 sm:space-y-3 px-2`}>
-                <p>🎮 Experience weather data like it's 1985!</p>
-                <p>📊 Real-time meteorological data with pixel-perfect styling</p>
-                <p className="hidden sm:block">🌈 Choose from Dark Terminal, Miami Vice, or Tron Grid themes</p>
-                <p className="hidden sm:block">📡 Complete with Doppler radar and atmospheric analysis</p>
-              </div>
-              
-              <div className={`${themeClasses.cardBg} p-3 sm:p-4 lg:p-6 border-2 ${themeClasses.borderColor} mb-6 sm:mb-8 max-w-xl mx-auto ${themeClasses.specialBorder}`}>
-                <div className={`${themeClasses.successText} font-mono text-sm sm:text-base font-bold mb-3 sm:mb-4 animate-pulse`}>
-                  🔍 LOCATION SEARCH PROTOCOLS:
-                </div>
-                <div className={`${themeClasses.text} font-mono text-xs sm:text-sm space-y-1 sm:space-y-2`}>
-                  <p>📍 <strong>City names:</strong> "Paris", "Tokyo", "London"</p>
-                  <p>🏢 <strong>City + State:</strong> "Austin, TX", "Miami, FL"</p>
-                  <p>🌍 <strong>City + Country:</strong> "Toronto, Canada"</p>
-                  <p>📮 <strong>ZIP/Postal:</strong> "90210", "10001"</p>
-                  <p className="hidden sm:block">📍 <strong>Coordinates:</strong> "40.7128,-74.0060"</p>
                 </div>
               </div>
 
-              <div className="space-y-2 sm:space-y-3">
-                <div className={`${themeClasses.headerText} font-mono text-lg sm:text-xl font-bold animate-pulse`}>
-                  ⚡ SELECT A CITY TO BEGIN YOUR WEATHER QUEST ⚡
-                </div>
-                <div className={`${themeClasses.secondaryText} font-mono text-xs sm:text-sm`}>
-                  Caching enabled • Return visits will load your last searched location
-                </div>
-              </div>
-
-              {/* Retro Loading Animation - Mobile responsive */}
-              <div className="mt-4 sm:mt-6 flex justify-center space-x-2">
-                <div className={`w-2 h-2 sm:w-3 sm:h-3 ${themeClasses.cardBg} border ${themeClasses.borderColor} animate-pulse`}></div>
-                <div className={`w-2 h-2 sm:w-3 sm:h-3 ${themeClasses.cardBg} border ${themeClasses.borderColor} animate-pulse`} style={{animationDelay: '0.2s'}}></div>
-                <div className={`w-2 h-2 sm:w-3 sm:h-3 ${themeClasses.cardBg} border ${themeClasses.borderColor} animate-pulse`} style={{animationDelay: '0.4s'}}></div>
-              </div>
+              {/* Forecast */}
+              <Forecast forecast={weather.forecast} theme={theme} />
             </div>
           )}
         </div>
       </div>
-
-      {/* Tron Animated Grid Background */}
-      <TronGridBackground />
-    </div>
-  )
+      <Analytics />
+    </PageWrapper>
+  );
 }
 
 export default function HomePage() {
   return (
-    <PageWrapper>
-      <WeatherApp />
-    </PageWrapper>
+    <WeatherApp />
   )
 }
 

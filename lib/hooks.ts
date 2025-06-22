@@ -1,23 +1,44 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 /**
- * Custom hook for debounced search input
+ * Custom hook for debounced search input with improved rate limiting
  * @param callback Function to call after debounce delay
  * @param delay Debounce delay in milliseconds
+ * @param minLength Minimum length required before triggering search
  * @returns [value, setValue] - Current value and setter function
  */
-export function useDebounce<T>(callback: (value: T) => void, delay: number = 300): [T, (value: T) => void] {
+export function useDebounce<T>(
+  callback: (value: T) => void, 
+  delay: number = 500, 
+  minLength: number = 3
+): [T, (value: T) => void] {
   const [value, setValue] = useState<T>({} as T)
+  const lastCalledValue = useRef<T | null>(null)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      callback(value)
-    }, delay)
+    // Clear previous timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+    }
+
+    // Only proceed if value meets minimum length requirement
+    if (typeof value === 'string' && value.length >= minLength) {
+      timeoutRef.current = setTimeout(() => {
+        // Prevent duplicate API calls for the same value
+        if (JSON.stringify(value) !== JSON.stringify(lastCalledValue.current)) {
+          lastCalledValue.current = value
+          callback(value)
+        }
+      }, delay)
+    }
 
     return () => {
-      clearTimeout(timer)
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
     }
-  }, [value, delay, callback])
+  }, [value, delay, callback, minLength])
 
   return [value, setValue]
 }

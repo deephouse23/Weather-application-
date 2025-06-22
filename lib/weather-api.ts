@@ -76,9 +76,54 @@ interface MoonPhaseInfo {
   phaseAngle: number;
 }
 
+interface WindData {
+  speed: number;
+  direction?: string;
+  gust?: number;
+}
+
 const BASE_URL = 'https://api.openweathermap.org/data/2.5';
 const BASE_URL_V3 = 'https://api.openweathermap.org/data/3.0';
 const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
+
+// Validate API key
+const validateApiKey = () => {
+  // Debug environment variables
+  console.log('🔍 ENVIRONMENT VARIABLE DEBUG:');
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('REACT_APP_OPENWEATHER_API_KEY:', process.env.REACT_APP_OPENWEATHER_API_KEY ? 'SET' : 'MISSING');
+  console.log('NEXT_PUBLIC_OPENWEATHER_API_KEY:', process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY ? 'SET' : 'MISSING');
+  console.log('All env vars starting with REACT_APP_:', Object.keys(process.env).filter(key => key.startsWith('REACT_APP_')));
+  console.log('All env vars starting with NEXT_PUBLIC_:', Object.keys(process.env).filter(key => key.startsWith('NEXT_PUBLIC_')));
+  
+  // Try both variable names for compatibility
+  const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || process.env.REACT_APP_OPENWEATHER_API_KEY;
+  
+  if (!apiKey) {
+    console.error('❌ OpenWeather API key is missing!');
+    console.error('Please set either NEXT_PUBLIC_OPENWEATHER_API_KEY or REACT_APP_OPENWEATHER_API_KEY environment variable.');
+    console.error('For Next.js, use NEXT_PUBLIC_OPENWEATHER_API_KEY');
+    throw new Error('OpenWeather API key not configured');
+  }
+  
+  console.log('✅ OpenWeather API key found:', apiKey.substring(0, 8) + '...');
+  return apiKey;
+};
+
+// Validate Google Pollen API key
+const validateGooglePollenApiKey = () => {
+  // Try both variable names for compatibility
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY || process.env.REACT_APP_GOOGLE_POLLEN_API_KEY;
+  
+  if (!apiKey) {
+    console.warn('⚠️ Google Pollen API key is missing!');
+    console.warn('Please set either NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY or REACT_APP_GOOGLE_POLLEN_API_KEY environment variable for real pollen data.');
+    return null;
+  }
+  
+  console.log('✅ Google Pollen API key found:', apiKey.substring(0, 8) + '...');
+  return apiKey;
+};
 
 /**
  * Convert wind degrees to 8-point compass direction
@@ -208,23 +253,33 @@ const shouldUseMetricUnits = (countryCode: string): boolean => {
   return !imperialCountries.includes(countryCode);
 };
 
-// Enhanced temperature formatting
+// Temperature conversion functions
+const celsiusToFahrenheit = (celsius: number): number => Math.round((celsius * 9/5) + 32);
+const fahrenheitToCelsius = (fahrenheit: number): number => Math.round((fahrenheit - 32) * 5/9);
+
+// Location-based unit detection
+const isUSALocation = (country: string): boolean => country === 'US' || country === 'USA';
+const shouldUseFahrenheit = (countryCode: string): boolean => isUSALocation(countryCode);
+
+// Enhanced temperature formatting with proper unit handling
 const formatTemperature = (temp: number, countryCode: string): { value: number; unit: string; display: string } => {
-  const useMetric = shouldUseMetricUnits(countryCode);
+  console.log('Formatting temperature:', { temp, countryCode });
+  const useF = shouldUseFahrenheit(countryCode);
+  console.log('Using Fahrenheit:', useF);
   
-  if (useMetric) {
-    // Convert Fahrenheit to Celsius if needed
-    const tempC = (temp - 32) * 5/9;
+  if (useF) {
+    return {
+      value: temp,
+      unit: '°F',
+      display: `${Math.round(temp)}°F`
+    };
+  } else {
+    // Convert to Celsius if needed
+    const tempC = fahrenheitToCelsius(temp);
     return {
       value: tempC,
       unit: '°C',
-      display: `${Math.round(tempC)}°C`
-    };
-  } else {
-    return {
-      value: temp,
-      unit: '°F', 
-      display: `${Math.round(temp)}°F`
+      display: `${tempC}°C`
     };
   }
 };
@@ -542,64 +597,32 @@ const calculateMoonPhase = (): MoonPhaseInfo => {
 };
 
 // Process 5-day forecast data to extract daily high/low temperatures
-const processDailyForecast = (forecastData: OpenWeatherMapForecastResponse) => {
-  const dailyData: { [key: string]: { 
-    temps: number[]; 
-    conditions: string[]; 
-    descriptions: string[]; 
-    date: Date;
-  } } = {};
-
-  // Group forecast data by day
-  forecastData.list.forEach((item) => {
-    const date = new Date(item.dt * 1000);
-    const dateKey = date.toDateString(); // Use date string as key
-    
-    if (!dailyData[dateKey]) {
-      dailyData[dateKey] = {
-        temps: [],
-        conditions: [],
-        descriptions: [],
-        date: date
-      };
-    }
-    
-    dailyData[dateKey].temps.push(item.main.temp);
-    dailyData[dateKey].conditions.push(item.weather[0].main);
-    dailyData[dateKey].descriptions.push(item.weather[0].description);
-  });
-
-  // Convert to forecast array, excluding today and taking next 5 days
-  const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-  const today = new Date().toDateString();
+const processDailyForecast = (forecastData: OpenWeatherMapForecastResponse, useFahrenheit: boolean) => {
+  const dailyTemps: { [key: string]: { high: number; low: number; condition: string; description: string } } = {};
   
-  return Object.entries(dailyData)
-    .filter(([dateKey]) => dateKey !== today) // Exclude today
-    .slice(0, 5) // Take next 5 days
-    .map(([dateKey, data]) => {
-      const highTemp = Math.round(Math.max(...data.temps));
-      const lowTemp = Math.round(Math.min(...data.temps));
-      
-      // Use the most common condition for the day
-      const conditionCounts: { [key: string]: number } = {};
-      data.conditions.forEach(condition => {
-        conditionCounts[condition] = (conditionCounts[condition] || 0) + 1;
-      });
-      const dominantCondition = Object.entries(conditionCounts)
-        .sort(([,a], [,b]) => b - a)[0][0];
-      
-      // Use the first description for the dominant condition
-      const conditionIndex = data.conditions.findIndex(c => c === dominantCondition);
-      const description = data.descriptions[conditionIndex];
-      
-      return {
-        day: dayNames[data.date.getDay()],
-        highTemp,
-        lowTemp,
-        condition: mapWeatherCondition(dominantCondition),
-        description
+  forecastData.list.forEach((item) => {
+    const date = new Date(item.dt * 1000).toLocaleDateString('en-US', { weekday: 'long' });
+    
+    if (!dailyTemps[date]) {
+      dailyTemps[date] = {
+        high: item.main.temp_max,
+        low: item.main.temp_min,
+        condition: item.weather[0].main,
+        description: item.weather[0].description
       };
-    });
+    } else {
+      dailyTemps[date].high = Math.max(dailyTemps[date].high, item.main.temp_max);
+      dailyTemps[date].low = Math.min(dailyTemps[date].low, item.main.temp_min);
+    }
+  });
+  
+  return Object.entries(dailyTemps).map(([day, data]) => ({
+    day,
+    highTemp: useFahrenheit ? Math.round(data.high) : fahrenheitToCelsius(data.high),
+    lowTemp: useFahrenheit ? Math.round(data.low) : fahrenheitToCelsius(data.low),
+    condition: mapWeatherCondition(data.condition),
+    description: data.description
+  }));
 };
 
 // Enhanced pressure formatting utilities with better regional support
@@ -644,131 +667,434 @@ const formatPressureValue = (pressureHPa: number, unit: 'hPa' | 'inHg'): { value
   }
 };
 
-// Enhanced UV Index fetching with time-aware logic
-const fetchCurrentWeatherData = async (lat: number, lon: number, apiKey: string): Promise<{ uvIndex: number; uvDescription: string }> => {
+// Add UV Index API endpoint with detailed debugging
+const fetchUVIndex = async (lat: number, lon: number, apiKey: string): Promise<number> => {
+  console.log('=== UV INDEX NIGHTTIME DEBUG ===');
+  console.log('Coordinates:', { lat, lon });
+  
   try {
-    // Use One Call API 3.0 which includes real-time UV Index
-    const oneCallResponse = await fetch(
-      `${BASE_URL_V3}/onecall?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial&exclude=minutely,daily,alerts`
-    );
-
-    if (!oneCallResponse.ok) {
-      console.warn('Failed to fetch UV Index from One Call API 3.0 - Status:', oneCallResponse.status);
-      return { uvIndex: 0, uvDescription: 'N/A' };
+    // First, get current weather data to determine if it's day or night
+    const currentWeatherUrl = `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`;
+    console.log('Getting current weather for UV calculation:', currentWeatherUrl);
+    
+    const currentResponse = await fetch(currentWeatherUrl);
+    if (!currentResponse.ok) {
+      console.error('Current weather API failed for UV calculation:', currentResponse.status);
+      return 0;
     }
-
-    const oneCallData = await oneCallResponse.json();
     
-    // Get UV Index from One Call API 3.0 current data
-    const uvIndex = Math.round(oneCallData.current?.uvi || 0);
-    const uvDescription = getUVDescription(uvIndex);
+    const currentData = await currentResponse.json();
+    console.log('Current weather data for UV calculation:', currentData);
     
-    return { uvIndex, uvDescription };
+    // Extract sunrise, sunset, and timezone data
+    const sunrise = currentData.sys.sunrise;
+    const sunset = currentData.sys.sunset;
+    const timezone = currentData.timezone;
+    const currentTime = currentData.dt;
+    
+    console.log('Sunrise timestamp:', sunrise);
+    console.log('Sunset timestamp:', sunset);
+    console.log('Current time timestamp:', currentTime);
+    console.log('Timezone offset (seconds):', timezone);
+    
+    // Calculate local times
+    const localCurrentTime = currentTime + timezone;
+    const localSunrise = sunrise + timezone;
+    const localSunset = sunset + timezone;
+    
+    console.log('Local current time:', new Date(localCurrentTime * 1000).toLocaleString('en-US', {timeZone: 'UTC'}));
+    console.log('Local sunrise time:', new Date(localSunrise * 1000).toLocaleString('en-US', {timeZone: 'UTC'}));
+    console.log('Local sunset time:', new Date(localSunset * 1000).toLocaleString('en-US', {timeZone: 'UTC'}));
+    
+    // Check if it's currently day or night
+    const isDaytime = localCurrentTime >= localSunrise && localCurrentTime <= localSunset;
+    console.log('Is currently daytime?', isDaytime);
+    
+    // If it's nighttime, return 0 immediately
+    if (!isDaytime) {
+      console.log('UV Index: 0 (nighttime)');
+      return 0;
+    }
+    
+    // If it's daytime, fetch the actual UV index
+    console.log('Fetching UV Index for daytime...');
+    const uvApiUrl = `${BASE_URL}/uvi?lat=${lat}&lon=${lon}&appid=${apiKey}`;
+    console.log('UV API URL:', uvApiUrl);
+    
+    const response = await fetch(uvApiUrl);
+    console.log('UV API Response Status:', response.status);
+    
+    if (!response.ok) {
+      console.error('UV Index API failed:', response.status, response.statusText);
+      
+      // Try alternative endpoint for UV Index
+      const altUvUrl = `${BASE_URL_V3}/onecall?lat=${lat}&lon=${lon}&exclude=current,minutely,hourly,daily,alerts&appid=${apiKey}`;
+      console.log('Trying alternative UV API URL:', altUvUrl);
+      
+      const altResponse = await fetch(altUvUrl);
+      if (altResponse.ok) {
+        const altData = await altResponse.json();
+        console.log('Alternative UV API Response:', altData);
+        const uvIndex = altData.current?.uvi || 0;
+        console.log('Alternative UV Index value:', uvIndex);
+        return Math.round(uvIndex);
+      }
+      
+      return 0;
+    }
+    
+    const data = await response.json();
+    console.log('UV API Response Data:', data);
+    
+    // Check both possible properties for UV index
+    const uvIndex = data.value || data.uvi || 0;
+    console.log('UV Index value:', uvIndex);
+    
+    if (!uvIndex) {
+      console.error('UV Index not found in response');
+      return 0;
+    }
+    
+    const roundedUV = Math.round(uvIndex);
+    console.log('Final UV Index (rounded):', roundedUV);
+    return roundedUV;
+    
   } catch (error) {
-    console.warn('Failed to fetch UV Index from One Call API 3.0:', error);
-    return { uvIndex: 0, uvDescription: 'N/A' };
+    console.error('UV Index API error:', error);
+    return 0;
+  }
+};
+
+// Add Pollen API endpoint with real Google Pollen API
+const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: string): Promise<{ tree: Record<string, string>; grass: Record<string, string>; weed: Record<string, string> }> => {
+  console.log('=== POLLEN DATA DEBUG ===');
+  console.log('Coordinates:', { lat, lon });
+  console.log('OpenWeather API Key available:', !!openWeatherApiKey);
+  
+  // Use real Google Pollen API
+  const googlePollenApiKey = validateGooglePollenApiKey();
+  console.log('Google Pollen API Key available:', !!googlePollenApiKey);
+  
+  if (googlePollenApiKey) {
+    try {
+      console.log('🔍 Attempting to fetch real pollen data from Google Pollen API...');
+      const googlePollenUrl = `https://pollen.googleapis.com/v1/forecast:lookup?key=${googlePollenApiKey}&location.latitude=${lat}&location.longitude=${lon}&days=1`;
+      console.log('Google Pollen API URL:', googlePollenUrl);
+      
+      const response = await fetch(googlePollenUrl);
+      console.log('Google Pollen API Response Status:', response.status);
+      console.log('Google Pollen API Response Headers:', Object.fromEntries(response.headers.entries()));
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Google Pollen API Response Data:', data);
+        console.log('Full Google Pollen API Response:', JSON.stringify(data, null, 2));
+        
+        // Parse the actual Google Pollen API response
+        const dailyInfo = data.dailyInfo?.[0];
+        console.log('Daily Info:', dailyInfo);
+        
+        if (dailyInfo) {
+          console.log('Pollen Type Info:', dailyInfo.pollenTypeInfo);
+          console.log('Plant Info:', dailyInfo.plantInfo);
+          
+          // Helper function to convert pollen value to category
+          const getPollenCategory = (value: number): string => {
+            if (value === 0) return 'No Data';
+            if (value <= 2) return 'Low';
+            if (value <= 5) return 'Moderate';
+            if (value <= 8) return 'High';
+            return 'Very High';
+          };
+
+          // Plant code groupings
+          const treePlants = ['MAPLE', 'ELM', 'COTTONWOOD', 'ALDER', 'BIRCH', 'ASH', 'PINE', 'OAK', 'JUNIPER'];
+          const grassPlants = ['GRAMINALES'];
+          const weedPlants = ['RAGWEED', 'WEED'];
+
+          // Helper to extract all plants of a group
+          const extractPlantCategories = (plants: any[], group: string[]): Record<string, string> => {
+            const result: Record<string, string> = {};
+            plants?.forEach((p: any) => {
+              const code = p.code || p.displayName || '';
+              if (group.some(type => code.includes(type))) {
+                const value = p.indexInfo?.value || 0;
+                const category = p.indexInfo?.category || getPollenCategory(value);
+                result[p.displayName || code] = category;
+              }
+            });
+            return result;
+          };
+
+          const plantInfo = dailyInfo.plantInfo || [];
+          const treeBreakdown = extractPlantCategories(plantInfo, treePlants);
+          const grassBreakdown = extractPlantCategories(plantInfo, grassPlants);
+          const weedBreakdown = extractPlantCategories(plantInfo, weedPlants);
+
+          // Fallback to pollenTypeInfo if no plantInfo for a group
+          const pollenTypeTree = dailyInfo.pollenTypeInfo?.find((p: any) => p.code === 'TREE');
+          const pollenTypeGrass = dailyInfo.pollenTypeInfo?.find((p: any) => p.code === 'GRASS');
+          const pollenTypeWeed = dailyInfo.pollenTypeInfo?.find((p: any) => p.code === 'WEED');
+
+          if (Object.keys(treeBreakdown).length === 0 && pollenTypeTree) {
+            treeBreakdown['Tree'] = pollenTypeTree.indexInfo?.category || getPollenCategory(pollenTypeTree.indexInfo?.value || 0);
+          }
+          if (Object.keys(grassBreakdown).length === 0 && pollenTypeGrass) {
+            grassBreakdown['Grass'] = pollenTypeGrass.indexInfo?.category || getPollenCategory(pollenTypeGrass.indexInfo?.value || 0);
+          }
+          if (Object.keys(weedBreakdown).length === 0 && pollenTypeWeed) {
+            weedBreakdown['Weed'] = pollenTypeWeed.indexInfo?.category || getPollenCategory(pollenTypeWeed.indexInfo?.value || 0);
+          }
+
+          // Log for debugging
+          console.log('Tree breakdown:', treeBreakdown);
+          console.log('Grass breakdown:', grassBreakdown);
+          console.log('Weed breakdown:', weedBreakdown);
+
+          const pollenData = {
+            tree: treeBreakdown,
+            grass: grassBreakdown,
+            weed: weedBreakdown
+          };
+
+          console.log('Final parsed pollen data from Google API:', pollenData);
+          return pollenData;
+        } else {
+          console.warn('No daily pollen info found in Google API response');
+          console.log('Available keys in response:', Object.keys(data));
+        }
+      } else {
+        console.error('Google Pollen API failed:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+      }
+    } catch (error) {
+      console.error('Google Pollen API error:', error);
+    }
+  }
+  
+  // Fallback to OpenWeather Air Pollution API only if Google API fails
+  console.log('🔄 Falling back to OpenWeather Air Pollution API for basic air quality data...');
+  try {
+    const airPollutionUrl = `${BASE_URL}/air_pollution?lat=${lat}&lon=${lon}&appid=${openWeatherApiKey}`;
+    console.log('OpenWeather Air Pollution API URL:', airPollutionUrl);
+    
+    const response = await fetch(airPollutionUrl);
+    console.log('OpenWeather Air Pollution API Response Status:', response.status);
+    
+    if (!response.ok) {
+      console.warn('OpenWeather Air Pollution API failed:', response.status, response.statusText);
+      return { tree: { 'Tree': 'No Data' }, grass: { 'Grass': 'No Data' }, weed: { 'Weed': 'No Data' } };
+    }
+    
+    const data = await response.json();
+    console.log('OpenWeather Air Pollution API Response Data:', data);
+    
+    // Use air quality as fallback (not seasonal estimates)
+    const airQualityIndex = data.list?.[0]?.main?.aqi || 1;
+    const pm10 = data.list?.[0]?.components?.pm10 || 0;
+    const pm2_5 = data.list?.[0]?.components?.pm2_5 || 0;
+    
+    console.log('Air quality fallback data:', { airQualityIndex, pm10, pm2_5 });
+    
+    // Simple fallback based on air quality (not seasonal estimates)
+    const getPollenCategory = (value: number): string => {
+      if (value === 0) return 'No Data';
+      if (value <= 2) return 'Low';
+      if (value <= 5) return 'Moderate';
+      if (value <= 8) return 'High';
+      return 'Very High';
+    };
+    
+    const pollenData = {
+      tree: { 'Tree': getPollenCategory(Math.min(Math.round(airQualityIndex * 10), 100)) },
+      grass: { 'Grass': getPollenCategory(Math.min(Math.round(airQualityIndex * 8), 100)) },
+      weed: { 'Weed': getPollenCategory(Math.min(Math.round(airQualityIndex * 6), 100)) }
+    };
+    
+    console.log('Fallback pollen data (air quality based):', pollenData);
+    console.log('Note: Using air quality fallback. For real pollen data, ensure Google Pollen API key is properly configured.');
+    
+    return pollenData;
+    
+  } catch (error) {
+    console.warn('OpenWeather Air Pollution API error:', error);
+    console.log('Returning default pollen values');
+    return { tree: { 'Tree': 'No Data' }, grass: { 'Grass': 'No Data' }, weed: { 'Weed': 'No Data' } };
+  }
+};
+
+// Fetch Air Quality from Google Air Quality API
+const fetchAirQualityData = async (lat: number, lon: number, cityName?: string): Promise<{ aqi: number; category: string }> => {
+  console.log('=== FETCHING AIR QUALITY DATA ===');
+  console.log('=== AIR QUALITY COORDINATE DEBUG ===');
+  console.log('City being searched:', cityName || 'Unknown');
+  console.log('Coordinates passed to Air Quality API:', { latitude: lat, longitude: lon });
+  
+  // Store previous coordinates for comparison (in a simple way for debugging)
+  const previousCoordinates = (globalThis as any).lastAirQualityCoordinates;
+  console.log('Previous coordinates (if cached):', previousCoordinates);
+  
+  // Update stored coordinates
+  (globalThis as any).lastAirQualityCoordinates = { latitude: lat, longitude: lon };
+  
+  console.log('Fetching Air Quality for:', cityName || 'Unknown', 'at coordinates:', lat, lon);
+  
+  const googleApiKey = validateGooglePollenApiKey();
+  console.log('Google Air Quality API Key available:', !!googleApiKey);
+  
+  if (!googleApiKey) {
+    console.warn('No Google Air Quality API key found. Returning default AQI.');
+    return { aqi: 0, category: 'No Data' };
+  }
+  
+  try {
+    const url = `https://airquality.googleapis.com/v1/currentConditions:lookup?key=${googleApiKey}`;
+    const payload = JSON.stringify({ location: { latitude: lat, longitude: lon } });
+    
+    console.log('Air Quality API URL and payload:', url, payload);
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload
+    });
+    
+    console.log('Google Air Quality API Response Status:', response.status);
+    console.log('Google Air Quality API Response Headers:', Object.fromEntries(response.headers.entries()));
+    
+    if (!response.ok) {
+      console.error('Google Air Quality API failed:', response.status, response.statusText);
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
+      return { aqi: 0, category: 'No Data' };
+    }
+    
+    const responseData = await response.json();
+    console.log('Google Air Quality API Response Data:', responseData);
+    console.log('Full Google Air Quality API Response:', JSON.stringify(responseData, null, 2));
+    
+    // Parse AQI value and category with correct data path
+    const indexes = responseData?.indexes;
+    console.log('Indexes:', indexes);
+    
+    const aqiValue = indexes?.[0]?.aqi || 0;
+    const aqiCategory = indexes?.[0]?.category || 'No Data';
+    
+    console.log('AQI value extracted:', aqiValue);
+    console.log('AQI category extracted:', aqiCategory);
+    
+    const finalAirQualityObject = { aqi: aqiValue, category: aqiCategory };
+    console.log('Final air quality object:', finalAirQualityObject);
+    
+    return finalAirQualityObject;
+    
+  } catch (error) {
+    console.error('Google Air Quality API error:', error);
+    return { aqi: 0, category: 'No Data' };
   }
 };
 
 export const fetchWeatherData = async (locationInput: string, apiKey: string): Promise<WeatherData> => {
-  if (!apiKey) {
-    throw new Error('API key is required')
-  }
-
-  // Check cache first
-  const cached = getCachedWeatherData()
-  if (cached.data && cached.location === locationInput && !cached.isStale) {
-    return cached.data
-  }
-
-  const locationQuery = parseLocationInput(locationInput)
+  console.log('Fetching weather data for:', locationInput);
   
   try {
-    // Deduplicate geocoding requests
-    const { lat, lon, displayName } = await deduplicateRequest(
-      `geocode_${locationInput}`,
-      () => geocodeLocation(locationQuery, apiKey)
-    )
+    // Validate API key
+    const validApiKey = validateApiKey();
     
-    // Deduplicate weather data requests
-    const currentData = await deduplicateRequest(
-      `current_${lat}_${lon}`,
-      () => withRetry(async () => {
-        const response = await fetch(
-          `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`
-        )
+    // Parse location input
+    const locationQuery = parseLocationInput(locationInput);
+    console.log('Parsed location query:', locationQuery);
 
-        if (!response.ok) {
-          throw new Error(`Weather API error: ${response.status}`)
-        }
+    // Geocode location
+    const { lat, lon, displayName } = await geocodeLocation(locationQuery, validApiKey);
+    console.log('Geocoded location:', { lat, lon, displayName });
 
-        return response.json()
-      })
-    )
+    // Fetch current weather
+    const currentWeatherUrl = `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${validApiKey}&units=imperial`;
+    console.log('Fetching current weather from:', currentWeatherUrl);
+    
+    const currentWeatherResponse = await fetch(currentWeatherUrl);
+    if (!currentWeatherResponse.ok) {
+      throw new Error(`Current weather API call failed: ${currentWeatherResponse.status}`);
+    }
+    const currentWeatherData = await currentWeatherResponse.json();
+    console.log('Current weather response:', currentWeatherData);
 
-    // Deduplicate forecast requests
-    const forecastData = await deduplicateRequest(
-      `forecast_${lat}_${lon}`,
-      () => withRetry(async () => {
-        const response = await fetch(
-          `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`
-        )
+    // Fetch forecast
+    const forecastUrl = `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${validApiKey}&units=imperial`;
+    console.log('Fetching forecast from:', forecastUrl);
+    
+    const forecastResponse = await fetch(forecastUrl);
+    if (!forecastResponse.ok) {
+      throw new Error(`Forecast API call failed: ${forecastResponse.status}`);
+    }
+    const forecastData = await forecastResponse.json();
+    console.log('Forecast response:', forecastData);
 
-        if (!response.ok) {
-          throw new Error(`Forecast API error: ${response.status}`)
-        }
+    // Process and validate data
+    const countryCode = currentWeatherData.sys.country;
+    const useFahrenheit = shouldUseFahrenheit(countryCode);
+    console.log('Using Fahrenheit:', useFahrenheit);
 
-        return response.json()
-      })
-    )
+    // Format temperature with proper unit handling
+    const temp = formatTemperature(currentWeatherData.main.temp, countryCode);
+    console.log('Formatted temperature:', temp);
 
-    // Process forecast data to get daily high/low temperatures
-    const dailyForecasts = processDailyForecast(forecastData)
+    // Process forecast data
+    const forecast = processDailyForecast(forecastData, useFahrenheit);
+    console.log('Processed forecast:', forecast);
 
-    // Calculate current moon phase
-    const moonPhase = calculateMoonPhase()
+    // Calculate moon phase
+    const moonPhase = calculateMoonPhase();
+    console.log('Moon phase:', moonPhase);
 
-    // Fetch UV Index data with retry
-    const { uvIndex, uvDescription } = await withRetry(() => 
-      fetchCurrentWeatherData(lat, lon, apiKey)
-    )
+    // Fetch UV Index with debugging
+    console.log('=== FETCHING UV INDEX ===');
+    const uvIndex = await fetchUVIndex(lat, lon, validApiKey);
+    console.log('UV Index fetched:', uvIndex);
 
+    // Fetch Pollen data
+    const pollenData = await fetchPollenData(lat, lon, validApiKey);
+    console.log('Weather Data - Pollen:', pollenData);
+
+    // Fetch Air Quality data
+    const airQualityData = await fetchAirQualityData(lat, lon, displayName);
+    console.log('Weather Data - Air Quality:', airQualityData);
+
+    // Construct weather data object
     const weatherData: WeatherData = {
-      current: {
-        temp: Math.round(currentData.main.temp),
-        condition: mapWeatherCondition(currentData.weather[0].main),
-        humidity: currentData.main.humidity,
-        wind: Math.round(currentData.wind.speed),
-        windDirection: currentData.wind.deg,
-        windDisplay: formatWindDisplay(currentData.wind.speed, currentData.wind.deg, currentData.wind.gust, currentData.sys.country),
-        location: displayName,
-        description: currentData.weather[0].description,
-        sunrise: currentData.sys.sunrise ? formatTime(currentData.sys.sunrise, currentData.timezone) : 'N/A',
-        sunset: currentData.sys.sunset ? formatTime(currentData.sys.sunset, currentData.timezone) : 'N/A',
-        dewPoint: calculateDewPoint(currentData.main.temp, currentData.main.humidity),
-        uvIndex,
-        uvDescription,
-        pressure: currentData.main.pressure,
-        pressureDisplay: formatPressureByRegion(currentData.main.pressure, currentData.sys.country),
-        country: currentData.sys.country,
-        lat,
-        lon
-      },
-      forecast: dailyForecasts,
-      moonPhase
-    }
+      location: displayName,
+      country: countryCode,
+      temperature: temp.value,
+      unit: temp.unit,
+      condition: currentWeatherData.weather[0].main,
+      description: currentWeatherData.weather[0].description,
+      humidity: currentWeatherData.main.humidity,
+      wind: {
+        speed: currentWeatherData.wind.speed,
+        direction: currentWeatherData.wind.deg ? getCompassDirection(currentWeatherData.wind.deg) : undefined,
+        gust: currentWeatherData.wind.gust
+      } as WindData,
+      pressure: formatPressureByRegion(currentWeatherData.main.pressure, countryCode),
+      sunrise: formatTime(currentWeatherData.sys.sunrise, currentWeatherData.timezone),
+      sunset: formatTime(currentWeatherData.sys.sunset, currentWeatherData.timezone),
+      forecast: forecast,
+      moonPhase: moonPhase,
+      uvIndex,
+      aqi: airQualityData.aqi,
+      aqiCategory: airQualityData.category,
+      pollen: pollenData,
+    };
 
-    // Cache the weather data
-    cacheWeatherData(locationInput, weatherData)
+    console.log('Final weather data:', weatherData);
+    return weatherData;
 
-    return weatherData
   } catch (error) {
-    if (error instanceof Error) {
-      throw error
-    }
-    throw new Error('Failed to fetch weather data. Please try again.')
+    console.error('Error fetching weather data:', error);
+    throw error;
   }
-}
+};
 
 // Generate helpful error messages based on location type
 const getLocationNotFoundError = (locationQuery: LocationQuery): string => {
@@ -787,115 +1113,98 @@ const getLocationNotFoundError = (locationQuery: LocationQuery): string => {
 };
 
 // Function to get user's location and fetch weather
-export const fetchWeatherByLocation = async (apiKey: string): Promise<WeatherData> => {
-  if (!apiKey) {
-    throw new Error('API key is required')
+export const fetchWeatherByLocation = async (coords: string): Promise<WeatherData> => {
+  const apiKey = validateApiKey();
+  const [latitude, longitude] = coords.split(',').map(Number)
+  
+  if (isNaN(latitude) || isNaN(longitude)) {
+    throw new Error('Invalid coordinates')
   }
 
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Geolocation is not supported by this browser.'))
-      return
+  try {
+    // Fetch current weather
+    const currentWeatherUrl = `${BASE_URL}/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=imperial`
+    console.log('Fetching current weather from:', currentWeatherUrl)
+    
+    const currentWeatherResponse = await fetch(currentWeatherUrl)
+    if (!currentWeatherResponse.ok) {
+      throw new Error(`Current weather API call failed: ${currentWeatherResponse.status}`)
+    }
+    const currentWeatherData = await currentWeatherResponse.json()
+    console.log('Current weather response:', currentWeatherData)
+
+    // Fetch forecast
+    const forecastUrl = `${BASE_URL}/forecast?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=imperial`
+    console.log('Fetching forecast from:', forecastUrl)
+    
+    const forecastResponse = await fetch(forecastUrl)
+    if (!forecastResponse.ok) {
+      throw new Error(`Forecast API call failed: ${forecastResponse.status}`)
+    }
+    const forecastData = await forecastResponse.json()
+    console.log('Forecast response:', forecastData)
+
+    // Process and validate data
+    const countryCode = currentWeatherData.sys.country
+    const useFahrenheit = shouldUseFahrenheit(countryCode)
+    console.log('Using Fahrenheit:', useFahrenheit)
+
+    // Format temperature with proper unit handling
+    const temp = formatTemperature(currentWeatherData.main.temp, countryCode)
+    console.log('Formatted temperature:', temp)
+
+    // Process forecast data
+    const forecast = processDailyForecast(forecastData, useFahrenheit)
+    console.log('Processed forecast:', forecast)
+
+    // Calculate moon phase
+    const moonPhase = calculateMoonPhase()
+    console.log('Moon phase:', moonPhase)
+
+    // Fetch UV Index with debugging
+    console.log('=== FETCHING UV INDEX ===');
+    const uvIndex = await fetchUVIndex(latitude, longitude, apiKey);
+    console.log('UV Index fetched:', uvIndex);
+
+    // Fetch Pollen data
+    console.log('=== FETCHING POLLEN DATA ===');
+    const pollenData = await fetchPollenData(latitude, longitude, apiKey);
+    console.log('Weather Data - Pollen:', pollenData);
+
+    // Fetch Air Quality data
+    const airQualityData = await fetchAirQualityData(latitude, longitude, `${currentWeatherData.name}, ${currentWeatherData.sys.country}`);
+    console.log('Weather Data - Air Quality:', airQualityData);
+
+    // Construct weather data object
+    const weatherData: WeatherData = {
+      location: `${currentWeatherData.name}, ${currentWeatherData.sys.country}`,
+      country: countryCode,
+      temperature: temp.value,
+      unit: temp.unit,
+      condition: currentWeatherData.weather[0].main,
+      description: currentWeatherData.weather[0].description,
+      humidity: currentWeatherData.main.humidity,
+      wind: {
+        speed: currentWeatherData.wind.speed,
+        direction: currentWeatherData.wind.deg ? getCompassDirection(currentWeatherData.wind.deg) : undefined,
+        gust: currentWeatherData.wind.gust
+      },
+      pressure: formatPressureByRegion(currentWeatherData.main.pressure, countryCode),
+      sunrise: formatTime(currentWeatherData.sys.sunrise, currentWeatherData.timezone),
+      sunset: formatTime(currentWeatherData.sys.sunset, currentWeatherData.timezone),
+      forecast: forecast,
+      moonPhase: moonPhase,
+      uvIndex: uvIndex,
+      aqi: airQualityData.aqi,
+      aqiCategory: airQualityData.category,
+      pollen: pollenData,
     }
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords
-          
-          // Deduplicate current weather request
-          const currentData = await deduplicateRequest(
-            `current_${latitude}_${longitude}`,
-            () => withRetry(async () => {
-              const response = await fetch(
-                `${BASE_URL}/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=imperial`
-              )
+    console.log('Final weather data:', weatherData)
+    return weatherData
 
-              if (!response.ok) {
-                throw new Error(`Weather API error: ${response.status}`)
-              }
-
-              return response.json()
-            })
-          )
-          
-          // Deduplicate forecast request
-          const forecastData = await deduplicateRequest(
-            `forecast_${latitude}_${longitude}`,
-            () => withRetry(async () => {
-              const response = await fetch(
-                `${BASE_URL}/forecast?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=imperial`
-              )
-
-              if (!response.ok) {
-                throw new Error(`Forecast API error: ${response.status}`)
-              }
-
-              return response.json()
-            })
-          )
-
-          // Process forecast data
-          const dailyForecasts = processDailyForecast(forecastData)
-
-          // Fetch UV Index data with retry
-          const { uvIndex, uvDescription } = await withRetry(() => 
-            fetchCurrentWeatherData(latitude, longitude, apiKey)
-          )
-
-          const weatherData: WeatherData = {
-            current: {
-              temp: Math.round(currentData.main.temp),
-              condition: mapWeatherCondition(currentData.weather[0].main),
-              humidity: currentData.main.humidity,
-              wind: Math.round(currentData.wind.speed),
-              windDirection: currentData.wind.deg,
-              windDisplay: formatWindDisplay(currentData.wind.speed, currentData.wind.deg, currentData.wind.gust, currentData.sys.country),
-              location: `${currentData.name}, ${currentData.sys.country}`,
-              description: currentData.weather[0].description,
-              sunrise: currentData.sys.sunrise ? formatTime(currentData.sys.sunrise, currentData.timezone) : 'N/A',
-              sunset: currentData.sys.sunset ? formatTime(currentData.sys.sunset, currentData.timezone) : 'N/A',
-              dewPoint: calculateDewPoint(currentData.main.temp, currentData.main.humidity),
-              uvIndex,
-              uvDescription,
-              pressure: currentData.main.pressure,
-              pressureDisplay: formatPressureByRegion(currentData.main.pressure, currentData.sys.country),
-              country: currentData.sys.country,
-              lat: latitude,
-              lon: longitude
-            },
-            forecast: dailyForecasts,
-            moonPhase: calculateMoonPhase()
-          }
-
-          // Cache the weather data
-          cacheWeatherData(weatherData.current.location, weatherData)
-
-          resolve(weatherData)
-        } catch (error) {
-          reject(error)
-        }
-      },
-      (error) => {
-        let errorMessage = 'Failed to get your location.'
-        
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = 'Location access denied. Please enter a location manually.'
-            break
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Location information unavailable.'
-            break
-          case error.TIMEOUT:
-            errorMessage = 'Location request timed out.'
-            break
-        }
-        
-        reject(new Error(errorMessage))
-      },
-      {
-        timeout: 10000, // 10 seconds timeout
-      }
-    )
-  })
+  } catch (error) {
+    console.error('Error fetching weather data:', error)
+    throw error
+  }
 } 

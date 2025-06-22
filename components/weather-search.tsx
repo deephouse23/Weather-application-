@@ -1,9 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Search, MapPin, Loader2 } from "lucide-react"
-import { useDebounce } from "@/lib/hooks"
-import { ThemeType, themeUtils, APP_CONSTANTS } from "@/lib/utils"
+import { ThemeType, APP_CONSTANTS } from "@/lib/utils"
 
 interface WeatherSearchProps {
   onSearch: (location: string) => void;
@@ -25,14 +24,80 @@ export default function WeatherSearch({
   theme = APP_CONSTANTS.THEMES.DARK
 }: WeatherSearchProps) {
   const [searchTerm, setSearchTerm] = useState("")
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useDebounce<string>((value) => {
-    if (value.trim() && !isLoading && !isDisabled) {
-      onSearch(value.trim())
-    }
-  }, 300)
 
-  // Use centralized theme classes
-  const themeClasses = themeUtils.getThemeClasses(theme)
+  // Local theme classes function
+  const getThemeClasses = (theme: ThemeType) => {
+    switch (theme) {
+      case 'dark':
+        return {
+          background: 'bg-[#0f0f0f]',
+          cardBg: 'bg-[#0f0f0f]',
+          borderColor: 'border-[#00d4ff]',
+          text: 'text-[#e0e0e0]',
+          headerText: 'text-[#00d4ff]',
+          secondaryText: 'text-[#e0e0e0]',
+          accentText: 'text-[#00d4ff]',
+          successText: 'text-[#00ff00]',
+          glow: 'glow-dark',
+          specialBorder: 'border-[#00d4ff]',
+          buttonHover: 'hover:bg-[#00d4ff] hover:text-[#0f0f0f]',
+          placeholderText: 'placeholder-[#a0a0a0]',
+          hoverBorder: 'hover:border-[#00d4ff]',
+          buttonBg: 'bg-[#0f0f0f]',
+          buttonBorder: 'border-[#00d4ff]',
+          buttonText: 'text-[#e0e0e0]',
+          errorBg: 'bg-[#1a0f0f]',
+          errorText: 'text-[#ff4444]',
+          warningText: 'text-[#ff6b6b]'
+        }
+      case 'miami':
+        return {
+          background: 'bg-[#0a0025]',
+          cardBg: 'bg-[#0a0025]',
+          borderColor: 'border-[#ff1493]',
+          text: 'text-[#00ffff]',
+          headerText: 'text-[#ff1493]',
+          secondaryText: 'text-[#00ffff]',
+          accentText: 'text-[#ff1493]',
+          successText: 'text-[#00ff00]',
+          glow: 'glow-miami',
+          specialBorder: 'border-[#ff1493]',
+          buttonHover: 'hover:bg-[#ff1493] hover:text-[#0a0025]',
+          placeholderText: 'placeholder-[#b0d4f1]',
+          hoverBorder: 'hover:border-[#ff1493]',
+          buttonBg: 'bg-[#0a0025]',
+          buttonBorder: 'border-[#ff1493]',
+          buttonText: 'text-[#00ffff]',
+          errorBg: 'bg-[#1a0025]',
+          errorText: 'text-[#ff1493]',
+          warningText: 'text-[#ff69b4]'
+        }
+      case 'tron':
+        return {
+          background: 'bg-black',
+          cardBg: 'bg-black',
+          borderColor: 'border-[#00FFFF]',
+          text: 'text-white',
+          headerText: 'text-[#00FFFF]',
+          secondaryText: 'text-[#00FFFF]',
+          accentText: 'text-[#00FFFF]',
+          successText: 'text-[#00ff00]',
+          glow: 'glow-tron',
+          specialBorder: 'border-[#00FFFF]',
+          buttonHover: 'hover:bg-[#00FFFF] hover:text-black',
+          placeholderText: 'placeholder-[#88CCFF]',
+          hoverBorder: 'hover:border-[#00FFFF]',
+          buttonBg: 'bg-black',
+          buttonBorder: 'border-[#00FFFF]',
+          buttonText: 'text-white',
+          errorBg: 'bg-[#001111]',
+          errorText: 'text-[#FF4444]',
+          warningText: 'text-[#FF6B6B]'
+        }
+    }
+  }
+
+  const themeClasses = getThemeClasses(theme)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -66,10 +131,7 @@ export default function WeatherSearch({
           <input
             type="text"
             value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value)
-              setDebouncedSearchTerm(e.target.value)
-            }}
+            onChange={(e) => setSearchTerm(e.target.value)}
             placeholder={isDisabled ? "Rate limit reached..." : "ZIP, City+State, or City+Country..."}
             disabled={controlsDisabled}
             className={`w-full px-3 sm:px-4 py-3 sm:py-4 pr-10 sm:pr-12 ${themeClasses.cardBg} border-2 ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.placeholderText} 
@@ -99,7 +161,7 @@ export default function WeatherSearch({
       </form>
 
       {/* Location Button - Mobile friendly */}
-      <div className="flex items-center justify-center mb-3 sm:mb-4 px-2 sm:px-0">
+      <div className="flex justify-center px-2 sm:px-0">
         <button
           onClick={handleLocationClick}
           disabled={controlsDisabled}
@@ -122,16 +184,16 @@ export default function WeatherSearch({
       </div>
 
       {/* Error Display - Mobile responsive */}
-      {(error && !rateLimitError) && (
+      {(error || rateLimitError) && (
         <div className={`p-3 sm:p-4 mx-2 sm:mx-0 ${themeClasses.errorBg} border ${themeClasses.errorText} 
                       text-xs sm:text-sm text-center pixel-font ${themeClasses.specialBorder}`}>
           <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
             <span>⚠</span>
-            <span className="uppercase tracking-wider break-words">{error}</span>
+            <span className="uppercase tracking-wider break-words">{error || rateLimitError}</span>
           </div>
           
           {/* Interactive suggestions based on error type - Mobile optimized */}
-          {error.includes('not found') && (
+          {error?.includes('not found') && (
             <div className="space-y-2">
               <div className={`text-xs ${themeClasses.secondaryText} normal-case`}>
                 Try these format examples:
@@ -165,19 +227,19 @@ export default function WeatherSearch({
             </div>
           )}
           
-          {error.includes('API key') && (
+          {error?.includes('API key') && (
             <div className={`text-xs ${themeClasses.secondaryText} normal-case mt-2 break-words`}>
               Please configure your OpenWeatherMap API key in the environment variables.
             </div>
           )}
           
-          {error.includes('location') && error.includes('denied') && (
+          {error?.includes('location') && error?.includes('denied') && (
             <div className={`text-xs ${themeClasses.secondaryText} normal-case mt-2 break-words`}>
               Location access was denied. Try searching manually or enable location permissions.
             </div>
           )}
           
-          {(error.includes('network') || error.includes('fetch')) && (
+          {(error?.includes('network') || error?.includes('fetch')) && (
             <div className={`text-xs ${themeClasses.secondaryText} normal-case mt-2 break-words`}>
               Network error. Please check your internet connection and try again.
             </div>

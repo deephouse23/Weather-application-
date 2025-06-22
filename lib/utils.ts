@@ -130,57 +130,101 @@ export const safeLocalStorage = {
 
 // Theme management utilities
 export const themeUtils = {
-  getStoredTheme: (): ThemeType => {
-    const stored = safeLocalStorage.get(APP_CONSTANTS.STORAGE_KEYS.THEME)
-    if (stored && Object.values(APP_CONSTANTS.THEMES).includes(stored as ThemeType)) {
-      return stored as ThemeType
+  getThemeColors: () => ({
+    text: '#e0e0e0',
+    background: '#0a0a1a',
+    accent: '#00d4ff',
+    cardBg: '#0f0f0f',
+    border: '#00d4ff'
+  }),
+
+  getThemeClasses: (theme: ThemeType = 'dark') => {
+    switch (theme) {
+      case 'dark':
+        return {
+          background: 'bg-[#0a0a1a]',
+          text: 'text-[#e0e0e0]',
+          borderColor: 'border-[#00d4ff]',
+          accentBg: 'bg-[#00d4ff]',
+          accentText: 'text-[#00d4ff]',
+          cardBg: 'bg-[#0f0f0f]',
+          hoverBg: 'hover:bg-[#00d4ff] hover:text-[#0a0a1a]',
+          glow: 'glow-dark',
+          headerText: 'text-[#00d4ff]',
+          secondaryText: 'text-[#a0a0a0]',
+          successText: 'text-[#4ecdc4]',
+          warningText: 'text-[#ff6b6b]',
+          shadowColor: '#00d4ff',
+          errorText: 'text-[#ff4444]'
+        }
+      case 'miami':
+        return {
+          background: 'bg-[#2d1b69]',
+          text: 'text-[#00ffff]',
+          borderColor: 'border-[#ff1493]',
+          accentBg: 'bg-[#ff1493]',
+          accentText: 'text-[#ff1493]',
+          cardBg: 'bg-[#4a0e4e]',
+          hoverBg: 'hover:bg-[#ff1493] hover:text-[#2d1b69]',
+          glow: 'glow-miami',
+          headerText: 'text-[#ff007f]',
+          secondaryText: 'text-[#b0d4f1]',
+          successText: 'text-[#ff69b4]',
+          warningText: 'text-[#ff69b4]',
+          shadowColor: '#ff1493',
+          errorText: 'text-[#ff1493]'
+        }
+      case 'tron':
+        return {
+          background: 'bg-[#000000]',
+          text: 'text-[#FFFFFF]',
+          borderColor: 'border-[#00FFFF]',
+          accentBg: 'bg-[#00FFFF]',
+          accentText: 'text-[#00FFFF]',
+          cardBg: 'bg-[#000000]',
+          hoverBg: 'hover:bg-[#00FFFF] hover:text-[#000000]',
+          glow: 'glow-tron',
+          headerText: 'text-[#00FFFF]',
+          secondaryText: 'text-[#88CCFF]',
+          successText: 'text-[#00FFFF]',
+          warningText: 'text-[#FF6B6B]',
+          shadowColor: '#00FFFF',
+          errorText: 'text-[#FF4444]'
+        }
+      default:
+        return {
+          background: 'bg-[#0a0a1a]',
+          text: 'text-[#e0e0e0]',
+          borderColor: 'border-[#00d4ff]',
+          accentBg: 'bg-[#00d4ff]',
+          accentText: 'text-[#00d4ff]',
+          cardBg: 'bg-[#0f0f0f]',
+          hoverBg: 'hover:bg-[#00d4ff] hover:text-[#0a0a1a]',
+          glow: 'glow-dark',
+          headerText: 'text-[#00d4ff]',
+          secondaryText: 'text-[#a0a0a0]',
+          successText: 'text-[#4ecdc4]',
+          warningText: 'text-[#ff6b6b]',
+          shadowColor: '#00d4ff',
+          errorText: 'text-[#ff4444]'
+        }
     }
-    return APP_CONSTANTS.THEMES.DARK
   },
 
-  setStoredTheme: (theme: ThemeType): boolean => {
-    return safeLocalStorage.set(APP_CONSTANTS.STORAGE_KEYS.THEME, theme)
+  setStoredTheme: (theme: ThemeType) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('weather-edu-theme', theme)
+    }
   },
 
-  getThemeColors: (theme: ThemeType) => THEME_COLORS[theme],
-
-  getThemeClasses: (theme: ThemeType) => {
-    const colors = THEME_COLORS[theme]
-    return {
-      background: theme === APP_CONSTANTS.THEMES.MIAMI ? 'bg-gradient-to-br from-[#2d1b69] via-[#11001c] to-[#0f0026]' : theme === APP_CONSTANTS.THEMES.TRON ? 'bg-black' : 'bg-[#0a0a1a]',
-      cardBg: `bg-[${colors.cardBg}]`,
-      borderColor: `border-[${colors.border}]`,
-      text: `text-[${colors.text}]`,
-      headerText: `text-[${colors.header}]`,
-      secondaryText: `text-[${colors.secondary}]`,
-      shadowColor: colors.shadow,
-      glow: `shadow-[0_0_15px_${colors.shadow}33]`,
-      hoverBg: `hover:bg-[${colors.hover}]`,
-      accentBg: `bg-[${colors.accent}]`,
-      accentText: `text-[${colors.accent}]`,
-      successText: `text-[${colors.success}]`,
-      warningText: `text-[${colors.warning}]`,
-      errorText: `text-[${colors.error || '#ff4444'}]`,
-      placeholderText: `placeholder-[${colors.secondary}]`,
-      hoverBorder: `hover:border-[${colors.hover}]`,
-      specialBorder: `border-[${colors.accent}]`,
-      inputStyle: `bg-[${colors.cardBg}] border-[${colors.border}] text-[${colors.text}] placeholder-[${colors.secondary}]`,
-      buttonBg: `bg-[${colors.cardBg}]`,
-      buttonBorder: `border-[${colors.border}]`,
-      buttonText: `text-[${colors.text}]`,
-      buttonHover: `hover:bg-[${colors.hover}] hover:text-[${colors.accent}]`,
-      errorBg: `bg-[${colors.cardBg}]`,
-      buttonStyle: theme === APP_CONSTANTS.THEMES.MIAMI ? {
-        background: 'linear-gradient(45deg, #ff1493, #00ffff)',
-        color: '#ffffff'
-      } : theme === APP_CONSTANTS.THEMES.TRON ? {
-        background: 'linear-gradient(45deg, #00FFFF, #88CCFF)',
-        color: '#000000'
-      } : {
-        background: 'linear-gradient(45deg, #00d4ff, #4ecdc4)',
-        color: '#ffffff'
+  getStoredTheme: (): ThemeType => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('weather-edu-theme')
+      if (stored && ['dark', 'miami', 'tron'].includes(stored)) {
+        return stored as ThemeType
       }
     }
+    return 'dark'
   },
 
   getThemeDisplay: (theme: ThemeType) => {

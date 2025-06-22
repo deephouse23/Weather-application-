@@ -1,14 +1,11 @@
 import type React from "react"
 import "./globals.css"
 import type { Metadata } from "next"
-import { Share_Tech_Mono } from "next/font/google"
+import { Inter } from "next/font/google"
 import { Analytics } from '@vercel/analytics/react'
+import { ThemeProvider } from "@/components/theme-provider"
 
-const shareTechMono = Share_Tech_Mono({
-  weight: "400",
-  subsets: ["latin"],
-  display: "swap",
-})
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "16-Bit Weather Education Platform - Retro Weather Learning",
@@ -92,7 +89,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -158,8 +155,16 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={shareTechMono.className}>
-        {children}
+      <body className={inter.className}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          storageKey="weather-edu-theme"
+          themes={["dark", "miami", "tron"]}
+        >
+          {children}
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>
