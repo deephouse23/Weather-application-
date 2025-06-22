@@ -926,29 +926,61 @@ const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: stri
 
 // Fetch Air Quality from Google Air Quality API
 const fetchAirQualityData = async (lat: number, lon: number): Promise<{ aqi: number; category: string }> => {
+  console.log('=== FETCHING AIR QUALITY DATA ===');
+  console.log('Coordinates:', { lat, lon });
+  
   const googleApiKey = validateGooglePollenApiKey();
+  console.log('Google Air Quality API Key available:', !!googleApiKey);
+  
   if (!googleApiKey) {
     console.warn('No Google Air Quality API key found. Returning default AQI.');
     return { aqi: 0, category: 'No Data' };
   }
+  
   try {
     const url = `https://airquality.googleapis.com/v1/currentConditions:lookup?key=${googleApiKey}`;
-    const body = JSON.stringify({ location: { latitude: lat, longitude: lon } });
+    const payload = JSON.stringify({ location: { latitude: lat, longitude: lon } });
+    
+    console.log('Air Quality API URL and payload:', url, payload);
+    
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body
+      body: payload
     });
+    
+    console.log('Google Air Quality API Response Status:', response.status);
+    console.log('Google Air Quality API Response Headers:', Object.fromEntries(response.headers.entries()));
+    
     if (!response.ok) {
       console.error('Google Air Quality API failed:', response.status, response.statusText);
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
       return { aqi: 0, category: 'No Data' };
     }
-    const data = await response.json();
-    console.log('Google Air Quality API Response:', data);
-    // Parse AQI value and category
-    const aqi = data?.currentConditions?.[0]?.indexes?.[0]?.aqi || 0;
-    const category = data?.currentConditions?.[0]?.indexes?.[0]?.category || 'No Data';
-    return { aqi, category };
+    
+    const responseData = await response.json();
+    console.log('Google Air Quality API Response Data:', responseData);
+    console.log('Full Google Air Quality API Response:', JSON.stringify(responseData, null, 2));
+    
+    // Parse AQI value and category with detailed logging
+    const currentConditions = responseData?.currentConditions;
+    console.log('Current Conditions:', currentConditions);
+    
+    const indexes = currentConditions?.[0]?.indexes;
+    console.log('Indexes:', indexes);
+    
+    const aqiValue = indexes?.[0]?.aqi || 0;
+    const aqiCategory = indexes?.[0]?.category || 'No Data';
+    
+    console.log('AQI value extracted:', aqiValue);
+    console.log('AQI category extracted:', aqiCategory);
+    
+    const finalAirQualityObject = { aqi: aqiValue, category: aqiCategory };
+    console.log('Final air quality object:', finalAirQualityObject);
+    
+    return finalAirQualityObject;
+    
   } catch (error) {
     console.error('Google Air Quality API error:', error);
     return { aqi: 0, category: 'No Data' };
