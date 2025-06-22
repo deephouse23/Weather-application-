@@ -17,7 +17,7 @@ import WeatherSearch from "@/components/weather-search"
 import { APP_CONSTANTS } from "@/lib/utils"
 
 // TEMPORARY DEBUG IMPORTS - REMOVE BEFORE PRODUCTION
-import ApiTest from '@/components/api-test'
+// import ApiTest from '@/components/api-test'
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
 // The main weather API handles UV index estimation for free accounts
@@ -763,7 +763,7 @@ function WeatherApp() {
           </div>
 
           {/* TEMPORARY API TEST - REMOVE BEFORE PRODUCTION */}
-          <ApiTest />
+          {/* <ApiTest /> */}
 
           <WeatherSearch
             onSearch={handleSearch}
@@ -814,7 +814,7 @@ function WeatherApp() {
                   theme === "miami" && "text-pink-400",
                   theme === "tron" && "text-cyan-400"
                 )} style={{ fontFamily: "monospace" }}>
-                  🌤️ Select a location to begin your forecast adventure!
+                  Select a location to begin your forecast adventure!
                 </p>
               </div>
             </div>
