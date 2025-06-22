@@ -61,10 +61,9 @@ if (!API_KEY) {
 const GOOGLE_POLLEN_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY || process.env.REACT_APP_GOOGLE_POLLEN_API_KEY;
 if (!GOOGLE_POLLEN_API_KEY) {
   console.warn('⚠️ Google Pollen API key is missing!');
-  console.warn('Note: Google Pollen API is not publicly available. Using OpenWeather Air Pollution API for seasonal pollen estimates.');
+  console.warn('Please set either NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY or REACT_APP_GOOGLE_POLLEN_API_KEY environment variable for real pollen data.');
 } else {
   console.log('✅ Google Pollen API key found:', GOOGLE_POLLEN_API_KEY.substring(0, 8) + '...');
-  console.log('Note: Google Pollen API endpoint is not publicly available. Using OpenWeather Air Pollution API instead.');
 }
 
 // Theme types
