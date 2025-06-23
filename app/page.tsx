@@ -74,29 +74,32 @@ const getPressureUnit = (countryCode: string): 'hPa' | 'inHg' => {
   return inHgCountries.includes(countryCode) ? 'inHg' : 'hPa';
 };
 
-// Add AQI helper functions with better contrast
+// Update AQI helper functions for Google Universal AQI (0-100, higher = better)
 const getAQIColor = (aqi: number): string => {
-  if (aqi <= 50) return 'text-green-400 font-semibold';
-  if (aqi <= 100) return 'text-yellow-400 font-semibold';
-  if (aqi <= 150) return 'text-orange-400 font-semibold';
-  if (aqi <= 200) return 'text-red-400 font-semibold';
-  return 'text-purple-400 font-semibold';
+  if (aqi >= 80) return 'text-green-400 font-semibold';      // Excellent
+  if (aqi >= 60) return 'text-green-400 font-semibold';      // Good  
+  if (aqi >= 40) return 'text-yellow-400 font-semibold';     // Moderate
+  if (aqi >= 20) return 'text-orange-400 font-semibold';     // Low
+  if (aqi >= 1) return 'text-red-400 font-semibold';         // Poor
+  return 'text-red-600 font-semibold';                       // Critical (0)
 };
 
 const getAQIDescription = (aqi: number): string => {
-  if (aqi <= 50) return 'Good';
-  if (aqi <= 100) return 'Moderate';
-  if (aqi <= 150) return 'Unhealthy for Sensitive Groups';
-  if (aqi <= 200) return 'Unhealthy';
-  return 'Very Unhealthy';
+  if (aqi >= 80) return 'Excellent';
+  if (aqi >= 60) return 'Good';
+  if (aqi >= 40) return 'Moderate';
+  if (aqi >= 20) return 'Low';
+  if (aqi >= 1) return 'Poor';
+  return 'Critical';
 };
 
 const getAQIRecommendation = (aqi: number): string => {
-  if (aqi <= 50) return 'Air quality is satisfactory. Enjoy outdoor activities.';
-  if (aqi <= 100) return 'Air quality is acceptable. Consider limiting prolonged outdoor exertion.';
-  if (aqi <= 150) return 'Sensitive groups should reduce outdoor activities.';
-  if (aqi <= 200) return 'Everyone should reduce outdoor activities.';
-  return 'Avoid outdoor activities. Stay indoors if possible.';
+  if (aqi >= 80) return 'Excellent air quality. Perfect for all outdoor activities.';
+  if (aqi >= 60) return 'Good air quality. Great for outdoor activities.';
+  if (aqi >= 40) return 'Moderate air quality. Generally acceptable for most people.';
+  if (aqi >= 20) return 'Low air quality. Consider limiting prolonged outdoor exertion.';
+  if (aqi >= 1) return 'Poor air quality. Avoid outdoor activities.';
+  return 'Critical air quality. Stay indoors.';
 };
 
 // Add pollen category color helper
@@ -942,19 +945,81 @@ function WeatherApp() {
 
               {/* AQI and Pollen Count */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* AQI Box */}
+                {/* AQI Box - Updated with Google Universal AQI */}
                 <div className={cn(
                   "p-4 rounded-lg text-center border-2 shadow-lg",
                   theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
                   theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
                   theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
                 )}>
-                  <h2 className="text-xl font-semibold mb-2 text-white">Air Quality</h2>
-                  <p className={`text-lg ${getAQIColor(weather.aqi)}`}>
-                    {weather.aqi} - {getAQIDescription(weather.aqi)}
-                  </p>
-                  <p className="text-sm text-gray-300 font-medium">
-                    {getAQIRecommendation(weather.aqi)}
+                  <h2 className="text-xl font-semibold mb-2 text-white pixel-font">Air Quality</h2>
+                  
+                  {/* Horizontal layout - AQI value and status on same line */}
+                  <div className="flex items-center justify-center gap-3 mb-3">
+                    <span className={`text-2xl font-bold pixel-font ${getAQIColor(weather.aqi)}`}>
+                      {weather.aqi}
+                    </span>
+                    <span className={`text-sm pixel-font ${getAQIColor(weather.aqi)}`}>
+                      {getAQIDescription(weather.aqi)} Air Quality
+                    </span>
+                  </div>
+
+                  <div className="mb-2">
+                    <div className="flex justify-between text-xs mb-1 pixel-font" 
+                         style={{ color: theme === "dark" ? "#d1d5db" : theme === "miami" ? "#22d3ee" : "#ffffff" }}>
+                      <span>POOR [0]</span>
+                      <span className={`font-bold ${getAQIColor(weather.aqi)}`}>◄ {weather.aqi} ►</span>
+                      <span>EXCELLENT [100]</span>
+                    </div>
+                    
+                    <div className="relative">
+                      <div className={cn(
+                        "flex h-4 rounded overflow-hidden border",
+                        theme === "dark" && "border-blue-500",
+                        theme === "miami" && "border-pink-500", 
+                        theme === "tron" && "border-cyan-500"
+                      )}
+                      style={{
+                        background: "linear-gradient(to right, #800000 0%, #FF0000 16.67%, #FF8C00 33.33%, #FFFF00 50%, #84CF33 66.67%, #009E3A 100%)"
+                      }}>
+                        <div className="flex-1 text-white text-xs flex items-center justify-center font-bold">0</div>
+                        <div className="flex-1 text-white text-xs flex items-center justify-center font-bold">█</div>
+                        <div className="flex-1 text-black text-xs flex items-center justify-center font-bold">█</div>
+                        <div className="flex-1 text-black text-xs flex items-center justify-center font-bold">█</div>
+                        <div className="flex-1 text-black text-xs flex items-center justify-center font-bold">█</div>
+                        <div className="flex-1 text-white text-xs flex items-center justify-center font-bold">100</div>
+                      </div>
+                      <div 
+                        className={cn(
+                          "absolute -top-1.5 w-0 h-0 transform -translate-x-1/2",
+                          theme === "dark" && "border-t-blue-500",
+                          theme === "miami" && "border-t-pink-500",
+                          theme === "tron" && "border-t-cyan-500"
+                        )}
+                        style={{ 
+                          left: `${weather.aqi}%`,
+                          borderLeft: "5px solid transparent",
+                          borderRight: "5px solid transparent", 
+                          borderTop: "6px solid"
+                        }}>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Compact 3-column legend */}
+                  <div className="grid grid-cols-3 gap-1 text-xs pixel-font mb-2"
+                       style={{ color: theme === "dark" ? "#d1d5db" : theme === "miami" ? "#22d3ee" : "#ffffff" }}>
+                    <div><span className="inline-block w-2 h-2 rounded mr-1" style={{background: "#009E3A"}}></span>EXCELLENT</div>
+                    <div><span className="inline-block w-2 h-2 rounded mr-1" style={{background: "#84CF33"}}></span>GOOD</div>
+                    <div><span className="inline-block w-2 h-2 rounded mr-1" style={{background: "#FFFF00"}}></span>MODERATE</div>
+                    <div><span className="inline-block w-2 h-2 rounded mr-1" style={{background: "#FF8C00"}}></span>LOW</div>
+                    <div><span className="inline-block w-2 h-2 rounded mr-1" style={{background: "#FF0000"}}></span>POOR</div>
+                    <div><span className="inline-block w-2 h-2 rounded mr-1" style={{background: "#800000"}}></span>CRITICAL</div>
+                  </div>
+
+                  <p className="text-xs pixel-font m-0"
+                     style={{ color: theme === "dark" ? "#9ca3af" : theme === "miami" ? "#67e8f9" : "#67e8f9" }}>
+                    GOOGLE UNIVERSAL AQI • HIGHER = BETTER
                   </p>
                 </div>
 
