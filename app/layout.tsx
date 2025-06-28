@@ -6,6 +6,8 @@ import { Analytics } from '@vercel/analytics/react'
 import { ThemeProvider } from "@/components/theme-provider"
 import { ClerkProvider } from '@clerk/nextjs'
 import { dark } from '@clerk/themes'
+import './globals.css'
+import Navigation from '@/components/navigation'
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -163,6 +165,7 @@ export default function RootLayout({
           />
         </head>
         <body className={inter.className}>
+          <Navigation />
           <div className="min-h-screen flex items-center justify-center p-4">
             <div className="text-center">
               <div className="text-cyan-600 font-mono mb-4">CLERK KEYS NOT CONFIGURED</div>
@@ -298,6 +301,7 @@ export default function RootLayout({
           />
         </head>
         <body className={inter.className}>
+          <Navigation />
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"

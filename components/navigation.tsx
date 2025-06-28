@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Menu, X, Cloud, Zap, BookOpen, Gamepad2, Info, Home, ChevronDown } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
+import { useUser, SignInButton, SignUpButton, SignOutButton } from '@clerk/nextjs'
 
 /**
  * 16-Bit Weather Education Platform Navigation
@@ -13,7 +14,8 @@ import { useTheme } from "@/components/theme-provider"
  * and three-theme support (Dark/Miami/Tron) for the expanded education platform
  */
 export default function Navigation() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { user, isLoaded } = useUser()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const pathname = usePathname()
   const { theme } = useTheme()
 
@@ -79,92 +81,150 @@ export default function Navigation() {
   ]
 
   return (
-    <nav className={`w-full border-b-4 pixel-border relative z-50 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
-      
-      {/* Desktop Navigation */}
-      <div className="hidden md:flex items-center justify-between px-6 py-4">
-        {/* Logo/Brand - TOP LEFT */}
-        <div className="flex items-center space-x-3">
-          <div className={`w-8 h-8 border-2 flex items-center justify-center animate-pulse ${themeClasses.accentBg} ${themeClasses.borderColor}`}>
-            <span className="text-black font-bold text-sm">16</span>
+    <nav className="bg-black border-b-2 border-cyan-500 shadow-lg shadow-cyan-500/20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <div className="flex-shrink-0">
+            <Link href="/" className="text-cyan-400 font-mono text-lg hover:text-cyan-300 transition-colors">
+              16-BIT WEATHER
+            </Link>
           </div>
-          <h1 className={`text-xl font-bold uppercase tracking-wider font-mono ${themeClasses.text} ${themeClasses.glow}`}>
-            BIT WEATHER
-          </h1>
-        </div>
 
-        {/* Main Navigation Links - TOP CENTER */}
-        <div className="flex items-center space-x-4">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            const isActive = pathname === item.href
-            
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center justify-center space-x-2 px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] h-[32px] ${
-                  isActive 
-                    ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black ${themeClasses.glow}`
-                    : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`
-                }`}
+          {/* Desktop Navigation */}
+          <div className="hidden md:block">
+            <div className="ml-10 flex items-baseline space-x-4">
+              {/* Always visible links */}
+              <Link 
+                href="/about" 
+                className="text-cyan-400 hover:text-cyan-300 px-3 py-2 font-mono text-sm transition-colors"
               >
-                <Icon className="w-3 h-3" />
-                <span className="whitespace-nowrap">{item.label}</span>
+                About
               </Link>
-            )
-          })}
-        </div>
-      </div>
 
-      {/* Mobile Navigation */}
-      <div className="md:hidden flex items-center justify-between px-4 py-3">
-        {/* Mobile Logo */}
-        <div className="flex items-center space-x-2">
-          <div className={`w-6 h-6 border-2 flex items-center justify-center ${themeClasses.accentBg} ${themeClasses.borderColor}`}>
-            <span className="text-black font-bold text-xs">16</span>
-          </div>
-          <h1 className={`text-sm font-bold uppercase tracking-wider font-mono ${themeClasses.text}`}>
-            BIT WEATHER
-          </h1>
-        </div>
-
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className={`p-2 border-2 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text}`}
-        >
-          {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-        </button>
-      </div>
-
-      {/* Mobile Menu Dropdown */}
-      {isMobileMenuOpen && (
-        <div className={`md:hidden absolute top-full left-0 right-0 border-4 border-t-0 z-50 ${themeClasses.background} ${themeClasses.borderColor}`}>
-          <div className="p-4 space-y-2">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href
-              
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center space-x-3 p-3 border-2 text-sm font-mono font-bold uppercase tracking-wider w-full h-[48px] ${
-                    isActive 
-                      ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black`
-                      : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text}`
-                  }`}
+              {/* Conditional links based on auth state */}
+              {isLoaded && user && (
+                <Link 
+                  href="/weather" 
+                  className="text-cyan-400 hover:text-cyan-300 px-3 py-2 font-mono text-sm transition-colors"
                 >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.label}</span>
+                  Weather
                 </Link>
-              )
-            })}
+              )}
+
+              {/* Auth buttons */}
+              {isLoaded && !user ? (
+                <>
+                  <SignInButton mode="modal">
+                    <button className="bg-transparent border border-cyan-500 text-cyan-400 hover:bg-cyan-500 hover:text-black px-4 py-2 font-mono text-sm transition-all duration-200">
+                      Sign In
+                    </button>
+                  </SignInButton>
+                  
+                  <SignUpButton mode="modal">
+                    <button className="bg-cyan-500 text-black hover:bg-cyan-400 px-4 py-2 font-mono text-sm transition-all duration-200">
+                      Sign Up
+                    </button>
+                  </SignUpButton>
+                </>
+              ) : isLoaded && user ? (
+                <div className="flex items-center space-x-4">
+                  <span className="text-cyan-600 font-mono text-sm">
+                    Hello, {user.firstName || user.username || 'User'}
+                  </span>
+                  <SignOutButton>
+                    <button className="bg-transparent border border-red-500 text-red-400 hover:bg-red-500 hover:text-black px-4 py-2 font-mono text-sm transition-all duration-200">
+                      Sign Out
+                    </button>
+                  </SignOutButton>
+                </div>
+              ) : (
+                // Loading state
+                <div className="text-cyan-600 font-mono text-sm">
+                  Loading...
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-cyan-400 hover:text-cyan-300 p-2"
+            >
+              <span className="font-mono text-sm">
+                {isMenuOpen ? 'CLOSE' : 'MENU'}
+              </span>
+            </button>
           </div>
         </div>
-      )}
+
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden border-t border-cyan-500">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              <Link 
+                href="/about" 
+                className="text-cyan-400 hover:text-cyan-300 block px-3 py-2 font-mono text-sm transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                About
+              </Link>
+
+              {isLoaded && user && (
+                <Link 
+                  href="/weather" 
+                  className="text-cyan-400 hover:text-cyan-300 block px-3 py-2 font-mono text-sm transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Weather
+                </Link>
+              )}
+
+              {isLoaded && !user ? (
+                <div className="space-y-2 pt-2">
+                  <SignInButton mode="modal">
+                    <button 
+                      className="w-full bg-transparent border border-cyan-500 text-cyan-400 hover:bg-cyan-500 hover:text-black px-4 py-2 font-mono text-sm transition-all duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Sign In
+                    </button>
+                  </SignInButton>
+                  
+                  <SignUpButton mode="modal">
+                    <button 
+                      className="w-full bg-cyan-500 text-black hover:bg-cyan-400 px-4 py-2 font-mono text-sm transition-all duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Sign Up
+                    </button>
+                  </SignUpButton>
+                </div>
+              ) : isLoaded && user ? (
+                <div className="pt-2 space-y-2">
+                  <div className="text-cyan-600 font-mono text-sm px-3 py-2">
+                    Hello, {user.firstName || user.username || 'User'}
+                  </div>
+                  <SignOutButton>
+                    <button 
+                      className="w-full bg-transparent border border-red-500 text-red-400 hover:bg-red-500 hover:text-black px-4 py-2 font-mono text-sm transition-all duration-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Sign Out
+                    </button>
+                  </SignOutButton>
+                </div>
+              ) : (
+                <div className="text-cyan-600 font-mono text-sm px-3 py-2">
+                  Loading...
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </nav>
   )
 } 

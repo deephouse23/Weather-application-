@@ -37,21 +37,39 @@ export default function AboutPage() {
   const themeClasses = themeUtils.getThemeClasses(currentTheme)
 
   return (
-    <PageWrapper>
-      <div className="container mx-auto px-4 py-8">
-        <div className={`${themeClasses.cardBg} p-6 border-4 pixel-border`}>
-          <h1 className={`text-3xl font-bold mb-4 ${themeClasses.headerText}`}>About 16-Bit Weather</h1>
-          <p className={`${themeClasses.text} mb-4`}>
-            Welcome to 16-Bit Weather, a retro-styled weather application that combines modern weather data with a nostalgic 16-bit aesthetic.
-          </p>
-          <p className={`${themeClasses.text} mb-4`}>
-            This application provides real-time weather information, forecasts, and educational content about weather systems and phenomena.
-          </p>
-          <p className={`${themeClasses.text}`}>
-            Built with Next.js, TypeScript, and Tailwind CSS, featuring three unique themes: Dark Mode, Miami Vice, and Tron.
-          </p>
+    <div className="min-h-screen bg-black text-cyan-400 p-8 crt-scanlines">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8 crt-flicker">
+          <pre className="text-cyan-400 text-xs leading-none font-mono">
+{`█████╗ ██████╗  ██████╗ ██╗   ██╗████████╗
+██╔══██╗██╔══██╗██╔═══██╗██║   ██║╚══██╔══╝
+███████║██████╔╝██║   ██║██║   ██║   ██║   
+██╔══██║██╔══██╗██║   ██║██║   ██║   ██║   
+██║  ██║██████╔╝╚██████╔╝╚██████╔╝   ██║   
+╚═╝  ╚═╝╚═════╝  ╚═════╝  ╚═════╝    ╚═╝`}
+          </pre>
+        </div>
+        
+        <div className="border-2 border-cyan-500 p-8">
+          <h1 className="text-2xl font-mono mb-6 text-cyan-400">About 16-Bit Weather</h1>
+          
+          <div className="space-y-4 text-cyan-600">
+            <p className="font-mono">
+              Welcome to the retro weather experience! 16-Bit Weather combines modern meteorological 
+              data with classic 1980s computer terminal aesthetics.
+            </p>
+            
+            <p className="font-mono">
+              Features include real-time weather data, customizable themes, location favorites, 
+              and a fully authenticated user experience.
+            </p>
+            
+            <p className="font-mono">
+              Built with Next.js, Clerk authentication, and a lot of nostalgia for the golden age of computing.
+            </p>
+          </div>
         </div>
       </div>
-    </PageWrapper>
+    </div>
   )
 } 

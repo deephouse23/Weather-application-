@@ -1100,7 +1100,63 @@ function WeatherApp() {
 
 export default function HomePage() {
   return (
-    <WeatherApp />
+    <div className="min-h-screen bg-black text-cyan-400 crt-scanlines">
+      <div className="container mx-auto px-4 py-8">
+        {/* Hero Section */}
+        <div className="text-center mb-12 crt-flicker">
+          <pre className="text-cyan-400 text-xs leading-none font-mono mb-4">
+{`▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄ ▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄ ▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄
+▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░▌ ▐░▌ ▐░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░░░░░░░▌ ▐░▌ ▐░▌ ▐░░░░░░░▌ ▐░░░░░░░▌
+▐░█▀▀▀█░▌ ▐░█▀▀▀▀▀ ▀▀▀▀█░█▀▀ ▐░▌ ▐░▌ ▐░▌ ▐░█▀▀▀▀▀ ▐░█▀▀▀▀▀ ▐░█▀▀▀▀▀ ▐░▌ ▐░▌ ▐░█▀▀▀▀▀ ▐░█▀▀▀▀▀`}
+          </pre>
+          
+          <h1 className="text-4xl font-mono mb-4 text-cyan-400">
+            16-BIT WEATHER
+          </h1>
+          
+          <p className="text-cyan-600 text-lg font-mono mb-8">
+            🌟 RETRO WEATHER TERMINAL 🌟<br/>
+            Experience weather data like it's 1985!
+          </p>
+        </div>
+
+        {/* Feature Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          <div className="border border-cyan-500 p-6 hover:border-cyan-300 transition-colors">
+            <div className="text-cyan-400 text-lg font-mono mb-2">🎮 RETRO STYLING</div>
+            <div className="text-cyan-600 text-sm">
+              Pixel-perfect terminal aesthetics with CRT scan lines and retro fonts
+            </div>
+          </div>
+          
+          <div className="border border-cyan-500 p-6 hover:border-cyan-300 transition-colors">
+            <div className="text-cyan-400 text-lg font-mono mb-2">📊 REAL-TIME DATA</div>
+            <div className="text-cyan-600 text-sm">
+              Live meteorological data with atmospheric analysis and radar
+            </div>
+          </div>
+          
+          <div className="border border-cyan-500 p-6 hover:border-cyan-300 transition-colors">
+            <div className="text-cyan-400 text-lg font-mono mb-2">🌈 THEMES</div>
+            <div className="text-cyan-600 text-sm">
+              Choose from Dark Terminal, Miami Vice, Tron Grid, or Amber Monitor
+            </div>
+          </div>
+        </div>
+
+        {/* CTA Section */}
+        <div className="text-center">
+          <div className="border-2 border-cyan-500 p-8 inline-block">
+            <div className="text-cyan-400 font-mono mb-4">
+              ⚡ SELECT A CITY TO BEGIN YOUR WEATHER QUEST ⚡
+            </div>
+            <div className="text-cyan-600 text-sm font-mono">
+              Sign up to save your favorite locations and customize your terminal
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 
