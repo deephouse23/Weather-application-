@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import PageWrapper from "@/components/page-wrapper"
 import { ExternalLink } from "lucide-react"
 import { ThemeType, themeUtils, APP_CONSTANTS } from "@/lib/utils"
 
@@ -65,13 +64,13 @@ export default function GamesPage() {
   ]
 
   return (
-    <PageWrapper>
+    <div className="min-h-screen bg-black text-cyan-400 crt-scanlines">
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-12">
-          <h1 className={`text-4xl md:text-6xl font-bold mb-4 font-mono uppercase tracking-wider ${themeClasses.headerText} ${themeClasses.glow}`}>
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 font-mono uppercase tracking-wider text-cyan-400">
             RETRO ARCADE
           </h1>
-          <p className={`text-lg ${themeClasses.secondaryText} font-mono mb-6`}>
+          <p className="text-lg text-cyan-600 font-mono mb-6">
             🎮 Classic 16-bit style games with authentic retro feel
           </p>
         </div>
@@ -83,24 +82,24 @@ export default function GamesPage() {
               href={game.url}
               target="_blank"
               rel="noopener noreferrer"
-              className={`${themeClasses.cardBg} border-4 ${themeClasses.borderColor} transition-all duration-300 ${themeClasses.hoverBg} cursor-pointer block transform hover:scale-105`}
-              style={{ boxShadow: `0 0 15px ${themeClasses.shadowColor}33` }}
+              className="bg-black border-4 border-cyan-500 transition-all duration-300 hover:bg-cyan-500 hover:text-black cursor-pointer block transform hover:scale-105"
+              style={{ boxShadow: '0 0 15px rgba(0, 255, 255, 0.2)' }}
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-4xl">{game.emoji}</div>
-                  <ExternalLink className="w-6 h-6" style={{ color: themeClasses.shadowColor }} />
+                  <ExternalLink className="w-6 h-6 text-cyan-400" />
                 </div>
                 
-                <h3 className={`font-mono font-bold text-xl uppercase tracking-wider mb-2 ${themeClasses.headerText}`}>
+                <h3 className="font-mono font-bold text-xl uppercase tracking-wider mb-2 text-cyan-400">
                   {game.title}
                 </h3>
                 
-                <p className={`${themeClasses.text} font-mono text-sm mb-4`}>
+                <p className="text-cyan-600 font-mono text-sm mb-4">
                   {game.description}
                 </p>
                 
-                <div className={`w-full ${themeClasses.accentBg} text-black font-mono font-bold py-2 px-4 border-2 border-current transition-all duration-200 text-center`}>
+                <div className="w-full bg-cyan-500 text-black font-mono font-bold py-2 px-4 border-2 border-current transition-all duration-200 text-center">
                   PLAY NOW
                 </div>
               </div>
@@ -109,12 +108,12 @@ export default function GamesPage() {
         </div>
 
         <div className="text-center mt-12">
-          <div className={`${themeClasses.cardBg} border-2 ${themeClasses.borderColor} p-6 max-w-2xl mx-auto`}
-               style={{ boxShadow: `0 0 10px ${themeClasses.shadowColor}33` }}>
-            <h3 className={`font-mono font-bold text-lg uppercase tracking-wider mb-4 ${themeClasses.headerText}`}>
+          <div className="bg-black border-2 border-cyan-500 p-6 max-w-2xl mx-auto"
+               style={{ boxShadow: '0 0 10px rgba(0, 255, 255, 0.2)' }}>
+            <h3 className="font-mono font-bold text-lg uppercase tracking-wider mb-4 text-cyan-400">
               🕹️ GAME FEATURES
             </h3>
-            <div className={`${themeClasses.text} font-mono text-sm space-y-2`}>
+            <div className="text-cyan-600 font-mono text-sm space-y-2">
               <p>✨ Authentic 16-bit retro styling with neon effects</p>
               <p>🎨 Orbitron font for genuine retro atmosphere</p>
               <p>🎮 Fully functional gameplay mechanics</p>
@@ -125,6 +124,6 @@ export default function GamesPage() {
           </div>
         </div>
       </div>
-    </PageWrapper>
+    </div>
   )
 } 
