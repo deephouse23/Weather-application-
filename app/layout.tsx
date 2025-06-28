@@ -90,8 +90,95 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Check if Clerk keys are available
+  const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+
+  // If Clerk keys are missing, render without authentication
+  if (!clerkPublishableKey) {
+    return (
+      <html lang="en" suppressHydrationWarning>
+        <head>
+          <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+          <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+          <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+          <link rel="shortcut icon" href="/favicon.ico" />
+          <meta name="theme-color" content="#0a0a1a" />
+          <meta name="msapplication-TileColor" content="#0a0a1a" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+          <meta name="format-detection" content="telephone=no" />
+          <link rel="preconnect" href="https://api.openweathermap.org" />
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "EducationalOrganization",
+                "name": "16-Bit Weather Education Platform",
+                "description": "Comprehensive weather education platform with 16-bit retro styling, covering meteorology, cloud types, weather systems, and interactive learning.",
+                "url": "https://16-bit-weather.vercel.app",
+                "applicationCategory": "EducationalApplication",
+                "operatingSystem": "Web Browser",
+                "offers": {
+                  "@type": "Offer",
+                  "price": "0",
+                  "priceCurrency": "USD"
+                },
+                "author": {
+                  "@type": "Organization",
+                  "name": "Weather Education Systems"
+                },
+                "screenshot": "https://16-bit-weather.vercel.app/og-image.png",
+                "educationalCredentialAwarded": "Weather Knowledge Certificate",
+                "educationalLevel": "All Levels",
+                "learningResourceType": [
+                  "Interactive Tutorial",
+                  "Educational Game",
+                  "Reference Material",
+                  "Simulation"
+                ],
+                "teaches": [
+                  "Meteorology",
+                  "Cloud Formation",
+                  "Weather Systems",
+                  "Atmospheric Science",
+                  "Weather Prediction"
+                ],
+                "featureList": [
+                  "Real-time weather data with 16-bit doppler radar",
+                  "Comprehensive cloud type atlas with pixel art",
+                  "Weather systems education and simulations",
+                  "Interactive weather facts and statistics", 
+                  "Educational weather games and quizzes",
+                  "Miami Vice and Dark retro themes",
+                  "Mobile responsive design",
+                  "Authentic 8-bit graphics and styling"
+                ],
+                "browserRequirements": "Requires JavaScript. Modern web browser recommended.",
+                "permissions": "geolocation (optional)"
+              })
+            }}
+          />
+        </head>
+        <body className={inter.className}>
+          <div className="min-h-screen flex items-center justify-center p-4">
+            <div className="text-center">
+              <div className="text-cyan-600 font-mono mb-4">CLERK KEYS NOT CONFIGURED</div>
+              <div className="text-cyan-400 font-mono text-sm">
+                Please set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY in environment variables
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    )
+  }
+
   return (
     <ClerkProvider
+      publishableKey={clerkPublishableKey}
       appearance={{
         baseTheme: dark,
         variables: {
