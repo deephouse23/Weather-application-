@@ -1,9 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import PageWrapper from "@/components/page-wrapper"
 import { ChevronDown, ChevronUp } from "lucide-react"
-import { ThemeType, themeUtils, APP_CONSTANTS } from "@/lib/utils"
 
 // Theme types to match main app
 type WeatherPhenomena = {
@@ -202,37 +200,13 @@ const weatherPhenomena: WeatherPhenomena[] = [
 ];
 
 export default function FunFactsPage() {
-  const [currentTheme, setCurrentTheme] = useState<ThemeType>(APP_CONSTANTS.THEMES.DARK)
+  const [isClient, setIsClient] = useState(false)
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
 
-  // Load and sync theme using centralized utilities
+  // Client-side mount effect
   useEffect(() => {
-    const storedTheme = themeUtils.getStoredTheme()
-    setCurrentTheme(storedTheme)
-    
-    // Listen for theme changes
-    const handleStorageChange = () => {
-      const newTheme = themeUtils.getStoredTheme()
-      setCurrentTheme(newTheme)
-    }
-    
-    window.addEventListener('storage', handleStorageChange)
-    
-    // Poll for theme changes
-    const interval = setInterval(() => {
-      const newTheme = themeUtils.getStoredTheme()
-      if (newTheme !== currentTheme) {
-        setCurrentTheme(newTheme)
-      }
-    }, 100)
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      clearInterval(interval)
-    }
-  }, [currentTheme])
-
-  const themeClasses = themeUtils.getThemeClasses(currentTheme)
+    setIsClient(true)
+  }, [])
 
   const toggleCard = (id: string) => {
     const newExpanded = new Set(expandedCards)
@@ -246,114 +220,106 @@ export default function FunFactsPage() {
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
-      case 'Ultra Rare': return currentTheme === 'miami' ? '#ff007f' : currentTheme === 'tron' ? '#00FFFF' : '#00d4ff'
-      case 'Very Rare': return currentTheme === 'miami' ? '#ff1493' : currentTheme === 'tron' ? '#00CCCC' : '#00b4d4'
-      case 'Rare': return currentTheme === 'miami' ? '#ff69b4' : currentTheme === 'tron' ? '#0099AA' : '#0094b4'
-      case 'Uncommon': return currentTheme === 'miami' ? '#ffb3da' : currentTheme === 'tron' ? '#006677' : '#007494'
-      default: return currentTheme === 'miami' ? '#d0d0d0' : currentTheme === 'tron' ? '#004455' : '#005474'
+      case 'Common': return 'text-green-400'
+      case 'Uncommon': return 'text-blue-400'
+      case 'Rare': return 'text-purple-400'
+      case 'Very Rare': return 'text-orange-400'
+      case 'Ultra Rare': return 'text-red-400'
+      default: return 'text-cyan-400'
     }
   }
 
   return (
-    <PageWrapper>
+    <div className="min-h-screen bg-black text-cyan-400 crt-scanlines">
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-12">
-          <h1 className={`text-4xl md:text-6xl font-bold mb-4 font-mono uppercase tracking-wider ${themeClasses.headerText} ${themeClasses.glow}`}>
-            16-BIT TAKES
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 font-mono uppercase tracking-wider text-cyan-400">
+            WEATHER PHENOMENA
           </h1>
-          <p className={`text-lg ${themeClasses.secondaryText} font-mono mb-6`}>
-            Weather phenomena explained with 16-bit gaming references
+          <p className="text-lg text-cyan-600 font-mono mb-6">
+            🌪️ Discover the rarest and most incredible weather events on Earth
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-          {weatherPhenomena.map((phenomenon) => {
-            const isExpanded = expandedCards.has(phenomenon.id)
-            return (
-              <div 
-                key={phenomenon.id}
-                className={`${themeClasses.cardBg} border-4 ${themeClasses.borderColor} transition-all duration-300 ${themeClasses.hoverBg} cursor-pointer h-fit`}
-                style={{ boxShadow: `0 0 15px ${themeClasses.shadowColor}33` }}
-                onClick={() => toggleCard(phenomenon.id)}
-              >
-                {/* Card Header */}
-                <div className="p-4 border-b-2 border-current">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-3xl">{phenomenon.emoji}</div>
-                    <div 
-                      className="text-xs font-mono font-bold px-2 py-1 border-2 rounded"
-                      style={{ 
-                        borderColor: getRarityColor(phenomenon.rarity),
-                        color: getRarityColor(phenomenon.rarity),
-                        backgroundColor: getRarityColor(phenomenon.rarity) + '20'
-                      }}
-                    >
-                      {phenomenon.rarity.toUpperCase()}
-                    </div>
-                  </div>
-                  
-                  <h3 className={`font-mono font-bold text-lg uppercase tracking-wider mb-2 ${themeClasses.headerText}`}>
-                    {phenomenon.name}
-                  </h3>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className={`text-sm font-mono ${themeClasses.secondaryText}`}>
-                      {phenomenon.category}
-                    </span>
-                    {isExpanded ? 
-                      <ChevronUp className="w-4 h-4 text-current" /> : 
-                      <ChevronDown className="w-4 h-4 text-current" />
-                    }
-                  </div>
-                </div>
-
-                {/* Card Body */}
-                <div className="p-4">
-                  <p className={`${themeClasses.text} font-mono text-sm mb-4`}>
-                    {phenomenon.description}
-                  </p>
-
-                  {isExpanded && (
-                    <div className="space-y-4">
-                      {/* Scientific Facts */}
-                      <div>
-                        <h4 className={`font-mono font-bold text-sm uppercase mb-2 ${themeClasses.headerText}`}>
-                          Scientific Facts:
-                        </h4>
-                        <ul className="space-y-1">
-                          {phenomenon.facts.map((fact, index) => (
-                            <li key={index} className={`${themeClasses.text} font-mono text-xs flex items-start`}>
-                              <span className={`${themeClasses.headerText} mr-2`}>▸</span>
-                              {fact}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      {/* 16-Bit Take */}
-                      <div className={`border-2 ${themeClasses.borderColor} p-3 mt-4`}
-                           style={{ backgroundColor: getRarityColor(phenomenon.rarity) + '10' }}>
-                        <h4 className={`font-mono font-bold text-sm uppercase mb-2 ${themeClasses.headerText}`}>
-                          16-Bit Take:
-                        </h4>
-                        <p className={`${themeClasses.text} font-mono text-xs italic`}>
-                          {phenomenon.bitFact}
-                        </p>
-                      </div>
-                    </div>
+          {weatherPhenomena.map((phenomenon) => (
+            <div
+              key={phenomenon.id}
+              className="bg-black border-2 border-cyan-500 transition-all duration-300 hover:border-cyan-300 cursor-pointer"
+              style={{ boxShadow: '0 0 10px rgba(0, 255, 255, 0.1)' }}
+              onClick={() => toggleCard(phenomenon.id)}
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-3xl">{phenomenon.emoji}</div>
+                  {expandedCards.has(phenomenon.id) ? (
+                    <ChevronUp className="w-5 h-5 text-cyan-400" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-cyan-400" />
                   )}
                 </div>
+                
+                <h3 className="font-mono font-bold text-lg uppercase tracking-wider mb-2 text-cyan-400">
+                  {phenomenon.name}
+                </h3>
+                
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs bg-cyan-500 text-black px-2 py-1 font-mono">
+                    {phenomenon.category}
+                  </span>
+                  <span className={`text-xs font-mono ${getRarityColor(phenomenon.rarity)}`}>
+                    {phenomenon.rarity}
+                  </span>
+                </div>
+                
+                <p className="text-cyan-600 font-mono text-sm mb-3">
+                  {phenomenon.description}
+                </p>
+                
+                {expandedCards.has(phenomenon.id) && (
+                  <div className="mt-4 space-y-3">
+                    <div className="border-t border-cyan-500 pt-3">
+                      <h4 className="font-mono font-bold text-sm uppercase tracking-wider mb-2 text-cyan-400">
+                        FACTS
+                      </h4>
+                      <ul className="space-y-1">
+                        {phenomenon.facts.map((fact, index) => (
+                          <li key={index} className="text-cyan-600 font-mono text-xs">
+                            • {fact}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-cyan-500/10 border border-cyan-500 p-3">
+                      <p className="text-cyan-400 font-mono text-xs">
+                        <span className="font-bold">16-BIT FACT:</span> {phenomenon.bitFact}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
-            )
-          })}
+            </div>
+          ))}
         </div>
 
         <div className="text-center mt-12">
-          <p className={`${themeClasses.secondaryText} font-mono text-sm`}>
-            Click any phenomenon card to expand and learn more!
-          </p>
+          <div className="bg-black border-2 border-cyan-500 p-6 max-w-2xl mx-auto"
+               style={{ boxShadow: '0 0 10px rgba(0, 255, 255, 0.2)' }}>
+            <h3 className="font-mono font-bold text-lg uppercase tracking-wider mb-4 text-cyan-400">
+              🌍 WEATHER PHENOMENA DATABASE
+            </h3>
+            <div className="text-cyan-600 font-mono text-sm space-y-2">
+              <p>✨ 12 incredible weather phenomena from around the world</p>
+              <p>🎮 Each phenomenon includes 16-bit gaming references</p>
+              <p>📊 Rarity levels from Common to Ultra Rare</p>
+              <p>🔬 Scientific facts with retro gaming flair</p>
+              <p>🌪️ Interactive cards with expandable details</p>
+              <p>🎯 Click any card to reveal more information</p>
+            </div>
+          </div>
         </div>
       </div>
-    </PageWrapper>
+    </div>
   )
 } 
