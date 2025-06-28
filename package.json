@@ -1,15 +1,19 @@
 {
   "name": "16-bit-weather",
-  "version": "0.2.7",
+  "version": "0.2.9",
   "description": "A retro 16-bit weather education platform with pixel art graphics, comprehensive location search, authentic doppler radar, cloud atlas, interactive weather systems database, extreme weather phenomena collection, historical weather data, interactive games with high score tracking, and authentic 16-bit gaming experience",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "preview": "vercel --prod=false",
+    "deploy-preview": "vercel --prod=false --confirm"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.23.1",
+    "@clerk/themes": "^2.2.52",
     "@vercel/analytics": "^1.5.0",
     "autoprefixer": "^10.4.20",
     "chart.js": "^4.4.9",
