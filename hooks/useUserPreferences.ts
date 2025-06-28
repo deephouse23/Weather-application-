@@ -7,8 +7,15 @@ export function useUserPreferences() {
   const { user, isLoaded } = useUser()
   const [preferences, setPreferences] = useState<WeatherPreferences>(defaultPreferences)
   const [isLoading, setIsLoading] = useState(true)
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isClient) return
+
     if (isLoaded && user) {
       const savedPrefs = user.unsafeMetadata?.weatherPreferences as WeatherPreferences
       if (savedPrefs) {
@@ -17,18 +24,20 @@ export function useUserPreferences() {
       setIsLoading(false)
     } else if (isLoaded && !user) {
       // Try to load from localStorage for guest users
-      const guestPrefs = localStorage.getItem('16bit-weather-preferences')
-      if (guestPrefs) {
-        try {
-          const parsed = JSON.parse(guestPrefs)
-          setPreferences({ ...defaultPreferences, ...parsed })
-        } catch (error) {
-          console.error('Failed to parse guest preferences:', error)
+      if (typeof window !== 'undefined') {
+        const guestPrefs = localStorage.getItem('16bit-weather-preferences')
+        if (guestPrefs) {
+          try {
+            const parsed = JSON.parse(guestPrefs)
+            setPreferences({ ...defaultPreferences, ...parsed })
+          } catch (error) {
+            console.error('Failed to parse guest preferences:', error)
+          }
         }
       }
       setIsLoading(false)
     }
-  }, [isLoaded, user])
+  }, [isClient, isLoaded, user])
 
   const updatePreferences = async (newPrefs: Partial<WeatherPreferences>) => {
     const updated = { ...preferences, ...newPrefs }
@@ -46,7 +55,7 @@ export function useUserPreferences() {
       } catch (error) {
         console.error('Failed to save preferences:', error)
       }
-    } else {
+    } else if (typeof window !== 'undefined') {
       // Save to localStorage for guest users
       localStorage.setItem('16bit-weather-preferences', JSON.stringify(updated))
     }
@@ -56,13 +65,17 @@ export function useUserPreferences() {
     setPreferences(defaultPreferences)
     
     if (user) {
-      await user.update({
-        unsafeMetadata: { 
-          ...user.unsafeMetadata,
-          weatherPreferences: defaultPreferences 
-        }
-      })
-    } else {
+      try {
+        await user.update({
+          unsafeMetadata: { 
+            ...user.unsafeMetadata,
+            weatherPreferences: defaultPreferences 
+          }
+        })
+      } catch (error) {
+        console.error('Failed to reset preferences:', error)
+      }
+    } else if (typeof window !== 'undefined') {
       localStorage.removeItem('16bit-weather-preferences')
     }
   }
@@ -71,7 +84,7 @@ export function useUserPreferences() {
     preferences, 
     updatePreferences, 
     resetPreferences, 
-    isLoading,
+    isLoading: !isClient || isLoading,
     isAuthenticated: !!user 
   }
 } 

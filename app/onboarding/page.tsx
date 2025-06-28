@@ -1,11 +1,12 @@
 'use client'
 import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { WeatherPreferences, defaultPreferences } from '@/types/user'
 
 export default function OnboardingPage() {
-  const { user } = useUser()
+  const [isClient, setIsClient] = useState(false)
+  const { user, isLoaded } = useUser()
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [preferences, setPreferences] = useState<WeatherPreferences>(defaultPreferences)
@@ -13,10 +14,22 @@ export default function OnboardingPage() {
 
   const totalSteps = 4
 
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  useEffect(() => {
+    if (isClient && isLoaded && !user) {
+      router.push('/sign-in')
+    }
+  }, [isClient, isLoaded, user, router])
+
   const savePreferences = async () => {
+    if (!user) return
+    
     setIsLoading(true)
     try {
-      await user?.update({
+      await user.update({
         unsafeMetadata: { 
           ...user.unsafeMetadata,
           weatherPreferences: preferences,
@@ -42,6 +55,28 @@ export default function OnboardingPage() {
     if (step > 1) {
       setStep(step - 1)
     }
+  }
+
+  // Show loading state during SSR or when not client-side
+  if (!isClient || !isLoaded) {
+    return (
+      <div className="min-h-screen bg-black text-cyan-400 p-4 crt-scanlines flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-cyan-600 font-mono">LOADING AUTHENTICATION...</div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show redirect state when user is not authenticated
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-black text-cyan-400 p-4 crt-scanlines flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-cyan-600 font-mono">REDIRECTING TO SIGN IN...</div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -221,22 +256,26 @@ export default function OnboardingPage() {
           )}
         </div>
 
-        {/* Navigation */}
+        {/* Navigation Buttons */}
         <div className="flex justify-between">
           <button
             onClick={prevStep}
             disabled={step === 1}
-            className="px-6 py-3 border border-cyan-500 text-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`px-6 py-3 border-2 font-mono text-sm transition-all ${
+              step === 1 
+                ? 'border-gray-600 text-gray-600 cursor-not-allowed' 
+                : 'border-cyan-500 text-cyan-400 hover:border-cyan-300 hover:text-cyan-300'
+            }`}
           >
-            ◄ PREVIOUS
+            ← PREVIOUS
           </button>
           
           <button
             onClick={nextStep}
             disabled={isLoading}
-            className="px-6 py-3 bg-cyan-500 text-black font-mono uppercase tracking-wider disabled:opacity-50"
+            className="px-6 py-3 border-2 border-cyan-500 text-cyan-400 font-mono text-sm hover:border-cyan-300 hover:text-cyan-300 transition-all disabled:opacity-50"
           >
-            {isLoading ? 'SAVING...' : step === totalSteps ? 'COMPLETE SETUP' : 'NEXT ►'}
+            {isLoading ? 'SAVING...' : step === totalSteps ? 'COMPLETE SETUP' : 'NEXT →'}
           </button>
         </div>
       </div>

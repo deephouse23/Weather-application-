@@ -8,6 +8,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { dark } from '@clerk/themes'
 import './globals.css'
 import Navigation from '@/components/navigation'
+import ErrorBoundary from '@/components/error-boundary'
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -112,68 +113,27 @@ export default function RootLayout({
           <link rel="preconnect" href="https://api.openweathermap.org" />
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
-                "@context": "https://schema.org",
-                "@type": "EducationalOrganization",
-                "name": "16-Bit Weather Education Platform",
-                "description": "Comprehensive weather education platform with 16-bit retro styling, covering meteorology, cloud types, weather systems, and interactive learning.",
-                "url": "https://16-bit-weather.vercel.app",
-                "applicationCategory": "EducationalApplication",
-                "operatingSystem": "Web Browser",
-                "offers": {
-                  "@type": "Offer",
-                  "price": "0",
-                  "priceCurrency": "USD"
-                },
-                "author": {
-                  "@type": "Organization",
-                  "name": "Weather Education Systems"
-                },
-                "screenshot": "https://16-bit-weather.vercel.app/og-image.png",
-                "educationalCredentialAwarded": "Weather Knowledge Certificate",
-                "educationalLevel": "All Levels",
-                "learningResourceType": [
-                  "Interactive Tutorial",
-                  "Educational Game",
-                  "Reference Material",
-                  "Simulation"
-                ],
-                "teaches": [
-                  "Meteorology",
-                  "Cloud Formation",
-                  "Weather Systems",
-                  "Atmospheric Science",
-                  "Weather Prediction"
-                ],
-                "featureList": [
-                  "Real-time weather data with 16-bit doppler radar",
-                  "Comprehensive cloud type atlas with pixel art",
-                  "Weather systems education and simulations",
-                  "Interactive weather facts and statistics", 
-                  "Educational weather games and quizzes",
-                  "Miami Vice and Dark retro themes",
-                  "Mobile responsive design",
-                  "Authentic 8-bit graphics and styling"
-                ],
-                "browserRequirements": "Requires JavaScript. Modern web browser recommended.",
-                "permissions": "geolocation (optional)"
-              })
-            }}
-          />
         </head>
         <body className={inter.className}>
-          <Navigation />
-          <div className="min-h-screen flex items-center justify-center p-4">
-            <div className="text-center">
-              <div className="text-cyan-600 font-mono mb-4">CLERK KEYS NOT CONFIGURED</div>
-              <div className="text-cyan-400 font-mono text-sm">
-                Please set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY in environment variables
+          <ErrorBoundary>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="dark"
+              enableSystem={false}
+              storageKey="weather-edu-theme"
+              themes={["dark", "miami", "tron"]}
+            >
+              <Navigation />
+              <div className="min-h-screen flex items-center justify-center p-4">
+                <div className="text-center">
+                  <div className="text-cyan-600 font-mono mb-4">CLERK KEYS NOT CONFIGURED</div>
+                  <div className="text-cyan-400 font-mono text-sm">
+                    Please set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY in environment variables
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </ThemeProvider>
+          </ErrorBoundary>
         </body>
       </html>
     )
@@ -248,69 +208,20 @@ export default function RootLayout({
           <link rel="preconnect" href="https://api.openweathermap.org" />
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
-                "@context": "https://schema.org",
-                "@type": "EducationalOrganization",
-                "name": "16-Bit Weather Education Platform",
-                "description": "Comprehensive weather education platform with 16-bit retro styling, covering meteorology, cloud types, weather systems, and interactive learning.",
-                "url": "https://16-bit-weather.vercel.app",
-                "applicationCategory": "EducationalApplication",
-                "operatingSystem": "Web Browser",
-                "offers": {
-                  "@type": "Offer",
-                  "price": "0",
-                  "priceCurrency": "USD"
-                },
-                "author": {
-                  "@type": "Organization",
-                  "name": "Weather Education Systems"
-                },
-                "screenshot": "https://16-bit-weather.vercel.app/og-image.png",
-                "educationalCredentialAwarded": "Weather Knowledge Certificate",
-                "educationalLevel": "All Levels",
-                "learningResourceType": [
-                  "Interactive Tutorial",
-                  "Educational Game",
-                  "Reference Material",
-                  "Simulation"
-                ],
-                "teaches": [
-                  "Meteorology",
-                  "Cloud Formation",
-                  "Weather Systems",
-                  "Atmospheric Science",
-                  "Weather Prediction"
-                ],
-                "featureList": [
-                  "Real-time weather data with 16-bit doppler radar",
-                  "Comprehensive cloud type atlas with pixel art",
-                  "Weather systems education and simulations",
-                  "Interactive weather facts and statistics", 
-                  "Educational weather games and quizzes",
-                  "Miami Vice and Dark retro themes",
-                  "Mobile responsive design",
-                  "Authentic 8-bit graphics and styling"
-                ],
-                "browserRequirements": "Requires JavaScript. Modern web browser recommended.",
-                "permissions": "geolocation (optional)"
-              })
-            }}
-          />
         </head>
         <body className={inter.className}>
-          <Navigation />
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem={false}
-            storageKey="weather-edu-theme"
-            themes={["dark", "miami", "tron"]}
-          >
-            {children}
-          </ThemeProvider>
+          <ErrorBoundary>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="dark"
+              enableSystem={false}
+              storageKey="weather-edu-theme"
+              themes={["dark", "miami", "tron"]}
+            >
+              <Navigation />
+              {children}
+            </ThemeProvider>
+          </ErrorBoundary>
           <Analytics />
         </body>
       </html>

@@ -1,23 +1,40 @@
 'use client'
 import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function WeatherPage() {
+  const [isClient, setIsClient] = useState(false)
   const { user, isLoaded } = useUser()
   const router = useRouter()
   
   useEffect(() => {
-    if (isLoaded && !user) {
+    setIsClient(true)
+  }, [])
+  
+  useEffect(() => {
+    if (isClient && isLoaded && !user) {
       router.push('/sign-in')
     }
-  }, [isLoaded, user, router])
+  }, [isClient, isLoaded, user, router])
 
-  if (!isLoaded || !user) {
+  // Show loading state during SSR or when not client-side
+  if (!isClient || !isLoaded) {
     return (
       <div className="min-h-screen bg-black text-cyan-400 p-4 crt-scanlines flex items-center justify-center">
         <div className="text-center">
           <div className="text-cyan-600 font-mono">LOADING AUTHENTICATION...</div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show redirect state when user is not authenticated
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-black text-cyan-400 p-4 crt-scanlines flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-cyan-600 font-mono">REDIRECTING TO SIGN IN...</div>
         </div>
       </div>
     )

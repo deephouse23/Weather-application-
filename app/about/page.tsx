@@ -1,40 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import PageWrapper from "@/components/page-wrapper"
-import { ThemeType, themeUtils, APP_CONSTANTS } from "@/lib/utils"
 
 export default function AboutPage() {
-  const [currentTheme, setCurrentTheme] = useState<ThemeType>(APP_CONSTANTS.THEMES.DARK)
+  const [isClient, setIsClient] = useState(false)
 
-  // Load and sync theme using centralized utilities
+  // Client-side mount effect
   useEffect(() => {
-    const storedTheme = themeUtils.getStoredTheme()
-    setCurrentTheme(storedTheme)
-    
-    // Listen for theme changes
-    const handleStorageChange = () => {
-      const newTheme = themeUtils.getStoredTheme()
-      setCurrentTheme(newTheme)
-    }
-    
-    window.addEventListener('storage', handleStorageChange)
-    
-    // Poll for theme changes
-    const interval = setInterval(() => {
-      const newTheme = themeUtils.getStoredTheme()
-      if (newTheme !== currentTheme) {
-        setCurrentTheme(newTheme)
-      }
-    }, 100)
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      clearInterval(interval)
-    }
-  }, [currentTheme])
-
-  const themeClasses = themeUtils.getThemeClasses(currentTheme)
+    setIsClient(true)
+  }, [])
 
   return (
     <div className="min-h-screen bg-black text-cyan-400 p-8 crt-scanlines">

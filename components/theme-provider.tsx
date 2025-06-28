@@ -37,8 +37,10 @@ export function ThemeProvider({
   enableSystem = false
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(defaultTheme)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const storedTheme = localStorage.getItem(storageKey) as Theme
     if (storedTheme && themes.includes(storedTheme)) {
       setTheme(storedTheme)
@@ -46,20 +48,29 @@ export function ThemeProvider({
   }, [storageKey, themes])
 
   useEffect(() => {
+    if (!mounted) return
+    
     const root = window.document.documentElement
     root.classList.remove(...themes)
     root.classList.add(theme)
     if (attribute === 'class') {
       root.setAttribute('data-theme', theme)
     }
-  }, [theme, themes, attribute])
+  }, [theme, themes, attribute, mounted])
 
   const toggleTheme = () => {
     const currentIndex = themes.indexOf(theme)
     const nextIndex = (currentIndex + 1) % themes.length
     const nextTheme = themes[nextIndex]
     setTheme(nextTheme)
-    localStorage.setItem(storageKey, nextTheme)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(storageKey, nextTheme)
+    }
+  }
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return <>{children}</>
   }
 
   return (
