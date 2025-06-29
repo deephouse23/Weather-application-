@@ -1,4 +1,5 @@
 import { SignUp } from '@clerk/nextjs'
+import { ClerkWrapper } from '@/components/clerk-wrapper'
 
 export default function SignUpPage() {
   return (
@@ -20,10 +21,23 @@ export default function SignUpPage() {
           </div>
         </div>
         
-        <SignUp 
-          redirectUrl="/onboarding"
-          fallbackRedirectUrl="/onboarding"
-        />
+        <ClerkWrapper 
+          fallback={
+            <div className="text-center p-8 border border-cyan-400 text-cyan-400">
+              <div className="text-lg font-mono mb-4">REGISTRATION UNAVAILABLE</div>
+              <div className="text-sm text-cyan-600">
+                Clerk authentication is not configured.
+                <br />
+                Please check your environment variables.
+              </div>
+            </div>
+          }
+        >
+          <SignUp 
+            redirectUrl="/onboarding"
+            fallbackRedirectUrl="/onboarding"
+          />
+        </ClerkWrapper>
         
         {/* Terminal Footer */}
         <div className="text-center mt-6 text-cyan-600 text-xs font-mono">

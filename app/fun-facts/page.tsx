@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ChevronDown, ChevronUp } from "lucide-react"
+import NavBar from '@/components/nav-bar'
 
 // Theme types to match main app
 type WeatherPhenomena = {
@@ -230,92 +230,93 @@ export default function FunFactsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-cyan-400 crt-scanlines">
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 font-mono uppercase tracking-wider text-cyan-400">
-            WEATHER PHENOMENA
-          </h1>
-          <p className="text-lg text-cyan-600 font-mono mb-6">
-            🌪️ Discover the rarest and most incredible weather events on Earth
-          </p>
-        </div>
+    <div className="min-h-screen bg-black text-cyan-400">
+      <NavBar />
+      <div className="p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4 font-mono uppercase tracking-wider text-cyan-400">
+              WEATHER PHENOMENA
+            </h1>
+            <p className="text-lg text-cyan-600 font-mono mb-6">
+              🌪️ Discover the rarest and most incredible weather events on Earth
+            </p>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-          {weatherPhenomena.map((phenomenon) => (
-            <div
-              key={phenomenon.id}
-              className="bg-black border-2 border-cyan-500 transition-all duration-300 hover:border-cyan-300 cursor-pointer"
-              style={{ boxShadow: '0 0 10px rgba(0, 255, 255, 0.1)' }}
-              onClick={() => toggleCard(phenomenon.id)}
-            >
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-3xl">{phenomenon.emoji}</div>
-                  {expandedCards.has(phenomenon.id) ? (
-                    <ChevronUp className="w-5 h-5 text-cyan-400" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-cyan-400" />
-                  )}
-                </div>
-                
-                <h3 className="font-mono font-bold text-lg uppercase tracking-wider mb-2 text-cyan-400">
-                  {phenomenon.name}
-                </h3>
-                
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-xs bg-cyan-500 text-black px-2 py-1 font-mono">
-                    {phenomenon.category}
-                  </span>
-                  <span className={`text-xs font-mono ${getRarityColor(phenomenon.rarity)}`}>
-                    {phenomenon.rarity}
-                  </span>
-                </div>
-                
-                <p className="text-cyan-600 font-mono text-sm mb-3">
-                  {phenomenon.description}
-                </p>
-                
-                {expandedCards.has(phenomenon.id) && (
-                  <div className="mt-4 space-y-3">
-                    <div className="border-t border-cyan-500 pt-3">
-                      <h4 className="font-mono font-bold text-sm uppercase tracking-wider mb-2 text-cyan-400">
-                        FACTS
-                      </h4>
-                      <ul className="space-y-1">
-                        {phenomenon.facts.map((fact, index) => (
-                          <li key={index} className="text-cyan-600 font-mono text-xs">
-                            • {fact}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    
-                    <div className="bg-cyan-500/10 border border-cyan-500 p-3">
-                      <p className="text-cyan-400 font-mono text-xs">
-                        <span className="font-bold">16-BIT FACT:</span> {phenomenon.bitFact}
-                      </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+            {weatherPhenomena.map((phenomenon) => (
+              <div
+                key={phenomenon.id}
+                className="bg-black border-2 border-cyan-500 transition-all duration-300 hover:border-cyan-300 cursor-pointer"
+                style={{ boxShadow: '0 0 10px rgba(0, 255, 255, 0.1)' }}
+                onClick={() => toggleCard(phenomenon.id)}
+              >
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-3xl">{phenomenon.emoji}</div>
+                    <div className="text-cyan-400">
+                      {expandedCards.has(phenomenon.id) ? '▼' : '▶'}
                     </div>
                   </div>
-                )}
+                  
+                  <h3 className="font-mono font-bold text-lg uppercase tracking-wider mb-2 text-cyan-400">
+                    {phenomenon.name}
+                  </h3>
+                  
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xs bg-cyan-500 text-black px-2 py-1 font-mono">
+                      {phenomenon.category}
+                    </span>
+                    <span className={`text-xs font-mono ${getRarityColor(phenomenon.rarity)}`}>
+                      {phenomenon.rarity}
+                    </span>
+                  </div>
+                  
+                  <p className="text-cyan-600 font-mono text-sm mb-3">
+                    {phenomenon.description}
+                  </p>
+                  
+                  {expandedCards.has(phenomenon.id) && (
+                    <div className="mt-4 space-y-3">
+                      <div className="border-t border-cyan-500 pt-3">
+                        <h4 className="font-mono font-bold text-sm uppercase tracking-wider mb-2 text-cyan-400">
+                          FACTS
+                        </h4>
+                        <ul className="space-y-1">
+                          {phenomenon.facts.map((fact, index) => (
+                            <li key={index} className="text-cyan-600 font-mono text-xs">
+                              • {fact}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      
+                      <div className="bg-cyan-500/10 border border-cyan-500 p-3">
+                        <p className="text-cyan-400 font-mono text-xs">
+                          <span className="font-bold">16-BIT FACT:</span> {phenomenon.bitFact}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <div className="text-center mt-12">
-          <div className="bg-black border-2 border-cyan-500 p-6 max-w-2xl mx-auto"
-               style={{ boxShadow: '0 0 10px rgba(0, 255, 255, 0.2)' }}>
-            <h3 className="font-mono font-bold text-lg uppercase tracking-wider mb-4 text-cyan-400">
-              🌍 WEATHER PHENOMENA DATABASE
-            </h3>
-            <div className="text-cyan-600 font-mono text-sm space-y-2">
-              <p>✨ 12 incredible weather phenomena from around the world</p>
-              <p>🎮 Each phenomenon includes 16-bit gaming references</p>
-              <p>📊 Rarity levels from Common to Ultra Rare</p>
-              <p>🔬 Scientific facts with retro gaming flair</p>
-              <p>🌪️ Interactive cards with expandable details</p>
-              <p>🎯 Click any card to reveal more information</p>
+          <div className="text-center mt-12">
+            <div className="bg-black border-2 border-cyan-500 p-6 max-w-2xl mx-auto"
+                 style={{ boxShadow: '0 0 10px rgba(0, 255, 255, 0.2)' }}>
+              <h3 className="font-mono font-bold text-lg uppercase tracking-wider mb-4 text-cyan-400">
+                🌍 WEATHER PHENOMENA DATABASE
+              </h3>
+              <div className="text-cyan-600 font-mono text-sm space-y-2">
+                <p>✨ 12 incredible weather phenomena from around the world</p>
+                <p>🎮 Each phenomenon includes 16-bit gaming references</p>
+                <p>📊 Rarity levels from Common to Ultra Rare</p>
+                <p>🔬 Scientific facts with retro gaming flair</p>
+                <p>🌪️ Interactive cards with expandable details</p>
+                <p>🎯 Click any card to reveal more information</p>
+              </div>
             </div>
           </div>
         </div>
