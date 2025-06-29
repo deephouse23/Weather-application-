@@ -22,8 +22,7 @@ export default function RootLayout({
   console.log('Layout component rendered');
   
   // Check if Clerk environment variables are available
-  const hasClerkConfig = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && 
-                        process.env.CLERK_SECRET_KEY
+  const hasClerkConfig = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
   
   console.log('Clerk config available:', !!hasClerkConfig);
   
