@@ -21,31 +21,20 @@ export default function RootLayout({
 }>) {
   console.log('Layout component rendered');
   
-  // Check if Clerk environment variables are available
-  const hasClerkConfig = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-  
-  console.log('Clerk config available:', !!hasClerkConfig);
-  
   return (
     <html lang="en">
       <body className={`${inter.className} bg-black text-cyan-400`}>
-        {hasClerkConfig ? (
-          <ClerkProvider
-            publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-            allowedRedirectOrigins={[
-              'https://weather-application-jvxh6l7gs-justin-elrods-projects.vercel.app',
-              'http://localhost:3000'
-            ]}
-          >
-            <ThemeProvider defaultTheme="dark">
-              {children}
-            </ThemeProvider>
-          </ClerkProvider>
-        ) : (
+        <ClerkProvider
+          publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+          allowedRedirectOrigins={[
+            'https://weather-application-jvxh6l7gs-justin-elrods-projects.vercel.app',
+            'http://localhost:3000'
+          ]}
+        >
           <ThemeProvider defaultTheme="dark">
             {children}
           </ThemeProvider>
-        )}
+        </ClerkProvider>
       </body>
     </html>
   );
