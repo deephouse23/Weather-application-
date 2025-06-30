@@ -14,9 +14,15 @@ export function ClerkWrapper({ children, fallback }: ClerkWrapperProps) {
   useEffect(() => {
     setIsClient(true)
     // Check if Clerk environment variables are available
-    const hasClerkConfig = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && 
-                          process.env.CLERK_SECRET_KEY
-    setIsClerkAvailable(!!hasClerkConfig)
+    const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+    const hasClerkConfig = !!publishableKey
+    
+    console.log('=== CLERK WRAPPER DEBUG ===')
+    console.log('publishableKey:', publishableKey)
+    console.log('hasClerkConfig:', hasClerkConfig)
+    console.log('==========================')
+    
+    setIsClerkAvailable(hasClerkConfig)
   }, [])
 
   if (!isClient) {

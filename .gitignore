@@ -19,3 +19,6 @@ components/api-test.tsx
 # git filter-branch artifacts
 .git-rewrite/
 .vercel
+
+# clerk configuration (can include secrets)
+/.clerk/
