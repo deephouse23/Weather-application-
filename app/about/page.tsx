@@ -41,8 +41,8 @@ export default function AboutPage() {
                 and a fully authenticated user experience.
               </p>
               
-              <p className="font-mono">
-                Built with Next.js, Clerk authentication, and a lot of nostalgia for the golden age of computing.
+              <p className="text-lg mb-6">
+                Built with Next.js, modern authentication, and a lot of nostalgia for the golden age of computing.
               </p>
             </div>
           </div>

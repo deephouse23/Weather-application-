@@ -1,51 +1,79 @@
 'use client'
-import { useEffect, useState } from 'react'
-import { useAuth } from '@clerk/nextjs'
+import { useState, useEffect } from 'react'
+import NavBar from '@/components/nav-bar'
 
 export default function DebugPage() {
-  const [envVars, setEnvVars] = useState<any>({})
   const [isClient, setIsClient] = useState(false)
+  const [envVars, setEnvVars] = useState<Record<string, string>>({})
 
-  // Client-side mounting effect
   useEffect(() => {
     setIsClient(true)
+    // Check environment variables
+    setEnvVars({
+      'NEXT_PUBLIC_OPENWEATHER_API_KEY': process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'Not set',
+      'NODE_ENV': process.env.NODE_ENV || 'Not set',
+    })
   }, [])
 
-  // Don't call Clerk hooks during SSR
   if (!isClient) {
     return (
-      <div className="p-8">
-        <h1 className="text-2xl mb-4">Environment Debug</h1>
-        <div className="bg-gray-800 p-4 rounded text-sm">
-          Loading...
-        </div>
+      <div className="min-h-screen bg-black text-cyan-400">
+        <NavBar />
+        <main className="container mx-auto px-4 py-8">
+          <h1 className="text-2xl font-bold mb-4">Debug Page</h1>
+          <p>Loading...</p>
+        </main>
       </div>
     )
   }
 
-  // NOW it's safe to use Clerk hooks
-  const { isSignedIn, userId, sessionId } = useAuth()
-
-  useEffect(() => {
-    setEnvVars({
-      publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-      nodeEnv: process.env.NODE_ENV,
-      vercelEnv: process.env.NEXT_PUBLIC_VERCEL_ENV,
-      allEnvKeys: Object.keys(process.env).filter(key => key.startsWith('NEXT_PUBLIC_')),
-      authStatus: {
-        isSignedIn,
-        userId,
-        sessionId
-      }
-    })
-  }, [isSignedIn, userId, sessionId])
-
   return (
-    <div className="p-8">
-      <h1 className="text-2xl mb-4">Environment Debug</h1>
-      <pre className="bg-gray-800 p-4 rounded text-sm">
-        {JSON.stringify(envVars, null, 2)}
-      </pre>
+    <div className="min-h-screen bg-black text-cyan-400">
+      <NavBar />
+      
+      <main className="container mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold mb-4">Debug Information</h1>
+        
+        <div className="bg-gray-900 border border-cyan-400 rounded-lg p-6 mb-6">
+          <h2 className="text-xl font-bold mb-4">Environment Variables</h2>
+          <div className="space-y-2">
+            {Object.entries(envVars).map(([key, value]) => (
+              <div key={key} className="flex justify-between">
+                <span className="font-mono text-sm">{key}:</span>
+                <span className="font-mono text-sm text-cyan-300">
+                  {value === 'Not set' ? '❌ Not set' : '✅ Set'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-gray-900 border border-cyan-400 rounded-lg p-6">
+          <h2 className="text-xl font-bold mb-4">System Information</h2>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span>User Agent:</span>
+              <span className="text-sm text-cyan-300">{navigator.userAgent}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Platform:</span>
+              <span className="text-sm text-cyan-300">{navigator.platform}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Language:</span>
+              <span className="text-sm text-cyan-300">{navigator.language}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Cookies Enabled:</span>
+              <span className="text-sm text-cyan-300">{navigator.cookieEnabled ? '✅ Yes' : '❌ No'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Geolocation:</span>
+              <span className="text-sm text-cyan-300">{navigator.geolocation ? '✅ Available' : '❌ Not available'}</span>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   )
 } 
