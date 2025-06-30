@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth, SignOutButton, useUser } from "@clerk/nextjs"
 
 /**
@@ -10,8 +10,153 @@ import { useAuth, SignOutButton, useUser } from "@clerk/nextjs"
  * Production-style navigation with horizontal layout
  */
 export default function NavBar() {
+  const [isClient, setIsClient] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  
+  // Client-side mounting effect
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Don't render Clerk-dependent content during SSR
+  if (!isClient) {
+    return (
+      <nav className="bg-black border-b-2 border-cyan-500 shadow-lg shadow-cyan-500/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo - Left Side */}
+            <div className="flex-shrink-0">
+              <Link href="/" className="text-cyan-400 font-mono text-lg hover:text-cyan-300 transition-colors">
+                16 BIT WEATHER
+              </Link>
+            </div>
+
+            {/* Desktop Navigation - Center */}
+            <div className="hidden md:block">
+              <div className="flex items-center space-x-6">
+                <Link 
+                  href="/" 
+                  className="text-cyan-400 hover:text-cyan-300 px-3 py-2 font-mono text-sm transition-colors"
+                >
+                  HOME
+                </Link>
+
+                <Link 
+                  href="/cloud-types" 
+                  className="text-cyan-400 hover:text-cyan-300 px-3 py-2 font-mono text-sm transition-colors"
+                >
+                  CLOUD TYPES
+                </Link>
+
+                <Link 
+                  href="/weather-systems" 
+                  className="text-cyan-400 hover:text-cyan-300 px-3 py-2 font-mono text-sm transition-colors"
+                >
+                  WEATHER SYSTEMS
+                </Link>
+
+                <Link 
+                  href="/fun-facts" 
+                  className="text-cyan-400 hover:text-cyan-300 px-3 py-2 font-mono text-sm transition-colors"
+                >
+                  16-BIT TAKES
+                </Link>
+
+                <Link 
+                  href="/games" 
+                  className="text-cyan-400 hover:text-cyan-300 px-3 py-2 font-mono text-sm transition-colors"
+                >
+                  GAMES
+                </Link>
+
+                <Link 
+                  href="/about" 
+                  className="text-cyan-400 hover:text-cyan-300 px-3 py-2 font-mono text-sm transition-colors"
+                >
+                  ABOUT
+                </Link>
+              </div>
+            </div>
+
+            {/* Auth Section - Right Side (Loading state) */}
+            <div className="flex items-center space-x-4">
+              <div className="text-cyan-600 font-mono text-sm">Loading...</div>
+              
+              {/* Mobile menu button */}
+              <div className="md:hidden">
+                <button
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="text-cyan-400 hover:text-cyan-300 p-2"
+                >
+                  <span className="font-mono text-sm">
+                    {isMenuOpen ? 'CLOSE' : 'MENU'}
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Navigation */}
+          {isMenuOpen && (
+            <div className="md:hidden border-t border-cyan-500">
+              <div className="px-2 pt-2 pb-3 space-y-1">
+                <Link 
+                  href="/" 
+                  className="text-cyan-400 hover:text-cyan-300 block px-3 py-2 font-mono text-sm transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  HOME
+                </Link>
+
+                <Link 
+                  href="/cloud-types" 
+                  className="text-cyan-400 hover:text-cyan-300 block px-3 py-2 font-mono text-sm transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  CLOUD TYPES
+                </Link>
+
+                <Link 
+                  href="/weather-systems" 
+                  className="text-cyan-400 hover:text-cyan-300 block px-3 py-2 font-mono text-sm transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  WEATHER SYSTEMS
+                </Link>
+
+                <Link 
+                  href="/fun-facts" 
+                  className="text-cyan-400 hover:text-cyan-300 block px-3 py-2 font-mono text-sm transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  16-BIT TAKES
+                </Link>
+
+                <Link 
+                  href="/games" 
+                  className="text-cyan-400 hover:text-cyan-300 block px-3 py-2 font-mono text-sm transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  GAMES
+                </Link>
+
+                <Link 
+                  href="/about" 
+                  className="text-cyan-400 hover:text-cyan-300 block px-3 py-2 font-mono text-sm transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  ABOUT
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+      </nav>
+    )
+  }
+
+  // Client-side hooks - only called after mounting
   const { isSignedIn, userId } = useAuth()
   const { user } = useUser()
 
