@@ -4,6 +4,26 @@ import { useAuth } from '@clerk/nextjs'
 
 export default function DebugPage() {
   const [envVars, setEnvVars] = useState<any>({})
+  const [isClient, setIsClient] = useState(false)
+
+  // Client-side mounting effect
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Don't call Clerk hooks during SSR
+  if (!isClient) {
+    return (
+      <div className="p-8">
+        <h1 className="text-2xl mb-4">Environment Debug</h1>
+        <div className="bg-gray-800 p-4 rounded text-sm">
+          Loading...
+        </div>
+      </div>
+    )
+  }
+
+  // NOW it's safe to use Clerk hooks
   const { isSignedIn, userId, sessionId } = useAuth()
 
   useEffect(() => {
