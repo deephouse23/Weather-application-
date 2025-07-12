@@ -801,21 +801,21 @@ function WeatherApp() {
 
           {/* 16-Bit Welcome Message */}
           {!weather && !loading && !error && (
-            <div className="text-center mt-8 mb-8">
-              <div className={cn(
-                "inline-block p-6 rounded-lg border-2 shadow-lg",
-                theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
-                theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
-                theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
-              )}>
-                <p className={cn(
-                  "text-2xl font-bold uppercase tracking-wider pixel-font",
-                  theme === "dark" && "text-blue-400",
-                  theme === "miami" && "text-pink-400",
-                  theme === "tron" && "text-cyan-400"
-                )} style={{ fontFamily: "monospace" }}>
-                  Select a location to begin your forecast adventure!
-                </p>
+            <div className="text-center mt-8 mb-8 px-2 sm:px-0">
+              <div className="w-full max-w-xl mx-auto">
+                <div className={cn(
+                  "p-2 sm:p-3 border-2 shadow-lg",
+                  theme === "dark" && "bg-[#0f0f0f] border-[#00d4ff] shadow-blue-500/20",
+                  theme === "miami" && "bg-[#0a0025] border-[#ff1493] shadow-pink-500/30",
+                  theme === "tron" && "bg-black border-[#00FFFF] shadow-cyan-500/40"
+                )}>
+                  <p className="text-sm font-mono font-bold uppercase tracking-wider text-white" style={{ 
+                    fontFamily: "monospace",
+                    fontSize: "clamp(10px, 2.4vw, 14px)"
+                  }}>
+                    ► PRESS START TO INITIALIZE WEATHER DATA ◄
+                  </p>
+                </div>
               </div>
             </div>
           )}
