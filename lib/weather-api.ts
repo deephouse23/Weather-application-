@@ -605,14 +605,14 @@ const processDailyForecast = (forecastData: OpenWeatherMapForecastResponse, useF
     
     if (!dailyTemps[date]) {
       dailyTemps[date] = {
-        high: item.main.temp_max,
-        low: item.main.temp_min,
+        high: item.main.temp,
+        low: item.main.temp,
         condition: item.weather[0].main,
         description: item.weather[0].description
       };
     } else {
-      dailyTemps[date].high = Math.max(dailyTemps[date].high, item.main.temp_max);
-      dailyTemps[date].low = Math.min(dailyTemps[date].low, item.main.temp_min);
+      dailyTemps[date].high = Math.max(dailyTemps[date].high, item.main.temp);
+      dailyTemps[date].low = Math.min(dailyTemps[date].low, item.main.temp);
     }
   });
   
