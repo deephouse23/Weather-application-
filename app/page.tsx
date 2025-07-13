@@ -74,29 +74,32 @@ const getPressureUnit = (countryCode: string): 'hPa' | 'inHg' => {
   return inHgCountries.includes(countryCode) ? 'inHg' : 'hPa';
 };
 
-// Add AQI helper functions with better contrast
+// Update AQI helper functions for Google Universal AQI (0-100, higher = better)
 const getAQIColor = (aqi: number): string => {
-  if (aqi <= 50) return 'text-green-400 font-semibold';
-  if (aqi <= 100) return 'text-yellow-400 font-semibold';
-  if (aqi <= 150) return 'text-orange-400 font-semibold';
-  if (aqi <= 200) return 'text-red-400 font-semibold';
-  return 'text-purple-400 font-semibold';
+  if (aqi >= 80) return 'text-green-400 font-semibold';      // Excellent
+  if (aqi >= 60) return 'text-green-400 font-semibold';      // Good  
+  if (aqi >= 40) return 'text-yellow-400 font-semibold';     // Moderate
+  if (aqi >= 20) return 'text-orange-400 font-semibold';     // Low
+  if (aqi >= 1) return 'text-red-400 font-semibold';         // Poor
+  return 'text-red-600 font-semibold';                       // Critical (0)
 };
 
 const getAQIDescription = (aqi: number): string => {
-  if (aqi <= 50) return 'Good';
-  if (aqi <= 100) return 'Moderate';
-  if (aqi <= 150) return 'Unhealthy for Sensitive Groups';
-  if (aqi <= 200) return 'Unhealthy';
-  return 'Very Unhealthy';
+  if (aqi >= 80) return 'Excellent';
+  if (aqi >= 60) return 'Good';
+  if (aqi >= 40) return 'Moderate';
+  if (aqi >= 20) return 'Low';
+  if (aqi >= 1) return 'Poor';
+  return 'Critical';
 };
 
 const getAQIRecommendation = (aqi: number): string => {
-  if (aqi <= 50) return 'Air quality is satisfactory. Enjoy outdoor activities.';
-  if (aqi <= 100) return 'Air quality is acceptable. Consider limiting prolonged outdoor exertion.';
-  if (aqi <= 150) return 'Sensitive groups should reduce outdoor activities.';
-  if (aqi <= 200) return 'Everyone should reduce outdoor activities.';
-  return 'Avoid outdoor activities. Stay indoors if possible.';
+  if (aqi >= 80) return 'Excellent air quality. Perfect for all outdoor activities.';
+  if (aqi >= 60) return 'Good air quality. Great for outdoor activities.';
+  if (aqi >= 40) return 'Moderate air quality. Generally acceptable for most people.';
+  if (aqi >= 20) return 'Low air quality. Consider limiting prolonged outdoor exertion.';
+  if (aqi >= 1) return 'Poor air quality. Avoid outdoor activities.';
+  return 'Critical air quality. Stay indoors.';
 };
 
 // Add pollen category color helper
@@ -921,7 +924,7 @@ function WeatherApp() {
 
               {/* AQI and Pollen Count */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* AQI Box */}
+                {/* AQI Box - Updated with Google Universal AQI */}
                 <div className={cn(
                   "p-4 rounded-lg text-center border-2 shadow-lg",
                   theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
