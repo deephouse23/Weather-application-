@@ -43,11 +43,20 @@ interface OpenWeatherMapForecastResponse {
       temp: number;
       temp_min: number;
       temp_max: number;
+      humidity: number;
+      pressure: number;
     };
     weather: Array<{
       main: string;
       description: string;
     }>;
+    wind?: {
+      speed: number;
+      deg?: number;
+    };
+    clouds?: {
+      all: number;
+    };
   }>;
 }
 
@@ -596,33 +605,112 @@ const calculateMoonPhase = (): MoonPhaseInfo => {
   };
 };
 
-// Process 5-day forecast data to extract daily high/low temperatures
+// Process 5-day forecast data to extract daily high/low temperatures with detailed metrics
 const processDailyForecast = (forecastData: OpenWeatherMapForecastResponse, useFahrenheit: boolean) => {
-  const dailyTemps: { [key: string]: { high: number; low: number; condition: string; description: string } } = {};
+  const dailyData: { [key: string]: { 
+    high: number; 
+    low: number; 
+    condition: string; 
+    description: string;
+    humidity: number[];
+    pressure: number[];
+    windSpeed: number[];
+    windDir: string[];
+    cloudCover: number[];
+    precipChance: number[];
+    hourlyForecast: any[];
+  } } = {};
   
   forecastData.list.forEach((item) => {
     const date = new Date(item.dt * 1000).toLocaleDateString('en-US', { weekday: 'long' });
+    const time = new Date(item.dt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true });
     
-    if (!dailyTemps[date]) {
-      dailyTemps[date] = {
-        high: item.main.temp_max,
-        low: item.main.temp_min,
+    if (!dailyData[date]) {
+      dailyData[date] = {
+        high: item.main.temp,
+        low: item.main.temp,
         condition: item.weather[0].main,
-        description: item.weather[0].description
+        description: item.weather[0].description,
+        humidity: [],
+        pressure: [],
+        windSpeed: [],
+        windDir: [],
+        cloudCover: [],
+        precipChance: [],
+        hourlyForecast: []
       };
     } else {
-      dailyTemps[date].high = Math.max(dailyTemps[date].high, item.main.temp_max);
-      dailyTemps[date].low = Math.min(dailyTemps[date].low, item.main.temp_min);
+      dailyData[date].high = Math.max(dailyData[date].high, item.main.temp);
+      dailyData[date].low = Math.min(dailyData[date].low, item.main.temp);
+    }
+
+    // Collect detailed metrics for averaging
+    dailyData[date].humidity.push(item.main.humidity);
+    dailyData[date].pressure.push(item.main.pressure);
+    dailyData[date].windSpeed.push(item.wind?.speed || 0);
+    if (item.wind?.deg) {
+      dailyData[date].windDir.push(getWindDirection(item.wind.deg));
+    }
+    dailyData[date].cloudCover.push(item.clouds?.all || 0);
+    
+    // Calculate precipitation chance (simplified)
+    const precipChance = item.weather[0].main.toLowerCase().includes('rain') ? 
+      Math.min((item.main.humidity / 100) * 100, 85) : 0;
+    dailyData[date].precipChance.push(precipChance);
+
+    // Add to hourly forecast (first 8 entries per day)
+    if (dailyData[date].hourlyForecast.length < 8) {
+      dailyData[date].hourlyForecast.push({
+        time: time,
+        temp: useFahrenheit ? Math.round(item.main.temp) : fahrenheitToCelsius(item.main.temp),
+        condition: mapWeatherCondition(item.weather[0].main),
+        precipChance: Math.round(precipChance)
+      });
     }
   });
   
-  return Object.entries(dailyTemps).map(([day, data]) => ({
-    day,
-    highTemp: useFahrenheit ? Math.round(data.high) : fahrenheitToCelsius(data.high),
-    lowTemp: useFahrenheit ? Math.round(data.low) : fahrenheitToCelsius(data.low),
-    condition: mapWeatherCondition(data.condition),
-    description: data.description
-  }));
+  return Object.entries(dailyData).map(([day, data]) => {
+    // Calculate averages for detailed metrics
+    const avgHumidity = Math.round(data.humidity.reduce((a, b) => a + b, 0) / data.humidity.length);
+    const avgPressure = Math.round(data.pressure.reduce((a, b) => a + b, 0) / data.pressure.length);
+    const avgWindSpeed = Math.round(data.windSpeed.reduce((a, b) => a + b, 0) / data.windSpeed.length);
+    const avgCloudCover = Math.round(data.cloudCover.reduce((a, b) => a + b, 0) / data.cloudCover.length);
+    const avgPrecipChance = Math.round(data.precipChance.reduce((a, b) => a + b, 0) / data.precipChance.length);
+    
+    // Get most common wind direction
+    const windDirection = data.windDir.length > 0 ? 
+      data.windDir.sort((a, b) => 
+        data.windDir.filter(v => v === a).length - data.windDir.filter(v => v === b).length
+      ).pop() : undefined;
+
+    return {
+      day,
+      date: new Date(Date.now() + (Object.keys(dailyData).indexOf(day) * 24 * 60 * 60 * 1000))
+        .toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      highTemp: useFahrenheit ? Math.round(data.high) : fahrenheitToCelsius(data.high),
+      lowTemp: useFahrenheit ? Math.round(data.low) : fahrenheitToCelsius(data.low),
+      condition: mapWeatherCondition(data.condition),
+      description: data.description,
+      details: {
+        humidity: avgHumidity,
+        windSpeed: avgWindSpeed,
+        windDirection: windDirection,
+        pressure: `${avgPressure} hPa`,
+        cloudCover: avgCloudCover,
+        precipitationChance: avgPrecipChance > 0 ? avgPrecipChance : undefined,
+        visibility: undefined, // Not available in free API
+        uvIndex: undefined // Not available in free API
+      },
+      hourlyForecast: data.hourlyForecast
+    };
+  });
+};
+
+// Helper function to convert wind degrees to direction
+const getWindDirection = (degrees: number): string => {
+  const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+  const index = Math.round(degrees / 22.5) % 16;
+  return directions[index];
 };
 
 // Enhanced pressure formatting utilities with better regional support
