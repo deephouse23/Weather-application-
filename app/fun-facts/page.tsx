@@ -246,11 +246,11 @@ export default function FunFactsPage() {
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
-      case 'Ultra Rare': return currentTheme === 'miami' ? '#ff007f' : currentTheme === 'tron' ? '#00FFFF' : '#00d4ff'
-      case 'Very Rare': return currentTheme === 'miami' ? '#ff1493' : currentTheme === 'tron' ? '#00CCCC' : '#00b4d4'
-      case 'Rare': return currentTheme === 'miami' ? '#ff69b4' : currentTheme === 'tron' ? '#0099AA' : '#0094b4'
-      case 'Uncommon': return currentTheme === 'miami' ? '#ffb3da' : currentTheme === 'tron' ? '#006677' : '#007494'
-      default: return currentTheme === 'miami' ? '#d0d0d0' : currentTheme === 'tron' ? '#004455' : '#005474'
+      case 'Ultra Rare': return themeClasses.warningText
+      case 'Very Rare': return themeClasses.successText
+      case 'Rare': return themeClasses.accentText
+      case 'Uncommon': return themeClasses.secondaryText
+      default: return themeClasses.text
     }
   }
 

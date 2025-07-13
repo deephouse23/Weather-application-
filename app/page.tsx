@@ -827,37 +827,25 @@ function WeatherApp() {
               {/* Current Weather */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* Temperature Box */}
-                <div className={cn(
-                  "p-4 rounded-lg text-center border-2 shadow-lg",
-                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
-                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
-                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
-                )}>
-                  <h2 className="text-xl font-semibold mb-2 text-white">Temperature</h2>
-                  <p className="text-3xl font-bold text-white">{weather.temperature}{weather.unit}</p>
+                <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
+                     style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
+                  <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Temperature</h2>
+                  <p className={`text-3xl font-bold ${themeClasses.text}`}>{weather.temperature}{weather.unit}</p>
                 </div>
 
                 {/* Conditions Box */}
-                <div className={cn(
-                  "p-4 rounded-lg text-center border-2 shadow-lg",
-                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
-                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
-                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
-                )}>
-                  <h2 className="text-xl font-semibold mb-2 text-white">Conditions</h2>
-                  <p className="text-lg text-white">{weather.condition}</p>
-                  <p className="text-sm text-gray-400">{weather.description}</p>
+                <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
+                     style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
+                  <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Conditions</h2>
+                  <p className={`text-lg ${themeClasses.text}`}>{weather.condition}</p>
+                  <p className={`text-sm ${themeClasses.secondaryText}`}>{weather.description}</p>
                 </div>
 
                 {/* Wind Box */}
-                <div className={cn(
-                  "p-4 rounded-lg text-center border-2 shadow-lg",
-                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
-                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
-                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
-                )}>
-                  <h2 className="text-xl font-semibold mb-2 text-white">Wind</h2>
-                  <p className="text-lg text-white">
+                <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
+                     style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
+                  <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Wind</h2>
+                  <p className={`text-lg ${themeClasses.text}`}>
                     {weather.wind.direction ? `${weather.wind.direction} ` : ''}
                     {weather.wind.speed} mph
                     {weather.wind.gust ? ` (gusts ${weather.wind.gust} mph)` : ''}
@@ -868,50 +856,38 @@ function WeatherApp() {
               {/* Sun Times, UV Index, Moon Phase */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* Sun Times Box */}
-                <div className={cn(
-                  "p-4 rounded-lg text-center border-2 shadow-lg",
-                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
-                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
-                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
-                )}>
-                  <h2 className="text-xl font-semibold mb-2 text-white">Sun Times</h2>
+                <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
+                     style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
+                  <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Sun Times</h2>
                   <div className="space-y-2">
                     <div className="flex items-center justify-center gap-2">
                       <span className="text-yellow-400">☀️</span>
-                      <p className="text-white">Sunrise: {weather.sunrise}</p>
+                      <p className={themeClasses.text}>Sunrise: {weather.sunrise}</p>
                     </div>
                     <div className="flex items-center justify-center gap-2">
                       <span className="text-orange-400">🌅</span>
-                      <p className="text-white">Sunset: {weather.sunset}</p>
+                      <p className={themeClasses.text}>Sunset: {weather.sunset}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* UV Index Box */}
-                <div className={cn(
-                  "p-4 rounded-lg text-center border-2 shadow-lg",
-                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
-                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
-                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
-                )}>
-                  <h2 className="text-xl font-semibold mb-2 text-white">UV Index</h2>
-                  <p className="text-lg text-white font-bold">{weather.uvIndex}</p>
+                <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
+                     style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
+                  <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>UV Index</h2>
+                  <p className={`text-lg font-bold ${themeClasses.text}`}>{weather.uvIndex}</p>
                 </div>
 
                 {/* Moon Phase Box */}
-                <div className={cn(
-                  "p-4 rounded-lg text-center border-2 shadow-lg",
-                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
-                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
-                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
-                )}>
-                  <h2 className="text-xl font-semibold mb-2 text-white">Moon Phase</h2>
+                <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
+                     style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
+                  <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Moon Phase</h2>
                   <div className="space-y-2">
                     <div className="flex items-center justify-center gap-2">
                       <span className="text-2xl">{getMoonPhaseIcon(weather.moonPhase.phase)}</span>
-                      <p className="text-lg text-white font-semibold">{weather.moonPhase.phase}</p>
+                      <p className={`text-lg font-semibold ${themeClasses.text}`}>{weather.moonPhase.phase}</p>
                     </div>
-                    <p className="text-sm text-gray-300 font-medium">
+                    <p className={`text-sm font-medium ${themeClasses.secondaryText}`}>
                       {weather.moonPhase.illumination}% illuminated
                     </p>
                   </div>
@@ -921,13 +897,9 @@ function WeatherApp() {
               {/* AQI and Pollen Count */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* AQI Box - Updated with Google Universal AQI */}
-                <div className={cn(
-                  "p-4 rounded-lg text-center border-2 shadow-lg",
-                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
-                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
-                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
-                )}>
-                  <h2 className="text-xl font-semibold mb-3 text-white">Air Quality</h2>
+                <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
+                     style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
+                  <h2 className={`text-xl font-semibold mb-3 ${themeClasses.headerText}`}>Air Quality</h2>
                   
                   {/* AQI Value and Description */}
                   <p className={`text-lg font-bold mb-3 ${getAQIColor(weather.aqi)}`}>
@@ -972,32 +944,28 @@ function WeatherApp() {
                     </div>
                   </div>
                   
-                  <p className="text-sm text-gray-300 font-medium mb-2">
+                  <p className={`text-sm font-medium mb-2 ${themeClasses.secondaryText}`}>
                     {getAQIRecommendation(weather.aqi)}
                   </p>
                   
                   {/* Google AQI Legend */}
-                  <div className="text-xs text-gray-400 border-t border-gray-600 pt-2">
+                  <div className={`text-xs border-t pt-2 ${themeClasses.secondaryText}`} style={{ borderColor: themeClasses.borderColor.replace('border-[', '').replace(']', '') + '66' }}>
                     <p className="font-medium">Using Google Universal AQI • Higher = Better</p>
                   </div>
                 </div>
 
                 {/* Pollen Count Box */}
-                <div className={cn(
-                  "p-4 rounded-lg text-center border-2 shadow-lg",
-                  theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
-                  theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
-                  theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
-                )}>
-                  <h2 className="text-xl font-semibold mb-2 text-white">Pollen Count</h2>
+                <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
+                     style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
+                  <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Pollen Count</h2>
                   <div className="grid grid-cols-3 gap-2">
                     {/* Tree Group */}
                     <div>
-                      <p className="text-sm text-gray-300 font-medium mb-1">Tree</p>
+                      <p className={`text-sm font-medium mb-1 ${themeClasses.secondaryText}`}>Tree</p>
                       {(() => {
                         const treeData = Object.entries(weather.pollen.tree).filter(([_, category]) => category !== 'No Data');
                         if (treeData.length === 0) {
-                          return <p className="text-sm text-gray-400">No Data</p>;
+                          return <p className={`text-sm ${themeClasses.secondaryText}`}>No Data</p>;
                         } else if (treeData.length === 1) {
                           const [plant, category] = treeData[0];
                           return <p className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>;
@@ -1010,11 +978,11 @@ function WeatherApp() {
                     </div>
                     {/* Grass Group */}
                     <div>
-                      <p className="text-sm text-gray-300 font-medium mb-1">Grass</p>
+                      <p className={`text-sm font-medium mb-1 ${themeClasses.secondaryText}`}>Grass</p>
                       {(() => {
                         const grassData = Object.entries(weather.pollen.grass).filter(([_, category]) => category !== 'No Data');
                         if (grassData.length === 0) {
-                          return <p className="text-sm text-gray-400">No Data</p>;
+                          return <p className={`text-sm ${themeClasses.secondaryText}`}>No Data</p>;
                         } else if (grassData.length === 1) {
                           const [plant, category] = grassData[0];
                           return <p className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>;
@@ -1027,11 +995,11 @@ function WeatherApp() {
                     </div>
                     {/* Weed Group */}
                     <div>
-                      <p className="text-sm text-gray-300 font-medium mb-1">Weed</p>
+                      <p className={`text-sm font-medium mb-1 ${themeClasses.secondaryText}`}>Weed</p>
                       {(() => {
                         const weedData = Object.entries(weather.pollen.weed).filter(([_, category]) => category !== 'No Data');
                         if (weedData.length === 0) {
-                          return <p className="text-sm text-gray-400">No Data</p>;
+                          return <p className={`text-sm ${themeClasses.secondaryText}`}>No Data</p>;
                         } else if (weedData.length === 1) {
                           const [plant, category] = weedData[0];
                           return <p className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>;

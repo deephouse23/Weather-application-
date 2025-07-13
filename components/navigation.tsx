@@ -13,6 +13,12 @@ interface NavigationProps {
   weatherUnit?: string;
 }
 
+interface NavigationProps {
+  weatherLocation?: string;
+  weatherTemperature?: number;
+  weatherUnit?: string;
+}
+
 /**
  * 16-Bit Weather Education Platform Navigation
  * 
@@ -97,6 +103,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
       return parts[0];
     }
   };
+
 
   const navItems = [
     { href: "/", label: "HOME", icon: Home },

@@ -1,13 +1,13 @@
-# 🌟 16-Bit Weather v0.2.74
+# 🌟 16-Bit Weather v0.2.78
 
 **Experience weather data like it's 1985!**
 
 A retro-styled weather application that combines modern meteorological data with authentic 16-bit gaming aesthetics. Get comprehensive weather information displayed through a nostalgic terminal interface with pixel-perfect styling.
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-16bitweather.co-brightgreen)](https://www.16bitweather.co/)
-[![Version](https://img.shields.io/badge/Version-0.2.74-blue)](https://github.com/deephouse23/Weather-application-/releases)
+[![Version](https://img.shields.io/badge/Version-0.2.78-blue)](https://github.com/deephouse23/Weather-application-/releases)
 [![React](https://img.shields.io/badge/React-18+-61dafb)](https://reactjs.org/)
-[![Security](https://img.shields.io/badge/Security-Hardened-green)](https://github.com/deephouse23/Weather-application-/releases/tag/v0.2.74)
+[![Security](https://img.shields.io/badge/Security-Hardened-green)](https://github.com/deephouse23/Weather-application-/releases/tag/v0.2.78)
 
 ## 🌐 Live Application
 
@@ -39,12 +39,15 @@ A retro-styled weather application that combines modern meteorological data with
 - **🌅 Sunrise/Sunset Times** - Daily solar schedule with custom sunrise/sunset icons
 - **🌙 Moon Phase Information** - Current lunar cycle with illumination percentage
 
-#### Extended Forecasting
-- **📅 5-Day Weather Forecast** - Detailed daily predictions
-- **🌡️ High/Low Temperatures** - Daily temperature ranges
-- **🌦️ Precipitation Probability** - Rain and snow likelihood
-- **☁️ Daily Conditions** - Weather pattern predictions
-- **📊 Weather Trend Analysis** - Visual weather pattern indicators
+#### Enhanced 5-Day Forecasting (NEW in v0.2.78!)
+- **📅 Interactive 5-Day Forecast** - Click any day tile for detailed metrics
+- **🌡️ High/Low Temperatures** - Daily temperature ranges with accurate future data
+- **📊 Detailed Weather Metrics** - Real humidity, wind, pressure, UV data for all days
+- **📅 Date Context** - Each tile shows actual date (M.DD.YY format)
+- **🎯 Smart UI Design** - Details hidden by default, revealed on demand
+- **🌦️ Precipitation Probability** - Rain and snow likelihood with visual indicators
+- **☁️ Daily Conditions** - Comprehensive weather pattern predictions
+- **📱 Mobile-Optimized** - Touch-friendly tiles with responsive design
 
 ### 📍 Advanced Location Features
 
@@ -271,6 +274,39 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - **📖 Documentation** - Complete guide in this README
 - **🌐 Live Demo** - [16bitweather.co](https://www.16bitweather.co/)
 - **📱 Mobile Testing** - Works on all modern devices
+
+---
+
+## 🚀 Version 0.2.78 Highlights - Complete Forecast Overhaul 🌟
+
+### 🎯 **Major Feature Release - Enhanced 5-Day Forecast Experience**
+
+This milestone release delivers a **complete overhaul of the 5-day forecast system** with significant improvements to user experience, data accuracy, and interactive design.
+
+#### ✨ **What's New**
+- **🔄 Original Design Restored**: Returned to the beloved original 5-day forecast layout
+- **🎯 Click-to-Expand Functionality**: Day tiles are now interactive with visual feedback
+- **📅 Date Display Enhancement**: Each forecast tile shows actual dates (M.DD.YY format)
+- **📊 Critical Data Fix**: Monday-Thursday now display **real weather data** instead of "N/A"
+- **🎨 Smart UI Behavior**: Details section hidden by default, appears only on day selection
+
+#### 🛠️ **Technical Improvements**
+- **Enhanced Data Architecture**: Better integration of forecast-specific metrics
+- **Improved Component Structure**: Clean separation between overview and detailed views
+- **Mobile-First Optimization**: Better touch targets and responsive behavior
+- **Theme Consistency**: All three themes (Dark, Miami Vice, Tron) fully supported
+
+#### 🎮 **User Experience Enhancements**
+- **Interactive Day Selection**: Click any day tile to reveal detailed weather metrics
+- **Visual Selection Feedback**: Selected days highlighted with theme-appropriate styling
+- **Smooth Animations**: Enhanced hover effects and transition animations
+- **Accessibility**: Improved keyboard navigation and screen reader compatibility
+
+#### 🐛 **Critical Fixes**
+- **RESOLVED**: Future forecast days no longer show "N/A" for humidity, wind, pressure, UV index
+- **Enhanced Data Mapping**: Proper utilization of existing detailed forecast data
+- **Improved State Management**: Better day selection and toggle behavior
+- **Mobile Layout**: Fixed responsive issues across all screen sizes
 
 ---
 

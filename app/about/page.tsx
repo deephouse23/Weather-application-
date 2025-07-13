@@ -39,7 +39,7 @@ export default function AboutPage() {
   return (
     <PageWrapper>
       <div className="container mx-auto px-4 py-8">
-        <div className={`${themeClasses.cardBg} p-6 border-4 pixel-border`}>
+        <div className={`${themeClasses.cardBg} p-6 border-4 ${themeClasses.borderColor}`}>
           <h1 className={`text-3xl font-bold mb-4 ${themeClasses.headerText}`}>About 16-Bit Weather</h1>
           <p className={`${themeClasses.text} mb-4`}>
             Welcome to 16-Bit Weather, a retro-styled weather application that combines modern weather data with a nostalgic 16-bit aesthetic.
