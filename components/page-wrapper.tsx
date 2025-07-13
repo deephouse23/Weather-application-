@@ -6,6 +6,9 @@ import { useTheme } from "@/components/theme-provider"
 
 interface PageWrapperProps {
   children: React.ReactNode
+  weatherLocation?: string
+  weatherTemperature?: number
+  weatherUnit?: string
 }
 
 /**
@@ -14,7 +17,7 @@ interface PageWrapperProps {
  * Handles theme management and provides consistent navigation
  * across all pages in the education platform
  */
-export default function PageWrapper({ children }: PageWrapperProps) {
+export default function PageWrapper({ children, weatherLocation, weatherTemperature, weatherUnit }: PageWrapperProps) {
   const { theme } = useTheme()
 
   // Dynamic theme classes based on current theme
@@ -67,7 +70,11 @@ export default function PageWrapper({ children }: PageWrapperProps) {
 
   return (
     <div className={`min-h-screen ${themeClasses.background} ${themeClasses.textColor} relative`}>
-      <Navigation />
+      <Navigation 
+        weatherLocation={weatherLocation}
+        weatherTemperature={weatherTemperature}
+        weatherUnit={weatherUnit}
+      />
       <main className="relative z-10">
         {children}
       </main>

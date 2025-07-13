@@ -6,13 +6,19 @@ import { usePathname } from "next/navigation"
 import { Menu, X, Cloud, Zap, BookOpen, Gamepad2, Info, Home, ChevronDown } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 
+interface NavigationProps {
+  weatherLocation?: string;
+  weatherTemperature?: number;
+  weatherUnit?: string;
+}
+
 /**
  * 16-Bit Weather Education Platform Navigation
  * 
  * Features authentic retro styling with pixel-perfect borders
  * and three-theme support (Dark/Miami/Tron) for the expanded education platform
  */
-export default function Navigation() {
+export default function Navigation({ weatherLocation, weatherTemperature, weatherUnit }: NavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
   const { theme } = useTheme()
@@ -69,6 +75,24 @@ export default function Navigation() {
 
   const themeClasses = getThemeClasses(theme)
 
+  // Helper function to format location for header display
+  const formatHeaderLocation = (location: string): string => {
+    // Convert "Beverly Hills, US" to "BEVERLY HILLS" format
+    // Convert "New York, NY, US" to "NEW YORK NY" format
+    let formatted = location.toUpperCase();
+    
+    // Remove country codes and clean up
+    formatted = formatted.replace(/, US$/, '');
+    formatted = formatted.replace(/, CA$/, '');
+    formatted = formatted.replace(/, UK$/, '');
+    formatted = formatted.replace(/, GB$/, '');
+    
+    // Replace commas with spaces for cleaner look
+    formatted = formatted.replace(/,/g, ' ');
+    
+    return formatted;
+  };
+
   const navItems = [
     { href: "/", label: "HOME", icon: Home },
     { href: "/cloud-types", label: "CLOUD TYPES", icon: Cloud },
@@ -83,13 +107,25 @@ export default function Navigation() {
       
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center justify-between px-6 py-4">
-        {/* Logo/Brand - TOP LEFT */}
+        {/* Logo/Brand with Weather Data - TOP LEFT */}
         <div className="flex items-center space-x-3">
           <div className={`w-8 h-8 border-2 flex items-center justify-center animate-pulse ${themeClasses.accentBg} ${themeClasses.borderColor}`}>
             <span className="text-black font-bold text-sm">16</span>
           </div>
-          <h1 className={`text-xl font-bold uppercase tracking-wider font-mono ${themeClasses.text} ${themeClasses.glow}`}>
-            BIT WEATHER
+          <h1 className={`text-lg font-bold uppercase tracking-wider font-mono ${themeClasses.text} ${themeClasses.glow}`} style={{ 
+            fontFamily: "monospace",
+            fontSize: "clamp(14px, 2vw, 18px)"
+          }}>
+            BIT WEATHER{weatherLocation && weatherTemperature ? (
+              <>
+                <span className={`font-extrabold text-xl ml-2 ${themeClasses.accentText}`} style={{ 
+                  fontSize: "clamp(16px, 2.5vw, 22px)",
+                  textShadow: "0 0 8px currentColor"
+                }}>
+                  {formatHeaderLocation(weatherLocation)} {Math.round(weatherTemperature)}°{weatherUnit === '°F' ? 'F' : 'C'}
+                </span>
+              </>
+            ) : ''}
           </h1>
         </div>
 
@@ -119,13 +155,25 @@ export default function Navigation() {
 
       {/* Mobile Navigation */}
       <div className="md:hidden flex items-center justify-between px-4 py-3">
-        {/* Mobile Logo */}
-        <div className="flex items-center space-x-2">
+        {/* Mobile Logo with Weather Data */}
+        <div className="flex items-center space-x-2 flex-1 min-w-0">
           <div className={`w-6 h-6 border-2 flex items-center justify-center ${themeClasses.accentBg} ${themeClasses.borderColor}`}>
             <span className="text-black font-bold text-xs">16</span>
           </div>
-          <h1 className={`text-sm font-bold uppercase tracking-wider font-mono ${themeClasses.text}`}>
-            BIT WEATHER
+          <h1 className={`text-xs font-bold uppercase tracking-wider font-mono ${themeClasses.text}`} style={{ 
+            fontFamily: "monospace",
+            fontSize: "clamp(10px, 2.5vw, 12px)"
+          }}>
+            BIT WEATHER{weatherLocation && weatherTemperature ? (
+              <>
+                <span className={`font-extrabold ml-1 ${themeClasses.accentText}`} style={{ 
+                  fontSize: "clamp(11px, 3vw, 14px)",
+                  textShadow: "0 0 4px currentColor"
+                }}>
+                  {formatHeaderLocation(weatherLocation)} {Math.round(weatherTemperature)}°{weatherUnit === '°F' ? 'F' : 'C'}
+                </span>
+              </>
+            ) : ''}
           </h1>
         </div>
 
