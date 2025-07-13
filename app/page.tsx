@@ -5,19 +5,13 @@ import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { fetchWeatherData, fetchWeatherByLocation } from "@/lib/weather-api"
 import { useTheme } from '@/components/theme-provider'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { Search } from 'lucide-react'
 import { WeatherData } from '@/lib/types'
 import Forecast from "@/components/forecast"
 import PageWrapper from "@/components/page-wrapper"
 import { Analytics } from "@vercel/analytics/react"
-import Link from "next/link"
-import { Cloud, Zap, Flame } from "lucide-react"
 import WeatherSearch from "@/components/weather-search"
 import { APP_CONSTANTS } from "@/lib/utils"
 
-// TEMPORARY DEBUG IMPORTS - REMOVE BEFORE PRODUCTION
-// import ApiTest from '@/components/api-test'
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
 // The main weather API handles UV index estimation for free accounts

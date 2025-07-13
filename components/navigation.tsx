@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, Cloud, Zap, BookOpen, Gamepad2, Info, Home, ChevronDown } from "lucide-react"
+import { Menu, X, Cloud, Zap, BookOpen, Gamepad2, Info, Home } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 
 interface NavigationProps {
