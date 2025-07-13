@@ -17,6 +17,7 @@ interface ForecastDay {
 interface ForecastDetailsProps {
   forecast: ForecastDay[];
   theme?: ThemeType;
+  selectedDay: number | null;
   currentWeatherData?: {
     humidity: number;
     wind: { speed: number; direction?: string };
@@ -30,14 +31,15 @@ interface ForecastDetailsProps {
 export default function ForecastDetails({ 
   forecast, 
   theme = 'dark', 
+  selectedDay,
   currentWeatherData 
 }: ForecastDetailsProps) {
-  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const themeClasses = getComponentStyles(theme, 'card');
-
-  const selectDay = (index: number) => {
-    setSelectedDay(selectedDay === index ? null : index);
-  };
+  
+  // Don't render anything if no day is selected
+  if (selectedDay === null) {
+    return null;
+  }
 
   return (
     <div className={`${themeClasses.background} p-3 sm:p-4 lg:p-6 rounded-none border-2 sm:border-4 ${themeClasses.borderColor} pixel-shadow`}>
@@ -45,29 +47,8 @@ export default function ForecastDetails({
         DETAILED FORECAST
       </h2>
       
-      {/* Day Selection Buttons */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 lg:gap-4 mb-4">
-        {forecast.slice(0, 5).map((day, index) => (
-          <button
-            key={index}
-            onClick={() => selectDay(index)}
-            className={`p-2 sm:p-3 border ${themeClasses.borderColor} text-center transition-all duration-200 
-                       ${selectedDay === index 
-                         ? `${themeClasses.accentBg} ${themeClasses.accentText}` 
-                         : `${themeClasses.cardBg} ${themeClasses.text} hover:${themeClasses.hoverBg}`
-                       }`}
-          >
-            <div className="text-xs sm:text-sm font-bold uppercase tracking-wider">
-              <span className="sm:hidden">{day.day.substring(0, 3)}</span>
-              <span className="hidden sm:inline">{day.day}</span>
-            </div>
-          </button>
-        ))}
-      </div>
-
       {/* Expanded Details Section */}
-      {selectedDay !== null && (
-        <div className={`${themeClasses.cardBg} border ${themeClasses.borderColor} p-4`}>
+      <div className={`${themeClasses.cardBg} border ${themeClasses.borderColor} p-4`}>
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className={`text-lg font-bold ${themeClasses.accentText} pixel-glow`}>
@@ -91,7 +72,6 @@ export default function ForecastDetails({
             currentWeatherData={currentWeatherData}
           />
         </div>
-      )}
     </div>
   );
 }
