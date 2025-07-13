@@ -77,20 +77,71 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
 
   // Helper function to format location for header display
   const formatHeaderLocation = (location: string): string => {
-    // Convert "Beverly Hills, US" to "BEVERLY HILLS" format
-    // Convert "New York, NY, US" to "NEW YORK NY" format
-    let formatted = location.toUpperCase();
+    // Convert "Dublin, US" to "Dublin, CA" format
+    // Convert "New York, NY, US" to "New York, NY" format
+    // Convert "Beverly Hills, US" to "Beverly Hills, CA" format
     
-    // Remove country codes and clean up
-    formatted = formatted.replace(/, US$/, '');
-    formatted = formatted.replace(/, CA$/, '');
-    formatted = formatted.replace(/, UK$/, '');
-    formatted = formatted.replace(/, GB$/, '');
+    const parts = location.split(', ');
     
-    // Replace commas with spaces for cleaner look
-    formatted = formatted.replace(/,/g, ' ');
-    
-    return formatted;
+    if (parts.length >= 3) {
+      // Format: "City, State, Country" -> "City, State"
+      const city = parts[0];
+      const state = parts[1];
+      return `${city}, ${state}`;
+    } else if (parts.length === 2) {
+      // Format: "City, Country" -> need to determine state
+      const city = parts[0];
+      const country = parts[1];
+      
+      // For US locations without state, try to infer common ones
+      if (country === 'US') {
+        // Common city-to-state mappings for major cities
+        const cityStateMap: { [key: string]: string } = {
+          'Dublin': 'CA',
+          'Beverly Hills': 'CA',
+          'Los Angeles': 'CA',
+          'San Francisco': 'CA',
+          'San Diego': 'CA',
+          'Sacramento': 'CA',
+          'San Jose': 'CA',
+          'Oakland': 'CA',
+          'Fresno': 'CA',
+          'New York': 'NY',
+          'Brooklyn': 'NY',
+          'Chicago': 'IL',
+          'Houston': 'TX',
+          'Phoenix': 'AZ',
+          'Philadelphia': 'PA',
+          'San Antonio': 'TX',
+          'Dallas': 'TX',
+          'Austin': 'TX',
+          'Jacksonville': 'FL',
+          'Fort Worth': 'TX',
+          'Columbus': 'OH',
+          'Charlotte': 'NC',
+          'Seattle': 'WA',
+          'Denver': 'CO',
+          'Boston': 'MA',
+          'Nashville': 'TN',
+          'Baltimore': 'MD',
+          'Portland': 'OR',
+          'Las Vegas': 'NV',
+          'Miami': 'FL',
+          'Atlanta': 'GA',
+          'Detroit': 'MI',
+          'Phoenix': 'AZ'
+        };
+        
+        const state = cityStateMap[city] || 'CA'; // Default to CA if not found
+        return `${city}, ${state}`;
+      } else {
+        // Non-US locations, just return city
+        return city;
+      }
+    } else {
+      // Single part, just return as-is
+      return parts[0];
+    }
   };
 
   const navItems = [
