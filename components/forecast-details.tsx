@@ -67,6 +67,7 @@ export default function ForecastDetails({
 
           <DetailedWeatherInfo 
             selectedDay={selectedDay}
+            forecastDay={forecast[selectedDay]}
             theme={theme} 
             themeClasses={themeClasses}
             currentWeatherData={currentWeatherData}
@@ -78,44 +79,53 @@ export default function ForecastDetails({
 
 function DetailedWeatherInfo({ 
   selectedDay, 
+  forecastDay,
   theme, 
   themeClasses, 
   currentWeatherData 
 }: { 
-  selectedDay: number; 
+  selectedDay: number;
+  forecastDay: any;
   theme: ThemeType; 
   themeClasses: any; 
   currentWeatherData?: any; 
 }) {
-  // Use actual weather data
+  // Use forecast day details first, fallback to current weather for today
   const isToday = selectedDay === 0;
+  const dayDetails = forecastDay?.details;
   
   const weatherMetrics = [
     {
       icon: <Droplets className="w-4 h-4" />,
       label: "Humidity",
-      value: isToday && currentWeatherData?.humidity ? `${currentWeatherData.humidity}%` : "N/A"
+      value: dayDetails?.humidity !== undefined ? `${dayDetails.humidity}%` : 
+             (isToday && currentWeatherData?.humidity ? `${currentWeatherData.humidity}%` : "N/A")
     },
     {
       icon: <Wind className="w-4 h-4" />,
       label: "Wind",
-      value: isToday && currentWeatherData?.wind ? 
-        `${Math.round(currentWeatherData.wind.speed)} mph ${currentWeatherData.wind.direction || ''}` : 
-        "N/A"
+      value: dayDetails?.windSpeed !== undefined ? 
+        `${dayDetails.windSpeed} mph ${dayDetails.windDirection || ''}` : 
+        (isToday && currentWeatherData?.wind ? 
+          `${Math.round(currentWeatherData.wind.speed)} mph ${currentWeatherData.wind.direction || ''}` : 
+          "N/A")
     },
     {
       icon: <Gauge className="w-4 h-4" />,
       label: "Pressure",
-      value: isToday && currentWeatherData?.pressure ? currentWeatherData.pressure : "N/A"
+      value: dayDetails?.pressure || 
+             (isToday && currentWeatherData?.pressure ? currentWeatherData.pressure : "N/A")
     },
     {
       icon: <Eye className="w-4 h-4" />,
       label: "UV Index",
-      value: isToday && currentWeatherData?.uvIndex !== undefined ? currentWeatherData.uvIndex.toString() : "N/A"
+      value: dayDetails?.uvIndex !== undefined ? dayDetails.uvIndex.toString() : 
+             (isToday && currentWeatherData?.uvIndex !== undefined ? currentWeatherData.uvIndex.toString() : "N/A")
     }
   ];
 
-  if (isToday && currentWeatherData) {
+  // Show sunrise/sunset for all days (values are similar daily)
+  if (currentWeatherData?.sunrise || currentWeatherData?.sunset) {
     weatherMetrics.push(
       {
         icon: <Sunrise className="w-4 h-4" />,
