@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Menu, X, Cloud, Zap, BookOpen, Gamepad2, Info, Home } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
+import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
 
 interface NavigationProps {
   weatherLocation?: string;
@@ -23,57 +24,8 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
   const pathname = usePathname()
   const { theme } = useTheme()
 
-  // Local theme classes function for better light mode support
-  const getThemeClasses = (theme: string) => {
-    switch (theme) {
-      case 'dark':
-        return {
-          background: 'bg-[#0a0a1a]',
-          text: 'text-[#e0e0e0]',
-          borderColor: 'border-[#00d4ff]',
-          accentBg: 'bg-[#00d4ff]',
-          accentText: 'text-[#00d4ff]',
-          cardBg: 'bg-[#0f0f0f]',
-          hoverBg: 'hover:bg-[#00d4ff] hover:text-[#0a0a1a]',
-          glow: 'glow-dark'
-        }
-      case 'miami':
-        return {
-          background: 'bg-[#2d1b69]',
-          text: 'text-[#00ffff]',
-          borderColor: 'border-[#ff1493]',
-          accentBg: 'bg-[#ff1493]',
-          accentText: 'text-[#ff1493]',
-          cardBg: 'bg-[#4a0e4e]',
-          hoverBg: 'hover:bg-[#ff1493] hover:text-[#2d1b69]',
-          glow: 'glow-miami'
-        }
-      case 'tron':
-        return {
-          background: 'bg-black',
-          text: 'text-white',
-          borderColor: 'border-[#00FFFF]',
-          accentBg: 'bg-[#00FFFF]',
-          accentText: 'text-[#00FFFF]',
-          cardBg: 'bg-black',
-          hoverBg: 'hover:bg-[#00FFFF] hover:text-black',
-          glow: 'glow-tron'
-        }
-      default:
-        return {
-          background: 'bg-[#0a0a1a]',
-          text: 'text-[#e0e0e0]',
-          borderColor: 'border-[#00d4ff]',
-          accentBg: 'bg-[#00d4ff]',
-          accentText: 'text-[#00d4ff]',
-          cardBg: 'bg-[#0f0f0f]',
-          hoverBg: 'hover:bg-[#00d4ff] hover:text-[#0a0a1a]',
-          glow: 'glow-dark'
-        }
-    }
-  }
-
-  const themeClasses = getThemeClasses(theme)
+  // Use centralized theme system
+  const themeClasses = getComponentStyles(theme as ThemeType, 'navigation')
 
   // Helper function to format location for header display
   const formatHeaderLocation = (location: string): string => {
