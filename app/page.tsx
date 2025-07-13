@@ -7,7 +7,7 @@ import { fetchWeatherData, fetchWeatherByLocation } from "@/lib/weather-api"
 import { useTheme } from '@/components/theme-provider'
 import { WeatherData } from '@/lib/types'
 import Forecast from "@/components/forecast"
-import ExpandableForecast from "@/components/expandable-forecast"
+import ForecastDetails from "@/components/forecast-details"
 import PageWrapper from "@/components/page-wrapper"
 import { Analytics } from "@vercel/analytics/react"
 import WeatherSearch from "@/components/weather-search"
@@ -1045,25 +1045,20 @@ function WeatherApp() {
                 </div>
               </div>
 
-              {/* Enhanced Expandable Forecast */}
-              <ExpandableForecast 
+              {/* Original 5-Day Forecast */}
+              <Forecast 
                 forecast={weather.forecast.map(day => ({
                   ...day,
-                  date: '', // Will be calculated in component
-                  country: weather.country,
-                  details: {
-                    humidity: undefined,
-                    windSpeed: undefined,
-                    windDirection: undefined,
-                    pressure: undefined,
-                    uvIndex: undefined,
-                    precipitationChance: undefined,
-                    cloudCover: undefined,
-                    visibility: undefined,
-                    sunrise: undefined,
-                    sunset: undefined
-                  },
-                  hourlyForecast: []
+                  country: weather.country
+                }))} 
+                theme={theme}
+              />
+
+              {/* Expandable Details Section Below */}
+              <ForecastDetails 
+                forecast={weather.forecast.map(day => ({
+                  ...day,
+                  country: weather.country
                 }))} 
                 theme={theme}
                 currentWeatherData={{
