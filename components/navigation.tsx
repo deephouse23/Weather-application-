@@ -116,7 +116,16 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
             fontFamily: "monospace",
             fontSize: "clamp(14px, 2vw, 18px)"
           }}>
-            BIT WEATHER{weatherLocation && weatherTemperature ? ` ${formatHeaderLocation(weatherLocation)} ${Math.round(weatherTemperature)}°${weatherUnit === '°F' ? 'F' : 'C'}` : ''}
+            BIT WEATHER{weatherLocation && weatherTemperature ? (
+              <>
+                <span className={`font-extrabold text-xl ml-2 ${themeClasses.accentText}`} style={{ 
+                  fontSize: "clamp(16px, 2.5vw, 22px)",
+                  textShadow: "0 0 8px currentColor"
+                }}>
+                  {formatHeaderLocation(weatherLocation)} {Math.round(weatherTemperature)}°{weatherUnit === '°F' ? 'F' : 'C'}
+                </span>
+              </>
+            ) : ''}
           </h1>
         </div>
 
@@ -151,11 +160,20 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
           <div className={`w-6 h-6 border-2 flex items-center justify-center ${themeClasses.accentBg} ${themeClasses.borderColor}`}>
             <span className="text-black font-bold text-xs">16</span>
           </div>
-          <h1 className={`text-xs font-bold uppercase tracking-wider font-mono ${themeClasses.text} truncate`} style={{ 
+          <h1 className={`text-xs font-bold uppercase tracking-wider font-mono ${themeClasses.text}`} style={{ 
             fontFamily: "monospace",
             fontSize: "clamp(10px, 2.5vw, 12px)"
           }}>
-            BIT WEATHER{weatherLocation && weatherTemperature ? ` ${formatHeaderLocation(weatherLocation)} ${Math.round(weatherTemperature)}°${weatherUnit === '°F' ? 'F' : 'C'}` : ''}
+            BIT WEATHER{weatherLocation && weatherTemperature ? (
+              <>
+                <span className={`font-extrabold ml-1 ${themeClasses.accentText}`} style={{ 
+                  fontSize: "clamp(11px, 3vw, 14px)",
+                  textShadow: "0 0 4px currentColor"
+                }}>
+                  {formatHeaderLocation(weatherLocation)} {Math.round(weatherTemperature)}°{weatherUnit === '°F' ? 'F' : 'C'}
+                </span>
+              </>
+            ) : ''}
           </h1>
         </div>
 

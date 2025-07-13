@@ -973,9 +973,14 @@ function WeatherApp() {
                     </div>
                   </div>
                   
-                  <p className="text-sm text-gray-300 font-medium">
+                  <p className="text-sm text-gray-300 font-medium mb-2">
                     {getAQIRecommendation(weather.aqi)}
                   </p>
+                  
+                  {/* Google AQI Legend */}
+                  <div className="text-xs text-gray-400 border-t border-gray-600 pt-2">
+                    <p className="font-medium">Using Google Universal AQI • Higher = Better</p>
+                  </div>
                 </div>
 
                 {/* Pollen Count Box */}
