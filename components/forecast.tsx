@@ -17,9 +17,11 @@ interface ForecastDay {
 interface ForecastProps {
   forecast: ForecastDay[];
   theme?: ThemeType;
+  onDayClick?: (index: number) => void;
+  selectedDay?: number | null;
 }
 
-export default function Forecast({ forecast, theme = 'dark' }: ForecastProps) {
+export default function Forecast({ forecast, theme = 'dark', onDayClick, selectedDay }: ForecastProps) {
   // Enhanced theme-based color classes for three themes
   const getThemeClasses = (theme: ThemeType) => {
     switch (theme) {
@@ -98,25 +100,63 @@ export default function Forecast({ forecast, theme = 'dark' }: ForecastProps) {
       {/* Mobile responsive grid - stack on very small screens, 3 cols on mobile+, 5 cols on desktop */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 lg:gap-4">
         {forecast.slice(0, 5).map((day, index) => (
-          <ForecastCard key={index} day={day} themeClasses={themeClasses} theme={theme} />
+          <ForecastCard 
+            key={index} 
+            day={day} 
+            index={index}
+            themeClasses={themeClasses} 
+            theme={theme}
+            onDayClick={onDayClick}
+            isSelected={selectedDay === index}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function ForecastCard({ day, themeClasses, theme }: { day: ForecastDay; themeClasses: any; theme: ThemeType }) {
+function ForecastCard({ day, index, themeClasses, theme, onDayClick, isSelected }: { 
+  day: ForecastDay; 
+  index: number;
+  themeClasses: any; 
+  theme: ThemeType;
+  onDayClick?: (index: number) => void;
+  isSelected?: boolean;
+}) {
   const isUSALocation = day.country === 'US' || day.country === 'USA';
   const tempUnit = isUSALocation ? '°F' : '°C';
+  
+  // Generate date in M.DD.YY format
+  const today = new Date();
+  const targetDate = new Date(today);
+  targetDate.setDate(today.getDate() + index);
+  const month = targetDate.getMonth() + 1;
+  const date = targetDate.getDate();
+  const year = targetDate.getFullYear().toString().slice(-2);
+  const formattedDate = `${month}.${date.toString().padStart(2, '0')}.${year}`;
+
+  const handleClick = () => {
+    if (onDayClick) {
+      onDayClick(index);
+    }
+  };
 
   return (
-    <div className={`${themeClasses.itemBg} p-2 sm:p-3 border ${themeClasses.itemBorder} text-center ${themeClasses.itemHover} transition-colors duration-200 ${themeClasses.specialBorder}
-                    min-h-[120px] sm:min-h-[140px] lg:min-h-[160px] flex flex-col justify-between`}
-         style={themeClasses.itemStyle}>
+    <div 
+      className={`${themeClasses.itemBg} p-2 sm:p-3 border ${themeClasses.itemBorder} text-center transition-all duration-200 ${themeClasses.specialBorder}
+                  min-h-[120px] sm:min-h-[140px] lg:min-h-[160px] flex flex-col justify-between
+                  ${onDayClick ? 'cursor-pointer hover:scale-105' : ''} ${themeClasses.itemHover}
+                  ${isSelected ? `ring-2 ring-${theme === 'dark' ? '[#00d4ff]' : theme === 'miami' ? '[#ff1493]' : '[#00FFFF]'} ring-opacity-80` : ''}`}
+      style={themeClasses.itemStyle}
+      onClick={handleClick}
+    >
       {/* Day of week - Mobile responsive */}
       <div className={`text-xs sm:text-sm font-bold ${themeClasses.primaryText} mb-1 sm:mb-2 uppercase tracking-wider ${themeClasses.glow} break-words`}>
         <span className="sm:hidden">{day.day.substring(0, 3)}</span>
         <span className="hidden sm:inline">{day.day}</span>
+        <div className={`text-xs ${themeClasses.primaryText} opacity-70 mt-1`}>
+          {formattedDate}
+        </div>
       </div>
       
       {/* Weather icon - Mobile responsive */}

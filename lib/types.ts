@@ -20,6 +20,22 @@ export interface WeatherData {
     lowTemp: number;
     condition: string;
     description: string;
+    details?: {
+      humidity?: number;
+      windSpeed?: number;
+      windDirection?: string;
+      pressure?: string;
+      cloudCover?: number;
+      precipitationChance?: number;
+      visibility?: number;
+      uvIndex?: number;
+    };
+    hourlyForecast?: Array<{
+      time: string;
+      temp: number;
+      condition: string;
+      precipChance: number;
+    }>;
   }>;
   moonPhase: {
     phase: string;

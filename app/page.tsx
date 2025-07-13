@@ -7,6 +7,7 @@ import { fetchWeatherData, fetchWeatherByLocation } from "@/lib/weather-api"
 import { useTheme } from '@/components/theme-provider'
 import { WeatherData } from '@/lib/types'
 import Forecast from "@/components/forecast"
+import ForecastDetails from "@/components/forecast-details"
 import PageWrapper from "@/components/page-wrapper"
 import { Analytics } from "@vercel/analytics/react"
 import WeatherSearch from "@/components/weather-search"
@@ -124,6 +125,7 @@ function WeatherApp() {
   const [isClient, setIsClient] = useState(false)
   const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark')
   const [searchCache, setSearchCache] = useState<Map<string, { data: WeatherData; timestamp: number }>>(new Map())
+  const [selectedDay, setSelectedDay] = useState<number | null>(null)
 
   // localStorage keys
   const CACHE_KEY = 'bitweather_city'
@@ -1044,8 +1046,45 @@ function WeatherApp() {
                 </div>
               </div>
 
-              {/* Forecast */}
-              <Forecast forecast={weather.forecast} theme={theme} />
+              {/* Day click handler */}
+              {(() => {
+                const handleDayClick = (index: number) => {
+                  setSelectedDay(selectedDay === index ? null : index);
+                };
+                
+                return (
+                  <>
+                    {/* Original 5-Day Forecast */}
+                    <Forecast 
+                      forecast={weather.forecast.map(day => ({
+                        ...day,
+                        country: weather.country
+                      }))} 
+                      theme={theme}
+                      onDayClick={handleDayClick}
+                      selectedDay={selectedDay}
+                    />
+
+                    {/* Expandable Details Section Below */}
+                    <ForecastDetails 
+                      forecast={weather.forecast.map(day => ({
+                        ...day,
+                        country: weather.country
+                      }))} 
+                      theme={theme}
+                      selectedDay={selectedDay}
+                      currentWeatherData={{
+                        humidity: weather.humidity,
+                        wind: weather.wind,
+                        pressure: weather.pressure,
+                        uvIndex: weather.uvIndex,
+                        sunrise: weather.sunrise,
+                        sunset: weather.sunset
+                      }}
+                    />
+                  </>
+                );
+              })()}
             </div>
           )}
         </div>
