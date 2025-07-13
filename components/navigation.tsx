@@ -104,23 +104,6 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
     }
   };
 
-  // Helper function to format location for header display
-  const formatHeaderLocation = (location: string): string => {
-    // Convert "Beverly Hills, US" to "BEVERLY HILLS" format
-    // Convert "New York, NY, US" to "NEW YORK NY" format
-    let formatted = location.toUpperCase();
-    
-    // Remove country codes and clean up
-    formatted = formatted.replace(/, US$/, '');
-    formatted = formatted.replace(/, CA$/, '');
-    formatted = formatted.replace(/, UK$/, '');
-    formatted = formatted.replace(/, GB$/, '');
-    
-    // Replace commas with spaces for cleaner look
-    formatted = formatted.replace(/,/g, ' ');
-    
-    return formatted;
-  };
 
   const navItems = [
     { href: "/", label: "HOME", icon: Home },
