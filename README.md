@@ -1,12 +1,13 @@
-# 🌟 16-Bit Weather v0.2.5
+# 🌟 16-Bit Weather v0.2.74
 
 **Experience weather data like it's 1985!**
 
 A retro-styled weather application that combines modern meteorological data with authentic 16-bit gaming aesthetics. Get comprehensive weather information displayed through a nostalgic terminal interface with pixel-perfect styling.
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-16bitweather.co-brightgreen)](https://www.16bitweather.co/)
-[![Version](https://img.shields.io/badge/Version-0.2.5-blue)](https://github.com/deephouse23/Weather-application-/releases)
+[![Version](https://img.shields.io/badge/Version-0.2.74-blue)](https://github.com/deephouse23/Weather-application-/releases)
 [![React](https://img.shields.io/badge/React-18+-61dafb)](https://reactjs.org/)
+[![Security](https://img.shields.io/badge/Security-Hardened-green)](https://github.com/deephouse23/Weather-application-/releases/tag/v0.2.74)
 
 ## 🌐 Live Application
 
@@ -270,6 +271,49 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - **📖 Documentation** - Complete guide in this README
 - **🌐 Live Demo** - [16bitweather.co](https://www.16bitweather.co/)
 - **📱 Mobile Testing** - Works on all modern devices
+
+---
+
+## 🚀 Version 0.2.74 Highlights
+
+### 🔒 Security & Performance Improvements
+- **CRITICAL SECURITY FIX**: Removed hardcoded API keys from debug files
+- **Enhanced Navigation**: Location display now shows state abbreviations ("Dublin, CA" format)
+- **Dead Code Cleanup**: Removed 259 lines of unused code for better performance
+- **Bundle Optimization**: Cleaner imports and reduced build size
+- **Production Ready**: Eliminated all development-only files with security risks
+
+### ✨ New Features
+- **📍 Enhanced Location Display**: Headers now show "16 BIT WEATHER Dublin, CA 61°F" format
+- **🧹 Code Quality**: Comprehensive cleanup of unused imports and functions
+- **⚡ Performance**: Faster loading with optimized bundle size
+- **🔧 Maintainability**: Cleaner codebase with removed dead code
+
+### 🛡️ Security Enhancements
+- **🔐 Credential Safety**: Removed `local-dev-config.ts` with exposed API keys
+- **🗑️ Debug Cleanup**: Eliminated `lib/weather-api-debug.ts` development files
+- **📝 Code Hygiene**: Removed commented code blocks and unused imports
+- **✅ Build Verification**: All changes tested and verified working
+
+---
+
+## 🚀 Version 0.2.73 Highlights
+
+### ✨ Navigation Enhancements
+- **📍 State Abbreviations**: Location display now includes proper state formatting
+- **🏙️ Smart City Mapping**: Comprehensive city-to-state mapping for major US cities
+- **🌍 International Support**: Proper handling of international locations
+- **💫 Visual Consistency**: Maintains 16-bit terminal aesthetics
+
+---
+
+## 🚀 Version 0.2.72 Highlights
+
+### ✨ Enhanced User Experience
+- **🎮 Navigation Integration**: Weather data now displays in top navigation bar
+- **🌈 AQI Visualization**: Restored horizontal color bar with current reading indicator
+- **📱 Enhanced Visibility**: Larger fonts, bold styling, and theme-appropriate glow effects
+- **💭 Welcome Message**: Updated to "► PRESS START TO INITIALIZE WEATHER DATA ◄"
 
 ---
 
