@@ -18,3 +18,4 @@ components/api-test.tsx
 
 # git filter-branch artifacts
 .git-rewrite/
+.vercel

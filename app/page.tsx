@@ -732,6 +732,7 @@ function WeatherApp() {
     return location;
   };
 
+
   // Helper function to get moon phase icon
   const getMoonPhaseIcon = (phase: string): string => {
     const phaseLower = phase.toLowerCase();
@@ -750,7 +751,11 @@ function WeatherApp() {
   };
 
   return (
-    <PageWrapper>
+    <PageWrapper
+      weatherLocation={weather?.location}
+      weatherTemperature={weather?.temperature}
+      weatherUnit={weather?.unit}
+    >
       <div className={cn(
         "min-h-screen",
         theme === "dark" && "bg-gradient-to-b from-gray-900 to-black",
@@ -758,9 +763,6 @@ function WeatherApp() {
         theme === "tron" && "bg-gradient-to-b from-black to-blue-900"
       )}>
         <div className="container mx-auto px-4 py-8">
-          <div className="flex justify-end items-center mb-8">
-            <ThemeToggle />
-          </div>
 
           {/* TEMPORARY API TEST - REMOVE BEFORE PRODUCTION */}
           {/* <ApiTest /> */}
@@ -775,29 +777,6 @@ function WeatherApp() {
             theme={theme}
           />
 
-          {/* Location Display */}
-          {weather && !loading && !error && (
-            <div className="text-center mt-6 mb-6">
-              <div className={cn(
-                "inline-block p-4 rounded-lg border-2 shadow-lg",
-                theme === "dark" && "bg-gray-800 border-blue-500 shadow-blue-500/20",
-                theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
-                theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
-              )}>
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-2xl">📍</span>
-                  <p className={cn(
-                    "text-xl font-bold uppercase tracking-wider pixel-font",
-                    theme === "dark" && "text-blue-400",
-                    theme === "miami" && "text-pink-400",
-                    theme === "tron" && "text-cyan-400"
-                  )} style={{ fontFamily: "monospace" }}>
-                    {formatLocationDisplay(weather.location, weather.country)}, {weather.country}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* 16-Bit Welcome Message */}
           {!weather && !loading && !error && (
@@ -949,10 +928,51 @@ function WeatherApp() {
                   theme === "miami" && "bg-pink-900/50 border-pink-500 shadow-pink-500/30",
                   theme === "tron" && "bg-black/50 border-cyan-500 shadow-cyan-500/40"
                 )}>
-                  <h2 className="text-xl font-semibold mb-2 text-white">Air Quality</h2>
-                  <p className={`text-lg ${getAQIColor(weather.aqi)}`}>
+                  <h2 className="text-xl font-semibold mb-3 text-white">Air Quality</h2>
+                  
+                  {/* AQI Value and Description */}
+                  <p className={`text-lg font-bold mb-3 ${getAQIColor(weather.aqi)}`}>
                     {weather.aqi} - {getAQIDescription(weather.aqi)}
                   </p>
+                  
+                  {/* Horizontal AQI Color Bar */}
+                  <div className="mb-3">
+                    <div className="relative w-full h-4 rounded-full overflow-hidden border border-gray-400">
+                      {/* Color segments */}
+                      <div className="absolute inset-0 flex">
+                        {/* EXCELLENT (0-50) - Green */}
+                        <div className="bg-green-500 flex-1" style={{ width: '20%' }}></div>
+                        {/* GOOD (51-100) - Yellow */}
+                        <div className="bg-yellow-400 flex-1" style={{ width: '20%' }}></div>
+                        {/* MODERATE (101-150) - Orange */}
+                        <div className="bg-orange-500 flex-1" style={{ width: '20%' }}></div>
+                        {/* POOR (151-200) - Red */}
+                        <div className="bg-red-500 flex-1" style={{ width: '20%' }}></div>
+                        {/* CRITICAL (201+) - Purple */}
+                        <div className="bg-purple-600 flex-1" style={{ width: '20%' }}></div>
+                      </div>
+                      
+                      {/* Current reading indicator */}
+                      <div 
+                        className="absolute top-0 w-1 h-full bg-white border border-black transform -translate-x-0.5"
+                        style={{ 
+                          left: `${Math.min(Math.max((weather.aqi / 250) * 100, 0), 100)}%`,
+                          boxShadow: '0 0 4px rgba(0,0,0,0.8)'
+                        }}
+                      ></div>
+                    </div>
+                    
+                    {/* AQI Scale Labels */}
+                    <div className="flex justify-between text-xs text-gray-400 mt-1 px-1">
+                      <span>0</span>
+                      <span>50</span>
+                      <span>100</span>
+                      <span>150</span>
+                      <span>200</span>
+                      <span>250+</span>
+                    </div>
+                  </div>
+                  
                   <p className="text-sm text-gray-300 font-medium">
                     {getAQIRecommendation(weather.aqi)}
                   </p>
