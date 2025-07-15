@@ -11,6 +11,8 @@ import ForecastDetails from "@/components/forecast-details"
 import PageWrapper from "@/components/page-wrapper"
 import { Analytics } from "@vercel/analytics/react"
 import WeatherSearch from "@/components/weather-search"
+import { locationService, LocationData } from "@/lib/location-service"
+import { userCacheService } from "@/lib/user-cache-service"
 import { APP_CONSTANTS } from "@/lib/utils"
 
 
@@ -126,6 +128,8 @@ function WeatherApp() {
   const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark')
   const [searchCache, setSearchCache] = useState<Map<string, { data: WeatherData; timestamp: number }>>(new Map())
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
+  const [isAutoDetecting, setIsAutoDetecting] = useState(false)
+  const [autoLocationAttempted, setAutoLocationAttempted] = useState(false)
 
   // localStorage keys
   const CACHE_KEY = 'bitweather_city'
@@ -145,6 +149,122 @@ function WeatherApp() {
   useEffect(() => {
     setIsClient(true)
   }, [])
+
+  // Silent auto-location detection on first visit
+  useEffect(() => {
+    if (!isClient || autoLocationAttempted) return
+    
+    const tryAutoLocation = async () => {
+      try {
+        // Check if we have a recent last location
+        const lastLocation = userCacheService.getLastLocation()
+        if (lastLocation) {
+          console.log('Using cached last location:', lastLocation)
+          await handleLocationDetected(lastLocation)
+          return
+        }
+        
+        // Check if we have cached weather data first
+        const cachedLocation = localStorage.getItem(CACHE_KEY)
+        const cachedWeatherData = localStorage.getItem(WEATHER_KEY)
+        const cacheTimestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY)
+        
+        if (cachedLocation && cachedWeatherData && cacheTimestamp) {
+          const cacheAge = Date.now() - parseInt(cacheTimestamp)
+          
+          // If cache is fresh, use it and skip auto-detection for now
+          if (cacheAge < 10 * 60 * 1000) {
+            console.log('Using fresh cached data, skipping auto-location')
+            return
+          }
+        }
+        
+        // Try silent location detection
+        console.log('Attempting silent location detection...')
+        setIsAutoDetecting(true)
+        
+        try {
+          const location = await locationService.getCurrentLocation()
+          await handleLocationDetected(location)
+        } catch (error: any) {
+          console.log('Geolocation failed, trying IP fallback:', error.message)
+          try {
+            const ipLocation = await locationService.getLocationByIP()
+            await handleLocationDetected(ipLocation)
+          } catch (ipError) {
+            console.log('IP location also failed, using default location:', ipError)
+            // Use default location (San Francisco)
+            await handleSearch('San Francisco, CA')
+          }
+        } finally {
+          setIsAutoDetecting(false)
+        }
+        
+        setAutoLocationAttempted(true)
+        
+      } catch (error) {
+        console.error('Auto-location initialization failed:', error)
+        setIsAutoDetecting(false)
+        setAutoLocationAttempted(true)
+      }
+    }
+    
+    // Small delay to let other initialization complete
+    const timer = setTimeout(tryAutoLocation, 1000)
+    return () => clearTimeout(timer)
+  }, [isClient, autoLocationAttempted])
+
+  // Handle successful location detection
+  const handleLocationDetected = async (location: LocationData) => {
+    try {
+      console.log('Location detected:', location)
+      
+      // Save as last location
+      userCacheService.saveLastLocation(location)
+      
+      // Check for cached weather data for this location
+      const locationKey = userCacheService.getLocationKey(location)
+      const cachedWeather = userCacheService.getCachedWeatherData(locationKey)
+      
+      if (cachedWeather) {
+        console.log('Using cached weather data for detected location')
+        setWeather(cachedWeather)
+        setLocationInput(location.displayName)
+        setCurrentLocation(location.displayName)
+        setHasSearched(true)
+        setError('')
+        return
+      }
+      
+      // Fetch fresh weather data
+      setLoading(true)
+      setError('')
+      
+      const coords = userCacheService.getLocationKey(location).replace('_', ',')
+      const weatherData = await fetchWeatherByLocation(coords)
+      
+      if (weatherData) {
+        setWeather(weatherData)
+        setLocationInput(location.displayName)
+        setCurrentLocation(location.displayName)
+        setHasSearched(true)
+        
+        // Cache the weather data
+        userCacheService.cacheWeatherData(locationKey, weatherData)
+        
+        // Also save in legacy cache for compatibility
+        saveLocationToCache(location.displayName)
+        saveWeatherToCache(weatherData)
+        
+        console.log('Weather data loaded for auto-detected location')
+      }
+    } catch (error: any) {
+      console.error('Failed to load weather for detected location:', error)
+      setError('Failed to load weather data for your location')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Initialize search cache on mount
   useEffect(() => {
@@ -559,9 +679,9 @@ function WeatherApp() {
     }
   };
 
-  // Enhanced location search with error handling
+  // Enhanced location search with new location service
   const handleLocationSearch = async () => {
-    if (!navigator.geolocation) {
+    if (!locationService.isGeolocationSupported()) {
       setError("Geolocation is not supported by your browser")
       return
     }
@@ -570,37 +690,17 @@ function WeatherApp() {
     setError("")
 
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 5000,
-          maximumAge: 0
-        })
-      })
-
-      const { latitude, longitude } = position.coords
-      console.log("Got coordinates:", { latitude, longitude })
-
-      const weatherData = await fetchWeatherByLocation(`${latitude},${longitude}`)
-      console.log("Weather data received:", weatherData)
-
-      if (weatherData) {
-        setWeather(weatherData)
-        setHasSearched(true)
-        setError("")
-        saveLocationToCache(`${latitude},${longitude}`)
-        saveWeatherToCache(weatherData)
-        recordRequest()
-      } else {
-        setError("Failed to fetch weather data for your location")
-      }
-    } catch (error) {
+      const location = await locationService.getCurrentLocation()
+      await handleLocationDetected(location)
+      recordRequest()
+    } catch (error: any) {
       console.error("Location error:", error)
-      setError(error instanceof Error ? error.message : "Failed to get your location")
+      setError(error.message || "Failed to get your location")
     } finally {
       setLoading(false)
     }
   }
+
 
   const formatWindDisplayHTML = (windDisplay: string): string => {
     // Convert wind display to HTML for colored wind speeds
@@ -768,13 +868,13 @@ function WeatherApp() {
 
           <WeatherSearch
             onSearch={handleSearch}
-            onLocationSearch={handleLocationSearch}
-            isLoading={loading}
+            isLoading={loading || isAutoDetecting}
             error={error}
             rateLimitError={rateLimitError}
             isDisabled={isOnCooldown}
             theme={theme}
           />
+
 
 
           {/* 16-Bit Welcome Message */}
@@ -798,7 +898,7 @@ function WeatherApp() {
             </div>
           )}
 
-          {loading && (
+          {(loading || isAutoDetecting) && (
             <div className="flex justify-center items-center mt-8">
               <Loader2 className={cn(
                 "h-8 w-8 animate-spin",
@@ -806,7 +906,9 @@ function WeatherApp() {
                 theme === "miami" && "text-pink-500",
                 theme === "tron" && "text-cyan-500"
               )} />
-              <span className="ml-2 text-white">Loading weather data...</span>
+              <span className="ml-2 text-white">
+                {isAutoDetecting ? 'Detecting your location...' : 'Loading weather data...'}
+              </span>
             </div>
           )}
 

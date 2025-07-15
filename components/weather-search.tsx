@@ -1,12 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Search, MapPin, Loader2 } from "lucide-react"
+import { Search, Loader2 } from "lucide-react"
 import { ThemeType, APP_CONSTANTS } from "@/lib/utils"
 
 interface WeatherSearchProps {
   onSearch: (location: string) => void;
-  onLocationSearch: () => void;
   isLoading: boolean;
   error?: string;
   isDisabled?: boolean;
@@ -16,7 +15,6 @@ interface WeatherSearchProps {
 
 export default function WeatherSearch({ 
   onSearch, 
-  onLocationSearch, 
   isLoading, 
   error, 
   isDisabled = false,
@@ -106,11 +104,6 @@ export default function WeatherSearch({
     }
   }
 
-  const handleLocationClick = () => {
-    if (!isLoading && !isDisabled) {
-      onLocationSearch()
-    }
-  }
 
   // Determine if controls should be disabled
   const controlsDisabled = isLoading || isDisabled
@@ -160,28 +153,6 @@ export default function WeatherSearch({
         </div>
       </form>
 
-      {/* Location Button - Mobile friendly */}
-      <div className="flex justify-center px-2 sm:px-0">
-        <button
-          onClick={handleLocationClick}
-          disabled={controlsDisabled}
-          className={`flex items-center gap-2 px-4 sm:px-6 py-3 ${themeClasses.buttonBg} border ${themeClasses.buttonBorder} 
-                   ${themeClasses.buttonText} ${themeClasses.buttonHover} transition-all duration-200 
-                   text-xs sm:text-sm uppercase tracking-wider font-mono disabled:opacity-50 
-                   disabled:cursor-not-allowed pixel-font ${themeClasses.specialBorder}
-                   min-h-[48px] touch-manipulation w-full sm:w-auto max-w-xs`}
-            style={{
-              imageRendering: "pixelated",
-              fontFamily: "monospace",
-              fontSize: "clamp(11px, 2.5vw, 14px)" // Responsive font size
-            }}
-        >
-          <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-          <span className="break-words text-center">
-            {isLoading ? "LOADING..." : isDisabled ? "RATE LIMITED" : "USE MY LOCATION"}
-          </span>
-        </button>
-      </div>
 
       {/* Error Display - Mobile responsive */}
       {(error || rateLimitError) && (
