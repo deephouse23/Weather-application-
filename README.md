@@ -232,7 +232,7 @@ Modify `src/styles/themes.css` to customize colors:
 ### Planned Improvements
 - **🔔 Weather Alerts** - Severe weather notifications
 - **📈 Historical Data** - Weather trends and comparisons
-- **🗺️ Weather Maps** - Interactive radar and satellite imagery
+- **🗺️ Weather Maps** - Interactive satellite imagery
 - **👥 Multi-Location** - Save and compare multiple cities
 
 ## 🤝 Contributing

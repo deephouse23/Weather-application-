@@ -9,8 +9,8 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "16-Bit Weather Education Platform - Retro Weather Learning",
-  description: "Explore weather like it's 1985! Comprehensive 16-bit weather education platform with doppler radar, cloud atlas, weather systems, fun facts, and educational games. Learn meteorology with authentic pixel graphics.",
-  keywords: "16-bit weather, retro weather education, doppler radar, cloud types, weather systems, meteorology learning, educational games, pixel weather, weather facts, atmospheric science",
+  description: "Explore weather like it's 1985! Comprehensive 16-bit weather education platform with cloud atlas, weather systems, fun facts, and educational games. Learn meteorology with authentic pixel graphics.",
+  keywords: "16-bit weather, retro weather education, cloud types, weather systems, meteorology learning, educational games, pixel weather, weather facts, atmospheric science",
   generator: 'Next.js',
   applicationName: '16-Bit Weather Education Platform',
   authors: [{ name: 'Weather Education Systems' }],
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: '16-Bit Weather Education Platform - Learn Weather Like It\'s 1985',
-    description: 'Comprehensive weather education with 16-bit doppler radar, cloud atlas, weather systems, and retro-styled learning games.',
+    description: 'Comprehensive weather education with cloud atlas, weather systems, and retro-styled learning games.',
     url: 'https://16-bit-weather.vercel.app',
     siteName: '16-Bit Weather Education',
     images: [
@@ -140,7 +140,7 @@ export default function RootLayout({
                 "Weather Prediction"
               ],
               "featureList": [
-                "Real-time weather data with 16-bit doppler radar",
+                "Real-time weather data and forecasts",
                 "Comprehensive cloud type atlas with pixel art",
                 "Weather systems education and simulations",
                 "Interactive weather facts and statistics", 
