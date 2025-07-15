@@ -701,29 +701,6 @@ function WeatherApp() {
     }
   }
 
-  // Handle silent location detection
-  const handleLocationDetection = async () => {
-    if (loading || isAutoDetecting) return
-    
-    setIsAutoDetecting(true)
-    setError('')
-    
-    try {
-      const location = await locationService.getCurrentLocation()
-      await handleLocationDetected(location)
-    } catch (error: any) {
-      console.log('Geolocation failed, trying IP fallback:', error.message)
-      try {
-        const ipLocation = await locationService.getLocationByIP()
-        await handleLocationDetected(ipLocation)
-      } catch (ipError) {
-        console.log('All location detection failed:', ipError)
-        setError('Location detection failed. Please search manually.')
-      }
-    } finally {
-      setIsAutoDetecting(false)
-    }
-  }
 
   const formatWindDisplayHTML = (windDisplay: string): string => {
     // Convert wind display to HTML for colored wind speeds
@@ -891,7 +868,6 @@ function WeatherApp() {
 
           <WeatherSearch
             onSearch={handleSearch}
-            onLocationSearch={handleLocationDetection}
             isLoading={loading || isAutoDetecting}
             error={error}
             rateLimitError={rateLimitError}
