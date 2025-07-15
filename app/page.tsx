@@ -11,6 +11,10 @@ import ForecastDetails from "@/components/forecast-details"
 import PageWrapper from "@/components/page-wrapper"
 import { Analytics } from "@vercel/analytics/react"
 import WeatherSearch from "@/components/weather-search"
+import LocationPermissionModal from "@/components/location-permission-modal"
+import FavoriteLocations from "@/components/favorite-locations"
+import { locationService, LocationData } from "@/lib/location-service"
+import { userCacheService } from "@/lib/user-cache-service"
 import { APP_CONSTANTS } from "@/lib/utils"
 
 
@@ -126,6 +130,10 @@ function WeatherApp() {
   const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark')
   const [searchCache, setSearchCache] = useState<Map<string, { data: WeatherData; timestamp: number }>>(new Map())
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
+  const [showLocationModal, setShowLocationModal] = useState(false)
+  const [showFavorites, setShowFavorites] = useState(false)
+  const [isAutoDetecting, setIsAutoDetecting] = useState(false)
+  const [autoLocationAttempted, setAutoLocationAttempted] = useState(false)
 
   // localStorage keys
   const CACHE_KEY = 'bitweather_city'
@@ -145,6 +153,139 @@ function WeatherApp() {
   useEffect(() => {
     setIsClient(true)
   }, [])
+
+  // Auto-location detection on first visit
+  useEffect(() => {
+    if (!isClient) return
+    
+    const tryAutoLocation = async () => {
+      try {
+        const preferences = userCacheService.getPreferences()
+        
+        // Skip if user has disabled auto-detection or already been asked
+        if (!preferences?.settings.autoDetectLocation || 
+            preferences?.settings.permissionDenied ||
+            autoLocationAttempted) {
+          return
+        }
+        
+        // Check if we have a recent last location
+        const lastLocation = userCacheService.getLastLocation()
+        if (lastLocation) {
+          console.log('Using cached last location:', lastLocation)
+          await handleLocationDetected(lastLocation)
+          return
+        }
+        
+        // Check if we have cached weather data first
+        const cachedLocation = localStorage.getItem(CACHE_KEY)
+        const cachedWeatherData = localStorage.getItem(WEATHER_KEY)
+        const cacheTimestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY)
+        
+        if (cachedLocation && cachedWeatherData && cacheTimestamp) {
+          const cacheAge = Date.now() - parseInt(cacheTimestamp)
+          
+          // If cache is fresh, use it and skip auto-detection for now
+          if (cacheAge < 10 * 60 * 1000) {
+            console.log('Using fresh cached data, skipping auto-location')
+            return
+          }
+        }
+        
+        // Check if user granted permission before without asking again
+        const permissionStatus = await locationService.getPermissionStatus()
+        if (permissionStatus.granted) {
+          console.log('Location permission already granted, auto-detecting...')
+          setIsAutoDetecting(true)
+          
+          try {
+            const location = await locationService.getCurrentLocation()
+            await handleLocationDetected(location)
+          } catch (error: any) {
+            console.log('Auto-location failed:', error.message)
+            if (error.code !== 'PERMISSION_DENIED') {
+              // Try IP fallback for non-permission errors
+              try {
+                const ipLocation = await locationService.getLocationByIP()
+                await handleLocationDetected(ipLocation)
+              } catch (ipError) {
+                console.log('IP location also failed:', ipError)
+              }
+            }
+          } finally {
+            setIsAutoDetecting(false)
+          }
+        } else if (!preferences?.settings.permissionAsked && permissionStatus.supported) {
+          // Show permission modal for first-time users
+          console.log('First time user, showing location permission modal')
+          setShowLocationModal(true)
+        }
+        
+        setAutoLocationAttempted(true)
+        
+      } catch (error) {
+        console.error('Auto-location initialization failed:', error)
+        setIsAutoDetecting(false)
+        setAutoLocationAttempted(true)
+      }
+    }
+    
+    // Small delay to let other initialization complete
+    const timer = setTimeout(tryAutoLocation, 1000)
+    return () => clearTimeout(timer)
+  }, [isClient, autoLocationAttempted])
+
+  // Handle successful location detection
+  const handleLocationDetected = async (location: LocationData) => {
+    try {
+      console.log('Location detected:', location)
+      
+      // Save as last location
+      userCacheService.saveLastLocation(location)
+      
+      // Check for cached weather data for this location
+      const locationKey = userCacheService.getLocationKey(location)
+      const cachedWeather = userCacheService.getCachedWeatherData(locationKey)
+      
+      if (cachedWeather) {
+        console.log('Using cached weather data for detected location')
+        setWeather(cachedWeather)
+        setLocationInput(location.displayName)
+        setCurrentLocation(location.displayName)
+        setHasSearched(true)
+        setError('')
+        return
+      }
+      
+      // Fetch fresh weather data
+      setLoading(true)
+      setError('')
+      
+      const coords = userCacheService.getLocationKey(location).replace('_', ',')
+      const weatherData = await fetchWeatherByLocation(coords)
+      
+      if (weatherData) {
+        setWeather(weatherData)
+        setLocationInput(location.displayName)
+        setCurrentLocation(location.displayName)
+        setHasSearched(true)
+        
+        // Cache the weather data
+        userCacheService.cacheWeatherData(locationKey, weatherData)
+        
+        // Also save in legacy cache for compatibility
+        saveLocationToCache(location.displayName)
+        saveWeatherToCache(weatherData)
+        
+        console.log('Weather data loaded for auto-detected location')
+      }
+    } catch (error: any) {
+      console.error('Failed to load weather for detected location:', error)
+      setError('Failed to load weather data for your location')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Initialize search cache on mount
   useEffect(() => {
@@ -559,9 +700,9 @@ function WeatherApp() {
     }
   };
 
-  // Enhanced location search with error handling
+  // Enhanced location search with new location service
   const handleLocationSearch = async () => {
-    if (!navigator.geolocation) {
+    if (!locationService.isGeolocationSupported()) {
       setError("Geolocation is not supported by your browser")
       return
     }
@@ -570,36 +711,54 @@ function WeatherApp() {
     setError("")
 
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 5000,
-          maximumAge: 0
-        })
-      })
-
-      const { latitude, longitude } = position.coords
-      console.log("Got coordinates:", { latitude, longitude })
-
-      const weatherData = await fetchWeatherByLocation(`${latitude},${longitude}`)
-      console.log("Weather data received:", weatherData)
-
-      if (weatherData) {
-        setWeather(weatherData)
-        setHasSearched(true)
-        setError("")
-        saveLocationToCache(`${latitude},${longitude}`)
-        saveWeatherToCache(weatherData)
-        recordRequest()
-      } else {
-        setError("Failed to fetch weather data for your location")
-      }
-    } catch (error) {
+      const location = await locationService.getCurrentLocation()
+      await handleLocationDetected(location)
+      recordRequest()
+    } catch (error: any) {
       console.error("Location error:", error)
-      setError(error instanceof Error ? error.message : "Failed to get your location")
+      setError(error.message || "Failed to get your location")
     } finally {
       setLoading(false)
     }
+  }
+
+  // Show location permission modal
+  const handleShowLocationModal = () => {
+    setShowLocationModal(true)
+  }
+
+  // Handle location permission modal responses
+  const handleLocationGranted = async (location: { latitude: number; longitude: number; displayName: string }) => {
+    const locationData: LocationData = {
+      latitude: location.latitude,
+      longitude: location.longitude,
+      displayName: location.displayName,
+      source: 'geolocation'
+    }
+    
+    await handleLocationDetected(locationData)
+    recordRequest()
+  }
+
+  const handleLocationDenied = () => {
+    console.log('User denied location access')
+    // User preferences are already updated in the modal
+  }
+
+  const handleManualEntry = () => {
+    console.log('User chose manual entry')
+    // Focus on search input or show manual entry help
+    setError('Please enter your location in the search box above')
+  }
+
+  // Handle favorites
+  const handleShowFavorites = () => {
+    setShowFavorites(true)
+  }
+
+  const handleFavoriteLocationSelect = async (location: LocationData) => {
+    console.log('Selected favorite location:', location)
+    await handleLocationDetected(location)
   }
 
   const formatWindDisplayHTML = (windDisplay: string): string => {
@@ -768,12 +927,30 @@ function WeatherApp() {
 
           <WeatherSearch
             onSearch={handleSearch}
-            onLocationSearch={handleLocationSearch}
-            isLoading={loading}
+            onLocationSearch={handleShowLocationModal}
+            onShowFavorites={handleShowFavorites}
+            isLoading={loading || isAutoDetecting}
             error={error}
             rateLimitError={rateLimitError}
             isDisabled={isOnCooldown}
             theme={theme}
+          />
+
+          {/* Location Permission Modal */}
+          <LocationPermissionModal
+            isOpen={showLocationModal}
+            onClose={() => setShowLocationModal(false)}
+            onLocationGranted={handleLocationGranted}
+            onLocationDenied={handleLocationDenied}
+            onManualEntry={handleManualEntry}
+          />
+
+          {/* Favorite Locations Modal */}
+          <FavoriteLocations
+            isOpen={showFavorites}
+            onClose={() => setShowFavorites(false)}
+            onLocationSelect={handleFavoriteLocationSelect}
+            currentLocation={currentLocation}
           />
 
 
@@ -798,7 +975,7 @@ function WeatherApp() {
             </div>
           )}
 
-          {loading && (
+          {(loading || isAutoDetecting) && (
             <div className="flex justify-center items-center mt-8">
               <Loader2 className={cn(
                 "h-8 w-8 animate-spin",
@@ -806,7 +983,9 @@ function WeatherApp() {
                 theme === "miami" && "text-pink-500",
                 theme === "tron" && "text-cyan-500"
               )} />
-              <span className="ml-2 text-white">Loading weather data...</span>
+              <span className="ml-2 text-white">
+                {isAutoDetecting ? 'Detecting your location...' : 'Loading weather data...'}
+              </span>
             </div>
           )}
 
