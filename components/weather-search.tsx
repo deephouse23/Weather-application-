@@ -1,13 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { Search, MapPin, Loader2, Star } from "lucide-react"
+import { Search, MapPin, Loader2 } from "lucide-react"
 import { ThemeType, APP_CONSTANTS } from "@/lib/utils"
 
 interface WeatherSearchProps {
   onSearch: (location: string) => void;
   onLocationSearch: () => void;
-  onShowFavorites?: () => void;
   isLoading: boolean;
   error?: string;
   isDisabled?: boolean;
@@ -18,7 +17,6 @@ interface WeatherSearchProps {
 export default function WeatherSearch({ 
   onSearch, 
   onLocationSearch, 
-  onShowFavorites,
   isLoading, 
   error, 
   isDisabled = false,
@@ -184,26 +182,6 @@ export default function WeatherSearch({
           </span>
         </button>
 
-        {/* Favorites Button */}
-        {onShowFavorites && (
-          <button
-            onClick={onShowFavorites}
-            disabled={controlsDisabled}
-            className={`flex items-center gap-2 px-3 sm:px-4 py-3 ${themeClasses.buttonBg} border ${themeClasses.buttonBorder} 
-                     ${themeClasses.buttonText} ${themeClasses.buttonHover} transition-all duration-200 
-                     text-xs sm:text-sm uppercase tracking-wider font-mono disabled:opacity-50 
-                     disabled:cursor-not-allowed pixel-font ${themeClasses.specialBorder}
-                     min-h-[48px] touch-manipulation`}
-              style={{
-                imageRendering: "pixelated",
-                fontFamily: "monospace",
-                fontSize: "clamp(11px, 2.5vw, 14px)"
-              }}
-          >
-            <Star className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-            <span className="hidden sm:inline">FAVORITES</span>
-          </button>
-        )}
       </div>
 
       {/* Error Display - Mobile responsive */}

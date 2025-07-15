@@ -2,7 +2,7 @@
  * User Cache Service
  * 
  * This service provides comprehensive caching and user preference management with:
- * - Location preferences and favorites
+ * - Location preferences and last location caching
  * - Weather data caching with expiration
  * - User settings persistence
  * - Cache cleanup and management
@@ -14,14 +14,10 @@ import { LocationData } from './location-service';
 
 export interface UserPreferences {
   lastLocation?: LocationData;
-  favoriteLocations: LocationData[];
   settings: {
-    autoDetectLocation: boolean;
     units: 'metric' | 'imperial';
     theme: 'dark' | 'miami' | 'tron';
     cacheEnabled: boolean;
-    permissionAsked: boolean;
-    permissionDenied: boolean;
   };
   updatedAt: number;
 }
@@ -46,7 +42,6 @@ export class UserCacheService {
   private readonly STORAGE_PREFIX = 'bitweather_';
   private readonly PREFERENCES_KEY = 'user_preferences';
   private readonly WEATHER_CACHE_KEY = 'weather_cache';
-  private readonly MAX_FAVORITE_LOCATIONS = 10;
   private readonly DEFAULT_WEATHER_CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
   private readonly DEFAULT_LOCATION_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
   private readonly MAX_CACHE_SIZE = 5 * 1024 * 1024; // 5MB limit
@@ -69,14 +64,10 @@ export class UserCacheService {
   private initializeDefaults(): void {
     if (!this.getPreferences()) {
       const defaultPreferences: UserPreferences = {
-        favoriteLocations: [],
         settings: {
-          autoDetectLocation: true,
           units: 'imperial',
           theme: 'dark',
-          cacheEnabled: true,
-          permissionAsked: false,
-          permissionDenied: false
+          cacheEnabled: true
         },
         updatedAt: Date.now()
       };
@@ -168,64 +159,6 @@ export class UserCacheService {
     return preferences?.lastLocation || null;
   }
 
-  /**
-   * Add location to favorites
-   */
-  addFavoriteLocation(location: LocationData): boolean {
-    const preferences = this.getPreferences();
-    if (!preferences) return false;
-
-    // Check if location already exists
-    const existingIndex = preferences.favoriteLocations.findIndex(
-      fav => this.isSameLocation(fav, location)
-    );
-
-    if (existingIndex >= 0) {
-      // Update existing location
-      preferences.favoriteLocations[existingIndex] = location;
-    } else {
-      // Add new location
-      preferences.favoriteLocations.unshift(location);
-      
-      // Limit to maximum number of favorites
-      if (preferences.favoriteLocations.length > this.MAX_FAVORITE_LOCATIONS) {
-        preferences.favoriteLocations = preferences.favoriteLocations.slice(0, this.MAX_FAVORITE_LOCATIONS);
-      }
-    }
-
-    return this.savePreferences(preferences);
-  }
-
-  /**
-   * Remove location from favorites
-   */
-  removeFavoriteLocation(location: LocationData): boolean {
-    const preferences = this.getPreferences();
-    if (!preferences) return false;
-
-    preferences.favoriteLocations = preferences.favoriteLocations.filter(
-      fav => !this.isSameLocation(fav, location)
-    );
-
-    return this.savePreferences(preferences);
-  }
-
-  /**
-   * Get favorite locations
-   */
-  getFavoriteLocations(): LocationData[] {
-    const preferences = this.getPreferences();
-    return preferences?.favoriteLocations || [];
-  }
-
-  /**
-   * Check if two locations are the same
-   */
-  private isSameLocation(loc1: LocationData, loc2: LocationData): boolean {
-    const tolerance = 0.001; // ~100m tolerance
-    return Math.abs(loc1.latitude - loc2.latitude) < tolerance &&
-           Math.abs(loc1.longitude - loc2.longitude) < tolerance;
-  }
 
   /**
    * Cache weather data
@@ -508,14 +441,10 @@ export class UserCacheService {
    */
   private validateAndMigratePreferences(preferences: any): UserPreferences {
     const defaultPreferences: UserPreferences = {
-      favoriteLocations: [],
       settings: {
-        autoDetectLocation: true,
         units: 'imperial',
         theme: 'dark',
-        cacheEnabled: true,
-        permissionAsked: false,
-        permissionDenied: false
+        cacheEnabled: true
       },
       updatedAt: Date.now()
     };
@@ -527,10 +456,7 @@ export class UserCacheService {
       settings: {
         ...defaultPreferences.settings,
         ...preferences.settings
-      },
-      favoriteLocations: Array.isArray(preferences.favoriteLocations) 
-        ? preferences.favoriteLocations.slice(0, this.MAX_FAVORITE_LOCATIONS)
-        : []
+      }
     };
   }
 

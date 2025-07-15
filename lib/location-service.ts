@@ -99,8 +99,8 @@ export class LocationService {
     useCache?: boolean;
   }): Promise<LocationData> {
     const defaultOptions = {
-      enableHighAccuracy: true,
-      timeout: 10000,
+      enableHighAccuracy: false, // Silent mode - don't prompt for precise location
+      timeout: 5000, // Shorter timeout for silent operation
       maximumAge: 300000, // 5 minutes
       useCache: true,
       ...options

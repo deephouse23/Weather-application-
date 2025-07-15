@@ -11,8 +11,6 @@ import ForecastDetails from "@/components/forecast-details"
 import PageWrapper from "@/components/page-wrapper"
 import { Analytics } from "@vercel/analytics/react"
 import WeatherSearch from "@/components/weather-search"
-import LocationPermissionModal from "@/components/location-permission-modal"
-import FavoriteLocations from "@/components/favorite-locations"
 import { locationService, LocationData } from "@/lib/location-service"
 import { userCacheService } from "@/lib/user-cache-service"
 import { APP_CONSTANTS } from "@/lib/utils"
@@ -130,8 +128,6 @@ function WeatherApp() {
   const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark')
   const [searchCache, setSearchCache] = useState<Map<string, { data: WeatherData; timestamp: number }>>(new Map())
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
-  const [showLocationModal, setShowLocationModal] = useState(false)
-  const [showFavorites, setShowFavorites] = useState(false)
   const [isAutoDetecting, setIsAutoDetecting] = useState(false)
   const [autoLocationAttempted, setAutoLocationAttempted] = useState(false)
 
@@ -154,21 +150,12 @@ function WeatherApp() {
     setIsClient(true)
   }, [])
 
-  // Auto-location detection on first visit
+  // Silent auto-location detection on first visit
   useEffect(() => {
-    if (!isClient) return
+    if (!isClient || autoLocationAttempted) return
     
     const tryAutoLocation = async () => {
       try {
-        const preferences = userCacheService.getPreferences()
-        
-        // Skip if user has disabled auto-detection or already been asked
-        if (!preferences?.settings.autoDetectLocation || 
-            preferences?.settings.permissionDenied ||
-            autoLocationAttempted) {
-          return
-        }
-        
         // Check if we have a recent last location
         const lastLocation = userCacheService.getLastLocation()
         if (lastLocation) {
@@ -192,33 +179,25 @@ function WeatherApp() {
           }
         }
         
-        // Check if user granted permission before without asking again
-        const permissionStatus = await locationService.getPermissionStatus()
-        if (permissionStatus.granted) {
-          console.log('Location permission already granted, auto-detecting...')
-          setIsAutoDetecting(true)
-          
+        // Try silent location detection
+        console.log('Attempting silent location detection...')
+        setIsAutoDetecting(true)
+        
+        try {
+          const location = await locationService.getCurrentLocation()
+          await handleLocationDetected(location)
+        } catch (error: any) {
+          console.log('Geolocation failed, trying IP fallback:', error.message)
           try {
-            const location = await locationService.getCurrentLocation()
-            await handleLocationDetected(location)
-          } catch (error: any) {
-            console.log('Auto-location failed:', error.message)
-            if (error.code !== 'PERMISSION_DENIED') {
-              // Try IP fallback for non-permission errors
-              try {
-                const ipLocation = await locationService.getLocationByIP()
-                await handleLocationDetected(ipLocation)
-              } catch (ipError) {
-                console.log('IP location also failed:', ipError)
-              }
-            }
-          } finally {
-            setIsAutoDetecting(false)
+            const ipLocation = await locationService.getLocationByIP()
+            await handleLocationDetected(ipLocation)
+          } catch (ipError) {
+            console.log('IP location also failed, using default location:', ipError)
+            // Use default location (San Francisco)
+            await handleSearch('San Francisco, CA')
           }
-        } else if (!preferences?.settings.permissionAsked && permissionStatus.supported) {
-          // Show permission modal for first-time users
-          console.log('First time user, showing location permission modal')
-          setShowLocationModal(true)
+        } finally {
+          setIsAutoDetecting(false)
         }
         
         setAutoLocationAttempted(true)
@@ -722,43 +701,28 @@ function WeatherApp() {
     }
   }
 
-  // Show location permission modal
-  const handleShowLocationModal = () => {
-    setShowLocationModal(true)
-  }
-
-  // Handle location permission modal responses
-  const handleLocationGranted = async (location: { latitude: number; longitude: number; displayName: string }) => {
-    const locationData: LocationData = {
-      latitude: location.latitude,
-      longitude: location.longitude,
-      displayName: location.displayName,
-      source: 'geolocation'
-    }
+  // Handle silent location detection
+  const handleLocationDetection = async () => {
+    if (loading || isAutoDetecting) return
     
-    await handleLocationDetected(locationData)
-    recordRequest()
-  }
-
-  const handleLocationDenied = () => {
-    console.log('User denied location access')
-    // User preferences are already updated in the modal
-  }
-
-  const handleManualEntry = () => {
-    console.log('User chose manual entry')
-    // Focus on search input or show manual entry help
-    setError('Please enter your location in the search box above')
-  }
-
-  // Handle favorites
-  const handleShowFavorites = () => {
-    setShowFavorites(true)
-  }
-
-  const handleFavoriteLocationSelect = async (location: LocationData) => {
-    console.log('Selected favorite location:', location)
-    await handleLocationDetected(location)
+    setIsAutoDetecting(true)
+    setError('')
+    
+    try {
+      const location = await locationService.getCurrentLocation()
+      await handleLocationDetected(location)
+    } catch (error: any) {
+      console.log('Geolocation failed, trying IP fallback:', error.message)
+      try {
+        const ipLocation = await locationService.getLocationByIP()
+        await handleLocationDetected(ipLocation)
+      } catch (ipError) {
+        console.log('All location detection failed:', ipError)
+        setError('Location detection failed. Please search manually.')
+      }
+    } finally {
+      setIsAutoDetecting(false)
+    }
   }
 
   const formatWindDisplayHTML = (windDisplay: string): string => {
@@ -927,8 +891,7 @@ function WeatherApp() {
 
           <WeatherSearch
             onSearch={handleSearch}
-            onLocationSearch={handleShowLocationModal}
-            onShowFavorites={handleShowFavorites}
+            onLocationSearch={handleLocationDetection}
             isLoading={loading || isAutoDetecting}
             error={error}
             rateLimitError={rateLimitError}
@@ -936,22 +899,6 @@ function WeatherApp() {
             theme={theme}
           />
 
-          {/* Location Permission Modal */}
-          <LocationPermissionModal
-            isOpen={showLocationModal}
-            onClose={() => setShowLocationModal(false)}
-            onLocationGranted={handleLocationGranted}
-            onLocationDenied={handleLocationDenied}
-            onManualEntry={handleManualEntry}
-          />
-
-          {/* Favorite Locations Modal */}
-          <FavoriteLocations
-            isOpen={showFavorites}
-            onClose={() => setShowFavorites(false)}
-            onLocationSelect={handleFavoriteLocationSelect}
-            currentLocation={currentLocation}
-          />
 
 
           {/* 16-Bit Welcome Message */}
