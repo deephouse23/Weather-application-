@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://16bitweather.co/sitemap.xml
+
+# Additional bot instructions
+Crawl-delay: 1
