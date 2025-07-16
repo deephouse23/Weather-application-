@@ -57,6 +57,7 @@ interface OpenWeatherMapForecastResponse {
     clouds?: {
       all: number;
     };
+    pop?: number; // Probability of precipitation (0-1)
   }>;
 }
 
@@ -653,9 +654,16 @@ const processDailyForecast = (forecastData: OpenWeatherMapForecastResponse, useF
     }
     dailyData[date].cloudCover.push(item.clouds?.all || 0);
     
-    // Calculate precipitation chance (simplified)
-    const precipChance = item.weather[0].main.toLowerCase().includes('rain') ? 
-      Math.min((item.main.humidity / 100) * 100, 85) : 0;
+    // Use actual API precipitation probability or fallback calculation
+    let precipChance = 0;
+    if (item.pop !== undefined) {
+      // Use OpenWeatherMap's probability of precipitation (convert from 0-1 to 0-100)
+      precipChance = Math.round(item.pop * 100);
+    } else {
+      // Fallback: simplified calculation based on weather conditions
+      precipChance = item.weather[0].main.toLowerCase().includes('rain') ? 
+        Math.min((item.main.humidity / 100) * 100, 85) : 0;
+    }
     dailyData[date].precipChance.push(precipChance);
 
     // Add to hourly forecast (first 8 entries per day)
@@ -697,7 +705,7 @@ const processDailyForecast = (forecastData: OpenWeatherMapForecastResponse, useF
         windDirection: windDirection,
         pressure: `${avgPressure} hPa`,
         cloudCover: avgCloudCover,
-        precipitationChance: avgPrecipChance > 0 ? avgPrecipChance : undefined,
+        precipitationChance: avgPrecipChance,
         visibility: undefined, // Not available in free API
         uvIndex: undefined // Not available in free API
       },
