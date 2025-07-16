@@ -41,12 +41,13 @@ function InfoTooltip({ text, theme }: { text: string; theme: ThemeType }) {
         onMouseLeave={() => setIsVisible(false)}
       />
       {isVisible && (
-        <div className={`absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs ${themeClasses.background} ${themeClasses.text} border ${themeClasses.borderColor} rounded-md shadow-lg max-w-48 text-center`}>
-          <div className="whitespace-normal leading-relaxed">
+        <div className={`absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs bg-gray-900 text-white border-2 border-gray-600 rounded-md shadow-xl max-w-48 text-center backdrop-blur-sm`}
+             style={{ backgroundColor: 'rgba(17, 24, 39, 0.95)' }}>
+          <div className="whitespace-normal leading-relaxed font-medium">
             {text}
           </div>
           {/* Arrow pointing down */}
-          <div className={`absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-current`}></div>
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-600"></div>
         </div>
       )}
     </div>
@@ -123,7 +124,7 @@ function DetailedWeatherInfo({
     {
       icon: <Droplets className="w-4 h-4" />,
       label: "Chance of Rain",
-      value: dayDetails?.precipitationChance !== undefined ? `${dayDetails.precipitationChance}%` : "N/A"
+      value: dayDetails?.precipitationChance !== undefined ? `${dayDetails.precipitationChance}%` : "0%"
     },
     {
       icon: <Droplets className="w-4 h-4" />,
