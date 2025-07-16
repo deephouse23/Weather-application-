@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { ChevronDown, ChevronUp, Droplets, Wind, Eye, Gauge, Sunrise, Sunset, Cloud } from "lucide-react"
+import { ChevronDown, ChevronUp, Droplets, Wind, Eye, Gauge, Sunrise, Sunset, Cloud, Info } from "lucide-react"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
 
 interface ForecastDay {
@@ -26,6 +26,31 @@ interface ForecastDetailsProps {
     sunrise: string;
     sunset: string;
   };
+}
+
+// Information tooltip component
+function InfoTooltip({ text, theme }: { text: string; theme: ThemeType }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const themeClasses = getComponentStyles(theme, 'card');
+
+  return (
+    <div className="relative inline-flex">
+      <Info 
+        className="w-3 h-3 ml-1 cursor-help opacity-60 hover:opacity-100 transition-opacity" 
+        onMouseEnter={() => setIsVisible(true)}
+        onMouseLeave={() => setIsVisible(false)}
+      />
+      {isVisible && (
+        <div className={`absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs ${themeClasses.background} ${themeClasses.text} border ${themeClasses.borderColor} rounded-md shadow-lg max-w-48 text-center`}>
+          <div className="whitespace-normal leading-relaxed">
+            {text}
+          </div>
+          {/* Arrow pointing down */}
+          <div className={`absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-current`}></div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function ForecastDetails({ 
@@ -97,9 +122,15 @@ function DetailedWeatherInfo({
   const weatherMetrics = [
     {
       icon: <Droplets className="w-4 h-4" />,
+      label: "Chance of Rain",
+      value: dayDetails?.precipitationChance !== undefined ? `${dayDetails.precipitationChance}%` : "N/A"
+    },
+    {
+      icon: <Droplets className="w-4 h-4" />,
       label: "Humidity",
       value: dayDetails?.humidity !== undefined ? `${dayDetails.humidity}%` : 
-             (isToday && currentWeatherData?.humidity ? `${currentWeatherData.humidity}%` : "N/A")
+             (isToday && currentWeatherData?.humidity ? `${currentWeatherData.humidity}%` : "N/A"),
+      tooltip: "Relative humidity measures the amount of moisture in the air as a percentage of the maximum moisture the air can hold at the current temperature."
     },
     {
       icon: <Wind className="w-4 h-4" />,
@@ -114,7 +145,8 @@ function DetailedWeatherInfo({
       icon: <Gauge className="w-4 h-4" />,
       label: "Pressure",
       value: dayDetails?.pressure || 
-             (isToday && currentWeatherData?.pressure ? currentWeatherData.pressure : "N/A")
+             (isToday && currentWeatherData?.pressure ? currentWeatherData.pressure : "N/A"),
+      tooltip: "Barometric pressure measures the weight of the atmosphere pressing down on Earth's surface. It's measured in inches of mercury (inHg) or hectopascals (hPa)."
     },
     {
       icon: <Eye className="w-4 h-4" />,
@@ -148,8 +180,9 @@ function DetailedWeatherInfo({
             {metric.icon}
           </div>
           <div className="min-w-0 flex-1">
-            <div className={`text-xs ${themeClasses.secondary} opacity-70`}>
+            <div className={`text-xs ${themeClasses.secondary} opacity-70 flex items-center`}>
               {metric.label}
+              {(metric as any).tooltip && <InfoTooltip text={(metric as any).tooltip} theme={theme} />}
             </div>
             <div className={`text-sm font-medium ${themeClasses.text} truncate`}>
               {metric.value}
