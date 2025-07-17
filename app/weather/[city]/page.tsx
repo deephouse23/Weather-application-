@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import CityWeatherClient from './client'
+import { EnhancedMetaTags } from '@/components/enhanced-meta-tags'
 
 // City data for SEO and functionality
 const cityData: { [key: string]: { 
@@ -168,14 +169,16 @@ export default function CityWeatherPage({ params }: PageParams) {
 
   return (
     <>
-      {/* SEO Head */}
+      {/* Enhanced SEO Head */}
       <head>
-        <title>{city.title}</title>
-        <meta name="description" content={city.description} />
-        <meta property="og:title" content={city.title} />
-        <meta property="og:description" content={city.description} />
-        <meta property="og:url" content={`https://16bitweather.co/weather/${citySlug}`} />
-        <link rel="canonical" href={`https://16bitweather.co/weather/${citySlug}`} />
+        <EnhancedMetaTags
+          title={city.title}
+          description={city.description}
+          url={`https://16bitweather.co/weather/${citySlug}`}
+          cityName={city.name}
+          cityState={city.state}
+          type="website"
+        />
         
         <script
           type="application/ld+json"

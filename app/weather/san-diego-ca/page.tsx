@@ -11,6 +11,7 @@ import ForecastDetails from '@/components/forecast-details'
 import { useTheme } from '@/components/theme-provider'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { CollapsibleSection } from '@/components/collapsible-section'
 
 // City data for SEO and functionality
 const cityData: { [key: string]: { 
@@ -113,8 +114,8 @@ const cityData: { [key: string]: {
     name: 'San Diego',
     state: 'CA',
     searchTerm: 'San Diego, CA',
-    title: 'San Diego Weather Forecast - 16 Bit Weather',
-    description: 'Current weather conditions and 5-day forecast for San Diego, CA. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
+    title: 'San Diego Weather Forecast | 16-Bit Retro Weather Terminal',
+    description: 'Get San Diego weather in nostalgic 16-bit style. Real-time conditions, 7-day forecast, radar, and atmospheric data.',
     content: {
       intro: 'San Diego boasts a semi-arid Mediterranean climate with mild temperatures year-round. Located on the Pacific coast of Southern California, the city enjoys one of the most stable and pleasant climates in the United States.',
       climate: 'Temperatures are remarkably consistent, with summer highs in the mid-70s°F (24°C) and winter highs in the mid-60s°F (18°C). Humidity is generally low, and the city receives only about 10 inches of rain annually, mostly during winter months.',
@@ -326,6 +327,16 @@ export default function CityWeatherPage() {
               )}>
                 {city.name}, {city.state} WEATHER
               </h1>
+              
+              {/* Climate Summary - Above Weather Widget */}
+              <p className={cn(
+                "text-sm font-mono mt-3 max-w-2xl mx-auto",
+                theme === "dark" && "text-[#e0e0e0]",
+                theme === "miami" && "text-[#00ffff]",
+                theme === "tron" && "text-white"
+              )}>
+                San Diego has a semi-arid Mediterranean climate with mild temperatures year-round. The city enjoys one of the most stable climates in the US.
+              </p>
             </div>
 
             {/* Weather Search Component */}
@@ -448,28 +459,18 @@ export default function CityWeatherPage() {
               </div>
             )}
 
-            {/* SEO Content Section - Added below weather display */}
-            <div className={cn(
-              "mt-12 p-6 border-2 rounded-lg",
-              theme === "dark" && "bg-[#0f0f0f] border-[#00d4ff] text-[#e0e0e0]",
-              theme === "miami" && "bg-[#0a0025] border-[#ff1493] text-[#00ffff]",
-              theme === "tron" && "bg-black border-[#00FFFF] text-white"
-            )}>
-              <h2 className={cn(
-                "text-xl font-bold mb-4 uppercase tracking-wider font-mono",
-                theme === "dark" && "text-[#00d4ff]",
-                theme === "miami" && "text-[#ff1493]",
-                theme === "tron" && "text-[#00FFFF]"
-              )}>
-                About {city.name} Weather
-              </h2>
-              
-              <div className="space-y-4 text-sm leading-relaxed font-mono">
-                <p>{city.content.intro}</p>
-                <p>{city.content.climate}</p>
-                <p>{city.content.patterns}</p>
-              </div>
-            </div>
+            {/* Local Weather Patterns - Minimal SEO Content */}
+            <CollapsibleSection 
+              title="Local Weather Patterns" 
+              theme={theme}
+              className="mt-8 max-w-2xl mx-auto"
+            >
+              <ul className="space-y-2">
+                <li>• Marine influence prevents temperature extremes</li>
+                <li>• May Gray and June Gloom bring coastal clouds</li>
+                <li>• Santa Ana winds occasionally bring hot, dry conditions</li>
+              </ul>
+            </CollapsibleSection>
           </div>
         </div>
       </PageWrapper>

@@ -11,6 +11,7 @@ import ForecastDetails from '@/components/forecast-details'
 import { useTheme } from '@/components/theme-provider'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { CollapsibleSection } from '@/components/collapsible-section'
 
 // City data for SEO and functionality
 const cityData: { [key: string]: { 
@@ -77,8 +78,8 @@ const cityData: { [key: string]: {
     name: 'Phoenix',
     state: 'AZ',
     searchTerm: 'Phoenix, AZ',
-    title: 'Phoenix Weather Forecast - 16 Bit Weather',
-    description: 'Current weather conditions and 5-day forecast for Phoenix, AZ. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
+    title: 'Phoenix Weather Forecast | 16-Bit Retro Weather Terminal',
+    description: 'Get Phoenix weather in nostalgic 16-bit style. Real-time conditions, 7-day forecast, radar, and atmospheric data.',
     content: {
       intro: 'Phoenix has a hot desert climate with extremely hot summers and mild winters. Located in the Sonoran Desert, the city experiences low humidity year-round and abundant sunshine with minimal precipitation.',
       climate: 'Summer temperatures routinely exceed 110°F (43°C) from May through September, making Phoenix one of the hottest major cities in the US. Winters are pleasant with highs in the 70s°F (21°C). Annual rainfall is only about 8 inches, mostly from winter storms and summer monsoons.',
@@ -326,6 +327,16 @@ export default function CityWeatherPage() {
               )}>
                 {city.name}, {city.state} WEATHER
               </h1>
+              
+              {/* Climate Summary - Above Weather Widget */}
+              <p className={cn(
+                "text-sm font-mono mt-3 max-w-2xl mx-auto",
+                theme === "dark" && "text-[#e0e0e0]",
+                theme === "miami" && "text-[#00ffff]",
+                theme === "tron" && "text-white"
+              )}>
+                Phoenix has a hot desert climate with extremely hot summers and mild winters. The city receives only about 8 inches of rainfall annually.
+              </p>
             </div>
 
             {/* Weather Search Component */}
@@ -448,28 +459,18 @@ export default function CityWeatherPage() {
               </div>
             )}
 
-            {/* SEO Content Section - Added below weather display */}
-            <div className={cn(
-              "mt-12 p-6 border-2 rounded-lg",
-              theme === "dark" && "bg-[#0f0f0f] border-[#00d4ff] text-[#e0e0e0]",
-              theme === "miami" && "bg-[#0a0025] border-[#ff1493] text-[#00ffff]",
-              theme === "tron" && "bg-black border-[#00FFFF] text-white"
-            )}>
-              <h2 className={cn(
-                "text-xl font-bold mb-4 uppercase tracking-wider font-mono",
-                theme === "dark" && "text-[#00d4ff]",
-                theme === "miami" && "text-[#ff1493]",
-                theme === "tron" && "text-[#00FFFF]"
-              )}>
-                About {city.name} Weather
-              </h2>
-              
-              <div className="space-y-4 text-sm leading-relaxed font-mono">
-                <p>{city.content.intro}</p>
-                <p>{city.content.climate}</p>
-                <p>{city.content.patterns}</p>
-              </div>
-            </div>
+            {/* Local Weather Patterns - Minimal SEO Content */}
+            <CollapsibleSection 
+              title="Local Weather Patterns" 
+              theme={theme}
+              className="mt-8 max-w-2xl mx-auto"
+            >
+              <ul className="space-y-2">
+                <li>• Monsoon season brings summer thunderstorms and flash flooding</li>
+                <li>• Urban heat island effect can add 5-10°F to temperatures</li>
+                <li>• Winter months offer ideal outdoor weather conditions</li>
+              </ul>
+            </CollapsibleSection>
           </div>
         </div>
       </PageWrapper>

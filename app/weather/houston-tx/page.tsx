@@ -11,6 +11,7 @@ import ForecastDetails from '@/components/forecast-details'
 import { useTheme } from '@/components/theme-provider'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { CollapsibleSection } from '@/components/collapsible-section'
 
 // City data for SEO and functionality
 const cityData: { [key: string]: { 
@@ -65,8 +66,8 @@ const cityData: { [key: string]: {
     name: 'Houston',
     state: 'TX',
     searchTerm: 'Houston, TX',
-    title: 'Houston Weather Forecast - 16 Bit Weather',
-    description: 'Current weather conditions and 5-day forecast for Houston, TX. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
+    title: 'Houston Weather Forecast | 16-Bit Retro Weather Terminal',
+    description: 'Get Houston weather in nostalgic 16-bit style. Real-time conditions, 7-day forecast, radar, and atmospheric data.',
     content: {
       intro: 'Houston has a humid subtropical climate with hot, humid summers and mild winters. Located near the Gulf of Mexico, the city experiences high humidity year-round and is prone to tropical weather systems.',
       climate: 'Summer temperatures regularly reach the 90s°F (32-37°C) with very high humidity making it feel even hotter. Winters are mild with highs in the 60s-70s°F (15-21°C). The city receives about 50 inches of rain annually, much of it from thunderstorms and tropical systems.',
@@ -326,6 +327,16 @@ export default function CityWeatherPage() {
               )}>
                 {city.name}, {city.state} WEATHER
               </h1>
+              
+              {/* Climate Summary - Above Weather Widget */}
+              <p className={cn(
+                "text-sm font-mono mt-3 max-w-2xl mx-auto",
+                theme === "dark" && "text-[#e0e0e0]",
+                theme === "miami" && "text-[#00ffff]",
+                theme === "tron" && "text-white"
+              )}>
+                Houston has a humid subtropical climate with hot, humid summers year-round. The city is prone to tropical weather systems from the Gulf.
+              </p>
             </div>
 
             {/* Weather Search Component */}
@@ -448,28 +459,18 @@ export default function CityWeatherPage() {
               </div>
             )}
 
-            {/* SEO Content Section - Added below weather display */}
-            <div className={cn(
-              "mt-12 p-6 border-2 rounded-lg",
-              theme === "dark" && "bg-[#0f0f0f] border-[#00d4ff] text-[#e0e0e0]",
-              theme === "miami" && "bg-[#0a0025] border-[#ff1493] text-[#00ffff]",
-              theme === "tron" && "bg-black border-[#00FFFF] text-white"
-            )}>
-              <h2 className={cn(
-                "text-xl font-bold mb-4 uppercase tracking-wider font-mono",
-                theme === "dark" && "text-[#00d4ff]",
-                theme === "miami" && "text-[#ff1493]",
-                theme === "tron" && "text-[#00FFFF]"
-              )}>
-                About {city.name} Weather
-              </h2>
-              
-              <div className="space-y-4 text-sm leading-relaxed font-mono">
-                <p>{city.content.intro}</p>
-                <p>{city.content.climate}</p>
-                <p>{city.content.patterns}</p>
-              </div>
-            </div>
+            {/* Local Weather Patterns - Minimal SEO Content */}
+            <CollapsibleSection 
+              title="Local Weather Patterns" 
+              theme={theme}
+              className="mt-8 max-w-2xl mx-auto"
+            >
+              <ul className="space-y-2">
+                <li>• Gulf moisture creates frequent afternoon thunderstorms</li>
+                <li>• Hurricane season brings potential for major storm impacts</li>
+                <li>• High humidity makes summer temperatures feel 10+ degrees hotter</li>
+              </ul>
+            </CollapsibleSection>
           </div>
         </div>
       </PageWrapper>

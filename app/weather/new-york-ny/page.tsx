@@ -11,6 +11,7 @@ import ForecastDetails from '@/components/forecast-details'
 import { useTheme } from '@/components/theme-provider'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { CollapsibleSection } from '@/components/collapsible-section'
 
 // City data for SEO and functionality
 const cityData: { [key: string]: { 
@@ -29,8 +30,8 @@ const cityData: { [key: string]: {
     name: 'New York',
     state: 'NY',
     searchTerm: 'New York, NY',
-    title: 'New York Weather Forecast - 16 Bit Weather',
-    description: 'Current weather conditions and 5-day forecast for New York, NY. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
+    title: 'New York Weather Forecast | 16-Bit Retro Weather Terminal',
+    description: 'Get New York weather in nostalgic 16-bit style. Real-time conditions, 7-day forecast, radar, and atmospheric data.',
     content: {
       intro: 'New York City experiences a humid subtropical climate with four distinct seasons. Located in the northeastern United States, the city\'s weather is influenced by its coastal position and urban heat island effect.',
       climate: 'Summers in NYC are typically hot and humid with average highs in the mid-80s°F (29°C), while winters are cold with temperatures often dropping below freezing. The city receives about 50 inches of precipitation annually, distributed fairly evenly throughout the year.',
@@ -293,10 +294,25 @@ export default function CityWeatherPage() {
               },
               "mainEntity": {
                 "@type": "WeatherForecast",
+                "name": `${city.name} Weather Forecast`,
+                "description": `Current weather conditions and 7-day forecast for ${city.name}, ${city.state}`,
                 "location": {
                   "@type": "Place",
-                  "name": `${city.name}, ${city.state}`
-                }
+                  "name": `${city.name}, ${city.state}`,
+                  "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": city.name,
+                    "addressRegion": city.state,
+                    "addressCountry": "US"
+                  }
+                },
+                "provider": {
+                  "@type": "Organization",
+                  "name": "16-Bit Weather",
+                  "url": "https://16bitweather.co"
+                },
+                "datePublished": new Date().toISOString().split('T')[0],
+                "validThrough": new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
               }
             })
           }}
@@ -326,6 +342,16 @@ export default function CityWeatherPage() {
               )}>
                 {city.name}, {city.state} WEATHER
               </h1>
+              
+              {/* Climate Summary - Above Weather Widget */}
+              <p className={cn(
+                "text-sm font-mono mt-3 max-w-2xl mx-auto",
+                theme === "dark" && "text-[#e0e0e0]",
+                theme === "miami" && "text-[#00ffff]",
+                theme === "tron" && "text-white"
+              )}>
+                New York experiences a humid subtropical climate with hot summers and cold winters. The city sees about 50 inches of rainfall annually.
+              </p>
             </div>
 
             {/* Weather Search Component */}
@@ -448,28 +474,18 @@ export default function CityWeatherPage() {
               </div>
             )}
 
-            {/* SEO Content Section - Added below weather display */}
-            <div className={cn(
-              "mt-12 p-6 border-2 rounded-lg",
-              theme === "dark" && "bg-[#0f0f0f] border-[#00d4ff] text-[#e0e0e0]",
-              theme === "miami" && "bg-[#0a0025] border-[#ff1493] text-[#00ffff]",
-              theme === "tron" && "bg-black border-[#00FFFF] text-white"
-            )}>
-              <h2 className={cn(
-                "text-xl font-bold mb-4 uppercase tracking-wider font-mono",
-                theme === "dark" && "text-[#00d4ff]",
-                theme === "miami" && "text-[#ff1493]",
-                theme === "tron" && "text-[#00FFFF]"
-              )}>
-                About {city.name} Weather
-              </h2>
-              
-              <div className="space-y-4 text-sm leading-relaxed font-mono">
-                <p>{city.content.intro}</p>
-                <p>{city.content.climate}</p>
-                <p>{city.content.patterns}</p>
-              </div>
-            </div>
+            {/* Local Weather Patterns - Minimal SEO Content */}
+            <CollapsibleSection 
+              title="Local Weather Patterns" 
+              theme={theme}
+              className="mt-8 max-w-2xl mx-auto"
+            >
+              <ul className="space-y-2">
+                <li>• Urban heat island effect raises temperatures 2-5°F above surrounding areas</li>
+                <li>• Nor'easter storms bring heavy winter precipitation and coastal flooding</li>
+                <li>• Atlantic Ocean moderates temperature extremes year-round</li>
+              </ul>
+            </CollapsibleSection>
           </div>
         </div>
       </PageWrapper>

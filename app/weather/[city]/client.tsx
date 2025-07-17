@@ -5,11 +5,12 @@ import { fetchWeatherData } from '@/lib/weather-api'
 import { WeatherData } from '@/lib/types'
 import PageWrapper from '@/components/page-wrapper'
 import WeatherSearch from '@/components/weather-search'
-import Forecast from '@/components/forecast'
-import ForecastDetails from '@/components/forecast-details'
 import { useTheme } from '@/components/theme-provider'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from '@/components/lazy-weather-components'
+import { ResponsiveContainer, ResponsiveGrid } from '@/components/responsive-container'
+
 
 interface CityWeatherClientProps {
   city: {
@@ -34,53 +35,14 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>("")
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
-  const [hasAutoLoaded, setHasAutoLoaded] = useState(false)
 
-  // Silent auto-location function for city pages
-  const tryAutoLocation = async () => {
-    if (!navigator.geolocation || hasAutoLoaded) {
-      return
-    }
-
-    try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 5000,
-          maximumAge: 0
-        })
-      })
-
-      const { latitude, longitude } = position.coords
-      console.log("City page auto-location coordinates:", { latitude, longitude })
-
-      setLoading(true)
-      const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || process.env.REACT_APP_OPENWEATHER_API_KEY
-      if (!API_KEY) {
-        throw new Error('API key not configured')
-      }
-      
-      const { fetchWeatherByLocation } = await import('@/lib/weather-api')
-      const weatherData = await fetchWeatherByLocation(`${latitude},${longitude}`)
-      
-      if (weatherData) {
-        setWeather(weatherData)
-        setHasAutoLoaded(true)
-      }
-    } catch (error) {
-      console.log("City page auto-location failed silently:", error)
-      // Fall back to loading the city-specific weather
-      loadCityWeather()
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Load weather data for the city on mount
+  // Load weather data for the specific city
   const loadCityWeather = async () => {
     try {
       setLoading(true)
       setError("")
+      
+      console.log(`Loading weather for city: ${city.name}, ${city.state} (${city.searchTerm})`)
       
       const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || process.env.REACT_APP_OPENWEATHER_API_KEY
       if (!API_KEY) {
@@ -88,6 +50,7 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
       }
       
       const weatherData = await fetchWeatherData(city.searchTerm, API_KEY)
+      console.log(`Weather data loaded for ${city.name}:`, weatherData.location)
       setWeather(weatherData)
     } catch (err) {
       console.error('Error loading city weather:', err)
@@ -99,10 +62,10 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
 
   useEffect(() => {
     if (city) {
-      // Try auto-location first, fall back to city weather if it fails
-      tryAutoLocation()
+      // Load city-specific weather data first (city pages should show city data, not user location)
+      loadCityWeather()
     }
-  }, [city?.searchTerm, hasAutoLoaded])
+  }, [city?.searchTerm])
 
   // Search handler for the search component
   const handleSearch = async (locationInput: string) => {
@@ -178,7 +141,7 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
         theme === "miami" && "bg-gradient-to-b from-pink-900 to-purple-900",
         theme === "tron" && "bg-gradient-to-b from-black to-blue-900"
       )}>
-        <div className="container mx-auto px-4 py-8">
+        <ResponsiveContainer maxWidth="xl" padding="md">
           
           {/* City Header */}
           <div className="text-center mb-6">
@@ -228,7 +191,7 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
           {weather && !loading && !error && (
             <div className="space-y-4 sm:space-y-6">
               {/* Current Weather - Same styling as homepage */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
                 {/* Temperature Box */}
                 <div className={cn(
                   "p-4 rounded-lg text-center border-2 shadow-lg",
@@ -281,10 +244,13 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
                     {weather.wind.gust ? ` (gusts ${weather.wind.gust} mph)` : ''}
                   </p>
                 </div>
-              </div>
+              </ResponsiveGrid>
 
-              {/* Forecast Components - Same as homepage */}
-              <Forecast 
+              {/* AQI and Pollen Count - Using Lazy Loaded Shared Components */}
+              <LazyEnvironmentalDisplay weather={weather} theme={theme} />
+
+              {/* Forecast Components - Lazy Loaded */}
+              <LazyForecast 
                 forecast={weather.forecast.map(day => ({
                   ...day,
                   country: weather.country
@@ -294,7 +260,7 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
                 selectedDay={selectedDay}
               />
 
-              <ForecastDetails 
+              <LazyForecastDetails 
                 forecast={weather.forecast.map(day => ({
                   ...day,
                   country: weather.country
@@ -335,7 +301,7 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
               <p>{city.content.patterns}</p>
             </div>
           </div>
-        </div>
+        </ResponsiveContainer>
       </div>
     </PageWrapper>
   )

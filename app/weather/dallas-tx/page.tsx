@@ -11,6 +11,7 @@ import ForecastDetails from '@/components/forecast-details'
 import { useTheme } from '@/components/theme-provider'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { CollapsibleSection } from '@/components/collapsible-section'
 
 // City data for SEO and functionality
 const cityData: { [key: string]: { 
@@ -125,8 +126,8 @@ const cityData: { [key: string]: {
     name: 'Dallas',
     state: 'TX',
     searchTerm: 'Dallas, TX',
-    title: 'Dallas Weather Forecast - 16 Bit Weather',
-    description: 'Current weather conditions and 5-day forecast for Dallas, TX. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
+    title: 'Dallas Weather Forecast | 16-Bit Retro Weather Terminal',
+    description: 'Get Dallas weather in nostalgic 16-bit style. Real-time conditions, 7-day forecast, radar, and atmospheric data.',
     content: {
       intro: 'Dallas has a humid subtropical climate with hot summers and mild winters. Located in north-central Texas, the city experiences a continental climate influence with variable weather patterns and moderate precipitation.',
       climate: 'Summer temperatures frequently reach the 90s-100s°F (32-38°C) with moderate to high humidity. Winters are generally mild with highs in the 50s-60s°F (10-15°C), though occasional cold fronts can bring freezing temperatures. Annual precipitation is about 37 inches.',
@@ -326,6 +327,16 @@ export default function CityWeatherPage() {
               )}>
                 {city.name}, {city.state} WEATHER
               </h1>
+              
+              {/* Climate Summary - Above Weather Widget */}
+              <p className={cn(
+                "text-sm font-mono mt-3 max-w-2xl mx-auto",
+                theme === "dark" && "text-[#e0e0e0]",
+                theme === "miami" && "text-[#00ffff]",
+                theme === "tron" && "text-white"
+              )}>
+                Dallas has a humid subtropical climate with hot summers and mild winters. The city's location in North Texas creates variable weather patterns.
+              </p>
             </div>
 
             {/* Weather Search Component */}
@@ -448,28 +459,18 @@ export default function CityWeatherPage() {
               </div>
             )}
 
-            {/* SEO Content Section - Added below weather display */}
-            <div className={cn(
-              "mt-12 p-6 border-2 rounded-lg",
-              theme === "dark" && "bg-[#0f0f0f] border-[#00d4ff] text-[#e0e0e0]",
-              theme === "miami" && "bg-[#0a0025] border-[#ff1493] text-[#00ffff]",
-              theme === "tron" && "bg-black border-[#00FFFF] text-white"
-            )}>
-              <h2 className={cn(
-                "text-xl font-bold mb-4 uppercase tracking-wider font-mono",
-                theme === "dark" && "text-[#00d4ff]",
-                theme === "miami" && "text-[#ff1493]",
-                theme === "tron" && "text-[#00FFFF]"
-              )}>
-                About {city.name} Weather
-              </h2>
-              
-              <div className="space-y-4 text-sm leading-relaxed font-mono">
-                <p>{city.content.intro}</p>
-                <p>{city.content.climate}</p>
-                <p>{city.content.patterns}</p>
-              </div>
-            </div>
+            {/* Local Weather Patterns - Minimal SEO Content */}
+            <CollapsibleSection 
+              title="Local Weather Patterns" 
+              theme={theme}
+              className="mt-8 max-w-2xl mx-auto"
+            >
+              <ul className="space-y-2">
+                <li>• Tornado Alley location brings severe weather potential</li>
+                <li>• Blue northers can drop temperatures 30+ degrees rapidly</li>
+                <li>• Urban heat island effect extends hot season</li>
+              </ul>
+            </CollapsibleSection>
           </div>
         </div>
       </PageWrapper>

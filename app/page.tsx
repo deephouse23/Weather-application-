@@ -6,12 +6,12 @@ import { cn } from "@/lib/utils"
 import { fetchWeatherData, fetchWeatherByLocation } from "@/lib/weather-api"
 import { useTheme } from '@/components/theme-provider'
 import { WeatherData } from '@/lib/types'
-import Forecast from "@/components/forecast"
-import ForecastDetails from "@/components/forecast-details"
 import PageWrapper from "@/components/page-wrapper"
 import { Analytics } from "@vercel/analytics/react"
 import WeatherSearch from "@/components/weather-search"
 import { APP_CONSTANTS } from "@/lib/utils"
+import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from "@/components/lazy-weather-components"
+import { ResponsiveContainer, ResponsiveGrid } from "@/components/responsive-container"
 
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
@@ -69,46 +69,6 @@ const getPressureUnit = (countryCode: string): 'hPa' | 'inHg' => {
   return inHgCountries.includes(countryCode) ? 'inHg' : 'hPa';
 };
 
-// Update AQI helper functions for Google Universal AQI (0-100, higher = better)
-const getAQIColor = (aqi: number): string => {
-  if (aqi >= 80) return 'text-green-400 font-semibold';      // Excellent
-  if (aqi >= 60) return 'text-green-400 font-semibold';      // Good  
-  if (aqi >= 40) return 'text-yellow-400 font-semibold';     // Moderate
-  if (aqi >= 20) return 'text-orange-400 font-semibold';     // Low
-  if (aqi >= 1) return 'text-red-400 font-semibold';         // Poor
-  return 'text-red-600 font-semibold';                       // Critical (0)
-};
-
-const getAQIDescription = (aqi: number): string => {
-  if (aqi >= 80) return 'Excellent';
-  if (aqi >= 60) return 'Good';
-  if (aqi >= 40) return 'Moderate';
-  if (aqi >= 20) return 'Low';
-  if (aqi >= 1) return 'Poor';
-  return 'Critical';
-};
-
-const getAQIRecommendation = (aqi: number): string => {
-  if (aqi >= 80) return 'Excellent air quality. Perfect for all outdoor activities.';
-  if (aqi >= 60) return 'Good air quality. Great for outdoor activities.';
-  if (aqi >= 40) return 'Moderate air quality. Generally acceptable for most people.';
-  if (aqi >= 20) return 'Low air quality. Consider limiting prolonged outdoor exertion.';
-  if (aqi >= 1) return 'Poor air quality. Avoid outdoor activities.';
-  return 'Critical air quality. Stay indoors.';
-};
-
-// Add pollen category color helper
-const getPollenColor = (category: string | number): string => {
-  const cat = typeof category === 'string' ? category.toLowerCase() : category.toString();
-  
-  if (cat === 'no data' || cat === '0') return 'text-gray-400 font-semibold';
-  if (cat === 'low' || cat === '1' || cat === '2') return 'text-green-400 font-semibold';
-  if (cat === 'moderate' || cat === '3' || cat === '4' || cat === '5') return 'text-yellow-400 font-semibold';
-  if (cat === 'high' || cat === '6' || cat === '7' || cat === '8') return 'text-orange-400 font-semibold';
-  if (cat === 'very high' || cat === '9' || cat === '10') return 'text-red-400 font-semibold';
-  
-  return 'text-white font-semibold'; // Default fallback
-};
 
 function WeatherApp() {
   const { theme } = useTheme()
@@ -806,7 +766,7 @@ function WeatherApp() {
         theme === "miami" && "bg-gradient-to-b from-pink-900 to-purple-900",
         theme === "tron" && "bg-gradient-to-b from-black to-blue-900"
       )}>
-        <div className="container mx-auto px-4 py-8">
+        <ResponsiveContainer maxWidth="xl" padding="md">
 
           {/* TEMPORARY API TEST - REMOVE BEFORE PRODUCTION */}
           {/* <ApiTest /> */}
@@ -871,7 +831,7 @@ function WeatherApp() {
           {weather && !loading && !error && (
             <div className="space-y-4 sm:space-y-6">
               {/* Current Weather */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
                 {/* Temperature Box */}
                 <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
                      style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
@@ -897,10 +857,10 @@ function WeatherApp() {
                     {weather.wind.gust ? ` (gusts ${weather.wind.gust} mph)` : ''}
                   </p>
                 </div>
-              </div>
+              </ResponsiveGrid>
 
               {/* Sun Times, UV Index, Moon Phase */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
                 {/* Sun Times Box */}
                 <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
                      style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
@@ -938,127 +898,10 @@ function WeatherApp() {
                     </p>
                   </div>
                 </div>
-              </div>
+              </ResponsiveGrid>
 
-              {/* AQI and Pollen Count */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* AQI Box - Updated with Google Universal AQI */}
-                <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
-                     style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
-                  <h2 className={`text-xl font-semibold mb-3 ${themeClasses.headerText}`}>Air Quality</h2>
-                  
-                  {/* AQI Value and Description */}
-                  <p className={`text-lg font-bold mb-3 ${getAQIColor(weather.aqi)}`}>
-                    {weather.aqi} - {getAQIDescription(weather.aqi)}
-                  </p>
-                  
-                  {/* Horizontal AQI Color Bar */}
-                  <div className="mb-3">
-                    <div className="relative w-full h-4 rounded-full overflow-hidden border border-gray-400">
-                      {/* Color segments */}
-                      <div className="absolute inset-0 flex">
-                        {/* EXCELLENT (0-50) - Green */}
-                        <div className="bg-green-500 flex-1" style={{ width: '20%' }}></div>
-                        {/* GOOD (51-100) - Yellow */}
-                        <div className="bg-yellow-400 flex-1" style={{ width: '20%' }}></div>
-                        {/* MODERATE (101-150) - Orange */}
-                        <div className="bg-orange-500 flex-1" style={{ width: '20%' }}></div>
-                        {/* POOR (151-200) - Red */}
-                        <div className="bg-red-500 flex-1" style={{ width: '20%' }}></div>
-                        {/* CRITICAL (201+) - Purple */}
-                        <div className="bg-purple-600 flex-1" style={{ width: '20%' }}></div>
-                      </div>
-                      
-                      {/* Current reading indicator */}
-                      <div 
-                        className="absolute top-0 w-1 h-full bg-white border border-black transform -translate-x-0.5"
-                        style={{ 
-                          left: `${Math.min(Math.max((weather.aqi / 250) * 100, 0), 100)}%`,
-                          boxShadow: '0 0 4px rgba(0,0,0,0.8)'
-                        }}
-                      ></div>
-                    </div>
-                    
-                    {/* AQI Scale Labels */}
-                    <div className="flex justify-between text-xs text-gray-400 mt-1 px-1">
-                      <span>0</span>
-                      <span>50</span>
-                      <span>100</span>
-                      <span>150</span>
-                      <span>200</span>
-                      <span>250+</span>
-                    </div>
-                  </div>
-                  
-                  <p className={`text-sm font-medium mb-2 ${themeClasses.secondaryText}`}>
-                    {getAQIRecommendation(weather.aqi)}
-                  </p>
-                  
-                  {/* Google AQI Legend */}
-                  <div className={`text-xs border-t pt-2 ${themeClasses.secondaryText}`} style={{ borderColor: themeClasses.borderColor.replace('border-[', '').replace(']', '') + '66' }}>
-                    <p className="font-medium">Using Google Universal AQI • Higher = Better</p>
-                  </div>
-                </div>
-
-                {/* Pollen Count Box */}
-                <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
-                     style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
-                  <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Pollen Count</h2>
-                  <div className="grid grid-cols-3 gap-2">
-                    {/* Tree Group */}
-                    <div>
-                      <p className={`text-sm font-medium mb-1 ${themeClasses.secondaryText}`}>Tree</p>
-                      {(() => {
-                        const treeData = Object.entries(weather.pollen.tree).filter(([_, category]) => category !== 'No Data');
-                        if (treeData.length === 0) {
-                          return <p className={`text-sm ${themeClasses.secondaryText}`}>No Data</p>;
-                        } else if (treeData.length === 1) {
-                          const [plant, category] = treeData[0];
-                          return <p className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>;
-                        } else {
-                          return treeData.map(([plant, category]) => (
-                            <p key={plant} className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>
-                          ));
-                        }
-                      })()}
-                    </div>
-                    {/* Grass Group */}
-                    <div>
-                      <p className={`text-sm font-medium mb-1 ${themeClasses.secondaryText}`}>Grass</p>
-                      {(() => {
-                        const grassData = Object.entries(weather.pollen.grass).filter(([_, category]) => category !== 'No Data');
-                        if (grassData.length === 0) {
-                          return <p className={`text-sm ${themeClasses.secondaryText}`}>No Data</p>;
-                        } else if (grassData.length === 1) {
-                          const [plant, category] = grassData[0];
-                          return <p className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>;
-                        } else {
-                          return grassData.map(([plant, category]) => (
-                            <p key={plant} className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>
-                          ));
-                        }
-                      })()}
-                    </div>
-                    {/* Weed Group */}
-                    <div>
-                      <p className={`text-sm font-medium mb-1 ${themeClasses.secondaryText}`}>Weed</p>
-                      {(() => {
-                        const weedData = Object.entries(weather.pollen.weed).filter(([_, category]) => category !== 'No Data');
-                        if (weedData.length === 0) {
-                          return <p className={`text-sm ${themeClasses.secondaryText}`}>No Data</p>;
-                        } else if (weedData.length === 1) {
-                          const [plant, category] = weedData[0];
-                          return <p className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>;
-                        } else {
-                          return weedData.map(([plant, category]) => (
-                            <p key={plant} className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>
-                          ));
-                        }
-                      })()}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              {/* AQI and Pollen Count - Using Lazy Loaded Shared Components */}
+              <LazyEnvironmentalDisplay weather={weather} theme={theme} />
 
               {/* Day click handler */}
               {(() => {
@@ -1069,7 +912,7 @@ function WeatherApp() {
                 return (
                   <>
                     {/* Original 5-Day Forecast */}
-                    <Forecast 
+                    <LazyForecast 
                       forecast={weather.forecast.map(day => ({
                         ...day,
                         country: weather.country
@@ -1080,7 +923,7 @@ function WeatherApp() {
                     />
 
                     {/* Expandable Details Section Below */}
-                    <ForecastDetails 
+                    <LazyForecastDetails 
                       forecast={weather.forecast.map(day => ({
                         ...day,
                         country: weather.country
@@ -1230,7 +1073,7 @@ function WeatherApp() {
               </a>
             </div>
           </div>
-        </div>
+        </ResponsiveContainer>
       </div>
       <Analytics />
     </PageWrapper>
