@@ -12,6 +12,7 @@ interface WeatherSearchProps {
   isDisabled?: boolean;
   rateLimitError?: string;
   theme?: ThemeType;
+  hideLocationButton?: boolean;
 }
 
 export default function WeatherSearch({ 
@@ -21,7 +22,8 @@ export default function WeatherSearch({
   error, 
   isDisabled = false,
   rateLimitError,
-  theme = APP_CONSTANTS.THEMES.DARK
+  theme = APP_CONSTANTS.THEMES.DARK,
+  hideLocationButton = false
 }: WeatherSearchProps) {
   const [searchTerm, setSearchTerm] = useState("")
 
@@ -160,28 +162,30 @@ export default function WeatherSearch({
         </div>
       </form>
 
-      {/* Location Button - Mobile friendly */}
-      <div className="flex justify-center px-2 sm:px-0">
-        <button
-          onClick={handleLocationClick}
-          disabled={controlsDisabled}
-          className={`flex items-center gap-2 px-4 sm:px-6 py-3 ${themeClasses.buttonBg} border ${themeClasses.buttonBorder} 
-                   ${themeClasses.buttonText} ${themeClasses.buttonHover} transition-all duration-200 
-                   text-xs sm:text-sm uppercase tracking-wider font-mono disabled:opacity-50 
-                   disabled:cursor-not-allowed pixel-font ${themeClasses.specialBorder}
-                   min-h-[48px] touch-manipulation w-full sm:w-auto max-w-xs`}
-            style={{
-              imageRendering: "pixelated",
-              fontFamily: "monospace",
-              fontSize: "clamp(11px, 2.5vw, 14px)" // Responsive font size
-            }}
-        >
-          <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-          <span className="break-words text-center">
-            {isLoading ? "LOADING..." : isDisabled ? "RATE LIMITED" : "USE MY LOCATION"}
-          </span>
-        </button>
-      </div>
+      {/* Location Button - Mobile friendly - Hidden when auto-location is enabled */}
+      {!hideLocationButton && (
+        <div className="flex justify-center px-2 sm:px-0">
+          <button
+            onClick={handleLocationClick}
+            disabled={controlsDisabled}
+            className={`flex items-center gap-2 px-4 sm:px-6 py-3 ${themeClasses.buttonBg} border ${themeClasses.buttonBorder} 
+                     ${themeClasses.buttonText} ${themeClasses.buttonHover} transition-all duration-200 
+                     text-xs sm:text-sm uppercase tracking-wider font-mono disabled:opacity-50 
+                     disabled:cursor-not-allowed pixel-font ${themeClasses.specialBorder}
+                     min-h-[48px] touch-manipulation w-full sm:w-auto max-w-xs`}
+              style={{
+                imageRendering: "pixelated",
+                fontFamily: "monospace",
+                fontSize: "clamp(11px, 2.5vw, 14px)" // Responsive font size
+              }}
+          >
+            <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+            <span className="break-words text-center">
+              {isLoading ? "LOADING..." : isDisabled ? "RATE LIMITED" : "USE MY LOCATION"}
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* Error Display - Mobile responsive */}
       {(error || rateLimitError) && (

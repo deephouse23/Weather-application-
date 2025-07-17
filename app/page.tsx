@@ -207,7 +207,13 @@ function WeatherApp() {
             setData(weather)
             setLocationInput(cachedLocationData)
             setHasSearched(true)
+            return // Exit early if we have cached data
           }
+        }
+        
+        // If no cached data, attempt auto-location on first visit
+        if (!hasSearched) {
+          tryAutoLocation()
         }
       } catch (error) {
         console.warn('Cache check failed:', error)
@@ -559,6 +565,45 @@ function WeatherApp() {
     }
   };
 
+  // Silent auto-location function for first visit
+  const tryAutoLocation = async () => {
+    if (!navigator.geolocation) {
+      console.log("Geolocation not supported, skipping auto-location")
+      return
+    }
+
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
+        })
+      })
+
+      const { latitude, longitude } = position.coords
+      console.log("Auto-location coordinates:", { latitude, longitude })
+
+      setLoading(true)
+      const weatherData = await fetchWeatherByLocation(`${latitude},${longitude}`)
+      console.log("Auto-location weather data received:", weatherData)
+
+      if (weatherData) {
+        setWeather(weatherData)
+        setHasSearched(true)
+        setError("")
+        saveLocationToCache(`${latitude},${longitude}`)
+        saveWeatherToCache(weatherData)
+        recordRequest()
+      }
+    } catch (error) {
+      console.log("Auto-location failed silently:", error)
+      // Don't show errors for auto-location failures
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Enhanced location search with error handling
   const handleLocationSearch = async () => {
     if (!navigator.geolocation) {
@@ -774,6 +819,7 @@ function WeatherApp() {
             rateLimitError={rateLimitError}
             isDisabled={isOnCooldown}
             theme={theme}
+            hideLocationButton={true}
           />
 
 
