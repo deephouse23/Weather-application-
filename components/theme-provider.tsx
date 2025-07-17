@@ -9,15 +9,28 @@ interface ThemeContextType {
   toggleTheme: () => void
 }
 
-// Provide a default value to prevent the context error
+// Create context with a guaranteed default value
 const ThemeContext = createContext<ThemeContextType>({
   theme: 'dark',
-  toggleTheme: () => {}
+  toggleTheme: () => {
+    console.warn('ThemeProvider not mounted yet')
+  }
 })
 
 export function useTheme() {
   const context = useContext(ThemeContext)
-  // No error throw needed since context always has a default value
+  
+  // Double-check that context is never undefined
+  if (!context) {
+    console.warn('useTheme called outside of ThemeProvider, using default theme')
+    return {
+      theme: 'dark' as Theme,
+      toggleTheme: () => {
+        console.warn('ThemeProvider not available')
+      }
+    }
+  }
+  
   return context
 }
 
@@ -44,39 +57,54 @@ export function ThemeProvider({
   useEffect(() => {
     setMounted(true)
     if (typeof window !== 'undefined') {
-      const storedTheme = localStorage.getItem(storageKey) as Theme
-      if (storedTheme && themes.includes(storedTheme)) {
-        setTheme(storedTheme)
+      try {
+        const storedTheme = localStorage.getItem(storageKey) as Theme
+        if (storedTheme && themes.includes(storedTheme)) {
+          setTheme(storedTheme)
+        }
+      } catch (error) {
+        console.warn('Failed to load theme from localStorage:', error)
       }
     }
   }, [storageKey, themes])
 
   useEffect(() => {
     if (!mounted || typeof window === 'undefined') return
-    const root = window.document.documentElement
-    root.classList.remove(...themes)
-    root.classList.add(theme)
-    if (attribute === 'class') {
-      root.setAttribute('data-theme', theme)
+    
+    try {
+      const root = window.document.documentElement
+      root.classList.remove(...themes)
+      root.classList.add(theme)
+      if (attribute === 'class') {
+        root.setAttribute('data-theme', theme)
+      }
+    } catch (error) {
+      console.warn('Failed to apply theme to document:', error)
     }
   }, [theme, themes, attribute, mounted])
 
   const toggleTheme = () => {
-    const currentIndex = themes.indexOf(theme)
-    const nextIndex = (currentIndex + 1) % themes.length
-    const nextTheme = themes[nextIndex]
-    setTheme(nextTheme)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(storageKey, nextTheme)
+    try {
+      const currentIndex = themes.indexOf(theme)
+      const nextIndex = (currentIndex + 1) % themes.length
+      const nextTheme = themes[nextIndex]
+      setTheme(nextTheme)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(storageKey, nextTheme)
+      }
+    } catch (error) {
+      console.warn('Failed to toggle theme:', error)
     }
   }
 
-  // Always render the provider to prevent context errors
-  // Use defaultTheme before mounting to ensure consistent SSR
-  const currentTheme = mounted ? theme : defaultTheme
+  // Always provide a valid context value
+  const contextValue: ThemeContextType = {
+    theme: mounted ? theme : defaultTheme,
+    toggleTheme
+  }
 
   return (
-    <ThemeContext.Provider value={{ theme: currentTheme, toggleTheme }}>
+    <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
   )
