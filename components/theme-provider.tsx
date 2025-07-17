@@ -71,12 +71,12 @@ export function ThemeProvider({
     }
   }
 
-  if (!mounted) {
-    return null
-  }
+  // Always render the provider to prevent context errors
+  // Use defaultTheme before mounting to ensure consistent SSR
+  const currentTheme = mounted ? theme : defaultTheme
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme: currentTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   )
