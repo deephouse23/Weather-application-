@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(gh pr list:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge-base:*)",
+      "Bash(npm run build:*)",
+      "Bash(git tag:*)",
+      "Bash(gh release create:*)",
+      "Bash(git commit:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(rm:*)",
+      "WebFetch(domain:openweathermap.org)",
+      "WebFetch(domain:weather.com)",
+      "Bash(npx tsc:*)",
+      "Bash(grep:*)",
+      "Bash(node:*)",
+      "Bash(gh pr create:*)",
+      "Bash(git branch:*)",
+      "Bash(timeout 10s npm run dev)",
+      "Bash(git rm:*)",
+      "Bash(gh pr view:*)",
+      "Bash(git stash push:*)",
+      "Bash(git stash pop:*)",
+      "Bash(gh pr edit:*)",
+      "Bash(gh pr close:*)",
+      "Bash(git stash:*)",
+      "Bash(gh release delete:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)"
+    ],
+    "deny": []
+  }
+}
