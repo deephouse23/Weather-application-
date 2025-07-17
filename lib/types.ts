@@ -14,12 +14,14 @@ export interface WeatherData {
   pressure: string;
   sunrise: string;
   sunset: string;
+  precipitationProbability?: number; // Added precipitation probability for current weather
   forecast: Array<{
     day: string;
     highTemp: number;
     lowTemp: number;
     condition: string;
     description: string;
+    precipitationChance?: number; // Added precipitation chance to forecast days
     details?: {
       humidity?: number;
       windSpeed?: number;

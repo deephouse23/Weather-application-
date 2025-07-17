@@ -12,6 +12,7 @@ import WeatherSearch from "@/components/weather-search"
 import { APP_CONSTANTS } from "@/lib/utils"
 import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from "@/components/lazy-weather-components"
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/responsive-container"
+import { Tooltip } from "@/components/tooltip"
 
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
@@ -754,6 +755,38 @@ function WeatherApp() {
     return '🌑';
   };
 
+  // Helper function to get humidity tooltip
+  const getHumidityTooltip = (humidity: number) => {
+    if (humidity < 30) return "Low humidity - May feel dry, static electricity common"
+    if (humidity < 60) return "Comfortable humidity - Ideal for most activities"
+    if (humidity < 80) return "High humidity - May feel sticky and uncomfortable"
+    return "Very high humidity - Oppressive conditions, possible discomfort"
+  };
+
+  // Helper function to get pressure tooltip
+  const getPressureTooltip = (pressure: string) => {
+    const numericPressure = parseFloat(pressure)
+    if (pressure.includes('hPa')) {
+      if (numericPressure < 1013) return "Low pressure - Stormy weather likely, possible headaches"
+      if (numericPressure > 1020) return "High pressure - Fair weather expected, stable conditions"
+      return "Normal pressure - Typical atmospheric conditions"
+    } else if (pressure.includes('in')) {
+      if (numericPressure < 29.92) return "Low pressure - Stormy weather likely, possible headaches"
+      if (numericPressure > 30.20) return "High pressure - Fair weather expected, stable conditions"
+      return "Normal pressure - Typical atmospheric conditions"
+    }
+    return "Atmospheric pressure reading"
+  };
+
+  // Helper function to check if weather is from a major city
+  const isMajorCityWeather = (location: string) => {
+    const majorCities = [
+      'New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 
+      'Philadelphia', 'San Antonio', 'San Diego', 'Dallas', 'Austin'
+    ];
+    return majorCities.some(city => location.includes(city));
+  };
+
   return (
     <PageWrapper
       weatherLocation={weather?.location}
@@ -845,6 +878,16 @@ function WeatherApp() {
                   <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Conditions</h2>
                   <p className={`text-lg ${themeClasses.text}`}>{weather.condition}</p>
                   <p className={`text-sm ${themeClasses.secondaryText}`}>{weather.description}</p>
+                  {weather.precipitationProbability && weather.precipitationProbability > 0 && (
+                    <p className={`text-sm ${themeClasses.secondaryText} mt-2 opacity-80`}>
+                      {weather.precipitationProbability}% chance of rain
+                    </p>
+                  )}
+                  {(!weather.precipitationProbability || weather.precipitationProbability === 0) && (
+                    <p className={`text-sm ${themeClasses.secondaryText} mt-2 opacity-80`}>
+                      0% rain
+                    </p>
+                  )}
                 </div>
 
                 {/* Wind Box */}
@@ -945,134 +988,136 @@ function WeatherApp() {
             </div>
           )}
           
-          {/* SEO City Links Section */}
-          <div className={cn(
-            "mt-16 pt-8 border-t-2 text-center",
-            theme === "dark" && "border-[#00d4ff]",
-            theme === "miami" && "border-[#ff1493]",
-            theme === "tron" && "border-[#00FFFF]"
-          )}>
-            <h2 className={cn(
-              "text-lg font-bold mb-4 uppercase tracking-wider font-mono",
-              theme === "dark" && "text-[#00d4ff]",
-              theme === "miami" && "text-[#ff1493]",
-              theme === "tron" && "text-[#00FFFF]"
+          {/* SEO City Links Section - Only show when weather data is from major cities or when no weather data is displayed */}
+          {(!weather || isMajorCityWeather(weather.location)) && (
+            <div className={cn(
+              "mt-16 pt-8 border-t-2 text-center",
+              theme === "dark" && "border-[#00d4ff]",
+              theme === "miami" && "border-[#ff1493]",
+              theme === "tron" && "border-[#00FFFF]"
             )}>
-              WEATHER BY CITY
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 max-w-4xl mx-auto">
-              <a 
-                href="/weather/new-york-ny" 
-                className={cn(
-                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
-                )}
-              >
-                NEW YORK
-              </a>
-              <a 
-                href="/weather/los-angeles-ca" 
-                className={cn(
-                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
-                )}
-              >
-                LOS ANGELES
-              </a>
-              <a 
-                href="/weather/chicago-il" 
-                className={cn(
-                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
-                )}
-              >
-                CHICAGO
-              </a>
-              <a 
-                href="/weather/houston-tx" 
-                className={cn(
-                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
-                )}
-              >
-                HOUSTON
-              </a>
-              <a 
-                href="/weather/phoenix-az" 
-                className={cn(
-                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
-                )}
-              >
-                PHOENIX
-              </a>
-              <a 
-                href="/weather/philadelphia-pa" 
-                className={cn(
-                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
-                )}
-              >
-                PHILADELPHIA
-              </a>
-              <a 
-                href="/weather/san-antonio-tx" 
-                className={cn(
-                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
-                )}
-              >
-                SAN ANTONIO
-              </a>
-              <a 
-                href="/weather/san-diego-ca" 
-                className={cn(
-                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
-                )}
-              >
-                SAN DIEGO
-              </a>
-              <a 
-                href="/weather/dallas-tx" 
-                className={cn(
-                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
-                )}
-              >
-                DALLAS
-              </a>
-              <a 
-                href="/weather/austin-tx" 
-                className={cn(
-                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
-                )}
-              >
-                AUSTIN
-              </a>
+              <h2 className={cn(
+                "text-lg font-bold mb-4 uppercase tracking-wider font-mono",
+                theme === "dark" && "text-[#00d4ff]",
+                theme === "miami" && "text-[#ff1493]",
+                theme === "tron" && "text-[#00FFFF]"
+              )}>
+                WEATHER BY CITY
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 max-w-4xl mx-auto">
+                <a 
+                  href="/weather/new-york-ny" 
+                  className={cn(
+                    "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                    theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                    theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                    theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  )}
+                >
+                  NEW YORK
+                </a>
+                <a 
+                  href="/weather/los-angeles-ca" 
+                  className={cn(
+                    "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                    theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                    theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                    theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  )}
+                >
+                  LOS ANGELES
+                </a>
+                <a 
+                  href="/weather/chicago-il" 
+                  className={cn(
+                    "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                    theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                    theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                    theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  )}
+                >
+                  CHICAGO
+                </a>
+                <a 
+                  href="/weather/houston-tx" 
+                  className={cn(
+                    "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                    theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                    theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                    theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  )}
+                >
+                  HOUSTON
+                </a>
+                <a 
+                  href="/weather/phoenix-az" 
+                  className={cn(
+                    "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                    theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                    theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                    theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  )}
+                >
+                  PHOENIX
+                </a>
+                <a 
+                  href="/weather/philadelphia-pa" 
+                  className={cn(
+                    "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                    theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                    theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                    theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  )}
+                >
+                  PHILADELPHIA
+                </a>
+                <a 
+                  href="/weather/san-antonio-tx" 
+                  className={cn(
+                    "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                    theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                    theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                    theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  )}
+                >
+                  SAN ANTONIO
+                </a>
+                <a 
+                  href="/weather/san-diego-ca" 
+                  className={cn(
+                    "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                    theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                    theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                    theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  )}
+                >
+                  SAN DIEGO
+                </a>
+                <a 
+                  href="/weather/dallas-tx" 
+                  className={cn(
+                    "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                    theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                    theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                    theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  )}
+                >
+                  DALLAS
+                </a>
+                <a 
+                  href="/weather/austin-tx" 
+                  className={cn(
+                    "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                    theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                    theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                    theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  )}
+                >
+                  AUSTIN
+                </a>
+              </div>
             </div>
-          </div>
+          )}
         </ResponsiveContainer>
       </div>
       <Analytics />

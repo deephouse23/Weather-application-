@@ -14,6 +14,7 @@ interface DetailedForecastDay {
   condition: string;
   description: string;
   country?: string;
+  precipitationChance?: number; // Add precipitation chance to main forecast level
   // Enhanced details for expanded view
   details: {
     humidity?: number;
@@ -158,10 +159,10 @@ function ExpandableForecastCard({
 
         {/* Right: Expand Icon */}
         <div className="flex items-center space-x-2 flex-shrink-0">
-          {details?.precipitationChance && (
+          {(day.precipitationChance || details?.precipitationChance) && (
             <div className="flex items-center space-x-1 text-xs text-blue-400">
               <Droplets className="w-3 h-3" />
-              <span>{details.precipitationChance}%</span>
+              <span>{day.precipitationChance || details?.precipitationChance}%</span>
             </div>
           )}
           <div className={`${themeClasses.accentText} transform transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>

@@ -57,6 +57,7 @@ interface OpenWeatherMapForecastResponse {
     clouds?: {
       all: number;
     };
+    pop?: number; // Probability of precipitation (0-1)
   }>;
 }
 
@@ -653,9 +654,10 @@ const processDailyForecast = (forecastData: OpenWeatherMapForecastResponse, useF
     }
     dailyData[date].cloudCover.push(item.clouds?.all || 0);
     
-    // Calculate precipitation chance (simplified)
-    const precipChance = item.weather[0].main.toLowerCase().includes('rain') ? 
-      Math.min((item.main.humidity / 100) * 100, 85) : 0;
+    // Use actual precipitation probability from API, fallback to weather condition estimation
+    const precipChance = item.pop ? Math.round(item.pop * 100) : 
+      (item.weather[0].main.toLowerCase().includes('rain') ? 
+        Math.min((item.main.humidity / 100) * 100, 85) : 0);
     dailyData[date].precipChance.push(precipChance);
 
     // Add to hourly forecast (first 8 entries per day)
@@ -691,6 +693,7 @@ const processDailyForecast = (forecastData: OpenWeatherMapForecastResponse, useF
       lowTemp: useFahrenheit ? Math.round(data.low) : fahrenheitToCelsius(data.low),
       condition: mapWeatherCondition(data.condition),
       description: data.description,
+      precipitationChance: avgPrecipChance > 0 ? avgPrecipChance : undefined, // Added to main forecast level
       details: {
         humidity: avgHumidity,
         windSpeed: avgWindSpeed,
@@ -1280,6 +1283,12 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
     const airQualityData = await fetchAirQualityData(lat, lon, displayName);
     console.log('Weather Data - Air Quality:', airQualityData);
 
+    // Get current precipitation probability from first forecast entry (closest to current time)
+    const currentPrecipProbability = forecast.length > 0 && forecast[0].precipitationChance 
+      ? forecast[0].precipitationChance 
+      : (currentWeatherData.weather[0].main.toLowerCase().includes('rain') ? 
+          Math.min((currentWeatherData.main.humidity / 100) * 100, 85) : 0);
+
     // Construct weather data object
     const weatherData: WeatherData = {
       location: displayName,
@@ -1297,6 +1306,7 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
       pressure: formatPressureByRegion(currentWeatherData.main.pressure, countryCode),
       sunrise: formatTime(currentWeatherData.sys.sunrise, currentWeatherData.timezone),
       sunset: formatTime(currentWeatherData.sys.sunset, currentWeatherData.timezone),
+      precipitationProbability: currentPrecipProbability > 0 ? currentPrecipProbability : undefined,
       forecast: forecast,
       moonPhase: moonPhase,
       uvIndex,
@@ -1393,6 +1403,12 @@ export const fetchWeatherByLocation = async (coords: string): Promise<WeatherDat
     const airQualityData = await fetchAirQualityData(latitude, longitude, `${currentWeatherData.name}, ${currentWeatherData.sys.country}`);
     console.log('Weather Data - Air Quality:', airQualityData);
 
+    // Get current precipitation probability from first forecast entry (closest to current time)
+    const currentPrecipProbability = forecast.length > 0 && forecast[0].precipitationChance 
+      ? forecast[0].precipitationChance 
+      : (currentWeatherData.weather[0].main.toLowerCase().includes('rain') ? 
+          Math.min((currentWeatherData.main.humidity / 100) * 100, 85) : 0);
+
     // Construct weather data object
     const weatherData: WeatherData = {
       location: `${currentWeatherData.name}, ${currentWeatherData.sys.country}`,
@@ -1410,6 +1426,7 @@ export const fetchWeatherByLocation = async (coords: string): Promise<WeatherDat
       pressure: formatPressureByRegion(currentWeatherData.main.pressure, countryCode),
       sunrise: formatTime(currentWeatherData.sys.sunrise, currentWeatherData.timezone),
       sunset: formatTime(currentWeatherData.sys.sunset, currentWeatherData.timezone),
+      precipitationProbability: currentPrecipProbability > 0 ? currentPrecipProbability : undefined,
       forecast: forecast,
       moonPhase: moonPhase,
       uvIndex: uvIndex,

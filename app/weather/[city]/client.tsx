@@ -36,6 +36,15 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
   const [error, setError] = useState<string>("")
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
 
+  // Helper function to check if weather is from a major city
+  const isMajorCityWeather = (location: string) => {
+    const majorCities = [
+      'New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 
+      'Philadelphia', 'San Antonio', 'San Diego', 'Dallas', 'Austin'
+    ];
+    return majorCities.some(city => location.includes(city));
+  };
+
   // Load weather data for the specific city
   const loadCityWeather = async () => {
     try {
@@ -223,6 +232,16 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
                   )}>Conditions</h2>
                   <p className="text-lg text-white">{weather.condition}</p>
                   <p className="text-sm text-gray-300">{weather.description}</p>
+                  {weather.precipitationProbability && weather.precipitationProbability > 0 && (
+                    <p className="text-sm text-gray-300 mt-2 opacity-80">
+                      {weather.precipitationProbability}% chance of rain
+                    </p>
+                  )}
+                  {(!weather.precipitationProbability || weather.precipitationProbability === 0) && (
+                    <p className="text-sm text-gray-300 mt-2 opacity-80">
+                      0% rain
+                    </p>
+                  )}
                 </div>
 
                 {/* Wind Box */}
@@ -279,28 +298,30 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
             </div>
           )}
 
-          {/* SEO Content Section - Added below weather display */}
-          <div className={cn(
-            "mt-12 p-6 border-2 rounded-lg",
-            theme === "dark" && "bg-[#0f0f0f] border-[#00d4ff] text-[#e0e0e0]",
-            theme === "miami" && "bg-[#0a0025] border-[#ff1493] text-[#00ffff]",
-            theme === "tron" && "bg-black border-[#00FFFF] text-white"
-          )}>
-            <h2 className={cn(
-              "text-xl font-bold mb-4 uppercase tracking-wider font-mono",
-              theme === "dark" && "text-[#00d4ff]",
-              theme === "miami" && "text-[#ff1493]",
-              theme === "tron" && "text-[#00FFFF]"
+          {/* SEO Content Section - Only show for major cities, hide when searching other locations */}
+          {(!weather || isMajorCityWeather(weather.location)) && (
+            <div className={cn(
+              "mt-12 p-6 border-2 rounded-lg",
+              theme === "dark" && "bg-[#0f0f0f] border-[#00d4ff] text-[#e0e0e0]",
+              theme === "miami" && "bg-[#0a0025] border-[#ff1493] text-[#00ffff]",
+              theme === "tron" && "bg-black border-[#00FFFF] text-white"
             )}>
-              About {city.name} Weather
-            </h2>
-            
-            <div className="space-y-4 text-sm leading-relaxed font-mono">
-              <p>{city.content.intro}</p>
-              <p>{city.content.climate}</p>
-              <p>{city.content.patterns}</p>
+              <h2 className={cn(
+                "text-xl font-bold mb-4 uppercase tracking-wider font-mono",
+                theme === "dark" && "text-[#00d4ff]",
+                theme === "miami" && "text-[#ff1493]",
+                theme === "tron" && "text-[#00FFFF]"
+              )}>
+                About {city.name} Weather
+              </h2>
+              
+              <div className="space-y-4 text-sm leading-relaxed font-mono">
+                <p>{city.content.intro}</p>
+                <p>{city.content.climate}</p>
+                <p>{city.content.patterns}</p>
+              </div>
             </div>
-          </div>
+          )}
         </ResponsiveContainer>
       </div>
     </PageWrapper>
