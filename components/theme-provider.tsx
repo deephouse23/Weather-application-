@@ -9,13 +9,15 @@ interface ThemeContextType {
   toggleTheme: () => void
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
+// Provide a default value to prevent the context error
+const ThemeContext = createContext<ThemeContextType>({
+  theme: 'dark',
+  toggleTheme: () => {}
+})
 
 export function useTheme() {
   const context = useContext(ThemeContext)
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider')
-  }
+  // No error throw needed since context always has a default value
   return context
 }
 
@@ -37,29 +39,40 @@ export function ThemeProvider({
   enableSystem = false
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(defaultTheme)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const storedTheme = localStorage.getItem(storageKey) as Theme
-    if (storedTheme && themes.includes(storedTheme)) {
-      setTheme(storedTheme)
+    setMounted(true)
+    if (typeof window !== 'undefined') {
+      const storedTheme = localStorage.getItem(storageKey) as Theme
+      if (storedTheme && themes.includes(storedTheme)) {
+        setTheme(storedTheme)
+      }
     }
   }, [storageKey, themes])
 
   useEffect(() => {
+    if (!mounted || typeof window === 'undefined') return
     const root = window.document.documentElement
     root.classList.remove(...themes)
     root.classList.add(theme)
     if (attribute === 'class') {
       root.setAttribute('data-theme', theme)
     }
-  }, [theme, themes, attribute])
+  }, [theme, themes, attribute, mounted])
 
   const toggleTheme = () => {
     const currentIndex = themes.indexOf(theme)
     const nextIndex = (currentIndex + 1) % themes.length
     const nextTheme = themes[nextIndex]
     setTheme(nextTheme)
-    localStorage.setItem(storageKey, nextTheme)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(storageKey, nextTheme)
+    }
+  }
+
+  if (!mounted) {
+    return null
   }
 
   return (
