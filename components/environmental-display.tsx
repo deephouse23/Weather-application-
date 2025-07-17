@@ -13,7 +13,7 @@ interface EnvironmentalDisplayProps {
   className?: string
 }
 
-export function EnvironmentalDisplay({ weather, theme, className }: EnvironmentalDisplayProps) {
+export default function EnvironmentalDisplay({ weather, theme, className }: EnvironmentalDisplayProps) {
   return (
     <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${className || ''}`}>
       <AirQualityDisplay 
