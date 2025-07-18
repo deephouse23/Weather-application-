@@ -68,15 +68,25 @@ export function Tooltip({
   }
 
   const getPositionStyles = () => {
+    const baseStyles = isMobile ? 'left-1/2 transform -translate-x-1/2' : '';
+    
     switch (position) {
       case 'top':
-        return 'bottom-full left-1/2 transform -translate-x-1/2 mb-2'
+        return isMobile 
+          ? `bottom-full ${baseStyles} mb-2`
+          : 'bottom-full left-1/2 transform -translate-x-1/2 mb-3'
       case 'bottom':
-        return 'top-full left-1/2 transform -translate-x-1/2 mt-2'
+        return isMobile 
+          ? `top-full ${baseStyles} mt-2`
+          : 'top-full left-1/2 transform -translate-x-1/2 mt-3'
       case 'left':
-        return 'right-full top-1/2 transform -translate-y-1/2 mr-2'
+        return isMobile 
+          ? `bottom-full ${baseStyles} mb-2`
+          : 'right-full top-1/2 transform -translate-y-1/2 mr-3'
       case 'right':
-        return 'left-full top-1/2 transform -translate-y-1/2 ml-2'
+        return isMobile 
+          ? `bottom-full ${baseStyles} mb-2`
+          : 'left-full top-1/2 transform -translate-y-1/2 ml-3'
     }
   }
 
@@ -110,9 +120,10 @@ export function Tooltip({
       {isVisible && (
         <div 
           className={cn(
-            "absolute z-50 px-3 py-2 text-sm font-mono rounded-lg border-2",
+            "absolute z-50 px-5 py-4 text-sm font-mono rounded-lg border-2",
             "animate-in fade-in-0 zoom-in-95 duration-200",
-            "max-w-xs sm:max-w-sm md:max-w-md",
+            "w-72 sm:w-80 md:w-96 lg:w-[420px]",
+            "max-w-[95vw] sm:max-w-[85vw]",
             "whitespace-normal break-words",
             themeStyles.background,
             themeStyles.border,
@@ -122,10 +133,21 @@ export function Tooltip({
           )}
           style={{ 
             boxShadow: `0 0 15px ${theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF'}33`,
-            backdropFilter: 'blur(8px)'
+            backdropFilter: 'blur(8px)',
+            lineHeight: '1.7'
           }}
         >
-          {content}
+          <div className="space-y-3">
+            {content.split(/(?<=[.!?])\s+/).filter(sentence => sentence.trim()).map((sentence, index) => (
+              <div 
+                key={index} 
+                className="text-sm leading-relaxed"
+                style={{ lineHeight: '1.6' }}
+              >
+                {sentence.trim()}
+              </div>
+            ))}
+          </div>
           <div className={getArrowStyles()} />
         </div>
       )}
