@@ -29,6 +29,32 @@ interface ForecastDetailsProps {
   };
 }
 
+// Information tooltip component
+function InfoTooltip({ text, theme }: { text: string; theme: ThemeType }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const themeClasses = getComponentStyles(theme, 'card');
+
+  return (
+    <div className="relative inline-flex">
+      <Info 
+        className="w-3 h-3 ml-1 cursor-help opacity-60 hover:opacity-100 transition-opacity" 
+        onMouseEnter={() => setIsVisible(true)}
+        onMouseLeave={() => setIsVisible(false)}
+      />
+      {isVisible && (
+        <div className={`absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs bg-gray-900 text-white border-2 border-gray-600 rounded-md shadow-xl max-w-48 text-center backdrop-blur-sm`}
+             style={{ backgroundColor: 'rgba(17, 24, 39, 0.95)' }}>
+          <div className="whitespace-normal leading-relaxed font-medium">
+            {text}
+          </div>
+          {/* Arrow pointing down */}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-600"></div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ForecastDetails({ 
   forecast, 
   theme = 'dark', 
@@ -115,10 +141,13 @@ function DetailedWeatherInfo({
   const weatherMetrics = [
     {
       icon: <Droplets className="w-4 h-4" />,
+      label: "Chance of Rain",
+      value: dayDetails?.precipitationChance !== undefined ? `${dayDetails.precipitationChance}%` : "0%"
+    },
+    {
+      icon: <Droplets className="w-4 h-4" />,
       label: "Humidity",
-      value: humidityValue !== undefined ? `${humidityValue}%` : "N/A",
-      tooltip: getHumidityTooltip(humidityValue),
-      hasInfoIcon: true
+
     },
     {
       icon: <Wind className="w-4 h-4" />,
@@ -134,9 +163,7 @@ function DetailedWeatherInfo({
     {
       icon: <Gauge className="w-4 h-4" />,
       label: "Pressure",
-      value: pressureValue || "N/A",
-      tooltip: getPressureTooltip(pressureValue),
-      hasInfoIcon: true
+
     },
     {
       icon: <Eye className="w-4 h-4" />,
@@ -176,13 +203,7 @@ function DetailedWeatherInfo({
             {metric.icon}
           </div>
           <div className="min-w-0 flex-1">
-            <div className={`text-xs ${themeClasses.secondary} opacity-70 flex items-center gap-1`}>
-              {metric.label}
-              {metric.hasInfoIcon && (
-                <Tooltip content={metric.tooltip} theme={theme} position="top">
-                  <Info className={`w-3 h-3 cursor-help ${themeClasses.accentText} opacity-70 hover:opacity-100 transition-opacity`} />
-                </Tooltip>
-              )}
+
             </div>
             <div className={`text-sm font-medium ${themeClasses.text} truncate`}>
               {metric.value}
