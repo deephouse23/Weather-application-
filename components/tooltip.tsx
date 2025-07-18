@@ -110,8 +110,10 @@ export function Tooltip({
       {isVisible && (
         <div 
           className={cn(
-            "absolute z-50 px-3 py-2 text-sm font-mono rounded-lg border-2 whitespace-nowrap",
+            "absolute z-50 px-3 py-2 text-sm font-mono rounded-lg border-2",
             "animate-in fade-in-0 zoom-in-95 duration-200",
+            "max-w-xs sm:max-w-sm md:max-w-md",
+            "whitespace-normal break-words",
             themeStyles.background,
             themeStyles.border,
             themeStyles.text,

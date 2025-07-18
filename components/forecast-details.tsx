@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { ChevronDown, ChevronUp, Droplets, Wind, Eye, Gauge, Sunrise, Sunset, Cloud } from "lucide-react"
+import { ChevronDown, ChevronUp, Droplets, Wind, Eye, Gauge, Sunrise, Sunset, Cloud, Info } from "lucide-react"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
 import { Tooltip } from "./tooltip"
 
@@ -98,26 +98,13 @@ function DetailedWeatherInfo({
   // Helper function to get humidity tooltip
   const getHumidityTooltip = (humidity: number | undefined) => {
     if (!humidity) return "Humidity data not available"
-    if (humidity < 30) return "Low humidity - May feel dry, static electricity common"
-    if (humidity < 60) return "Comfortable humidity - Ideal for most activities"
-    if (humidity < 80) return "High humidity - May feel sticky and uncomfortable"
-    return "Very high humidity - Oppressive conditions, possible discomfort"
+    return "Relative humidity measures water vapor in the air as a percentage of maximum possible at current temperature. Calculated using dew point and current temperature. <30% feels dry and can cause static electricity. 30-50% is comfortable. >70% feels muggy and can promote mold growth."
   }
 
   // Helper function to get pressure tooltip
   const getPressureTooltip = (pressure: string | undefined) => {
     if (!pressure) return "Pressure data not available"
-    const numericPressure = parseFloat(pressure)
-    if (pressure.includes('hPa')) {
-      if (numericPressure < 1013) return "Low pressure - Stormy weather likely, possible headaches"
-      if (numericPressure > 1020) return "High pressure - Fair weather expected, stable conditions"
-      return "Normal pressure - Typical atmospheric conditions"
-    } else if (pressure.includes('in')) {
-      if (numericPressure < 29.92) return "Low pressure - Stormy weather likely, possible headaches"
-      if (numericPressure > 30.20) return "High pressure - Fair weather expected, stable conditions"
-      return "Normal pressure - Typical atmospheric conditions"
-    }
-    return "Atmospheric pressure reading"
+    return "Barometric pressure measures atmospheric weight pressing down at your location. Measured in hPa (hectopascals) or inHg (inches of mercury). <1013 hPa indicates low pressure systems bringing clouds/storms. >1020 hPa indicates high pressure bringing clear skies. Rapid changes can affect weather and some people feel pressure changes physically."
   }
 
   const humidityValue = dayDetails?.humidity !== undefined ? dayDetails.humidity : 
@@ -130,7 +117,8 @@ function DetailedWeatherInfo({
       icon: <Droplets className="w-4 h-4" />,
       label: "Humidity",
       value: humidityValue !== undefined ? `${humidityValue}%` : "N/A",
-      tooltip: getHumidityTooltip(humidityValue)
+      tooltip: getHumidityTooltip(humidityValue),
+      hasInfoIcon: true
     },
     {
       icon: <Wind className="w-4 h-4" />,
@@ -140,20 +128,23 @@ function DetailedWeatherInfo({
         (isToday && currentWeatherData?.wind ? 
           `${Math.round(currentWeatherData.wind.speed)} mph ${currentWeatherData.wind.direction || ''}` : 
           "N/A"),
-      tooltip: "Wind speed and direction"
+      tooltip: "Wind speed and direction",
+      hasInfoIcon: false
     },
     {
       icon: <Gauge className="w-4 h-4" />,
       label: "Pressure",
       value: pressureValue || "N/A",
-      tooltip: getPressureTooltip(pressureValue)
+      tooltip: getPressureTooltip(pressureValue),
+      hasInfoIcon: true
     },
     {
       icon: <Eye className="w-4 h-4" />,
       label: "UV Index",
       value: dayDetails?.uvIndex !== undefined ? dayDetails.uvIndex.toString() : 
              (isToday && currentWeatherData?.uvIndex !== undefined ? currentWeatherData.uvIndex.toString() : "N/A"),
-      tooltip: "UV radiation intensity level"
+      tooltip: "UV radiation intensity level",
+      hasInfoIcon: false
     }
   ];
 
@@ -164,13 +155,15 @@ function DetailedWeatherInfo({
         icon: <Sunrise className="w-4 h-4" />,
         label: "Sunrise",
         value: currentWeatherData.sunrise || "N/A",
-        tooltip: "Time of sunrise for this location"
+        tooltip: "Time of sunrise for this location",
+        hasInfoIcon: false
       },
       {
         icon: <Sunset className="w-4 h-4" />,
         label: "Sunset", 
         value: currentWeatherData.sunset || "N/A",
-        tooltip: "Time of sunset for this location"
+        tooltip: "Time of sunset for this location",
+        hasInfoIcon: false
       }
     );
   }
@@ -178,21 +171,24 @@ function DetailedWeatherInfo({
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
       {weatherMetrics.map((metric, index) => (
-        <Tooltip key={index} content={metric.tooltip} theme={theme} position="top">
-          <div className="flex items-center space-x-2 cursor-help">
-            <div className={`${themeClasses.accentText} flex-shrink-0`}>
-              {metric.icon}
+        <div key={index} className="flex items-center space-x-2">
+          <div className={`${themeClasses.accentText} flex-shrink-0`}>
+            {metric.icon}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className={`text-xs ${themeClasses.secondary} opacity-70 flex items-center gap-1`}>
+              {metric.label}
+              {metric.hasInfoIcon && (
+                <Tooltip content={metric.tooltip} theme={theme} position="top">
+                  <Info className={`w-3 h-3 cursor-help ${themeClasses.accentText} opacity-70 hover:opacity-100 transition-opacity`} />
+                </Tooltip>
+              )}
             </div>
-            <div className="min-w-0 flex-1">
-              <div className={`text-xs ${themeClasses.secondary} opacity-70`}>
-                {metric.label}
-              </div>
-              <div className={`text-sm font-medium ${themeClasses.text} truncate`}>
-                {metric.value}
-              </div>
+            <div className={`text-sm font-medium ${themeClasses.text} truncate`}>
+              {metric.value}
             </div>
           </div>
-        </Tooltip>
+        </div>
       ))}
     </div>
   );
