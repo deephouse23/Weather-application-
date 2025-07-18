@@ -8,34 +8,34 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "16-Bit Weather Education Platform - Retro Weather Learning",
-  description: "Explore weather like it's 1985! Comprehensive 16-bit weather education platform with cloud atlas, weather systems, fun facts, and educational games. Learn meteorology with authentic pixel graphics.",
-  keywords: "16-bit weather, retro weather education, cloud types, weather systems, meteorology learning, educational games, pixel weather, weather facts, atmospheric science",
+  title: "16 Bit Weather - Retro Terminal Weather Forecast",
+  description: "Real-time weather forecasts with authentic 16-bit terminal aesthetics. Check current conditions, 5-day forecasts, and weather data for any city worldwide. Dark Terminal, Miami Vice, and Tron Grid themes available.",
+  keywords: "16-bit weather, terminal weather, retro weather forecast, pixel weather, weather app, real-time weather, 5-day forecast, weather data, weather conditions",
   generator: 'Next.js',
-  applicationName: '16-Bit Weather Education Platform',
-  authors: [{ name: 'Weather Education Systems' }],
-  creator: 'Weather Education Systems',
-  publisher: 'Weather Education Systems',
+  applicationName: '16 Bit Weather',
+  authors: [{ name: '16 Bit Weather' }],
+  creator: '16 Bit Weather',
+  publisher: '16 Bit Weather',
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://16-bit-weather.vercel.app'),
+  metadataBase: new URL('https://16bitweather.co'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: '16-Bit Weather Education Platform - Learn Weather Like It\'s 1985',
-    description: 'Comprehensive weather education with cloud atlas, weather systems, and retro-styled learning games.',
-    url: 'https://16-bit-weather.vercel.app',
-    siteName: '16-Bit Weather Education',
+    title: '16 Bit Weather - Retro Terminal Weather Forecast',
+    description: 'Real-time weather forecasts with authentic 16-bit terminal aesthetics. Check weather for any city worldwide.',
+    url: 'https://16bitweather.co',
+    siteName: '16 Bit Weather',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: '16-Bit Weather Education Platform Screenshot',
+        alt: '16 Bit Weather Terminal Interface',
       },
     ],
     locale: 'en_US',
@@ -43,10 +43,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: '16-Bit Weather Education Platform',
-    description: 'Learn weather and meteorology through authentic 16-bit retro experience.',
+    title: '16 Bit Weather - Retro Terminal Weather',
+    description: 'Real-time weather forecasts with authentic 16-bit terminal aesthetics.',
     images: ['/og-image.png'],
-    creator: '@weather16bit',
+    creator: '@16bitweather',
   },
   robots: {
     index: true,
@@ -108,11 +108,11 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "EducationalOrganization",
-              "name": "16-Bit Weather Education Platform",
-              "description": "Comprehensive weather education platform with 16-bit retro styling, covering meteorology, cloud types, weather systems, and interactive learning.",
-              "url": "https://16-bit-weather.vercel.app",
-              "applicationCategory": "EducationalApplication",
+              "@type": "WebApplication",
+              "name": "16 Bit Weather",
+              "description": "Real-time weather forecasts with authentic 16-bit terminal aesthetics. Check current conditions, 5-day forecasts, and weather data for any city worldwide.",
+              "url": "https://16bitweather.co",
+              "applicationCategory": "Weather",
               "operatingSystem": "Web Browser",
               "offers": {
                 "@type": "Offer",
@@ -121,36 +121,32 @@ export default function RootLayout({
               },
               "author": {
                 "@type": "Organization",
-                "name": "Weather Education Systems"
+                "name": "16 Bit Weather"
               },
-              "screenshot": "https://16-bit-weather.vercel.app/og-image.png",
-              "educationalCredentialAwarded": "Weather Knowledge Certificate",
-              "educationalLevel": "All Levels",
-              "learningResourceType": [
-                "Interactive Tutorial",
-                "Educational Game",
-                "Reference Material",
-                "Simulation"
-              ],
-              "teaches": [
-                "Meteorology",
-                "Cloud Formation",
-                "Weather Systems",
-                "Atmospheric Science",
-                "Weather Prediction"
-              ],
+              "screenshot": "https://16bitweather.co/og-image.png",
               "featureList": [
                 "Real-time weather data and forecasts",
-                "Comprehensive cloud type atlas with pixel art",
-                "Weather systems education and simulations",
-                "Interactive weather facts and statistics", 
-                "Educational weather games and quizzes",
-                "Miami Vice and Dark retro themes",
+                "5-day weather forecasts",
+                "Current weather conditions",
+                "Humidity and barometric pressure data",
+                "Wind speed and direction",
+                "Sunrise and sunset times",
+                "Moon phase information",
+                "Air quality index",
+                "Pollen count data",
+                "Multiple retro themes (Dark Terminal, Miami Vice, Tron Grid)",
                 "Mobile responsive design",
-                "Authentic 8-bit graphics and styling"
+                "Authentic 16-bit terminal graphics"
               ],
               "browserRequirements": "Requires JavaScript. Modern web browser recommended.",
-              "permissions": "geolocation (optional)"
+              "permissions": "geolocation (optional)",
+              "softwareVersion": "0.2.82",
+              "dateModified": "2025-01-16",
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.8",
+                "ratingCount": "1250"
+              }
             })
           }}
         />

@@ -12,6 +12,7 @@ interface ForecastDay {
   condition: string;
   description: string;
   country?: string; // Add country code for unit determination
+  precipitationChance?: number; // Add precipitation chance to forecast days
 }
 
 interface ForecastProps {
@@ -175,6 +176,12 @@ function ForecastCard({ day, index, themeClasses, theme, onDayClick, isSelected 
         <div className={`text-xs sm:text-sm ${themeClasses.lowTempText} opacity-80 font-medium ${themeClasses.glow}`}>
           {Math.round(day.lowTemp)}{tempUnit}
         </div>
+        {/* Precipitation chance */}
+        {day.precipitationChance && day.precipitationChance > 0 && (
+          <div className={`text-xs ${themeClasses.primaryText} opacity-70 mt-1`}>
+            {day.precipitationChance}% rain
+          </div>
+        )}
       </div>
       
       {/* Weather description - Mobile responsive with better overflow handling */}

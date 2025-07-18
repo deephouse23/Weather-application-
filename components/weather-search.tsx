@@ -11,6 +11,7 @@ interface WeatherSearchProps {
   isDisabled?: boolean;
   rateLimitError?: string;
   theme?: ThemeType;
+  hideLocationButton?: boolean;
 }
 
 export default function WeatherSearch({ 
@@ -19,7 +20,8 @@ export default function WeatherSearch({
   error, 
   isDisabled = false,
   rateLimitError,
-  theme = APP_CONSTANTS.THEMES.DARK
+  theme = APP_CONSTANTS.THEMES.DARK,
+  hideLocationButton = false
 }: WeatherSearchProps) {
   const [searchTerm, setSearchTerm] = useState("")
 
@@ -152,6 +154,7 @@ export default function WeatherSearch({
           </button>
         </div>
       </form>
+
 
 
       {/* Error Display - Mobile responsive */}

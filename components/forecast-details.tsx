@@ -4,6 +4,7 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { ChevronDown, ChevronUp, Droplets, Wind, Eye, Gauge, Sunrise, Sunset, Cloud, Info } from "lucide-react"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
+import { Tooltip } from "./tooltip"
 
 interface ForecastDay {
   day: string;
@@ -120,6 +121,23 @@ function DetailedWeatherInfo({
   const isToday = selectedDay === 0;
   const dayDetails = forecastDay?.details;
   
+  // Helper function to get humidity tooltip
+  const getHumidityTooltip = (humidity: number | undefined) => {
+    if (!humidity) return "Humidity data not available"
+    return "Relative humidity measures water vapor in the air as a percentage of maximum possible at current temperature. Calculated using dew point and current temperature. <30% feels dry and can cause static electricity. 30-50% is comfortable. >70% feels muggy and can promote mold growth."
+  }
+
+  // Helper function to get pressure tooltip
+  const getPressureTooltip = (pressure: string | undefined) => {
+    if (!pressure) return "Pressure data not available"
+    return "Barometric pressure measures atmospheric weight pressing down at your location. Measured in hPa (hectopascals) or inHg (inches of mercury). <1013 hPa indicates low pressure systems bringing clouds/storms. >1020 hPa indicates high pressure bringing clear skies. Rapid changes can affect weather and some people feel pressure changes physically."
+  }
+
+  const humidityValue = dayDetails?.humidity !== undefined ? dayDetails.humidity : 
+                       (isToday && currentWeatherData?.humidity ? currentWeatherData.humidity : undefined)
+  const pressureValue = dayDetails?.pressure || 
+                       (isToday && currentWeatherData?.pressure ? currentWeatherData.pressure : undefined)
+  
   const weatherMetrics = [
     {
       icon: <Droplets className="w-4 h-4" />,
@@ -129,9 +147,7 @@ function DetailedWeatherInfo({
     {
       icon: <Droplets className="w-4 h-4" />,
       label: "Humidity",
-      value: dayDetails?.humidity !== undefined ? `${dayDetails.humidity}%` : 
-             (isToday && currentWeatherData?.humidity ? `${currentWeatherData.humidity}%` : "N/A"),
-      tooltip: "Relative humidity measures the amount of moisture in the air as a percentage of the maximum moisture the air can hold at the current temperature."
+
     },
     {
       icon: <Wind className="w-4 h-4" />,
@@ -140,20 +156,22 @@ function DetailedWeatherInfo({
         `${dayDetails.windSpeed} mph ${dayDetails.windDirection || ''}` : 
         (isToday && currentWeatherData?.wind ? 
           `${Math.round(currentWeatherData.wind.speed)} mph ${currentWeatherData.wind.direction || ''}` : 
-          "N/A")
+          "N/A"),
+      tooltip: "Wind speed and direction",
+      hasInfoIcon: false
     },
     {
       icon: <Gauge className="w-4 h-4" />,
       label: "Pressure",
-      value: dayDetails?.pressure || 
-             (isToday && currentWeatherData?.pressure ? currentWeatherData.pressure : "N/A"),
-      tooltip: "Barometric pressure measures the weight of the atmosphere pressing down on Earth's surface. It's measured in inches of mercury (inHg) or hectopascals (hPa)."
+
     },
     {
       icon: <Eye className="w-4 h-4" />,
       label: "UV Index",
       value: dayDetails?.uvIndex !== undefined ? dayDetails.uvIndex.toString() : 
-             (isToday && currentWeatherData?.uvIndex !== undefined ? currentWeatherData.uvIndex.toString() : "N/A")
+             (isToday && currentWeatherData?.uvIndex !== undefined ? currentWeatherData.uvIndex.toString() : "N/A"),
+      tooltip: "UV radiation intensity level",
+      hasInfoIcon: false
     }
   ];
 
@@ -163,12 +181,16 @@ function DetailedWeatherInfo({
       {
         icon: <Sunrise className="w-4 h-4" />,
         label: "Sunrise",
-        value: currentWeatherData.sunrise || "N/A"
+        value: currentWeatherData.sunrise || "N/A",
+        tooltip: "Time of sunrise for this location",
+        hasInfoIcon: false
       },
       {
         icon: <Sunset className="w-4 h-4" />,
         label: "Sunset", 
-        value: currentWeatherData.sunset || "N/A"
+        value: currentWeatherData.sunset || "N/A",
+        tooltip: "Time of sunset for this location",
+        hasInfoIcon: false
       }
     );
   }
@@ -181,9 +203,7 @@ function DetailedWeatherInfo({
             {metric.icon}
           </div>
           <div className="min-w-0 flex-1">
-            <div className={`text-xs ${themeClasses.secondary} opacity-70 flex items-center`}>
-              {metric.label}
-              {(metric as any).tooltip && <InfoTooltip text={(metric as any).tooltip} theme={theme} />}
+
             </div>
             <div className={`text-sm font-medium ${themeClasses.text} truncate`}>
               {metric.value}
