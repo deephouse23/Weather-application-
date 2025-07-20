@@ -654,10 +654,7 @@ const processDailyForecast = (forecastData: OpenWeatherMapForecastResponse, useF
     }
     dailyData[date].cloudCover.push(item.clouds?.all || 0);
     
-    // Use actual precipitation probability from API, fallback to weather condition estimation
-    const precipChance = item.pop ? Math.round(item.pop * 100) : 
-      (item.weather[0].main.toLowerCase().includes('rain') ? 
-        Math.min((item.main.humidity / 100) * 100, 85) : 0);
+
     dailyData[date].precipChance.push(precipChance);
 
     // Add to hourly forecast (first 8 entries per day)
@@ -700,7 +697,7 @@ const processDailyForecast = (forecastData: OpenWeatherMapForecastResponse, useF
         windDirection: windDirection,
         pressure: `${avgPressure} hPa`,
         cloudCover: avgCloudCover,
-        precipitationChance: avgPrecipChance > 0 ? avgPrecipChance : undefined,
+        precipitationChance: avgPrecipChance,
         visibility: undefined, // Not available in free API
         uvIndex: undefined // Not available in free API
       },

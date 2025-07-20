@@ -128,7 +128,7 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
 /**
  * Get theme-specific gradient definitions
  */
-export const getThemeGradients = (theme: ThemeType) => {
+export const getThemeGradients = (theme: ThemeType): { primary: string; accent: string; card: string } => {
   switch (theme) {
     case 'dark':
       return {
