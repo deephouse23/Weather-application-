@@ -654,6 +654,10 @@ const processDailyForecast = (forecastData: OpenWeatherMapForecastResponse, useF
     }
     dailyData[date].cloudCover.push(item.clouds?.all || 0);
     
+    // Get precipitation probability from OpenWeather API (0-1, convert to percentage)
+    const precipChance = item.pop ? Math.round(item.pop * 100) : 
+      (item.weather[0].main.toLowerCase().includes('rain') ? 
+        Math.min((item.main.humidity / 100) * 100, 85) : 0);
 
     dailyData[date].precipChance.push(precipChance);
 

@@ -106,6 +106,62 @@ function WeatherApp() {
   const RATE_LIMIT_WINDOW = 60000 // 1 minute
   const MAX_REQUESTS = 5
 
+  // Auto-location function (moved outside useEffect so it can be reused)
+  const tryAutoLocation = async () => {
+    try {
+      // Check if we have a recent last location
+      const lastLocation = userCacheService.getLastLocation()
+      if (lastLocation) {
+        console.log('Using cached last location:', lastLocation)
+        await handleLocationDetected(lastLocation)
+        return
+      }
+      
+      // Check if we have cached weather data first
+      const cachedLocation = localStorage.getItem(CACHE_KEY)
+      const cachedWeatherData = localStorage.getItem(WEATHER_KEY)
+      const cacheTimestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY)
+      
+      if (cachedLocation && cachedWeatherData && cacheTimestamp) {
+        const cacheAge = Date.now() - parseInt(cacheTimestamp)
+        
+        // If cache is fresh, use it and skip auto-detection for now
+        if (cacheAge < 10 * 60 * 1000) {
+          console.log('Using fresh cached data, skipping auto-location')
+          return
+        }
+      }
+      
+      // Try silent location detection
+      console.log('Attempting silent location detection...')
+      setIsAutoDetecting(true)
+      
+      try {
+        const location = await locationService.getCurrentLocation()
+        await handleLocationDetected(location)
+      } catch (error: any) {
+        console.log('Geolocation failed, trying IP fallback:', error.message)
+        try {
+          const ipLocation = await locationService.getLocationByIP()
+          await handleLocationDetected(ipLocation)
+        } catch (ipError) {
+          console.log('IP location also failed, using default location:', ipError)
+          // Use default location (San Francisco)
+          await handleSearch('San Francisco, CA')
+        }
+      } finally {
+        setIsAutoDetecting(false)
+      }
+      
+      setAutoLocationAttempted(true)
+      
+    } catch (error) {
+      console.error('Auto-location initialization failed:', error)
+      setIsAutoDetecting(false)
+      setAutoLocationAttempted(true)
+    }
+  }
+
   // Client-side mount effect
   useEffect(() => {
     setIsClient(true)
@@ -114,61 +170,6 @@ function WeatherApp() {
   // Silent auto-location detection on first visit
   useEffect(() => {
     if (!isClient || autoLocationAttempted) return
-    
-    const tryAutoLocation = async () => {
-      try {
-        // Check if we have a recent last location
-        const lastLocation = userCacheService.getLastLocation()
-        if (lastLocation) {
-          console.log('Using cached last location:', lastLocation)
-          await handleLocationDetected(lastLocation)
-          return
-        }
-        
-        // Check if we have cached weather data first
-        const cachedLocation = localStorage.getItem(CACHE_KEY)
-        const cachedWeatherData = localStorage.getItem(WEATHER_KEY)
-        const cacheTimestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY)
-        
-        if (cachedLocation && cachedWeatherData && cacheTimestamp) {
-          const cacheAge = Date.now() - parseInt(cacheTimestamp)
-          
-          // If cache is fresh, use it and skip auto-detection for now
-          if (cacheAge < 10 * 60 * 1000) {
-            console.log('Using fresh cached data, skipping auto-location')
-            return
-          }
-        }
-        
-        // Try silent location detection
-        console.log('Attempting silent location detection...')
-        setIsAutoDetecting(true)
-        
-        try {
-          const location = await locationService.getCurrentLocation()
-          await handleLocationDetected(location)
-        } catch (error: any) {
-          console.log('Geolocation failed, trying IP fallback:', error.message)
-          try {
-            const ipLocation = await locationService.getLocationByIP()
-            await handleLocationDetected(ipLocation)
-          } catch (ipError) {
-            console.log('IP location also failed, using default location:', ipError)
-            // Use default location (San Francisco)
-            await handleSearch('San Francisco, CA')
-          }
-        } finally {
-          setIsAutoDetecting(false)
-        }
-        
-        setAutoLocationAttempted(true)
-        
-      } catch (error) {
-        console.error('Auto-location initialization failed:', error)
-        setIsAutoDetecting(false)
-        setAutoLocationAttempted(true)
-      }
-    }
     
     // Small delay to let other initialization complete
     const timer = setTimeout(tryAutoLocation, 1000)
