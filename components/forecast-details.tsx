@@ -203,8 +203,6 @@ function DetailedWeatherInfo({
             {metric.icon}
           </div>
           <div className="min-w-0 flex-1">
-
-            </div>
             <div className={`text-sm font-medium ${themeClasses.text} truncate`}>
               {metric.value}
             </div>
