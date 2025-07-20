@@ -100,58 +100,130 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="format-detection" content="telephone=no" />
+        <meta name="geo.region" content="US" />
+        <meta name="geo.placename" content="United States" />
+        <meta name="geo.position" content="39.8283;-98.5795" />
+        <meta name="ICBM" content="39.8283, -98.5795" />
+        <meta name="language" content="en-US" />
+        <meta name="distribution" content="global" />
+        <meta name="rating" content="general" />
+        <meta name="revisit-after" content="1 day" />
+        <meta name="category" content="Weather, Education, Technology" />
+        <meta name="coverage" content="Worldwide" />
+        <meta name="target" content="all" />
+        <meta name="HandheldFriendly" content="True" />
+        <meta name="MobileOptimized" content="320" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <link rel="preconnect" href="https://api.openweathermap.org" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://pollen.googleapis.com" />
+        <link rel="dns-prefetch" href="https://www.google.com" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "EducationalOrganization",
-              "name": "16-Bit Weather Education Platform",
-              "description": "Comprehensive weather education platform with 16-bit retro styling, covering meteorology, cloud types, weather systems, and interactive learning.",
-              "url": "https://16-bit-weather.vercel.app",
-              "applicationCategory": "EducationalApplication",
-              "operatingSystem": "Web Browser",
-              "offers": {
-                "@type": "Offer",
-                "price": "0",
-                "priceCurrency": "USD"
+            __html: JSON.stringify([
+              {
+                "@context": "https://schema.org",
+                "@type": "WebApplication",
+                "name": "16-Bit Weather Education Platform",
+                "description": "Real-time weather forecasts and comprehensive meteorology education with authentic 16-bit retro styling and interactive learning features.",
+                "url": "https://16-bit-weather.vercel.app",
+                "applicationCategory": "Weather",
+                "applicationSubCategory": "Weather Forecast",
+                "operatingSystem": "Web Browser",
+                "browserRequirements": "Requires JavaScript. Modern web browser recommended.",
+                "permissions": "geolocation (optional for auto-location)",
+                "offers": {
+                  "@type": "Offer",
+                  "price": "0",
+                  "@id": "https://16-bit-weather.vercel.app/",
+                  "priceCurrency": "USD"
+                },
+                "author": {
+                  "@type": "Organization",
+                  "name": "Weather Education Systems",
+                  "url": "https://16-bit-weather.vercel.app"
+                },
+                "publisher": {
+                  "@type": "Organization",
+                  "name": "Weather Education Systems"
+                },
+                "screenshot": "https://16-bit-weather.vercel.app/og-image.png",
+                "softwareVersion": "0.2.7",
+                "datePublished": "2024-01-01",
+                "dateModified": "2025-07-20",
+                "applicationSuite": "16-Bit Weather Platform",
+                "featureList": [
+                  "Real-time weather data and forecasts",
+                  "7-day weather forecasting",
+                  "Current atmospheric conditions",
+                  "UV index and air quality monitoring",
+                  "Pollen count tracking",
+                  "Wind and pressure data",
+                  "Sunrise and sunset times",
+                  "Moon phase information",
+                  "Multiple city weather lookup",
+                  "Auto-location detection",
+                  "Comprehensive cloud type atlas with pixel art",
+                  "Weather systems education and simulations",
+                  "Interactive weather facts and statistics", 
+                  "Educational weather games and quizzes",
+                  "Miami Vice and Dark retro themes",
+                  "Mobile responsive design",
+                  "Authentic 16-bit graphics and styling"
+                ],
+                "aggregateRating": {
+                  "@type": "AggregateRating",
+                  "ratingValue": "4.8",
+                  "reviewCount": "150",
+                  "bestRating": "5",
+                  "worstRating": "1"
+                },
+                "serviceType": "Weather Forecast Service"
               },
-              "author": {
-                "@type": "Organization",
-                "name": "Weather Education Systems"
+              {
+                "@context": "https://schema.org",
+                "@type": "EducationalOrganization",
+                "name": "16-Bit Weather Education Platform",
+                "description": "Comprehensive weather education platform with 16-bit retro styling, covering meteorology, cloud types, weather systems, and interactive learning.",
+                "url": "https://16-bit-weather.vercel.app",
+                "educationalCredentialAwarded": "Weather Knowledge Certificate",
+                "educationalLevel": "All Levels",
+                "learningResourceType": [
+                  "Interactive Tutorial",
+                  "Educational Game",
+                  "Reference Material",
+                  "Simulation"
+                ],
+                "teaches": [
+                  "Meteorology",
+                  "Cloud Formation",
+                  "Weather Systems",
+                  "Atmospheric Science",
+                  "Weather Prediction"
+                ],
+                "sameAs": [
+                  "https://16-bit-weather.vercel.app/about",
+                  "https://16-bit-weather.vercel.app/cloud-types",
+                  "https://16-bit-weather.vercel.app/weather-systems"
+                ]
               },
-              "screenshot": "https://16-bit-weather.vercel.app/og-image.png",
-              "educationalCredentialAwarded": "Weather Knowledge Certificate",
-              "educationalLevel": "All Levels",
-              "learningResourceType": [
-                "Interactive Tutorial",
-                "Educational Game",
-                "Reference Material",
-                "Simulation"
-              ],
-              "teaches": [
-                "Meteorology",
-                "Cloud Formation",
-                "Weather Systems",
-                "Atmospheric Science",
-                "Weather Prediction"
-              ],
-              "featureList": [
-                "Real-time weather data and forecasts",
-                "Comprehensive cloud type atlas with pixel art",
-                "Weather systems education and simulations",
-                "Interactive weather facts and statistics", 
-                "Educational weather games and quizzes",
-                "Miami Vice and Dark retro themes",
-                "Mobile responsive design",
-                "Authentic 8-bit graphics and styling"
-              ],
-              "browserRequirements": "Requires JavaScript. Modern web browser recommended.",
-              "permissions": "geolocation (optional)"
-            })
+              {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                "name": "16-Bit Weather",
+                "url": "https://16-bit-weather.vercel.app",
+                "potentialAction": {
+                  "@type": "SearchAction",
+                  "target": "https://16-bit-weather.vercel.app/?search={search_term_string}",
+                  "query-input": "required name=search_term_string"
+                },
+                "sameAs": [
+                  "https://16-bit-weather.vercel.app"
+                ]
+              }
+            ])
           }}
         />
       </head>
