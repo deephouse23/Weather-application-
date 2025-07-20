@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://16-bit-weather.vercel.app/sitemap.xml
+
+# Allow all crawling for weather data and educational content
+Allow: /weather/
+Allow: /about
+Allow: /cloud-types
+Allow: /weather-systems
+Allow: /fun-facts
+Allow: /games
+
+# Crawl-delay for courtesy (optional)
+Crawl-delay: 1
