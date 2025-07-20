@@ -98,13 +98,13 @@ function DetailedWeatherInfo({
   // Helper function to get humidity tooltip
   const getHumidityTooltip = (humidity: number | undefined) => {
     if (!humidity) return "Humidity data not available"
-    return "Relative humidity measures water vapor in the air as a percentage of maximum possible at current temperature. Calculated using dew point and current temperature. <30% feels dry and can cause static electricity. 30-50% is comfortable. >70% feels muggy and can promote mold growth."
+    return "Relative humidity measures water vapor in air as percentage of maximum possible at current temperature. <30% feels dry and can cause static electricity. 30-50% is comfortable range. >70% feels muggy and promotes mold growth."
   }
 
   // Helper function to get pressure tooltip
   const getPressureTooltip = (pressure: string | undefined) => {
     if (!pressure) return "Pressure data not available"
-    return "Barometric pressure measures atmospheric weight pressing down at your location. Measured in hPa (hectopascals) or inHg (inches of mercury). <1013 hPa indicates low pressure systems bringing clouds/storms. >1020 hPa indicates high pressure bringing clear skies. Rapid changes can affect weather and some people feel pressure changes physically."
+    return "Barometric pressure measures atmospheric weight pressing down at your location. Measured in hPa or inHg units. <1013 hPa indicates low pressure bringing storms. >1020 hPa indicates high pressure bringing clear skies. Rapid changes can affect weather and some people feel pressure changes physically."
   }
 
   const humidityValue = dayDetails?.humidity !== undefined ? dayDetails.humidity : 
