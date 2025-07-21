@@ -97,7 +97,7 @@ export default function RootLayout({
         <link rel="shortcut icon" href="/favicon.ico" />
         <meta name="theme-color" content="#0a0a1a" />
         <meta name="msapplication-TileColor" content="#0a0a1a" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="format-detection" content="telephone=no" />
         <link rel="preconnect" href="https://api.openweathermap.org" />

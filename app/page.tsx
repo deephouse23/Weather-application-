@@ -110,6 +110,58 @@ function WeatherApp() {
     setIsClient(true)
   }, [])
 
+  // Handle successful location detection
+  const handleLocationDetected = async (location: LocationData) => {
+    try {
+      console.log('Location detected:', location)
+      
+      // Save as last location
+      userCacheService.saveLastLocation(location)
+      
+      // Check for cached weather data for this location
+      const locationKey = userCacheService.getLocationKey(location)
+      const cachedWeather = userCacheService.getCachedWeatherData(locationKey)
+      
+      if (cachedWeather) {
+        console.log('Using cached weather data for detected location')
+        setWeather(cachedWeather)
+        setLocationInput(location.displayName)
+        setCurrentLocation(location.displayName)
+        setHasSearched(true)
+        setError('')
+        return
+      }
+      
+      // Fetch fresh weather data
+      setLoading(true)
+      setError('')
+      
+      const coords = userCacheService.getLocationKey(location).replace('_', ',')
+      const weatherData = await fetchWeatherByLocation(coords)
+      
+      if (weatherData) {
+        setWeather(weatherData)
+        setLocationInput(location.displayName)
+        setCurrentLocation(location.displayName)
+        setHasSearched(true)
+        
+        // Cache the weather data
+        userCacheService.cacheWeatherData(locationKey, weatherData)
+        
+        // Also save in legacy cache for compatibility
+        saveLocationToCache(location.displayName)
+        saveWeatherToCache(weatherData)
+        
+        console.log('Weather data loaded for auto-detected location')
+      }
+    } catch (error: any) {
+      console.error('Failed to load weather for detected location:', error)
+      setError('Failed to load weather data for your location')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Silent auto-location detection on first visit
   useEffect(() => {
     if (!isClient || autoLocationAttempted) return
@@ -173,58 +225,6 @@ function WeatherApp() {
     const timer = setTimeout(tryAutoLocation, 1000)
     return () => clearTimeout(timer)
   }, [isClient, autoLocationAttempted])
-
-  // Handle successful location detection
-  const handleLocationDetected = async (location: LocationData) => {
-    try {
-      console.log('Location detected:', location)
-      
-      // Save as last location
-      userCacheService.saveLastLocation(location)
-      
-      // Check for cached weather data for this location
-      const locationKey = userCacheService.getLocationKey(location)
-      const cachedWeather = userCacheService.getCachedWeatherData(locationKey)
-      
-      if (cachedWeather) {
-        console.log('Using cached weather data for detected location')
-        setWeather(cachedWeather)
-        setLocationInput(location.displayName)
-        setCurrentLocation(location.displayName)
-        setHasSearched(true)
-        setError('')
-        return
-      }
-      
-      // Fetch fresh weather data
-      setLoading(true)
-      setError('')
-      
-      const coords = userCacheService.getLocationKey(location).replace('_', ',')
-      const weatherData = await fetchWeatherByLocation(coords)
-      
-      if (weatherData) {
-        setWeather(weatherData)
-        setLocationInput(location.displayName)
-        setCurrentLocation(location.displayName)
-        setHasSearched(true)
-        
-        // Cache the weather data
-        userCacheService.cacheWeatherData(locationKey, weatherData)
-        
-        // Also save in legacy cache for compatibility
-        saveLocationToCache(location.displayName)
-        saveWeatherToCache(weatherData)
-        
-        console.log('Weather data loaded for auto-detected location')
-      }
-    } catch (error: any) {
-      console.error('Failed to load weather for detected location:', error)
-      setError('Failed to load weather data for your location')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // Initialize search cache on mount
   useEffect(() => {
