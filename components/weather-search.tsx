@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { Search, MapPin, Loader2 } from "lucide-react"
 import { ThemeType, APP_CONSTANTS } from "@/lib/utils"
+import CityAutocomplete from "./city-autocomplete"
+import { type CityData } from "@/lib/city-database"
 
 interface WeatherSearchProps {
   onSearch: (location: string) => void;
@@ -26,6 +28,7 @@ export default function WeatherSearch({
   hideLocationButton = false
 }: WeatherSearchProps) {
   const [searchTerm, setSearchTerm] = useState("")
+  const [showAutocomplete, setShowAutocomplete] = useState(false)
 
   // Local theme classes function
   const getThemeClasses = (theme: ThemeType) => {
@@ -105,7 +108,20 @@ export default function WeatherSearch({
     e.preventDefault()
     if (searchTerm.trim() && !isLoading && !isDisabled) {
       onSearch(searchTerm.trim())
+      setShowAutocomplete(false)
     }
+  }
+
+  const handleCitySelect = (city: CityData) => {
+    setSearchTerm(city.searchTerm)
+    onSearch(city.searchTerm)
+    setShowAutocomplete(false)
+  }
+
+  const handleInputChange = (value: string) => {
+    setSearchTerm(value)
+    // Show autocomplete when typing, hide when empty
+    setShowAutocomplete(value.length >= 2)
   }
 
   const handleLocationClick = () => {
@@ -133,7 +149,8 @@ export default function WeatherSearch({
           <input
             type="text"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => handleInputChange(e.target.value)}
+            onFocus={() => searchTerm.length >= 2 && setShowAutocomplete(true)}
             placeholder={isDisabled ? "Rate limit reached..." : "ZIP, City+State, or City+Country..."}
             disabled={controlsDisabled}
             className={`w-full px-3 sm:px-4 py-3 sm:py-4 pr-10 sm:pr-12 ${themeClasses.cardBg} border-2 ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.placeholderText} 
@@ -159,6 +176,16 @@ export default function WeatherSearch({
               <Search className="w-4 h-4 sm:w-5 sm:h-5" />
             )}
           </button>
+
+          {/* City Autocomplete */}
+          <CityAutocomplete
+            query={searchTerm}
+            onSelect={handleCitySelect}
+            onQueryChange={setSearchTerm}
+            theme={theme}
+            isVisible={showAutocomplete}
+            onVisibilityChange={setShowAutocomplete}
+          />
         </div>
       </form>
 
