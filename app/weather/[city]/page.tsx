@@ -174,7 +174,7 @@ export default function CityWeatherPage({ params }: PageParams) {
         <EnhancedMetaTags
           title={city.title}
           description={city.description}
-          url={`https://16bitweather.co/weather/${citySlug}`}
+          url={`https://www.16bitweather.co/weather/${citySlug}`}
           cityName={city.name}
           cityState={city.state}
           type="website"
@@ -188,7 +188,7 @@ export default function CityWeatherPage({ params }: PageParams) {
               "@type": "WebPage",
               "name": city.title,
               "description": city.description,
-              "url": `https://16bitweather.co/weather/${citySlug}`,
+              "url": `https://www.16bitweather.co/weather/${citySlug}`,
               "about": {
                 "@type": "Place",
                 "name": `${city.name}, ${city.state}`,

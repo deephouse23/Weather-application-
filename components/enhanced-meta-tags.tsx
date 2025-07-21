@@ -23,7 +23,7 @@ export function EnhancedMetaTags({
   publishedTime 
 }: MetaTagsProps) {
   const siteName = '16-Bit Weather'
-  const domain = 'https://16bitweather.co'
+  const domain = 'https://www.16bitweather.co'
   const ogImageUrl = `${domain}/api/og?city=${encodeURIComponent(cityName)}&state=${cityState}`
   
   return (

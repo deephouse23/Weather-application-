@@ -74,7 +74,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
       'Chicago': 'IL', 'Houston': 'TX', 'Phoenix': 'AZ', 'Philadelphia': 'PA', 'San Antonio': 'TX',
       'Dallas': 'TX', 'Austin': 'TX', 'Jacksonville': 'FL', 'Fort Worth': 'TX', 'Columbus': 'OH',
       'Charlotte': 'NC', 'Seattle': 'WA', 'Denver': 'CO', 'Boston': 'MA', 'Nashville': 'TN',
-      'Baltimore': 'MD', 'Portland': 'OR', 'Las Vegas': 'NV', 'Miami': 'FL', 'Atlanta': 'GA',
+      'Baltimore': 'MD', 'Portland': 'OR', 'Las Vegas': 'NV', 'Atlanta': 'GA',
       'Detroit': 'MI', 'Memphis': 'TN', 'Louisville': 'KY', 'Milwaukee': 'WI', 'Albuquerque': 'NM',
       'Tucson': 'AZ', 'Fresno': 'CA', 'Mesa': 'AZ', 'Kansas City': 'MO', 'Virginia Beach': 'VA',
       'Omaha': 'NE', 'Colorado Springs': 'CO', 'Raleigh': 'NC', 'Miami Beach': 'FL'

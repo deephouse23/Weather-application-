@@ -5,7 +5,7 @@ Allow: /
 Allow: /weather/*
 
 # Sitemap location
-Sitemap: https://16bitweather.co/sitemap.xml
+Sitemap: https://www.16bitweather.co/sitemap.xml
 
 # Additional bot instructions
 Crawl-delay: 1

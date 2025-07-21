@@ -21,14 +21,14 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://16bitweather.co'),
+  metadataBase: new URL('https://www.16bitweather.co'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: '16 Bit Weather - Retro Terminal Weather Forecast',
     description: 'Real-time weather forecasts with authentic 16-bit terminal aesthetics. Check weather for any city worldwide.',
-    url: 'https://16bitweather.co',
+    url: 'https://www.16bitweather.co',
     siteName: '16 Bit Weather',
     images: [
       {
@@ -111,7 +111,7 @@ export default function RootLayout({
               "@type": "WebApplication",
               "name": "16 Bit Weather",
               "description": "Real-time weather forecasts with authentic 16-bit terminal aesthetics. Check current conditions, 5-day forecasts, and weather data for any city worldwide.",
-              "url": "https://16bitweather.co",
+              "url": "https://www.16bitweather.co",
               "applicationCategory": "Weather",
               "operatingSystem": "Web Browser",
               "offers": {
@@ -123,7 +123,7 @@ export default function RootLayout({
                 "@type": "Organization",
                 "name": "16 Bit Weather"
               },
-              "screenshot": "https://16bitweather.co/og-image.png",
+              "screenshot": "https://www.16bitweather.co/og-image.png",
               "featureList": [
                 "Real-time weather data and forecasts",
                 "5-day weather forecasts",

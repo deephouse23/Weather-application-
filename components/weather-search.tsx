@@ -1,14 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { Search, MapPin, Loader2 } from "lucide-react"
+import { Search, Loader2, MapPin } from "lucide-react"
 import { ThemeType, APP_CONSTANTS } from "@/lib/utils"
 import CityAutocomplete from "./city-autocomplete"
 import { type CityData } from "@/lib/city-database"
 
 interface WeatherSearchProps {
   onSearch: (location: string) => void;
-  onLocationSearch: () => void;
+  onLocationSearch?: () => void;
   isLoading: boolean;
   error?: string;
   isDisabled?: boolean;
@@ -19,7 +19,7 @@ interface WeatherSearchProps {
 
 export default function WeatherSearch({ 
   onSearch, 
-  onLocationSearch, 
+  onLocationSearch,
   isLoading, 
   error, 
   isDisabled = false,
@@ -125,7 +125,7 @@ export default function WeatherSearch({
   }
 
   const handleLocationClick = () => {
-    if (!isLoading && !isDisabled) {
+    if (!isLoading && !isDisabled && onLocationSearch) {
       onLocationSearch()
     }
   }
@@ -190,7 +190,7 @@ export default function WeatherSearch({
       </form>
 
       {/* Location Button - Mobile friendly - Hidden when auto-location is enabled */}
-      {!hideLocationButton && (
+      {!hideLocationButton && onLocationSearch && (
         <div className="flex justify-center px-2 sm:px-0">
           <button
             onClick={handleLocationClick}
