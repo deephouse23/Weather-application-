@@ -27,3 +27,5 @@ export function EnvironmentalDisplay({ weather, theme, className }: Environmenta
     </div>
   )
 }
+
+export default EnvironmentalDisplay

@@ -6,6 +6,7 @@
 import { lazy, Suspense } from 'react'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ErrorBoundary } from './error-boundary'
 
 // Lazy load weather components
 const Forecast = lazy(() => import('./forecast'))
@@ -30,24 +31,30 @@ function WeatherComponentLoader({ theme }: { theme: 'dark' | 'miami' | 'tron' })
 // Lazy wrapper components with fallback loading states
 export function LazyForecast(props: any) {
   return (
-    <Suspense fallback={<WeatherComponentLoader theme={props.theme} />}>
-      <Forecast {...props} />
-    </Suspense>
+    <ErrorBoundary componentName="Weather Forecast" theme={props.theme}>
+      <Suspense fallback={<WeatherComponentLoader theme={props.theme} />}>
+        <Forecast {...props} />
+      </Suspense>
+    </ErrorBoundary>
   )
 }
 
 export function LazyForecastDetails(props: any) {
   return (
-    <Suspense fallback={<WeatherComponentLoader theme={props.theme} />}>
-      <ForecastDetails {...props} />
-    </Suspense>
+    <ErrorBoundary componentName="Forecast Details" theme={props.theme}>
+      <Suspense fallback={<WeatherComponentLoader theme={props.theme} />}>
+        <ForecastDetails {...props} />
+      </Suspense>
+    </ErrorBoundary>
   )
 }
 
 export function LazyEnvironmentalDisplay(props: any) {
   return (
-    <Suspense fallback={<WeatherComponentLoader theme={props.theme} />}>
-      <EnvironmentalDisplay {...props} />
-    </Suspense>
+    <ErrorBoundary componentName="Environmental Display" theme={props.theme}>
+      <Suspense fallback={<WeatherComponentLoader theme={props.theme} />}>
+        <EnvironmentalDisplay {...props} />
+      </Suspense>
+    </ErrorBoundary>
   )
 }

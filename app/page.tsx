@@ -14,6 +14,7 @@ import { userCacheService } from "@/lib/user-cache-service"
 import { APP_CONSTANTS } from "@/lib/utils"
 import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from "@/components/lazy-weather-components"
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/responsive-container"
+import { ErrorBoundary, SafeRender } from "@/components/error-boundary"
 
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
@@ -256,8 +257,17 @@ function WeatherApp() {
 
   // Set data function (for cached weather data)
   const setData = (weatherData: WeatherData) => {
-    setWeather(weatherData)
-    setError("")
+    try {
+      if (!weatherData) {
+        console.warn('Attempted to set null/undefined weather data');
+        return;
+      }
+      setWeather(weatherData);
+      setError("");
+    } catch (error) {
+      console.error('Error setting weather data:', error);
+      setError('Failed to process weather data');
+    }
   }
 
   // Load cached data and theme on component mount
@@ -291,10 +301,7 @@ function WeatherApp() {
           }
         }
         
-        // If no cached data, attempt auto-location on first visit
-        if (!hasSearched) {
-          tryAutoLocation()
-        }
+        // Auto-location is handled by the separate useEffect hook
       } catch (error) {
         console.warn('Cache check failed:', error)
       }
@@ -313,6 +320,7 @@ function WeatherApp() {
       }
     } catch (error) {
       console.warn('Failed to get stored theme:', error)
+      setError('Theme loading failed, using default')
     }
     return 'dark' // Default to dark theme
   }
@@ -320,28 +328,46 @@ function WeatherApp() {
   // Load theme on mount and sync with navigation
   useEffect(() => {
     if (!isClient) return
-    const storedTheme = getStoredTheme()
-    setCurrentTheme(storedTheme)
     
-    // Listen for theme changes from navigation
-    const handleStorageChange = () => {
-      const newTheme = getStoredTheme()
-      setCurrentTheme(newTheme)
-    }
-    
-    window.addEventListener('storage', handleStorageChange)
-    
-    // Poll for theme changes (in case of same-tab changes)
-    const interval = setInterval(() => {
-      const newTheme = getStoredTheme()
-      if (newTheme !== currentTheme) {
-        setCurrentTheme(newTheme)
+    try {
+      const storedTheme = getStoredTheme()
+      setCurrentTheme(storedTheme)
+      
+      // Listen for theme changes from navigation
+      const handleStorageChange = () => {
+        try {
+          const newTheme = getStoredTheme()
+          setCurrentTheme(newTheme)
+        } catch (error) {
+          console.error('Error handling storage change:', error)
+        }
       }
-    }, 100)
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      clearInterval(interval)
+      
+      window.addEventListener('storage', handleStorageChange)
+      
+      // Poll for theme changes (in case of same-tab changes)
+      const interval = setInterval(() => {
+        try {
+          const newTheme = getStoredTheme()
+          if (newTheme !== currentTheme) {
+            setCurrentTheme(newTheme)
+          }
+        } catch (error) {
+          console.error('Error polling theme changes:', error)
+        }
+      }, 100)
+      
+      return () => {
+        try {
+          window.removeEventListener('storage', handleStorageChange)
+          clearInterval(interval)
+        } catch (error) {
+          console.error('Error cleaning up theme listeners:', error)
+        }
+      }
+    } catch (error) {
+      console.error('Error initializing theme management:', error)
+      setError('Theme initialization failed')
     }
   }, [isClient, currentTheme])
 
@@ -412,9 +438,14 @@ function WeatherApp() {
   const saveRateLimitData = (data: { requests: number[], lastReset: number }) => {
     if (!isClient) return
     try {
+      if (!data || typeof data !== 'object') {
+        console.warn('Invalid rate limit data provided');
+        return;
+      }
       localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(data))
     } catch (error) {
       console.warn('Failed to save rate limit data:', error)
+      setError('Rate limiting storage failed')
     }
   }
 
@@ -482,10 +513,15 @@ function WeatherApp() {
   const saveWeatherToCache = (weatherData: WeatherData) => {
     if (!isClient) return
     try {
+      if (!weatherData || typeof weatherData !== 'object') {
+        console.warn('Invalid weather data provided for caching');
+        return;
+      }
       localStorage.setItem(WEATHER_KEY, JSON.stringify(weatherData))
       localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString())
     } catch (error) {
       console.warn('Failed to save weather data to cache:', error)
+      setError('Weather data caching failed')
     }
   }
 
@@ -832,16 +868,18 @@ function WeatherApp() {
           {/* TEMPORARY API TEST - REMOVE BEFORE PRODUCTION */}
           {/* <ApiTest /> */}
 
-          <WeatherSearch
-            onSearch={handleSearch}
-            onLocationSearch={handleLocationSearch}
-            isLoading={loading || isAutoDetecting}
-            error={error}
-            rateLimitError={rateLimitError}
-            isDisabled={isOnCooldown}
-            theme={theme}
-            hideLocationButton={true}
-          />
+          <ErrorBoundary componentName="Weather Search" theme={currentTheme}>
+            <WeatherSearch
+              onSearch={handleSearch}
+              onLocationSearch={handleLocationSearch}
+              isLoading={loading || isAutoDetecting}
+              error={error}
+              rateLimitError={rateLimitError}
+              isDisabled={isOnCooldown}
+              theme={theme}
+              hideLocationButton={true}
+            />
+          </ErrorBoundary>
 
 
 
@@ -893,22 +931,23 @@ function WeatherApp() {
           )}
 
           {weather && !loading && !error && (
-            <div className="space-y-4 sm:space-y-6">
-              {/* Current Weather */}
-              <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
+            <ErrorBoundary componentName="Weather Display" theme={currentTheme}>
+              <div className="space-y-4 sm:space-y-6">
+                {/* Current Weather */}
+                <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
                 {/* Temperature Box */}
                 <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
                      style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
                   <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Temperature</h2>
-                  <p className={`text-3xl font-bold ${themeClasses.text}`}>{weather.temperature}{weather.unit}</p>
+                  <p className={`text-3xl font-bold ${themeClasses.text}`}>{weather?.temperature || 'N/A'}{weather?.unit || '°F'}</p>
                 </div>
 
                 {/* Conditions Box */}
                 <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
                      style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
                   <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Conditions</h2>
-                  <p className={`text-lg ${themeClasses.text}`}>{weather.condition}</p>
-                  <p className={`text-sm ${themeClasses.secondaryText}`}>{weather.description}</p>
+                  <p className={`text-lg ${themeClasses.text}`}>{weather?.condition || 'Unknown'}</p>
+                  <p className={`text-sm ${themeClasses.secondaryText}`}>{weather?.description || 'No description available'}</p>
                 </div>
 
                 {/* Wind Box */}
@@ -916,9 +955,9 @@ function WeatherApp() {
                      style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
                   <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Wind</h2>
                   <p className={`text-lg ${themeClasses.text}`}>
-                    {weather.wind.direction ? `${weather.wind.direction} ` : ''}
-                    {weather.wind.speed} mph
-                    {weather.wind.gust ? ` (gusts ${weather.wind.gust} mph)` : ''}
+                    {weather?.wind?.direction ? `${weather.wind.direction} ` : ''}
+                    {weather?.wind?.speed || 'N/A'} mph
+                    {weather?.wind?.gust ? ` (gusts ${weather.wind.gust} mph)` : ''}
                   </p>
                 </div>
               </ResponsiveGrid>
@@ -932,11 +971,11 @@ function WeatherApp() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-center gap-2">
                       <span className="text-yellow-400">☀️</span>
-                      <p className={themeClasses.text}>Sunrise: {weather.sunrise}</p>
+                      <p className={themeClasses.text}>Sunrise: {weather?.sunrise || 'N/A'}</p>
                     </div>
                     <div className="flex items-center justify-center gap-2">
                       <span className="text-orange-400">🌅</span>
-                      <p className={themeClasses.text}>Sunset: {weather.sunset}</p>
+                      <p className={themeClasses.text}>Sunset: {weather?.sunset || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
@@ -945,7 +984,7 @@ function WeatherApp() {
                 <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
                      style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
                   <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>UV Index</h2>
-                  <p className={`text-lg font-bold ${themeClasses.text}`}>{weather.uvIndex}</p>
+                  <p className={`text-lg font-bold ${themeClasses.text}`}>{weather?.uvIndex || 'N/A'}</p>
                 </div>
 
                 {/* Moon Phase Box */}
@@ -954,11 +993,11 @@ function WeatherApp() {
                   <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Moon Phase</h2>
                   <div className="space-y-2">
                     <div className="flex items-center justify-center gap-2">
-                      <span className="text-2xl">{getMoonPhaseIcon(weather.moonPhase.phase)}</span>
-                      <p className={`text-lg font-semibold ${themeClasses.text}`}>{weather.moonPhase.phase}</p>
+                      <span className="text-2xl">{getMoonPhaseIcon(weather?.moonPhase?.phase || 'new')}</span>
+                      <p className={`text-lg font-semibold ${themeClasses.text}`}>{weather?.moonPhase?.phase || 'Unknown'}</p>
                     </div>
                     <p className={`text-sm font-medium ${themeClasses.secondaryText}`}>
-                      {weather.moonPhase.illumination}% illuminated
+                      {weather?.moonPhase?.illumination || 0}% illuminated
                     </p>
                   </div>
                 </div>
@@ -977,9 +1016,9 @@ function WeatherApp() {
                   <>
                     {/* Original 5-Day Forecast */}
                     <LazyForecast 
-                      forecast={weather.forecast.map(day => ({
+                      forecast={(weather?.forecast || []).map((day, index) => ({
                         ...day,
-                        country: weather.country
+                        country: weather?.country || 'US'
                       }))} 
                       theme={theme}
                       onDayClick={handleDayClick}
@@ -988,25 +1027,26 @@ function WeatherApp() {
 
                     {/* Expandable Details Section Below */}
                     <LazyForecastDetails 
-                      forecast={weather.forecast.map(day => ({
+                      forecast={(weather?.forecast || []).map((day, index) => ({
                         ...day,
-                        country: weather.country
+                        country: weather?.country || 'US'
                       }))} 
                       theme={theme}
                       selectedDay={selectedDay}
                       currentWeatherData={{
-                        humidity: weather.humidity,
-                        wind: weather.wind,
-                        pressure: weather.pressure,
-                        uvIndex: weather.uvIndex,
-                        sunrise: weather.sunrise,
-                        sunset: weather.sunset
+                        humidity: weather?.humidity || 0,
+                        wind: weather?.wind || { speed: 0, direction: '', gust: null },
+                        pressure: weather?.pressure || 1013,
+                        uvIndex: weather?.uvIndex || 0,
+                        sunrise: weather?.sunrise || 'N/A',
+                        sunset: weather?.sunset || 'N/A'
                       }}
                     />
                   </>
                 );
               })()}
-            </div>
+              </div>
+            </ErrorBoundary>
           )}
           
           {/* SEO City Links Section */}
