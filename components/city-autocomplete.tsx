@@ -33,21 +33,21 @@ export default function CityAutocomplete({
     switch (theme) {
       case 'miami':
         return {
-          dropdown: "bg-[#0a0025] border-[#ff1493] text-[#00ffff]",
-          item: "hover:bg-[#ff1493] hover:text-[#0a0025]",
-          selectedItem: "bg-[#ff1493] text-[#0a0025]",
-          cityName: "text-[#00ffff]",
-          location: "text-[#ff69b4]",
-          pageIndicator: "text-[#ff1493]"
+          dropdown: "bg-[#0a0025] border-[#00d4ff] text-[#00d4ff]",
+          item: "hover:bg-[#00d4ff] hover:text-[#0a0025]",
+          selectedItem: "bg-[#00d4ff] text-[#0a0025]",
+          cityName: "text-[#00d4ff]",
+          location: "text-[#00d4ff]",
+          pageIndicator: "text-[#00d4ff]"
         };
       case 'tron':
         return {
-          dropdown: "bg-black border-[#00FFFF] text-white",
-          item: "hover:bg-[#00FFFF] hover:text-black",
-          selectedItem: "bg-[#00FFFF] text-black",
+          dropdown: "bg-black border-[#00d4ff] text-white",
+          item: "hover:bg-[#00d4ff] hover:text-black",
+          selectedItem: "bg-[#00d4ff] text-black",
           cityName: "text-white",
-          location: "text-[#00FFFF]",
-          pageIndicator: "text-[#00FFFF]"
+          location: "text-[#00d4ff]",
+          pageIndicator: "text-[#00d4ff]"
         };
       default: // dark
         return {
@@ -149,9 +149,7 @@ export default function CityAutocomplete({
         themeClasses.dropdown
       )}
       style={{ 
-        boxShadow: `0 4px 20px ${themeClasses.dropdown.includes('[#00d4ff]') ? '#00d4ff33' : 
-                    themeClasses.dropdown.includes('[#ff1493]') ? '#ff149333' : 
-                    '#00FFFF33'}` 
+        boxShadow: `0 4px 20px #00d4ff33` 
       }}
     >
       {suggestions.map((city, index) => (

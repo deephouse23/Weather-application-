@@ -27,13 +27,13 @@ export function CollapsibleSection({ title, children, theme, className }: Collap
         }
       case 'miami':
         return {
-          button: 'bg-[#0a0025] border-[#ff1493] text-[#ff1493] hover:bg-[#1a0040]',
-          content: 'bg-[#0a0025] border-[#ff1493] text-[#00ffff]'
+          button: 'bg-[#0a0025] border-[#00d4ff] text-[#00d4ff] hover:bg-[#1a0040]',
+          content: 'bg-[#0a0025] border-[#00d4ff] text-[#00d4ff]'
         }
       case 'tron':
         return {
-          button: 'bg-black border-[#00FFFF] text-[#00FFFF] hover:bg-[#001a1a]',
-          content: 'bg-black border-[#00FFFF] text-white'
+          button: 'bg-black border-[#00d4ff] text-[#00d4ff] hover:bg-[#001a1a]',
+          content: 'bg-black border-[#00d4ff] text-white'
         }
       default:
         return {

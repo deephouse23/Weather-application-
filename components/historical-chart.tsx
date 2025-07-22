@@ -96,14 +96,14 @@ export default function HistoricalChart({ currentTheme, latitude, longitude, loc
       {
         label: 'High Temperature',
         data: maxTemps,
-        borderColor: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#ff1493' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#00FFFF' : '#00d4ff',
+        borderColor: '#00d4ff',
         backgroundColor: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? 'rgba(255, 20, 147, 0.1)' : currentTheme === APP_CONSTANTS.THEMES.TRON ? 'rgba(0, 255, 255, 0.1)' : 'rgba(0, 212, 255, 0.1)',
         tension: 0.4
       },
       {
         label: 'Low Temperature',
         data: minTemps,
-        borderColor: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#00ffff' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#88CCFF' : '#4ecdc4',
+        borderColor: '#00d4ff',
         backgroundColor: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? 'rgba(0, 255, 255, 0.1)' : currentTheme === APP_CONSTANTS.THEMES.TRON ? 'rgba(136, 204, 255, 0.1)' : 'rgba(78, 205, 196, 0.1)',
         tension: 0.4
       }
@@ -117,7 +117,7 @@ export default function HistoricalChart({ currentTheme, latitude, longitude, loc
       legend: {
         position: 'top' as const,
         labels: {
-          color: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#00ffff' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#FFFFFF' : '#e0e0e0',
+          color: currentTheme === APP_CONSTANTS.THEMES.TRON ? '#FFFFFF' : '#e0e0e0',
           font: {
             family: 'monospace'
           }
@@ -126,7 +126,7 @@ export default function HistoricalChart({ currentTheme, latitude, longitude, loc
       title: {
         display: true,
         text: `30-Year Temperature History for ${locationName}`,
-        color: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#ff1493' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#00FFFF' : '#00d4ff',
+        color: '#00d4ff',
         font: {
           family: 'monospace',
           size: 16
@@ -134,9 +134,9 @@ export default function HistoricalChart({ currentTheme, latitude, longitude, loc
       },
       tooltip: {
         backgroundColor: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#4a0e4e' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#000000' : '#16213e',
-        titleColor: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#00ffff' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#FFFFFF' : '#e0e0e0',
-        bodyColor: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#00ffff' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#FFFFFF' : '#e0e0e0',
-        borderColor: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#ff1493' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#00FFFF' : '#00d4ff',
+        titleColor: currentTheme === APP_CONSTANTS.THEMES.TRON ? '#FFFFFF' : '#e0e0e0',
+        bodyColor: currentTheme === APP_CONSTANTS.THEMES.TRON ? '#FFFFFF' : '#e0e0e0',
+        borderColor: '#00d4ff',
         borderWidth: 1,
         padding: 10,
         titleFont: {
@@ -153,7 +153,7 @@ export default function HistoricalChart({ currentTheme, latitude, longitude, loc
           color: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? 'rgba(255, 20, 147, 0.1)' : currentTheme === APP_CONSTANTS.THEMES.TRON ? 'rgba(0, 255, 255, 0.1)' : 'rgba(0, 212, 255, 0.1)'
         },
         ticks: {
-          color: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#00ffff' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#FFFFFF' : '#e0e0e0',
+          color: currentTheme === APP_CONSTANTS.THEMES.TRON ? '#FFFFFF' : '#e0e0e0',
           font: {
             family: 'monospace'
           }
@@ -164,7 +164,7 @@ export default function HistoricalChart({ currentTheme, latitude, longitude, loc
           color: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? 'rgba(255, 20, 147, 0.1)' : currentTheme === APP_CONSTANTS.THEMES.TRON ? 'rgba(0, 255, 255, 0.1)' : 'rgba(0, 212, 255, 0.1)'
         },
         ticks: {
-          color: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#00ffff' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#FFFFFF' : '#e0e0e0',
+          color: currentTheme === APP_CONSTANTS.THEMES.TRON ? '#FFFFFF' : '#e0e0e0',
           font: {
             family: 'monospace'
           }

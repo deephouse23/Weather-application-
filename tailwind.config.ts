@@ -12,7 +12,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Enhanced 16-bit weather theme colors with gradients
+        // Consistent cyan theme colors
         'weather': {
           // Dark theme
           'dark': {
@@ -21,8 +21,8 @@ const config: Config = {
             'bg-tertiary': '#16213e',
             'primary': '#00d4ff',
             'text': '#e0e0e0',
-            'text-secondary': '#4ecdc4',
-            'accent': '#ffe66d',
+            'text-secondary': '#00d4ff',
+            'accent': '#00d4ff',
             'border': '#00d4ff',
             'gradient-start': '#0a0a1a',
             'gradient-mid': '#16213e',
@@ -33,11 +33,11 @@ const config: Config = {
             'bg': '#0a0025',
             'bg-secondary': '#2d1b69',
             'bg-tertiary': '#4a0e4e',
-            'primary': '#ff1493',
-            'text': '#00ffff',
-            'text-secondary': '#22d3ee',
-            'accent': '#ff1493',
-            'border': '#ff1493',
+            'primary': '#00d4ff',
+            'text': '#00d4ff',
+            'text-secondary': '#00d4ff',
+            'accent': '#00d4ff',
+            'border': '#00d4ff',
             'gradient-start': '#0a0025',
             'gradient-mid': '#2d1b69',
             'gradient-end': '#4a0e4e'
@@ -47,11 +47,11 @@ const config: Config = {
             'bg': '#000000',
             'bg-secondary': '#000000',
             'bg-tertiary': '#0a0a0a',
-            'primary': '#00FFFF',
+            'primary': '#00d4ff',
             'text': '#FFFFFF',
-            'text-secondary': '#88CCFF',
-            'accent': '#00FFFF',
-            'border': '#00FFFF',
+            'text-secondary': '#00d4ff',
+            'accent': '#00d4ff',
+            'border': '#00d4ff',
             'gradient-start': '#000000',
             'gradient-mid': '#0a0a0a',
             'gradient-end': '#001111'
@@ -65,9 +65,9 @@ const config: Config = {
         'card-dark': 'linear-gradient(135deg, #0a0a1a 0%, #16213e 50%, #0f0f0f 100%)',
         'card-miami': 'linear-gradient(135deg, #0a0025 0%, #2d1b69 30%, #4a0e4e 70%, #2d1b69 100%)',
         'card-tron': 'linear-gradient(135deg, #000000 0%, #0a0a0a 30%, #001111 70%, #000000 100%)',
-        'text-dark': 'linear-gradient(90deg, #00d4ff 0%, #4ecdc4 50%, #ffe66d 100%)',
-        'text-miami': 'linear-gradient(90deg, #ff1493 0%, #00ffff 50%, #ff69b4 100%)',
-        'text-tron': 'linear-gradient(90deg, #00FFFF 0%, #88CCFF 50%, #ffffff 100%)'
+        'text-dark': 'linear-gradient(90deg, #00d4ff 0%, #00d4ff 50%, #00d4ff 100%)',
+        'text-miami': 'linear-gradient(90deg, #00d4ff 0%, #00d4ff 50%, #00d4ff 100%)',
+        'text-tron': 'linear-gradient(90deg, #00d4ff 0%, #00d4ff 50%, #00d4ff 100%)'
       },
       fontFamily: {
         'pixel': ['"Courier New"', '"Monaco"', '"Lucida Console"', 'monospace'],

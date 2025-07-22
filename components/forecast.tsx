@@ -32,11 +32,11 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
           itemBg: 'bg-[#1a1a2e]',
           itemHover: 'hover:bg-[#1f2347]',
           borderColor: 'border-[#00d4ff]',
-          itemBorder: 'border-[#4ecdc4]',
+          itemBorder: 'border-[#00d4ff]',
           headerText: 'text-[#00d4ff]',
-          primaryText: 'text-[#4ecdc4]',
-          temperatureText: 'text-[#ffe66d]',
-          lowTempText: 'text-[#4ecdc4]',
+          primaryText: 'text-[#00d4ff]',
+          temperatureText: 'text-[#00d4ff]',
+          lowTempText: 'text-[#00d4ff]',
           glow: '',
           specialBorder: '',
           cardStyle: {},
@@ -47,22 +47,22 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
           cardBg: 'bg-gradient-to-br from-[#4a0e4e] via-[#2d1b69] to-[#1a0033]',
           itemBg: 'bg-gradient-to-br from-[#2d1b69] to-[#4a0e4e]',
           itemHover: 'hover:bg-gradient-to-br hover:from-[#4a0e4e] hover:to-[#6a1b9a]',
-          borderColor: 'border-[#ff1493]',
-          itemBorder: 'border-[#ff1493]',
-          headerText: 'text-[#ff007f]',
-          primaryText: 'text-[#00ffff]',
-          temperatureText: 'text-[#ff1493]',
-          lowTempText: 'text-[#00ffff]',
-          glow: 'drop-shadow-[0_0_8px_#ff007f]',
-          specialBorder: 'shadow-[0_0_15px_#ff1493]',
+          borderColor: 'border-[#00d4ff]',
+          itemBorder: 'border-[#00d4ff]',
+          headerText: 'text-[#00d4ff]',
+          primaryText: 'text-[#00d4ff]',
+          temperatureText: 'text-[#00d4ff]',
+          lowTempText: 'text-[#00d4ff]',
+          glow: 'drop-shadow-[0_0_8px_#00d4ff]',
+          specialBorder: 'shadow-[0_0_15px_#00d4ff]',
           cardStyle: {
-            boxShadow: '0 0 30px #ff1493, 0 0 60px rgba(255, 20, 147, 0.3), inset 0 0 20px rgba(138, 43, 226, 0.2)',
-            textShadow: '0 0 15px #ff007f, 0 0 30px #ff007f'
+            boxShadow: '0 0 30px #00d4ff, 0 0 60px rgba(0, 212, 255, 0.3), inset 0 0 20px rgba(0, 212, 255, 0.2)',
+            textShadow: '0 0 15px #00d4ff, 0 0 30px #00d4ff'
           },
           itemStyle: {
             background: 'linear-gradient(135deg, #2d1b69, #4a0e4e)',
-            boxShadow: '0 0 20px #ff1493, inset 0 0 15px rgba(255, 20, 147, 0.1)',
-            borderColor: '#ff1493'
+            boxShadow: '0 0 20px #00d4ff, inset 0 0 15px rgba(0, 212, 255, 0.1)',
+            borderColor: '#00d4ff'
           }
         }
       case 'tron':
@@ -70,22 +70,22 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
           cardBg: 'bg-[#000000]',
           itemBg: 'bg-[#000000]',
           itemHover: 'hover:bg-[#001111]',
-          borderColor: 'border-[#00FFFF]',
-          itemBorder: 'border-[#00FFFF]',
-          headerText: 'text-[#00FFFF]',
+          borderColor: 'border-[#00d4ff]',
+          itemBorder: 'border-[#00d4ff]',
+          headerText: 'text-[#00d4ff]',
           primaryText: 'text-[#FFFFFF]',
-          temperatureText: 'text-[#00FFFF]',
-          lowTempText: 'text-[#88CCFF]',
-          glow: 'drop-shadow-[0_0_15px_#00FFFF]',
-          specialBorder: 'shadow-[0_0_20px_#00FFFF]',
+          temperatureText: 'text-[#00d4ff]',
+          lowTempText: 'text-[#00d4ff]',
+          glow: 'drop-shadow-[0_0_15px_#00d4ff]',
+          specialBorder: 'shadow-[0_0_20px_#00d4ff]',
           cardStyle: {
-            boxShadow: '0 0 30px #00FFFF, 0 0 60px rgba(0, 255, 255, 0.3), inset 0 0 20px rgba(0, 255, 255, 0.1)',
-            textShadow: '0 0 15px #00FFFF, 0 0 30px #00FFFF'
+            boxShadow: '0 0 30px #00d4ff, 0 0 60px rgba(0, 212, 255, 0.3), inset 0 0 20px rgba(0, 212, 255, 0.1)',
+            textShadow: '0 0 15px #00d4ff, 0 0 30px #00d4ff'
           },
           itemStyle: {
             background: 'linear-gradient(135deg, #000000, #001111)',
-            boxShadow: '0 0 25px #00FFFF, inset 0 0 20px rgba(0, 255, 255, 0.1)',
-            borderColor: '#00FFFF'
+            boxShadow: '0 0 25px #00d4ff, inset 0 0 20px rgba(0, 212, 255, 0.1)',
+            borderColor: '#00d4ff'
           }
         }
     }
@@ -148,7 +148,7 @@ function ForecastCard({ day, index, themeClasses, theme, onDayClick, isSelected 
       className={`${themeClasses.itemBg} p-2 sm:p-3 border ${themeClasses.itemBorder} text-center transition-all duration-200 ${themeClasses.specialBorder}
                   min-h-[120px] sm:min-h-[140px] lg:min-h-[160px] flex flex-col justify-between
                   ${onDayClick ? 'cursor-pointer hover:scale-105' : ''} ${themeClasses.itemHover}
-                  ${isSelected ? `ring-2 ring-${theme === 'dark' ? '[#00d4ff]' : theme === 'miami' ? '[#ff1493]' : '[#00FFFF]'} ring-opacity-80` : ''}`}
+                  ${isSelected ? `ring-2 ring-[#00d4ff] ring-opacity-80` : ''}`}
       style={themeClasses.itemStyle}
       onClick={handleClick}
     >

@@ -27,7 +27,7 @@ export interface ComponentVariants {
   navigation: ThemeStyles;
 }
 
-// Core theme color definitions
+// Core theme color definitions - Consistent cyan theme
 const THEME_COLORS = {
   dark: {
     background: '#0a0a1a',
@@ -35,29 +35,29 @@ const THEME_COLORS = {
     backgroundTertiary: '#16213e',
     primary: '#00d4ff',
     text: '#e0e0e0',
-    textSecondary: '#4ecdc4',
-    accent: '#ffe66d',
+    textSecondary: '#00d4ff',
+    accent: '#00d4ff',
     border: '#00d4ff'
   },
   miami: {
     background: '#0a0025',
     backgroundSecondary: '#2d1b69',
     backgroundTertiary: '#4a0e4e',
-    primary: '#ff1493',
-    text: '#00ffff',
-    textSecondary: '#22d3ee',
-    accent: '#ff1493',
-    border: '#ff1493'
+    primary: '#00d4ff',
+    text: '#00d4ff',
+    textSecondary: '#00d4ff',
+    accent: '#00d4ff',
+    border: '#00d4ff'
   },
   tron: {
     background: '#000000',
     backgroundSecondary: '#000000',
     backgroundTertiary: '#0a0a0a',
-    primary: '#00FFFF',
+    primary: '#00d4ff',
     text: '#FFFFFF',
-    textSecondary: '#88CCFF',
-    accent: '#00FFFF',
-    border: '#00FFFF'
+    textSecondary: '#00d4ff',
+    accent: '#00d4ff',
+    border: '#00d4ff'
   }
 } as const;
 
@@ -142,10 +142,10 @@ export const getThemeGradients = (theme: ThemeType): {
     case 'dark':
       return {
         primary: 'linear-gradient(135deg, #0a0a1a 0%, #16213e 25%, #1a1a2e 50%, #16213e 75%, #0a0a1a 100%)',
-        accent: 'linear-gradient(90deg, #00d4ff 0%, #4ecdc4 50%, #ffe66d 100%)',
+        accent: 'linear-gradient(90deg, #00d4ff 0%, #00d4ff 50%, #00d4ff 100%)',
         card: 'linear-gradient(135deg, #0a0a1a 0%, #16213e 50%, #0f0f0f 100%)',
         background: 'linear-gradient(135deg, #0a0a1a 0%, #16213e 25%, #1a1a2e 50%, #16213e 75%, #0a0a1a 100%)',
-        text: 'linear-gradient(90deg, #00d4ff 0%, #4ecdc4 50%, #ffe66d 100%)',
+        text: 'linear-gradient(90deg, #00d4ff 0%, #00d4ff 50%, #00d4ff 100%)',
         cardClass: 'gradient-card-dark',
         backgroundClass: 'gradient-bg-dark',
         textClass: 'gradient-text-dark'
@@ -154,10 +154,10 @@ export const getThemeGradients = (theme: ThemeType): {
     case 'miami':
       return {
         primary: 'linear-gradient(135deg, #0a0025 0%, #2d1b69 25%, #4a0e4e 50%, #2d1b69 75%, #0a0025 100%)',
-        accent: 'linear-gradient(90deg, #ff1493 0%, #00ffff 50%, #ff69b4 100%)',
+        accent: 'linear-gradient(90deg, #00d4ff 0%, #00d4ff 50%, #00d4ff 100%)',
         card: 'linear-gradient(135deg, #0a0025 0%, #2d1b69 30%, #4a0e4e 70%, #2d1b69 100%)',
         background: 'linear-gradient(135deg, #0a0025 0%, #2d1b69 25%, #4a0e4e 50%, #2d1b69 75%, #0a0025 100%)',
-        text: 'linear-gradient(90deg, #ff1493 0%, #00ffff 50%, #ff69b4 100%)',
+        text: 'linear-gradient(90deg, #00d4ff 0%, #00d4ff 50%, #00d4ff 100%)',
         cardClass: 'gradient-card-miami',
         backgroundClass: 'gradient-bg-miami',
         textClass: 'gradient-text-miami'
@@ -166,10 +166,10 @@ export const getThemeGradients = (theme: ThemeType): {
     case 'tron':
       return {
         primary: 'linear-gradient(135deg, #000000 0%, #0a0a0a 25%, #001111 50%, #0a0a0a 75%, #000000 100%)',
-        accent: 'linear-gradient(90deg, #00FFFF 0%, #88CCFF 50%, #ffffff 100%)',
+        accent: 'linear-gradient(90deg, #00d4ff 0%, #00d4ff 50%, #00d4ff 100%)',
         card: 'linear-gradient(135deg, #000000 0%, #0a0a0a 30%, #001111 70%, #000000 100%)',
         background: 'linear-gradient(135deg, #000000 0%, #0a0a0a 25%, #001111 50%, #0a0a0a 75%, #000000 100%)',
-        text: 'linear-gradient(90deg, #00FFFF 0%, #88CCFF 50%, #ffffff 100%)',
+        text: 'linear-gradient(90deg, #00d4ff 0%, #00d4ff 50%, #00d4ff 100%)',
         cardClass: 'gradient-card-tron',
         backgroundClass: 'gradient-bg-tron',
         textClass: 'gradient-text-tron'

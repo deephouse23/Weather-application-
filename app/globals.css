@@ -215,21 +215,21 @@ input:focus,
 }
 
 .gradient-text-dark {
-  background: linear-gradient(90deg, #00d4ff 0%, #4ecdc4 50%, #ffe66d 100%);
+  background: linear-gradient(90deg, #00d4ff 0%, #00d4ff 50%, #00d4ff 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .gradient-text-miami {
-  background: linear-gradient(90deg, #ff1493 0%, #00ffff 50%, #ff69b4 100%);
+  background: linear-gradient(90deg, #00d4ff 0%, #00d4ff 50%, #00d4ff 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .gradient-text-tron {
-  background: linear-gradient(90deg, #00FFFF 0%, #88CCFF 50%, #ffffff 100%);
+  background: linear-gradient(90deg, #00d4ff 0%, #00d4ff 50%, #00d4ff 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
