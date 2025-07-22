@@ -183,6 +183,80 @@ input:focus,
   will-change: transform;
 }
 
+/* Enhanced gradient and color blending utilities */
+.gradient-card-dark {
+  background: linear-gradient(135deg, #0a0a1a 0%, #16213e 50%, #0f0f0f 100%);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 212, 255, 0.1);
+}
+
+.gradient-card-miami {
+  background: linear-gradient(135deg, #0a0025 0%, #2d1b69 30%, #4a0e4e 70%, #2d1b69 100%);
+  border: 1px solid rgba(255, 20, 147, 0.3);
+  box-shadow: 0 8px 32px rgba(255, 20, 147, 0.1);
+}
+
+.gradient-card-tron {
+  background: linear-gradient(135deg, #000000 0%, #0a0a0a 30%, #001111 70%, #000000 100%);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 255, 255, 0.1);
+}
+
+.gradient-bg-dark {
+  background: linear-gradient(135deg, #0a0a1a 0%, #16213e 25%, #1a1a2e 50%, #16213e 75%, #0a0a1a 100%);
+}
+
+.gradient-bg-miami {
+  background: linear-gradient(135deg, #0a0025 0%, #2d1b69 25%, #4a0e4e 50%, #2d1b69 75%, #0a0025 100%);
+}
+
+.gradient-bg-tron {
+  background: linear-gradient(135deg, #000000 0%, #0a0a0a 25%, #001111 50%, #0a0a0a 75%, #000000 100%);
+}
+
+.gradient-text-dark {
+  background: linear-gradient(90deg, #00d4ff 0%, #4ecdc4 50%, #ffe66d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-miami {
+  background: linear-gradient(90deg, #ff1493 0%, #00ffff 50%, #ff69b4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-tron {
+  background: linear-gradient(90deg, #00FFFF 0%, #88CCFF 50%, #ffffff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.retro-font {
+  font-family: "Courier New", "Monaco", "Lucida Console", monospace;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.smooth-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.color-blend-multiply {
+  mix-blend-mode: multiply;
+}
+
+.color-blend-screen {
+  mix-blend-mode: screen;
+}
+
+.color-blend-overlay {
+  mix-blend-mode: overlay;
+}
+
 /* Standardized responsive utility patterns */
 @layer utilities {
   .text-balance {

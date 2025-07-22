@@ -15,6 +15,7 @@ import { APP_CONSTANTS } from "@/lib/utils"
 import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from "@/components/lazy-weather-components"
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/responsive-container"
 import { ErrorBoundary, SafeRender } from "@/components/error-boundary"
+import { getThemeGradients, getTypographyClasses, COLOR_BLENDING } from "@/lib/theme-utils"
 
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
@@ -371,51 +372,26 @@ function WeatherApp() {
     }
   }, [isClient, currentTheme])
 
-  // Enhanced theme classes for three themes with authentic Tron movie colors
+  // Enhanced theme classes with gradients and improved styling
   const getThemeClasses = (theme: ThemeType) => {
-    switch (theme) {
-      case 'dark':
-        return {
-          background: 'bg-[#0f0f0f]',
-          cardBg: 'bg-[#0f0f0f]',
-          borderColor: 'border-[#00d4ff]',
-          text: 'text-[#e0e0e0]',
-          headerText: 'text-[#00d4ff]',
-          secondaryText: 'text-[#e0e0e0]',
-          accentText: 'text-[#00d4ff]',
-          successText: 'text-[#00ff00]',
-          glow: '',
-          specialBorder: 'border-[#00d4ff]',
-          buttonHover: 'hover:bg-[#00d4ff] hover:text-[#0f0f0f]'
-        }
-      case 'miami':
-        return {
-          background: 'bg-[#0a0025]',
-          cardBg: 'bg-[#0a0025]',
-          borderColor: 'border-[#ff1493]',
-          text: 'text-[#00ffff]',
-          headerText: 'text-[#ff1493]',
-          secondaryText: 'text-[#00ffff]',
-          accentText: 'text-[#ff1493]',
-          successText: 'text-[#00ff00]',
-          glow: '',
-          specialBorder: 'border-[#ff1493]',
-          buttonHover: 'hover:bg-[#ff1493] hover:text-[#0a0025]'
-        }
-      case 'tron':
-        return {
-          background: 'bg-black',
-          cardBg: 'bg-black',
-          borderColor: 'border-[#00FFFF]',
-          text: 'text-white',
-          headerText: 'text-[#00FFFF]',
-          secondaryText: 'text-[#00FFFF]',
-          accentText: 'text-[#00FFFF]',
-          successText: 'text-[#00ff00]',
-          glow: '',
-          specialBorder: 'border-[#00FFFF]',
-          buttonHover: 'hover:bg-[#00FFFF] hover:text-black'
-        }
+    const gradients = getThemeGradients(theme);
+    const typography = getTypographyClasses(theme);
+    
+    return {
+      background: gradients.backgroundClass,
+      cardBg: gradients.cardClass,
+      borderColor: theme === 'dark' ? 'border-[#00d4ff]' : theme === 'miami' ? 'border-[#ff1493]' : 'border-[#00FFFF]',
+      text: `${typography.normal} text-[${theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : 'white'}]`,
+      headerText: `${typography.gradient}`,
+      secondaryText: `${typography.normal} text-[${theme === 'dark' ? '#e0e0e0' : theme === 'miami' ? '#00ffff' : 'white'}]`,
+      accentText: `${typography.gradient}`,
+      successText: 'text-[#00ff00]',
+      glow: '',
+      specialBorder: theme === 'dark' ? 'border-[#00d4ff]' : theme === 'miami' ? 'border-[#ff1493]' : 'border-[#00FFFF]',
+      buttonHover: `hover:bg-[${theme === 'dark' ? '#00d4ff' : theme === 'miami' ? '#ff1493' : '#00FFFF'}] hover:text-[${theme === 'dark' ? '#0f0f0f' : theme === 'miami' ? '#0a0025' : 'black'}] smooth-transition`,
+      gradientText: gradients.textClass,
+      cardGradient: gradients.cardClass,
+      backgroundGradient: gradients.backgroundClass
     }
   }
 

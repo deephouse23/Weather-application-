@@ -128,27 +128,51 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
 /**
  * Get theme-specific gradient definitions
  */
-export const getThemeGradients = (theme: ThemeType): { primary: string; accent: string; card: string } => {
+export const getThemeGradients = (theme: ThemeType): { 
+  primary: string; 
+  accent: string; 
+  card: string; 
+  background: string; 
+  text: string; 
+  cardClass: string;
+  backgroundClass: string;
+  textClass: string;
+} => {
   switch (theme) {
     case 'dark':
       return {
-        primary: 'linear-gradient(135deg, #0a0a1a 0%, #16213e 100%)',
-        accent: 'linear-gradient(90deg, #00d4ff 0%, #4ecdc4 100%)',
-        card: 'linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%)'
+        primary: 'linear-gradient(135deg, #0a0a1a 0%, #16213e 25%, #1a1a2e 50%, #16213e 75%, #0a0a1a 100%)',
+        accent: 'linear-gradient(90deg, #00d4ff 0%, #4ecdc4 50%, #ffe66d 100%)',
+        card: 'linear-gradient(135deg, #0a0a1a 0%, #16213e 50%, #0f0f0f 100%)',
+        background: 'linear-gradient(135deg, #0a0a1a 0%, #16213e 25%, #1a1a2e 50%, #16213e 75%, #0a0a1a 100%)',
+        text: 'linear-gradient(90deg, #00d4ff 0%, #4ecdc4 50%, #ffe66d 100%)',
+        cardClass: 'gradient-card-dark',
+        backgroundClass: 'gradient-bg-dark',
+        textClass: 'gradient-text-dark'
       };
 
     case 'miami':
       return {
-        primary: 'linear-gradient(135deg, #0a0025 0%, #2d1b69 50%, #4a0e4e 100%)',
-        accent: 'linear-gradient(90deg, #ff1493 0%, #00ffff 100%)',
-        card: 'linear-gradient(135deg, #2d1b69 0%, #4a0e4e 100%)'
+        primary: 'linear-gradient(135deg, #0a0025 0%, #2d1b69 25%, #4a0e4e 50%, #2d1b69 75%, #0a0025 100%)',
+        accent: 'linear-gradient(90deg, #ff1493 0%, #00ffff 50%, #ff69b4 100%)',
+        card: 'linear-gradient(135deg, #0a0025 0%, #2d1b69 30%, #4a0e4e 70%, #2d1b69 100%)',
+        background: 'linear-gradient(135deg, #0a0025 0%, #2d1b69 25%, #4a0e4e 50%, #2d1b69 75%, #0a0025 100%)',
+        text: 'linear-gradient(90deg, #ff1493 0%, #00ffff 50%, #ff69b4 100%)',
+        cardClass: 'gradient-card-miami',
+        backgroundClass: 'gradient-bg-miami',
+        textClass: 'gradient-text-miami'
       };
 
     case 'tron':
       return {
-        primary: 'linear-gradient(135deg, #000000 0%, #0a0a0a 100%)',
-        accent: 'linear-gradient(90deg, #00FFFF 0%, #88CCFF 100%)',
-        card: 'linear-gradient(135deg, #000000 0%, #001111 100%)'
+        primary: 'linear-gradient(135deg, #000000 0%, #0a0a0a 25%, #001111 50%, #0a0a0a 75%, #000000 100%)',
+        accent: 'linear-gradient(90deg, #00FFFF 0%, #88CCFF 50%, #ffffff 100%)',
+        card: 'linear-gradient(135deg, #000000 0%, #0a0a0a 30%, #001111 70%, #000000 100%)',
+        background: 'linear-gradient(135deg, #000000 0%, #0a0a0a 25%, #001111 50%, #0a0a0a 75%, #000000 100%)',
+        text: 'linear-gradient(90deg, #00FFFF 0%, #88CCFF 50%, #ffffff 100%)',
+        cardClass: 'gradient-card-tron',
+        backgroundClass: 'gradient-bg-tron',
+        textClass: 'gradient-text-tron'
       };
 
     default:
@@ -198,5 +222,53 @@ export const COMPONENT_SIZES = {
  */
 export const ANIMATIONS = {
   transition: 'transition-all duration-200',
-  hover: 'hover:scale-105'
+  hover: 'hover:scale-105',
+  smoothTransition: 'smooth-transition'
 } as const;
+
+/**
+ * Typography and retro styling utilities
+ */
+export const TYPOGRAPHY = {
+  retro: 'retro-font',
+  pixel: 'font-pixel',
+  monospace: 'font-mono',
+  sizes: {
+    xs: 'text-xs sm:text-sm',
+    sm: 'text-sm sm:text-base',
+    base: 'text-base sm:text-lg',
+    lg: 'text-lg sm:text-xl',
+    xl: 'text-xl sm:text-2xl',
+    '2xl': 'text-2xl sm:text-3xl'
+  },
+  weights: {
+    normal: 'font-normal',
+    medium: 'font-medium',
+    semibold: 'font-semibold',
+    bold: 'font-bold'
+  }
+} as const;
+
+/**
+ * Color blending utilities for enhanced visual effects
+ */
+export const COLOR_BLENDING = {
+  multiply: 'color-blend-multiply',
+  screen: 'color-blend-screen',
+  overlay: 'color-blend-overlay',
+  normal: ''
+} as const;
+
+/**
+ * Get typography classes for theme-specific text styling
+ */
+export const getTypographyClasses = (theme: ThemeType, size: keyof typeof TYPOGRAPHY.sizes = 'base', weight: keyof typeof TYPOGRAPHY.weights = 'normal') => {
+  const gradients = getThemeGradients(theme);
+  
+  return {
+    base: `${TYPOGRAPHY.retro} ${TYPOGRAPHY.sizes[size]} ${TYPOGRAPHY.weights[weight]}`,
+    gradient: `${TYPOGRAPHY.retro} ${TYPOGRAPHY.sizes[size]} ${TYPOGRAPHY.weights[weight]} ${gradients.textClass}`,
+    normal: `${TYPOGRAPHY.retro} ${TYPOGRAPHY.sizes[size]} ${TYPOGRAPHY.weights[weight]}`,
+    mono: `${TYPOGRAPHY.pixel} ${TYPOGRAPHY.sizes[size]} ${TYPOGRAPHY.weights[weight]}`
+  };
+};

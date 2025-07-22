@@ -1,6 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
+import { getThemeGradients, getTypographyClasses } from '@/lib/theme-utils'
 
 // Theme types
 type ThemeType = 'dark' | 'miami' | 'tron';
@@ -92,11 +93,12 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
 
   const themeClasses = getThemeClasses(theme)
 
+  const gradients = getThemeGradients(theme);
+  const typography = getTypographyClasses(theme, 'lg', 'bold');
+  
   return (
-    <div className={`${themeClasses.cardBg} p-3 sm:p-4 lg:p-6 rounded-none border-2 sm:border-4 ${themeClasses.borderColor} ${themeClasses.specialBorder}`}
-         style={themeClasses.cardStyle}>
-      <h2 className={`text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4 ${themeClasses.headerText} uppercase tracking-wider ${themeClasses.glow} text-center`}
-          style={{ textShadow: themeClasses.cardStyle.textShadow }}>5-DAY FORECAST</h2>
+    <div className={`${gradients.cardClass} p-3 sm:p-4 lg:p-6 rounded-none border-2 sm:border-4 ${themeClasses.borderColor} ${themeClasses.specialBorder} smooth-transition`}>
+      <h2 className={`${typography.gradient} uppercase tracking-wider text-center`}>5-DAY FORECAST</h2>
       {/* Mobile responsive grid - stack on very small screens, 3 cols on mobile+, 5 cols on desktop */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 lg:gap-4">
         {forecast.slice(0, 5).map((day, index) => (

@@ -24,7 +24,8 @@
       "Bash(npm run type-check:*)",
       "Bash(npx tsc:*)",
       "Bash(git pull:*)",
-      "Bash(gh:*)"
+      "Bash(gh:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": []
   }
