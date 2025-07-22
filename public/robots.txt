@@ -1,16 +1,61 @@
 User-agent: *
 Allow: /
 
-# Sitemap
-Sitemap: https://16-bit-weather.vercel.app/sitemap.xml
+# Weather data is dynamic and should be crawled frequently
+Allow: /weather/*
 
-# Allow all crawling for weather data and educational content
-Allow: /weather/
+# Allow all crawling for educational content
 Allow: /about
 Allow: /cloud-types
 Allow: /weather-systems
 Allow: /fun-facts
 Allow: /games
 
-# Crawl-delay for courtesy (optional)
+# API routes should not be crawled
+Disallow: /api/
+
+# Private or admin areas (if any)
+Disallow: /_next/
+Disallow: /admin/
+
+# Sitemap location
+Sitemap: https://www.16bitweather.co/sitemap.xml
+
+# Additional bot instructions for courtesy
 Crawl-delay: 1
+
+# Specific instructions for major search engines
+User-agent: Googlebot
+Crawl-delay: 0.5
+Allow: /weather/*
+Allow: /about
+Allow: /cloud-types
+Allow: /weather-systems
+
+User-agent: Bingbot
+Crawl-delay: 1
+Allow: /weather/*
+Allow: /about
+Allow: /cloud-types
+Allow: /weather-systems
+
+User-agent: Slurp
+Crawl-delay: 1
+
+# Social media crawlers
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+# Archive and research crawlers
+User-agent: ia_archiver
+Crawl-delay: 2
+
+# Block problematic or aggressive crawlers (optional)
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: SemrushBot
+Crawl-delay: 10

@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16-Bit Pac-Man</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(45deg, #000428, #004e92);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Orbitron', monospace;
+            color: #ffff00;
+        }
+        
+        .game-container {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            border: 3px solid #ffff00;
+            box-shadow: 0 0 20px #ffff00;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #ffff00;
+            font-weight: 900;
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+        
+        #gameCanvas {
+            border: 2px solid #ffff00;
+            background: #000;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.5);
+        }
+        
+        .controls {
+            margin-top: 20px;
+            font-size: 1.1em;
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 30px;
+            border: 3px solid #ff0040;
+            border-radius: 10px;
+            text-align: center;
+            color: #ff0040;
+            font-size: 1.5em;
+            display: none;
+            box-shadow: 0 0 20px #ff0040;
+        }
+        
+        .restart-btn {
+            background: #ffff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 15px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .restart-btn:hover {
+            background: #ffff40;
+            box-shadow: 0 0 10px #ffff00;
+        }
+        
+        .high-scores {
+            margin-top: 20px;
+            padding: 15px;
+            border: 2px solid #ffff00;
+            border-radius: 5px;
+            background: rgba(255, 255, 0, 0.1);
+        }
+        
+        .high-scores h3 {
+            color: #ffff00;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .score-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .score-list li {
+            color: #ffff00;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.9em;
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .new-record {
+            color: #ff00ff;
+            text-shadow: 0 0 10px #ff00ff;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .view-scores-btn {
+            background: transparent;
+            color: #ffff00;
+            border: 2px solid #ffff00;
+            padding: 8px 16px;
+            font-size: 1em;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            cursor: pointer;
+            margin: 10px 5px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .view-scores-btn:hover {
+            background: #ffff00;
+            color: #000;
+            box-shadow: 0 0 10px #ffff00;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>PAC-MAZE</h1>
+        <div class="game-info">
+            <div>Score: <span id="score">0</span></div>
+            <div>Lives: <span id="lives">3</span></div>
+            <div>Level: <span id="level">1</span></div>
+        </div>
+        <canvas id="gameCanvas" width="600" height="600"></canvas>
+        <div class="controls">
+            Use WASD or Arrow Keys to move
+        </div>
+        
+        <div class="game-over" id="gameOver">
+            <h2>GAME OVER</h2>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <div id="newRecord" class="new-record" style="display: none;">
+                🏆 NEW PERSONAL BEST! 🏆
+            </div>
+            <div class="high-scores" id="highScoresDisplay">
+                <h3>👾 HIGH SCORES 👾</h3>
+                <ol class="score-list" id="scoreList"></ol>
+            </div>
+            <button class="restart-btn" onclick="restartGame()">PLAY AGAIN</button>
+            <button class="view-scores-btn" onclick="toggleHighScores()">VIEW SCORES</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const CELL_SIZE = 30;
+        const ROWS = 20;
+        const COLS = 20;
+        
+        // Game state
+        let score = 0;
+        let lives = 3;
+        let level = 1;
+        let gameRunning = true;
+        let dots = [];
+        let powerPellets = [];
+        let highScoresVisible = true;
+        
+        // Maze layout (1 = wall, 0 = path, 2 = dot, 3 = power pellet)
+        const maze = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,1],
+            [1,3,1,1,2,1,1,1,2,1,1,2,1,1,1,2,1,1,3,1],
+            [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+            [1,2,1,1,2,1,2,1,1,1,1,1,1,2,1,2,1,1,2,1],
+            [1,2,2,2,2,1,2,2,2,1,1,2,2,2,1,2,2,2,2,1],
+            [1,1,1,1,2,1,1,1,0,1,1,0,1,1,1,2,1,1,1,1],
+            [0,0,0,1,2,1,0,0,0,0,0,0,0,0,1,2,1,0,0,0],
+            [1,1,1,1,2,1,0,1,1,0,0,1,1,0,1,2,1,1,1,1],
+            [0,0,0,0,2,0,0,1,0,0,0,0,1,0,0,2,0,0,0,0],
+            [1,1,1,1,2,1,0,1,0,0,0,0,1,0,1,2,1,1,1,1],
+            [0,0,0,1,2,1,0,1,1,1,1,1,1,0,1,2,1,0,0,0],
+            [1,1,1,1,2,1,1,1,0,0,0,0,1,1,1,2,1,1,1,1],
+            [1,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,1],
+            [1,2,1,1,2,1,1,1,2,1,1,2,1,1,1,2,1,1,2,1],
+            [1,3,2,1,2,2,2,2,2,2,2,2,2,2,2,2,1,2,3,1],
+            [1,1,2,1,2,1,2,1,1,1,1,1,1,2,1,2,1,2,1,1],
+            [1,2,2,2,2,1,2,2,2,1,1,2,2,2,1,2,2,2,2,1],
+            [1,2,1,1,1,1,1,1,2,1,1,2,1,1,1,1,1,1,2,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+        
+        // Player
+        const player = {
+            x: 9,
+            y: 15,
+            direction: 0,
+            nextDirection: 0,
+            mouth: 0
+        };
+        
+        // Ghosts
+        const ghosts = [
+            { x: 9, y: 9, color: '#ff0000', dx: 1, dy: 0 },
+            { x: 10, y: 9, color: '#ffb8ff', dx: -1, dy: 0 },
+            { x: 9, y: 10, color: '#00ffff', dx: 0, dy: -1 }
+        ];
+        
+        // Direction vectors
+        const directions = [
+            { dx: 1, dy: 0 },
+            { dx: 0, dy: 1 },
+            { dx: -1, dy: 0 },
+            { dx: 0, dy: -1 }
+        ];
+        
+        // Initialize dots
+        function initDots() {
+            dots = [];
+            powerPellets = [];
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    if (maze[y][x] === 2) {
+                        dots.push({ x, y });
+                    } else if (maze[y][x] === 3) {
+                        powerPellets.push({ x, y });
+                    }
+                }
+            }
+        }
+        
+        // Check if position is valid
+        function isValidMove(x, y) {
+            if (x < 0 || x >= COLS || y < 0 || y >= ROWS) return false;
+            return maze[y][x] !== 1;
+        }
+        
+        // Move player
+        function movePlayer() {
+            const dir = directions[player.nextDirection];
+            const newX = player.x + dir.dx;
+            const newY = player.y + dir.dy;
+            
+            if (isValidMove(newX, newY)) {
+                player.direction = player.nextDirection;
+            }
+            
+            const currentDir = directions[player.direction];
+            const nextX = player.x + currentDir.dx;
+            const nextY = player.y + currentDir.dy;
+            
+            if (isValidMove(nextX, nextY)) {
+                player.x = nextX;
+                player.y = nextY;
+                
+                if (player.x < 0) player.x = COLS - 1;
+                if (player.x >= COLS) player.x = 0;
+                
+                player.mouth = (player.mouth + 1) % 6;
+            }
+        }
+        
+        // Move ghosts
+        function moveGhosts() {
+            ghosts.forEach(ghost => {
+                const possibleMoves = [];
+                
+                for (let i = 0; i < 4; i++) {
+                    const dir = directions[i];
+                    const newX = ghost.x + dir.dx;
+                    const newY = ghost.y + dir.dy;
+                    
+                    if (isValidMove(newX, newY)) {
+                        possibleMoves.push({ dx: dir.dx, dy: dir.dy });
+                    }
+                }
+                
+                if (possibleMoves.length > 0) {
+                    if (Math.random() < 0.1 || !possibleMoves.some(m => m.dx === ghost.dx && m.dy === ghost.dy)) {
+                        const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+                        ghost.dx = randomMove.dx;
+                        ghost.dy = randomMove.dy;
+                    }
+                    
+                    ghost.x += ghost.dx;
+                    ghost.y += ghost.dy;
+                    
+                    if (ghost.x < 0) ghost.x = COLS - 1;
+                    if (ghost.x >= COLS) ghost.x = 0;
+                }
+            });
+        }
+        
+        // Check collisions
+        function checkCollisions() {
+            for (let i = dots.length - 1; i >= 0; i--) {
+                if (dots[i].x === player.x && dots[i].y === player.y) {
+                    dots.splice(i, 1);
+                    score += 10;
+                    document.getElementById('score').textContent = score;
+                }
+            }
+            
+            for (let i = powerPellets.length - 1; i >= 0; i--) {
+                if (powerPellets[i].x === player.x && powerPellets[i].y === player.y) {
+                    powerPellets.splice(i, 1);
+                    score += 50;
+                    document.getElementById('score').textContent = score;
+                }
+            }
+            
+            for (let ghost of ghosts) {
+                if (Math.abs(ghost.x - player.x) < 0.5 && Math.abs(ghost.y - player.y) < 0.5) {
+                    lives--;
+                    document.getElementById('lives').textContent = lives;
+                    
+                    if (lives <= 0) {
+                        gameOver();
+                    } else {
+                        player.x = 9;
+                        player.y = 15;
+                        player.direction = 0;
+                        player.nextDirection = 0;
+                    }
+                    break;
+                }
+            }
+            
+            if (dots.length === 0 && powerPellets.length === 0) {
+                level++;
+                document.getElementById('level').textContent = level;
+                initDots();
+                player.x = 9;
+                player.y = 15;
+                player.direction = 0;
+                player.nextDirection = 0;
+                ghosts.forEach((ghost, i) => {
+                    ghost.x = 9 + (i % 2);
+                    ghost.y = 9 + Math.floor(i / 2);
+                });
+            }
+        }
+        
+        // Draw
+        function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw maze
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    if (maze[y][x] === 1) {
+                        ctx.fillStyle = '#0040ff';
+                        ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                        ctx.fillStyle = 'rgba(0, 128, 255, 0.3)';
+                        ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, 3);
+                        ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, 3, CELL_SIZE);
+                    }
+                }
+            }
+            
+            // Draw dots
+            dots.forEach(dot => {
+                ctx.fillStyle = '#ffff00';
+                ctx.shadowColor = '#ffff00';
+                ctx.shadowBlur = 5;
+                ctx.beginPath();
+                ctx.arc(dot.x * CELL_SIZE + CELL_SIZE / 2, dot.y * CELL_SIZE + CELL_SIZE / 2, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            });
+            
+            powerPellets.forEach(pellet => {
+                ctx.fillStyle = '#ffff00';
+                ctx.shadowColor = '#ffff00';
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.arc(pellet.x * CELL_SIZE + CELL_SIZE / 2, pellet.y * CELL_SIZE + CELL_SIZE / 2, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            });
+            
+            // Draw player
+            const centerX = player.x * CELL_SIZE + CELL_SIZE / 2;
+            const centerY = player.y * CELL_SIZE + CELL_SIZE / 2;
+            const radius = CELL_SIZE / 2 - 3;
+            
+            ctx.fillStyle = '#ffff00';
+            ctx.shadowColor = '#ffff00';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            
+            const mouthAngle = player.mouth < 3 ? 0.5 : 0.2;
+            const startAngle = player.direction * Math.PI / 2 + mouthAngle;
+            const endAngle = player.direction * Math.PI / 2 - mouthAngle + Math.PI * 2;
+            
+            ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+            ctx.lineTo(centerX, centerY);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // Draw ghosts
+            ghosts.forEach(ghost => {
+                const centerX = ghost.x * CELL_SIZE + CELL_SIZE / 2;
+                const centerY = ghost.y * CELL_SIZE + CELL_SIZE / 2;
+                const radius = CELL_SIZE / 2 - 3;
+                
+                ctx.fillStyle = ghost.color;
+                ctx.shadowColor = ghost.color;
+                ctx.shadowBlur = 8;
+                
+                ctx.beginPath();
+                ctx.arc(centerX, centerY - radius / 2, radius, Math.PI, 0);
+                ctx.lineTo(centerX + radius, centerY + radius / 2);
+                
+                for (let i = 0; i < 3; i++) {
+                    ctx.lineTo(centerX + radius - (i + 1) * (radius * 2 / 4), centerY + radius / 2 + (i % 2 === 0 ? -5 : 0));
+                }
+                
+                ctx.lineTo(centerX - radius, centerY + radius / 2);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.fillStyle = '#fff';
+                ctx.shadowBlur = 0;
+                ctx.beginPath();
+                ctx.arc(centerX - 6, centerY - 8, 4, 0, Math.PI * 2);
+                ctx.arc(centerX + 6, centerY - 8, 4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(centerX - 6, centerY - 8, 2, 0, Math.PI * 2);
+                ctx.arc(centerX + 6, centerY - 8, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        // High Score Management
+        function getHighScores() {
+            const scores = localStorage.getItem('pacmanHighScores');
+            return scores ? JSON.parse(scores) : [];
+        }
+
+        function saveHighScores(scores) {
+            localStorage.setItem('pacmanHighScores', JSON.stringify(scores));
+        }
+
+        function addHighScore(newScore, finalLevel) {
+            const scores = getHighScores();
+            const timestamp = new Date().toLocaleDateString();
+            scores.push({ 
+                score: newScore, 
+                level: finalLevel, 
+                date: timestamp 
+            });
+            scores.sort((a, b) => b.score - a.score);
+            scores.splice(5); // Keep only top 5
+            saveHighScores(scores);
+            return scores[0].score === newScore && scores.filter(s => s.score === newScore).length === 1;
+        }
+
+        function displayHighScores() {
+            const scores = getHighScores();
+            const scoreList = document.getElementById('scoreList');
+            scoreList.innerHTML = '';
+            
+            if (scores.length === 0) {
+                scoreList.innerHTML = '<li style="text-align: center; opacity: 0.7;">No scores yet</li>';
+                return;
+            }
+            
+            scores.forEach((scoreData, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>#${index + 1}</span>
+                    <span>${scoreData.score} pts</span>
+                    <span>Lv.${scoreData.level}</span>
+                    <span>${scoreData.date}</span>
+                `;
+                scoreList.appendChild(li);
+            });
+        }
+
+        function toggleHighScores() {
+            const highScoresDisplay = document.getElementById('highScoresDisplay');
+            highScoresVisible = !highScoresVisible;
+            highScoresDisplay.style.display = highScoresVisible ? 'block' : 'none';
+            
+            const btn = document.querySelector('.view-scores-btn');
+            btn.textContent = highScoresVisible ? 'HIDE SCORES' : 'VIEW SCORES';
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            document.getElementById('finalScore').textContent = score;
+            
+            // Check for high score
+            const isNewRecord = addHighScore(score, level);
+            const newRecordElement = document.getElementById('newRecord');
+            
+            if (isNewRecord && score > 0) {
+                newRecordElement.style.display = 'block';
+            } else {
+                newRecordElement.style.display = 'none';
+            }
+            
+            displayHighScores();
+            document.getElementById('gameOver').style.display = 'block';
+        }
+        
+        function restartGame() {
+            score = 0;
+            lives = 3;
+            level = 1;
+            gameRunning = true;
+            
+            document.getElementById('score').textContent = score;
+            document.getElementById('lives').textContent = lives;
+            document.getElementById('level').textContent = level;
+            document.getElementById('gameOver').style.display = 'none';
+            
+            player.x = 9;
+            player.y = 15;
+            player.direction = 0;
+            player.nextDirection = 0;
+            player.mouth = 0;
+            
+            ghosts[0].x = 9; ghosts[0].y = 9;
+            ghosts[1].x = 10; ghosts[1].y = 9;
+            ghosts[2].x = 9; ghosts[2].y = 10;
+            
+            initDots();
+        }
+        
+        document.addEventListener('keydown', (e) => {
+            if (!gameRunning) return;
+            
+            const key = e.key.toLowerCase();
+            
+            if (key === 'arrowup' || key === 'w') {
+                player.nextDirection = 3;
+            } else if (key === 'arrowdown' || key === 's') {
+                player.nextDirection = 1;
+            } else if (key === 'arrowleft' || key === 'a') {
+                player.nextDirection = 2;
+            } else if (key === 'arrowright' || key === 'd') {
+                player.nextDirection = 0;
+            }
+        });
+        
+        function gameLoop() {
+            if (gameRunning) {
+                movePlayer();
+                moveGhosts();
+                checkCollisions();
+                draw();
+            }
+        }
+        
+        initDots();
+        setInterval(gameLoop, 150);
+    </script>
+</body>
+</html> 

@@ -6,14 +6,15 @@ import { cn } from "@/lib/utils"
 import { fetchWeatherData, fetchWeatherByLocation } from "@/lib/weather-api"
 import { useTheme } from '@/components/theme-provider'
 import { WeatherData } from '@/lib/types'
-import Forecast from "@/components/forecast"
-import ForecastDetails from "@/components/forecast-details"
 import PageWrapper from "@/components/page-wrapper"
 import { Analytics } from "@vercel/analytics/react"
 import WeatherSearch from "@/components/weather-search"
 import { locationService, LocationData } from "@/lib/location-service"
 import { userCacheService } from "@/lib/user-cache-service"
 import { APP_CONSTANTS } from "@/lib/utils"
+import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from "@/components/lazy-weather-components"
+import { ResponsiveContainer, ResponsiveGrid } from "@/components/responsive-container"
+import { ErrorBoundary, SafeRender } from "@/components/error-boundary"
 
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
@@ -71,46 +72,6 @@ const getPressureUnit = (countryCode: string): 'hPa' | 'inHg' => {
   return inHgCountries.includes(countryCode) ? 'inHg' : 'hPa';
 };
 
-// Update AQI helper functions for Google Universal AQI (0-100, higher = better)
-const getAQIColor = (aqi: number): string => {
-  if (aqi >= 80) return 'text-green-400 font-semibold';      // Excellent
-  if (aqi >= 60) return 'text-green-400 font-semibold';      // Good  
-  if (aqi >= 40) return 'text-yellow-400 font-semibold';     // Moderate
-  if (aqi >= 20) return 'text-orange-400 font-semibold';     // Low
-  if (aqi >= 1) return 'text-red-400 font-semibold';         // Poor
-  return 'text-red-600 font-semibold';                       // Critical (0)
-};
-
-const getAQIDescription = (aqi: number): string => {
-  if (aqi >= 80) return 'Excellent';
-  if (aqi >= 60) return 'Good';
-  if (aqi >= 40) return 'Moderate';
-  if (aqi >= 20) return 'Low';
-  if (aqi >= 1) return 'Poor';
-  return 'Critical';
-};
-
-const getAQIRecommendation = (aqi: number): string => {
-  if (aqi >= 80) return 'Excellent air quality. Perfect for all outdoor activities.';
-  if (aqi >= 60) return 'Good air quality. Great for outdoor activities.';
-  if (aqi >= 40) return 'Moderate air quality. Generally acceptable for most people.';
-  if (aqi >= 20) return 'Low air quality. Consider limiting prolonged outdoor exertion.';
-  if (aqi >= 1) return 'Poor air quality. Avoid outdoor activities.';
-  return 'Critical air quality. Stay indoors.';
-};
-
-// Add pollen category color helper
-const getPollenColor = (category: string | number): string => {
-  const cat = typeof category === 'string' ? category.toLowerCase() : category.toString();
-  
-  if (cat === 'no data' || cat === '0') return 'text-gray-400 font-semibold';
-  if (cat === 'low' || cat === '1' || cat === '2') return 'text-green-400 font-semibold';
-  if (cat === 'moderate' || cat === '3' || cat === '4' || cat === '5') return 'text-yellow-400 font-semibold';
-  if (cat === 'high' || cat === '6' || cat === '7' || cat === '8') return 'text-orange-400 font-semibold';
-  if (cat === 'very high' || cat === '9' || cat === '10') return 'text-red-400 font-semibold';
-  
-  return 'text-white font-semibold'; // Default fallback
-};
 
 function WeatherApp() {
   const { theme } = useTheme()
@@ -149,6 +110,58 @@ function WeatherApp() {
   useEffect(() => {
     setIsClient(true)
   }, [])
+
+  // Handle successful location detection
+  const handleLocationDetected = async (location: LocationData) => {
+    try {
+      console.log('Location detected:', location)
+      
+      // Save as last location
+      userCacheService.saveLastLocation(location)
+      
+      // Check for cached weather data for this location
+      const locationKey = userCacheService.getLocationKey(location)
+      const cachedWeather = userCacheService.getCachedWeatherData(locationKey)
+      
+      if (cachedWeather) {
+        console.log('Using cached weather data for detected location')
+        setWeather(cachedWeather)
+        setLocationInput(location.displayName)
+        setCurrentLocation(location.displayName)
+        setHasSearched(true)
+        setError('')
+        return
+      }
+      
+      // Fetch fresh weather data
+      setLoading(true)
+      setError('')
+      
+      const coords = userCacheService.getLocationKey(location).replace('_', ',')
+      const weatherData = await fetchWeatherByLocation(coords)
+      
+      if (weatherData) {
+        setWeather(weatherData)
+        setLocationInput(location.displayName)
+        setCurrentLocation(location.displayName)
+        setHasSearched(true)
+        
+        // Cache the weather data
+        userCacheService.cacheWeatherData(locationKey, weatherData)
+        
+        // Also save in legacy cache for compatibility
+        saveLocationToCache(location.displayName)
+        saveWeatherToCache(weatherData)
+        
+        console.log('Weather data loaded for auto-detected location')
+      }
+    } catch (error: any) {
+      console.error('Failed to load weather for detected location:', error)
+      setError('Failed to load weather data for your location')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Silent auto-location detection on first visit
   useEffect(() => {
@@ -214,58 +227,6 @@ function WeatherApp() {
     return () => clearTimeout(timer)
   }, [isClient, autoLocationAttempted])
 
-  // Handle successful location detection
-  const handleLocationDetected = async (location: LocationData) => {
-    try {
-      console.log('Location detected:', location)
-      
-      // Save as last location
-      userCacheService.saveLastLocation(location)
-      
-      // Check for cached weather data for this location
-      const locationKey = userCacheService.getLocationKey(location)
-      const cachedWeather = userCacheService.getCachedWeatherData(locationKey)
-      
-      if (cachedWeather) {
-        console.log('Using cached weather data for detected location')
-        setWeather(cachedWeather)
-        setLocationInput(location.displayName)
-        setCurrentLocation(location.displayName)
-        setHasSearched(true)
-        setError('')
-        return
-      }
-      
-      // Fetch fresh weather data
-      setLoading(true)
-      setError('')
-      
-      const coords = userCacheService.getLocationKey(location).replace('_', ',')
-      const weatherData = await fetchWeatherByLocation(coords)
-      
-      if (weatherData) {
-        setWeather(weatherData)
-        setLocationInput(location.displayName)
-        setCurrentLocation(location.displayName)
-        setHasSearched(true)
-        
-        // Cache the weather data
-        userCacheService.cacheWeatherData(locationKey, weatherData)
-        
-        // Also save in legacy cache for compatibility
-        saveLocationToCache(location.displayName)
-        saveWeatherToCache(weatherData)
-        
-        console.log('Weather data loaded for auto-detected location')
-      }
-    } catch (error: any) {
-      console.error('Failed to load weather for detected location:', error)
-      setError('Failed to load weather data for your location')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   // Initialize search cache on mount
   useEffect(() => {
     if (isClient) {
@@ -296,8 +257,17 @@ function WeatherApp() {
 
   // Set data function (for cached weather data)
   const setData = (weatherData: WeatherData) => {
-    setWeather(weatherData)
-    setError("")
+    try {
+      if (!weatherData) {
+        console.warn('Attempted to set null/undefined weather data');
+        return;
+      }
+      setWeather(weatherData);
+      setError("");
+    } catch (error) {
+      console.error('Error setting weather data:', error);
+      setError('Failed to process weather data');
+    }
   }
 
   // Load cached data and theme on component mount
@@ -327,8 +297,11 @@ function WeatherApp() {
             setData(weather)
             setLocationInput(cachedLocationData)
             setHasSearched(true)
+            return // Exit early if we have cached data
           }
         }
+        
+        // Auto-location is handled by the separate useEffect hook
       } catch (error) {
         console.warn('Cache check failed:', error)
       }
@@ -347,6 +320,7 @@ function WeatherApp() {
       }
     } catch (error) {
       console.warn('Failed to get stored theme:', error)
+      setError('Theme loading failed, using default')
     }
     return 'dark' // Default to dark theme
   }
@@ -354,28 +328,46 @@ function WeatherApp() {
   // Load theme on mount and sync with navigation
   useEffect(() => {
     if (!isClient) return
-    const storedTheme = getStoredTheme()
-    setCurrentTheme(storedTheme)
     
-    // Listen for theme changes from navigation
-    const handleStorageChange = () => {
-      const newTheme = getStoredTheme()
-      setCurrentTheme(newTheme)
-    }
-    
-    window.addEventListener('storage', handleStorageChange)
-    
-    // Poll for theme changes (in case of same-tab changes)
-    const interval = setInterval(() => {
-      const newTheme = getStoredTheme()
-      if (newTheme !== currentTheme) {
-        setCurrentTheme(newTheme)
+    try {
+      const storedTheme = getStoredTheme()
+      setCurrentTheme(storedTheme)
+      
+      // Listen for theme changes from navigation
+      const handleStorageChange = () => {
+        try {
+          const newTheme = getStoredTheme()
+          setCurrentTheme(newTheme)
+        } catch (error) {
+          console.error('Error handling storage change:', error)
+        }
       }
-    }, 100)
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      clearInterval(interval)
+      
+      window.addEventListener('storage', handleStorageChange)
+      
+      // Poll for theme changes (in case of same-tab changes)
+      const interval = setInterval(() => {
+        try {
+          const newTheme = getStoredTheme()
+          if (newTheme !== currentTheme) {
+            setCurrentTheme(newTheme)
+          }
+        } catch (error) {
+          console.error('Error polling theme changes:', error)
+        }
+      }, 100)
+      
+      return () => {
+        try {
+          window.removeEventListener('storage', handleStorageChange)
+          clearInterval(interval)
+        } catch (error) {
+          console.error('Error cleaning up theme listeners:', error)
+        }
+      }
+    } catch (error) {
+      console.error('Error initializing theme management:', error)
+      setError('Theme initialization failed')
     }
   }, [isClient, currentTheme])
 
@@ -446,9 +438,14 @@ function WeatherApp() {
   const saveRateLimitData = (data: { requests: number[], lastReset: number }) => {
     if (!isClient) return
     try {
+      if (!data || typeof data !== 'object') {
+        console.warn('Invalid rate limit data provided');
+        return;
+      }
       localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(data))
     } catch (error) {
       console.warn('Failed to save rate limit data:', error)
+      setError('Rate limiting storage failed')
     }
   }
 
@@ -516,10 +513,15 @@ function WeatherApp() {
   const saveWeatherToCache = (weatherData: WeatherData) => {
     if (!isClient) return
     try {
+      if (!weatherData || typeof weatherData !== 'object') {
+        console.warn('Invalid weather data provided for caching');
+        return;
+      }
       localStorage.setItem(WEATHER_KEY, JSON.stringify(weatherData))
       localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString())
     } catch (error) {
       console.warn('Failed to save weather data to cache:', error)
+      setError('Weather data caching failed')
     }
   }
 
@@ -861,19 +863,23 @@ function WeatherApp() {
         theme === "miami" && "bg-gradient-to-b from-pink-900 to-purple-900",
         theme === "tron" && "bg-gradient-to-b from-black to-blue-900"
       )}>
-        <div className="container mx-auto px-4 py-8">
+        <ResponsiveContainer maxWidth="xl" padding="md">
 
           {/* TEMPORARY API TEST - REMOVE BEFORE PRODUCTION */}
           {/* <ApiTest /> */}
 
-          <WeatherSearch
-            onSearch={handleSearch}
-            isLoading={loading || isAutoDetecting}
-            error={error}
-            rateLimitError={rateLimitError}
-            isDisabled={isOnCooldown}
-            theme={theme}
-          />
+          <ErrorBoundary componentName="Weather Search" theme={currentTheme}>
+            <WeatherSearch
+              onSearch={handleSearch}
+              onLocationSearch={handleLocationSearch}
+              isLoading={loading || isAutoDetecting}
+              error={error}
+              rateLimitError={rateLimitError}
+              isDisabled={isOnCooldown}
+              theme={theme}
+              hideLocationButton={true}
+            />
+          </ErrorBoundary>
 
 
 
@@ -925,22 +931,23 @@ function WeatherApp() {
           )}
 
           {weather && !loading && !error && (
-            <div className="space-y-4 sm:space-y-6">
-              {/* Current Weather */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <ErrorBoundary componentName="Weather Display" theme={currentTheme}>
+              <div className="space-y-4 sm:space-y-6">
+                {/* Current Weather */}
+                <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
                 {/* Temperature Box */}
                 <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
                      style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
                   <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Temperature</h2>
-                  <p className={`text-3xl font-bold ${themeClasses.text}`}>{weather.temperature}{weather.unit}</p>
+                  <p className={`text-3xl font-bold ${themeClasses.text}`}>{weather?.temperature || 'N/A'}{weather?.unit || '°F'}</p>
                 </div>
 
                 {/* Conditions Box */}
                 <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
                      style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
                   <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Conditions</h2>
-                  <p className={`text-lg ${themeClasses.text}`}>{weather.condition}</p>
-                  <p className={`text-sm ${themeClasses.secondaryText}`}>{weather.description}</p>
+                  <p className={`text-lg ${themeClasses.text}`}>{weather?.condition || 'Unknown'}</p>
+                  <p className={`text-sm ${themeClasses.secondaryText}`}>{weather?.description || 'No description available'}</p>
                 </div>
 
                 {/* Wind Box */}
@@ -948,15 +955,15 @@ function WeatherApp() {
                      style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
                   <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Wind</h2>
                   <p className={`text-lg ${themeClasses.text}`}>
-                    {weather.wind.direction ? `${weather.wind.direction} ` : ''}
-                    {weather.wind.speed} mph
-                    {weather.wind.gust ? ` (gusts ${weather.wind.gust} mph)` : ''}
+                    {weather?.wind?.direction ? `${weather.wind.direction} ` : ''}
+                    {weather?.wind?.speed || 'N/A'} mph
+                    {weather?.wind?.gust ? ` (gusts ${weather.wind.gust} mph)` : ''}
                   </p>
                 </div>
-              </div>
+              </ResponsiveGrid>
 
               {/* Sun Times, UV Index, Moon Phase */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
                 {/* Sun Times Box */}
                 <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
                      style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
@@ -964,11 +971,11 @@ function WeatherApp() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-center gap-2">
                       <span className="text-yellow-400">☀️</span>
-                      <p className={themeClasses.text}>Sunrise: {weather.sunrise}</p>
+                      <p className={themeClasses.text}>Sunrise: {weather?.sunrise || 'N/A'}</p>
                     </div>
                     <div className="flex items-center justify-center gap-2">
                       <span className="text-orange-400">🌅</span>
-                      <p className={themeClasses.text}>Sunset: {weather.sunset}</p>
+                      <p className={themeClasses.text}>Sunset: {weather?.sunset || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
@@ -977,7 +984,7 @@ function WeatherApp() {
                 <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
                      style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
                   <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>UV Index</h2>
-                  <p className={`text-lg font-bold ${themeClasses.text}`}>{weather.uvIndex}</p>
+                  <p className={`text-lg font-bold ${themeClasses.text}`}>{weather?.uvIndex || 'N/A'}</p>
                 </div>
 
                 {/* Moon Phase Box */}
@@ -986,135 +993,18 @@ function WeatherApp() {
                   <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Moon Phase</h2>
                   <div className="space-y-2">
                     <div className="flex items-center justify-center gap-2">
-                      <span className="text-2xl">{getMoonPhaseIcon(weather.moonPhase.phase)}</span>
-                      <p className={`text-lg font-semibold ${themeClasses.text}`}>{weather.moonPhase.phase}</p>
+                      <span className="text-2xl">{getMoonPhaseIcon(weather?.moonPhase?.phase || 'new')}</span>
+                      <p className={`text-lg font-semibold ${themeClasses.text}`}>{weather?.moonPhase?.phase || 'Unknown'}</p>
                     </div>
                     <p className={`text-sm font-medium ${themeClasses.secondaryText}`}>
-                      {weather.moonPhase.illumination}% illuminated
+                      {weather?.moonPhase?.illumination || 0}% illuminated
                     </p>
                   </div>
                 </div>
-              </div>
+              </ResponsiveGrid>
 
-              {/* AQI and Pollen Count */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* AQI Box - Updated with Google Universal AQI */}
-                <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
-                     style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
-                  <h2 className={`text-xl font-semibold mb-3 ${themeClasses.headerText}`}>Air Quality</h2>
-                  
-                  {/* AQI Value and Description */}
-                  <p className={`text-lg font-bold mb-3 ${getAQIColor(weather.aqi)}`}>
-                    {weather.aqi} - {getAQIDescription(weather.aqi)}
-                  </p>
-                  
-                  {/* Horizontal AQI Color Bar */}
-                  <div className="mb-3">
-                    <div className="relative w-full h-4 rounded-full overflow-hidden border border-gray-400">
-                      {/* Color segments */}
-                      <div className="absolute inset-0 flex">
-                        {/* EXCELLENT (0-50) - Green */}
-                        <div className="bg-green-500 flex-1" style={{ width: '20%' }}></div>
-                        {/* GOOD (51-100) - Yellow */}
-                        <div className="bg-yellow-400 flex-1" style={{ width: '20%' }}></div>
-                        {/* MODERATE (101-150) - Orange */}
-                        <div className="bg-orange-500 flex-1" style={{ width: '20%' }}></div>
-                        {/* POOR (151-200) - Red */}
-                        <div className="bg-red-500 flex-1" style={{ width: '20%' }}></div>
-                        {/* CRITICAL (201+) - Purple */}
-                        <div className="bg-purple-600 flex-1" style={{ width: '20%' }}></div>
-                      </div>
-                      
-                      {/* Current reading indicator */}
-                      <div 
-                        className="absolute top-0 w-1 h-full bg-white border border-black transform -translate-x-0.5"
-                        style={{ 
-                          left: `${Math.min(Math.max((weather.aqi / 250) * 100, 0), 100)}%`,
-                          boxShadow: '0 0 4px rgba(0,0,0,0.8)'
-                        }}
-                      ></div>
-                    </div>
-                    
-                    {/* AQI Scale Labels */}
-                    <div className="flex justify-between text-xs text-gray-400 mt-1 px-1">
-                      <span>0</span>
-                      <span>50</span>
-                      <span>100</span>
-                      <span>150</span>
-                      <span>200</span>
-                      <span>250+</span>
-                    </div>
-                  </div>
-                  
-                  <p className={`text-sm font-medium mb-2 ${themeClasses.secondaryText}`}>
-                    {getAQIRecommendation(weather.aqi)}
-                  </p>
-                  
-                  {/* Google AQI Legend */}
-                  <div className={`text-xs border-t pt-2 ${themeClasses.secondaryText}`} style={{ borderColor: themeClasses.borderColor.replace('border-[', '').replace(']', '') + '66' }}>
-                    <p className="font-medium">Using Google Universal AQI • Higher = Better</p>
-                  </div>
-                </div>
-
-                {/* Pollen Count Box */}
-                <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
-                     style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
-                  <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Pollen Count</h2>
-                  <div className="grid grid-cols-3 gap-2">
-                    {/* Tree Group */}
-                    <div>
-                      <p className={`text-sm font-medium mb-1 ${themeClasses.secondaryText}`}>Tree</p>
-                      {(() => {
-                        const treeData = Object.entries(weather.pollen.tree).filter(([_, category]) => category !== 'No Data');
-                        if (treeData.length === 0) {
-                          return <p className={`text-sm ${themeClasses.secondaryText}`}>No Data</p>;
-                        } else if (treeData.length === 1) {
-                          const [plant, category] = treeData[0];
-                          return <p className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>;
-                        } else {
-                          return treeData.map(([plant, category]) => (
-                            <p key={plant} className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>
-                          ));
-                        }
-                      })()}
-                    </div>
-                    {/* Grass Group */}
-                    <div>
-                      <p className={`text-sm font-medium mb-1 ${themeClasses.secondaryText}`}>Grass</p>
-                      {(() => {
-                        const grassData = Object.entries(weather.pollen.grass).filter(([_, category]) => category !== 'No Data');
-                        if (grassData.length === 0) {
-                          return <p className={`text-sm ${themeClasses.secondaryText}`}>No Data</p>;
-                        } else if (grassData.length === 1) {
-                          const [plant, category] = grassData[0];
-                          return <p className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>;
-                        } else {
-                          return grassData.map(([plant, category]) => (
-                            <p key={plant} className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>
-                          ));
-                        }
-                      })()}
-                    </div>
-                    {/* Weed Group */}
-                    <div>
-                      <p className={`text-sm font-medium mb-1 ${themeClasses.secondaryText}`}>Weed</p>
-                      {(() => {
-                        const weedData = Object.entries(weather.pollen.weed).filter(([_, category]) => category !== 'No Data');
-                        if (weedData.length === 0) {
-                          return <p className={`text-sm ${themeClasses.secondaryText}`}>No Data</p>;
-                        } else if (weedData.length === 1) {
-                          const [plant, category] = weedData[0];
-                          return <p className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>;
-                        } else {
-                          return weedData.map(([plant, category]) => (
-                            <p key={plant} className={`text-sm ${getPollenColor(category)}`}>{plant}: {category}</p>
-                          ));
-                        }
-                      })()}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              {/* AQI and Pollen Count - Using Lazy Loaded Shared Components */}
+              <LazyEnvironmentalDisplay weather={weather} theme={theme} />
 
               {/* Day click handler */}
               {(() => {
@@ -1125,10 +1015,10 @@ function WeatherApp() {
                 return (
                   <>
                     {/* Original 5-Day Forecast */}
-                    <Forecast 
-                      forecast={weather.forecast.map(day => ({
+                    <LazyForecast 
+                      forecast={(weather?.forecast || []).map((day, index) => ({
                         ...day,
-                        country: weather.country
+                        country: weather?.country || 'US'
                       }))} 
                       theme={theme}
                       onDayClick={handleDayClick}
@@ -1136,28 +1026,158 @@ function WeatherApp() {
                     />
 
                     {/* Expandable Details Section Below */}
-                    <ForecastDetails 
-                      forecast={weather.forecast.map(day => ({
+                    <LazyForecastDetails 
+                      forecast={(weather?.forecast || []).map((day, index) => ({
                         ...day,
-                        country: weather.country
+                        country: weather?.country || 'US'
                       }))} 
                       theme={theme}
                       selectedDay={selectedDay}
                       currentWeatherData={{
-                        humidity: weather.humidity,
-                        wind: weather.wind,
-                        pressure: weather.pressure,
-                        uvIndex: weather.uvIndex,
-                        sunrise: weather.sunrise,
-                        sunset: weather.sunset
+                        humidity: weather?.humidity || 0,
+                        wind: weather?.wind || { speed: 0, direction: '', gust: null },
+                        pressure: weather?.pressure || 1013,
+                        uvIndex: weather?.uvIndex || 0,
+                        sunrise: weather?.sunrise || 'N/A',
+                        sunset: weather?.sunset || 'N/A'
                       }}
                     />
                   </>
                 );
               })()}
-            </div>
+              </div>
+            </ErrorBoundary>
           )}
-        </div>
+          
+          {/* SEO City Links Section */}
+          <div className={cn(
+            "mt-16 pt-8 border-t-2 text-center",
+            theme === "dark" && "border-[#00d4ff]",
+            theme === "miami" && "border-[#ff1493]",
+            theme === "tron" && "border-[#00FFFF]"
+          )}>
+            <h2 className={cn(
+              "text-lg font-bold mb-4 uppercase tracking-wider font-mono",
+              theme === "dark" && "text-[#00d4ff]",
+              theme === "miami" && "text-[#ff1493]",
+              theme === "tron" && "text-[#00FFFF]"
+            )}>
+              WEATHER BY CITY
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 max-w-4xl mx-auto">
+              <a 
+                href="/weather/new-york-ny" 
+                className={cn(
+                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                )}
+              >
+                NEW YORK
+              </a>
+              <a 
+                href="/weather/los-angeles-ca" 
+                className={cn(
+                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                )}
+              >
+                LOS ANGELES
+              </a>
+              <a 
+                href="/weather/chicago-il" 
+                className={cn(
+                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                )}
+              >
+                CHICAGO
+              </a>
+              <a 
+                href="/weather/houston-tx" 
+                className={cn(
+                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                )}
+              >
+                HOUSTON
+              </a>
+              <a 
+                href="/weather/phoenix-az" 
+                className={cn(
+                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                )}
+              >
+                PHOENIX
+              </a>
+              <a 
+                href="/weather/philadelphia-pa" 
+                className={cn(
+                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                )}
+              >
+                PHILADELPHIA
+              </a>
+              <a 
+                href="/weather/san-antonio-tx" 
+                className={cn(
+                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                )}
+              >
+                SAN ANTONIO
+              </a>
+              <a 
+                href="/weather/san-diego-ca" 
+                className={cn(
+                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                )}
+              >
+                SAN DIEGO
+              </a>
+              <a 
+                href="/weather/dallas-tx" 
+                className={cn(
+                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                )}
+              >
+                DALLAS
+              </a>
+              <a 
+                href="/weather/austin-tx" 
+                className={cn(
+                  "block px-3 py-2 text-sm font-mono rounded border transition-colors",
+                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                )}
+              >
+                AUSTIN
+              </a>
+            </div>
+          </div>
+        </ResponsiveContainer>
       </div>
       <Analytics />
     </PageWrapper>

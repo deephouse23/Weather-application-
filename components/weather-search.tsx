@@ -1,27 +1,34 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Loader2 } from "lucide-react"
+import { Search, Loader2, MapPin } from "lucide-react"
 import { ThemeType, APP_CONSTANTS } from "@/lib/utils"
+import CityAutocomplete from "./city-autocomplete"
+import { type CityData } from "@/lib/city-database"
 
 interface WeatherSearchProps {
   onSearch: (location: string) => void;
+  onLocationSearch?: () => void;
   isLoading: boolean;
   error?: string;
   isDisabled?: boolean;
   rateLimitError?: string;
   theme?: ThemeType;
+  hideLocationButton?: boolean;
 }
 
 export default function WeatherSearch({ 
   onSearch, 
+  onLocationSearch,
   isLoading, 
   error, 
   isDisabled = false,
   rateLimitError,
-  theme = APP_CONSTANTS.THEMES.DARK
+  theme = APP_CONSTANTS.THEMES.DARK,
+  hideLocationButton = false
 }: WeatherSearchProps) {
   const [searchTerm, setSearchTerm] = useState("")
+  const [showAutocomplete, setShowAutocomplete] = useState(false)
 
   // Local theme classes function
   const getThemeClasses = (theme: ThemeType) => {
@@ -101,9 +108,27 @@ export default function WeatherSearch({
     e.preventDefault()
     if (searchTerm.trim() && !isLoading && !isDisabled) {
       onSearch(searchTerm.trim())
+      setShowAutocomplete(false)
     }
   }
 
+  const handleCitySelect = (city: CityData) => {
+    setSearchTerm(city.searchTerm)
+    onSearch(city.searchTerm)
+    setShowAutocomplete(false)
+  }
+
+  const handleInputChange = (value: string) => {
+    setSearchTerm(value)
+    // Show autocomplete when typing, hide when empty
+    setShowAutocomplete(value.length >= 2)
+  }
+
+  const handleLocationClick = () => {
+    if (!isLoading && !isDisabled && onLocationSearch) {
+      onLocationSearch()
+    }
+  }
 
   // Determine if controls should be disabled
   const controlsDisabled = isLoading || isDisabled
@@ -124,7 +149,8 @@ export default function WeatherSearch({
           <input
             type="text"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => handleInputChange(e.target.value)}
+            onFocus={() => searchTerm.length >= 2 && setShowAutocomplete(true)}
             placeholder={isDisabled ? "Rate limit reached..." : "ZIP, City+State, or City+Country..."}
             disabled={controlsDisabled}
             className={`w-full px-3 sm:px-4 py-3 sm:py-4 pr-10 sm:pr-12 ${themeClasses.cardBg} border-2 ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.placeholderText} 
@@ -150,9 +176,43 @@ export default function WeatherSearch({
               <Search className="w-4 h-4 sm:w-5 sm:h-5" />
             )}
           </button>
+
+          {/* City Autocomplete */}
+          <CityAutocomplete
+            query={searchTerm}
+            onSelect={handleCitySelect}
+            onQueryChange={setSearchTerm}
+            theme={theme}
+            isVisible={showAutocomplete}
+            onVisibilityChange={setShowAutocomplete}
+          />
         </div>
       </form>
 
+      {/* Location Button - Mobile friendly - Hidden when auto-location is enabled */}
+      {!hideLocationButton && onLocationSearch && (
+        <div className="flex justify-center px-2 sm:px-0">
+          <button
+            onClick={handleLocationClick}
+            disabled={controlsDisabled}
+            className={`flex items-center gap-2 px-4 sm:px-6 py-3 ${themeClasses.buttonBg} border ${themeClasses.buttonBorder} 
+                     ${themeClasses.buttonText} ${themeClasses.buttonHover} transition-all duration-200 
+                     text-xs sm:text-sm uppercase tracking-wider font-mono disabled:opacity-50 
+                     disabled:cursor-not-allowed pixel-font ${themeClasses.specialBorder}
+                     min-h-[48px] touch-manipulation w-full sm:w-auto max-w-xs`}
+              style={{
+                imageRendering: "pixelated",
+                fontFamily: "monospace",
+                fontSize: "clamp(11px, 2.5vw, 14px)" // Responsive font size
+              }}
+          >
+            <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+            <span className="break-words text-center">
+              {isLoading ? "LOADING..." : isDisabled ? "RATE LIMITED" : "USE MY LOCATION"}
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* Error Display - Mobile responsive */}
       {(error || rateLimitError) && (
