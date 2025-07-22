@@ -68,8 +68,8 @@ export default function ForecastDetails({
   }
 
   return (
-    <div className={`${themeClasses.background} p-3 sm:p-4 lg:p-6 rounded-none border-2 sm:border-4 ${themeClasses.borderColor} pixel-shadow`}>
-      <h2 className={`text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4 ${themeClasses.accentText} uppercase tracking-wider text-center pixel-glow`}>
+    <div className={`${themeClasses.background} p-3 sm:p-4 lg:p-6 rounded-none border-2 sm:border-4 ${themeClasses.borderColor}`}>
+      <h2 className={`text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4 ${themeClasses.accentText} uppercase tracking-wider text-center`}>
         DETAILED FORECAST
       </h2>
       
@@ -77,7 +77,7 @@ export default function ForecastDetails({
       <div className={`${themeClasses.cardBg} border ${themeClasses.borderColor} p-4`}>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className={`text-lg font-bold ${themeClasses.accentText} pixel-glow`}>
+              <h3 className={`text-lg font-bold ${themeClasses.accentText}`}>
                 {forecast[selectedDay].day}
               </h3>
               <p className={`text-sm ${themeClasses.text} capitalize`}>
@@ -85,7 +85,7 @@ export default function ForecastDetails({
               </p>
             </div>
             <div className="text-right">
-              <div className={`text-xl font-bold ${themeClasses.accentText} pixel-glow`}>
+              <div className={`text-xl font-bold ${themeClasses.accentText}`}>
                 {Math.round(forecast[selectedDay].highTemp)}° / {Math.round(forecast[selectedDay].lowTemp)}°
               </div>
             </div>

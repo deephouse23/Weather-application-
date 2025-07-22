@@ -75,7 +75,7 @@ export const getThemeStyles = (theme: ThemeType): ThemeStyles => {
     accentText: `text-[${colors.primary}]`,
     cardBg: `bg-[${colors.backgroundSecondary}]`,
     hoverBg: `hover:bg-[${colors.primary}] hover:text-[${colors.background}]`,
-    glow: `glow-${theme}`,
+    glow: '',
     secondary: `text-[${colors.textSecondary}]`
   };
 };
@@ -198,17 +198,5 @@ export const COMPONENT_SIZES = {
  */
 export const ANIMATIONS = {
   transition: 'transition-all duration-200',
-  hover: 'hover:scale-105',
-  glow: 'animate-pulse',
-  flicker: 'animate-flicker'
-} as const;
-
-/**
- * Pixel art effect utilities
- */
-export const PIXEL_EFFECTS = {
-  border: 'pixel-border',
-  glow: (theme: ThemeType) => `pixel-glow glow-${theme}`,
-  shadow: 'pixel-shadow',
-  font: 'pixel-font font-mono'
+  hover: 'hover:scale-105'
 } as const;

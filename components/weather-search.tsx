@@ -43,7 +43,7 @@ export default function WeatherSearch({
           secondaryText: 'text-[#e0e0e0]',
           accentText: 'text-[#00d4ff]',
           successText: 'text-[#00ff00]',
-          glow: 'glow-dark',
+          glow: '',
           specialBorder: 'border-[#00d4ff]',
           buttonHover: 'hover:bg-[#00d4ff] hover:text-[#0f0f0f]',
           placeholderText: 'placeholder-[#a0a0a0]',
@@ -65,7 +65,7 @@ export default function WeatherSearch({
           secondaryText: 'text-[#00ffff]',
           accentText: 'text-[#ff1493]',
           successText: 'text-[#00ff00]',
-          glow: 'glow-miami',
+          glow: '',
           specialBorder: 'border-[#ff1493]',
           buttonHover: 'hover:bg-[#ff1493] hover:text-[#0a0025]',
           placeholderText: 'placeholder-[#b0d4f1]',
@@ -87,7 +87,7 @@ export default function WeatherSearch({
           secondaryText: 'text-[#00FFFF]',
           accentText: 'text-[#00FFFF]',
           successText: 'text-[#00ff00]',
-          glow: 'glow-tron',
+          glow: '',
           specialBorder: 'border-[#00FFFF]',
           buttonHover: 'hover:bg-[#00FFFF] hover:text-black',
           placeholderText: 'placeholder-[#88CCFF]',
@@ -155,7 +155,7 @@ export default function WeatherSearch({
             disabled={controlsDisabled}
             className={`w-full px-3 sm:px-4 py-3 sm:py-4 pr-10 sm:pr-12 ${themeClasses.cardBg} border-2 ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.placeholderText} 
                      font-mono text-sm sm:text-base uppercase tracking-wider focus:outline-none ${themeClasses.hoverBorder} 
-                     transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed pixel-font ${themeClasses.specialBorder}
+                     transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${themeClasses.specialBorder}
                      min-h-[48px] touch-manipulation`}
             style={{
               imageRendering: "pixelated",
@@ -198,7 +198,7 @@ export default function WeatherSearch({
             className={`flex items-center gap-2 px-4 sm:px-6 py-3 ${themeClasses.buttonBg} border ${themeClasses.buttonBorder} 
                      ${themeClasses.buttonText} ${themeClasses.buttonHover} transition-all duration-200 
                      text-xs sm:text-sm uppercase tracking-wider font-mono disabled:opacity-50 
-                     disabled:cursor-not-allowed pixel-font ${themeClasses.specialBorder}
+                     disabled:cursor-not-allowed ${themeClasses.specialBorder}
                      min-h-[48px] touch-manipulation w-full sm:w-auto max-w-xs`}
               style={{
                 imageRendering: "pixelated",
@@ -217,7 +217,7 @@ export default function WeatherSearch({
       {/* Error Display - Mobile responsive */}
       {(error || rateLimitError) && (
         <div className={`p-3 sm:p-4 mx-2 sm:mx-0 ${themeClasses.errorBg} border ${themeClasses.errorText} 
-                      text-xs sm:text-sm text-center pixel-font ${themeClasses.specialBorder}`}>
+                      text-xs sm:text-sm text-center ${themeClasses.specialBorder}`}>
           <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
             <span>⚠</span>
             <span className="uppercase tracking-wider break-words">{error || rateLimitError}</span>

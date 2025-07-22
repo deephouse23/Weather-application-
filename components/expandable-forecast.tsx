@@ -88,8 +88,8 @@ export default function ExpandableForecast({
   };
 
   return (
-    <div className={`${themeClasses.background} p-3 sm:p-4 lg:p-6 rounded-none border-2 sm:border-4 ${themeClasses.borderColor} pixel-shadow`}>
-      <h2 className={`text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4 ${themeClasses.accentText} uppercase tracking-wider text-center pixel-glow`}>
+    <div className={`${themeClasses.background} p-3 sm:p-4 lg:p-6 rounded-none border-2 sm:border-4 ${themeClasses.borderColor}`}>
+      <h2 className={`text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4 ${themeClasses.accentText} uppercase tracking-wider text-center`}>
         5-DAY DETAILED FORECAST
       </h2>
       
@@ -173,7 +173,7 @@ function ExpandableForecastCard({
 
         {/* Center: Temperature Range */}
         <div className="flex items-center space-x-3 flex-1 justify-center">
-          <div className={`text-lg sm:text-xl font-bold ${themeClasses.accentText} pixel-glow`}>
+          <div className={`text-lg sm:text-xl font-bold ${themeClasses.accentText}`}>
             {Math.round(day.highTemp)}{tempUnit}
           </div>
           <div className="w-8 sm:w-12 h-1 bg-gradient-to-r from-blue-400 via-yellow-400 to-red-400 rounded"></div>
@@ -336,7 +336,7 @@ function WeatherIcon({ condition, size, theme }: { condition: string; size: "sma
     case "clear":
       return (
         <div className={cn("relative", sizeClasses[size])} style={iconStyle}>
-          <div className="absolute inset-0 bg-[#ffe66d] rounded-full animate-pulse-glow"></div>
+          <div className="absolute inset-0 bg-[#ffe66d] rounded-full"></div>
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-[#ffcc02] rounded-full"></div>
         </div>
       );

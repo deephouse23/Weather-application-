@@ -53,30 +53,9 @@ const config: Config = {
         'pixel': ['"Courier New"', '"Monaco"', '"Lucida Console"', 'monospace'],
       },
       animation: {
-        'flicker': 'flicker 0.15s infinite linear',
-        'tron-wave': 'tronWave 3s linear infinite',
-        'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
         'slide-in': 'slideIn 0.5s ease-out forwards',
       },
       keyframes: {
-        flicker: {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.98' },
-        },
-        tronWave: {
-          '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(100vw)' },
-        },
-        pulseGlow: {
-          '0%, 100%': { 
-            textShadow: '0 0 8px currentColor, 0 0 16px currentColor',
-            transform: 'scale(1)'
-          },
-          '50%': { 
-            textShadow: '0 0 12px currentColor, 0 0 24px currentColor, 0 0 36px currentColor',
-            transform: 'scale(1.02)'
-          },
-        },
         slideIn: {
           'from': { 
             opacity: '0', 

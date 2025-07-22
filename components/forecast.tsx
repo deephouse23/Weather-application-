@@ -93,7 +93,7 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
   const themeClasses = getThemeClasses(theme)
 
   return (
-    <div className={`${themeClasses.cardBg} p-3 sm:p-4 lg:p-6 rounded-none border-2 sm:border-4 ${themeClasses.borderColor} pixel-shadow ${themeClasses.specialBorder}`}
+    <div className={`${themeClasses.cardBg} p-3 sm:p-4 lg:p-6 rounded-none border-2 sm:border-4 ${themeClasses.borderColor} ${themeClasses.specialBorder}`}
          style={themeClasses.cardStyle}>
       <h2 className={`text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4 ${themeClasses.headerText} uppercase tracking-wider ${themeClasses.glow} text-center`}
           style={{ textShadow: themeClasses.cardStyle.textShadow }}>5-DAY FORECAST</h2>
@@ -166,13 +166,10 @@ function ForecastCard({ day, index, themeClasses, theme, onDayClick, isSelected 
       
       {/* Temperature display - Mobile optimized */}
       <div className="space-y-1">
-        <div className={`text-sm sm:text-base lg:text-lg font-bold ${themeClasses.temperatureText} pixel-glow ${themeClasses.glow}`}
-             style={theme !== 'dark' ? {
-               textShadow: theme === 'tron' ? '0 0 10px #00FFFF, 0 0 20px #00FFFF' : '0 0 10px #ff1493, 0 0 20px #ff1493'
-             } : {}}>
+        <div className={`text-sm sm:text-base lg:text-lg font-bold ${themeClasses.temperatureText}`}>
           {Math.round(day.highTemp)}{tempUnit}
         </div>
-        <div className={`text-xs sm:text-sm ${themeClasses.lowTempText} opacity-80 font-medium ${themeClasses.glow}`}>
+        <div className={`text-xs sm:text-sm ${themeClasses.lowTempText} opacity-80 font-medium`}>
           {Math.round(day.lowTemp)}{tempUnit}
         </div>
       </div>

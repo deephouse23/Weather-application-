@@ -115,7 +115,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
   ]
 
   return (
-    <nav className={`w-full border-b-4 pixel-border relative z-50 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
+    <nav className={`w-full border-b-4 relative z-50 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
       
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center justify-between px-6 py-4">

@@ -384,7 +384,7 @@ function WeatherApp() {
           secondaryText: 'text-[#e0e0e0]',
           accentText: 'text-[#00d4ff]',
           successText: 'text-[#00ff00]',
-          glow: 'glow-dark',
+          glow: '',
           specialBorder: 'border-[#00d4ff]',
           buttonHover: 'hover:bg-[#00d4ff] hover:text-[#0f0f0f]'
         }
@@ -398,7 +398,7 @@ function WeatherApp() {
           secondaryText: 'text-[#00ffff]',
           accentText: 'text-[#ff1493]',
           successText: 'text-[#00ff00]',
-          glow: 'glow-miami',
+          glow: '',
           specialBorder: 'border-[#ff1493]',
           buttonHover: 'hover:bg-[#ff1493] hover:text-[#0a0025]'
         }
@@ -412,7 +412,7 @@ function WeatherApp() {
           secondaryText: 'text-[#00FFFF]',
           accentText: 'text-[#00FFFF]',
           successText: 'text-[#00ff00]',
-          glow: 'glow-tron',
+          glow: '',
           specialBorder: 'border-[#00FFFF]',
           buttonHover: 'hover:bg-[#00FFFF] hover:text-black'
         }

@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(vercel:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh release create:*)",
+      "WebFetch(domain:16bitweather.co)",
+      "WebFetch(domain:www.16bitweather.co)",
+      "Bash(git checkout:*)",
+      "Bash(gh pr close:*)",
+      "Bash(git merge:*)",
+      "Bash(timeout 10s npm run dev)",
+      "Bash(true)",
+      "Bash(gh pr view:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git pull:*)",
+      "Bash(gh:*)"
+    ],
+    "deny": []
+  }
+}

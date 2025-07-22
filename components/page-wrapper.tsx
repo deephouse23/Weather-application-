@@ -31,7 +31,7 @@ export default function PageWrapper({ children, weatherLocation, weatherTemperat
           accentColor: 'text-[#00d4ff]',
           cardBg: 'bg-[#0f0f0f]',
           hoverBg: 'hover:bg-[#00d4ff] hover:text-[#0a0a1a]',
-          glow: 'glow-dark'
+          glow: ''
         }
       case 'miami':
         return {
@@ -41,7 +41,7 @@ export default function PageWrapper({ children, weatherLocation, weatherTemperat
           accentColor: 'text-[#ff1493]',
           cardBg: 'bg-[#4a0e4e]',
           hoverBg: 'hover:bg-[#ff1493] hover:text-[#2d1b69]',
-          glow: 'glow-miami'
+          glow: ''
         }
       case 'tron':
         return {
@@ -51,7 +51,7 @@ export default function PageWrapper({ children, weatherLocation, weatherTemperat
           accentColor: 'text-[#00FFFF]',
           cardBg: 'bg-black',
           hoverBg: 'hover:bg-[#00FFFF] hover:text-black',
-          glow: 'glow-tron'
+          glow: ''
         }
       default:
         return {
@@ -61,7 +61,7 @@ export default function PageWrapper({ children, weatherLocation, weatherTemperat
           accentColor: 'text-[#00d4ff]',
           cardBg: 'bg-[#0f0f0f]',
           hoverBg: 'hover:bg-[#00d4ff] hover:text-[#0a0a1a]',
-          glow: 'glow-dark'
+          glow: ''
         }
     }
   }
