@@ -313,3 +313,4 @@ function citySlugToSearchTerm(citySlug: string): string {
     return `${city}, ${state}`
   }
   return formatCityName(citySlug)
+}
