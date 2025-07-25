@@ -865,7 +865,7 @@ function WeatherApp() {
               <div className="w-full max-w-xl mx-auto">
                 <div className={cn(
                   "p-2 sm:p-3 border-2 shadow-lg",
-                  theme === "dark" && "bg-[#0f0f0f] border-[#00FFFF] shadow-blue-500/20",
+                  theme === "dark" && "bg-[#0f0f0f] border-[#00FFFF] shadow-[#00FFFF]/20",
                   theme === "miami" && "bg-[#0a0025] border-[#00FFFF] shadow-[#00FFFF]/30",
                   theme === "tron" && "bg-black border-[#00FFFF] shadow-[#00FFFF]/40"
                 )}>
@@ -884,7 +884,7 @@ function WeatherApp() {
             <div className="flex justify-center items-center mt-8">
               <Loader2 className={cn(
                 "h-8 w-8 animate-spin",
-                theme === "dark" && "text-blue-500",
+                theme === "dark" && "text-[#00FFFF]",
                 theme === "miami" && "text-pink-500",
                 theme === "tron" && "text-[#00FFFF]"
               )} />
@@ -1374,7 +1374,7 @@ function TronLightCycleWatermark() {
           <div className="tracer-beam relative">
             {/* Main beam */}
             <div 
-              className="absolute h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent"
+              className="absolute h-1 bg-gradient-to-r from-transparent via-[#00FFFF] to-transparent"
               style={{ 
                 width: '300px',
                 background: 'linear-gradient(90deg, transparent 0%, #00DCFF 20%, #00F0FF 50%, #00DCFF 80%, transparent 100%)',
@@ -1383,7 +1383,7 @@ function TronLightCycleWatermark() {
             />
             {/* Secondary glow beam */}
             <div 
-              className="absolute h-2 -mt-0.5 bg-gradient-to-r from-transparent via-blue-300 to-transparent opacity-60"
+              className="absolute h-2 -mt-0.5 bg-gradient-to-r from-transparent via-[#00FFFF] to-transparent opacity-60"
               style={{ 
                 width: '300px',
                 background: 'linear-gradient(90deg, transparent 0%, rgba(0, 220, 255, 0.4) 25%, rgba(0, 240, 255, 0.6) 50%, rgba(0, 220, 255, 0.4) 75%, transparent 100%)',
@@ -1404,7 +1404,7 @@ function TronLightCycleWatermark() {
         }} />
         
         {/* Horizon line */}
-        <div className="absolute bottom-16 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-40" />
+        <div className="absolute bottom-16 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#00FFFF] to-transparent opacity-40" />
       </div>
     </>
   )

@@ -185,7 +185,7 @@ function ExpandableForecastCard({
         {/* Right: Expand Icon */}
         <div className="flex items-center space-x-2 flex-shrink-0">
           {details?.precipitationChance !== undefined && (
-            <div className="flex items-center space-x-1 text-xs text-blue-400">
+            <div className="flex items-center space-x-1 text-xs text-[#00FFFF]">
               <Droplets className="w-3 h-3" />
               <span>{details.precipitationChance}%</span>
             </div>
@@ -306,8 +306,8 @@ function HourlyForecast({ hourlyData, theme, themeClasses, tempUnit }: any) {
             </div>
             {hour.precipChance > 0 && (
               <div className="flex items-center justify-center space-x-1 mt-1">
-                <Droplets className="w-3 h-3 text-blue-400" />
-                <span className="text-xs text-blue-400">{hour.precipChance}%</span>
+                <Droplets className="w-3 h-3 text-[#00FFFF]" />
+                <span className="text-xs text-[#00FFFF]">{hour.precipChance}%</span>
               </div>
             )}
           </div>
@@ -353,8 +353,8 @@ function WeatherIcon({ condition, size, theme }: { condition: string; size: "sma
       return (
         <div className={cn("relative", sizeClasses[size])} style={iconStyle}>
           <div className="absolute top-0 left-0 w-3/4 h-1/2 bg-[#6c7b7f] rounded-full"></div>
-          <div className="absolute bottom-0 left-1/4 w-1 h-1/3 bg-[#00d4ff] animate-slide-in"></div>
-          <div className="absolute bottom-0 right-1/4 w-1 h-1/3 bg-[#00d4ff] animate-slide-in"></div>
+          <div className="absolute bottom-0 left-1/4 w-1 h-1/3 bg-[#00FFFF] animate-slide-in"></div>
+          <div className="absolute bottom-0 right-1/4 w-1 h-1/3 bg-[#00FFFF] animate-slide-in"></div>
         </div>
       );
     default:

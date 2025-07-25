@@ -370,7 +370,7 @@ export default function CityWeatherPage() {
               <div className="flex justify-center items-center mt-8">
                 <Loader2 className={cn(
                   "h-8 w-8 animate-spin",
-                  theme === "dark" && "text-blue-500",
+                  theme === "dark" && "text-[#00FFFF]",
                   theme === "miami" && "text-pink-500",
                   theme === "tron" && "text-[#00FFFF]"
                 )} />
