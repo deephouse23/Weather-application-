@@ -46,23 +46,23 @@ export class ErrorBoundary extends Component<Props, State> {
     switch (theme) {
       case 'miami':
         return {
-          container: 'bg-[#0a0025] border-[#00d4ff] text-[#00d4ff]',
-          button: 'bg-[#00d4ff] text-[#0a0025] hover:bg-[#00b8e6]',
-          icon: 'text-[#00d4ff]',
-          text: 'text-[#00d4ff]'
+          container: 'bg-[#0a0025] border-[#00FFFF] text-[#00FFFF]',
+          button: 'bg-[#00FFFF] text-[#0a0025] hover:bg-[#00b8e6]',
+          icon: 'text-[#00FFFF]',
+          text: 'text-[#00FFFF]'
         }
       case 'tron':
         return {
-          container: 'bg-black border-[#00d4ff] text-white',
-          button: 'bg-[#00d4ff] text-black hover:bg-[#00DCFF]',
-          icon: 'text-[#00d4ff]',
+          container: 'bg-black border-[#00FFFF] text-white',
+          button: 'bg-[#00FFFF] text-black hover:bg-[#00DCFF]',
+          icon: 'text-[#00FFFF]',
           text: 'text-white'
         }
       default: // dark
         return {
-          container: 'bg-[#0f0f0f] border-[#00d4ff] text-[#e0e0e0]',
-          button: 'bg-[#00d4ff] text-[#0f0f0f] hover:bg-[#00b8e6]',
-          icon: 'text-[#00d4ff]',
+          container: 'bg-[#0f0f0f] border-[#00FFFF] text-[#e0e0e0]',
+          button: 'bg-[#00FFFF] text-[#0f0f0f] hover:bg-[#00b8e6]',
+          icon: 'text-[#00FFFF]',
           text: 'text-[#e0e0e0]'
         }
     }

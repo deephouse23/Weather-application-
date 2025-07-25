@@ -37,19 +37,19 @@ export default function WeatherSearch({
         return {
           background: 'bg-[#0f0f0f]',
           cardBg: 'bg-[#0f0f0f]',
-          borderColor: 'border-[#00d4ff]',
+          borderColor: 'border-[#00FFFF]',
           text: 'text-[#e0e0e0]',
-          headerText: 'text-[#00d4ff]',
-          secondaryText: 'text-[#00d4ff]',
-          accentText: 'text-[#00d4ff]',
-          successText: 'text-[#00d4ff]',
+          headerText: 'text-[#00FFFF]',
+          secondaryText: 'text-[#00FFFF]',
+          accentText: 'text-[#00FFFF]',
+          successText: 'text-[#00FFFF]',
           glow: '',
-          specialBorder: 'border-[#00d4ff]',
-          buttonHover: 'hover:bg-[#00d4ff] hover:text-[#0f0f0f]',
+          specialBorder: 'border-[#00FFFF]',
+          buttonHover: 'hover:bg-[#00FFFF] hover:text-[#0f0f0f]',
           placeholderText: 'placeholder-[#a0a0a0]',
-          hoverBorder: 'hover:border-[#00d4ff]',
+          hoverBorder: 'hover:border-[#00FFFF]',
           buttonBg: 'bg-[#0f0f0f]',
-          buttonBorder: 'border-[#00d4ff]',
+          buttonBorder: 'border-[#00FFFF]',
           buttonText: 'text-[#e0e0e0]',
           errorBg: 'bg-[#1a0f0f]',
           errorText: 'text-[#ff4444]',
@@ -59,45 +59,45 @@ export default function WeatherSearch({
         return {
           background: 'bg-[#0a0025]',
           cardBg: 'bg-[#0a0025]',
-          borderColor: 'border-[#00d4ff]',
-          text: 'text-[#00d4ff]',
-          headerText: 'text-[#00d4ff]',
-          secondaryText: 'text-[#00d4ff]',
-          accentText: 'text-[#00d4ff]',
-          successText: 'text-[#00d4ff]',
+          borderColor: 'border-[#00FFFF]',
+          text: 'text-[#00FFFF]',
+          headerText: 'text-[#00FFFF]',
+          secondaryText: 'text-[#00FFFF]',
+          accentText: 'text-[#00FFFF]',
+          successText: 'text-[#00FFFF]',
           glow: '',
-          specialBorder: 'border-[#00d4ff]',
-          buttonHover: 'hover:bg-[#00d4ff] hover:text-[#0a0025]',
+          specialBorder: 'border-[#00FFFF]',
+          buttonHover: 'hover:bg-[#00FFFF] hover:text-[#0a0025]',
           placeholderText: 'placeholder-[#b0d4f1]',
-          hoverBorder: 'hover:border-[#00d4ff]',
+          hoverBorder: 'hover:border-[#00FFFF]',
           buttonBg: 'bg-[#0a0025]',
-          buttonBorder: 'border-[#00d4ff]',
-          buttonText: 'text-[#00d4ff]',
+          buttonBorder: 'border-[#00FFFF]',
+          buttonText: 'text-[#00FFFF]',
           errorBg: 'bg-[#1a0025]',
-          errorText: 'text-[#00d4ff]',
-          warningText: 'text-[#00d4ff]'
+          errorText: 'text-[#00FFFF]',
+          warningText: 'text-[#00FFFF]'
         }
       case 'tron':
         return {
           background: 'bg-black',
           cardBg: 'bg-black',
-          borderColor: 'border-[#00d4ff]',
+          borderColor: 'border-[#00FFFF]',
           text: 'text-white',
-          headerText: 'text-[#00d4ff]',
-          secondaryText: 'text-[#00d4ff]',
-          accentText: 'text-[#00d4ff]',
-          successText: 'text-[#00d4ff]',
+          headerText: 'text-[#00FFFF]',
+          secondaryText: 'text-[#00FFFF]',
+          accentText: 'text-[#00FFFF]',
+          successText: 'text-[#00FFFF]',
           glow: '',
-          specialBorder: 'border-[#00d4ff]',
-          buttonHover: 'hover:bg-[#00d4ff] hover:text-black',
-          placeholderText: 'placeholder-[#00d4ff]',
-          hoverBorder: 'hover:border-[#00d4ff]',
+          specialBorder: 'border-[#00FFFF]',
+          buttonHover: 'hover:bg-[#00FFFF] hover:text-black',
+          placeholderText: 'placeholder-[#00FFFF]',
+          hoverBorder: 'hover:border-[#00FFFF]',
           buttonBg: 'bg-black',
-          buttonBorder: 'border-[#00d4ff]',
+          buttonBorder: 'border-[#00FFFF]',
           buttonText: 'text-white',
           errorBg: 'bg-[#001111]',
-          errorText: 'text-[#00d4ff]',
-          warningText: 'text-[#00d4ff]'
+          errorText: 'text-[#00FFFF]',
+          warningText: 'text-[#00FFFF]'
         }
     }
   }
@@ -232,7 +232,7 @@ export default function WeatherSearch({
               <div className="grid grid-cols-1 gap-1 text-xs">
                 <button 
                   onClick={() => setSearchTerm("90210")}
-                  className={`${themeClasses.warningText} hover:text-[#00d4ff] transition-colors cursor-pointer underline ${themeClasses.glow}
+                  className={`${themeClasses.warningText} hover:text-[#00FFFF] transition-colors cursor-pointer underline ${themeClasses.glow}
                            py-2 px-3 touch-manipulation min-h-[44px] text-left`}
                   disabled={isDisabled}
                 >
@@ -240,7 +240,7 @@ export default function WeatherSearch({
                 </button>
                 <button 
                   onClick={() => setSearchTerm("New York, NY")}
-                  className={`${themeClasses.warningText} hover:text-[#00d4ff] transition-colors cursor-pointer underline ${themeClasses.glow}
+                  className={`${themeClasses.warningText} hover:text-[#00FFFF] transition-colors cursor-pointer underline ${themeClasses.glow}
                            py-2 px-3 touch-manipulation min-h-[44px] text-left`}
                   disabled={isDisabled}
                 >
@@ -248,7 +248,7 @@ export default function WeatherSearch({
                 </button>
                 <button 
                   onClick={() => setSearchTerm("London, UK")}
-                  className={`${themeClasses.warningText} hover:text-[#00d4ff] transition-colors cursor-pointer underline ${themeClasses.glow}
+                  className={`${themeClasses.warningText} hover:text-[#00FFFF] transition-colors cursor-pointer underline ${themeClasses.glow}
                            py-2 px-3 touch-manipulation min-h-[44px] text-left`}
                   disabled={isDisabled}
                 >

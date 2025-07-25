@@ -33,30 +33,30 @@ export default function CityAutocomplete({
     switch (theme) {
       case 'miami':
         return {
-          dropdown: "bg-[#0a0025] border-[#00d4ff] text-[#00d4ff]",
-          item: "hover:bg-[#00d4ff] hover:text-[#0a0025]",
-          selectedItem: "bg-[#00d4ff] text-[#0a0025]",
-          cityName: "text-[#00d4ff]",
-          location: "text-[#00d4ff]",
-          pageIndicator: "text-[#00d4ff]"
+          dropdown: "bg-[#0a0025] border-[#00FFFF] text-[#00FFFF]",
+          item: "hover:bg-[#00FFFF] hover:text-[#0a0025]",
+          selectedItem: "bg-[#00FFFF] text-[#0a0025]",
+          cityName: "text-[#00FFFF]",
+          location: "text-[#00FFFF]",
+          pageIndicator: "text-[#00FFFF]"
         };
       case 'tron':
         return {
-          dropdown: "bg-black border-[#00d4ff] text-white",
-          item: "hover:bg-[#00d4ff] hover:text-black",
-          selectedItem: "bg-[#00d4ff] text-black",
+          dropdown: "bg-black border-[#00FFFF] text-white",
+          item: "hover:bg-[#00FFFF] hover:text-black",
+          selectedItem: "bg-[#00FFFF] text-black",
           cityName: "text-white",
-          location: "text-[#00d4ff]",
-          pageIndicator: "text-[#00d4ff]"
+          location: "text-[#00FFFF]",
+          pageIndicator: "text-[#00FFFF]"
         };
       default: // dark
         return {
-          dropdown: "bg-[#0f0f0f] border-[#00d4ff] text-[#e0e0e0]",
-          item: "hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-          selectedItem: "bg-[#00d4ff] text-[#0f0f0f]",
+          dropdown: "bg-[#0f0f0f] border-[#00FFFF] text-[#e0e0e0]",
+          item: "hover:bg-[#00FFFF] hover:text-[#0f0f0f]",
+          selectedItem: "bg-[#00FFFF] text-[#0f0f0f]",
           cityName: "text-[#e0e0e0]",
-          location: "text-[#00d4ff]",
-          pageIndicator: "text-[#00d4ff]"
+          location: "text-[#00FFFF]",
+          pageIndicator: "text-[#00FFFF]"
         };
     }
   };
@@ -149,7 +149,7 @@ export default function CityAutocomplete({
         themeClasses.dropdown
       )}
       style={{ 
-        boxShadow: `0 4px 20px #00d4ff33` 
+        boxShadow: `0 4px 20px #00FFFF33` 
       }}
     >
       {suggestions.map((city, index) => (

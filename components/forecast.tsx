@@ -31,12 +31,12 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
           cardBg: 'bg-[#16213e]',
           itemBg: 'bg-[#1a1a2e]',
           itemHover: 'hover:bg-[#1f2347]',
-          borderColor: 'border-[#00d4ff]',
-          itemBorder: 'border-[#00d4ff]',
-          headerText: 'text-[#00d4ff]',
-          primaryText: 'text-[#00d4ff]',
-          temperatureText: 'text-[#00d4ff]',
-          lowTempText: 'text-[#00d4ff]',
+          borderColor: 'border-[#00FFFF]',
+          itemBorder: 'border-[#00FFFF]',
+          headerText: 'text-[#00FFFF]',
+          primaryText: 'text-[#00FFFF]',
+          temperatureText: 'text-[#00FFFF]',
+          lowTempText: 'text-[#00FFFF]',
           glow: '',
           specialBorder: '',
           cardStyle: {},
@@ -47,22 +47,22 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
           cardBg: 'bg-gradient-to-br from-[#4a0e4e] via-[#2d1b69] to-[#1a0033]',
           itemBg: 'bg-gradient-to-br from-[#2d1b69] to-[#4a0e4e]',
           itemHover: 'hover:bg-gradient-to-br hover:from-[#4a0e4e] hover:to-[#6a1b9a]',
-          borderColor: 'border-[#00d4ff]',
-          itemBorder: 'border-[#00d4ff]',
-          headerText: 'text-[#00d4ff]',
-          primaryText: 'text-[#00d4ff]',
-          temperatureText: 'text-[#00d4ff]',
-          lowTempText: 'text-[#00d4ff]',
-          glow: 'drop-shadow-[0_0_8px_#00d4ff]',
-          specialBorder: 'shadow-[0_0_15px_#00d4ff]',
+          borderColor: 'border-[#00FFFF]',
+          itemBorder: 'border-[#00FFFF]',
+          headerText: 'text-[#00FFFF]',
+          primaryText: 'text-[#00FFFF]',
+          temperatureText: 'text-[#00FFFF]',
+          lowTempText: 'text-[#00FFFF]',
+          glow: 'drop-shadow-[0_0_8px_#00FFFF]',
+          specialBorder: 'shadow-[0_0_15px_#00FFFF]',
           cardStyle: {
-            boxShadow: '0 0 30px #00d4ff, 0 0 60px rgba(0, 212, 255, 0.3), inset 0 0 20px rgba(0, 212, 255, 0.2)',
-            textShadow: '0 0 15px #00d4ff, 0 0 30px #00d4ff'
+            boxShadow: '0 0 30px #00FFFF, 0 0 60px rgba(0, 212, 255, 0.3), inset 0 0 20px rgba(0, 212, 255, 0.2)',
+            textShadow: '0 0 15px #00FFFF, 0 0 30px #00FFFF'
           },
           itemStyle: {
             background: 'linear-gradient(135deg, #2d1b69, #4a0e4e)',
-            boxShadow: '0 0 20px #00d4ff, inset 0 0 15px rgba(0, 212, 255, 0.1)',
-            borderColor: '#00d4ff'
+            boxShadow: '0 0 20px #00FFFF, inset 0 0 15px rgba(0, 212, 255, 0.1)',
+            borderColor: '#00FFFF'
           }
         }
       case 'tron':
@@ -70,22 +70,22 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
           cardBg: 'bg-[#000000]',
           itemBg: 'bg-[#000000]',
           itemHover: 'hover:bg-[#001111]',
-          borderColor: 'border-[#00d4ff]',
-          itemBorder: 'border-[#00d4ff]',
-          headerText: 'text-[#00d4ff]',
+          borderColor: 'border-[#00FFFF]',
+          itemBorder: 'border-[#00FFFF]',
+          headerText: 'text-[#00FFFF]',
           primaryText: 'text-[#FFFFFF]',
-          temperatureText: 'text-[#00d4ff]',
-          lowTempText: 'text-[#00d4ff]',
-          glow: 'drop-shadow-[0_0_15px_#00d4ff]',
-          specialBorder: 'shadow-[0_0_20px_#00d4ff]',
+          temperatureText: 'text-[#00FFFF]',
+          lowTempText: 'text-[#00FFFF]',
+          glow: 'drop-shadow-[0_0_15px_#00FFFF]',
+          specialBorder: 'shadow-[0_0_20px_#00FFFF]',
           cardStyle: {
-            boxShadow: '0 0 30px #00d4ff, 0 0 60px rgba(0, 212, 255, 0.3), inset 0 0 20px rgba(0, 212, 255, 0.1)',
-            textShadow: '0 0 15px #00d4ff, 0 0 30px #00d4ff'
+            boxShadow: '0 0 30px #00FFFF, 0 0 60px rgba(0, 212, 255, 0.3), inset 0 0 20px rgba(0, 212, 255, 0.1)',
+            textShadow: '0 0 15px #00FFFF, 0 0 30px #00FFFF'
           },
           itemStyle: {
             background: 'linear-gradient(135deg, #000000, #001111)',
-            boxShadow: '0 0 25px #00d4ff, inset 0 0 20px rgba(0, 212, 255, 0.1)',
-            borderColor: '#00d4ff'
+            boxShadow: '0 0 25px #00FFFF, inset 0 0 20px rgba(0, 212, 255, 0.1)',
+            borderColor: '#00FFFF'
           }
         }
     }
@@ -148,7 +148,7 @@ function ForecastCard({ day, index, themeClasses, theme, onDayClick, isSelected 
       className={`${themeClasses.itemBg} p-2 sm:p-3 border ${themeClasses.itemBorder} text-center transition-all duration-200 ${themeClasses.specialBorder}
                   min-h-[120px] sm:min-h-[140px] lg:min-h-[160px] flex flex-col justify-between
                   ${onDayClick ? 'cursor-pointer hover:scale-105' : ''} ${themeClasses.itemHover}
-                  ${isSelected ? `ring-2 ring-[#00d4ff] ring-opacity-80` : ''}`}
+                  ${isSelected ? `ring-2 ring-[#00FFFF] ring-opacity-80` : ''}`}
       style={themeClasses.itemStyle}
       onClick={handleClick}
     >
@@ -232,9 +232,9 @@ function WeatherIcon({ condition, size }: { condition: string; size: "small" | "
           <div className="absolute top-0 left-0 w-3/4 h-1/2 bg-[#6c7b7f] rounded-full"></div>
           <div className="absolute top-1/4 right-0 w-3/4 h-1/2 bg-[#5a6c70] rounded-full"></div>
           {/* Rain drops */}
-          <div className="absolute bottom-0 left-1/4 w-1 h-1/3 bg-[#00d4ff]"></div>
-          <div className="absolute bottom-0 left-1/2 w-1 h-1/4 bg-[#00d4ff]"></div>
-          <div className="absolute bottom-0 right-1/4 w-1 h-1/3 bg-[#00d4ff]"></div>
+          <div className="absolute bottom-0 left-1/4 w-1 h-1/3 bg-[#00FFFF]"></div>
+          <div className="absolute bottom-0 left-1/2 w-1 h-1/4 bg-[#00FFFF]"></div>
+          <div className="absolute bottom-0 right-1/4 w-1 h-1/3 bg-[#00FFFF]"></div>
         </div>
       )
     case "snowy":

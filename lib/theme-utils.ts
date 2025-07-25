@@ -33,31 +33,31 @@ const THEME_COLORS = {
     background: '#0a0a1a',
     backgroundSecondary: '#0f0f0f',
     backgroundTertiary: '#16213e',
-    primary: '#00d4ff',
+    primary: '#00FFFF',
     text: '#e0e0e0',
-    textSecondary: '#00d4ff',
-    accent: '#00d4ff',
-    border: '#00d4ff'
+    textSecondary: '#00FFFF',
+    accent: '#00FFFF',
+    border: '#00FFFF'
   },
   miami: {
     background: '#0a0025',
     backgroundSecondary: '#2d1b69',
     backgroundTertiary: '#4a0e4e',
-    primary: '#00d4ff',
-    text: '#00d4ff',
-    textSecondary: '#00d4ff',
-    accent: '#00d4ff',
-    border: '#00d4ff'
+    primary: '#00FFFF',
+    text: '#00FFFF',
+    textSecondary: '#00FFFF',
+    accent: '#00FFFF',
+    border: '#00FFFF'
   },
   tron: {
     background: '#000000',
     backgroundSecondary: '#000000',
     backgroundTertiary: '#0a0a0a',
-    primary: '#00d4ff',
+    primary: '#00FFFF',
     text: '#FFFFFF',
-    textSecondary: '#00d4ff',
-    accent: '#00d4ff',
-    border: '#00d4ff'
+    textSecondary: '#00FFFF',
+    accent: '#00FFFF',
+    border: '#00FFFF'
   }
 } as const;
 

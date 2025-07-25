@@ -27,40 +27,40 @@ export default function PageWrapper({ children, weatherLocation, weatherTemperat
         return {
           background: 'bg-[#0a0a1a]',
           textColor: 'text-[#e0e0e0]',
-          borderColor: 'border-[#00d4ff]',
-          accentColor: 'text-[#00d4ff]',
+          borderColor: 'border-[#00FFFF]',
+          accentColor: 'text-[#00FFFF]',
           cardBg: 'bg-[#0f0f0f]',
-          hoverBg: 'hover:bg-[#00d4ff] hover:text-[#0a0a1a]',
+          hoverBg: 'hover:bg-[#00FFFF] hover:text-[#0a0a1a]',
           glow: ''
         }
       case 'miami':
         return {
           background: 'bg-[#2d1b69]',
-          textColor: 'text-[#00d4ff]',
-          borderColor: 'border-[#00d4ff]',
-          accentColor: 'text-[#00d4ff]',
+          textColor: 'text-[#00FFFF]',
+          borderColor: 'border-[#00FFFF]',
+          accentColor: 'text-[#00FFFF]',
           cardBg: 'bg-[#4a0e4e]',
-          hoverBg: 'hover:bg-[#00d4ff] hover:text-[#2d1b69]',
+          hoverBg: 'hover:bg-[#00FFFF] hover:text-[#2d1b69]',
           glow: ''
         }
       case 'tron':
         return {
           background: 'bg-black',
           textColor: 'text-white',
-          borderColor: 'border-[#00d4ff]',
-          accentColor: 'text-[#00d4ff]',
+          borderColor: 'border-[#00FFFF]',
+          accentColor: 'text-[#00FFFF]',
           cardBg: 'bg-black',
-          hoverBg: 'hover:bg-[#00d4ff] hover:text-black',
+          hoverBg: 'hover:bg-[#00FFFF] hover:text-black',
           glow: ''
         }
       default:
         return {
           background: 'bg-[#0a0a1a]',
           textColor: 'text-[#e0e0e0]',
-          borderColor: 'border-[#00d4ff]',
-          accentColor: 'text-[#00d4ff]',
+          borderColor: 'border-[#00FFFF]',
+          accentColor: 'text-[#00FFFF]',
           cardBg: 'bg-[#0f0f0f]',
-          hoverBg: 'hover:bg-[#00d4ff] hover:text-[#0a0a1a]',
+          hoverBg: 'hover:bg-[#00FFFF] hover:text-[#0a0a1a]',
           glow: ''
         }
     }

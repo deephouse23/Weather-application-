@@ -15,7 +15,7 @@ export function ThemeToggle() {
     >
       {theme === "dark" && <Moon className="h-5 w-5 text-blue-500" />}
       {theme === "miami" && <Sun className="h-5 w-5 text-pink-500" />}
-      {theme === "tron" && <Zap className="h-5 w-5 text-[#00d4ff]" />}
+      {theme === "tron" && <Zap className="h-5 w-5 text-[#00FFFF]" />}
     </button>
   )
 } 
