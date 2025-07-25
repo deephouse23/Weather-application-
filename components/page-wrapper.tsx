@@ -36,21 +36,21 @@ export default function PageWrapper({ children, weatherLocation, weatherTemperat
       case 'miami':
         return {
           background: 'bg-[#2d1b69]',
-          textColor: 'text-[#00ffff]',
-          borderColor: 'border-[#ff1493]',
-          accentColor: 'text-[#ff1493]',
+          textColor: 'text-[#00d4ff]',
+          borderColor: 'border-[#00d4ff]',
+          accentColor: 'text-[#00d4ff]',
           cardBg: 'bg-[#4a0e4e]',
-          hoverBg: 'hover:bg-[#ff1493] hover:text-[#2d1b69]',
+          hoverBg: 'hover:bg-[#00d4ff] hover:text-[#2d1b69]',
           glow: ''
         }
       case 'tron':
         return {
           background: 'bg-black',
           textColor: 'text-white',
-          borderColor: 'border-[#00FFFF]',
-          accentColor: 'text-[#00FFFF]',
+          borderColor: 'border-[#00d4ff]',
+          accentColor: 'text-[#00d4ff]',
           cardBg: 'bg-black',
-          hoverBg: 'hover:bg-[#00FFFF] hover:text-black',
+          hoverBg: 'hover:bg-[#00d4ff] hover:text-black',
           glow: ''
         }
       default:

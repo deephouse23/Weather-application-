@@ -25,7 +25,9 @@
       "Bash(npx tsc:*)",
       "Bash(git pull:*)",
       "Bash(gh:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(npm run lint)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }

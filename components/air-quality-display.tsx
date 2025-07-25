@@ -33,19 +33,19 @@ export function AirQualityDisplay({ aqi, theme, className }: AirQualityDisplayPr
         }
       case 'miami':
         return {
-          container: 'bg-[#0a0025] border-[#ff1493]',
-          header: 'text-[#ff1493]',
-          text: 'text-[#00ffff]',
-          border: 'border-[#ff149366]',
-          shadow: '0 0 15px #ff149333'
+          container: 'bg-[#0a0025] border-[#00d4ff]',
+          header: 'text-[#00d4ff]',
+          text: 'text-[#00d4ff]',
+          border: 'border-[#00d4ff66]',
+          shadow: '0 0 15px #00d4ff33'
         }
       case 'tron':
         return {
-          container: 'bg-black border-[#00FFFF]',
-          header: 'text-[#00FFFF]',
+          container: 'bg-black border-[#00d4ff]',
+          header: 'text-[#00d4ff]',
           text: 'text-white',
-          border: 'border-[#00FFFF66]',
-          shadow: '0 0 15px #00FFFF33'
+          border: 'border-[#00d4ff66]',
+          shadow: '0 0 15px #00d4ff33'
         }
       default:
         return {

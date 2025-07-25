@@ -21,7 +21,7 @@ function WeatherComponentLoader({ theme }: { theme: 'dark' | 'miami' | 'tron' })
         "h-8 w-8 animate-spin",
         theme === "dark" && "text-blue-500",
         theme === "miami" && "text-pink-500",
-        theme === "tron" && "text-cyan-500"
+        theme === "tron" && "text-[#00d4ff]"
       )} />
       <span className="ml-2 text-white text-sm">Loading weather data...</span>
     </div>

@@ -148,8 +148,8 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
             <h1 className={cn(
               "text-2xl md:text-3xl font-bold uppercase tracking-wider font-mono mb-2",
               theme === "dark" && "text-[#00d4ff]",
-              theme === "miami" && "text-[#ff1493]", 
-              theme === "tron" && "text-[#00FFFF]"
+              theme === "miami" && "text-[#00d4ff]", 
+              theme === "tron" && "text-[#00d4ff]"
             )}>
               {city.name}, {city.state} WEATHER
             </h1>
@@ -174,7 +174,7 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
                 "h-8 w-8 animate-spin",
                 theme === "dark" && "text-blue-500",
                 theme === "miami" && "text-pink-500",
-                theme === "tron" && "text-cyan-500"
+                theme === "tron" && "text-[#00d4ff]"
               )} />
               <span className="ml-2 text-white">Loading weather data...</span>
             </div>
@@ -196,14 +196,14 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
                 <div className={cn(
                   "p-4 rounded-lg text-center border-2 shadow-lg",
                   theme === "dark" && "bg-[#0f0f0f] border-[#00d4ff]",
-                  theme === "miami" && "bg-[#0a0025] border-[#ff1493]",
-                  theme === "tron" && "bg-black border-[#00FFFF]"
+                  theme === "miami" && "bg-[#0a0025] border-[#00d4ff]",
+                  theme === "tron" && "bg-black border-[#00d4ff]"
                 )}>
                   <h2 className={cn(
                     "text-xl font-semibold mb-2",
                     theme === "dark" && "text-[#00d4ff]",
-                    theme === "miami" && "text-[#ff1493]",
-                    theme === "tron" && "text-[#00FFFF]"
+                    theme === "miami" && "text-[#00d4ff]",
+                    theme === "tron" && "text-[#00d4ff]"
                   )}>Temperature</h2>
                   <p className="text-3xl font-bold text-white">{weather.temperature}{weather.unit}</p>
                 </div>
@@ -212,14 +212,14 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
                 <div className={cn(
                   "p-4 rounded-lg text-center border-2 shadow-lg",
                   theme === "dark" && "bg-[#0f0f0f] border-[#00d4ff]",
-                  theme === "miami" && "bg-[#0a0025] border-[#ff1493]",
-                  theme === "tron" && "bg-black border-[#00FFFF]"
+                  theme === "miami" && "bg-[#0a0025] border-[#00d4ff]",
+                  theme === "tron" && "bg-black border-[#00d4ff]"
                 )}>
                   <h2 className={cn(
                     "text-xl font-semibold mb-2",
                     theme === "dark" && "text-[#00d4ff]",
-                    theme === "miami" && "text-[#ff1493]",
-                    theme === "tron" && "text-[#00FFFF]"
+                    theme === "miami" && "text-[#00d4ff]",
+                    theme === "tron" && "text-[#00d4ff]"
                   )}>Conditions</h2>
                   <p className="text-lg text-white">{weather.condition}</p>
                   <p className="text-sm text-gray-300">{weather.description}</p>
@@ -229,14 +229,14 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
                 <div className={cn(
                   "p-4 rounded-lg text-center border-2 shadow-lg",
                   theme === "dark" && "bg-[#0f0f0f] border-[#00d4ff]",
-                  theme === "miami" && "bg-[#0a0025] border-[#ff1493]",
-                  theme === "tron" && "bg-black border-[#00FFFF]"
+                  theme === "miami" && "bg-[#0a0025] border-[#00d4ff]",
+                  theme === "tron" && "bg-black border-[#00d4ff]"
                 )}>
                   <h2 className={cn(
                     "text-xl font-semibold mb-2",
                     theme === "dark" && "text-[#00d4ff]",
-                    theme === "miami" && "text-[#ff1493]",
-                    theme === "tron" && "text-[#00FFFF]"
+                    theme === "miami" && "text-[#00d4ff]",
+                    theme === "tron" && "text-[#00d4ff]"
                   )}>Wind</h2>
                   <p className="text-lg text-white">
                     {weather.wind.direction ? `${weather.wind.direction} ` : ''}
@@ -283,14 +283,14 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
           <div className={cn(
             "mt-12 p-6 border-2 rounded-lg",
             theme === "dark" && "bg-[#0f0f0f] border-[#00d4ff] text-[#e0e0e0]",
-            theme === "miami" && "bg-[#0a0025] border-[#ff1493] text-[#00ffff]",
-            theme === "tron" && "bg-black border-[#00FFFF] text-white"
+            theme === "miami" && "bg-[#0a0025] border-[#00d4ff] text-[#00d4ff]",
+            theme === "tron" && "bg-black border-[#00d4ff] text-white"
           )}>
             <h2 className={cn(
               "text-xl font-bold mb-4 uppercase tracking-wider font-mono",
               theme === "dark" && "text-[#00d4ff]",
-              theme === "miami" && "text-[#ff1493]",
-              theme === "tron" && "text-[#00FFFF]"
+              theme === "miami" && "text-[#00d4ff]",
+              theme === "tron" && "text-[#00d4ff]"
             )}>
               About {city.name} Weather
             </h2>

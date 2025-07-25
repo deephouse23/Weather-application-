@@ -31,7 +31,7 @@ function PollenCategory({ categoryName, categoryData, theme }: PollenCategoryPro
       case 'dark':
         return 'text-[#e0e0e0]'
       case 'miami':
-        return 'text-[#00ffff]'
+        return 'text-[#00d4ff]'
       case 'tron':
         return 'text-white'
       default:
@@ -89,15 +89,15 @@ export function PollenDisplay({ pollen, theme, className }: PollenDisplayProps) 
         }
       case 'miami':
         return {
-          container: 'bg-[#0a0025] border-[#ff1493]',
-          header: 'text-[#ff1493]',
-          shadow: '0 0 15px #ff149333'
+          container: 'bg-[#0a0025] border-[#00d4ff]',
+          header: 'text-[#00d4ff]',
+          shadow: '0 0 15px #00d4ff33'
         }
       case 'tron':
         return {
-          container: 'bg-black border-[#00FFFF]',
-          header: 'text-[#00FFFF]',
-          shadow: '0 0 15px #00FFFF33'
+          container: 'bg-black border-[#00d4ff]',
+          header: 'text-[#00d4ff]',
+          shadow: '0 0 15px #00d4ff33'
         }
       default:
         return {

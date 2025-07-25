@@ -322,8 +322,8 @@ export default function CityWeatherPage() {
               <h1 className={cn(
                 "text-2xl md:text-3xl font-bold uppercase tracking-wider font-mono mb-2",
                 theme === "dark" && "text-[#00d4ff]",
-                theme === "miami" && "text-[#ff1493]", 
-                theme === "tron" && "text-[#00FFFF]"
+                theme === "miami" && "text-[#00d4ff]", 
+                theme === "tron" && "text-[#00d4ff]"
               )}>
                 {city.name}, {city.state} WEATHER
               </h1>
@@ -332,7 +332,7 @@ export default function CityWeatherPage() {
               <p className={cn(
                 "text-sm font-mono mt-3 max-w-2xl mx-auto",
                 theme === "dark" && "text-[#e0e0e0]",
-                theme === "miami" && "text-[#00ffff]",
+                theme === "miami" && "text-[#00d4ff]",
                 theme === "tron" && "text-white"
               )}>
                 San Diego has a semi-arid Mediterranean climate with mild temperatures year-round. The city enjoys one of the most stable climates in the US.
@@ -357,7 +357,7 @@ export default function CityWeatherPage() {
                   "h-8 w-8 animate-spin",
                   theme === "dark" && "text-blue-500",
                   theme === "miami" && "text-pink-500",
-                  theme === "tron" && "text-cyan-500"
+                  theme === "tron" && "text-[#00d4ff]"
                 )} />
                 <span className="ml-2 text-white">Loading weather data...</span>
               </div>
@@ -379,14 +379,14 @@ export default function CityWeatherPage() {
                   <div className={cn(
                     "p-4 rounded-lg text-center border-2 shadow-lg",
                     theme === "dark" && "bg-[#0f0f0f] border-[#00d4ff]",
-                    theme === "miami" && "bg-[#0a0025] border-[#ff1493]",
-                    theme === "tron" && "bg-black border-[#00FFFF]"
+                    theme === "miami" && "bg-[#0a0025] border-[#00d4ff]",
+                    theme === "tron" && "bg-black border-[#00d4ff]"
                   )}>
                     <h2 className={cn(
                       "text-xl font-semibold mb-2",
                       theme === "dark" && "text-[#00d4ff]",
-                      theme === "miami" && "text-[#ff1493]",
-                      theme === "tron" && "text-[#00FFFF]"
+                      theme === "miami" && "text-[#00d4ff]",
+                      theme === "tron" && "text-[#00d4ff]"
                     )}>Temperature</h2>
                     <p className="text-3xl font-bold text-white">{weather.temperature}{weather.unit}</p>
                   </div>
@@ -395,14 +395,14 @@ export default function CityWeatherPage() {
                   <div className={cn(
                     "p-4 rounded-lg text-center border-2 shadow-lg",
                     theme === "dark" && "bg-[#0f0f0f] border-[#00d4ff]",
-                    theme === "miami" && "bg-[#0a0025] border-[#ff1493]",
-                    theme === "tron" && "bg-black border-[#00FFFF]"
+                    theme === "miami" && "bg-[#0a0025] border-[#00d4ff]",
+                    theme === "tron" && "bg-black border-[#00d4ff]"
                   )}>
                     <h2 className={cn(
                       "text-xl font-semibold mb-2",
                       theme === "dark" && "text-[#00d4ff]",
-                      theme === "miami" && "text-[#ff1493]",
-                      theme === "tron" && "text-[#00FFFF]"
+                      theme === "miami" && "text-[#00d4ff]",
+                      theme === "tron" && "text-[#00d4ff]"
                     )}>Conditions</h2>
                     <p className="text-lg text-white">{weather.condition}</p>
                     <p className="text-sm text-gray-300">{weather.description}</p>
@@ -412,14 +412,14 @@ export default function CityWeatherPage() {
                   <div className={cn(
                     "p-4 rounded-lg text-center border-2 shadow-lg",
                     theme === "dark" && "bg-[#0f0f0f] border-[#00d4ff]",
-                    theme === "miami" && "bg-[#0a0025] border-[#ff1493]",
-                    theme === "tron" && "bg-black border-[#00FFFF]"
+                    theme === "miami" && "bg-[#0a0025] border-[#00d4ff]",
+                    theme === "tron" && "bg-black border-[#00d4ff]"
                   )}>
                     <h2 className={cn(
                       "text-xl font-semibold mb-2",
                       theme === "dark" && "text-[#00d4ff]",
-                      theme === "miami" && "text-[#ff1493]",
-                      theme === "tron" && "text-[#00FFFF]"
+                      theme === "miami" && "text-[#00d4ff]",
+                      theme === "tron" && "text-[#00d4ff]"
                     )}>Wind</h2>
                     <p className="text-lg text-white">
                       {weather.wind.direction ? `${weather.wind.direction} ` : ''}

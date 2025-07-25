@@ -46,16 +46,16 @@ export class ErrorBoundary extends Component<Props, State> {
     switch (theme) {
       case 'miami':
         return {
-          container: 'bg-[#0a0025] border-[#ff1493] text-[#00ffff]',
-          button: 'bg-[#ff1493] text-[#0a0025] hover:bg-[#ff69b4]',
-          icon: 'text-[#ff1493]',
-          text: 'text-[#00ffff]'
+          container: 'bg-[#0a0025] border-[#00d4ff] text-[#00d4ff]',
+          button: 'bg-[#00d4ff] text-[#0a0025] hover:bg-[#00b8e6]',
+          icon: 'text-[#00d4ff]',
+          text: 'text-[#00d4ff]'
         }
       case 'tron':
         return {
-          container: 'bg-black border-[#00FFFF] text-white',
-          button: 'bg-[#00FFFF] text-black hover:bg-[#00DCFF]',
-          icon: 'text-[#00FFFF]',
+          container: 'bg-black border-[#00d4ff] text-white',
+          button: 'bg-[#00d4ff] text-black hover:bg-[#00DCFF]',
+          icon: 'text-[#00d4ff]',
           text: 'text-white'
         }
       default: // dark

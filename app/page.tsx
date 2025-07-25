@@ -866,8 +866,8 @@ function WeatherApp() {
                 <div className={cn(
                   "p-2 sm:p-3 border-2 shadow-lg",
                   theme === "dark" && "bg-[#0f0f0f] border-[#00d4ff] shadow-blue-500/20",
-                  theme === "miami" && "bg-[#0a0025] border-[#00d4ff] shadow-cyan-500/30",
-                  theme === "tron" && "bg-black border-[#00d4ff] shadow-cyan-500/40"
+                  theme === "miami" && "bg-[#0a0025] border-[#00d4ff] shadow-[#00d4ff]/30",
+                  theme === "tron" && "bg-black border-[#00d4ff] shadow-[#00d4ff]/40"
                 )}>
                   <p className="text-sm font-mono font-bold uppercase tracking-wider text-white" style={{ 
                     fontFamily: "monospace",
@@ -886,7 +886,7 @@ function WeatherApp() {
                 "h-8 w-8 animate-spin",
                 theme === "dark" && "text-blue-500",
                 theme === "miami" && "text-pink-500",
-                theme === "tron" && "text-cyan-500"
+                theme === "tron" && "text-[#00d4ff]"
               )} />
               <span className="ml-2 text-white">
                 {isAutoDetecting ? 'Detecting your location...' : 'Loading weather data...'}
