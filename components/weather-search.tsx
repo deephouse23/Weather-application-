@@ -138,7 +138,7 @@ export default function WeatherSearch({
       {/* Simple format hints - Mobile responsive */}
       <div className="mb-2 sm:mb-3 text-center px-2">
         <div className={`text-xs sm:text-sm ${themeClasses.secondaryText} uppercase tracking-wider break-words`}>
-          <span className="hidden sm:inline">► 90210 • NEW YORK, NY • LONDON, UK ◄</span>
+          <span className="hidden sm:inline">► ZIP CODE • CITY, STATE • CITY, COUNTRY ◄</span>
           <span className="sm:hidden">► ZIP • CITY, STATE • CITY, COUNTRY ◄</span>
         </div>
       </div>

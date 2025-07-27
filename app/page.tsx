@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { fetchWeatherData, fetchWeatherByLocation } from "@/lib/weather-api"
 import { WeatherData } from '@/lib/types'
 import PageWrapper from "@/components/page-wrapper"
@@ -71,6 +73,7 @@ const getPressureUnit = (countryCode: string): 'hPa' | 'inHg' => {
 
 
 function WeatherApp() {
+  const pathname = usePathname()
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>("")
@@ -821,66 +824,33 @@ function WeatherApp() {
               WEATHER BY CITY
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 max-w-4xl mx-auto">
-              <a 
-                href="/weather/new-york-ny" 
-                className="block px-3 py-2 text-sm font-mono rounded border transition-colors border-[#00FFFF] text-[#e0e0e0] hover:bg-[#00FFFF] hover:text-[#0f0f0f]"
-              >
-                NEW YORK
-              </a>
-              <a 
-                href="/weather/los-angeles-ca" 
-                className="block px-3 py-2 text-sm font-mono rounded border transition-colors border-[#00FFFF] text-[#e0e0e0] hover:bg-[#00FFFF] hover:text-[#0f0f0f]"
-              >
-                LOS ANGELES
-              </a>
-              <a 
-                href="/weather/chicago-il" 
-                className="block px-3 py-2 text-sm font-mono rounded border transition-colors border-[#00FFFF] text-[#e0e0e0] hover:bg-[#00FFFF] hover:text-[#0f0f0f]"
-              >
-                CHICAGO
-              </a>
-              <a 
-                href="/weather/houston-tx" 
-                className="block px-3 py-2 text-sm font-mono rounded border transition-colors border-[#00FFFF] text-[#e0e0e0] hover:bg-[#00FFFF] hover:text-[#0f0f0f]"
-              >
-                HOUSTON
-              </a>
-              <a 
-                href="/weather/phoenix-az" 
-                className="block px-3 py-2 text-sm font-mono rounded border transition-colors border-[#00FFFF] text-[#e0e0e0] hover:bg-[#00FFFF] hover:text-[#0f0f0f]"
-              >
-                PHOENIX
-              </a>
-              <a 
-                href="/weather/philadelphia-pa" 
-                className="block px-3 py-2 text-sm font-mono rounded border transition-colors border-[#00FFFF] text-[#e0e0e0] hover:bg-[#00FFFF] hover:text-[#0f0f0f]"
-              >
-                PHILADELPHIA
-              </a>
-              <a 
-                href="/weather/san-antonio-tx" 
-                className="block px-3 py-2 text-sm font-mono rounded border transition-colors border-[#00FFFF] text-[#e0e0e0] hover:bg-[#00FFFF] hover:text-[#0f0f0f]"
-              >
-                SAN ANTONIO
-              </a>
-              <a 
-                href="/weather/san-diego-ca" 
-                className="block px-3 py-2 text-sm font-mono rounded border transition-colors border-[#00FFFF] text-[#e0e0e0] hover:bg-[#00FFFF] hover:text-[#0f0f0f]"
-              >
-                SAN DIEGO
-              </a>
-              <a 
-                href="/weather/dallas-tx" 
-                className="block px-3 py-2 text-sm font-mono rounded border transition-colors border-[#00FFFF] text-[#e0e0e0] hover:bg-[#00FFFF] hover:text-[#0f0f0f]"
-              >
-                DALLAS
-              </a>
-              <a 
-                href="/weather/austin-tx" 
-                className="block px-3 py-2 text-sm font-mono rounded border transition-colors border-[#00FFFF] text-[#e0e0e0] hover:bg-[#00FFFF] hover:text-[#0f0f0f]"
-              >
-                AUSTIN
-              </a>
+              {[
+                { href: "/weather/new-york-ny", label: "NEW YORK" },
+                { href: "/weather/los-angeles-ca", label: "LOS ANGELES" },
+                { href: "/weather/chicago-il", label: "CHICAGO" },
+                { href: "/weather/houston-tx", label: "HOUSTON" },
+                { href: "/weather/phoenix-az", label: "PHOENIX" },
+                { href: "/weather/philadelphia-pa", label: "PHILADELPHIA" },
+                { href: "/weather/san-antonio-tx", label: "SAN ANTONIO" },
+                { href: "/weather/san-diego-ca", label: "SAN DIEGO" },
+                { href: "/weather/dallas-tx", label: "DALLAS" },
+                { href: "/weather/austin-tx", label: "AUSTIN" }
+              ].map((city) => {
+                const isActive = pathname === city.href
+                return (
+                  <Link 
+                    key={city.href}
+                    href={city.href} 
+                    className={`block px-3 py-2 text-sm font-mono rounded border transition-colors ${
+                      isActive 
+                        ? "bg-[#00FFFF] text-[#0f0f0f] border-[#00FFFF]" 
+                        : "border-[#00FFFF] text-[#e0e0e0] hover:bg-[#00FFFF] hover:text-[#0f0f0f]"
+                    }`}
+                  >
+                    {city.label}
+                  </Link>
+                )
+              })}
             </div>
           </nav>
         </ResponsiveContainer>
