@@ -287,6 +287,7 @@ function WeatherApp() {
             
             setData(weather)
             setLocationInput(cachedLocationData)
+            setCurrentLocation(cachedLocationData)
             setHasSearched(true)
             return // Exit early if we have cached data
           }
