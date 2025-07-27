@@ -8,9 +8,12 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "16 Bit Weather - Retro Terminal Weather Forecast",
+  title: {
+    default: "16 Bit Weather - Retro Terminal Weather Forecast",
+    template: "%s | 16 Bit Weather"
+  },
   description: "Real-time weather forecasts with authentic 16-bit terminal aesthetics. Check current conditions, 5-day forecasts, and weather data for any city worldwide. Dark Terminal, Miami Vice, and Tron Grid themes available.",
-  keywords: "16-bit weather, terminal weather, retro weather forecast, pixel weather, weather app, real-time weather, 5-day forecast, weather data, weather conditions, meteorology education, cloud types, weather systems",
+  keywords: "16-bit weather, terminal weather, retro weather forecast, pixel weather, weather app, real-time weather, 5-day forecast, weather data, weather conditions, meteorology education, cloud types, weather systems, accurate weather forecast, weather radar, weather map, local weather, world weather, international weather",
   generator: 'Next.js',
   applicationName: '16 Bit Weather',
   authors: [{ name: '16 Bit Weather' }],
@@ -61,6 +64,10 @@ export const metadata: Metadata = {
   },
   verification: {
     google: 'your-google-verification-code',
+    yandex: 'your-yandex-verification-code',
+    other: {
+      'msvalidate.01': 'your-bing-verification-code'
+    }
   },
   icons: {
     icon: [
@@ -104,6 +111,9 @@ export default function RootLayout({
         <meta name="geo.placename" content="United States" />
         <meta name="geo.position" content="39.8283;-98.5795" />
         <meta name="ICBM" content="39.8283, -98.5795" />
+        <meta name="wot-verification" content="16bitweather" />
+        <meta name="yandex-verification" content="16bitweather" />
+        <meta name="p:domain_verify" content="16bitweather" />
         <meta name="language" content="en-US" />
         <meta name="distribution" content="global" />
         <meta name="rating" content="general" />
@@ -182,7 +192,20 @@ export default function RootLayout({
                   "bestRating": "5",
                   "worstRating": "1"
                 },
-                "serviceType": "Weather Forecast Service"
+                "serviceType": "Weather Forecast Service",
+                "mainEntityOfPage": {
+                  "@type": "WebPage",
+                  "@id": "https://www.16bitweather.co/"
+                },
+                "provider": {
+                  "@type": "Organization",
+                  "name": "16 Bit Weather",
+                  "url": "https://www.16bitweather.co"
+                },
+                "audience": {
+                  "@type": "Audience",
+                  "audienceType": "Weather enthusiasts, educators, students, developers"
+                }
               },
               {
                 "@context": "https://schema.org",
@@ -223,6 +246,46 @@ export default function RootLayout({
                 },
                 "sameAs": [
                   "https://www.16bitweather.co"
+                ],
+                "about": {
+                  "@type": "Thing",
+                  "name": "Weather Forecasting",
+                  "description": "Real-time weather data and forecasting services"
+                },
+                "mainEntity": {
+                  "@type": "Service",
+                  "name": "Weather Forecast Service",
+                  "description": "Free real-time weather forecasts and conditions"
+                }
+              },
+              {
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                "mainEntity": [
+                  {
+                    "@type": "Question",
+                    "name": "How accurate is 16 Bit Weather?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "16 Bit Weather provides real-time weather data from OpenWeatherMap API with high accuracy. Forecasts are updated every few minutes for current conditions."
+                    }
+                  },
+                  {
+                    "@type": "Question",
+                    "name": "Is 16 Bit Weather free to use?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "Yes, 16 Bit Weather is completely free to use. We provide weather forecasts, educational content, and retro-styled weather data at no cost."
+                    }
+                  },
+                  {
+                    "@type": "Question",
+                    "name": "What weather data does 16 Bit Weather provide?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "We provide current weather conditions, 5-day forecasts, humidity, pressure, wind speed/direction, UV index, air quality, pollen counts, and sunrise/sunset times."
+                    }
+                  }
                 ]
               }
             ])
