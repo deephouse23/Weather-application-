@@ -816,8 +816,8 @@ function WeatherApp() {
           )}
           
           {/* SEO City Links Section */}
-          <div className="mt-16 pt-8 border-t-2 text-center border-[#00FFFF]">
-            <h2 className="text-lg font-bold mb-4 uppercase tracking-wider font-mono text-[#00FFFF]">
+          <nav className="mt-16 pt-8 border-t-2 text-center border-[#00FFFF]" aria-labelledby="city-weather-navigation">
+            <h2 id="city-weather-navigation" className="text-lg font-bold mb-4 uppercase tracking-wider font-mono text-[#00FFFF]">
               WEATHER BY CITY
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 max-w-4xl mx-auto">
