@@ -10,6 +10,7 @@ import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from '@/components/lazy-weather-components'
 import { ResponsiveContainer, ResponsiveGrid } from '@/components/responsive-container'
+import { useLocationContext } from '@/components/location-context'
 
 
 interface CityWeatherClientProps {
@@ -30,6 +31,12 @@ interface CityWeatherClientProps {
 
 export default function CityWeatherClient({ city, citySlug }: CityWeatherClientProps) {
   const { theme } = useTheme()
+  const { 
+    setLocationInput, 
+    setCurrentLocation,
+    clearLocationState,
+    setShouldClearOnRouteChange
+  } = useLocationContext()
   
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -52,6 +59,10 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
       const weatherData = await fetchWeatherData(city.searchTerm, API_KEY)
       console.log(`Weather data loaded for ${city.name}:`, weatherData.location)
       setWeather(weatherData)
+      
+      // Update location context with city data
+      setLocationInput(city.searchTerm)
+      setCurrentLocation(weatherData.location || city.searchTerm)
     } catch (err) {
       console.error('Error loading city weather:', err)
       setError(err instanceof Error ? err.message : 'Failed to load weather data')
@@ -61,11 +72,19 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
   }
 
   useEffect(() => {
+    // Disable route change clearing for city pages (they manage their own state)
+    setShouldClearOnRouteChange(false)
+    
     if (city) {
       // Load city-specific weather data first (city pages should show city data, not user location)
       loadCityWeather()
     }
-  }, [city?.searchTerm])
+    
+    // Cleanup: enable route change clearing when leaving city pages
+    return () => {
+      setShouldClearOnRouteChange(true)
+    }
+  }, [city?.searchTerm, setShouldClearOnRouteChange])
 
   // Search handler for the search component
   const handleSearch = async (locationInput: string) => {
@@ -80,6 +99,10 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
       
       const weatherData = await fetchWeatherData(locationInput, API_KEY)
       setWeather(weatherData)
+      
+      // Update location context with search results
+      setLocationInput(locationInput)
+      setCurrentLocation(weatherData.location || locationInput)
     } catch (err) {
       console.error('Error searching weather:', err)
       setError(err instanceof Error ? err.message : 'Failed to load weather data')

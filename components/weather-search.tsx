@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
-import { Search, Loader2, MapPin } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Search, Loader2, MapPin, X } from "lucide-react"
 import { ThemeType, APP_CONSTANTS } from "@/lib/utils"
 import CityAutocomplete from "./city-autocomplete"
 import { type CityData } from "@/lib/city-database"
+import { useLocationContext } from "./location-context"
 
 interface WeatherSearchProps {
   onSearch: (location: string) => void;
@@ -29,6 +30,14 @@ export default function WeatherSearch({
 }: WeatherSearchProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [showAutocomplete, setShowAutocomplete] = useState(false)
+  const { locationInput, clearLocationState } = useLocationContext()
+
+  // Sync with location context
+  useEffect(() => {
+    if (locationInput !== searchTerm) {
+      setSearchTerm(locationInput)
+    }
+  }, [locationInput, searchTerm])
 
   // Local theme classes function
   const getThemeClasses = (theme: ThemeType) => {
@@ -130,6 +139,14 @@ export default function WeatherSearch({
     }
   }
 
+  const handleClearClick = () => {
+    if (!isLoading && !isDisabled) {
+      setSearchTerm("")
+      setShowAutocomplete(false)
+      clearLocationState()
+    }
+  }
+
   // Determine if controls should be disabled
   const controlsDisabled = isLoading || isDisabled
 
@@ -163,19 +180,37 @@ export default function WeatherSearch({
               fontSize: "clamp(12px, 3vw, 16px)" // Responsive font size
             }}
           />
-          <button
-            type="submit"
-            disabled={controlsDisabled || !searchTerm.trim()}
-            className={`absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 p-2 ${themeClasses.secondaryText} hover:text-[#ffe66d] 
-                     transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${themeClasses.glow}
-                     min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation`}
-          >
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-            ) : (
-              <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+            {/* Clear button */}
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={handleClearClick}
+                disabled={controlsDisabled}
+                className={`p-2 ${themeClasses.secondaryText} hover:text-red-400 
+                         transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed
+                         min-w-[40px] min-h-[40px] flex items-center justify-center touch-manipulation`}
+                title="Clear search"
+              >
+                <X className="w-4 h-4" />
+              </button>
             )}
-          </button>
+            
+            {/* Search button */}
+            <button
+              type="submit"
+              disabled={controlsDisabled || !searchTerm.trim()}
+              className={`p-2 ${themeClasses.secondaryText} hover:text-[#ffe66d] 
+                       transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${themeClasses.glow}
+                       min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation`}
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+              ) : (
+                <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+              )}
+            </button>
+          </div>
 
           {/* City Autocomplete */}
           <CityAutocomplete

@@ -15,6 +15,7 @@ import { APP_CONSTANTS } from "@/lib/utils"
 import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from "@/components/lazy-weather-components"
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/responsive-container"
 import { ErrorBoundary, SafeRender } from "@/components/error-boundary"
+import { useLocationContext } from "@/components/location-context"
 
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
@@ -75,13 +76,19 @@ const getPressureUnit = (countryCode: string): 'hPa' | 'inHg' => {
 
 function WeatherApp() {
   const { theme } = useTheme()
+  const { 
+    locationInput, 
+    currentLocation, 
+    setLocationInput, 
+    setCurrentLocation,
+    clearLocationState,
+    setShouldClearOnRouteChange
+  } = useLocationContext()
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>("")
   const [hasSearched, setHasSearched] = useState(false)
   const [lastSearchTerm, setLastSearchTerm] = useState<string>("")
-  const [currentLocation, setCurrentLocation] = useState<string>("")
-  const [locationInput, setLocationInput] = useState<string>("")
   const [isOnCooldown, setIsOnCooldown] = useState(false)
   const [remainingSearches, setRemainingSearches] = useState(10)
   const [rateLimitError, setRateLimitError] = useState<string>("")
@@ -109,7 +116,9 @@ function WeatherApp() {
   // Client-side mount effect
   useEffect(() => {
     setIsClient(true)
-  }, [])
+    // Enable route change clearing on the main page
+    setShouldClearOnRouteChange(true)
+  }, [setShouldClearOnRouteChange])
 
   // Handle successful location detection
   const handleLocationDetected = async (location: LocationData) => {
@@ -239,9 +248,10 @@ function WeatherApp() {
     if (!isClient) return
     try {
       const cachedLocation = localStorage.getItem(CACHE_KEY)
-      if (cachedLocation) {
+      if (cachedLocation && !locationInput && !currentLocation) {
         setLocationInput(cachedLocation)
         setCurrentLocation(cachedLocation)
+        console.log('Loaded cached location:', cachedLocation)
       }
     } catch (error) {
       console.warn('Failed to load cached location:', error)
@@ -308,7 +318,7 @@ function WeatherApp() {
     }
     
     checkCacheAndLoad()
-  }, [isClient])
+  }, [isClient, locationInput, currentLocation])
 
   // Enhanced theme management functions
   const getStoredTheme = (): ThemeType => {
@@ -933,6 +943,16 @@ function WeatherApp() {
           {weather && !loading && !error && (
             <ErrorBoundary componentName="Weather Display" theme={currentTheme}>
               <div className="space-y-4 sm:space-y-6">
+                {/* Location Title */}
+                <div className="text-center mb-4">
+                  <h1 className={`text-2xl sm:text-3xl font-bold uppercase tracking-wider ${themeClasses.headerText} ${themeClasses.glow}`} style={{
+                    fontFamily: "monospace",
+                    fontSize: "clamp(20px, 4vw, 32px)"
+                  }}>
+                    {weather.location} WEATHER
+                  </h1>
+                </div>
+                
                 {/* Current Weather */}
                 <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
                 {/* Temperature Box */}

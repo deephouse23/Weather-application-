@@ -4,6 +4,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Analytics } from '@vercel/analytics/react'
 import { ThemeProvider } from "@/components/theme-provider"
+import { LocationProvider } from "@/components/location-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -237,7 +238,9 @@ export default function RootLayout({
           storageKey="weather-edu-theme"
           themes={["dark", "miami", "tron"]}
         >
-          {children}
+          <LocationProvider>
+            {children}
+          </LocationProvider>
         </ThemeProvider>
         <Analytics />
       </body>
