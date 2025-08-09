@@ -77,32 +77,51 @@ export default function CityAutocomplete({
     }
   }, [query, onVisibilityChange]);
 
-  // Handle keyboard navigation
+  // Handle keyboard navigation - only for autocomplete-specific keys
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle keys when autocomplete is visible and has suggestions
       if (!isVisible || suggestions.length === 0) return;
-
+      
+      // Only prevent default for navigation keys we specifically handle
+      // Let all other keys (including backspace, delete, typing) pass through naturally
       switch (e.key) {
         case 'ArrowDown':
-          e.preventDefault();
-          setSelectedIndex(prev => 
-            prev < suggestions.length - 1 ? prev + 1 : prev
-          );
+          // Only prevent default if we're actually in the search input
+          const activeElement = document.activeElement as HTMLElement;
+          if (activeElement && (activeElement.type === 'text' || activeElement.tagName === 'INPUT')) {
+            e.preventDefault();
+            setSelectedIndex(prev => 
+              prev < suggestions.length - 1 ? prev + 1 : prev
+            );
+          }
           break;
         case 'ArrowUp':
-          e.preventDefault();
-          setSelectedIndex(prev => prev > 0 ? prev - 1 : -1);
+          // Only prevent default if we're actually in the search input
+          const activeElementUp = document.activeElement as HTMLElement;
+          if (activeElementUp && (activeElementUp.type === 'text' || activeElementUp.tagName === 'INPUT')) {
+            e.preventDefault();
+            setSelectedIndex(prev => prev > 0 ? prev - 1 : -1);
+          }
           break;
         case 'Enter':
-          e.preventDefault();
-          if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
+          // Only handle Enter if we have a selected item and we're in the search input
+          const activeElementEnter = document.activeElement as HTMLElement;
+          if (activeElementEnter && (activeElementEnter.type === 'text' || activeElementEnter.tagName === 'INPUT') &&
+              selectedIndex >= 0 && selectedIndex < suggestions.length) {
+            e.preventDefault();
             handleCitySelect(suggestions[selectedIndex]);
           }
           break;
         case 'Escape':
+          // Always handle Escape to close autocomplete
           e.preventDefault();
           onVisibilityChange(false);
           setSelectedIndex(-1);
+          break;
+        // Explicitly DO NOT handle any other keys - let them pass through to the input
+        default:
+          // Do nothing - let the browser handle all other keys naturally
           break;
       }
     };

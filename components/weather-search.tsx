@@ -32,12 +32,15 @@ export default function WeatherSearch({
   const { locationInput, setLocationInput, clearLocationState } = useLocationContext()
   const { theme } = useTheme()
 
-  // Sync with location context - prevent unnecessary loops
+  // Sync with location context - prevent unnecessary loops and preserve user input
   useEffect(() => {
-    if (locationInput !== searchTerm) {
+    // Only sync from context to local state if:
+    // 1. The context value is different from local state
+    // 2. The user isn't currently typing (to avoid interfering with active input)
+    if (locationInput !== searchTerm && document.activeElement?.tagName !== 'INPUT') {
       setSearchTerm(locationInput)
     }
-  }, [locationInput])
+  }, [locationInput, searchTerm])
 
   // Semantic dark theme classes using CSS variables
   const themeClasses = {
@@ -75,11 +78,26 @@ export default function WeatherSearch({
     setLocationInput(city.searchTerm)
     onSearch(city.searchTerm)
     setShowAutocomplete(false)
+    
+    // Ensure the input remains focusable and editable after selection
+    // This helps maintain natural editing behavior
+    setTimeout(() => {
+      const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+      if (input) {
+        input.focus();
+        // Position cursor at the end of the input
+        input.setSelectionRange(input.value.length, input.value.length);
+      }
+    }, 0);
   }
 
   const handleInputChange = (value: string) => {
+    // Update local state immediately for responsive UI
     setSearchTerm(value)
+    
+    // Update context state (debounced behavior handled by context)
     setLocationInput(value)
+    
     // Show autocomplete when typing, hide when empty
     setShowAutocomplete(value.length >= 2)
   }
@@ -96,6 +114,22 @@ export default function WeatherSearch({
       setLocationInput("")
       setShowAutocomplete(false)
       clearLocationState()
+    }
+  }
+
+  // Handle input key events to ensure natural editing behavior
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // For backspace, delete, and other editing keys, ensure they work naturally
+    // Don't interfere with these keys - let the browser handle them
+    if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+      // Let the browser handle these keys naturally
+      return;
+    }
+    
+    // For Enter key, submit the form if we don't have autocomplete visible
+    if (e.key === 'Enter' && !showAutocomplete) {
+      e.preventDefault();
+      handleSubmit(e as unknown as React.FormEvent);
     }
   }
 
@@ -119,6 +153,7 @@ export default function WeatherSearch({
             type="text"
             value={searchTerm}
             onChange={(e) => handleInputChange(e.target.value)}
+            onKeyDown={handleInputKeyDown}
             onFocus={() => searchTerm.length >= 2 && setShowAutocomplete(true)}
             placeholder={isDisabled ? "Rate limit reached..." : "ZIP, City+State, or City+Country..."}
             disabled={controlsDisabled}
