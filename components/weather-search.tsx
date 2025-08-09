@@ -30,14 +30,14 @@ export default function WeatherSearch({
 }: WeatherSearchProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [showAutocomplete, setShowAutocomplete] = useState(false)
-  const { locationInput, clearLocationState } = useLocationContext()
+  const { locationInput, setLocationInput, clearLocationState } = useLocationContext()
 
-  // Sync with location context
+  // Sync with location context - prevent unnecessary loops
   useEffect(() => {
     if (locationInput !== searchTerm) {
       setSearchTerm(locationInput)
     }
-  }, [locationInput, searchTerm])
+  }, [locationInput])
 
   // Local theme classes function
   const getThemeClasses = (theme: ThemeType) => {
@@ -123,12 +123,14 @@ export default function WeatherSearch({
 
   const handleCitySelect = (city: CityData) => {
     setSearchTerm(city.searchTerm)
+    setLocationInput(city.searchTerm)
     onSearch(city.searchTerm)
     setShowAutocomplete(false)
   }
 
   const handleInputChange = (value: string) => {
     setSearchTerm(value)
+    setLocationInput(value)
     // Show autocomplete when typing, hide when empty
     setShowAutocomplete(value.length >= 2)
   }
@@ -142,6 +144,7 @@ export default function WeatherSearch({
   const handleClearClick = () => {
     if (!isLoading && !isDisabled) {
       setSearchTerm("")
+      setLocationInput("")
       setShowAutocomplete(false)
       clearLocationState()
     }
