@@ -65,11 +65,11 @@ async function fetchLocationTemperature(
 
 export async function GET(request: NextRequest) {
   try {
-    // Get API key from environment
-    const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
+    // Get API key from server-side environment (without NEXT_PUBLIC_ prefix)
+    const apiKey = process.env.OPENWEATHER_API_KEY;
     
     if (!apiKey) {
-      console.error('OpenWeatherMap API key not configured');
+      console.error('OpenWeatherMap API key not configured in environment variables');
       return NextResponse.json(
         { error: 'OpenWeatherMap API key not configured' },
         { status: 500 }
