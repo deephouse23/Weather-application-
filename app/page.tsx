@@ -597,6 +597,7 @@ function WeatherApp() {
         return;
       }
 
+      const API_KEY = getAPIKey();
       if (!API_KEY) {
         throw new Error('OpenWeather API key is not configured');
       }
@@ -871,7 +872,7 @@ function WeatherApp() {
           )}
 
           {weather && !loading && !error && (
-            <ErrorBoundary componentName="Weather Display" theme={currentTheme}>
+            <ErrorBoundary componentName="Weather Display" theme={theme || 'dark'}>
               <div className="space-y-4 sm:space-y-6">
                 {/* Location Title */}
                 <div className="text-center mb-4">
@@ -954,7 +955,7 @@ function WeatherApp() {
               </ResponsiveGrid>
 
               {/* AQI and Pollen Count - Using Lazy Loaded Shared Components */}
-              <LazyEnvironmentalDisplay weather={weather} theme={theme} />
+              <LazyEnvironmentalDisplay weather={weather} theme={theme || 'dark'} />
 
               {/* Day click handler */}
               {(() => {
@@ -970,7 +971,7 @@ function WeatherApp() {
                         ...day,
                         country: weather?.country || 'US'
                       }))} 
-                      theme={theme}
+                      theme={theme || 'dark'}
                       onDayClick={handleDayClick}
                       selectedDay={selectedDay}
                     />
@@ -981,7 +982,7 @@ function WeatherApp() {
                         ...day,
                         country: weather?.country || 'US'
                       }))} 
-                      theme={theme}
+                      theme={theme || 'dark'}
                       selectedDay={selectedDay}
                       currentWeatherData={{
                         humidity: weather?.humidity || 0,
@@ -1002,15 +1003,15 @@ function WeatherApp() {
           {/* SEO City Links Section */}
           <div className={cn(
             "mt-16 pt-8 border-t-2 text-center",
-            theme === "dark" && "border-[#00d4ff]",
-            theme === "miami" && "border-[#ff1493]",
-            theme === "tron" && "border-[#00FFFF]"
+            (theme || 'dark') === "dark" && "border-[#00d4ff]",
+            (theme || 'dark') === "miami" && "border-[#ff1493]",
+            (theme || 'dark') === "tron" && "border-[#00FFFF]"
           )}>
             <h2 className={cn(
               "text-lg font-bold mb-4 uppercase tracking-wider font-mono",
-              theme === "dark" && "text-[#00d4ff]",
-              theme === "miami" && "text-[#ff1493]",
-              theme === "tron" && "text-[#00FFFF]"
+              (theme || 'dark') === "dark" && "text-[#00d4ff]",
+              (theme || 'dark') === "miami" && "text-[#ff1493]",
+              (theme || 'dark') === "tron" && "text-[#00FFFF]"
             )}>
               WEATHER BY CITY
             </h2>
@@ -1019,9 +1020,9 @@ function WeatherApp() {
                 href="/weather/new-york-ny" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 NEW YORK
@@ -1030,9 +1031,9 @@ function WeatherApp() {
                 href="/weather/los-angeles-ca" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 LOS ANGELES
@@ -1041,9 +1042,9 @@ function WeatherApp() {
                 href="/weather/chicago-il" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 CHICAGO
@@ -1052,9 +1053,9 @@ function WeatherApp() {
                 href="/weather/houston-tx" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 HOUSTON
@@ -1063,9 +1064,9 @@ function WeatherApp() {
                 href="/weather/phoenix-az" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 PHOENIX
@@ -1096,9 +1097,9 @@ function WeatherApp() {
                 href="/weather/san-diego-ca" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 SAN DIEGO
@@ -1107,9 +1108,9 @@ function WeatherApp() {
                 href="/weather/dallas-tx" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 DALLAS
@@ -1118,9 +1119,9 @@ function WeatherApp() {
                 href="/weather/austin-tx" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 AUSTIN
