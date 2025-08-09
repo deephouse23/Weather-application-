@@ -1,6 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { safeStorage } from '@/lib/safe-storage'
 
 type Theme = 'dark'
 
@@ -39,20 +40,25 @@ export function ThemeProvider({
   const [theme, setTheme] = useState<Theme>(defaultTheme)
 
   useEffect(() => {
-    const storedTheme = localStorage.getItem(storageKey) as Theme
-    if (storedTheme && themes.includes(storedTheme)) {
-      setTheme(storedTheme)
+    if (typeof window !== 'undefined') {
+      const storedTheme = safeStorage.getItem(storageKey) as Theme
+      if (storedTheme && themes.includes(storedTheme)) {
+        setTheme(storedTheme)
+      }
     }
   }, [storageKey, themes])
 
   useEffect(() => {
-    const root = window.document.documentElement
-    root.classList.remove(...themes)
-    root.classList.add(theme)
-    if (attribute === 'class') {
+    if (typeof window !== 'undefined') {
+      const root = window.document.documentElement
+      root.classList.remove(...themes)
+      root.classList.add(theme)
       root.setAttribute('data-theme', theme)
+      
+      // Save theme to storage
+      safeStorage.setItem(storageKey, theme)
     }
-  }, [theme, themes, attribute])
+  }, [theme, themes, storageKey])
 
   const toggleTheme = () => {
     // Theme is locked to dark - no-op
