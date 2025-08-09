@@ -3,7 +3,7 @@ import "./globals.css"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Analytics } from '@vercel/analytics/react'
-import { ThemeProvider } from "@/components/theme-provider"
+import AppThemeProvider from "@/app/providers/ThemeProvider"
 import { LocationProvider } from "@/components/location-context"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -231,17 +231,11 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
-          storageKey="weather-edu-theme"
-          themes={["dark"]}
-        >
+        <AppThemeProvider>
           <LocationProvider>
             {children}
           </LocationProvider>
-        </ThemeProvider>
+        </AppThemeProvider>
         <Analytics />
       </body>
     </html>

@@ -98,7 +98,12 @@ const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
 
 // Validate API key
 const validateApiKey = () => {
-  // Debug environment variables
+  // Skip validation during SSR/build
+  if (typeof window === 'undefined') {
+    return 'build-time-placeholder';
+  }
+  
+  // Debug environment variables (client-side only)
   console.log('🔍 ENVIRONMENT VARIABLE DEBUG:');
   console.log('NODE_ENV:', process.env.NODE_ENV);
   console.log('REACT_APP_OPENWEATHER_API_KEY:', process.env.REACT_APP_OPENWEATHER_API_KEY ? 'SET' : 'MISSING');
@@ -122,6 +127,11 @@ const validateApiKey = () => {
 
 // Validate Google Pollen API key
 const validateGooglePollenApiKey = () => {
+  // Skip validation during SSR/build
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  
   // Try both variable names for compatibility
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY || process.env.REACT_APP_GOOGLE_POLLEN_API_KEY;
   

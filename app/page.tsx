@@ -35,34 +35,16 @@ const formatPressureByRegion = (pressureHPa: number, countryCode: string): strin
   }
 };
 
-// Get API key from environment variables for production deployment
-// Try both NEXT_PUBLIC_ (Next.js) and REACT_APP_ (Create React App) prefixes for compatibility
-const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || process.env.REACT_APP_OPENWEATHER_API_KEY;
+// Environment variable access moved inside component to avoid SSR issues
+const getAPIKey = () => {
+  if (typeof window === 'undefined') return null;
+  return process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || process.env.REACT_APP_OPENWEATHER_API_KEY;
+};
 
-// Debug environment variables
-console.log('🔍 MAIN PAGE ENVIRONMENT DEBUG:');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('NEXT_PUBLIC_OPENWEATHER_API_KEY:', process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY ? 'SET' : 'MISSING');
-console.log('REACT_APP_OPENWEATHER_API_KEY:', process.env.REACT_APP_OPENWEATHER_API_KEY ? 'SET' : 'MISSING');
-console.log('Final API_KEY:', API_KEY ? 'SET' : 'MISSING');
-
-// Validate API key
-if (!API_KEY) {
-  console.error('❌ OpenWeather API key is missing!');
-  console.error('Please set either NEXT_PUBLIC_OPENWEATHER_API_KEY or REACT_APP_OPENWEATHER_API_KEY environment variable.');
-  console.error('For Next.js, use NEXT_PUBLIC_OPENWEATHER_API_KEY');
-} else {
-  console.log('✅ OpenWeather API key found:', API_KEY.substring(0, 8) + '...');
-}
-
-// Check for Google Pollen API key
-const GOOGLE_POLLEN_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY || process.env.REACT_APP_GOOGLE_POLLEN_API_KEY;
-if (!GOOGLE_POLLEN_API_KEY) {
-  console.warn('⚠️ Google Pollen API key is missing!');
-  console.warn('Please set either NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY or REACT_APP_GOOGLE_POLLEN_API_KEY environment variable for real pollen data.');
-} else {
-  console.log('✅ Google Pollen API key found:', GOOGLE_POLLEN_API_KEY.substring(0, 8) + '...');
-}
+const getGooglePollenAPIKey = () => {
+  if (typeof window === 'undefined') return null;
+  return process.env.NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY || process.env.REACT_APP_GOOGLE_POLLEN_API_KEY;
+};
 
 // Theme types (dark only now)
 type ThemeType = 'dark';
@@ -259,12 +241,7 @@ function WeatherApp() {
     }
   }
 
-  // Load theme function
-  const loadTheme = () => {
-    if (!isClient) return
-    const storedTheme = getStoredTheme()
-    setCurrentTheme(storedTheme)
-  }
+  // Theme is managed by ThemeProvider, no local state needed
 
   // Set data function (for cached weather data)
   const setData = (weatherData: WeatherData) => {
@@ -281,12 +258,11 @@ function WeatherApp() {
     }
   }
 
-  // Load cached data and theme on component mount
+  // Load cached data on component mount
   useEffect(() => {
     if (!isClient) return
     
     loadCachedLocation()
-    loadTheme()
     
     // Check for existing cached data when component mounts
     const checkCacheAndLoad = async () => {
