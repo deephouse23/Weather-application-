@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, Cloud, Zap, BookOpen, Gamepad2, Info, Home } from "lucide-react"
+import { Menu, X, Cloud, Zap, BookOpen, Gamepad2, Info, Home, Thermometer } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
 
@@ -107,6 +107,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
 
   const navItems = [
     { href: "/", label: "HOME", icon: Home },
+    { href: "/extremes", label: "EXTREMES", icon: Thermometer },
     { href: "/cloud-types", label: "CLOUD TYPES", icon: Cloud },
     { href: "/weather-systems", label: "WEATHER SYSTEMS", icon: Zap },
     { href: "/fun-facts", label: "16-BIT TAKES", icon: BookOpen },

@@ -27,7 +27,8 @@
       "Bash(timeout 10s npm run dev)",
       "Bash(node:*)",
       "Bash(vercel:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(gh release create:*)"
     ],
     "deny": []
   }
