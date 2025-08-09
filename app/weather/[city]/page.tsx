@@ -294,7 +294,11 @@ export default function CityWeatherPage({ params }: PageParams) {
           </div>
         </div>
       }>
-        <CityWeatherClient city={cityInfo} citySlug={citySlug} />
+        <CityWeatherClient 
+          city={cityInfo} 
+          citySlug={citySlug} 
+          isPredefinedCity={!!city}
+        />
       </Suspense>
     </>
   )

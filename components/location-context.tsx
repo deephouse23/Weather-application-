@@ -129,7 +129,9 @@ export function LocationProvider({ children }: LocationProviderProps) {
       shouldClearOnRouteChange
     })
 
-    const shouldClear = shouldClearOnRouteChange && (isNavigatingFromHomeToCityPage || isNavigatingFromCityPageToHome || isNavigatingBetweenCityPages)
+    // Always clear when navigating between different city pages or from city to home
+    const shouldClear = (isNavigatingFromCityPageToHome || isNavigatingBetweenCityPages) || 
+                       (shouldClearOnRouteChange && isNavigatingFromHomeToCityPage)
 
     if (shouldClear) {
       console.log(`[LocationProvider] 🔥 CLEARING TRIGGERED: Route change detected: ${lastPathname} -> ${pathname}`)
