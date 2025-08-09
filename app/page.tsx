@@ -36,16 +36,7 @@ const formatPressureByRegion = (pressureHPa: number, countryCode: string): strin
   }
 };
 
-// Environment variable access moved inside component to avoid SSR issues
-const getAPIKey = () => {
-  if (typeof window === 'undefined') return null;
-  return process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || process.env.REACT_APP_OPENWEATHER_API_KEY;
-};
-
-const getGooglePollenAPIKey = () => {
-  if (typeof window === 'undefined') return null;
-  return process.env.NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY || process.env.REACT_APP_GOOGLE_POLLEN_API_KEY;
-};
+// API keys are now handled by internal API routes
 
 // Theme types (dark only now)
 type ThemeType = 'dark';
@@ -538,12 +529,7 @@ function WeatherApp() {
         return;
       }
 
-      const API_KEY = getAPIKey();
-      if (!API_KEY) {
-        throw new Error('OpenWeather API key is not configured');
-      }
-
-      const weatherData = await fetchWeatherData(locationInput, API_KEY);
+      const weatherData = await fetchWeatherData(locationInput);
       console.log('Weather data received:', weatherData);
 
       if (!weatherData) {

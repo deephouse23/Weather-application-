@@ -62,12 +62,7 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
       
       console.log(`Loading weather for city: ${city.name}, ${city.state} (${city.searchTerm})`)
       
-      const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || process.env.REACT_APP_OPENWEATHER_API_KEY
-      if (!API_KEY) {
-        throw new Error('API key not configured')
-      }
-      
-      const weatherData = await fetchWeatherData(city.searchTerm, API_KEY)
+      const weatherData = await fetchWeatherData(city.searchTerm)
       console.log(`Weather data loaded for ${city.name}:`, weatherData.location)
       setWeather(weatherData)
       
@@ -139,11 +134,7 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
       })
 
       const { latitude, longitude } = position.coords
-      const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || process.env.REACT_APP_OPENWEATHER_API_KEY
-      
-      if (!API_KEY) {
-        throw new Error('API key not configured')
-      }
+      // API key is now handled by internal API routes
       
       const { fetchWeatherByLocation } = await import('@/lib/weather-api')
       const weatherData = await fetchWeatherByLocation(`${latitude},${longitude}`)
