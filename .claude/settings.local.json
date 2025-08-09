@@ -20,7 +20,8 @@
       "Bash(find:*)",
       "Bash(npm ci:*)",
       "Bash(powershell:*)",
-      "Bash(gh pr list:*)"
+      "Bash(gh pr list:*)",
+      "Bash(timeout 60 npm run build)"
     ],
     "deny": []
   }
