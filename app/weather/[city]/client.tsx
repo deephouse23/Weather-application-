@@ -14,6 +14,23 @@ import { ResponsiveContainer, ResponsiveGrid } from '@/components/responsive-con
 import { useLocationContext } from '@/components/location-context'
 
 
+// Helper function to get moon phase icon
+const getMoonPhaseIcon = (phase: string): string => {
+  const phaseLower = phase.toLowerCase();
+  
+  if (phaseLower.includes('new')) return '●';
+  if (phaseLower.includes('waxing crescent')) return '🌒';
+  if (phaseLower.includes('first quarter')) return '🌓';
+  if (phaseLower.includes('waxing gibbous')) return '🌔';
+  if (phaseLower.includes('full')) return '🌕';
+  if (phaseLower.includes('waning gibbous')) return '🌖';
+  if (phaseLower.includes('last quarter')) return '🌗';
+  if (phaseLower.includes('waning crescent')) return '🌘';
+  
+  // Fallback for any other phases
+  return '🌑';
+};
+
 interface CityWeatherClientProps {
   city: {
     name: string
@@ -82,7 +99,9 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
     setWeather(null)
     setSelectedDay(null)
     setError("")
-    // also clear any location input stored in context if desired
+    // Clear the location context completely to prevent history from carrying over
+    clearLocationState()
+    // Then set the current city as the location
     setLocationInput(city.searchTerm)
     setCurrentLocation(city.searchTerm)
   }, [citySlug])
@@ -220,6 +239,44 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
                     {weather.wind.speed} mph
                     {weather.wind.gust ? ` (gusts ${weather.wind.gust} mph)` : ''}
                   </p>
+                </div>
+              </ResponsiveGrid>
+
+              {/* Sun Times, UV Index, Moon Phase - Same as homepage */}
+              <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
+                {/* Sun Times Box */}
+                <div className="p-4 rounded-lg text-center border-2 shadow-lg bg-weather-bg-elev border-weather-border">
+                  <h2 className="text-xl font-semibold mb-2 text-weather-primary">Sun Times</h2>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-yellow-400">☀️</span>
+                      <p className="text-weather-text">Sunrise: {weather?.sunrise || 'N/A'}</p>
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-orange-400">🌅</span>
+                      <p className="text-weather-text">Sunset: {weather?.sunset || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* UV Index Box */}
+                <div className="p-4 rounded-lg text-center border-2 shadow-lg bg-weather-bg-elev border-weather-border">
+                  <h2 className="text-xl font-semibold mb-2 text-weather-primary">UV Index</h2>
+                  <p className="text-lg font-bold text-weather-text">{weather?.uvIndex || 'N/A'}</p>
+                </div>
+
+                {/* Moon Phase Box */}
+                <div className="p-4 rounded-lg text-center border-2 shadow-lg bg-weather-bg-elev border-weather-border">
+                  <h2 className="text-xl font-semibold mb-2 text-weather-primary">Moon Phase</h2>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-2xl">{getMoonPhaseIcon(weather?.moonPhase?.phase || 'new')}</span>
+                      <p className="text-lg font-semibold text-weather-text">{weather?.moonPhase?.phase || 'Unknown'}</p>
+                    </div>
+                    <p className="text-sm font-medium text-weather-muted">
+                      {weather?.moonPhase?.illumination || 0}% illuminated
+                    </p>
+                  </div>
                 </div>
               </ResponsiveGrid>
 
