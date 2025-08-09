@@ -2,8 +2,8 @@ import { Suspense } from 'react'
 import CityWeatherClient from './client'
 import { EnhancedMetaTags } from '@/components/enhanced-meta-tags'
 
-// Enable static generation for better SEO performance
-// Dynamic directive removed to allow generateStaticParams to work
+// Force dynamic rendering to prevent build-time API calls
+export const dynamic = 'force-dynamic'
 
 // City data for SEO and functionality
 const cityData: { [key: string]: { 

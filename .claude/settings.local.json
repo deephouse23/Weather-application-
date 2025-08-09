@@ -21,7 +21,12 @@
       "Bash(npm ci:*)",
       "Bash(powershell:*)",
       "Bash(gh pr list:*)",
-      "Bash(timeout 60 npm run build)"
+      "Bash(timeout 60 npm run build)",
+      "Bash(git stash:*)",
+      "Bash(mkdir:*)",
+      "Bash(timeout 10s npm run dev)",
+      "Bash(node:*)",
+      "Bash(vercel:*)"
     ],
     "deny": []
   }

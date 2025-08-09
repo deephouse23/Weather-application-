@@ -96,6 +96,22 @@ const BASE_URL = 'https://api.openweathermap.org/data/2.5';
 const BASE_URL_V3 = 'https://api.openweathermap.org/data/3.0';
 const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
 
+/**
+ * Helper function to get proper API URL for server-side/client-side rendering
+ * Handles the difference between build-time static generation and client-side fetching
+ */
+const getApiUrl = (path: string): string => {
+  if (typeof window === 'undefined') {
+    // Server-side/build time
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    return `${baseUrl}${path}`;
+  }
+  // Client-side
+  return path;
+};
+
 // Note: API key validation is no longer needed on client-side
 // as all API calls are now routed through internal server endpoints
 const validateApiKey = () => {
@@ -462,7 +478,7 @@ const mapWeatherCondition = (condition: string): string => {
 
 // Geocoding function to get coordinates from location using internal API
 const geocodeLocation = async (locationQuery: LocationQuery, apiKey: string): Promise<{ lat: number; lon: number; displayName: string }> => {
-  const baseUrl = '/api/weather/geocoding';
+  const baseUrl = getApiUrl('/api/weather/geocoding');
   
   if (locationQuery.type === 'zip') {
     // Use ZIP code geocoding endpoint
@@ -746,7 +762,7 @@ const fetchUVIndex = async (lat: number, lon: number, apiKey: string): Promise<n
   console.log('Coordinates:', { lat, lon });
   
   try {
-    const response = await fetch(`/api/weather/uv?lat=${lat}&lon=${lon}`);
+    const response = await fetch(getApiUrl(`/api/weather/uv?lat=${lat}&lon=${lon}`));
     
     if (!response.ok) {
       console.error('UV Index API failed:', response.status);
@@ -795,7 +811,7 @@ const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: stri
   console.log('Coordinates:', { lat, lon });
   
   try {
-    const response = await fetch(`/api/weather/pollen?lat=${lat}&lon=${lon}`);
+    const response = await fetch(getApiUrl(`/api/weather/pollen?lat=${lat}&lon=${lon}`));
     
     if (!response.ok) {
       console.error('Pollen API failed:', response.status);
@@ -827,7 +843,7 @@ const fetchAirQualityData = async (lat: number, lon: number, cityName?: string):
   console.log('Coordinates:', { lat, lon });
   
   try {
-    const response = await fetch(`/api/weather/air-quality?lat=${lat}&lon=${lon}`);
+    const response = await fetch(getApiUrl(`/api/weather/air-quality?lat=${lat}&lon=${lon}`));
     
     if (!response.ok) {
       console.error('Air Quality API failed:', response.status);
@@ -869,7 +885,7 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
     console.log('Geocoded location:', { lat, lon, displayName });
 
     // Fetch current weather using internal API
-    const currentWeatherResponse = await fetch(`/api/weather/current?lat=${lat}&lon=${lon}&units=imperial`);
+    const currentWeatherResponse = await fetch(getApiUrl(`/api/weather/current?lat=${lat}&lon=${lon}&units=imperial`));
     if (!currentWeatherResponse.ok) {
       throw new Error(`Current weather API call failed: ${currentWeatherResponse.status}`);
     }
@@ -877,7 +893,7 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
     console.log('Current weather response:', currentWeatherData);
 
     // Fetch forecast using internal API
-    const forecastResponse = await fetch(`/api/weather/forecast?lat=${lat}&lon=${lon}&units=imperial`);
+    const forecastResponse = await fetch(getApiUrl(`/api/weather/forecast?lat=${lat}&lon=${lon}&units=imperial`));
     if (!forecastResponse.ok) {
       throw new Error(`Forecast API call failed: ${forecastResponse.status}`);
     }
@@ -975,7 +991,7 @@ export const fetchWeatherByLocation = async (coords: string): Promise<WeatherDat
 
   try {
     // Fetch current weather using internal API
-    const currentWeatherResponse = await fetch(`/api/weather/current?lat=${latitude}&lon=${longitude}&units=imperial`)
+    const currentWeatherResponse = await fetch(getApiUrl(`/api/weather/current?lat=${latitude}&lon=${longitude}&units=imperial`))
     if (!currentWeatherResponse.ok) {
       throw new Error(`Current weather API call failed: ${currentWeatherResponse.status}`)
     }
@@ -983,7 +999,7 @@ export const fetchWeatherByLocation = async (coords: string): Promise<WeatherDat
     console.log('Current weather response:', currentWeatherData)
 
     // Fetch forecast using internal API
-    const forecastResponse = await fetch(`/api/weather/forecast?lat=${latitude}&lon=${longitude}&units=imperial`)
+    const forecastResponse = await fetch(getApiUrl(`/api/weather/forecast?lat=${latitude}&lon=${longitude}&units=imperial`))
     if (!forecastResponse.ok) {
       throw new Error(`Forecast API call failed: ${forecastResponse.status}`)
     }
