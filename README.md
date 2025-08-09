@@ -1,13 +1,13 @@
-# 🌟 16-Bit Weather v0.2.78
+# 🌟 16-Bit Weather v0.3.0
 
 **Experience weather data like it's 1985!**
 
 A retro-styled weather application that combines modern meteorological data with authentic 16-bit gaming aesthetics. Get comprehensive weather information displayed through a nostalgic terminal interface with pixel-perfect styling.
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-16bitweather.co-brightgreen)](https://www.16bitweather.co/)
-[![Version](https://img.shields.io/badge/Version-0.2.78-blue)](https://github.com/deephouse23/Weather-application-/releases)
+[![Version](https://img.shields.io/badge/Version-0.3.0-blue)](https://github.com/deephouse23/Weather-application-/releases)
 [![React](https://img.shields.io/badge/React-18+-61dafb)](https://reactjs.org/)
-[![Security](https://img.shields.io/badge/Security-Hardened-green)](https://github.com/deephouse23/Weather-application-/releases/tag/v0.2.78)
+[![Security](https://img.shields.io/badge/Security-Hardened-green)](https://github.com/deephouse23/Weather-application-/releases/tag/v0.3.0)
 
 ## 🌐 Live Application
 
@@ -39,7 +39,7 @@ A retro-styled weather application that combines modern meteorological data with
 - **🌅 Sunrise/Sunset Times** - Daily solar schedule with custom sunrise/sunset icons
 - **🌙 Moon Phase Information** - Current lunar cycle with illumination percentage
 
-#### Enhanced 5-Day Forecasting (NEW in v0.2.78!)
+#### Enhanced 5-Day Forecasting
 - **📅 Interactive 5-Day Forecast** - Click any day tile for detailed metrics
 - **🌡️ High/Low Temperatures** - Daily temperature ranges with accurate future data
 - **📊 Detailed Weather Metrics** - Real humidity, wind, pressure, UV data for all days
@@ -84,10 +84,12 @@ A retro-styled weather application that combines modern meteorological data with
 ## 🛠️ Technology Stack
 
 ### Frontend Framework
-- **⚛️ React 18+** - Modern React with Hooks and functional components
-- **🎨 CSS3** - Custom styling with CSS Grid and Flexbox
+- **⚛️ React 19** - Latest React with modern features and improved performance
+- **🚀 Next.js 14** - Full-stack React framework with App Router
+- **🎨 Tailwind CSS** - utility-first CSS framework
 - **📱 Responsive Design** - Mobile-first design approach
 - **🎮 Custom Fonts** - Retro gaming typography
+- **🔧 TypeScript** - Type-safe development experience
 
 ### APIs & Data Sources
 - **🌦️ OpenWeatherMap API** - Primary weather data provider
@@ -97,10 +99,11 @@ A retro-styled weather application that combines modern meteorological data with
 - **🌸 Pollen Data API** - Allergen level tracking
 
 ### Development Tools
-- **📦 Create React App** - React application foundation
-- **🔧 Modern JavaScript (ES6+)** - Latest language features
-- **📱 Progressive Web App** - Service worker implementation
+- **🚀 Next.js 14** - Modern full-stack React framework
+- **🔧 TypeScript** - Type-safe JavaScript development
+- **📱 Progressive Web App** - Enhanced PWA capabilities
 - **🚀 Vercel Deployment** - Serverless hosting platform
+- **⚡ App Router** - Next.js modern routing system
 
 ## 🚀 Getting Started
 
@@ -127,18 +130,19 @@ A retro-styled weather application that combines modern meteorological data with
 3. **🔑 Configure Environment**
    ```bash
    # Create .env.local file in root directory
-   cp env.example .env.local
+   cp .env.example .env.local
    
-   # Add your API keys
-   REACT_APP_OPENWEATHER_API_KEY=your_openweather_api_key_here
-   REACT_APP_GOOGLE_POLLEN_API_KEY=your_google_pollen_api_key_here
+   # Add your API keys (Note: Next.js uses NEXT_PUBLIC_ prefix)
+   NEXT_PUBLIC_OPENWEATHER_API_KEY=your_openweather_api_key_here
+   NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY=your_google_pollen_api_key_here
+   NEXT_PUBLIC_GOOGLE_AIR_QUALITY_API_KEY=your_google_air_quality_key_here
    ```
 
 4. **🏃 Start Development Server**
    ```bash
-   npm start
+   npm run dev
    # or
-   yarn start
+   yarn dev
    ```
 
 5. **🌐 Open Application**
@@ -151,6 +155,9 @@ A retro-styled weather application that combines modern meteorological data with
 ```bash
 # Build for production
 npm run build
+
+# Start production server locally
+npm start
 
 # Deploy to Vercel (optional)
 vercel --prod
@@ -179,11 +186,14 @@ vercel --prod
 
 ### Environment Variables
 ```env
-# Required
-REACT_APP_OPENWEATHER_API_KEY=your_openweather_api_key_here
+# Required - OpenWeatherMap API key
+NEXT_PUBLIC_OPENWEATHER_API_KEY=your_openweather_api_key_here
 
-# Optional - for accurate pollen data
-REACT_APP_GOOGLE_POLLEN_API_KEY=your_google_pollen_api_key_here
+# Optional - Enhanced pollen data
+NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY=your_google_pollen_api_key_here
+
+# Optional - Enhanced air quality data
+NEXT_PUBLIC_GOOGLE_AIR_QUALITY_API_KEY=your_google_air_quality_key_here
 
 # Development Environment
 NODE_ENV=development
@@ -277,36 +287,39 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-## 🚀 Version 0.2.78 Highlights - Complete Forecast Overhaul 🌟
+## 🚀 Version 0.3.0 Highlights - Major Architecture Upgrade 🌟
 
-### 🎯 **Major Feature Release - Enhanced 5-Day Forecast Experience**
+### 🎯 **Major Release - Next.js 14 Migration & Modern Architecture**
 
-This milestone release delivers a **complete overhaul of the 5-day forecast system** with significant improvements to user experience, data accuracy, and interactive design.
+This groundbreaking release represents a **complete architectural transformation** with migration to Next.js 14, React 19, and modern development practices while preserving the beloved 16-bit retro aesthetic.
 
-#### ✨ **What's New**
-- **🔄 Original Design Restored**: Returned to the beloved original 5-day forecast layout
-- **🎯 Click-to-Expand Functionality**: Day tiles are now interactive with visual feedback
-- **📅 Date Display Enhancement**: Each forecast tile shows actual dates (M.DD.YY format)
-- **📊 Critical Data Fix**: Monday-Thursday now display **real weather data** instead of "N/A"
-- **🎨 Smart UI Behavior**: Details section hidden by default, appears only on day selection
+#### 🚀 **Core Architecture Overhaul**
+- **🚀 Next.js 14 Migration**: Complete transition from Create React App to Next.js 14 with App Router
+- **⚛️ React 19 Upgrade**: Latest React version with improved performance and features
+- **🎨 Tailwind CSS Integration**: Modern utility-first styling framework
+- **🔧 TypeScript Enhancement**: Full type safety across the application
+- **📱 Enhanced SEO**: Server-side rendering and dynamic metadata generation
 
-#### 🛠️ **Technical Improvements**
-- **Enhanced Data Architecture**: Better integration of forecast-specific metrics
-- **Improved Component Structure**: Clean separation between overview and detailed views
-- **Mobile-First Optimization**: Better touch targets and responsive behavior
-- **Theme Consistency**: All three themes (Dark, Miami Vice, Tron) fully supported
+#### 🏗️ **Technical Improvements**
+- **⚡ App Router Architecture**: Modern Next.js routing with improved performance
+- **🎯 Dynamic City Pages**: SEO-friendly URL structure for weather locations
+- **🔄 Enhanced State Management**: Improved data flow and component architecture
+- **📱 Progressive Web App**: Enhanced PWA capabilities with better caching
+- **🚀 Build Optimization**: Faster builds and improved bundle size
 
 #### 🎮 **User Experience Enhancements**
-- **Interactive Day Selection**: Click any day tile to reveal detailed weather metrics
-- **Visual Selection Feedback**: Selected days highlighted with theme-appropriate styling
-- **Smooth Animations**: Enhanced hover effects and transition animations
-- **Accessibility**: Improved keyboard navigation and screen reader compatibility
+- **🎨 Theme System Upgrade**: Enhanced theme switching with better persistence
+- **📍 Improved Location Handling**: Better geolocation and search functionality
+- **💾 Enhanced Caching**: Smarter data caching and performance optimization
+- **🌍 SEO Optimization**: Better search engine visibility and social sharing
+- **📱 Mobile Performance**: Improved mobile experience and touch interactions
 
-#### 🐛 **Critical Fixes**
-- **RESOLVED**: Future forecast days no longer show "N/A" for humidity, wind, pressure, UV index
-- **Enhanced Data Mapping**: Proper utilization of existing detailed forecast data
-- **Improved State Management**: Better day selection and toggle behavior
-- **Mobile Layout**: Fixed responsive issues across all screen sizes
+#### 🛠️ **Development Experience**
+- **🔧 Modern Tooling**: Next.js 14 development server and build tools
+- **📝 Type Safety**: Comprehensive TypeScript implementation
+- **🧹 Code Quality**: Cleaner component structure and better organization
+- **⚡ Hot Reloading**: Faster development with improved hot module replacement
+- **🔍 Better Debugging**: Enhanced error handling and development tools
 
 ---
 
