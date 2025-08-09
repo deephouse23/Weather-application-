@@ -6,6 +6,42 @@ import { Loader2, TrendingUp, TrendingDown, MapPin, RefreshCw, Thermometer } fro
 import { useTheme } from "@/components/theme-provider"
 import { ExtremesData } from "@/lib/extremes/extremes-data"
 
+// Client-side cache management
+const CACHE_KEY = '16bit-weather-extremes-cache';
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+
+function getCachedExtremesClient(): ExtremesData | null {
+  if (typeof window === 'undefined') return null;
+  
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (!cached) return null;
+    
+    const data = JSON.parse(cached);
+    const age = Date.now() - data.lastUpdated;
+    
+    if (age > CACHE_DURATION) {
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error reading cache:', error);
+    return null;
+  }
+}
+
+function setCachedExtremesClient(data: ExtremesData): void {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+  } catch (error) {
+    console.error('Error setting cache:', error);
+  }
+}
+
 export default function ExtremesPage() {
   const [data, setData] = useState<ExtremesData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -52,8 +88,18 @@ export default function ExtremesPage() {
   const currentTheme = themeClasses[theme] || themeClasses.dark
 
   // Fetch extremes data
-  const fetchData = async () => {
+  const fetchData = async (skipCache = false) => {
     try {
+      // Check client-side cache first
+      if (!skipCache) {
+        const cached = getCachedExtremesClient();
+        if (cached) {
+          setData(cached);
+          setLoading(false);
+          return;
+        }
+      }
+      
       setLoading(true)
       setError(null)
       
@@ -63,12 +109,14 @@ export default function ExtremesPage() {
       }
       
       const response = await fetch(url)
+      const responseData = await response.json()
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch extreme temperatures')
+        throw new Error(responseData.error || 'Failed to fetch extreme temperatures')
       }
       
-      const data = await response.json()
-      setData(data)
+      setData(responseData)
+      setCachedExtremesClient(responseData) // Cache on client side
     } catch (err) {
       console.error('Error fetching extremes:', err)
       setError(err instanceof Error ? err.message : 'An error occurred')
@@ -103,7 +151,7 @@ export default function ExtremesPage() {
   // Re-fetch when user coords change
   useEffect(() => {
     if (userCoords) {
-      fetchData()
+      fetchData(true) // Skip cache when user location changes
     }
   }, [userCoords])
 
@@ -111,7 +159,7 @@ export default function ExtremesPage() {
   useEffect(() => {
     if (autoRefresh) {
       refreshIntervalRef.current = setInterval(() => {
-        fetchData()
+        fetchData(true) // Skip cache for refresh
       }, 30 * 60 * 1000) // 30 minutes
     }
     
@@ -123,7 +171,7 @@ export default function ExtremesPage() {
   }, [autoRefresh, userCoords])
 
   // Thermometer visualization component
-  const Thermometer = ({ temp, max = 140, min = -100 }: { temp: number; max?: number; min?: number }) => {
+  const ThermometerViz = ({ temp, max = 140, min = -100 }: { temp: number; max?: number; min?: number }) => {
     const percentage = ((temp - min) / (max - min)) * 100
     const isHot = temp > 32
     
@@ -177,7 +225,7 @@ export default function ExtremesPage() {
               ERROR: {error}
             </div>
             <button
-              onClick={fetchData}
+              onClick={() => fetchData(true)}
               className={`px-6 py-3 border-2 ${currentTheme.border} ${currentTheme.text} 
                        hover:bg-opacity-20 hover:bg-white transition-all duration-200 
                        font-mono uppercase tracking-wider`}
@@ -222,7 +270,7 @@ export default function ExtremesPage() {
             {data.hottest && (
               <>
                 <div className="mb-4">
-                  <Thermometer temp={data.hottest.temp} />
+                  <ThermometerViz temp={data.hottest.temp} />
                 </div>
                 
                 <div className={`text-3xl font-mono font-bold mb-2 ${currentTheme.hot} text-center`}>
@@ -268,7 +316,7 @@ export default function ExtremesPage() {
             {data.coldest && (
               <>
                 <div className="mb-4">
-                  <Thermometer temp={data.coldest.temp} />
+                  <ThermometerViz temp={data.coldest.temp} />
                 </div>
                 
                 <div className={`text-3xl font-mono font-bold mb-2 ${currentTheme.cold} text-center`}>
@@ -400,7 +448,7 @@ export default function ExtremesPage() {
         {/* Controls */}
         <div className="flex justify-center gap-4 mt-8">
           <button
-            onClick={fetchData}
+            onClick={() => fetchData(true)}
             disabled={loading}
             className={`px-6 py-3 border-2 ${currentTheme.border} ${currentTheme.text} 
                      hover:bg-opacity-20 hover:bg-white transition-all duration-200 
