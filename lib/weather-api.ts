@@ -477,7 +477,7 @@ const mapWeatherCondition = (condition: string): string => {
 };
 
 // Geocoding function to get coordinates from location using internal API
-const geocodeLocation = async (locationQuery: LocationQuery, apiKey: string): Promise<{ lat: number; lon: number; displayName: string }> => {
+const geocodeLocation = async (locationQuery: LocationQuery): Promise<{ lat: number; lon: number; displayName: string }> => {
   const baseUrl = getApiUrl('/api/weather/geocoding');
   
   if (locationQuery.type === 'zip') {
@@ -757,7 +757,7 @@ const formatPressureValue = (pressureHPa: number, unit: 'hPa' | 'inHg'): { value
 };
 
 // Fetch UV Index using internal API endpoint
-const fetchUVIndex = async (lat: number, lon: number, apiKey: string): Promise<number> => {
+const fetchUVIndex = async (lat: number, lon: number): Promise<number> => {
   console.log('=== UV INDEX DEBUG ===');
   console.log('Coordinates:', { lat, lon });
   
@@ -806,7 +806,7 @@ const estimateCurrentUVFromDailyMax = (dailyMaxUV: number, hour: number): number
 };
 
 // Fetch Pollen data using internal API endpoint
-const fetchPollenData = async (lat: number, lon: number, openWeatherApiKey: string): Promise<{ tree: Record<string, string>; grass: Record<string, string>; weed: Record<string, string> }> => {
+const fetchPollenData = async (lat: number, lon: number): Promise<{ tree: Record<string, string>; grass: Record<string, string>; weed: Record<string, string> }> => {
   console.log('=== POLLEN DATA DEBUG ===');
   console.log('Coordinates:', { lat, lon });
   
@@ -869,19 +869,16 @@ const fetchAirQualityData = async (lat: number, lon: number, cityName?: string):
 
 // Note: AQI calculation functions moved to server-side API routes
 
-export const fetchWeatherData = async (locationInput: string, apiKey: string): Promise<WeatherData> => {
+export const fetchWeatherData = async (locationInput: string): Promise<WeatherData> => {
   console.log('Fetching weather data for:', locationInput);
   
   try {
-    // Validate API key
-    const validApiKey = validateApiKey();
-    
     // Parse location input
     const locationQuery = parseLocationInput(locationInput);
     console.log('Parsed location query:', locationQuery);
 
     // Geocode location
-    const { lat, lon, displayName } = await geocodeLocation(locationQuery, validApiKey);
+    const { lat, lon, displayName } = await geocodeLocation(locationQuery);
     console.log('Geocoded location:', { lat, lon, displayName });
 
     // Fetch current weather using internal API
@@ -919,11 +916,11 @@ export const fetchWeatherData = async (locationInput: string, apiKey: string): P
 
     // Fetch UV Index with debugging
     console.log('=== FETCHING UV INDEX ===');
-    const uvIndex = await fetchUVIndex(lat, lon, validApiKey);
+    const uvIndex = await fetchUVIndex(lat, lon);
     console.log('UV Index fetched:', uvIndex);
 
     // Fetch Pollen data
-    const pollenData = await fetchPollenData(lat, lon, validApiKey);
+    const pollenData = await fetchPollenData(lat, lon);
     console.log('Weather Data - Pollen:', pollenData);
 
     // Fetch Air Quality data
@@ -982,7 +979,6 @@ const getLocationNotFoundError = (locationQuery: LocationQuery): string => {
 
 // Function to get user's location and fetch weather
 export const fetchWeatherByLocation = async (coords: string): Promise<WeatherData> => {
-  const apiKey = validateApiKey();
   const [latitude, longitude] = coords.split(',').map(Number)
   
   if (isNaN(latitude) || isNaN(longitude)) {
@@ -1025,12 +1021,12 @@ export const fetchWeatherByLocation = async (coords: string): Promise<WeatherDat
 
     // Fetch UV Index with debugging
     console.log('=== FETCHING UV INDEX ===');
-    const uvIndex = await fetchUVIndex(latitude, longitude, apiKey);
+    const uvIndex = await fetchUVIndex(latitude, longitude);
     console.log('UV Index fetched:', uvIndex);
 
     // Fetch Pollen data
     console.log('=== FETCHING POLLEN DATA ===');
-    const pollenData = await fetchPollenData(latitude, longitude, apiKey);
+    const pollenData = await fetchPollenData(latitude, longitude);
     console.log('Weather Data - Pollen:', pollenData);
 
     // Fetch Air Quality data

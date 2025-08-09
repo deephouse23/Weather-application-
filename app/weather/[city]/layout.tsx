@@ -36,14 +36,10 @@ export async function generateMetadata({ params }: { params: { city: string } })
   
   // Try to fetch weather data for enhanced metadata
   let weatherData = null
-  const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || process.env.REACT_APP_OPENWEATHER_API_KEY
-  
-  if (API_KEY) {
-    try {
-      weatherData = await fetchWeatherData(searchTerm, API_KEY)
-    } catch (error) {
-      console.log('Failed to fetch weather data for metadata:', error)
-    }
+  try {
+    weatherData = await fetchWeatherData(searchTerm)
+  } catch (error) {
+    console.log('Failed to fetch weather data for metadata:', error)
   }
 
   // Enhanced description with current weather if available

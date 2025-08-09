@@ -26,7 +26,8 @@
       "Bash(mkdir:*)",
       "Bash(timeout 10s npm run dev)",
       "Bash(node:*)",
-      "Bash(vercel:*)"
+      "Bash(vercel:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": []
   }
