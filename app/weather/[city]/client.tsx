@@ -45,9 +45,10 @@ interface CityWeatherClientProps {
     }
   }
   citySlug: string
+  isPredefinedCity?: boolean
 }
 
-export default function CityWeatherClient({ city, citySlug }: CityWeatherClientProps) {
+export default function CityWeatherClient({ city, citySlug, isPredefinedCity = false }: CityWeatherClientProps) {
   const router = useRouter()
   const { theme } = useTheme()
   const { 
@@ -313,18 +314,20 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
             </div>
           )}
 
-          {/* SEO Content Section - Added below weather display */}
-          <div className="mt-12 p-6 border-2 rounded-lg bg-weather-bg-elev border-weather-border text-weather-text">
-            <h2 className="text-xl font-bold mb-4 uppercase tracking-wider font-mono text-weather-primary">
-              About {city.name} Weather
-            </h2>
-            
-            <div className="space-y-4 text-sm leading-relaxed font-mono">
-              <p>{city.content.intro}</p>
-              <p>{city.content.climate}</p>
-              <p>{city.content.patterns}</p>
+          {/* SEO Content Section - Only show for predefined cities */}
+          {isPredefinedCity && (
+            <div className="mt-12 p-6 border-2 rounded-lg bg-weather-bg-elev border-weather-border text-weather-text">
+              <h2 className="text-xl font-bold mb-4 uppercase tracking-wider font-mono text-weather-primary">
+                About {city.name} Weather
+              </h2>
+              
+              <div className="space-y-4 text-sm leading-relaxed font-mono">
+                <p>{city.content.intro}</p>
+                <p>{city.content.climate}</p>
+                <p>{city.content.patterns}</p>
+              </div>
             </div>
-          </div>
+          )}
         </ResponsiveContainer>
       </div>
     </PageWrapper>
