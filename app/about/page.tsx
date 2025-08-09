@@ -1,10 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import dynamic from 'next/dynamic'
+import { Loader2 } from "lucide-react"
 import PageWrapper from "@/components/page-wrapper"
 import { ThemeType, themeUtils, APP_CONSTANTS } from "@/lib/utils"
 
-export default function AboutPage() {
+function AboutPageContent() {
   const [currentTheme, setCurrentTheme] = useState<ThemeType>(APP_CONSTANTS.THEMES.DARK)
 
   // Load and sync theme using centralized utilities
@@ -54,4 +56,21 @@ export default function AboutPage() {
       </div>
     </PageWrapper>
   )
-} 
+}
+
+// Create a dynamic import to avoid SSR issues
+const DynamicAboutPage = dynamic(
+  () => Promise.resolve(AboutPageContent),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    )
+  }
+)
+
+export default function AboutPage() {
+  return <DynamicAboutPage />
+}

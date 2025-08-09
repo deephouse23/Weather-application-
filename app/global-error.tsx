@@ -1,6 +1,9 @@
 'use client'
 
-export default function GlobalError({
+import dynamic from 'next/dynamic'
+import { Loader2 } from "lucide-react"
+
+function GlobalErrorContent({
   error,
   reset,
 }: {
@@ -24,4 +27,31 @@ export default function GlobalError({
       </body>
     </html>
   )
+}
+
+// Create a dynamic import to avoid SSR issues
+const DynamicGlobalError = dynamic(
+  () => Promise.resolve(GlobalErrorContent),
+  { 
+    ssr: false,
+    loading: () => (
+      <html>
+        <body>
+          <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          </div>
+        </body>
+      </html>
+    )
+  }
+)
+
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string }
+  reset: () => void
+}) {
+  return <DynamicGlobalError error={error} reset={reset} />
 }

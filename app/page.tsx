@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, Suspense } from "react"
+import dynamic from 'next/dynamic'
 import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { fetchWeatherData, fetchWeatherByLocation } from "@/lib/weather-api"
@@ -75,8 +76,7 @@ function WeatherApp() {
   const [remainingSearches, setRemainingSearches] = useState(10)
   const [rateLimitError, setRateLimitError] = useState<string>("")
   const [isClient, setIsClient] = useState(false)
-  // Theme is now fixed to dark
-  const currentTheme = 'dark' as const
+  // Theme is managed by ThemeProvider
   const [searchCache, setSearchCache] = useState<Map<string, { data: WeatherData; timestamp: number }>>(new Map())
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [isAutoDetecting, setIsAutoDetecting] = useState(false)
@@ -297,66 +297,7 @@ function WeatherApp() {
     checkCacheAndLoad()
   }, [isClient, locationInput, currentLocation])
 
-  // Enhanced theme management functions
-  const getStoredTheme = (): ThemeType => {
-    if (!isClient) return 'dark'
-    try {
-      const stored = localStorage.getItem('weather-edu-theme')
-      if (stored && ['dark', 'miami', 'tron'].includes(stored)) {
-        return stored as ThemeType
-      }
-    } catch (error) {
-      console.warn('Failed to get stored theme:', error)
-      setError('Theme loading failed, using default')
-    }
-    return 'dark' // Default to dark theme
-  }
-
-  // Load theme on mount and sync with navigation
-  useEffect(() => {
-    if (!isClient) return
-    
-    try {
-      const storedTheme = getStoredTheme()
-      setCurrentTheme(storedTheme)
-      
-      // Listen for theme changes from navigation
-      const handleStorageChange = () => {
-        try {
-          const newTheme = getStoredTheme()
-          setCurrentTheme(newTheme)
-        } catch (error) {
-          console.error('Error handling storage change:', error)
-        }
-      }
-      
-      window.addEventListener('storage', handleStorageChange)
-      
-      // Poll for theme changes (in case of same-tab changes)
-      const interval = setInterval(() => {
-        try {
-          const newTheme = getStoredTheme()
-          if (newTheme !== currentTheme) {
-            setCurrentTheme(newTheme)
-          }
-        } catch (error) {
-          console.error('Error polling theme changes:', error)
-        }
-      }, 100)
-      
-      return () => {
-        try {
-          window.removeEventListener('storage', handleStorageChange)
-          clearInterval(interval)
-        } catch (error) {
-          console.error('Error cleaning up theme listeners:', error)
-        }
-      }
-    } catch (error) {
-      console.error('Error initializing theme management:', error)
-      setError('Theme initialization failed')
-    }
-  }, [isClient, currentTheme])
+  // Theme is now managed entirely by ThemeProvider, no local management needed
 
   // Semantic dark theme classes using CSS variables
   const getThemeClasses = () => {
@@ -668,7 +609,7 @@ function WeatherApp() {
 
   // Tron Animated Grid Background Component - Same as PageWrapper
   const TronGridBackground = () => {
-    if (currentTheme !== 'tron') return null;
+    if ((theme || 'dark') !== 'tron') return null;
     
     return (
       <>
@@ -1135,10 +1076,21 @@ function WeatherApp() {
   );
 }
 
+// Create a dynamic import for the WeatherApp to avoid SSR issues
+const DynamicWeatherApp = dynamic(
+  () => Promise.resolve(WeatherApp),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    )
+  }
+)
+
 export default function HomePage() {
-  return (
-    <WeatherApp />
-  )
+  return <DynamicWeatherApp />
 }
 
 // Component definitions remain the same...
