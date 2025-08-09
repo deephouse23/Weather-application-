@@ -12,61 +12,26 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // 16-bit weather theme colors
-        'weather': {
-          // Dark theme
-          'dark': {
-            'bg': '#0a0a1a',
-            'bg-secondary': '#0f0f0f',
-            'bg-tertiary': '#16213e',
-            'primary': '#00d4ff',
-            'text': '#e0e0e0',
-            'text-secondary': '#4ecdc4',
-            'accent': '#ffe66d',
-            'border': '#00d4ff'
-          },
-          // Miami theme
-          'miami': {
-            'bg': '#0a0025',
-            'bg-secondary': '#2d1b69',
-            'bg-tertiary': '#4a0e4e',
-            'primary': '#ff1493',
-            'text': '#00ffff',
-            'text-secondary': '#22d3ee',
-            'accent': '#ff1493',
-            'border': '#ff1493'
-          },
-          // Tron theme
-          'tron': {
-            'bg': '#000000',
-            'bg-secondary': '#000000',
-            'bg-tertiary': '#0a0a0a',
-            'primary': '#00FFFF',
-            'text': '#FFFFFF',
-            'text-secondary': '#88CCFF',
-            'accent': '#00FFFF',
-            'border': '#00FFFF'
-          }
-        }
+        // Semantic color tokens using CSS variables
+        'weather-bg': 'var(--bg)',
+        'weather-bg-elev': 'var(--bg-elev)',
+        'weather-border': 'var(--border)',
+        'weather-text': 'var(--text)',
+        'weather-muted': 'var(--text-muted)',
+        'weather-primary': 'var(--primary)',
+        'weather-accent': 'var(--accent)',
+        'weather-ok': 'var(--ok)',
+        'weather-warn': 'var(--warn)',
+        'weather-danger': 'var(--danger)',
       },
       fontFamily: {
         'pixel': ['"Courier New"', '"Monaco"', '"Lucida Console"', 'monospace'],
       },
       animation: {
-        'flicker': 'flicker 0.15s infinite linear',
-        'tron-wave': 'tronWave 3s linear infinite',
         'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
         'slide-in': 'slideIn 0.5s ease-out forwards',
       },
       keyframes: {
-        flicker: {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.98' },
-        },
-        tronWave: {
-          '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(100vw)' },
-        },
         pulseGlow: {
           '0%, 100%': { 
             textShadow: '0 0 8px currentColor, 0 0 16px currentColor',

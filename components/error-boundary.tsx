@@ -9,7 +9,7 @@ interface Props {
   fallback?: ReactNode
   componentName?: string
   className?: string
-  theme?: 'dark' | 'miami' | 'tron'
+  // theme removed - using dark theme only
 }
 
 interface State {
@@ -41,30 +41,11 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   private getThemeClasses() {
-    const { theme = 'dark' } = this.props
-    
-    switch (theme) {
-      case 'miami':
-        return {
-          container: 'bg-[#0a0025] border-[#ff1493] text-[#00ffff]',
-          button: 'bg-[#ff1493] text-[#0a0025] hover:bg-[#ff69b4]',
-          icon: 'text-[#ff1493]',
-          text: 'text-[#00ffff]'
-        }
-      case 'tron':
-        return {
-          container: 'bg-black border-[#00FFFF] text-white',
-          button: 'bg-[#00FFFF] text-black hover:bg-[#00DCFF]',
-          icon: 'text-[#00FFFF]',
-          text: 'text-white'
-        }
-      default: // dark
-        return {
-          container: 'bg-[#0f0f0f] border-[#00d4ff] text-[#e0e0e0]',
-          button: 'bg-[#00d4ff] text-[#0f0f0f] hover:bg-[#00b8e6]',
-          icon: 'text-[#00d4ff]',
-          text: 'text-[#e0e0e0]'
-        }
+    return {
+      container: 'bg-weather-bg-elev border-weather-border text-weather-text',
+      button: 'bg-weather-primary text-weather-bg hover:bg-weather-primary/80',
+      icon: 'text-weather-primary',
+      text: 'text-weather-text'
     }
   }
 

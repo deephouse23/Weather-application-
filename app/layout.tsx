@@ -90,7 +90,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
       <head>
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -236,7 +236,7 @@ export default function RootLayout({
           defaultTheme="dark"
           enableSystem={false}
           storageKey="weather-edu-theme"
-          themes={["dark", "miami", "tron"]}
+          themes={["dark"]}
         >
           <LocationProvider>
             {children}

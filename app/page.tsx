@@ -64,8 +64,8 @@ if (!GOOGLE_POLLEN_API_KEY) {
   console.log('✅ Google Pollen API key found:', GOOGLE_POLLEN_API_KEY.substring(0, 8) + '...');
 }
 
-// Theme types
-type ThemeType = 'dark' | 'miami' | 'tron';
+// Theme types (dark only now)
+type ThemeType = 'dark';
 
 // Helper function to determine pressure unit (matches weather API logic)
 const getPressureUnit = (countryCode: string): 'hPa' | 'inHg' => {
@@ -93,7 +93,8 @@ function WeatherApp() {
   const [remainingSearches, setRemainingSearches] = useState(10)
   const [rateLimitError, setRateLimitError] = useState<string>("")
   const [isClient, setIsClient] = useState(false)
-  const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark')
+  // Theme is now fixed to dark
+  const currentTheme = 'dark' as const
   const [searchCache, setSearchCache] = useState<Map<string, { data: WeatherData; timestamp: number }>>(new Map())
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [isAutoDetecting, setIsAutoDetecting] = useState(false)
@@ -381,55 +382,24 @@ function WeatherApp() {
     }
   }, [isClient, currentTheme])
 
-  // Enhanced theme classes for three themes with authentic Tron movie colors
-  const getThemeClasses = (theme: ThemeType) => {
-    switch (theme) {
-      case 'dark':
-        return {
-          background: 'bg-[#0f0f0f]',
-          cardBg: 'bg-[#0f0f0f]',
-          borderColor: 'border-[#00d4ff]',
-          text: 'text-[#e0e0e0]',
-          headerText: 'text-[#00d4ff]',
-          secondaryText: 'text-[#e0e0e0]',
-          accentText: 'text-[#00d4ff]',
-          successText: 'text-[#00ff00]',
-          glow: 'glow-dark',
-          specialBorder: 'border-[#00d4ff]',
-          buttonHover: 'hover:bg-[#00d4ff] hover:text-[#0f0f0f]'
-        }
-      case 'miami':
-        return {
-          background: 'bg-[#0a0025]',
-          cardBg: 'bg-[#0a0025]',
-          borderColor: 'border-[#ff1493]',
-          text: 'text-[#00ffff]',
-          headerText: 'text-[#ff1493]',
-          secondaryText: 'text-[#00ffff]',
-          accentText: 'text-[#ff1493]',
-          successText: 'text-[#00ff00]',
-          glow: 'glow-miami',
-          specialBorder: 'border-[#ff1493]',
-          buttonHover: 'hover:bg-[#ff1493] hover:text-[#0a0025]'
-        }
-      case 'tron':
-        return {
-          background: 'bg-black',
-          cardBg: 'bg-black',
-          borderColor: 'border-[#00FFFF]',
-          text: 'text-white',
-          headerText: 'text-[#00FFFF]',
-          secondaryText: 'text-[#00FFFF]',
-          accentText: 'text-[#00FFFF]',
-          successText: 'text-[#00ff00]',
-          glow: 'glow-tron',
-          specialBorder: 'border-[#00FFFF]',
-          buttonHover: 'hover:bg-[#00FFFF] hover:text-black'
-        }
+  // Semantic dark theme classes using CSS variables
+  const getThemeClasses = () => {
+    return {
+      background: 'bg-weather-bg-elev',
+      cardBg: 'bg-weather-bg-elev', 
+      borderColor: 'border-weather-border',
+      text: 'text-weather-text',
+      headerText: 'text-weather-primary',
+      secondaryText: 'text-weather-text',
+      accentText: 'text-weather-primary',
+      successText: 'text-weather-ok',
+      glow: 'glow',
+      specialBorder: 'border-weather-primary',
+      buttonHover: 'hover:bg-weather-primary hover:text-weather-bg'
     }
   }
 
-  const themeClasses = getThemeClasses(currentTheme)
+  const themeClasses = getThemeClasses()
 
   // Rate limiting functions
   const getRateLimitData = () => {
@@ -867,18 +837,13 @@ function WeatherApp() {
       weatherTemperature={weather?.temperature}
       weatherUnit={weather?.unit}
     >
-      <div className={cn(
-        "min-h-screen",
-        theme === "dark" && "bg-gradient-to-b from-gray-900 to-black",
-        theme === "miami" && "bg-gradient-to-b from-pink-900 to-purple-900",
-        theme === "tron" && "bg-gradient-to-b from-black to-blue-900"
-      )}>
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-weather-bg">
         <ResponsiveContainer maxWidth="xl" padding="md">
 
           {/* TEMPORARY API TEST - REMOVE BEFORE PRODUCTION */}
           {/* <ApiTest /> */}
 
-          <ErrorBoundary componentName="Weather Search" theme={currentTheme}>
+          <ErrorBoundary componentName="Weather Search">
             <WeatherSearch
               onSearch={handleSearch}
               onLocationSearch={handleLocationSearch}
@@ -886,7 +851,6 @@ function WeatherApp() {
               error={error}
               rateLimitError={rateLimitError}
               isDisabled={isOnCooldown}
-              theme={theme}
               hideLocationButton={true}
             />
           </ErrorBoundary>
@@ -897,12 +861,7 @@ function WeatherApp() {
           {!weather && !loading && !error && (
             <div className="text-center mt-8 mb-8 px-2 sm:px-0">
               <div className="w-full max-w-xl mx-auto">
-                <div className={cn(
-                  "p-2 sm:p-3 border-2 shadow-lg",
-                  theme === "dark" && "bg-[#0f0f0f] border-[#00d4ff] shadow-blue-500/20",
-                  theme === "miami" && "bg-[#0a0025] border-[#ff1493] shadow-pink-500/30",
-                  theme === "tron" && "bg-black border-[#00FFFF] shadow-cyan-500/40"
-                )}>
+                <div className="p-2 sm:p-3 border-2 shadow-lg bg-weather-bg-elev border-weather-primary shadow-weather-primary/20">
                   <p className="text-sm font-mono font-bold uppercase tracking-wider text-white" style={{ 
                     fontFamily: "monospace",
                     fontSize: "clamp(10px, 2.4vw, 14px)"
@@ -916,13 +875,8 @@ function WeatherApp() {
 
           {(loading || isAutoDetecting) && (
             <div className="flex justify-center items-center mt-8">
-              <Loader2 className={cn(
-                "h-8 w-8 animate-spin",
-                theme === "dark" && "text-blue-500",
-                theme === "miami" && "text-pink-500",
-                theme === "tron" && "text-cyan-500"
-              )} />
-              <span className="ml-2 text-white">
+              <Loader2 className="h-8 w-8 animate-spin text-weather-primary" />
+              <span className="ml-2 text-weather-text">
                 {isAutoDetecting ? 'Detecting your location...' : 'Loading weather data...'}
               </span>
             </div>

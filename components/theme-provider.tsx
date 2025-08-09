@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 
-type Theme = 'dark' | 'miami' | 'tron'
+type Theme = 'dark'
 
 interface ThemeContextType {
   theme: Theme
@@ -32,7 +32,7 @@ export function ThemeProvider({
   children,
   defaultTheme = 'dark',
   storageKey = 'weather-edu-theme',
-  themes = ['dark', 'miami', 'tron'],
+  themes = ['dark'],
   attribute = 'class',
   enableSystem = false
 }: ThemeProviderProps) {
@@ -55,11 +55,8 @@ export function ThemeProvider({
   }, [theme, themes, attribute])
 
   const toggleTheme = () => {
-    const currentIndex = themes.indexOf(theme)
-    const nextIndex = (currentIndex + 1) % themes.length
-    const nextTheme = themes[nextIndex]
-    setTheme(nextTheme)
-    localStorage.setItem(storageKey, nextTheme)
+    // Theme is locked to dark - no-op
+    // Keeping function for compatibility but does nothing
   }
 
   return (
