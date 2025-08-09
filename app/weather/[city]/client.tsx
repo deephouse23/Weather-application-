@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { fetchWeatherData } from '@/lib/weather-api'
 import { WeatherData } from '@/lib/types'
 import PageWrapper from '@/components/page-wrapper'
@@ -30,6 +31,7 @@ interface CityWeatherClientProps {
 }
 
 export default function CityWeatherClient({ city, citySlug }: CityWeatherClientProps) {
+  const router = useRouter()
   const { theme } = useTheme()
   const { 
     setLocationInput, 
@@ -42,6 +44,15 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>("")
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
+
+  // Helper: normalize "San Ramon, CA" -> "san-ramon-ca"
+  const toSlug = (input: string) =>
+    input
+      .trim()
+      .toLowerCase()
+      .replace(/,/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')
 
   // Load weather data for the specific city
   const loadCityWeather = async () => {
@@ -71,8 +82,18 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
     }
   }
 
+  // CLEAR local state whenever the route/citySlug changes (prevents ghost data)
   useEffect(() => {
-    // Disable route change clearing for city pages (they manage their own state)
+    setWeather(null)
+    setSelectedDay(null)
+    setError("")
+    // also clear any location input stored in context if desired
+    setLocationInput(city.searchTerm)
+    setCurrentLocation(city.searchTerm)
+  }, [citySlug])
+
+  // Existing effect: load weather for this page's city (runs after reset above)
+  useEffect(() => {
     setShouldClearOnRouteChange(false)
     
     if (city) {
@@ -86,29 +107,16 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
     }
   }, [city?.searchTerm, setShouldClearOnRouteChange])
 
-  // Search handler for the search component
+  // REPLACE handleSearch to navigate instead of only setting local weather
   const handleSearch = async (locationInput: string) => {
-    try {
-      setLoading(true)
-      setError("")
-      
-      const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || process.env.REACT_APP_OPENWEATHER_API_KEY
-      if (!API_KEY) {
-        throw new Error('API key not configured')
-      }
-      
-      const weatherData = await fetchWeatherData(locationInput, API_KEY)
-      setWeather(weatherData)
-      
-      // Update location context with search results
-      setLocationInput(locationInput)
-      setCurrentLocation(weatherData.location || locationInput)
-    } catch (err) {
-      console.error('Error searching weather:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load weather data')
-    } finally {
-      setLoading(false)
-    }
+    if (!locationInput?.trim()) return
+    const slug = toSlug(locationInput)
+    // optional: optimistic UI clear before navigating
+    setWeather(null)
+    setSelectedDay(null)
+    setError("")
+    setLocationInput('') // clear search field in context
+    router.push(`/weather/${slug}`)
   }
 
   const handleLocationSearch = async () => {
@@ -180,6 +188,7 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
 
           {/* Weather Search Component */}
           <WeatherSearch
+            key={citySlug}
             onSearch={handleSearch}
             onLocationSearch={handleLocationSearch}
             isLoading={loading}
