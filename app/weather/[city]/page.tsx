@@ -2,6 +2,9 @@ import { Suspense } from 'react'
 import CityWeatherClient from './client'
 import { EnhancedMetaTags } from '@/components/enhanced-meta-tags'
 
+// Force dynamic rendering to avoid build-time API calls
+export const dynamic = 'force-dynamic'
+
 // City data for SEO and functionality
 const cityData: { [key: string]: { 
   name: string
@@ -137,12 +140,12 @@ const cityData: { [key: string]: {
   }
 }
 
-// Generate static parameters for all city pages (for static generation)
-export async function generateStaticParams() {
-  return Object.keys(cityData).map((citySlug) => ({
-    city: citySlug,
-  }))
-}
+// Comment out static generation to avoid build-time API calls
+// export async function generateStaticParams() {
+//   return Object.keys(cityData).map((citySlug) => ({
+//     city: citySlug,
+//   }))
+// }
 
 // Generate metadata for each city page
 export async function generateMetadata({ params }: { params: { city: string } }) {
