@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Dark theme semantic tokens */
+:root[data-theme="dark"] {
+  --bg: #0d1117;         /* page background */
+  --bg-elev: #111827;    /* cards/panels */
+  --border: #1f2937;     /* borders/dividers */
+  --text: #e5e7eb;       /* primary text */
+  --text-muted: #9ca3af; /* secondary text */
+  --primary: #00d4ff;    /* retro cyan accent */
+  --accent: #7c3aed;     /* secondary accent */
+  --ok: #22c55e;         /* success */
+  --warn: #f59e0b;       /* warning */
+  --danger: #ef4444;     /* error */
+}
+
+/* Default fallback (same as dark) */
+:root {
+  --bg: #0d1117;
+  --bg-elev: #111827;
+  --border: #1f2937;
+  --text: #e5e7eb;
+  --text-muted: #9ca3af;
+  --primary: #00d4ff;
+  --accent: #7c3aed;
+  --ok: #22c55e;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+}
+
 /* Global mobile-first responsive base styles */
 * {
   box-sizing: border-box;
@@ -143,12 +171,11 @@ input:focus,
   background: rgba(0, 0, 0, 0.5);
 }
 
-/* Mobile-optimized animations */
+/* Respect user's reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    animation: none !important;
+    transition: none !important;
   }
 }
 
@@ -162,49 +189,17 @@ input:focus,
   text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
 }
 
-/* Theme-specific glow effects */
-.glow-dark {
-  text-shadow: 0 0 8px #00d4ff, 0 0 16px #00d4ff, 0 0 24px #00d4ff;
+/* Dark theme glow effect */
+.glow {
+  text-shadow: 0 0 8px var(--primary), 0 0 16px var(--primary), 0 0 24px var(--primary);
   box-shadow: inset 0 0 20px rgba(0, 212, 255, 0.1);
-}
-
-.glow-miami {
-  text-shadow: 0 0 8px #ff1493, 0 0 16px #ff1493, 0 0 24px #ff1493;
-  box-shadow: inset 0 0 20px rgba(255, 20, 147, 0.1);
-}
-
-.glow-tron {
-  text-shadow: 0 0 8px #00FFFF, 0 0 16px #00FFFF, 0 0 24px #00FFFF, 0 0 32px #00FFFF;
-  box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.2);
 }
 
 .pixel-shadow {
   box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.8), 8px 8px 0 rgba(0, 212, 255, 0.3);
 }
 
-/* Optimized scanline effect with performance improvements */
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(transparent 50%, rgba(0, 212, 255, 0.03) 50%);
-  background-size: 100% 4px;
-  pointer-events: none;
-  z-index: 1000;
-  /* Performance optimizations */
-  will-change: transform;
-  contain: layout style paint;
-  transform: translateZ(0);
-}
 
-/* Optimized animation library */
-@keyframes flicker {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.98; }
-}
 
 @keyframes tronWave {
   0% { transform: translateX(-100%); }
@@ -233,19 +228,8 @@ body::before {
   }
 }
 
-/* Performance-optimized flicker effect */
-body {
-  animation: flicker 0.15s infinite linear;
-  will-change: opacity;
-  contain: layout style;
-}
 
 /* Animation utility classes */
-.animate-tron-wave {
-  animation: tronWave 3s linear infinite;
-  will-change: transform;
-  contain: layout style paint;
-}
 
 .animate-pulse-glow {
   animation: pulseGlow 2s ease-in-out infinite;

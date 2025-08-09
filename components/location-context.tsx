@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 import { userCacheService } from '@/lib/user-cache-service'
+import { safeStorage } from '@/lib/safe-storage'
 
 interface LocationContextType {
   locationInput: string
@@ -31,12 +32,12 @@ export function LocationProvider({ children }: LocationProviderProps) {
   // Debug function to log localStorage keys
   const logLocalStorageKeys = (context: string) => {
     if (typeof window !== 'undefined') {
-      const keys = Object.keys(localStorage).filter(key => 
+      const keys = safeStorage.getAllKeys().filter(key => 
         key.includes('bitweather') || key.includes('weather')
       )
       console.log(`[LocationProvider] ${context} - localStorage keys:`, keys)
       keys.forEach(key => {
-        const value = localStorage.getItem(key)
+        const value = safeStorage.getItem(key)
         console.log(`  ${key}: ${value ? value.substring(0, 100) + (value.length > 100 ? '...' : '') : 'null'}`)
       })
     }
@@ -80,8 +81,8 @@ export function LocationProvider({ children }: LocationProviderProps) {
         ]
         
         keysToRemove.forEach(key => {
-          const existed = localStorage.getItem(key) !== null
-          localStorage.removeItem(key)
+          const existed = safeStorage.getItem(key) !== null
+          safeStorage.removeItem(key)
           console.log(`[LocationProvider] Removed localStorage key: ${key} (existed: ${existed})`)
         })
         

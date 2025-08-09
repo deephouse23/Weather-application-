@@ -9,6 +9,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Disable static optimization to fix SSR issues
+  output: 'standalone',
 }
 
 export default nextConfig

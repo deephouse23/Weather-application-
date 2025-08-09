@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, Suspense } from "react"
+import dynamic from 'next/dynamic'
 import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { fetchWeatherData, fetchWeatherByLocation } from "@/lib/weather-api"
@@ -35,37 +36,19 @@ const formatPressureByRegion = (pressureHPa: number, countryCode: string): strin
   }
 };
 
-// Get API key from environment variables for production deployment
-// Try both NEXT_PUBLIC_ (Next.js) and REACT_APP_ (Create React App) prefixes for compatibility
-const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || process.env.REACT_APP_OPENWEATHER_API_KEY;
+// Environment variable access moved inside component to avoid SSR issues
+const getAPIKey = () => {
+  if (typeof window === 'undefined') return null;
+  return process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || process.env.REACT_APP_OPENWEATHER_API_KEY;
+};
 
-// Debug environment variables
-console.log('🔍 MAIN PAGE ENVIRONMENT DEBUG:');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('NEXT_PUBLIC_OPENWEATHER_API_KEY:', process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY ? 'SET' : 'MISSING');
-console.log('REACT_APP_OPENWEATHER_API_KEY:', process.env.REACT_APP_OPENWEATHER_API_KEY ? 'SET' : 'MISSING');
-console.log('Final API_KEY:', API_KEY ? 'SET' : 'MISSING');
+const getGooglePollenAPIKey = () => {
+  if (typeof window === 'undefined') return null;
+  return process.env.NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY || process.env.REACT_APP_GOOGLE_POLLEN_API_KEY;
+};
 
-// Validate API key
-if (!API_KEY) {
-  console.error('❌ OpenWeather API key is missing!');
-  console.error('Please set either NEXT_PUBLIC_OPENWEATHER_API_KEY or REACT_APP_OPENWEATHER_API_KEY environment variable.');
-  console.error('For Next.js, use NEXT_PUBLIC_OPENWEATHER_API_KEY');
-} else {
-  console.log('✅ OpenWeather API key found:', API_KEY.substring(0, 8) + '...');
-}
-
-// Check for Google Pollen API key
-const GOOGLE_POLLEN_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY || process.env.REACT_APP_GOOGLE_POLLEN_API_KEY;
-if (!GOOGLE_POLLEN_API_KEY) {
-  console.warn('⚠️ Google Pollen API key is missing!');
-  console.warn('Please set either NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY or REACT_APP_GOOGLE_POLLEN_API_KEY environment variable for real pollen data.');
-} else {
-  console.log('✅ Google Pollen API key found:', GOOGLE_POLLEN_API_KEY.substring(0, 8) + '...');
-}
-
-// Theme types
-type ThemeType = 'dark' | 'miami' | 'tron';
+// Theme types (dark only now)
+type ThemeType = 'dark';
 
 // Helper function to determine pressure unit (matches weather API logic)
 const getPressureUnit = (countryCode: string): 'hPa' | 'inHg' => {
@@ -93,7 +76,7 @@ function WeatherApp() {
   const [remainingSearches, setRemainingSearches] = useState(10)
   const [rateLimitError, setRateLimitError] = useState<string>("")
   const [isClient, setIsClient] = useState(false)
-  const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark')
+  // Theme is managed by ThemeProvider
   const [searchCache, setSearchCache] = useState<Map<string, { data: WeatherData; timestamp: number }>>(new Map())
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [isAutoDetecting, setIsAutoDetecting] = useState(false)
@@ -258,12 +241,7 @@ function WeatherApp() {
     }
   }
 
-  // Load theme function
-  const loadTheme = () => {
-    if (!isClient) return
-    const storedTheme = getStoredTheme()
-    setCurrentTheme(storedTheme)
-  }
+  // Theme is managed by ThemeProvider, no local state needed
 
   // Set data function (for cached weather data)
   const setData = (weatherData: WeatherData) => {
@@ -280,12 +258,11 @@ function WeatherApp() {
     }
   }
 
-  // Load cached data and theme on component mount
+  // Load cached data on component mount
   useEffect(() => {
     if (!isClient) return
     
     loadCachedLocation()
-    loadTheme()
     
     // Check for existing cached data when component mounts
     const checkCacheAndLoad = async () => {
@@ -320,116 +297,26 @@ function WeatherApp() {
     checkCacheAndLoad()
   }, [isClient, locationInput, currentLocation])
 
-  // Enhanced theme management functions
-  const getStoredTheme = (): ThemeType => {
-    if (!isClient) return 'dark'
-    try {
-      const stored = localStorage.getItem('weather-edu-theme')
-      if (stored && ['dark', 'miami', 'tron'].includes(stored)) {
-        return stored as ThemeType
-      }
-    } catch (error) {
-      console.warn('Failed to get stored theme:', error)
-      setError('Theme loading failed, using default')
-    }
-    return 'dark' // Default to dark theme
-  }
+  // Theme is now managed entirely by ThemeProvider, no local management needed
 
-  // Load theme on mount and sync with navigation
-  useEffect(() => {
-    if (!isClient) return
-    
-    try {
-      const storedTheme = getStoredTheme()
-      setCurrentTheme(storedTheme)
-      
-      // Listen for theme changes from navigation
-      const handleStorageChange = () => {
-        try {
-          const newTheme = getStoredTheme()
-          setCurrentTheme(newTheme)
-        } catch (error) {
-          console.error('Error handling storage change:', error)
-        }
-      }
-      
-      window.addEventListener('storage', handleStorageChange)
-      
-      // Poll for theme changes (in case of same-tab changes)
-      const interval = setInterval(() => {
-        try {
-          const newTheme = getStoredTheme()
-          if (newTheme !== currentTheme) {
-            setCurrentTheme(newTheme)
-          }
-        } catch (error) {
-          console.error('Error polling theme changes:', error)
-        }
-      }, 100)
-      
-      return () => {
-        try {
-          window.removeEventListener('storage', handleStorageChange)
-          clearInterval(interval)
-        } catch (error) {
-          console.error('Error cleaning up theme listeners:', error)
-        }
-      }
-    } catch (error) {
-      console.error('Error initializing theme management:', error)
-      setError('Theme initialization failed')
-    }
-  }, [isClient, currentTheme])
-
-  // Enhanced theme classes for three themes with authentic Tron movie colors
-  const getThemeClasses = (theme: ThemeType) => {
-    switch (theme) {
-      case 'dark':
-        return {
-          background: 'bg-[#0f0f0f]',
-          cardBg: 'bg-[#0f0f0f]',
-          borderColor: 'border-[#00d4ff]',
-          text: 'text-[#e0e0e0]',
-          headerText: 'text-[#00d4ff]',
-          secondaryText: 'text-[#e0e0e0]',
-          accentText: 'text-[#00d4ff]',
-          successText: 'text-[#00ff00]',
-          glow: 'glow-dark',
-          specialBorder: 'border-[#00d4ff]',
-          buttonHover: 'hover:bg-[#00d4ff] hover:text-[#0f0f0f]'
-        }
-      case 'miami':
-        return {
-          background: 'bg-[#0a0025]',
-          cardBg: 'bg-[#0a0025]',
-          borderColor: 'border-[#ff1493]',
-          text: 'text-[#00ffff]',
-          headerText: 'text-[#ff1493]',
-          secondaryText: 'text-[#00ffff]',
-          accentText: 'text-[#ff1493]',
-          successText: 'text-[#00ff00]',
-          glow: 'glow-miami',
-          specialBorder: 'border-[#ff1493]',
-          buttonHover: 'hover:bg-[#ff1493] hover:text-[#0a0025]'
-        }
-      case 'tron':
-        return {
-          background: 'bg-black',
-          cardBg: 'bg-black',
-          borderColor: 'border-[#00FFFF]',
-          text: 'text-white',
-          headerText: 'text-[#00FFFF]',
-          secondaryText: 'text-[#00FFFF]',
-          accentText: 'text-[#00FFFF]',
-          successText: 'text-[#00ff00]',
-          glow: 'glow-tron',
-          specialBorder: 'border-[#00FFFF]',
-          buttonHover: 'hover:bg-[#00FFFF] hover:text-black'
-        }
+  // Semantic dark theme classes using CSS variables
+  const getThemeClasses = () => {
+    return {
+      background: 'bg-weather-bg-elev',
+      cardBg: 'bg-weather-bg-elev', 
+      borderColor: 'border-weather-border',
+      text: 'text-weather-text',
+      headerText: 'text-weather-primary',
+      secondaryText: 'text-weather-text',
+      accentText: 'text-weather-primary',
+      successText: 'text-weather-ok',
+      glow: 'glow',
+      specialBorder: 'border-weather-primary',
+      buttonHover: 'hover:bg-weather-primary hover:text-weather-bg'
     }
   }
 
-  const themeClasses = getThemeClasses(currentTheme)
+  const themeClasses = getThemeClasses()
 
   // Rate limiting functions
   const getRateLimitData = () => {
@@ -651,6 +538,7 @@ function WeatherApp() {
         return;
       }
 
+      const API_KEY = getAPIKey();
       if (!API_KEY) {
         throw new Error('OpenWeather API key is not configured');
       }
@@ -721,7 +609,7 @@ function WeatherApp() {
 
   // Tron Animated Grid Background Component - Same as PageWrapper
   const TronGridBackground = () => {
-    if (currentTheme !== 'tron') return null;
+    if ((theme || 'dark') !== 'tron') return null;
     
     return (
       <>
@@ -867,18 +755,13 @@ function WeatherApp() {
       weatherTemperature={weather?.temperature}
       weatherUnit={weather?.unit}
     >
-      <div className={cn(
-        "min-h-screen",
-        theme === "dark" && "bg-gradient-to-b from-gray-900 to-black",
-        theme === "miami" && "bg-gradient-to-b from-pink-900 to-purple-900",
-        theme === "tron" && "bg-gradient-to-b from-black to-blue-900"
-      )}>
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-weather-bg">
         <ResponsiveContainer maxWidth="xl" padding="md">
 
           {/* TEMPORARY API TEST - REMOVE BEFORE PRODUCTION */}
           {/* <ApiTest /> */}
 
-          <ErrorBoundary componentName="Weather Search" theme={currentTheme}>
+          <ErrorBoundary componentName="Weather Search">
             <WeatherSearch
               onSearch={handleSearch}
               onLocationSearch={handleLocationSearch}
@@ -886,7 +769,6 @@ function WeatherApp() {
               error={error}
               rateLimitError={rateLimitError}
               isDisabled={isOnCooldown}
-              theme={theme}
               hideLocationButton={true}
             />
           </ErrorBoundary>
@@ -897,12 +779,7 @@ function WeatherApp() {
           {!weather && !loading && !error && (
             <div className="text-center mt-8 mb-8 px-2 sm:px-0">
               <div className="w-full max-w-xl mx-auto">
-                <div className={cn(
-                  "p-2 sm:p-3 border-2 shadow-lg",
-                  theme === "dark" && "bg-[#0f0f0f] border-[#00d4ff] shadow-blue-500/20",
-                  theme === "miami" && "bg-[#0a0025] border-[#ff1493] shadow-pink-500/30",
-                  theme === "tron" && "bg-black border-[#00FFFF] shadow-cyan-500/40"
-                )}>
+                <div className="p-2 sm:p-3 border-2 shadow-lg bg-weather-bg-elev border-weather-primary shadow-weather-primary/20">
                   <p className="text-sm font-mono font-bold uppercase tracking-wider text-white" style={{ 
                     fontFamily: "monospace",
                     fontSize: "clamp(10px, 2.4vw, 14px)"
@@ -916,13 +793,8 @@ function WeatherApp() {
 
           {(loading || isAutoDetecting) && (
             <div className="flex justify-center items-center mt-8">
-              <Loader2 className={cn(
-                "h-8 w-8 animate-spin",
-                theme === "dark" && "text-blue-500",
-                theme === "miami" && "text-pink-500",
-                theme === "tron" && "text-cyan-500"
-              )} />
-              <span className="ml-2 text-white">
+              <Loader2 className="h-8 w-8 animate-spin text-weather-primary" />
+              <span className="ml-2 text-weather-text">
                 {isAutoDetecting ? 'Detecting your location...' : 'Loading weather data...'}
               </span>
             </div>
@@ -941,7 +813,7 @@ function WeatherApp() {
           )}
 
           {weather && !loading && !error && (
-            <ErrorBoundary componentName="Weather Display" theme={currentTheme}>
+            <ErrorBoundary componentName="Weather Display" theme={theme || 'dark'}>
               <div className="space-y-4 sm:space-y-6">
                 {/* Location Title */}
                 <div className="text-center mb-4">
@@ -1024,7 +896,7 @@ function WeatherApp() {
               </ResponsiveGrid>
 
               {/* AQI and Pollen Count - Using Lazy Loaded Shared Components */}
-              <LazyEnvironmentalDisplay weather={weather} theme={theme} />
+              <LazyEnvironmentalDisplay weather={weather} theme={theme || 'dark'} />
 
               {/* Day click handler */}
               {(() => {
@@ -1040,7 +912,7 @@ function WeatherApp() {
                         ...day,
                         country: weather?.country || 'US'
                       }))} 
-                      theme={theme}
+                      theme={theme || 'dark'}
                       onDayClick={handleDayClick}
                       selectedDay={selectedDay}
                     />
@@ -1051,7 +923,7 @@ function WeatherApp() {
                         ...day,
                         country: weather?.country || 'US'
                       }))} 
-                      theme={theme}
+                      theme={theme || 'dark'}
                       selectedDay={selectedDay}
                       currentWeatherData={{
                         humidity: weather?.humidity || 0,
@@ -1072,15 +944,15 @@ function WeatherApp() {
           {/* SEO City Links Section */}
           <div className={cn(
             "mt-16 pt-8 border-t-2 text-center",
-            theme === "dark" && "border-[#00d4ff]",
-            theme === "miami" && "border-[#ff1493]",
-            theme === "tron" && "border-[#00FFFF]"
+            (theme || 'dark') === "dark" && "border-[#00d4ff]",
+            (theme || 'dark') === "miami" && "border-[#ff1493]",
+            (theme || 'dark') === "tron" && "border-[#00FFFF]"
           )}>
             <h2 className={cn(
               "text-lg font-bold mb-4 uppercase tracking-wider font-mono",
-              theme === "dark" && "text-[#00d4ff]",
-              theme === "miami" && "text-[#ff1493]",
-              theme === "tron" && "text-[#00FFFF]"
+              (theme || 'dark') === "dark" && "text-[#00d4ff]",
+              (theme || 'dark') === "miami" && "text-[#ff1493]",
+              (theme || 'dark') === "tron" && "text-[#00FFFF]"
             )}>
               WEATHER BY CITY
             </h2>
@@ -1089,9 +961,9 @@ function WeatherApp() {
                 href="/weather/new-york-ny" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 NEW YORK
@@ -1100,9 +972,9 @@ function WeatherApp() {
                 href="/weather/los-angeles-ca" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 LOS ANGELES
@@ -1111,9 +983,9 @@ function WeatherApp() {
                 href="/weather/chicago-il" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 CHICAGO
@@ -1122,9 +994,9 @@ function WeatherApp() {
                 href="/weather/houston-tx" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 HOUSTON
@@ -1133,9 +1005,9 @@ function WeatherApp() {
                 href="/weather/phoenix-az" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 PHOENIX
@@ -1144,9 +1016,9 @@ function WeatherApp() {
                 href="/weather/philadelphia-pa" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 PHILADELPHIA
@@ -1155,9 +1027,9 @@ function WeatherApp() {
                 href="/weather/san-antonio-tx" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 SAN ANTONIO
@@ -1166,9 +1038,9 @@ function WeatherApp() {
                 href="/weather/san-diego-ca" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 SAN DIEGO
@@ -1177,9 +1049,9 @@ function WeatherApp() {
                 href="/weather/dallas-tx" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 DALLAS
@@ -1188,9 +1060,9 @@ function WeatherApp() {
                 href="/weather/austin-tx" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 AUSTIN
@@ -1204,10 +1076,21 @@ function WeatherApp() {
   );
 }
 
+// Create a dynamic import for the WeatherApp to avoid SSR issues
+const DynamicWeatherApp = dynamic(
+  () => Promise.resolve(WeatherApp),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    )
+  }
+)
+
 export default function HomePage() {
-  return (
-    <WeatherApp />
-  )
+  return <DynamicWeatherApp />
 }
 
 // Component definitions remain the same...

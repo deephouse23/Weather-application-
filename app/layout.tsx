@@ -3,7 +3,7 @@ import "./globals.css"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Analytics } from '@vercel/analytics/react'
-import { ThemeProvider } from "@/components/theme-provider"
+import AppThemeProvider from "@/app/providers/ThemeProvider"
 import { LocationProvider } from "@/components/location-context"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -90,7 +90,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
       <head>
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -231,17 +231,11 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
-          storageKey="weather-edu-theme"
-          themes={["dark", "miami", "tron"]}
-        >
+        <AppThemeProvider>
           <LocationProvider>
             {children}
           </LocationProvider>
-        </ThemeProvider>
+        </AppThemeProvider>
         <Analytics />
       </body>
     </html>

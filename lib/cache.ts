@@ -1,4 +1,5 @@
 import { WeatherData } from './types'
+import { safeStorage } from './safe-storage'
 
 // Cache configuration
 const CACHE_DURATION = 10 * 60 * 1000 // 10 minutes
@@ -105,7 +106,7 @@ export const withRetry = async <T>(
 export const cacheWeatherData = (location: string, data: WeatherData): void => {
   setCachedData(CACHE_KEYS.WEATHER, data)
   setCachedData(CACHE_KEYS.LOCATION, location)
-  localStorage.setItem(CACHE_KEYS.TIMESTAMP, Date.now().toString())
+  safeStorage.setItem(CACHE_KEYS.TIMESTAMP, Date.now().toString())
 }
 
 /**

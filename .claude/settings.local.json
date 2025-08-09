@@ -15,7 +15,13 @@
       "WebFetch(domain:github.com)",
       "Bash(git remote get-url:*)",
       "Bash(git commit:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(npm ci:*)",
+      "Bash(powershell:*)",
+      "Bash(gh pr list:*)",
+      "Bash(timeout 60 npm run build)"
     ],
     "deny": []
   }

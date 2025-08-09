@@ -11,6 +11,7 @@
 
 import { WeatherData } from './types';
 import { LocationData } from './location-service';
+import { safeStorage } from './safe-storage';
 
 export interface UserPreferences {
   lastLocation?: LocationData;
@@ -81,8 +82,8 @@ export class UserCacheService {
   private isStorageAvailable(): boolean {
     try {
       const testKey = this.STORAGE_PREFIX + 'test';
-      localStorage.setItem(testKey, 'test');
-      localStorage.removeItem(testKey);
+      safeStorage.setItem(testKey, 'test');
+      safeStorage.removeItem(testKey);
       return true;
     } catch (error) {
       console.warn('localStorage not available:', error);
@@ -97,7 +98,7 @@ export class UserCacheService {
     if (!this.isStorageAvailable()) return null;
 
     try {
-      const stored = localStorage.getItem(this.STORAGE_PREFIX + this.PREFERENCES_KEY);
+      const stored = safeStorage.getItem(this.STORAGE_PREFIX + this.PREFERENCES_KEY);
       if (stored) {
         const preferences = JSON.parse(stored) as UserPreferences;
         // Validate and migrate old data if needed
@@ -119,7 +120,7 @@ export class UserCacheService {
     try {
       preferences.updatedAt = Date.now();
       const serialized = JSON.stringify(preferences);
-      localStorage.setItem(this.STORAGE_PREFIX + this.PREFERENCES_KEY, serialized);
+      safeStorage.setItem(this.STORAGE_PREFIX + this.PREFERENCES_KEY, serialized);
       console.log('Preferences saved successfully');
       return true;
     } catch (error) {
@@ -179,7 +180,7 @@ export class UserCacheService {
       };
 
       const cacheKey = this.STORAGE_PREFIX + this.WEATHER_CACHE_KEY + '_' + this.sanitizeKey(locationKey);
-      localStorage.setItem(cacheKey, JSON.stringify(cacheEntry));
+      safeStorage.setItem(cacheKey, JSON.stringify(cacheEntry));
       
       console.log(`Weather data cached for ${locationKey}, expires in ${Math.round(duration / 1000 / 60)} minutes`);
       return true;
@@ -198,7 +199,7 @@ export class UserCacheService {
 
     try {
       const cacheKey = this.STORAGE_PREFIX + this.WEATHER_CACHE_KEY + '_' + this.sanitizeKey(locationKey);
-      const stored = localStorage.getItem(cacheKey);
+      const stored = safeStorage.getItem(cacheKey);
       
       if (stored) {
         const cacheEntry: CachedWeatherData = JSON.parse(stored);
@@ -209,7 +210,7 @@ export class UserCacheService {
           return cacheEntry.data;
         } else {
           // Remove expired cache
-          localStorage.removeItem(cacheKey);
+          safeStorage.removeItem(cacheKey);
           console.log(`Cached weather data expired for ${locationKey}`);
         }
       }
@@ -231,16 +232,16 @@ export class UserCacheService {
       if (locationKey) {
         // Clear specific location cache
         const cacheKey = this.STORAGE_PREFIX + this.WEATHER_CACHE_KEY + '_' + this.sanitizeKey(locationKey);
-        localStorage.removeItem(cacheKey);
+        safeStorage.removeItem(cacheKey);
         console.log(`Weather cache cleared for ${locationKey}`);
       } else {
         // Clear all weather cache
-        const keys = Object.keys(localStorage);
+        const keys = safeStorage.getAllKeys();
         const weatherCacheKeys = keys.filter(key => 
           key.startsWith(this.STORAGE_PREFIX + this.WEATHER_CACHE_KEY)
         );
         
-        weatherCacheKeys.forEach(key => localStorage.removeItem(key));
+        weatherCacheKeys.forEach(key => safeStorage.removeItem(key));
         console.log(`All weather cache cleared (${weatherCacheKeys.length} entries)`);
       }
       return true;
@@ -263,7 +264,7 @@ export class UserCacheService {
     if (!this.isStorageAvailable()) return metrics;
 
     try {
-      const keys = Object.keys(localStorage);
+      const keys = safeStorage.getAllKeys();
       const weatherCacheKeys = keys.filter(key => 
         key.startsWith(this.STORAGE_PREFIX + this.WEATHER_CACHE_KEY)
       );
@@ -273,7 +274,7 @@ export class UserCacheService {
 
       weatherCacheKeys.forEach(key => {
         try {
-          const stored = localStorage.getItem(key);
+          const stored = safeStorage.getItem(key);
           if (stored) {
             metrics.totalSize += stored.length * 2; // Approximate bytes (UTF-16)
             metrics.totalEntries++;
@@ -338,7 +339,7 @@ export class UserCacheService {
    * Clean up expired cache entries
    */
   private cleanupExpiredEntries(): void {
-    const keys = Object.keys(localStorage);
+    const keys = safeStorage.getAllKeys();
     const weatherCacheKeys = keys.filter(key => 
       key.startsWith(this.STORAGE_PREFIX + this.WEATHER_CACHE_KEY)
     );
@@ -347,17 +348,17 @@ export class UserCacheService {
 
     weatherCacheKeys.forEach(key => {
       try {
-        const stored = localStorage.getItem(key);
+        const stored = safeStorage.getItem(key);
         if (stored) {
           const cacheEntry: CachedWeatherData = JSON.parse(stored);
           if (Date.now() > cacheEntry.expiresAt) {
-            localStorage.removeItem(key);
+            safeStorage.removeItem(key);
             removedCount++;
           }
         }
       } catch (error) {
         // Remove corrupted entries
-        localStorage.removeItem(key);
+        safeStorage.removeItem(key);
         removedCount++;
       }
     });
@@ -369,7 +370,7 @@ export class UserCacheService {
    * Clean up oldest cache entries to reduce size
    */
   private cleanupOldestEntries(): void {
-    const keys = Object.keys(localStorage);
+    const keys = safeStorage.getAllKeys();
     const weatherCacheKeys = keys.filter(key => 
       key.startsWith(this.STORAGE_PREFIX + this.WEATHER_CACHE_KEY)
     );
@@ -378,7 +379,7 @@ export class UserCacheService {
 
     weatherCacheKeys.forEach(key => {
       try {
-        const stored = localStorage.getItem(key);
+        const stored = safeStorage.getItem(key);
         if (stored) {
           const cacheEntry: CachedWeatherData = JSON.parse(stored);
           entries.push({
@@ -406,7 +407,7 @@ export class UserCacheService {
 
     while (currentSize > this.MAX_CACHE_SIZE && entries.length > 0) {
       const entry = entries.shift()!;
-      localStorage.removeItem(entry.key);
+      safeStorage.removeItem(entry.key);
       currentSize -= entry.size;
       removedCount++;
     }
@@ -420,7 +421,7 @@ export class UserCacheService {
   private handleCorruptedData(key: string): void {
     try {
       const fullKey = this.STORAGE_PREFIX + key;
-      localStorage.removeItem(fullKey);
+      safeStorage.removeItem(fullKey);
       console.log(`Removed corrupted data: ${key}`);
     } catch (error) {
       console.error('Failed to remove corrupted data:', error);
@@ -474,10 +475,10 @@ export class UserCacheService {
     if (!this.isStorageAvailable()) return false;
 
     try {
-      const keys = Object.keys(localStorage);
+      const keys = safeStorage.getAllKeys();
       const ourKeys = keys.filter(key => key.startsWith(this.STORAGE_PREFIX));
       
-      ourKeys.forEach(key => localStorage.removeItem(key));
+      ourKeys.forEach(key => safeStorage.removeItem(key));
       
       console.log(`All user data cleared (${ourKeys.length} entries)`);
       this.initializeDefaults();

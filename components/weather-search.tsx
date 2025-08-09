@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { Search, Loader2, MapPin, X } from "lucide-react"
-import { ThemeType, APP_CONSTANTS } from "@/lib/utils"
+// APP_CONSTANTS removed - no longer needed for themes
 import CityAutocomplete from "./city-autocomplete"
 import { type CityData } from "@/lib/city-database"
 import { useLocationContext } from "./location-context"
+import { useTheme } from "./theme-provider"
 
 interface WeatherSearchProps {
   onSearch: (location: string) => void;
@@ -14,7 +15,6 @@ interface WeatherSearchProps {
   error?: string;
   isDisabled?: boolean;
   rateLimitError?: string;
-  theme?: ThemeType;
   hideLocationButton?: boolean;
 }
 
@@ -25,12 +25,12 @@ export default function WeatherSearch({
   error, 
   isDisabled = false,
   rateLimitError,
-  theme = APP_CONSTANTS.THEMES.DARK,
   hideLocationButton = false
 }: WeatherSearchProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [showAutocomplete, setShowAutocomplete] = useState(false)
   const { locationInput, setLocationInput, clearLocationState } = useLocationContext()
+  const { theme } = useTheme()
 
   // Sync with location context - prevent unnecessary loops
   useEffect(() => {
@@ -39,79 +39,28 @@ export default function WeatherSearch({
     }
   }, [locationInput])
 
-  // Local theme classes function
-  const getThemeClasses = (theme: ThemeType) => {
-    switch (theme) {
-      case 'dark':
-        return {
-          background: 'bg-[#0f0f0f]',
-          cardBg: 'bg-[#0f0f0f]',
-          borderColor: 'border-[#00d4ff]',
-          text: 'text-[#e0e0e0]',
-          headerText: 'text-[#00d4ff]',
-          secondaryText: 'text-[#e0e0e0]',
-          accentText: 'text-[#00d4ff]',
-          successText: 'text-[#00ff00]',
-          glow: 'glow-dark',
-          specialBorder: 'border-[#00d4ff]',
-          buttonHover: 'hover:bg-[#00d4ff] hover:text-[#0f0f0f]',
-          placeholderText: 'placeholder-[#a0a0a0]',
-          hoverBorder: 'hover:border-[#00d4ff]',
-          buttonBg: 'bg-[#0f0f0f]',
-          buttonBorder: 'border-[#00d4ff]',
-          buttonText: 'text-[#e0e0e0]',
-          errorBg: 'bg-[#1a0f0f]',
-          errorText: 'text-[#ff4444]',
-          warningText: 'text-[#ff6b6b]'
-        }
-      case 'miami':
-        return {
-          background: 'bg-[#0a0025]',
-          cardBg: 'bg-[#0a0025]',
-          borderColor: 'border-[#ff1493]',
-          text: 'text-[#00ffff]',
-          headerText: 'text-[#ff1493]',
-          secondaryText: 'text-[#00ffff]',
-          accentText: 'text-[#ff1493]',
-          successText: 'text-[#00ff00]',
-          glow: 'glow-miami',
-          specialBorder: 'border-[#ff1493]',
-          buttonHover: 'hover:bg-[#ff1493] hover:text-[#0a0025]',
-          placeholderText: 'placeholder-[#b0d4f1]',
-          hoverBorder: 'hover:border-[#ff1493]',
-          buttonBg: 'bg-[#0a0025]',
-          buttonBorder: 'border-[#ff1493]',
-          buttonText: 'text-[#00ffff]',
-          errorBg: 'bg-[#1a0025]',
-          errorText: 'text-[#ff1493]',
-          warningText: 'text-[#ff69b4]'
-        }
-      case 'tron':
-        return {
-          background: 'bg-black',
-          cardBg: 'bg-black',
-          borderColor: 'border-[#00FFFF]',
-          text: 'text-white',
-          headerText: 'text-[#00FFFF]',
-          secondaryText: 'text-[#00FFFF]',
-          accentText: 'text-[#00FFFF]',
-          successText: 'text-[#00ff00]',
-          glow: 'glow-tron',
-          specialBorder: 'border-[#00FFFF]',
-          buttonHover: 'hover:bg-[#00FFFF] hover:text-black',
-          placeholderText: 'placeholder-[#88CCFF]',
-          hoverBorder: 'hover:border-[#00FFFF]',
-          buttonBg: 'bg-black',
-          buttonBorder: 'border-[#00FFFF]',
-          buttonText: 'text-white',
-          errorBg: 'bg-[#001111]',
-          errorText: 'text-[#FF4444]',
-          warningText: 'text-[#FF6B6B]'
-        }
-    }
+  // Semantic dark theme classes using CSS variables
+  const themeClasses = {
+    background: 'bg-weather-bg-elev',
+    cardBg: 'bg-weather-bg-elev',
+    borderColor: 'border-weather-border',
+    text: 'text-weather-text',
+    headerText: 'text-weather-primary',
+    secondaryText: 'text-weather-text',
+    accentText: 'text-weather-primary',
+    successText: 'text-weather-ok',
+    glow: 'glow',
+    specialBorder: 'border-weather-primary',
+    buttonHover: 'hover:bg-weather-primary hover:text-weather-bg',
+    placeholderText: 'placeholder-weather-muted',
+    hoverBorder: 'hover:border-weather-primary',
+    buttonBg: 'bg-weather-bg-elev',
+    buttonBorder: 'border-weather-border',
+    buttonText: 'text-weather-text',
+    errorBg: 'bg-weather-danger/10',
+    errorText: 'text-weather-danger',
+    warningText: 'text-weather-warn'
   }
-
-  const themeClasses = getThemeClasses(theme)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
