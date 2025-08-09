@@ -1,5 +1,19 @@
 import { Suspense } from 'react'
-import CityWeatherClient from './client'
+import dynamic from 'next/dynamic'
+import { Loader2 } from 'lucide-react'
+
+// Dynamic import to avoid SSR issues with theme context
+const CityWeatherClient = dynamic(
+  () => import('./client'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    )
+  }
+)
 import { EnhancedMetaTags } from '@/components/enhanced-meta-tags'
 
 // City data for SEO and functionality
