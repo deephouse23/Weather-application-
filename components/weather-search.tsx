@@ -6,6 +6,7 @@ import { Search, Loader2, MapPin, X } from "lucide-react"
 import CityAutocomplete from "./city-autocomplete"
 import { type CityData } from "@/lib/city-database"
 import { useLocationContext } from "./location-context"
+import { useTheme } from "./theme-provider"
 
 interface WeatherSearchProps {
   onSearch: (location: string) => void;
@@ -29,6 +30,7 @@ export default function WeatherSearch({
   const [searchTerm, setSearchTerm] = useState("")
   const [showAutocomplete, setShowAutocomplete] = useState(false)
   const { locationInput, setLocationInput, clearLocationState } = useLocationContext()
+  const { theme } = useTheme()
 
   // Sync with location context - prevent unnecessary loops
   useEffect(() => {

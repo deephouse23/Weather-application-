@@ -1,5 +1,8 @@
 "use client"
 
+// Force dynamic rendering to prevent build-time API calls
+export const dynamic = 'force-dynamic'
+
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { fetchWeatherData } from '@/lib/weather-api'

@@ -1016,9 +1016,9 @@ function WeatherApp() {
                 href="/weather/philadelphia-pa" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 PHILADELPHIA
@@ -1027,9 +1027,9 @@ function WeatherApp() {
                 href="/weather/san-antonio-tx" 
                 className={cn(
                   "block px-3 py-2 text-sm font-mono rounded border transition-colors",
-                  theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-                  theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-                  theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+                  (theme || 'dark') === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
+                  (theme || 'dark') === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
+                  (theme || 'dark') === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
                 )}
               >
                 SAN ANTONIO

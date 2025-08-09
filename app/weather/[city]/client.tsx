@@ -185,7 +185,6 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
             error={error}
             rateLimitError=""
             isDisabled={false}
-            theme={theme || 'dark'}
             hideLocationButton={true}
           />
 
