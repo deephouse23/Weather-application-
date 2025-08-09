@@ -185,7 +185,7 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
             error={error}
             rateLimitError=""
             isDisabled={false}
-            theme={theme}
+            theme={theme || 'dark'}
             hideLocationButton={true}
           />
 
@@ -234,7 +234,7 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
               </ResponsiveGrid>
 
               {/* AQI and Pollen Count - Using Lazy Loaded Shared Components */}
-              <LazyEnvironmentalDisplay weather={weather} theme={theme} />
+              <LazyEnvironmentalDisplay weather={weather} theme={theme || 'dark'} />
 
               {/* Forecast Components - Lazy Loaded */}
               <LazyForecast 
@@ -242,7 +242,7 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
                   ...day,
                   country: weather.country
                 }))} 
-                theme={theme}
+                theme={theme || 'dark'}
                 onDayClick={handleDayClick}
                 selectedDay={selectedDay}
               />
@@ -252,7 +252,7 @@ export default function CityWeatherClient({ city, citySlug }: CityWeatherClientP
                   ...day,
                   country: weather.country
                 }))} 
-                theme={theme}
+                theme={theme || 'dark'}
                 selectedDay={selectedDay}
                 currentWeatherData={{
                   humidity: weather.humidity,
