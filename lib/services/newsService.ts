@@ -49,7 +49,8 @@ export class NewsService {
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
   private readonly NEWS_API_KEY = process.env.NEXT_PUBLIC_NEWS_API_KEY || '';
   private readonly NEWS_API_URL = 'https://newsapi.org/v2';
-  private readonly WEATHER_ALERTS_URL = 'https://api.weather.gov/alerts/active';
+  private readonly WEATHER_ALERTS_URL = 'https://api.weather.gov/alerts/active?';
+  private readonly isProduction = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
 
   private constructor() {}
 
@@ -128,7 +129,12 @@ export class NewsService {
    */
   private async fetchWeatherAlerts(): Promise<NewsItem[]> {
     try {
-      const response = await fetch(`${this.WEATHER_ALERTS_URL}?status=actual&limit=5`, {
+      // NOAA API doesn't support 'limit' parameter, use different approach
+      const response = await fetch(`${this.WEATHER_ALERTS_URL}status=actual`, {
+        headers: {
+          'Accept': 'application/geo+json',
+          'User-Agent': '16-Bit Weather Platform'
+        },
         next: { revalidate: 300 } // Cache for 5 minutes in Next.js
       });
 
@@ -138,7 +144,10 @@ export class NewsService {
 
       const data: WeatherAlertResponse = await response.json();
       
-      return data.features.map(feature => ({
+      // Limit to first 5 alerts
+      const limitedFeatures = data.features.slice(0, 5);
+      
+      return limitedFeatures.map(feature => ({
         id: feature.properties.id,
         title: feature.properties.headline,
         url: feature.properties.web,
@@ -163,9 +172,19 @@ export class NewsService {
     }
 
     try {
-      const response = await fetch(
-        `${this.NEWS_API_URL}/everything?q=weather+OR+storm+OR+hurricane+OR+tornado&sortBy=publishedAt&pageSize=5&apiKey=${this.NEWS_API_KEY}`
-      );
+      let response;
+      
+      if (this.isProduction) {
+        // Use our API route in production
+        response = await fetch(
+          `/api/news?endpoint=everything&q=${encodeURIComponent('weather OR storm OR hurricane OR tornado')}&pageSize=5`
+        );
+      } else {
+        // Direct API call in development
+        response = await fetch(
+          `${this.NEWS_API_URL}/everything?q=weather+OR+storm+OR+hurricane+OR+tornado&sortBy=publishedAt&pageSize=5&apiKey=${this.NEWS_API_KEY}`
+        );
+      }
 
       if (!response.ok) {
         throw new Error('Failed to fetch weather news');
@@ -197,9 +216,19 @@ export class NewsService {
     }
 
     try {
-      const response = await fetch(
-        `${this.NEWS_API_URL}/top-headlines?country=us&pageSize=5&apiKey=${this.NEWS_API_KEY}`
-      );
+      let response;
+      
+      if (this.isProduction) {
+        // Use our API route in production
+        response = await fetch(
+          `/api/news?endpoint=top-headlines&country=us&pageSize=5`
+        );
+      } else {
+        // Direct API call in development
+        response = await fetch(
+          `${this.NEWS_API_URL}/top-headlines?country=us&pageSize=5&apiKey=${this.NEWS_API_KEY}`
+        );
+      }
 
       if (!response.ok) {
         throw new Error('Failed to fetch breaking news');
@@ -231,10 +260,19 @@ export class NewsService {
     }
 
     try {
-      // For now, default to US news. In future, can use geolocation
-      const response = await fetch(
-        `${this.NEWS_API_URL}/top-headlines?country=us&category=general&pageSize=5&apiKey=${this.NEWS_API_KEY}`
-      );
+      let response;
+      
+      if (this.isProduction) {
+        // Use our API route in production
+        response = await fetch(
+          `/api/news?endpoint=top-headlines&country=us&category=general&pageSize=5`
+        );
+      } else {
+        // Direct API call in development
+        response = await fetch(
+          `${this.NEWS_API_URL}/top-headlines?country=us&category=general&pageSize=5&apiKey=${this.NEWS_API_KEY}`
+        );
+      }
 
       if (!response.ok) {
         throw new Error('Failed to fetch local news');
@@ -266,9 +304,19 @@ export class NewsService {
     }
 
     try {
-      const response = await fetch(
-        `${this.NEWS_API_URL}/top-headlines?country=us&category=science&pageSize=5&apiKey=${this.NEWS_API_KEY}`
-      );
+      let response;
+      
+      if (this.isProduction) {
+        // Use our API route in production
+        response = await fetch(
+          `/api/news?endpoint=top-headlines&country=us&category=science&pageSize=5`
+        );
+      } else {
+        // Direct API call in development
+        response = await fetch(
+          `${this.NEWS_API_URL}/top-headlines?country=us&category=science&pageSize=5&apiKey=${this.NEWS_API_KEY}`
+        );
+      }
 
       if (!response.ok) {
         throw new Error('Failed to fetch general news');
@@ -368,7 +416,7 @@ export class NewsService {
     return [
       {
         id: 'fallback-1',
-        title: 'Weather service temporarily unavailable',
+        title: 'News service temporarily unavailable. Please check back soon.',
         url: '#',
         source: 'System',
         category: 'general',
@@ -377,10 +425,10 @@ export class NewsService {
       },
       {
         id: 'fallback-2',
-        title: 'Check back soon for the latest weather updates and news',
-        url: '#',
-        source: 'System',
-        category: 'general',
+        title: 'Weather alerts will appear here when available',
+        url: 'https://www.weather.gov/alerts',
+        source: 'NOAA',
+        category: 'weather',
         priority: 'low',
         timestamp: new Date()
       }

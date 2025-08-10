@@ -54,16 +54,20 @@ The news ticker is automatically included in the navigation component:
 ## API Integration
 
 ### News Sources
-1. **NewsAPI.org** (requires API key)
+
+1. **NewsAPI.org** (requires API key) ✅ **Works in Production via API Route**
    - Breaking news
-   - Local news
+   - Local news  
    - General news
    - Weather-related articles
+   - **Production**: Uses server-side API route (`/api/news`)
+   - **Development**: Direct client-side calls
 
-2. **NOAA Weather Service** (no API key required)
+2. **NOAA Weather Service** (no API key required) ✅ **Works Everywhere**
    - Real-time weather alerts
    - Severe weather warnings
    - Emergency notifications
+   - Works from any domain without restrictions
 
 ### Rate Limits
 - NewsAPI Free Tier: 100 requests/day
@@ -126,6 +130,35 @@ lib/
 - Respects prefers-reduced-motion
 - ARIA labels for screen readers
 - Keyboard navigation support
+
+## Production Setup
+
+### Environment Variables
+
+For production on Vercel, you need to set **TWO** environment variables:
+
+1. In Vercel Dashboard, add:
+   ```
+   NEWS_API_KEY=your_actual_api_key_here
+   ```
+   (This is for server-side use, without NEXT_PUBLIC prefix)
+
+2. Also add (optional, for client-side fallback):
+   ```
+   NEXT_PUBLIC_NEWS_API_KEY=your_actual_api_key_here
+   ```
+
+### How It Works
+
+1. **Development (localhost)**:
+   - NewsAPI calls are made directly from the browser
+   - Uses `NEXT_PUBLIC_NEWS_API_KEY`
+
+2. **Production (www.16bitweather.com)**:
+   - Browser calls our API route: `/api/news`
+   - API route (server-side) calls NewsAPI using `NEWS_API_KEY`
+   - No CORS issues since server-to-server communication
+   - Results are cached for 5 minutes
 
 ## Troubleshooting
 

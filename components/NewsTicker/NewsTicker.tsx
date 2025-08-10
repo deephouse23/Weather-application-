@@ -35,17 +35,19 @@ export interface NewsTickerProps {
 }
 
 // Fallback data for when API is not available
-const fallbackNewsItems: NewsItem[] = [
-  {
-    id: 'fallback-1',
-    title: 'Configure NEWS_API_KEY in environment variables for live news',
-    url: '#',
-    source: 'System',
-    category: 'general',
-    priority: 'low',
-    timestamp: new Date()
-  }
-];
+const getFallbackNewsItems = (): NewsItem[] => {
+  return [
+    {
+      id: 'fallback-1',
+      title: 'Loading news updates...',
+      url: '#',
+      source: 'System',
+      category: 'general',
+      priority: 'low',
+      timestamp: new Date()
+    }
+  ];
+};
 
 const NewsTicker: React.FC<NewsTickerProps> = ({
   categories = ['breaking', 'weather', 'local', 'general'],
@@ -72,7 +74,7 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
   });
 
   // Use real news if available, otherwise use fallback
-  const newsItems = useRealData && news.length > 0 ? news : fallbackNewsItems;
+  const newsItems = useRealData && news.length > 0 ? news : getFallbackNewsItems();
 
   // Fixed animation speed (between medium and fast)
   const animationSpeed = '30s';
@@ -98,12 +100,14 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
     }
   }, []);
 
-  // Check if we should use real data based on API key availability
+  // Check if we should use real data based on environment
   useEffect(() => {
     const hasApiKey = process.env.NEXT_PUBLIC_NEWS_API_KEY;
+    
     if (!hasApiKey) {
-      console.warn('News API key not configured. Using fallback data.');
-      setUseRealData(false);
+      console.warn('News API key not configured.');
+      // Still try to fetch NOAA alerts which don't need a key
+      setUseRealData(true);
     }
   }, []);
 
