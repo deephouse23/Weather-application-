@@ -1,6 +1,12 @@
-# 🌟 16-Bit Weather v0.3.0
+# 🌟 16-Bit Weather v0.3.2 - BETA
+
+[![License: Fair Source](https://img.shields.io/badge/License-Fair%20Source%200.9-yellow)](LICENSE)
+[![Beta Version](https://img.shields.io/badge/Status-BETA-orange)](https://github.com/deephouse23/Weather-application-/releases)
+[![Version](https://img.shields.io/badge/Version-0.3.2--beta-blue)](https://github.com/deephouse23/Weather-application-/releases)
 
 **Experience weather data like it's 1985!**
+
+> ⚠️ **BETA SOFTWARE**: This project is currently in beta. Features may change, and bugs may exist. Use in production at your own risk.
 
 A retro-styled weather application that combines modern meteorological data with authentic 16-bit gaming aesthetics. Get comprehensive weather information displayed through a nostalgic terminal interface with pixel-perfect styling.
 
@@ -415,6 +421,37 @@ This groundbreaking release represents a **complete architectural transformation
 - **⚡ Faster initial load** - Optimized bundle size and lazy loading
 - **💾 Better caching** - Improved location memory and data persistence
 - **🔄 Smoother animations** - Enhanced user interface transitions
+
+---
+
+## 📜 License
+
+### Fair Source License 0.9
+
+This project is licensed under the **Fair Source License, Version 0.9**.
+
+- **Use Limitation**: 5 users
+- **Change Date**: January 2029 (4 years from release)
+- **Change License**: MIT License after Change Date
+- **Commercial Use**: Allowed for up to 5 users
+
+#### What this means:
+- ✅ **Free for small teams** (up to 5 users)
+- ✅ **Commercial use allowed** within user limit
+- ✅ **Modification and distribution permitted**
+- ✅ **Becomes MIT licensed** in 2029
+- ❌ **Requires license** for more than 5 users
+
+For the full license terms, see the [LICENSE](LICENSE) file.
+
+### 🚧 Beta Status
+
+This software is currently in **BETA** (v0.3.2). This means:
+- Features may change without notice
+- Bugs and issues are expected  
+- API interfaces may be modified
+- Performance optimizations are ongoing
+- Production use is at your own risk
 
 ---
 
