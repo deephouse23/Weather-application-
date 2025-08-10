@@ -8,18 +8,26 @@
  */
 
 .tickerScroll {
-  display: flex;
+  display: inline-flex;
+  padding-left: 100%;
   animation: scroll-left linear infinite;
   will-change: transform;
 }
 
 @keyframes scroll-left {
   0% {
-    transform: translateX(0);
+    transform: translate(0, 0);
   }
   100% {
-    transform: translateX(-100%);
+    transform: translate(-100%, 0);
   }
+}
+
+/* Ensure smooth continuous scrolling */
+.tickerWrapper {
+  display: flex;
+  overflow: hidden;
+  width: 100%;
 }
 
 /* Pixel border style matching the retro theme */

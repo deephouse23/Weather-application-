@@ -51,6 +51,19 @@ export class NewsService {
   private readonly NEWS_API_URL = 'https://newsapi.org/v2';
   private readonly WEATHER_ALERTS_URL = 'https://api.weather.gov/alerts/active?';
   private readonly isProduction = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
+  
+  // Trusted weather domains - only get news from these sources
+  private readonly WEATHER_DOMAINS = [
+    'noaa.gov',
+    'weather.gov',
+    'nhc.noaa.gov',
+    'spc.noaa.gov',
+    'weather.com',
+    'accuweather.com',
+    'wunderground.com',
+    'metoffice.gov.uk',
+    'bom.gov.au'
+  ].join(',');
 
   private constructor() {}
 
@@ -59,113 +72,6 @@ export class NewsService {
       NewsService.instance = new NewsService();
     }
     return NewsService.instance;
-  }
-
-  /**
-   * Fetch climate-related news
-   */
-  private async fetchClimateNews(): Promise<NewsItem[]> {
-    if (!this.NEWS_API_KEY) {
-      return [];
-    }
-
-    try {
-      let response;
-      
-      if (this.isProduction) {
-        response = await fetch(
-          `/api/news?endpoint=everything&q=${encodeURIComponent('climate change OR global warming OR environmental disaster OR weather pattern')}&pageSize=8`
-        );
-      } else {
-        response = await fetch(
-          `${this.NEWS_API_URL}/everything?q=climate+change+OR+global+warming+OR+environmental+disaster+OR+weather+pattern&sortBy=publishedAt&pageSize=8&apiKey=${this.NEWS_API_KEY}`
-        );
-      }
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch climate news');
-      }
-
-      const data: NewsAPIResponse = await response.json();
-      
-      // Filter out sports and non-weather content
-      const weatherRelatedArticles = data.articles.filter(article => {
-        const title = article.title.toLowerCase();
-        const excludeTerms = ['game', 'match', 'player', 'team', 'score', 'wins', 'loses', 'playoff'];
-        return !excludeTerms.some(term => title.includes(term));
-      });
-      
-      return weatherRelatedArticles.map(article => ({
-        id: `climate-${article.publishedAt}-${article.title.substring(0, 10)}`,
-        title: article.title,
-        url: article.url,
-        source: article.source.name,
-        category: 'weather' as const,
-        priority: 'medium' as const,
-        timestamp: new Date(article.publishedAt)
-      }));
-    } catch (error) {
-      console.error('Error fetching climate news:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Fetch extreme weather specific news
-   */
-  private async fetchExtremeWeatherNews(): Promise<NewsItem[]> {
-    if (!this.NEWS_API_KEY) {
-      return [];
-    }
-
-    try {
-      let response;
-      
-      if (this.isProduction) {
-        response = await fetch(
-          `/api/news?endpoint=everything&q=${encodeURIComponent('disaster OR catastrophe OR emergency weather OR record temperature OR unprecedented storm')}&pageSize=8`
-        );
-      } else {
-        response = await fetch(
-          `${this.NEWS_API_URL}/everything?q=disaster+OR+catastrophe+OR+emergency+weather+OR+record+temperature+OR+unprecedented+storm&sortBy=publishedAt&pageSize=8&apiKey=${this.NEWS_API_KEY}`
-        );
-      }
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch extreme weather news');
-      }
-
-      const data: NewsAPIResponse = await response.json();
-      
-      // Filter out non-weather related disasters
-      const weatherRelatedArticles = data.articles.filter(article => {
-        const title = article.title.toLowerCase();
-        const description = (article.description || '').toLowerCase();
-        const content = title + ' ' + description;
-        
-        // Exclude sports, entertainment, politics unless weather-related
-        const excludeTerms = ['game', 'match', 'player', 'team', 'movie', 'film', 'actor', 'election', 'vote', 'stock', 'market'];
-        const includeTerms = ['weather', 'storm', 'rain', 'snow', 'wind', 'temperature', 'climate', 'flood', 'drought', 'hurricane', 'tornado'];
-        
-        const hasExcludeTerm = excludeTerms.some(term => content.includes(term));
-        const hasIncludeTerm = includeTerms.some(term => content.includes(term));
-        
-        return !hasExcludeTerm || hasIncludeTerm;
-      });
-      
-      return weatherRelatedArticles.map(article => ({
-        id: `extreme-${article.publishedAt}-${article.title.substring(0, 10)}`,
-        title: article.title,
-        url: article.url,
-        source: article.source.name,
-        category: 'weather' as const,
-        priority: 'high' as const,
-        timestamp: new Date(article.publishedAt)
-      }));
-    } catch (error) {
-      console.error('Error fetching extreme weather news:', error);
-      return [];
-    }
   }
 
   /**
@@ -190,24 +96,11 @@ export class NewsService {
       const fetchPromises: Promise<NewsItem[]>[] = [];
 
       if (categories.includes('weather')) {
-        // Always fetch both weather alerts and weather news
+        // Always fetch weather alerts and news
         fetchPromises.push(this.fetchWeatherAlerts());
-        fetchPromises.push(this.fetchWeatherNews());
-        fetchPromises.push(this.fetchClimateNews());
+        fetchPromises.push(this.fetchSevereWeatherNews());
         fetchPromises.push(this.fetchExtremeWeatherNews());
-      }
-
-      // Only fetch other categories if specifically requested
-      if (categories.includes('breaking')) {
-        fetchPromises.push(this.fetchBreakingNews());
-      }
-
-      if (categories.includes('local')) {
-        fetchPromises.push(this.fetchLocalNews());
-      }
-
-      if (categories.includes('general')) {
-        fetchPromises.push(this.fetchGeneralNews());
+        fetchPromises.push(this.fetchClimateNews());
       }
 
       // Wait for all fetches to complete
@@ -240,7 +133,6 @@ export class NewsService {
    */
   private async fetchWeatherAlerts(): Promise<NewsItem[]> {
     try {
-      // NOAA API doesn't support 'limit' parameter, use different approach
       const response = await fetch(`${this.WEATHER_ALERTS_URL}status=actual`, {
         headers: {
           'Accept': 'application/geo+json',
@@ -255,8 +147,8 @@ export class NewsService {
 
       const data: WeatherAlertResponse = await response.json();
       
-      // Limit to first 10 alerts for more content
-      const limitedFeatures = data.features.slice(0, 10);
+      // Limit to first 15 alerts
+      const limitedFeatures = data.features.slice(0, 15);
       
       return limitedFeatures.map(feature => ({
         id: feature.properties.id,
@@ -274,37 +166,125 @@ export class NewsService {
   }
 
   /**
-   * Fetch weather-related news from NewsAPI
+   * Fetch severe weather news from trusted weather domains
    */
-  private async fetchWeatherNews(): Promise<NewsItem[]> {
+  private async fetchSevereWeatherNews(): Promise<NewsItem[]> {
     if (!this.NEWS_API_KEY) {
-      console.warn('NewsAPI key not configured');
       return [];
     }
 
     try {
       let response;
       
+      // Use specific weather query with domain filtering
+      const weatherQuery = '("hurricane" OR "tornado" OR "derecho" OR "blizzard" OR "flood" OR "heat wave" OR "severe storm" OR "winter storm" OR "tropical storm" OR "cyclone" OR "typhoon") AND (warning OR alert OR emergency OR watch OR advisory)';
+      
       if (this.isProduction) {
-        // Use our API route in production - search for extreme weather terms
         response = await fetch(
-          `/api/news?endpoint=everything&q=${encodeURIComponent('extreme weather OR severe storm OR hurricane OR tornado OR flooding OR drought OR wildfire OR blizzard OR heatwave OR typhoon OR cyclone')}&pageSize=10`
+          `/api/news?endpoint=everything&q=${encodeURIComponent(weatherQuery)}&domains=${encodeURIComponent(this.WEATHER_DOMAINS)}&language=en&pageSize=20`
         );
       } else {
-        // Direct API call in development
         response = await fetch(
-          `${this.NEWS_API_URL}/everything?q=extreme+weather+OR+severe+storm+OR+hurricane+OR+tornado+OR+flooding+OR+drought+OR+wildfire+OR+blizzard+OR+heatwave+OR+typhoon+OR+cyclone&sortBy=publishedAt&pageSize=10&apiKey=${this.NEWS_API_KEY}`
+          `${this.NEWS_API_URL}/everything?q=${encodeURIComponent(weatherQuery)}&domains=${this.WEATHER_DOMAINS}&language=en&sortBy=publishedAt&pageSize=20&apiKey=${this.NEWS_API_KEY}`
         );
       }
 
       if (!response.ok) {
-        throw new Error('Failed to fetch weather news');
+        throw new Error('Failed to fetch severe weather news');
       }
 
       const data: NewsAPIResponse = await response.json();
       
       return data.articles.map(article => ({
-        id: `news-${article.publishedAt}-${article.title.substring(0, 10)}`,
+        id: `severe-${article.publishedAt}-${article.title.substring(0, 10)}`,
+        title: article.title,
+        url: article.url,
+        source: article.source.name,
+        category: 'weather' as const,
+        priority: 'high' as const,
+        timestamp: new Date(article.publishedAt)
+      }));
+    } catch (error) {
+      console.error('Error fetching severe weather news:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Fetch extreme weather news from trusted sources
+   */
+  private async fetchExtremeWeatherNews(): Promise<NewsItem[]> {
+    if (!this.NEWS_API_KEY) {
+      return [];
+    }
+
+    try {
+      let response;
+      
+      const extremeQuery = '("record temperature" OR "unprecedented" OR "historic storm" OR "emergency evacuation" OR "disaster declaration" OR "catastrophic flooding" OR "life-threatening")';
+      
+      if (this.isProduction) {
+        response = await fetch(
+          `/api/news?endpoint=everything&q=${encodeURIComponent(extremeQuery)}&domains=${encodeURIComponent(this.WEATHER_DOMAINS)}&language=en&pageSize=15`
+        );
+      } else {
+        response = await fetch(
+          `${this.NEWS_API_URL}/everything?q=${encodeURIComponent(extremeQuery)}&domains=${this.WEATHER_DOMAINS}&language=en&sortBy=publishedAt&pageSize=15&apiKey=${this.NEWS_API_KEY}`
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch extreme weather news');
+      }
+
+      const data: NewsAPIResponse = await response.json();
+      
+      return data.articles.map(article => ({
+        id: `extreme-${article.publishedAt}-${article.title.substring(0, 10)}`,
+        title: article.title,
+        url: article.url,
+        source: article.source.name,
+        category: 'weather' as const,
+        priority: 'high' as const,
+        timestamp: new Date(article.publishedAt)
+      }));
+    } catch (error) {
+      console.error('Error fetching extreme weather news:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Fetch climate and weather pattern news
+   */
+  private async fetchClimateNews(): Promise<NewsItem[]> {
+    if (!this.NEWS_API_KEY) {
+      return [];
+    }
+
+    try {
+      let response;
+      
+      const climateQuery = '("El Nino" OR "La Nina" OR "polar vortex" OR "atmospheric river" OR "jet stream" OR "weather pattern" OR "climate change impact")';
+      
+      if (this.isProduction) {
+        response = await fetch(
+          `/api/news?endpoint=everything&q=${encodeURIComponent(climateQuery)}&domains=${encodeURIComponent(this.WEATHER_DOMAINS)}&language=en&pageSize=10`
+        );
+      } else {
+        response = await fetch(
+          `${this.NEWS_API_URL}/everything?q=${encodeURIComponent(climateQuery)}&domains=${this.WEATHER_DOMAINS}&language=en&sortBy=publishedAt&pageSize=10&apiKey=${this.NEWS_API_KEY}`
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch climate news');
+      }
+
+      const data: NewsAPIResponse = await response.json();
+      
+      return data.articles.map(article => ({
+        id: `climate-${article.publishedAt}-${article.title.substring(0, 10)}`,
         title: article.title,
         url: article.url,
         source: article.source.name,
@@ -313,139 +293,7 @@ export class NewsService {
         timestamp: new Date(article.publishedAt)
       }));
     } catch (error) {
-      console.error('Error fetching weather news:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Fetch breaking news
-   */
-  private async fetchBreakingNews(): Promise<NewsItem[]> {
-    if (!this.NEWS_API_KEY) {
-      return [];
-    }
-
-    try {
-      let response;
-      
-      if (this.isProduction) {
-        // Use our API route in production
-        response = await fetch(
-          `/api/news?endpoint=top-headlines&country=us&pageSize=10`
-        );
-      } else {
-        // Direct API call in development
-        response = await fetch(
-          `${this.NEWS_API_URL}/top-headlines?country=us&pageSize=10&apiKey=${this.NEWS_API_KEY}`
-        );
-      }
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch breaking news');
-      }
-
-      const data: NewsAPIResponse = await response.json();
-      
-      return data.articles.map(article => ({
-        id: `breaking-${article.publishedAt}-${article.title.substring(0, 10)}`,
-        title: `BREAKING: ${article.title}`,
-        url: article.url,
-        source: article.source.name,
-        category: 'breaking' as const,
-        priority: 'high' as const,
-        timestamp: new Date(article.publishedAt)
-      }));
-    } catch (error) {
-      console.error('Error fetching breaking news:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Fetch local news (uses geolocation or defaults to US news)
-   */
-  private async fetchLocalNews(): Promise<NewsItem[]> {
-    if (!this.NEWS_API_KEY) {
-      return [];
-    }
-
-    try {
-      let response;
-      
-      if (this.isProduction) {
-        // Use our API route in production
-        response = await fetch(
-          `/api/news?endpoint=top-headlines&country=us&category=general&pageSize=8`
-        );
-      } else {
-        // Direct API call in development
-        response = await fetch(
-          `${this.NEWS_API_URL}/top-headlines?country=us&category=general&pageSize=8&apiKey=${this.NEWS_API_KEY}`
-        );
-      }
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch local news');
-      }
-
-      const data: NewsAPIResponse = await response.json();
-      
-      return data.articles.map(article => ({
-        id: `local-${article.publishedAt}-${article.title.substring(0, 10)}`,
-        title: article.title,
-        url: article.url,
-        source: article.source.name,
-        category: 'local' as const,
-        priority: 'medium' as const,
-        timestamp: new Date(article.publishedAt)
-      }));
-    } catch (error) {
-      console.error('Error fetching local news:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Fetch general news
-   */
-  private async fetchGeneralNews(): Promise<NewsItem[]> {
-    if (!this.NEWS_API_KEY) {
-      return [];
-    }
-
-    try {
-      let response;
-      
-      if (this.isProduction) {
-        // Use our API route in production - science and technology news
-        response = await fetch(
-          `/api/news?endpoint=top-headlines&country=us&category=technology&pageSize=8`
-        );
-      } else {
-        // Direct API call in development
-        response = await fetch(
-          `${this.NEWS_API_URL}/top-headlines?country=us&category=technology&pageSize=8&apiKey=${this.NEWS_API_KEY}`
-        );
-      }
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch general news');
-      }
-
-      const data: NewsAPIResponse = await response.json();
-      
-      return data.articles.map(article => ({
-        id: `general-${article.publishedAt}-${article.title.substring(0, 10)}`,
-        title: article.title,
-        url: article.url,
-        source: article.source.name,
-        category: 'general' as const,
-        priority: 'low' as const,
-        timestamp: new Date(article.publishedAt)
-      }));
-    } catch (error) {
-      console.error('Error fetching general news:', error);
+      console.error('Error fetching climate news:', error);
       return [];
     }
   }
@@ -527,15 +375,6 @@ export class NewsService {
     return [
       {
         id: 'fallback-1',
-        title: 'News service temporarily unavailable. Please check back soon.',
-        url: '#',
-        source: 'System',
-        category: 'general',
-        priority: 'low',
-        timestamp: new Date()
-      },
-      {
-        id: 'fallback-2',
         title: 'Weather alerts will appear here when available',
         url: 'https://www.weather.gov/alerts',
         source: 'NOAA',
