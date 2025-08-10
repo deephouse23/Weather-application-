@@ -51,42 +51,6 @@ export default function ExtremesPage() {
   const { theme } = useTheme()
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Theme-based classes
-  const themeClasses = {
-    dark: {
-      bg: 'bg-gray-900',
-      cardBg: 'bg-gray-800',
-      text: 'text-green-400',
-      subtext: 'text-green-300',
-      border: 'border-green-500',
-      hot: 'text-red-500',
-      cold: 'text-cyan-400',
-      glow: 'drop-shadow-[0_0_10px_rgba(34,197,94,0.5)]'
-    },
-    miami: {
-      bg: 'bg-gradient-to-b from-purple-900 to-pink-900',
-      cardBg: 'bg-black/50',
-      text: 'text-pink-400',
-      subtext: 'text-cyan-300',
-      border: 'border-cyan-400',
-      hot: 'text-yellow-400',
-      cold: 'text-blue-400',
-      glow: 'drop-shadow-[0_0_15px_rgba(236,72,153,0.7)]'
-    },
-    tron: {
-      bg: 'bg-black',
-      cardBg: 'bg-gray-900/90',
-      text: 'text-cyan-400',
-      subtext: 'text-cyan-300',
-      border: 'border-cyan-500',
-      hot: 'text-orange-500',
-      cold: 'text-blue-500',
-      glow: 'drop-shadow-[0_0_20px_rgba(6,182,212,0.8)]'
-    }
-  }
-
-  const currentTheme = themeClasses[theme] || themeClasses.dark
-
   // Fetch extremes data
   const fetchData = async (skipCache = false) => {
     try {
@@ -170,7 +134,7 @@ export default function ExtremesPage() {
     }
   }, [autoRefresh, userCoords])
 
-  // Thermometer visualization component
+  // Thermometer visualization component with theme colors
   const ThermometerViz = ({ temp, max = 140, min = -100 }: { temp: number; max?: number; min?: number }) => {
     const percentage = ((temp - min) / (max - min)) * 100
     const isHot = temp > 32
@@ -178,20 +142,22 @@ export default function ExtremesPage() {
     return (
       <div className="relative h-48 w-12 mx-auto">
         {/* Thermometer tube */}
-        <div className="absolute inset-0 bg-gray-700 rounded-full border-2 border-gray-600">
-          {/* Mercury fill */}
+        <div className="absolute inset-0 bg-weather-bg-elev rounded-full border-2 border-weather-border">
+          {/* Mercury fill - using theme colors */}
           <div 
             className={`absolute bottom-0 left-0 right-0 rounded-b-full transition-all duration-1000 ${
-              isHot ? 'bg-gradient-to-t from-red-600 to-orange-400' : 'bg-gradient-to-t from-blue-600 to-cyan-400'
+              isHot 
+                ? 'bg-gradient-to-t from-weather-danger via-weather-warn to-weather-warn' 
+                : 'bg-gradient-to-t from-weather-primary via-weather-primary to-cyan-300'
             }`}
             style={{ height: `${Math.max(5, Math.min(95, percentage))}%` }}
           />
         </div>
         {/* Bulb */}
         <div className={`absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-16 h-16 rounded-full ${
-          isHot ? 'bg-red-500' : 'bg-blue-500'
-        } border-2 border-gray-600`}>
-          <div className="flex items-center justify-center h-full text-white font-bold text-xs">
+          isHot ? 'bg-weather-danger' : 'bg-weather-primary'
+        } border-2 border-weather-border`}>
+          <div className="flex items-center justify-center h-full text-weather-bg font-bold text-xs">
             {temp}°
           </div>
         </div>
@@ -204,7 +170,7 @@ export default function ExtremesPage() {
     return (
       <PageWrapper>
         <div className="min-h-screen flex items-center justify-center">
-          <div className={`text-center ${currentTheme.text}`}>
+          <div className="text-center text-weather-primary">
             <Loader2 className="w-16 h-16 animate-spin mx-auto mb-4" />
             <div className="text-xl font-mono uppercase tracking-wider">
               Scanning Global Temperatures...
@@ -220,15 +186,15 @@ export default function ExtremesPage() {
     return (
       <PageWrapper>
         <div className="min-h-screen flex items-center justify-center">
-          <div className={`text-center ${currentTheme.text}`}>
+          <div className="text-center text-weather-danger">
             <div className="text-xl font-mono uppercase tracking-wider mb-4">
               ERROR: {error}
             </div>
             <button
               onClick={() => fetchData(true)}
-              className={`px-6 py-3 border-2 ${currentTheme.border} ${currentTheme.text} 
-                       hover:bg-opacity-20 hover:bg-white transition-all duration-200 
-                       font-mono uppercase tracking-wider`}
+              className="px-6 py-3 border-2 border-weather-danger text-weather-danger 
+                       hover:bg-weather-danger hover:text-weather-bg transition-all duration-200 
+                       font-mono uppercase tracking-wider"
             >
               RETRY
             </button>
@@ -245,13 +211,13 @@ export default function ExtremesPage() {
       <div className="min-h-screen p-4 sm:p-6 lg:p-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className={`text-3xl sm:text-4xl lg:text-5xl font-mono font-bold mb-2 ${currentTheme.text} ${currentTheme.glow}`}>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-mono font-bold mb-2 text-weather-primary glow">
             🌍 PLANET EXTREMES 🌡️
           </h1>
-          <div className={`text-sm sm:text-base ${currentTheme.subtext} font-mono uppercase tracking-wider`}>
+          <div className="text-sm sm:text-base text-weather-text font-mono uppercase tracking-wider">
             GLOBAL TEMPERATURE CHAMPIONS • LIVE DATA
           </div>
-          <div className={`text-xs mt-2 ${currentTheme.subtext} opacity-75`}>
+          <div className="text-xs mt-2 text-weather-muted opacity-75">
             Last Updated: {new Date(data.lastUpdated).toLocaleTimeString()}
           </div>
         </div>
@@ -259,12 +225,12 @@ export default function ExtremesPage() {
         {/* Main Extremes Display */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Hottest Place */}
-          <div className={`${currentTheme.cardBg} p-6 rounded-lg border-2 ${currentTheme.border}`}>
+          <div className="bg-weather-bg-elev p-6 rounded-lg border-2 border-weather-border pixel-border">
             <div className="flex items-center justify-between mb-4">
-              <h2 className={`text-xl font-mono font-bold ${currentTheme.hot}`}>
+              <h2 className="text-xl font-mono font-bold text-weather-warn">
                 🔥 HOTTEST ON EARTH
               </h2>
-              <TrendingUp className={currentTheme.hot} />
+              <TrendingUp className="text-weather-warn" />
             </div>
             
             {data.hottest && (
@@ -273,30 +239,30 @@ export default function ExtremesPage() {
                   <ThermometerViz temp={data.hottest.temp} />
                 </div>
                 
-                <div className={`text-3xl font-mono font-bold mb-2 ${currentTheme.hot} text-center`}>
+                <div className="text-3xl font-mono font-bold mb-2 text-weather-warn text-center">
                   {data.hottest.temp}°F / {data.hottest.tempC}°C
                 </div>
                 
-                <div className={`text-lg font-mono mb-2 ${currentTheme.text} text-center`}>
+                <div className="text-lg font-mono mb-2 text-weather-text text-center">
                   {data.hottest.emoji} {data.hottest.name}, {data.hottest.country}
                 </div>
                 
-                <div className={`text-sm ${currentTheme.subtext} mb-2`}>
+                <div className="text-sm text-weather-muted mb-2">
                   Condition: {data.hottest.condition}
                 </div>
                 
-                <div className={`text-sm ${currentTheme.subtext} mb-2`}>
+                <div className="text-sm text-weather-muted mb-2">
                   Humidity: {data.hottest.humidity}% | Wind: {data.hottest.windSpeed} mph
                 </div>
                 
                 {data.hottest.fact && (
-                  <div className={`text-xs ${currentTheme.subtext} italic mt-3 p-2 border ${currentTheme.border} rounded`}>
+                  <div className="text-xs text-weather-muted italic mt-3 p-2 border border-weather-border rounded bg-weather-bg/50">
                     💡 {data.hottest.fact}
                   </div>
                 )}
                 
                 {data.hottest.historicalAvg && (
-                  <div className={`text-xs ${currentTheme.subtext} mt-2`}>
+                  <div className="text-xs text-weather-muted mt-2">
                     Typical: Summer {data.hottest.historicalAvg.summer}°F | Winter {data.hottest.historicalAvg.winter}°F
                   </div>
                 )}
@@ -305,12 +271,12 @@ export default function ExtremesPage() {
           </div>
 
           {/* Coldest Place */}
-          <div className={`${currentTheme.cardBg} p-6 rounded-lg border-2 ${currentTheme.border}`}>
+          <div className="bg-weather-bg-elev p-6 rounded-lg border-2 border-weather-border pixel-border">
             <div className="flex items-center justify-between mb-4">
-              <h2 className={`text-xl font-mono font-bold ${currentTheme.cold}`}>
+              <h2 className="text-xl font-mono font-bold text-weather-primary">
                 🧊 COLDEST ON EARTH
               </h2>
-              <TrendingDown className={currentTheme.cold} />
+              <TrendingDown className="text-weather-primary" />
             </div>
             
             {data.coldest && (
@@ -319,30 +285,30 @@ export default function ExtremesPage() {
                   <ThermometerViz temp={data.coldest.temp} />
                 </div>
                 
-                <div className={`text-3xl font-mono font-bold mb-2 ${currentTheme.cold} text-center`}>
+                <div className="text-3xl font-mono font-bold mb-2 text-weather-primary text-center">
                   {data.coldest.temp}°F / {data.coldest.tempC}°C
                 </div>
                 
-                <div className={`text-lg font-mono mb-2 ${currentTheme.text} text-center`}>
+                <div className="text-lg font-mono mb-2 text-weather-text text-center">
                   {data.coldest.emoji} {data.coldest.name}, {data.coldest.country}
                 </div>
                 
-                <div className={`text-sm ${currentTheme.subtext} mb-2`}>
+                <div className="text-sm text-weather-muted mb-2">
                   Condition: {data.coldest.condition}
                 </div>
                 
-                <div className={`text-sm ${currentTheme.subtext} mb-2`}>
+                <div className="text-sm text-weather-muted mb-2">
                   Humidity: {data.coldest.humidity}% | Wind: {data.coldest.windSpeed} mph
                 </div>
                 
                 {data.coldest.fact && (
-                  <div className={`text-xs ${currentTheme.subtext} italic mt-3 p-2 border ${currentTheme.border} rounded`}>
+                  <div className="text-xs text-weather-muted italic mt-3 p-2 border border-weather-border rounded bg-weather-bg/50">
                     💡 {data.coldest.fact}
                   </div>
                 )}
                 
                 {data.coldest.historicalAvg && (
-                  <div className={`text-xs ${currentTheme.subtext} mt-2`}>
+                  <div className="text-xs text-weather-muted mt-2">
                     Typical: Summer {data.coldest.historicalAvg.summer}°F | Winter {data.coldest.historicalAvg.winter}°F
                   </div>
                 )}
@@ -354,22 +320,22 @@ export default function ExtremesPage() {
         {/* Temperature Leaderboards */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Top 5 Hottest */}
-          <div className={`${currentTheme.cardBg} p-6 rounded-lg border-2 ${currentTheme.border}`}>
-            <h3 className={`text-lg font-mono font-bold mb-4 ${currentTheme.hot}`}>
+          <div className="bg-weather-bg-elev p-6 rounded-lg border-2 border-weather-border pixel-border">
+            <h3 className="text-lg font-mono font-bold mb-4 text-weather-warn">
               🏆 TOP 5 HOTTEST
             </h3>
             <div className="space-y-2">
               {data.topHot.map((loc, index) => (
-                <div key={index} className={`flex items-center justify-between p-2 border ${currentTheme.border} rounded`}>
+                <div key={index} className="flex items-center justify-between p-2 border border-weather-border rounded bg-weather-bg/50">
                   <div className="flex items-center gap-2">
-                    <span className={`font-mono font-bold ${currentTheme.hot}`}>
+                    <span className="font-mono font-bold text-weather-warn">
                       #{index + 1}
                     </span>
-                    <span className={currentTheme.text}>
+                    <span className="text-weather-text">
                       {loc.emoji} {loc.name}
                     </span>
                   </div>
-                  <span className={`font-mono font-bold ${currentTheme.hot}`}>
+                  <span className="font-mono font-bold text-weather-warn">
                     {loc.temp}°F
                   </span>
                 </div>
@@ -378,22 +344,22 @@ export default function ExtremesPage() {
           </div>
 
           {/* Top 5 Coldest */}
-          <div className={`${currentTheme.cardBg} p-6 rounded-lg border-2 ${currentTheme.border}`}>
-            <h3 className={`text-lg font-mono font-bold mb-4 ${currentTheme.cold}`}>
+          <div className="bg-weather-bg-elev p-6 rounded-lg border-2 border-weather-border pixel-border">
+            <h3 className="text-lg font-mono font-bold mb-4 text-weather-primary">
               🏆 TOP 5 COLDEST
             </h3>
             <div className="space-y-2">
               {data.topCold.map((loc, index) => (
-                <div key={index} className={`flex items-center justify-between p-2 border ${currentTheme.border} rounded`}>
+                <div key={index} className="flex items-center justify-between p-2 border border-weather-border rounded bg-weather-bg/50">
                   <div className="flex items-center gap-2">
-                    <span className={`font-mono font-bold ${currentTheme.cold}`}>
+                    <span className="font-mono font-bold text-weather-primary">
                       #{index + 1}
                     </span>
-                    <span className={currentTheme.text}>
+                    <span className="text-weather-text">
                       {loc.emoji} {loc.name}
                     </span>
                   </div>
-                  <span className={`font-mono font-bold ${currentTheme.cold}`}>
+                  <span className="font-mono font-bold text-weather-primary">
                     {loc.temp}°F
                   </span>
                 </div>
@@ -404,21 +370,21 @@ export default function ExtremesPage() {
 
         {/* User Location Ranking */}
         {data.userLocation && (
-          <div className={`${currentTheme.cardBg} p-6 rounded-lg border-2 ${currentTheme.border} mb-8`}>
+          <div className="bg-weather-bg-elev p-6 rounded-lg border-2 border-weather-border pixel-border mb-8">
             <div className="flex items-center justify-between mb-4">
-              <h3 className={`text-lg font-mono font-bold ${currentTheme.text}`}>
-                <MapPin className="inline mr-2" />
+              <h3 className="text-lg font-mono font-bold text-weather-text">
+                <MapPin className="inline mr-2 text-weather-primary" />
                 YOUR LOCATION RANKING
               </h3>
             </div>
             <div className="text-center">
-              <div className={`text-2xl font-mono font-bold mb-2 ${currentTheme.text}`}>
+              <div className="text-2xl font-mono font-bold mb-2 text-weather-primary">
                 {data.userLocation.temp}°F / {data.userLocation.tempC}°C
               </div>
-              <div className={`text-lg ${currentTheme.subtext}`}>
+              <div className="text-lg text-weather-text">
                 Global Rank: #{data.userLocation.globalRank} of {data.userLocation.totalLocations}
               </div>
-              <div className={`text-sm ${currentTheme.subtext} mt-2`}>
+              <div className="text-sm text-weather-muted mt-2">
                 {data.userLocation.globalRank && data.userLocation.globalRank <= 5 && "🔥 You're in one of the hottest places!"}
                 {data.userLocation.globalRank && data.userLocation.globalRank > data.userLocation.totalLocations - 5 && "🧊 You're in one of the coldest places!"}
                 {data.userLocation.globalRank && 
@@ -432,14 +398,14 @@ export default function ExtremesPage() {
 
         {/* Temperature Difference */}
         {data.hottest && data.coldest && (
-          <div className={`${currentTheme.cardBg} p-6 rounded-lg border-2 ${currentTheme.border} text-center`}>
-            <h3 className={`text-lg font-mono font-bold mb-4 ${currentTheme.text}`}>
+          <div className="bg-weather-bg-elev p-6 rounded-lg border-2 border-weather-border pixel-border text-center">
+            <h3 className="text-lg font-mono font-bold mb-4 text-weather-text">
               🌡️ GLOBAL TEMPERATURE SPREAD
             </h3>
-            <div className={`text-3xl font-mono font-bold ${currentTheme.text}`}>
+            <div className="text-3xl font-mono font-bold text-weather-primary glow">
               {Math.abs(data.hottest.temp - data.coldest.temp)}°F
             </div>
-            <div className={`text-sm ${currentTheme.subtext} mt-2`}>
+            <div className="text-sm text-weather-muted mt-2">
               Difference between hottest and coldest places on Earth right now
             </div>
           </div>
@@ -450,10 +416,10 @@ export default function ExtremesPage() {
           <button
             onClick={() => fetchData(true)}
             disabled={loading}
-            className={`px-6 py-3 border-2 ${currentTheme.border} ${currentTheme.text} 
-                     hover:bg-opacity-20 hover:bg-white transition-all duration-200 
+            className="px-6 py-3 border-2 border-weather-primary text-weather-primary 
+                     hover:bg-weather-primary hover:text-weather-bg transition-all duration-200 
                      font-mono uppercase tracking-wider disabled:opacity-50 
-                     disabled:cursor-not-allowed flex items-center gap-2`}
+                     disabled:cursor-not-allowed flex items-center gap-2 pixel-border"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             REFRESH
@@ -461,17 +427,17 @@ export default function ExtremesPage() {
           
           <button
             onClick={() => setAutoRefresh(!autoRefresh)}
-            className={`px-6 py-3 border-2 ${currentTheme.border} ${currentTheme.text} 
-                     hover:bg-opacity-20 hover:bg-white transition-all duration-200 
-                     font-mono uppercase tracking-wider`}
+            className="px-6 py-3 border-2 border-weather-primary text-weather-primary 
+                     hover:bg-weather-primary hover:text-weather-bg transition-all duration-200 
+                     font-mono uppercase tracking-wider pixel-border"
           >
             AUTO-REFRESH: {autoRefresh ? 'ON' : 'OFF'}
           </button>
         </div>
 
         {/* ASCII Art Footer */}
-        <div className={`text-center mt-12 ${currentTheme.subtext} opacity-50`}>
-          <pre className="text-xs inline-block">
+        <div className="text-center mt-12 text-weather-muted opacity-50">
+          <pre className="text-xs inline-block font-mono">
 {`     .-.     .-.     .-.     .-.     .-.     .-.
    .'   '._..'   '._..'   '._..'   '._..'   '._..'
    :     HOT     COLD     HOT     COLD     HOT   :
