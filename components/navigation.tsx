@@ -247,9 +247,9 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
       
       {/* News Ticker - Below Navigation */}
       <NewsTicker 
-        categories={['breaking', 'weather', 'local', 'general']}
+        categories={['weather']}  // Only weather-related news
         autoRefresh={300000} // 5 minutes
-        maxItems={20} // Show more news
+        maxItems={25} // Show more weather news
         priority="all"
       />
     </>

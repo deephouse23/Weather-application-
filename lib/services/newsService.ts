@@ -62,6 +62,113 @@ export class NewsService {
   }
 
   /**
+   * Fetch climate-related news
+   */
+  private async fetchClimateNews(): Promise<NewsItem[]> {
+    if (!this.NEWS_API_KEY) {
+      return [];
+    }
+
+    try {
+      let response;
+      
+      if (this.isProduction) {
+        response = await fetch(
+          `/api/news?endpoint=everything&q=${encodeURIComponent('climate change OR global warming OR environmental disaster OR weather pattern')}&pageSize=8`
+        );
+      } else {
+        response = await fetch(
+          `${this.NEWS_API_URL}/everything?q=climate+change+OR+global+warming+OR+environmental+disaster+OR+weather+pattern&sortBy=publishedAt&pageSize=8&apiKey=${this.NEWS_API_KEY}`
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch climate news');
+      }
+
+      const data: NewsAPIResponse = await response.json();
+      
+      // Filter out sports and non-weather content
+      const weatherRelatedArticles = data.articles.filter(article => {
+        const title = article.title.toLowerCase();
+        const excludeTerms = ['game', 'match', 'player', 'team', 'score', 'wins', 'loses', 'playoff'];
+        return !excludeTerms.some(term => title.includes(term));
+      });
+      
+      return weatherRelatedArticles.map(article => ({
+        id: `climate-${article.publishedAt}-${article.title.substring(0, 10)}`,
+        title: article.title,
+        url: article.url,
+        source: article.source.name,
+        category: 'weather' as const,
+        priority: 'medium' as const,
+        timestamp: new Date(article.publishedAt)
+      }));
+    } catch (error) {
+      console.error('Error fetching climate news:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Fetch extreme weather specific news
+   */
+  private async fetchExtremeWeatherNews(): Promise<NewsItem[]> {
+    if (!this.NEWS_API_KEY) {
+      return [];
+    }
+
+    try {
+      let response;
+      
+      if (this.isProduction) {
+        response = await fetch(
+          `/api/news?endpoint=everything&q=${encodeURIComponent('disaster OR catastrophe OR emergency weather OR record temperature OR unprecedented storm')}&pageSize=8`
+        );
+      } else {
+        response = await fetch(
+          `${this.NEWS_API_URL}/everything?q=disaster+OR+catastrophe+OR+emergency+weather+OR+record+temperature+OR+unprecedented+storm&sortBy=publishedAt&pageSize=8&apiKey=${this.NEWS_API_KEY}`
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch extreme weather news');
+      }
+
+      const data: NewsAPIResponse = await response.json();
+      
+      // Filter out non-weather related disasters
+      const weatherRelatedArticles = data.articles.filter(article => {
+        const title = article.title.toLowerCase();
+        const description = (article.description || '').toLowerCase();
+        const content = title + ' ' + description;
+        
+        // Exclude sports, entertainment, politics unless weather-related
+        const excludeTerms = ['game', 'match', 'player', 'team', 'movie', 'film', 'actor', 'election', 'vote', 'stock', 'market'];
+        const includeTerms = ['weather', 'storm', 'rain', 'snow', 'wind', 'temperature', 'climate', 'flood', 'drought', 'hurricane', 'tornado'];
+        
+        const hasExcludeTerm = excludeTerms.some(term => content.includes(term));
+        const hasIncludeTerm = includeTerms.some(term => content.includes(term));
+        
+        return !hasExcludeTerm || hasIncludeTerm;
+      });
+      
+      return weatherRelatedArticles.map(article => ({
+        id: `extreme-${article.publishedAt}-${article.title.substring(0, 10)}`,
+        title: article.title,
+        url: article.url,
+        source: article.source.name,
+        category: 'weather' as const,
+        priority: 'high' as const,
+        timestamp: new Date(article.publishedAt)
+      }));
+    } catch (error) {
+      console.error('Error fetching extreme weather news:', error);
+      return [];
+    }
+  }
+
+  /**
    * Fetch news from multiple sources and combine them
    */
   public async fetchNews(
@@ -79,14 +186,18 @@ export class NewsService {
     try {
       const allNews: NewsItem[] = [];
 
-      // Fetch based on categories
+      // Fetch based on categories - focus on weather only
       const fetchPromises: Promise<NewsItem[]>[] = [];
 
       if (categories.includes('weather')) {
+        // Always fetch both weather alerts and weather news
         fetchPromises.push(this.fetchWeatherAlerts());
         fetchPromises.push(this.fetchWeatherNews());
+        fetchPromises.push(this.fetchClimateNews());
+        fetchPromises.push(this.fetchExtremeWeatherNews());
       }
 
+      // Only fetch other categories if specifically requested
       if (categories.includes('breaking')) {
         fetchPromises.push(this.fetchBreakingNews());
       }

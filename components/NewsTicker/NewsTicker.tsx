@@ -50,9 +50,9 @@ const getFallbackNewsItems = (): NewsItem[] => {
 };
 
 const NewsTicker: React.FC<NewsTickerProps> = ({
-  categories = ['breaking', 'weather', 'local', 'general'],
+  categories = ['weather'],  // Only weather news
   autoRefresh = 300000, // 5 minutes default
-  maxItems = 20,  // Increased from 10 to show more news
+  maxItems = 25,  // More weather-specific news
   priority = 'all'
 }) => {
   const [isVisible, setIsVisible] = useState(true);
@@ -75,8 +75,8 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
   // Use real news if available, otherwise use fallback
   const newsItems = useRealData && news.length > 0 ? news : getFallbackNewsItems();
 
-  // Fixed animation speed - slightly faster for more content
-  const animationSpeed = '45s';
+  // Fixed animation speed - adjusted for full scroll
+  const animationSpeed = '60s';
 
 
 
@@ -167,12 +167,13 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
           paddingLeft: '100%'
         }}
       >
-        {/* Duplicate items for seamless loop */}
-        {[...newsItems, ...newsItems].map((item, index) => (
-          <div
-            key={`${item.id}-${index}`}
-            className="flex items-center mx-4 whitespace-nowrap"
-          >
+        {/* Single set of items with proper spacing for continuous loop */}
+        <div className="flex items-center">
+          {newsItems.map((item, index) => (
+            <div
+              key={`${item.id}-${index}`}
+              className="flex items-center mx-4 whitespace-nowrap"
+            >
             <span className={`flex items-center px-1 py-0.5 rounded-sm text-xs font-bold mr-2 ${getCategoryColor(item.category, item.priority)}`}>
               {getCategoryIcon(item.category)}
               <span className="ml-1">{item.category.toUpperCase()}</span>
@@ -180,7 +181,24 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
             <NewsTickerItem item={item} theme={theme as ThemeType} />
             <span className={`text-xs mx-2 opacity-50 ${themeClasses.text}`}>•</span>
           </div>
-        ))}
+          ))}
+        </div>
+        {/* Duplicate for seamless loop */}
+        <div className="flex items-center" aria-hidden="true">
+          {newsItems.map((item, index) => (
+            <div
+              key={`${item.id}-duplicate-${index}`}
+              className="flex items-center mx-4 whitespace-nowrap"
+            >
+              <span className={`flex items-center px-1 py-0.5 rounded-sm text-xs font-bold mr-2 ${getCategoryColor(item.category, item.priority)}`}>
+                {getCategoryIcon(item.category)}
+                <span className="ml-1">{item.category.toUpperCase()}</span>
+              </span>
+              <NewsTickerItem item={item} theme={theme as ThemeType} />
+              <span className={`text-xs mx-2 opacity-50 ${themeClasses.text}`}>•</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
