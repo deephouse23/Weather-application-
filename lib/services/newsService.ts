@@ -75,6 +75,64 @@ export class NewsService {
   }
 
   /**
+   * Remove duplicate news items based on title similarity
+   */
+  private deduplicateNews(news: NewsItem[]): NewsItem[] {
+    const seen = new Map<string, NewsItem>();
+    const seenTopics = new Set<string>();
+    
+    news.forEach(item => {
+      // Extract key topics from the title (e.g., "Tropical Storm Bernadette")
+      const title = item.title.toLowerCase();
+      
+      // Look for named storms, hurricanes, etc.
+      const stormMatch = title.match(/(tropical storm|hurricane|typhoon|cyclone)\s+([a-z]+)/i);
+      const locationMatch = title.match(/(floods?|flooding|wildfire|blizzard|tornado|earthquake).*?(?:in|at|near)\s+([a-z\s]+)/i);
+      
+      let topicKey = '';
+      
+      if (stormMatch) {
+        // For named storms, use storm type + name as key
+        topicKey = `${stormMatch[1]}-${stormMatch[2]}`.toLowerCase().replace(/\s+/g, '');
+      } else if (locationMatch) {
+        // For location-based events, use event + location
+        topicKey = `${locationMatch[1]}-${locationMatch[2]}`.toLowerCase().replace(/\s+/g, '').substring(0, 30);
+      } else {
+        // For other news, create key from main words
+        const words = title
+          .replace(/[^a-z0-9\s]/g, '')
+          .split(' ')
+          .filter(w => w.length > 4)
+          .slice(0, 4)
+          .sort()
+          .join('');
+        topicKey = words;
+      }
+      
+      // Skip if we've seen this topic
+      if (topicKey && seenTopics.has(topicKey)) {
+        return; // Skip this duplicate
+      }
+      
+      if (topicKey) {
+        seenTopics.add(topicKey);
+      }
+      
+      // Also check for exact duplicates
+      const exactKey = item.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+        .substring(0, 60);
+      
+      if (!seen.has(exactKey)) {
+        seen.set(exactKey, item);
+      }
+    });
+    
+    return Array.from(seen.values());
+  }
+
+  /**
    * Fetch news from multiple sources and combine them
    */
   public async fetchNews(
@@ -115,8 +173,11 @@ export class NewsService {
       // Sort by timestamp and priority
       const sortedNews = this.sortAndPrioritizeNews(allNews);
       
+      // Remove duplicates
+      const deduplicatedNews = this.deduplicateNews(sortedNews);
+      
       // Limit to maxItems
-      const limitedNews = sortedNews.slice(0, maxItems);
+      const limitedNews = deduplicatedNews.slice(0, maxItems);
 
       // Cache the results
       this.saveToCache(cacheKey, limitedNews);
@@ -147,10 +208,40 @@ export class NewsService {
 
       const data: WeatherAlertResponse = await response.json();
       
-      // Limit to first 15 alerts
-      const limitedFeatures = data.features.slice(0, 15);
+      // Deduplicate NOAA alerts based on event type and area
+      const uniqueAlerts = new Map<string, typeof data.features[0]>();
       
-      return limitedFeatures.map(feature => ({
+      data.features.forEach(feature => {
+        // Create a key based on event type and affected area
+        const event = feature.properties.event || '';
+        const headline = feature.properties.headline || '';
+        
+        // Extract the main event and location
+        const eventKey = event.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const locationMatch = headline.match(/for (.+?)(?:until|\[|$)/i);
+        const location = locationMatch ? locationMatch[1].trim().toLowerCase() : '';
+        
+        const dedupeKey = `${eventKey}-${location.substring(0, 20)}`;
+        
+        // Keep the most severe or most recent alert for each event/location
+        if (!uniqueAlerts.has(dedupeKey)) {
+          uniqueAlerts.set(dedupeKey, feature);
+        } else {
+          const existing = uniqueAlerts.get(dedupeKey)!;
+          const severityOrder = { 'Extreme': 0, 'Severe': 1, 'Moderate': 2, 'Minor': 3 };
+          const existingSeverity = severityOrder[existing.properties.severity] || 4;
+          const newSeverity = severityOrder[feature.properties.severity] || 4;
+          
+          if (newSeverity < existingSeverity) {
+            uniqueAlerts.set(dedupeKey, feature);
+          }
+        }
+      });
+      
+      // Convert back to array and limit
+      const uniqueFeatures = Array.from(uniqueAlerts.values()).slice(0, 15);
+      
+      return uniqueFeatures.map(feature => ({
         id: feature.properties.id,
         title: feature.properties.headline,
         url: feature.properties.web,
