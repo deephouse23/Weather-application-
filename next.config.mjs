@@ -15,8 +15,6 @@ const nextConfig = {
   // Compression for better performance
   compress: true,
   
-  // Enable SWC minification
-  swcMinify: true,
   
   // Optimize for production
   productionBrowserSourceMaps: false,
@@ -91,7 +89,7 @@ const nextConfig = {
   
   // Experimental features for better performance
   experimental: {
-    optimizeCss: true,
+    optimizeCss: false, // Disabled to fix critters module build error
     scrollRestoration: true,
   },
 }
