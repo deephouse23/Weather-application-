@@ -1,11 +1,12 @@
 import { MetadataRoute } from 'next'
-import { ALL_CITIES } from '@/components/random-city-links'
+import { CITY_DATA } from '@/lib/city-data'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://www.16bitweather.co'
   
-  // Static pages with their priorities and change frequencies
-  const staticPages: MetadataRoute.Sitemap = [
+  try {
+    // Static pages with their priorities and change frequencies
+    const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       lastModified: new Date(),
@@ -50,14 +51,33 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ]
   
-  // Dynamic city pages - generated from ALL_CITIES
-  const cityPages: MetadataRoute.Sitemap = ALL_CITIES.map(city => ({
-    url: `${baseUrl}/weather/${city.slug}`,
-    lastModified: new Date(),
-    changeFrequency: 'hourly',
-    priority: 0.9,
-  }))
-  
-  // Combine all pages
-  return [...staticPages, ...cityPages]
+    // Dynamic city pages - generated from CITY_DATA keys
+    const cityPages: MetadataRoute.Sitemap = Object.keys(CITY_DATA || {}).map(citySlug => ({
+      url: `${baseUrl}/weather/${citySlug}`,
+      lastModified: new Date(),
+      changeFrequency: 'hourly' as const,
+      priority: 0.9,
+    }))
+    
+    // Combine all pages
+    return [...staticPages, ...cityPages]
+  } catch (error) {
+    console.error('Error generating sitemap:', error)
+    
+    // Return minimal sitemap with just static pages if city data fails
+    return [
+      {
+        url: baseUrl,
+        lastModified: new Date(),
+        changeFrequency: 'daily' as const,
+        priority: 1,
+      },
+      {
+        url: `${baseUrl}/about`,
+        lastModified: new Date(),
+        changeFrequency: 'monthly' as const,
+        priority: 0.8,
+      },
+    ]
+  }
 }
