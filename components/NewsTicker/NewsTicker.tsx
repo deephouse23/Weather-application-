@@ -10,11 +10,12 @@
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Pause, Play, ChevronLeft, ChevronRight, AlertTriangle, Cloud, Globe } from 'lucide-react';
+import { X, Pause, Play, RefreshCw, AlertTriangle, Cloud, Globe, Loader2 } from 'lucide-react';
 import NewsTickerItem from './NewsTickerItem';
 import styles from './NewsTicker.module.css';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
+import { useNewsFeed } from '@/lib/hooks/useNewsFeed';
 
 export interface NewsItem {
   id: string;
@@ -28,102 +29,53 @@ export interface NewsItem {
 
 export interface NewsTickerProps {
   categories?: ('breaking' | 'weather' | 'local' | 'general')[];
-  speed?: 'slow' | 'medium' | 'fast';
   autoRefresh?: number; // in milliseconds
   maxItems?: number;
   priority?: 'high' | 'medium' | 'low' | 'all';
 }
 
-// Mock data for Phase 1
-const mockNewsItems: NewsItem[] = [
+// Fallback data for when API is not available
+const fallbackNewsItems: NewsItem[] = [
   {
-    id: '1',
-    title: 'BREAKING: Severe flooding reported in Wisconsin following heavy rainfall',
+    id: 'fallback-1',
+    title: 'Configure NEWS_API_KEY in environment variables for live news',
     url: '#',
-    source: 'Weather Service',
-    category: 'breaking',
-    priority: 'high',
-    timestamp: new Date()
-  },
-  {
-    id: '2',
-    title: 'Heat wave continues across California with temperatures reaching 105°F',
-    url: '#',
-    source: 'Local News',
-    category: 'weather',
-    priority: 'medium',
-    timestamp: new Date()
-  },
-  {
-    id: '3',
-    title: 'Tornado watch issued for Kansas and Oklahoma through midnight',
-    url: '#',
-    source: 'National Weather Service',
-    category: 'weather',
-    priority: 'high',
-    timestamp: new Date()
-  },
-  {
-    id: '4',
-    title: 'Local schools announce closures due to winter storm warning',
-    url: '#',
-    source: 'School District',
-    category: 'local',
-    priority: 'high',
-    timestamp: new Date()
-  },
-  {
-    id: '5',
-    title: 'New climate report shows record-breaking temperatures in 2024',
-    url: '#',
-    source: 'Climate Central',
+    source: 'System',
     category: 'general',
     priority: 'low',
-    timestamp: new Date()
-  },
-  {
-    id: '6',
-    title: 'Hurricane season outlook: Above-average activity expected',
-    url: '#',
-    source: 'NOAA',
-    category: 'weather',
-    priority: 'medium',
     timestamp: new Date()
   }
 ];
 
 const NewsTicker: React.FC<NewsTickerProps> = ({
   categories = ['breaking', 'weather', 'local', 'general'],
-  speed = 'medium',
   autoRefresh = 300000, // 5 minutes default
   maxItems = 10,
   priority = 'all'
 }) => {
-  const [newsItems, setNewsItems] = useState<NewsItem[]>(mockNewsItems);
   const [isVisible, setIsVisible] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
-  const [currentSpeed, setCurrentSpeed] = useState(speed);
+  const [useRealData, setUseRealData] = useState(true);
   const tickerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
   
   const themeClasses = getComponentStyles(theme as ThemeType, 'navigation');
 
-  // Filter news items based on categories and priority
-  const filteredItems = newsItems.filter(item => {
-    const categoryMatch = categories.includes(item.category);
-    const priorityMatch = priority === 'all' || item.priority === priority || 
-                         (priority === 'high' && item.priority === 'high') ||
-                         (priority === 'medium' && (item.priority === 'high' || item.priority === 'medium'));
-    return categoryMatch && priorityMatch;
-  }).slice(0, maxItems);
+  // Use the custom hook for fetching news
+  const { news, loading, error, refresh } = useNewsFeed({
+    categories,
+    maxItems,
+    priority,
+    autoRefresh,
+    enabled: useRealData
+  });
 
-  // Speed mapping for animation
-  const speedMap = {
-    slow: '60s',
-    medium: '40s',
-    fast: '20s'
-  };
+  // Use real news if available, otherwise use fallback
+  const newsItems = useRealData && news.length > 0 ? news : fallbackNewsItems;
+
+  // Fixed animation speed (between medium and fast)
+  const animationSpeed = '30s';
 
   // Handle visibility toggle
   const handleClose = () => {
@@ -136,13 +88,7 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
     setIsPaused(!isPaused);
   };
 
-  // Handle speed change
-  const cycleSpeed = () => {
-    const speeds: ('slow' | 'medium' | 'fast')[] = ['slow', 'medium', 'fast'];
-    const currentIndex = speeds.indexOf(currentSpeed);
-    const nextIndex = (currentIndex + 1) % speeds.length;
-    setCurrentSpeed(speeds[nextIndex]);
-  };
+
 
   // Check if ticker was previously closed
   useEffect(() => {
@@ -152,20 +98,33 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
     }
   }, []);
 
-  // Auto-refresh news items
+  // Check if we should use real data based on API key availability
   useEffect(() => {
-    if (autoRefresh > 0) {
-      const interval = setInterval(() => {
-        // In Phase 1, we just shuffle the mock data
-        // In Phase 2, this will fetch real news
-        setNewsItems(prev => [...prev].sort(() => Math.random() - 0.5));
-      }, autoRefresh);
-
-      return () => clearInterval(interval);
+    const hasApiKey = process.env.NEXT_PUBLIC_NEWS_API_KEY;
+    if (!hasApiKey) {
+      console.warn('News API key not configured. Using fallback data.');
+      setUseRealData(false);
     }
-  }, [autoRefresh]);
+  }, []);
 
-  if (!isVisible || filteredItems.length === 0) {
+  if (!isVisible) {
+    return null;
+  }
+
+  // Show loading state initially
+  if (loading && newsItems.length === 0) {
+    return (
+      <div className={`relative w-full overflow-hidden border-b-4 pixel-border ${themeClasses.background} ${themeClasses.borderColor}`}
+           style={{ height: '40px' }}>
+        <div className="flex items-center justify-center h-full">
+          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+          <span className="text-sm font-mono">Loading news...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (newsItems.length === 0) {
     return null;
   }
 
@@ -215,7 +174,7 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
       style={{ height: '40px' }}
     >
       {/* Controls */}
-      <div className="absolute left-0 top-0 h-full flex items-center z-20 px-2 space-x-1"
+      <div className="absolute left-0 top-0 h-full flex items-center z-20 px-2"
            style={{ 
              background: `linear-gradient(90deg, 
                ${theme === 'dark' ? 'rgba(0,0,0,1)' : 
@@ -230,13 +189,16 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
         >
           {isPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />}
         </button>
-        <button
-          onClick={cycleSpeed}
-          className={`px-2 py-1 border-2 text-xs font-mono ${themeClasses.background} ${themeClasses.borderColor} hover:${themeClasses.accentBg} transition-colors`}
-          title="Change speed"
-        >
-          {currentSpeed.toUpperCase()}
-        </button>
+        {useRealData && (
+          <button
+            onClick={refresh}
+            className={`p-1 border-2 ml-1 ${themeClasses.background} ${themeClasses.borderColor} hover:${themeClasses.accentBg} transition-colors`}
+            title="Refresh news"
+            disabled={loading}
+          >
+            <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+        )}
       </div>
 
       {/* Close button */}
@@ -262,12 +224,12 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
         ref={scrollRef}
         className={`flex items-center h-full ${styles.tickerScroll} ${isPaused ? styles.paused : ''}`}
         style={{
-          animationDuration: speedMap[currentSpeed],
+          animationDuration: animationSpeed,
           paddingLeft: '100%'
         }}
       >
         {/* Duplicate items for seamless loop */}
-        {[...filteredItems, ...filteredItems].map((item, index) => (
+        {[...newsItems, ...newsItems].map((item, index) => (
           <div
             key={`${item.id}-${index}`}
             className="flex items-center mx-4 whitespace-nowrap"

@@ -77,19 +77,7 @@ describe('NewsTicker Component', () => {
     expect(screen.getByTitle('Play')).toBeInTheDocument();
   });
 
-  it('handles speed change', () => {
-    render(
-      <ThemeProvider>
-        <NewsTicker speed="slow" />
-      </ThemeProvider>
-    );
 
-    const speedButton = screen.getByText('SLOW');
-    fireEvent.click(speedButton);
-
-    // Should cycle to MEDIUM
-    expect(screen.getByText('MEDIUM')).toBeInTheDocument();
-  });
 
   it('handles close functionality', () => {
     render(
