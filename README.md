@@ -287,6 +287,22 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
+## 🚀 Version 0.3.2 Highlights - Planet Extremes Feature 🌡️
+
+### 🌍 **NEW: Global Temperature Extremes Tracker**
+
+Track Earth's hottest and coldest places in real-time with our new Planet Extremes feature!
+
+#### Features:
+- **🔥 Hottest Place on Earth**: Live temperature monitoring from Death Valley, Kuwait City, and more
+- **🧊 Coldest Place on Earth**: Real-time data from Antarctica, Siberia, and Arctic regions
+- **📊 Temperature Leaderboards**: Top 5 hottest and coldest locations globally
+- **📍 Your Location Ranking**: See where you rank among Earth's temperature extremes
+- **🎮 Retro Visualizations**: Animated thermometers with pixel-perfect 16-bit styling
+- **💡 Educational Facts**: Learn about extreme weather phenomena and records
+
+---
+
 ## 🚀 Version 0.3.0 Highlights - Major Architecture Upgrade 🌟
 
 ### 🎯 **Major Release - Next.js 14 Migration & Modern Architecture**

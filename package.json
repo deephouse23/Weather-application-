@@ -1,13 +1,16 @@
 {
   "name": "16-bit-weather",
-  "version": "0.2.7",
-  "description": "A retro 16-bit weather education platform with pixel art graphics, comprehensive location search, cloud atlas, interactive weather systems database, extreme weather phenomena collection, historical weather data, interactive games with high score tracking, and authentic 16-bit gaming experience",
+  "version": "0.3.2",
+  "description": "A retro 16-bit weather education platform featuring global temperature extremes tracking, pixel art graphics, comprehensive location search, cloud atlas, interactive weather systems database, extreme weather phenomena collection, historical weather data, interactive games with high score tracking, and authentic 16-bit gaming experience. Now with Planet Extremes - real-time hottest and coldest places on Earth!",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --ci --runInBand"
   },
   "dependencies": {
     "@vercel/analytics": "^1.5.0",
@@ -30,6 +33,14 @@
     "eslint-config-next": "^15.4.5",
     "postcss": "^8",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5"
+    "typescript": "^5",
+    "jest": "^29.7.0",
+    "@jest/globals": "^29.7.0",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "jest-environment-jsdom": "^29.7.0",
+    "identity-obj-proxy": "^3.0.0",
+    "ts-jest": "^29.2.5",
+    "@types/jest": "^29.5.14"
   }
 }
