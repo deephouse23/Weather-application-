@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') || '';
     const q = searchParams.get('q') || '';
     const country = searchParams.get('country') || 'us';
-    const pageSize = searchParams.get('pageSize') || '5';
+    const pageSize = searchParams.get('pageSize') || '10';  // Increased default
 
     // Check if API key is configured
     if (!NEWS_API_KEY) {

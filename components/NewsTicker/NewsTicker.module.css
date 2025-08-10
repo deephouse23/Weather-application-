@@ -13,10 +13,6 @@
   will-change: transform;
 }
 
-.tickerScroll.paused {
-  animation-play-state: paused;
-}
-
 @keyframes scroll-left {
   0% {
     transform: translateX(0);
@@ -24,11 +20,6 @@
   100% {
     transform: translateX(-50%);
   }
-}
-
-/* Smooth hover effect */
-.tickerScroll:hover {
-  animation-play-state: paused;
 }
 
 /* Pixel border style matching the retro theme */

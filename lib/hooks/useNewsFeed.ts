@@ -64,7 +64,7 @@ export function useNewsFeed({
       setLoading(true);
       setError(null);
       
-      const fetchedNews = await newsService.fetchNews(categories, maxItems * 2); // Fetch extra for filtering
+      const fetchedNews = await newsService.fetchNews(categories, maxItems * 1.5); // Fetch 50% extra for filtering
       const filteredNews = filterByPriority(fetchedNews).slice(0, maxItems);
       
       setNews(filteredNews);

@@ -144,8 +144,8 @@ export class NewsService {
 
       const data: WeatherAlertResponse = await response.json();
       
-      // Limit to first 5 alerts
-      const limitedFeatures = data.features.slice(0, 5);
+      // Limit to first 10 alerts for more content
+      const limitedFeatures = data.features.slice(0, 10);
       
       return limitedFeatures.map(feature => ({
         id: feature.properties.id,
@@ -175,14 +175,14 @@ export class NewsService {
       let response;
       
       if (this.isProduction) {
-        // Use our API route in production
+        // Use our API route in production - search for extreme weather terms
         response = await fetch(
-          `/api/news?endpoint=everything&q=${encodeURIComponent('weather OR storm OR hurricane OR tornado')}&pageSize=5`
+          `/api/news?endpoint=everything&q=${encodeURIComponent('extreme weather OR severe storm OR hurricane OR tornado OR flooding OR drought OR wildfire OR blizzard OR heatwave OR typhoon OR cyclone')}&pageSize=10`
         );
       } else {
         // Direct API call in development
         response = await fetch(
-          `${this.NEWS_API_URL}/everything?q=weather+OR+storm+OR+hurricane+OR+tornado&sortBy=publishedAt&pageSize=5&apiKey=${this.NEWS_API_KEY}`
+          `${this.NEWS_API_URL}/everything?q=extreme+weather+OR+severe+storm+OR+hurricane+OR+tornado+OR+flooding+OR+drought+OR+wildfire+OR+blizzard+OR+heatwave+OR+typhoon+OR+cyclone&sortBy=publishedAt&pageSize=10&apiKey=${this.NEWS_API_KEY}`
         );
       }
 
@@ -221,12 +221,12 @@ export class NewsService {
       if (this.isProduction) {
         // Use our API route in production
         response = await fetch(
-          `/api/news?endpoint=top-headlines&country=us&pageSize=5`
+          `/api/news?endpoint=top-headlines&country=us&pageSize=10`
         );
       } else {
         // Direct API call in development
         response = await fetch(
-          `${this.NEWS_API_URL}/top-headlines?country=us&pageSize=5&apiKey=${this.NEWS_API_KEY}`
+          `${this.NEWS_API_URL}/top-headlines?country=us&pageSize=10&apiKey=${this.NEWS_API_KEY}`
         );
       }
 
@@ -265,12 +265,12 @@ export class NewsService {
       if (this.isProduction) {
         // Use our API route in production
         response = await fetch(
-          `/api/news?endpoint=top-headlines&country=us&category=general&pageSize=5`
+          `/api/news?endpoint=top-headlines&country=us&category=general&pageSize=8`
         );
       } else {
         // Direct API call in development
         response = await fetch(
-          `${this.NEWS_API_URL}/top-headlines?country=us&category=general&pageSize=5&apiKey=${this.NEWS_API_KEY}`
+          `${this.NEWS_API_URL}/top-headlines?country=us&category=general&pageSize=8&apiKey=${this.NEWS_API_KEY}`
         );
       }
 
@@ -307,14 +307,14 @@ export class NewsService {
       let response;
       
       if (this.isProduction) {
-        // Use our API route in production
+        // Use our API route in production - science and technology news
         response = await fetch(
-          `/api/news?endpoint=top-headlines&country=us&category=science&pageSize=5`
+          `/api/news?endpoint=top-headlines&country=us&category=technology&pageSize=8`
         );
       } else {
         // Direct API call in development
         response = await fetch(
-          `${this.NEWS_API_URL}/top-headlines?country=us&category=science&pageSize=5&apiKey=${this.NEWS_API_KEY}`
+          `${this.NEWS_API_URL}/top-headlines?country=us&category=technology&pageSize=8&apiKey=${this.NEWS_API_KEY}`
         );
       }
 

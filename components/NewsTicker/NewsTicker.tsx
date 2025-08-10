@@ -10,7 +10,7 @@
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Pause, Play, RefreshCw, AlertTriangle, Cloud, Globe, Loader2 } from 'lucide-react';
+import { AlertTriangle, Cloud, Globe, Loader2 } from 'lucide-react';
 import NewsTickerItem from './NewsTickerItem';
 import styles from './NewsTicker.module.css';
 import { useTheme } from '@/components/theme-provider';
@@ -52,11 +52,10 @@ const getFallbackNewsItems = (): NewsItem[] => {
 const NewsTicker: React.FC<NewsTickerProps> = ({
   categories = ['breaking', 'weather', 'local', 'general'],
   autoRefresh = 300000, // 5 minutes default
-  maxItems = 10,
+  maxItems = 20,  // Increased from 10 to show more news
   priority = 'all'
 }) => {
   const [isVisible, setIsVisible] = useState(true);
-  const [isPaused, setIsPaused] = useState(false);
   const [useRealData, setUseRealData] = useState(true);
   const tickerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -76,29 +75,11 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
   // Use real news if available, otherwise use fallback
   const newsItems = useRealData && news.length > 0 ? news : getFallbackNewsItems();
 
-  // Fixed animation speed (between medium and fast)
-  const animationSpeed = '30s';
-
-  // Handle visibility toggle
-  const handleClose = () => {
-    setIsVisible(false);
-    localStorage.setItem('newsTickerClosed', 'true');
-  };
-
-  // Handle pause/play
-  const togglePause = () => {
-    setIsPaused(!isPaused);
-  };
+  // Fixed animation speed - slightly faster for more content
+  const animationSpeed = '45s';
 
 
 
-  // Check if ticker was previously closed
-  useEffect(() => {
-    const wasClosed = localStorage.getItem('newsTickerClosed');
-    if (wasClosed === 'true') {
-      setIsVisible(false);
-    }
-  }, []);
 
   // Check if we should use real data based on environment
   useEffect(() => {
@@ -174,59 +155,13 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
 
   return (
     <div 
-      className={`relative w-full overflow-hidden border-b-4 pixel-border ${themeClasses.background} ${themeClasses.borderColor}`}
-      style={{ height: '40px' }}
+      className={`relative w-full overflow-hidden ${themeClasses.background} ${themeClasses.borderColor}`}
+      style={{ height: '32px' }}  // Reduced height
     >
-      {/* Controls */}
-      <div className="absolute left-0 top-0 h-full flex items-center z-20 px-2"
-           style={{ 
-             background: `linear-gradient(90deg, 
-               ${theme === 'dark' ? 'rgba(0,0,0,1)' : 
-                 theme === 'miami' ? 'rgba(255,192,203,1)' : 
-                 'rgba(0,255,255,1)'} 0%, 
-               transparent 100%)`
-           }}>
-        <button
-          onClick={togglePause}
-          className={`p-1 border-2 ${themeClasses.background} ${themeClasses.borderColor} hover:${themeClasses.accentBg} transition-colors`}
-          title={isPaused ? 'Play' : 'Pause'}
-        >
-          {isPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />}
-        </button>
-        {useRealData && (
-          <button
-            onClick={refresh}
-            className={`p-1 border-2 ml-1 ${themeClasses.background} ${themeClasses.borderColor} hover:${themeClasses.accentBg} transition-colors`}
-            title="Refresh news"
-            disabled={loading}
-          >
-            <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-        )}
-      </div>
-
-      {/* Close button */}
-      <div className="absolute right-0 top-0 h-full flex items-center z-20 px-2"
-           style={{ 
-             background: `linear-gradient(270deg, 
-               ${theme === 'dark' ? 'rgba(0,0,0,1)' : 
-                 theme === 'miami' ? 'rgba(255,192,203,1)' : 
-                 'rgba(0,255,255,1)'} 0%, 
-               transparent 100%)`
-           }}>
-        <button
-          onClick={handleClose}
-          className={`p-1 border-2 ${themeClasses.background} ${themeClasses.borderColor} hover:bg-red-500 hover:text-white transition-colors`}
-          title="Close ticker"
-        >
-          <X className="w-3 h-3" />
-        </button>
-      </div>
-
-      {/* Scrolling content */}
+      {/* Scrolling content - no controls, just continuous scroll */}
       <div 
         ref={scrollRef}
-        className={`flex items-center h-full ${styles.tickerScroll} ${isPaused ? styles.paused : ''}`}
+        className={`flex items-center h-full ${styles.tickerScroll}`}
         style={{
           animationDuration: animationSpeed,
           paddingLeft: '100%'
@@ -238,7 +173,7 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
             key={`${item.id}-${index}`}
             className="flex items-center mx-4 whitespace-nowrap"
           >
-            <span className={`flex items-center px-2 py-1 rounded-sm text-xs font-bold mr-2 ${getCategoryColor(item.category, item.priority)}`}>
+            <span className={`flex items-center px-1 py-0.5 rounded-sm text-xs font-bold mr-2 ${getCategoryColor(item.category, item.priority)}`}>
               {getCategoryIcon(item.category)}
               <span className="ml-1">{item.category.toUpperCase()}</span>
             </span>

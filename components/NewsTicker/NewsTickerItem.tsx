@@ -49,19 +49,19 @@ const NewsTickerItem: React.FC<NewsTickerItemProps> = ({ item, theme }) => {
     <a
       href={item.url}
       onClick={handleClick}
-      className={`inline-flex items-center space-x-2 hover:underline cursor-pointer ${themeClasses.text}`}
+      className={`inline-flex items-center space-x-1 hover:underline cursor-pointer ${themeClasses.text}`}
       title={`${item.title} - ${item.source}`}
     >
-      <span className="text-sm font-mono">
+      <span className="text-xs font-mono">
         {item.title}
       </span>
-      <span className={`text-xs opacity-70`}>
+      <span className={`text-xs opacity-60`}>
         ({item.source})
       </span>
       {item.url && item.url !== '#' && (
-        <ExternalLink className="w-3 h-3 opacity-50" />
+        <ExternalLink className="w-2.5 h-2.5 opacity-50" />
       )}
-      <span className={`text-xs opacity-50`}>
+      <span className={`text-xs opacity-40`}>
         {formatTime(item.timestamp)}
       </span>
     </a>
