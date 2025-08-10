@@ -21,6 +21,7 @@ import { usePathname } from "next/navigation"
 import { Menu, X, Cloud, Zap, BookOpen, Gamepad2, Info, Home, Thermometer } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
+import NewsTicker from "@/components/NewsTicker"
 
 interface NavigationProps {
   weatherLocation?: string;
@@ -131,7 +132,8 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
   ]
 
   return (
-    <nav className={`w-full border-b-4 pixel-border relative z-50 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
+    <>
+      <nav className={`w-full border-b-4 pixel-border relative z-50 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
       
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center justify-between px-6 py-4">
@@ -241,6 +243,16 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
           </div>
         </div>
       )}
-    </nav>
+      </nav>
+      
+      {/* News Ticker - Below Navigation */}
+      <NewsTicker 
+        categories={['breaking', 'weather', 'local']}
+        speed="medium"
+        autoRefresh={300000} // 5 minutes
+        maxItems={10}
+        priority="all"
+      />
+    </>
   )
 } 
