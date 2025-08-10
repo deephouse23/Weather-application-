@@ -52,8 +52,8 @@
 /* Touch-friendly mobile styles */
 @media (hover: none) and (pointer: coarse) {
   .tickerScroll {
-    /* Even slower for touch devices */
-    animation-duration: 300s !important;
+    /* Even slower for touch devices - 30% slower (was 300s) */
+    animation-duration: 390s !important;
   }
   
   .tickerWrapper {
@@ -79,8 +79,8 @@
 /* Mobile responsive adjustments */
 @media (max-width: 480px) {
   .tickerScroll {
-    /* Super slow for small mobile screens */
-    animation-duration: 360s !important;
+    /* Super slow for small mobile screens - 30% slower (was 360s) */
+    animation-duration: 468s !important;
     font-size: 14px;
     padding: 8px 0;
   }
@@ -93,8 +93,8 @@
 
 @media (min-width: 481px) and (max-width: 768px) {
   .tickerScroll {
-    /* Slow for larger mobile screens */
-    animation-duration: 240s !important;
+    /* Slow for larger mobile screens - 30% slower (was 240s) */
+    animation-duration: 312s !important;
     font-size: 13px;
     padding: 6px 0;
   }
@@ -108,8 +108,8 @@
 /* Tablet adjustments */
 @media (min-width: 769px) and (max-width: 1024px) {
   .tickerScroll {
-    /* Moderate speed for tablets */
-    animation-duration: 180s !important;
+    /* Moderate speed for tablets - 30% slower (was 180s) */
+    animation-duration: 234s !important;
     font-size: 12px;
   }
   
@@ -121,8 +121,8 @@
 /* Desktop adjustments */
 @media (min-width: 1025px) {
   .tickerScroll {
-    /* Standard speed for desktop */
-    animation-duration: 120s !important;
+    /* Standard speed for desktop - 30% slower (was 120s) */
+    animation-duration: 156s !important;
   }
 }
 

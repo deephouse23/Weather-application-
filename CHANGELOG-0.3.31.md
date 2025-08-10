@@ -15,11 +15,12 @@ This update focuses on dramatically improving the mobile user experience for the
    - Touch device detection for optimized interactions
    - Responsive behavior based on screen size
 
-2. **Adaptive Animation Speed**
-   - Desktop: 120 seconds base duration (2 minutes)
-   - Tablet: 225 seconds (3.75 minutes)
-   - Mobile: 540 seconds (9 minutes) - 3x slower than default
-   - Small mobile screens (<480px): 360 seconds (6 minutes)
+2. **Adaptive Animation Speed (30% Slower Update)**
+   - Desktop: 156 seconds base duration (2.6 minutes) - was 120s
+   - Tablet: 292.5 seconds (4.875 minutes) - was 225s
+   - Mobile: 702 seconds (11.7 minutes) - was 540s
+   - Small mobile screens (<480px): 468 seconds (7.8 minutes) - was 360s
+   - All speeds reduced by 30% for better readability
 
 3. **Mobile Controls**
    - Play/Pause button for mobile users

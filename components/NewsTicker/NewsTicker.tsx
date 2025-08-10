@@ -112,13 +112,13 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
   const getAnimationDuration = () => {
     const totalLength = newsItems.reduce((acc, item) => acc + item.title.length, 0);
     
-    // Base durations - significantly slower
-    let baseDuration = 120; // Desktop: 120s (2 minutes)
+    // Base durations - 30% slower than before (multiplied by 1.3)
+    let baseDuration = 156; // Desktop: 156s (2.6 minutes, was 120s)
     
     if (isMobile) {
-      baseDuration = 180 * mobileSpeedFactor; // Mobile: 180s × 3 = 540s (9 minutes)
+      baseDuration = 234 * mobileSpeedFactor; // Mobile: 234s × 3 = 702s (11.7 minutes, was 540s)
     } else if (isTablet) {
-      baseDuration = 150 * 1.5; // Tablet: 225s (3.75 minutes)
+      baseDuration = 195 * 1.5; // Tablet: 292.5s (4.875 minutes, was 225s)
     }
     
     // Additional slowdown for longer content
