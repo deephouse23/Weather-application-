@@ -22,6 +22,10 @@ export async function GET(request: NextRequest) {
     const openWeatherApiKey = process.env.OPENWEATHER_API_KEY
     const googleApiKey = process.env.GOOGLE_AIR_QUALITY_API_KEY
     
+    // Debug logging
+    console.log('Google API Key exists:', !!googleApiKey)
+    console.log('Google API Key length:', googleApiKey?.length || 0)
+    
     if (!openWeatherApiKey) {
       return NextResponse.json(
         { error: 'OpenWeather API key not configured' },
@@ -63,31 +67,63 @@ export async function GET(request: NextRequest) {
     // Try Google Air Quality API first if available
     if (googleApiKey) {
       try {
+        console.log('Attempting Google Air Quality API...')
         const googleUrl = 'https://airquality.googleapis.com/v1/currentConditions:lookup'
-        const payload = JSON.stringify({ 
-          location: { latitude, longitude } 
-        })
+        const payload = {
+          location: { 
+            latitude, 
+            longitude 
+          },
+          extraComputations: [
+            "LOCAL_AQI",
+            "POLLUTANT_CONCENTRATION"
+          ],
+          languageCode: "en"
+        }
+        
+        console.log('Google API Request:', JSON.stringify(payload, null, 2))
         
         const response = await fetch(`${googleUrl}?key=${googleApiKey}`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: payload
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(payload)
         })
+        
+        console.log('Google API Response Status:', response.status)
         
         if (response.ok) {
           const data = await response.json()
-          const aqiValue = data?.indexes?.[0]?.aqi || 0
-          const aqiCategory = data?.indexes?.[0]?.category || 'No Data'
+          console.log('Google API Data:', JSON.stringify(data, null, 2))
           
-          return NextResponse.json({
-            aqi: aqiValue,
-            category: aqiCategory,
-            source: 'google'
-          })
+          // Look for US EPA AQI or Universal AQI
+          const usEpaIndex = data.indexes?.find((idx: any) => idx.code === 'usa_epa')
+          const universalIndex = data.indexes?.find((idx: any) => idx.code === 'uaqi')
+          const primaryIndex = usEpaIndex || universalIndex || data.indexes?.[0]
+          
+          if (primaryIndex) {
+            console.log('Using index:', primaryIndex.code, 'AQI:', primaryIndex.aqi)
+            return NextResponse.json({
+              aqi: primaryIndex.aqi || 0,
+              category: primaryIndex.category || 'No Data',
+              source: 'google',
+              debug: {
+                indexUsed: primaryIndex.code,
+                allIndexes: data.indexes?.map((idx: any) => ({ code: idx.code, aqi: idx.aqi }))
+              }
+            })
+          }
+        } else {
+          const errorText = await response.text()
+          console.error('Google API failed:', response.status, errorText)
         }
-      } catch {
-        console.log('Google Air Quality API failed, trying fallback')
+      } catch (error) {
+        console.error('Google Air Quality API error:', error)
       }
+    } else {
+      console.log('No Google API key found, using OpenWeather fallback')
     }
 
     // Fallback to OpenWeather Air Pollution API

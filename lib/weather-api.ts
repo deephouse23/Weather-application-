@@ -867,12 +867,18 @@ const fetchAirQualityData = async (lat: number, lon: number, cityName?: string):
     const data = await response.json();
     console.log('Air Quality API Response:', data);
     
+    // Log debug information if available
+    if (data.debug) {
+      console.log('AQI Debug Info:', data.debug);
+    }
+    
     const airQualityData = {
       aqi: data.aqi || 0,
       category: data.category || 'No Data'
     };
     
     console.log('Final air quality data:', airQualityData);
+    console.log('Data source:', data.source || 'unknown');
     return airQualityData;
     
   } catch (error) {

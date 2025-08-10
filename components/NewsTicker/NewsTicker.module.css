@@ -1,0 +1,53 @@
+/**
+ * 16-Bit Weather Platform - News Ticker Feature
+ * 
+ * Copyright (C) 2025 16-Bit Weather
+ * Licensed under Fair Source License, Version 0.9
+ * 
+ * News Ticker Styles
+ */
+
+.tickerScroll {
+  display: inline-flex;
+  padding-left: 100%;
+  animation: scroll-left linear infinite;
+  will-change: transform;
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(-100%, 0);
+  }
+}
+
+/* Ensure smooth continuous scrolling */
+.tickerWrapper {
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+}
+
+/* Pixel border style matching the retro theme */
+.pixel-border {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* Performance optimization for smooth scrolling */
+@media (prefers-reduced-motion: reduce) {
+  .tickerScroll {
+    animation: none;
+    overflow-x: auto;
+  }
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .tickerScroll {
+    animation-duration: 30s !important; /* Faster on mobile */
+  }
+}
