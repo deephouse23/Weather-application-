@@ -1,5 +1,5 @@
 /**
- * 16-Bit Weather Platform - BETA v0.3.2
+ * 16-Bit Weather Platform - BETA v0.3.31
  * 
  * Copyright (C) 2025 16-Bit Weather
  * Licensed under Fair Source License, Version 0.9
