@@ -67,11 +67,11 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
         timestamp: new Date()
       }];
 
-  // Calculate animation duration based on content length - reduced by 35% for faster scrolling
+  // Calculate animation duration based on content length - slowed down by 50%
   const getAnimationDuration = () => {
     const totalLength = newsItems.reduce((acc, item) => acc + item.title.length, 0);
-    const baseDuration = 39; // Reduced from 60s by 35% (60 * 0.65 = 39)
-    const adjustedDuration = Math.max(baseDuration, (totalLength / 10) * 0.65);
+    const baseDuration = 78; // Slowed from 39s by 50% (39 * 2 = 78)
+    const adjustedDuration = Math.max(baseDuration, (totalLength / 10) * 1.3); // Also increased content-based duration
     return `${adjustedDuration}s`;
   };
 
