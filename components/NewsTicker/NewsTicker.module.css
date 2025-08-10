@@ -1,10 +1,11 @@
 /**
  * 16-Bit Weather Platform - News Ticker Feature
+ * Version 0.3.31 - Mobile Optimization Update
  * 
  * Copyright (C) 2025 16-Bit Weather
  * Licensed under Fair Source License, Version 0.9
  * 
- * News Ticker Styles
+ * News Ticker Styles - Mobile Optimized
  */
 
 .tickerScroll {
@@ -12,14 +13,22 @@
   padding-left: 100%;
   animation: scroll-left linear infinite;
   will-change: transform;
+  /* Hardware acceleration for smooth performance */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.tickerScroll.paused {
+  animation-play-state: paused !important;
 }
 
 @keyframes scroll-left {
   0% {
-    transform: translate(0, 0);
+    transform: translate3d(0, 0, 0);
   }
   100% {
-    transform: translate(-100%, 0);
+    transform: translate3d(-100%, 0, 0);
   }
 }
 
@@ -28,6 +37,9 @@
   display: flex;
   overflow: hidden;
   width: 100%;
+  position: relative;
+  /* Optimize rendering on mobile */
+  contain: layout style paint;
 }
 
 /* Pixel border style matching the retro theme */
@@ -37,17 +49,165 @@
   image-rendering: crisp-edges;
 }
 
+/* Touch-friendly mobile styles */
+@media (hover: none) and (pointer: coarse) {
+  .tickerScroll {
+    /* Even slower for touch devices - 30% slower (was 300s) */
+    animation-duration: 390s !important;
+  }
+  
+  .tickerWrapper {
+    /* Larger tap targets on mobile */
+    min-height: 48px;
+  }
+}
+
 /* Performance optimization for smooth scrolling */
 @media (prefers-reduced-motion: reduce) {
   .tickerScroll {
     animation: none;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  .tickerWrapper {
+    overflow-x: auto;
   }
 }
 
 /* Mobile responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 480px) {
   .tickerScroll {
-    animation-duration: 30s !important; /* Faster on mobile */
+    /* Super slow for small mobile screens - 30% slower (was 360s) */
+    animation-duration: 468s !important;
+    font-size: 14px;
+    padding: 8px 0;
   }
+  
+  .tickerWrapper {
+    min-height: 48px;
+    align-items: center;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .tickerScroll {
+    /* Slow for larger mobile screens - 30% slower (was 240s) */
+    animation-duration: 312s !important;
+    font-size: 13px;
+    padding: 6px 0;
+  }
+  
+  .tickerWrapper {
+    min-height: 44px;
+    align-items: center;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .tickerScroll {
+    /* Moderate speed for tablets - 30% slower (was 180s) */
+    animation-duration: 234s !important;
+    font-size: 12px;
+  }
+  
+  .tickerWrapper {
+    min-height: 36px;
+  }
+}
+
+/* Desktop adjustments */
+@media (min-width: 1025px) {
+  .tickerScroll {
+    /* Standard speed for desktop - 30% slower (was 120s) */
+    animation-duration: 156s !important;
+  }
+}
+
+/* iOS-specific optimizations */
+@supports (-webkit-touch-callout: none) {
+  .tickerScroll {
+    -webkit-transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    -webkit-perspective: 1000px;
+  }
+  
+  .tickerWrapper {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Android-specific optimizations */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  .tickerScroll {
+    transform: translateZ(0);
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .tickerScroll {
+    border-top: 2px solid;
+    border-bottom: 2px solid;
+  }
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+  .tickerScroll {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Pause button styles for mobile */
+.pauseButton {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pauseButton:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.pauseButton:hover {
+  background: rgba(0, 0, 0, 0.9);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Loading state */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Smooth transitions */
+.tickerScroll,
+.tickerWrapper {
+  transition: height 0.3s ease, font-size 0.3s ease;
 }

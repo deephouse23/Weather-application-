@@ -1,16 +1,17 @@
 /**
  * 16-Bit Weather Platform - News Ticker Feature
+ * Version 0.3.31 - Mobile Optimization Update
  * 
  * Copyright (C) 2025 16-Bit Weather
  * Licensed under Fair Source License, Version 0.9
  * 
- * News Ticker Component - Core Implementation
+ * News Ticker Component - Mobile Optimized Version
  */
 
 "use client"
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { AlertTriangle, Cloud, Globe, Loader2 } from 'lucide-react';
+import { AlertTriangle, Cloud, Globe, Loader2, Pause, Play } from 'lucide-react';
 import NewsTickerItem from './NewsTickerItem';
 import styles from './NewsTicker.module.css';
 import { useTheme } from '@/components/theme-provider';
@@ -32,18 +33,58 @@ export interface NewsTickerProps {
   autoRefresh?: number; // in milliseconds
   maxItems?: number;
   priority?: 'high' | 'medium' | 'low' | 'all';
+  mobileSpeedFactor?: number; // Speed multiplier for mobile (1 = normal, 2 = 2x slower)
+  enableMobileControls?: boolean; // Show play/pause on mobile
 }
+
+// Mobile detection hook
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+
+  useEffect(() => {
+    const checkDevice = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+      setIsTablet(width >= 768 && width < 1024);
+    };
+
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
+  }, []);
+
+  return { isMobile, isTablet };
+};
+
+// Touch detection hook
+const useIsTouchDevice = () => {
+  const [isTouch, setIsTouch] = useState(false);
+
+  useEffect(() => {
+    setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  }, []);
+
+  return isTouch;
+};
 
 const NewsTicker: React.FC<NewsTickerProps> = ({
   categories = ['weather'],
   autoRefresh = 300000, // 5 minutes default
   maxItems = 30,
-  priority = 'all'
+  priority = 'all',
+  mobileSpeedFactor = 3, // 3x slower on mobile by default
+  enableMobileControls = true
 }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [useRealData, setUseRealData] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
+  const [userHasInteracted, setUserHasInteracted] = useState(false);
   const { theme } = useTheme();
   const themeClasses = getComponentStyles(theme as ThemeType, 'navigation');
+  const { isMobile, isTablet } = useIsMobile();
+  const isTouch = useIsTouchDevice();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Use the custom hook for fetching news
   const { news, loading, error, refresh } = useNewsFeed({
@@ -67,13 +108,57 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
         timestamp: new Date()
       }];
 
-  // Calculate animation duration based on content length - slowed down by 50%
+  // Calculate animation duration based on content length and device type
   const getAnimationDuration = () => {
     const totalLength = newsItems.reduce((acc, item) => acc + item.title.length, 0);
-    const baseDuration = 78; // Slowed from 39s by 50% (39 * 2 = 78)
-    const adjustedDuration = Math.max(baseDuration, (totalLength / 10) * 1.3); // Also increased content-based duration
+    
+    // Base durations - 30% slower than before (multiplied by 1.3)
+    let baseDuration = 156; // Desktop: 156s (2.6 minutes, was 120s)
+    
+    if (isMobile) {
+      baseDuration = 234 * mobileSpeedFactor; // Mobile: 234s × 3 = 702s (11.7 minutes, was 540s)
+    } else if (isTablet) {
+      baseDuration = 195 * 1.5; // Tablet: 292.5s (4.875 minutes, was 225s)
+    }
+    
+    // Additional slowdown for longer content
+    const contentFactor = Math.max(1, totalLength / 500);
+    const adjustedDuration = baseDuration * contentFactor;
+    
     return `${adjustedDuration}s`;
   };
+
+  // Handle pause/play for mobile
+  const togglePause = useCallback(() => {
+    setIsPaused(prev => !prev);
+    setUserHasInteracted(true);
+  }, []);
+
+  // Auto-pause on mobile when user starts scrolling
+  useEffect(() => {
+    if (!isMobile || !enableMobileControls) return;
+
+    let scrollTimeout: NodeJS.Timeout;
+    const handleScroll = () => {
+      if (!userHasInteracted) {
+        setIsPaused(true);
+      }
+      
+      // Resume after user stops scrolling for 3 seconds
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        if (!userHasInteracted) {
+          setIsPaused(false);
+        }
+      }, 3000);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(scrollTimeout);
+    };
+  }, [isMobile, enableMobileControls, userHasInteracted]);
 
   // Check API key availability
   useEffect(() => {
@@ -84,6 +169,17 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
     }
   }, []);
 
+  // Touch-friendly click handler for mobile
+  const handleItemClick = useCallback((e: React.MouseEvent, url: string) => {
+    if (isTouch) {
+      e.preventDefault();
+      // Add a small delay for touch feedback
+      setTimeout(() => {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }, 100);
+    }
+  }, [isTouch]);
+
   if (!isVisible || newsItems.length === 0) {
     return null;
   }
@@ -92,10 +188,12 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
   if (loading && newsItems.length === 0) {
     return (
       <div className={`relative w-full overflow-hidden ${themeClasses.background}`}
-           style={{ height: '32px' }}>
+           style={{ height: isMobile ? '48px' : '32px' }}>
         <div className="flex items-center justify-center h-full">
           <Loader2 className="w-4 h-4 animate-spin mr-2" />
-          <span className="text-xs font-mono">Loading weather alerts...</span>
+          <span className={`text-xs font-mono ${isMobile ? 'text-sm' : ''}`}>
+            Loading weather alerts...
+          </span>
         </div>
       </div>
     );
@@ -103,13 +201,14 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
 
   // Get category icon
   const getCategoryIcon = (category: string) => {
+    const iconSize = isMobile ? 'w-4 h-4' : 'w-3 h-3';
     switch (category) {
       case 'breaking':
-        return <AlertTriangle className="w-3 h-3" />;
+        return <AlertTriangle className={iconSize} />;
       case 'weather':
-        return <Cloud className="w-3 h-3" />;
+        return <Cloud className={iconSize} />;
       default:
-        return <Globe className="w-3 h-3" />;
+        return <Globe className={iconSize} />;
     }
   };
 
@@ -125,18 +224,29 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
            'bg-blue-400 text-black';
   };
 
-  // Create continuous content string
+  // Create continuous content string with mobile optimizations
   const tickerContent = (
     <>
       {newsItems.map((item, index) => (
-        <span key={`${item.id}-${index}`} className="inline-flex items-center mx-4 whitespace-nowrap">
-          <span className={`inline-flex items-center px-1 py-0.5 rounded-sm text-xs font-bold mr-2 ${getCategoryColor(item.category, item.priority)}`}>
+        <span 
+          key={`${item.id}-${index}`} 
+          className={`inline-flex items-center mx-4 whitespace-nowrap ${
+            isMobile ? 'touch-manipulation' : ''
+          }`}
+          onClick={(e) => handleItemClick(e, item.url)}
+          style={{ cursor: isTouch ? 'pointer' : 'default' }}
+        >
+          <span className={`inline-flex items-center px-${isMobile ? '2' : '1'} py-${isMobile ? '1' : '0.5'} rounded-sm text-${isMobile ? 'sm' : 'xs'} font-bold mr-2 ${getCategoryColor(item.category, item.priority)}`}>
             {getCategoryIcon(item.category)}
-            <span className="ml-1">WEATHER</span>
+            <span className={`ml-${isMobile ? '2' : '1'}`}>WEATHER</span>
           </span>
-          <NewsTickerItem item={item} theme={theme as ThemeType} />
+          <div className={isMobile ? 'text-sm' : ''}>
+            <NewsTickerItem item={item} theme={theme as ThemeType} />
+          </div>
           {index < newsItems.length - 1 && (
-            <span className={`text-xs mx-2 opacity-50 ${themeClasses.text}`}>•</span>
+            <span className={`text-${isMobile ? 'sm' : 'xs'} mx-${isMobile ? '3' : '2'} opacity-50 ${themeClasses.text}`}>
+              •
+            </span>
           )}
         </span>
       ))}
@@ -144,18 +254,51 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
   );
 
   return (
-    <div className={`relative w-full overflow-hidden ${themeClasses.background}`}
-         style={{ height: '32px' }}>
-      <div className={styles.tickerWrapper}>
+    <div 
+      className={`relative w-full overflow-hidden ${themeClasses.background} ${
+        isMobile ? 'touch-manipulation' : ''
+      }`}
+      style={{ 
+        height: isMobile ? '48px' : '32px',
+        WebkitOverflowScrolling: 'touch' // Smooth scrolling on iOS
+      }}
+    >
+      {/* Mobile controls */}
+      {isMobile && enableMobileControls && (
+        <button
+          onClick={togglePause}
+          className={`absolute left-2 top-1/2 transform -translate-y-1/2 z-10 p-2 rounded ${themeClasses.background} ${themeClasses.border} opacity-80 hover:opacity-100 transition-opacity`}
+          aria-label={isPaused ? 'Play news ticker' : 'Pause news ticker'}
+        >
+          {isPaused ? (
+            <Play className="w-4 h-4" />
+          ) : (
+            <Pause className="w-4 h-4" />
+          )}
+        </button>
+      )}
+      
+      <div 
+        className={styles.tickerWrapper}
+        style={{ 
+          paddingLeft: isMobile && enableMobileControls ? '48px' : '0' 
+        }}
+      >
         <div 
-          className={styles.tickerScroll}
+          ref={scrollRef}
+          className={`${styles.tickerScroll} ${isPaused ? styles.paused : ''}`}
           style={{
-            animationDuration: getAnimationDuration()
+            animationDuration: getAnimationDuration(),
+            animationPlayState: isPaused ? 'paused' : 'running',
+            // Optimize for mobile rendering
+            transform: 'translateZ(0)',
+            backfaceVisibility: 'hidden',
+            perspective: 1000
           }}
         >
           {tickerContent}
-          {/* Add spacing before loop */}
-          <span className="inline-block" style={{ width: '100px' }}></span>
+          {/* Add more spacing before loop on mobile */}
+          <span className="inline-block" style={{ width: isMobile ? '200px' : '100px' }}></span>
           {tickerContent}
         </div>
       </div>
