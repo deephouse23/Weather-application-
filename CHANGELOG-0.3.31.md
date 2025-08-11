@@ -15,13 +15,13 @@ This update focuses on dramatically improving the mobile user experience for the
    - Touch device detection for optimized interactions
    - Responsive behavior based on screen size
 
-2. **Adaptive Animation Speed (62.5% Slower Total)**
-   - Desktop: 195 seconds (3.25 minutes) - was originally 120s
-   - Tablet: 366 seconds (6.1 minutes) - was originally 225s
-   - Mobile: 879 seconds (14.65 minutes) - was originally 540s
+2. **Adaptive Animation Speed (Desktop: 95% slower, Mobile: 62.5% slower)**
+   - Desktop: 234 seconds (3.9 minutes) - was originally 120s (95% slower)
+   - Tablet: 366 seconds (6.1 minutes) - was originally 225s (62.5% slower)
+   - Mobile: 879 seconds (14.65 minutes) - was originally 540s (62.5% slower)
    - Small mobile screens (<480px): 585 seconds (9.75 minutes) - was originally 360s
    - Touch devices: 488 seconds (8.13 minutes)
-   - All speeds reduced by 62.5% total for optimal readability
+   - Desktop specifically slowed by additional 20% for optimal readability
 
 3. **Mobile Controls**
    - Play/Pause button for mobile users
@@ -35,6 +35,23 @@ This update focuses on dramatically improving the mobile user experience for the
    - Increased ticker height on mobile (48px vs 32px desktop)
    - Better touch targets with proper spacing
    - Optimized padding and margins for mobile
+
+2. **Enhanced Typography (Desktop)**
+   - Inter font family for better readability
+   - JetBrains Mono for category labels
+   - Improved letter-spacing and line-height
+   - Optimized font rendering with antialiasing
+   - Text shadows for depth perception
+   - Animated underline on hover for links
+   - Better font-weight hierarchy (300-600)
+   - Kerning and ligature support
+
+3. **Visual Enhancements**
+   - Subtle hover animations on desktop
+   - Improved separator design with better spacing
+   - Category labels with box shadows
+   - Smooth transitions for interactive elements
+   - Better contrast in both light and dark modes
 
 2. **Performance Optimizations**
    - Hardware acceleration with CSS transforms
