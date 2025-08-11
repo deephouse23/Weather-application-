@@ -112,13 +112,13 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
   const getAnimationDuration = () => {
     const totalLength = newsItems.reduce((acc, item) => acc + item.title.length, 0);
     
-    // Base durations - 30% slower than before (multiplied by 1.3)
-    let baseDuration = 156; // Desktop: 156s (2.6 minutes, was 120s)
+    // Base durations - Desktop slowed by additional 20%
+    let baseDuration = 234; // Desktop: 234s (3.9 minutes, was 195s)
     
     if (isMobile) {
-      baseDuration = 234 * mobileSpeedFactor; // Mobile: 234s × 3 = 702s (11.7 minutes, was 540s)
+      baseDuration = 293 * mobileSpeedFactor; // Mobile: 293s × 3 = 879s (14.65 minutes, unchanged)
     } else if (isTablet) {
-      baseDuration = 195 * 1.5; // Tablet: 292.5s (4.875 minutes, was 225s)
+      baseDuration = 244 * 1.5; // Tablet: 366s (6.1 minutes, unchanged)
     }
     
     // Additional slowdown for longer content
@@ -224,7 +224,7 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
            'bg-blue-400 text-black';
   };
 
-  // Create continuous content string with mobile optimizations
+  // Create continuous content string with mobile optimizations and improved design
   const tickerContent = (
     <>
       {newsItems.map((item, index) => (
@@ -236,15 +236,15 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
           onClick={(e) => handleItemClick(e, item.url)}
           style={{ cursor: isTouch ? 'pointer' : 'default' }}
         >
-          <span className={`inline-flex items-center px-${isMobile ? '2' : '1'} py-${isMobile ? '1' : '0.5'} rounded-sm text-${isMobile ? 'sm' : 'xs'} font-bold mr-2 ${getCategoryColor(item.category, item.priority)}`}>
+          <span className={`inline-flex items-center ${styles.categoryLabel} px-${isMobile ? '2' : '1'} py-${isMobile ? '1' : '0.5'} rounded-sm text-${isMobile ? 'sm' : 'xs'} font-bold mr-2 ${getCategoryColor(item.category, item.priority)}`}>
             {getCategoryIcon(item.category)}
             <span className={`ml-${isMobile ? '2' : '1'}`}>WEATHER</span>
           </span>
-          <div className={isMobile ? 'text-sm' : ''}>
+          <div className={`${isMobile ? 'text-sm' : ''} ${!isMobile ? styles.newsLink : ''}`}>
             <NewsTickerItem item={item} theme={theme as ThemeType} />
           </div>
           {index < newsItems.length - 1 && (
-            <span className={`text-${isMobile ? 'sm' : 'xs'} mx-${isMobile ? '3' : '2'} opacity-50 ${themeClasses.text}`}>
+            <span className={`${styles.separator} text-${isMobile ? 'sm' : 'xs'} mx-${isMobile ? '3' : '2'} opacity-50 ${themeClasses.text}`}>
               •
             </span>
           )}
