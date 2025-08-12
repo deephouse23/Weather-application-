@@ -131,9 +131,9 @@ export function AirQualityDisplay({ aqi, theme, className }: AirQualityDisplayPr
         {getAQIRecommendation(aqi)}
       </p>
       
-      {/* Google AQI Legend */}
+      {/* EPA AQI Legend - Updated */}
       <div className={cn("text-xs border-t pt-2", styles.text, styles.border)}>
-        <p className="font-medium">Using Google Universal AQI • Higher = Better</p>
+        <p className="font-medium">EPA Air Quality Index • Lower = Better</p>
       </div>
     </div>
   )
