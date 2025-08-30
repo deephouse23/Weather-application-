@@ -50,9 +50,30 @@ function NewsContent() {
         <div className={`border-2 p-4 ${themeClasses.borderColor} ${themeClasses.background}`}>
           <h2 className={`text-lg font-bold font-mono mb-3 ${themeClasses.accentText}`}>WEATHER ALERTS</h2>
           <div className="space-y-2">
-            <div className={`text-sm font-mono ${themeClasses.text}`}>{`•`} Severe thunderstorm watch</div>
-            <div className={`text-sm font-mono ${themeClasses.text}`}>{`•`} Heat advisory in effect</div>
-            <div className={`text-sm font-mono ${themeClasses.text}`}>{`•`} Flash flood warning</div>
+            <a 
+              href="https://www.weather.gov/alerts"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`text-sm font-mono ${themeClasses.text} hover:${themeClasses.accentText} block transition-colors`}
+            >
+              {`•`} Severe thunderstorm watch
+            </a>
+            <a 
+              href="https://www.weather.gov/safety/heat"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`text-sm font-mono ${themeClasses.text} hover:${themeClasses.accentText} block transition-colors`}
+            >
+              {`•`} Heat advisory in effect
+            </a>
+            <a 
+              href="https://www.weather.gov/safety/flood"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`text-sm font-mono ${themeClasses.text} hover:${themeClasses.accentText} block transition-colors`}
+            >
+              {`•`} Flash flood warning
+            </a>
           </div>
         </div>
 
@@ -68,9 +89,30 @@ function NewsContent() {
         <div className={`border-2 p-4 ${themeClasses.borderColor} ${themeClasses.background}`}>
           <h2 className={`text-lg font-bold font-mono mb-3 ${themeClasses.accentText}`}>CLIMATE</h2>
           <div className="space-y-2">
-            <div className={`text-sm font-mono ${themeClasses.text}`}>{`•`} Temperature records</div>
-            <div className={`text-sm font-mono ${themeClasses.text}`}>{`•`} Seasonal forecasts</div>
-            <div className={`text-sm font-mono ${themeClasses.text}`}>{`•`} Research updates</div>
+            <a 
+              href="https://www.ncei.noaa.gov/access/monitoring/climate-at-a-glance/global/time-series"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`text-sm font-mono ${themeClasses.text} hover:${themeClasses.accentText} block transition-colors`}
+            >
+              {`•`} Temperature records
+            </a>
+            <a 
+              href="https://www.cpc.ncep.noaa.gov/products/predictions/long_range/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`text-sm font-mono ${themeClasses.text} hover:${themeClasses.accentText} block transition-colors`}
+            >
+              {`•`} Seasonal forecasts
+            </a>
+            <a 
+              href="https://climate.nasa.gov/news/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`text-sm font-mono ${themeClasses.text} hover:${themeClasses.accentText} block transition-colors`}
+            >
+              {`•`} Research updates
+            </a>
           </div>
         </div>
       </div>
