@@ -1,10 +1,8 @@
 "use client"
 
-import { Suspense, useState, useEffect } from "react"
 import PageWrapper from "@/components/page-wrapper"
 import { useTheme } from "@/components/theme-provider"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
-import NewsSection from "@/components/NewsSection"
 
 export default function NewsPage() {
   const { theme } = useTheme()
@@ -25,13 +23,7 @@ export default function NewsPage() {
           </div>
 
           {/* News Content */}
-          <Suspense fallback={
-            <div className={`text-center py-8 ${themeClasses.text}`}>
-              <div className="animate-pulse">LOADING NEWS...</div>
-            </div>
-          }>
-            <NewsContent />
-          </Suspense>
+          <NewsContent />
         </div>
       </div>
     </PageWrapper>
@@ -116,10 +108,61 @@ function NewsContent() {
         </div>
       </div>
 
-      {/* Latest Headlines using NewsSection component */}
+      {/* Latest Headlines - Static for reliable navigation */}
       <div className={`border-2 p-6 ${themeClasses.borderColor} ${themeClasses.background}`}>
         <h2 className={`text-xl font-bold font-mono mb-4 ${themeClasses.accentText}`}>LATEST HEADLINES</h2>
-        <NewsSection />
+        <div className="space-y-3">
+          <a
+            href="https://www.weather.gov/alerts"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`block text-sm font-mono ${themeClasses.text} hover:${themeClasses.accentText} transition-colors group`}
+          >
+            <span className="inline-block mr-2">{`>`}</span>
+            <span className="group-hover:underline">Weather alerts and warnings from National Weather Service</span>
+            <span className={`ml-2 text-xs opacity-60`}>(NOAA)</span>
+          </a>
+          <a
+            href="https://www.nhc.noaa.gov/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`block text-sm font-mono ${themeClasses.text} hover:${themeClasses.accentText} transition-colors group`}
+          >
+            <span className="inline-block mr-2">{`>`}</span>
+            <span className="group-hover:underline">Hurricane and tropical storm updates</span>
+            <span className={`ml-2 text-xs opacity-60`}>(National Hurricane Center)</span>
+          </a>
+          <a
+            href="https://www.spc.noaa.gov/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`block text-sm font-mono ${themeClasses.text} hover:${themeClasses.accentText} transition-colors group`}
+          >
+            <span className="inline-block mr-2">{`>`}</span>
+            <span className="group-hover:underline">Severe weather forecasts and outlooks</span>
+            <span className={`ml-2 text-xs opacity-60`}>(Storm Prediction Center)</span>
+          </a>
+          <a
+            href="https://www.weather.com/news"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`block text-sm font-mono ${themeClasses.text} hover:${themeClasses.accentText} transition-colors group`}
+          >
+            <span className="inline-block mr-2">{`>`}</span>
+            <span className="group-hover:underline">Latest weather news and analysis</span>
+            <span className={`ml-2 text-xs opacity-60`}>(Weather.com)</span>
+          </a>
+          <a
+            href="https://climate.nasa.gov/news/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`block text-sm font-mono ${themeClasses.text} hover:${themeClasses.accentText} transition-colors group`}
+          >
+            <span className="inline-block mr-2">{`>`}</span>
+            <span className="group-hover:underline">Climate science updates and research</span>
+            <span className={`ml-2 text-xs opacity-60`}>(NASA Climate)</span>
+          </a>
+        </div>
       </div>
 
       {/* News Footer */}
