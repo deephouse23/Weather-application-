@@ -18,16 +18,10 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, Cloud, Zap, BookOpen, Gamepad2, Info, Home, Thermometer } from "lucide-react"
+import { Menu, X, Cloud, Zap, BookOpen, Gamepad2, Info, Home, Newspaper, Thermometer } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
 import NewsTicker from "@/components/NewsTicker"
-
-interface NavigationProps {
-  weatherLocation?: string;
-  weatherTemperature?: number;
-  weatherUnit?: string;
-}
 
 interface NavigationProps {
   weatherLocation?: string;
@@ -126,6 +120,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
     { href: "/extremes", label: "EXTREMES", icon: Thermometer },
     { href: "/cloud-types", label: "CLOUD TYPES", icon: Cloud },
     { href: "/weather-systems", label: "WEATHER SYSTEMS", icon: Zap },
+    { href: "/news", label: "NEWS", icon: Newspaper },
     { href: "/fun-facts", label: "16-BIT TAKES", icon: BookOpen },
     { href: "/games", label: "GAMES", icon: Gamepad2 },
     { href: "/about", label: "ABOUT", icon: Info }
