@@ -1,10 +1,10 @@
 "use client"
 
-import { Suspense } from "react"
+import { Suspense, useState, useEffect } from "react"
 import PageWrapper from "@/components/page-wrapper"
 import { useTheme } from "@/components/theme-provider"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
-import { useNewsFeed } from "@/lib/hooks/useNewsFeed"
+import NewsSection from "@/components/NewsSection"
 
 export default function NewsPage() {
   const { theme } = useTheme()
@@ -25,13 +25,11 @@ export default function NewsPage() {
           </div>
 
           {/* News Content */}
-          <Suspense 
-            fallback={
-              <div className={`text-center py-8 ${themeClasses.text}`}>
-                <div className="animate-pulse">LOADING NEWS...</div>
-              </div>
-            }
-          >
+          <Suspense fallback={
+            <div className={`text-center py-8 ${themeClasses.text}`}>
+              <div className="animate-pulse">LOADING NEWS...</div>
+            </div>
+          }>
             <NewsContent />
           </Suspense>
         </div>
@@ -43,15 +41,6 @@ export default function NewsPage() {
 function NewsContent() {
   const { theme } = useTheme()
   const themeClasses = getComponentStyles(theme as ThemeType, 'navigation')
-  
-  // Fetch real news data
-  const { news, loading, error, refresh } = useNewsFeed({
-    categories: ['weather'],
-    maxItems: 10,
-    priority: 'all',
-    autoRefresh: 300000,
-    enabled: true
-  })
 
   return (
     <div className="space-y-6">
@@ -127,48 +116,10 @@ function NewsContent() {
         </div>
       </div>
 
-      {/* Main News Feed */}
+      {/* Latest Headlines using NewsSection component */}
       <div className={`border-2 p-6 ${themeClasses.borderColor} ${themeClasses.background}`}>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className={`text-xl font-bold font-mono ${themeClasses.accentText}`}>LATEST HEADLINES</h2>
-          <button
-            onClick={refresh}
-            disabled={loading}
-            className={`text-xs font-mono px-2 py-1 border ${themeClasses.borderColor} ${themeClasses.text} hover:${themeClasses.accentText} transition-colors`}
-          >
-            {loading ? 'LOADING...' : 'REFRESH'}
-          </button>
-        </div>
-        
-        <div className="space-y-3">
-          {loading && news.length === 0 ? (
-            <div className={`text-center py-4 ${themeClasses.text}`}>
-              Loading weather news...
-            </div>
-          ) : error ? (
-            <div className={`text-center py-4 ${themeClasses.text} opacity-60`}>
-              Unable to load news. Please try again later.
-            </div>
-          ) : news.length === 0 ? (
-            <div className={`text-center py-4 ${themeClasses.text} opacity-60`}>
-              No weather news available at this time.
-            </div>
-          ) : (
-            news.map((item) => (
-              <a
-                key={item.id}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`block text-sm font-mono ${themeClasses.text} hover:${themeClasses.accentText} transition-colors group`}
-              >
-                <span className="inline-block mr-2">{`>`}</span>
-                <span className="group-hover:underline">{item.title}</span>
-                <span className={`ml-2 text-xs opacity-60`}>({item.source})</span>
-              </a>
-            ))
-          )}
-        </div>
+        <h2 className={`text-xl font-bold font-mono mb-4 ${themeClasses.accentText}`}>LATEST HEADLINES</h2>
+        <NewsSection />
       </div>
 
       {/* News Footer */}
