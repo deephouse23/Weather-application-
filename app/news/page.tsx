@@ -4,6 +4,7 @@ import { Suspense } from "react"
 import PageWrapper from "@/components/page-wrapper"
 import { useTheme } from "@/components/theme-provider"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
+import { useNewsFeed } from "@/lib/hooks/useNewsFeed"
 
 export default function NewsPage() {
   const { theme } = useTheme()
@@ -42,6 +43,15 @@ export default function NewsPage() {
 function NewsContent() {
   const { theme } = useTheme()
   const themeClasses = getComponentStyles(theme as ThemeType, 'navigation')
+  
+  // Fetch real news data
+  const { news, loading, error, refresh } = useNewsFeed({
+    categories: ['weather'],
+    maxItems: 10,
+    priority: 'all',
+    autoRefresh: 300000,
+    enabled: true
+  })
 
   return (
     <div className="space-y-6">
@@ -119,23 +129,45 @@ function NewsContent() {
 
       {/* Main News Feed */}
       <div className={`border-2 p-6 ${themeClasses.borderColor} ${themeClasses.background}`}>
-        <h2 className={`text-xl font-bold font-mono mb-4 ${themeClasses.accentText}`}>LATEST HEADLINES</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className={`text-xl font-bold font-mono ${themeClasses.accentText}`}>LATEST HEADLINES</h2>
+          <button
+            onClick={refresh}
+            disabled={loading}
+            className={`text-xs font-mono px-2 py-1 border ${themeClasses.borderColor} ${themeClasses.text} hover:${themeClasses.accentText} transition-colors`}
+          >
+            {loading ? 'LOADING...' : 'REFRESH'}
+          </button>
+        </div>
+        
         <div className="space-y-3">
-          <div className={`text-sm font-mono ${themeClasses.text} hover:${themeClasses.accentText} cursor-pointer transition-colors`}>
-            {`>`} Record-breaking heat wave sweeps across southwestern United States
-          </div>
-          <div className={`text-sm font-mono ${themeClasses.text} hover:${themeClasses.accentText} cursor-pointer transition-colors`}>
-            {`>`} Hurricane season outlook: Above-normal activity predicted
-          </div>
-          <div className={`text-sm font-mono ${themeClasses.text} hover:${themeClasses.accentText} cursor-pointer transition-colors`}>
-            {`>`} New radar technology improves tornado detection accuracy
-          </div>
-          <div className={`text-sm font-mono ${themeClasses.text} hover:${themeClasses.accentText} cursor-pointer transition-colors`}>
-            {`>`} Climate research reveals changing precipitation patterns
-          </div>
-          <div className={`text-sm font-mono ${themeClasses.text} hover:${themeClasses.accentText} cursor-pointer transition-colors`}>
-            {`>`} Air quality improvements noted in major metropolitan areas
-          </div>
+          {loading && news.length === 0 ? (
+            <div className={`text-center py-4 ${themeClasses.text}`}>
+              Loading weather news...
+            </div>
+          ) : error ? (
+            <div className={`text-center py-4 ${themeClasses.text} opacity-60`}>
+              Unable to load news. Please try again later.
+            </div>
+          ) : news.length === 0 ? (
+            <div className={`text-center py-4 ${themeClasses.text} opacity-60`}>
+              No weather news available at this time.
+            </div>
+          ) : (
+            news.map((item) => (
+              <a
+                key={item.id}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`block text-sm font-mono ${themeClasses.text} hover:${themeClasses.accentText} transition-colors group`}
+              >
+                <span className="inline-block mr-2">{`>`}</span>
+                <span className="group-hover:underline">{item.title}</span>
+                <span className={`ml-2 text-xs opacity-60`}>({item.source})</span>
+              </a>
+            ))
+          )}
         </div>
       </div>
 

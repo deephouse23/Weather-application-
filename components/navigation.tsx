@@ -21,7 +21,6 @@ import { usePathname } from "next/navigation"
 import { Menu, X, Cloud, Zap, BookOpen, Gamepad2, Info, Home, Newspaper, Thermometer } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
-import NewsTicker from "@/components/NewsTicker"
 
 interface NavigationProps {
   weatherLocation?: string;
@@ -239,14 +238,6 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
         </div>
       )}
       </nav>
-      
-      {/* News Ticker - Below Navigation */}
-      <NewsTicker 
-        categories={['weather']}  // Only weather-related news
-        autoRefresh={300000} // 5 minutes
-        maxItems={25} // Show more weather news
-        priority="all"
-      />
     </>
   )
 } 

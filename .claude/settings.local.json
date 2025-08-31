@@ -28,7 +28,16 @@
       "Bash(node:*)",
       "Bash(vercel:*)",
       "Bash(npx tsc:*)",
-      "Bash(gh release create:*)"
+      "Bash(gh release create:*)",
+      "Bash(git branch:*)",
+      "Bash(ls:*)",
+      "Bash(npx:*)",
+      "Bash(npm search:*)",
+      "Bash(sed:*)",
+      "Bash(perl:*)",
+      "Bash(gh pr view:*)",
+      "Bash(git fetch:*)",
+      "Bash(git rebase:*)"
     ],
     "deny": []
   }
