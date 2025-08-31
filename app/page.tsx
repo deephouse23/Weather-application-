@@ -33,6 +33,7 @@ import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from "@/c
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/responsive-container"
 import { ErrorBoundary, SafeRender } from "@/components/error-boundary"
 import { useLocationContext } from "@/components/location-context"
+import LazyWeatherMap from '@/components/lazy-weather-map'
 
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
@@ -908,7 +909,7 @@ function WeatherApp() {
                 
                 return (
                   <>
-                    {/* Original 5-Day Forecast */}
+                    {/* 5-Day Forecast - Moved Above Map */}
                     <LazyForecast 
                       forecast={(weather?.forecast || []).map((day, index) => ({
                         ...day,
@@ -919,7 +920,7 @@ function WeatherApp() {
                       selectedDay={selectedDay}
                     />
 
-                    {/* Expandable Details Section Below */}
+                    {/* Expandable Details Section */}
                     <LazyForecastDetails 
                       forecast={(weather?.forecast || []).map((day, index) => ({
                         ...day,
@@ -939,10 +940,26 @@ function WeatherApp() {
                   </>
                 );
               })()}
+
+              {/* Weather Radar Map - Moved Below Forecast */}
+              <div className="mt-6">
+                <h2 className={`text-xl font-semibold mb-4 text-center ${themeClasses.headerText} ${themeClasses.glow}`}>
+                  Weather Radar & Map
+                </h2>
+                <div className="h-96 rounded-lg overflow-hidden">
+                  <LazyWeatherMap 
+                    latitude={weather?.coordinates?.lat}
+                    longitude={weather?.coordinates?.lon}
+                    locationName={weather?.location}
+                    theme={theme || 'dark'}
+                  />
+                </div>
+              </div>
               </div>
             </ErrorBoundary>
           )}
           
+
           {/* SEO City Links Section with Random Display */}
           <RandomCityLinks theme={theme || 'dark'} />
         </ResponsiveContainer>

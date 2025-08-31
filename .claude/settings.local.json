@@ -37,7 +37,13 @@
       "Bash(perl:*)",
       "Bash(gh pr view:*)",
       "Bash(git fetch:*)",
-      "Bash(git rebase:*)"
+      "Bash(git rebase:*)",
+      "Bash(rg:*)",
+      "Bash(touch:*)",
+      "Bash(timeout 5 npm run dev)",
+      "Bash(taskkill:*)",
+      "WebFetch(domain:openweathermap.org)",
+      "Bash(curl:*)"
     ],
     "deny": []
   }

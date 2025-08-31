@@ -28,6 +28,10 @@ export interface WeatherData {
   pressure: string;
   sunrise: string;
   sunset: string;
+  coordinates?: {
+    lat: number;
+    lon: number;
+  };
   forecast: Array<{
     day: string;
     highTemp: number;
