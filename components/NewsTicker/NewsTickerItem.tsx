@@ -23,14 +23,15 @@ const NewsTickerItem: React.FC<NewsTickerItemProps> = ({ item, theme }) => {
   const themeClasses = getComponentStyles(theme, 'navigation');
   
   const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    // In Phase 2, this will open the actual news article
-    // For now, just log the click
-    console.log('News item clicked:', item);
-    
-    if (item.url && item.url !== '#') {
-      window.open(item.url, '_blank', 'noopener,noreferrer');
+    // Don't prevent default for valid URLs - let the link work normally
+    if (!item.url || item.url === '#') {
+      e.preventDefault();
+      console.log('News item clicked (no URL):', item);
+      return;
     }
+    
+    // For valid URLs, let the browser handle the navigation normally
+    console.log('News item clicked:', item);
   };
 
   const formatTime = (date: Date) => {
