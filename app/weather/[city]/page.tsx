@@ -183,7 +183,7 @@ export default function CityWeatherPage({ params }: PageParams) {
   )
 }
 
-// Force dynamic rendering to prevent build-time API calls
+// Force dynamic rendering to prevent build-time API calls  
 export const dynamic = 'force-dynamic'
 
 // City data for SEO and functionality
