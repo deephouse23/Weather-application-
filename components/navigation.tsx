@@ -190,7 +190,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
             onMouseLeave={() => setIsEducationDropdownOpen(false)}
           >
             <button
-              className={`flex items-center justify-center space-x-2 px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] h-[32px] ${
+              className={`flex items-center justify-center space-x-2 px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[120px] h-[32px] ${
                 isEducationActive 
                   ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black ${themeClasses.glow}`
                   : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`
@@ -311,7 +311,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
             {/* Education Dropdown Toggle */}
             <button
               onClick={() => setIsEducationDropdownOpen(!isEducationDropdownOpen)}
-              className={`flex items-center justify-between space-x-3 p-3 border-2 text-sm font-mono font-bold uppercase tracking-wider w-full h-[48px] ${
+              className={`flex items-center justify-between p-3 border-2 text-sm font-mono font-bold uppercase tracking-wider w-full h-[48px] ${
                 isEducationActive 
                   ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black`
                   : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text}`
