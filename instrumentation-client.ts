@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
-  dsn: "https://91a13cb4875d11f08eaeb65aedfd09e2@o4508684533522432.ingest.us.sentry.io/4509945618038784",
+  dsn: process.env.SENTRY_DSN,
   
   // Adjust trace sample rate for production
   // 0.1 means 10% of transactions will be captured
@@ -21,3 +21,6 @@ Sentry.init({
   // `release` value here - use the environment variable `SENTRY_RELEASE`, so
   // that it will also get attached to your source maps
 });
+
+// Export required for Next.js navigation tracking
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
