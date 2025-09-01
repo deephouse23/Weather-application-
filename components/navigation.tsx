@@ -171,7 +171,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center justify-center space-x-2 px-3 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] h-[32px] ${
+                className={`flex items-center justify-center space-x-2 px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] ${
                   isActive 
                     ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black ${themeClasses.glow}`
                     : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`
@@ -190,7 +190,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
             onMouseLeave={() => setIsEducationDropdownOpen(false)}
           >
             <button
-              className={`flex items-center justify-center space-x-2 px-3 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] h-[32px] ${
+              className={`flex items-center justify-center space-x-2 px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] ${
                 isEducationActive 
                   ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black ${themeClasses.glow}`
                   : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`
@@ -234,7 +234,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center justify-center space-x-2 px-3 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] h-[32px] ${
+                className={`flex items-center justify-center space-x-2 px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] ${
                   isActive 
                     ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black ${themeClasses.glow}`
                     : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`
