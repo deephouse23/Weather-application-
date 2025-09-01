@@ -45,7 +45,24 @@
       "WebFetch(domain:openweathermap.org)",
       "Bash(curl:*)",
       "Bash(echo $NODE_ENV)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(timeout 30 npm run build)",
+      "Bash(if exist .next rmdir /s /q .next)",
+      "Bash(set NODE_ENV=production)",
+      "Bash(unset NODE_ENV)",
+      "Bash(cat:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(diff:*)",
+      "Bash(fc \"app\\api\\news\\route.ts\" \"app\\api\\news\\route-v0.3.32.ts\")",
+      "Bash(del \"CUsersjustiOneDriveDesktopWeather-application--maincomponentsweather-map-animated.tsx\")",
+      "Bash(del tsconfig.tsbuildinfo)",
+      "Bash(cp:*)",
+      "Bash(NODE_ENV=production npm run build)",
+      "Bash(SENTRY_AUTH_TOKEN=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 npx @sentry/wizard@latest -i nextjs --saas --org 16bitweather --project javascript-nextjs)",
+      "Bash(export NODE_ENV=production)",
+      "Bash(env)",
+      "Bash(sentry-cli:*)",
+      "Bash(echo $SENTRY_DSN)"
     ],
     "deny": []
   }
