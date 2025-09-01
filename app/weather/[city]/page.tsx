@@ -12,11 +12,178 @@
  * Report issues: https://github.com/deephouse23/Weather-application-/issues
  */
 
+/**
+ * 16-Bit Weather Platform - BETA v0.3.2
+ * 
+ * Copyright (C) 2025 16-Bit Weather
+ * Licensed under Fair Source License, Version 0.9
+ * 
+ * Use Limitation: 5 users
+ * See LICENSE file for full terms
+ * 
+ * BETA SOFTWARE NOTICE:
+ * This software is in active development. Features may change.
+ * Report issues: https://github.com/deephouse23/Weather-application-/issues
+ */
+
 import { Suspense } from 'react'
 import CityWeatherClient from './client'
-import { EnhancedMetaTags } from '@/components/enhanced-meta-tags'
+import { cityData } from '@/lib/city-metadata';
+import { Metadata } from 'next';
 
-// Force dynamic rendering to prevent build-time API calls
+// Generate static pages for better SEO
+export async function generateStaticParams() {
+  return Object.keys(cityData).map((citySlug) => ({
+    city: citySlug,
+  }))
+}
+
+// Generate metadata for each city page
+export async function generateMetadata({ params }: { params: { city: string } }): Promise<Metadata> {
+  const citySlug = params.city
+  const city = cityData[citySlug]
+
+  if (!city) {
+    return {
+      title: 'City Not Found - 16 Bit Weather',
+      description: 'The requested city page does not exist.',
+    }
+  }
+
+  const pageTitle = `${city.name}, ${city.state} Weather Forecast - 16 Bit Weather`;
+  const description = `Get the latest real-time weather forecast for ${city.name}, ${city.state}. See temperature, precipitation, wind, and more with a retro terminal aesthetic.`;
+
+  return {
+    title: pageTitle,
+    description: description,
+    keywords: `${city.name} weather, ${city.state} weather forecast, ${city.name} temperature, ${city.name} climate, 16-bit weather, retro weather app`,
+    openGraph: {
+      title: pageTitle,
+      description: description,
+      url: `https://www.16bitweather.co/weather/${citySlug}`,
+      siteName: '16 Bit Weather',
+      images: [
+        {
+          url: '/og-image.png',
+          width: 1200,
+          height: 630,
+          alt: `${city.name} Weather - 16 Bit Weather Terminal`,
+        },
+      ],
+      locale: 'en_US',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: pageTitle,
+      description: description,
+      images: ['/og-image.png'],
+    },
+    alternates: {
+      canonical: `https://www.16bitweather.co/weather/${citySlug}`,
+    },
+  }
+}
+
+interface PageParams {
+  params: {
+    city: string
+  }
+}
+
+export default function CityWeatherPage({ params }: PageParams) {
+  const citySlug = params.city
+  const city = cityData[citySlug]
+
+  // If city doesn't exist in our predefined list, still render the client component
+  // This allows for dynamic city searches while maintaining SEO for major cities
+  const cityInfo = city || {
+    name: formatCityName(citySlug),
+    state: '',
+    searchTerm: citySlugToSearchTerm(citySlug),
+    title: `${formatCityName(citySlug)} Weather Forecast - 16 Bit Weather`,
+    description: `Current weather conditions and 5-day forecast for ${formatCityName(citySlug)}. Real-time weather data with retro terminal aesthetics.`,
+    content: {
+      intro: `Weather information for ${formatCityName(citySlug)}.`,
+      climate: 'Real-time weather data and forecasts available.',
+      patterns: 'Check current conditions and extended forecasts.'
+    }
+  }
+  
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: cityInfo.title,
+    description: cityInfo.description,
+    url: `https://www.16bitweather.co/weather/${citySlug}`,
+    about: {
+      '@type': 'Place',
+      name: `${cityInfo.name}, ${cityInfo.state || ''}`,
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: cityInfo.name,
+        addressRegion: cityInfo.state || undefined,
+        addressCountry: 'US'
+      }
+    },
+    mainEntity: {
+      '@type': 'WeatherForecast',
+      location: {
+        '@type': 'Place',
+        name: `${cityInfo.name}, ${cityInfo.state || ''}`
+      }
+    },
+    breadcrumb: {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: 'https://www.16bitweather.co'
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Weather',
+          item: 'https://www.16bitweather.co/weather'
+        },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: `${cityInfo.name}, ${cityInfo.state || ''}`,
+          item: `https://www.16bitweather.co/weather/${citySlug}`
+        }
+      ]
+    }
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <Suspense fallback={
+        <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black">
+          <div className="container mx-auto px-4 py-8">
+            <div className="text-center">
+              <div className="text-white text-center py-8">Loading weather data...</div>
+            </div>
+          </div>
+        </div>
+      }>
+        <CityWeatherClient 
+          city={cityInfo} 
+          citySlug={citySlug} 
+          isPredefinedCity={!!city}
+        />
+      </Suspense>
+    </>
+  )
+}
+
+// Force dynamic rendering to prevent build-time API calls  
 export const dynamic = 'force-dynamic'
 
 // City data for SEO and functionality
@@ -152,186 +319,4 @@ const cityData: { [key: string]: {
       patterns: 'Austin\'s weather features long, hot summers and short, mild winters. The city experiences severe thunderstorms, flash flooding, and occasional tornadoes. Spring brings wildflower blooms and variable weather, while fall offers some of the year\'s most pleasant conditions.'
     }
   }
-}
-
-// Generate static pages for better SEO
-export async function generateStaticParams() {
-  return Object.keys(cityData).map((citySlug) => ({
-    city: citySlug,
-  }))
-}
-
-// Generate metadata for each city page
-export async function generateMetadata({ params }: { params: { city: string } }) {
-  const citySlug = params.city
-  const city = cityData[citySlug]
-
-  if (!city) {
-    return {
-      title: 'City Not Found - 16 Bit Weather',
-      description: 'The requested city page does not exist.',
-    }
-  }
-
-  return {
-    title: city.title,
-    description: city.description,
-    keywords: `${city.name} weather, ${city.state} weather forecast, ${city.name} temperature, ${city.name} climate, 16-bit weather, retro weather app`,
-    openGraph: {
-      title: city.title,
-      description: city.description,
-      url: `https://www.16bitweather.co/weather/${citySlug}`,
-      siteName: '16 Bit Weather',
-      images: [
-        {
-          url: '/og-image.png',
-          width: 1200,
-          height: 630,
-          alt: `${city.name} Weather - 16 Bit Weather Terminal`,
-        },
-      ],
-      locale: 'en_US',
-      type: 'website',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: city.title,
-      description: city.description,
-      images: ['/og-image.png'],
-    },
-    alternates: {
-      canonical: `https://www.16bitweather.co/weather/${citySlug}`,
-    },
-  }
-}
-
-interface PageParams {
-  params: {
-    city: string
-  }
-}
-
-export default function CityWeatherPage({ params }: PageParams) {
-  const citySlug = params.city
-  const city = cityData[citySlug]
-
-  // If city doesn't exist in our predefined list, still render the client component
-  // This allows for dynamic city searches while maintaining SEO for major cities
-  const cityInfo = city || {
-    name: formatCityName(citySlug),
-    state: '',
-    searchTerm: citySlugToSearchTerm(citySlug),
-    title: `${formatCityName(citySlug)} Weather Forecast - 16 Bit Weather`,
-    description: `Current weather conditions and 5-day forecast for ${formatCityName(citySlug)}. Real-time weather data with retro terminal aesthetics.`,
-    content: {
-      intro: `Weather information for ${formatCityName(citySlug)}.`,
-      climate: 'Real-time weather data and forecasts available.',
-      patterns: 'Check current conditions and extended forecasts.'
-    }
-  }
-
-  return (
-    <>
-      {/* Enhanced SEO Head for predefined cities */}
-      {city && (
-        <head>
-          <EnhancedMetaTags
-            title={city.title}
-            description={city.description}
-            url={`https://www.16bitweather.co/weather/${citySlug}`}
-            cityName={city.name}
-            cityState={city.state}
-            type="website"
-          />
-          
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
-                "@context": "https://schema.org",
-                "@type": "WebPage",
-                "name": city.title,
-                "description": city.description,
-                "url": `https://www.16bitweather.co/weather/${citySlug}`,
-                "about": {
-                  "@type": "Place",
-                  "name": `${city.name}, ${city.state}`,
-                  "address": {
-                    "@type": "PostalAddress",
-                    "addressLocality": city.name,
-                    "addressRegion": city.state,
-                    "addressCountry": "US"
-                  }
-                },
-                "mainEntity": {
-                  "@type": "WeatherForecast",
-                  "location": {
-                    "@type": "Place",
-                    "name": `${city.name}, ${city.state}`
-                  }
-                },
-                "breadcrumb": {
-                  "@type": "BreadcrumbList",
-                  "itemListElement": [
-                    {
-                      "@type": "ListItem",
-                      "position": 1,
-                      "name": "Home",
-                      "item": "https://www.16bitweather.co"
-                    },
-                    {
-                      "@type": "ListItem",
-                      "position": 2,
-                      "name": "Weather",
-                      "item": "https://www.16bitweather.co/weather"
-                    },
-                    {
-                      "@type": "ListItem",
-                      "position": 3,
-                      "name": `${city.name}, ${city.state}`,
-                      "item": `https://www.16bitweather.co/weather/${citySlug}`
-                    }
-                  ]
-                }
-              })
-            }}
-          />
-        </head>
-      )}
-
-      <Suspense fallback={
-        <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black">
-          <div className="container mx-auto px-4 py-8">
-            <div className="text-center">
-              <div className="text-white text-center py-8">Loading weather data...</div>
-            </div>
-          </div>
-        </div>
-      }>
-        <CityWeatherClient 
-          city={cityInfo} 
-          citySlug={citySlug} 
-          isPredefinedCity={!!city}
-        />
-      </Suspense>
-    </>
-  )
-}
-
-// Helper functions for dynamic cities
-function formatCityName(citySlug: string): string {
-  return citySlug
-    .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-}
-
-function citySlugToSearchTerm(citySlug: string): string {
-  const parts = citySlug.split('-')
-  if (parts.length >= 2) {
-    const state = parts[parts.length - 1].toUpperCase()
-    const city = parts.slice(0, -1).join(' ')
-    return `${city}, ${state}`
-  }
-  return formatCityName(citySlug)
 }

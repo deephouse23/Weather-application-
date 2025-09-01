@@ -1,8 +1,8 @@
-# 🌟 16-Bit Weather v0.3.2 - BETA
+# 16-Bit Weather v0.4.5 - BETA
 
 [![License: Fair Source](https://img.shields.io/badge/License-Fair%20Source%200.9-yellow)](LICENSE)
 [![Beta Version](https://img.shields.io/badge/Status-BETA-orange)](https://github.com/deephouse23/Weather-application-/releases)
-[![Version](https://img.shields.io/badge/Version-0.3.2--beta-blue)](https://github.com/deephouse23/Weather-application-/releases)
+[![Version](https://img.shields.io/badge/Version-0.4.5--beta-blue)](https://github.com/deephouse23/Weather-application-/releases)
 
 **Experience weather data like it's 1985!**
 
@@ -293,7 +293,30 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-## 🚀 Version 0.3.2 Highlights - Planet Extremes Feature 🌡️
+## Version 0.4.5 Highlights - Animated Weather Radar Map
+
+### NEW: Interactive Weather Radar Animation
+
+Experience real-time precipitation tracking with our new animated weather radar system.
+
+#### Features:
+- **Animated Weather Radar Map**: Interactive map with timeline controls for precipitation visualization
+- **Timeline Navigation**: Current and forecast precipitation data (Now, +1h, +2h, +3h, +4h)
+- **Play/Pause Animation**: Cycle through precipitation timeframes automatically
+- **Radar Controls**: Skip to beginning/end, opacity slider, and timeline clicking
+- **Enhanced Layout**: 5-day forecast repositioned above weather radar for better user flow
+- **Theme Integration**: Full support for dark, miami, and tron themes with animated controls
+- **Mobile Optimized**: Responsive design with touch-friendly controls
+
+#### Technical Improvements:
+- **Fixed Precipitation API**: Resolved radar tile loading issues with proper API key handling
+- **Enhanced Error Handling**: Graceful fallbacks for API limitations and network issues
+- **Performance Optimized**: Efficient tile caching and smooth animation transitions
+- **Free Plan Compatible**: Works with OpenWeatherMap free tier for current precipitation data
+
+---
+
+## Version 0.3.2 Highlights - Planet Extremes Feature
 
 ### 🌍 **NEW: Global Temperature Extremes Tracker**
 
@@ -446,7 +469,7 @@ For the full license terms, see the [LICENSE](LICENSE) file.
 
 ### 🚧 Beta Status
 
-This software is currently in **BETA** (v0.3.2). This means:
+This software is currently in **BETA** (v0.4.5). This means:
 - Features may change without notice
 - Bugs and issues are expected  
 - API interfaces may be modified

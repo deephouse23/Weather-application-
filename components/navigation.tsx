@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 /**
  * 16-Bit Weather Platform - BETA v0.3.2
@@ -18,7 +18,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, Cloud, Zap, BookOpen, Gamepad2, Info, Home, Newspaper, Thermometer } from "lucide-react"
+import { Menu, X, Cloud, Zap, BookOpen, Gamepad2, Info, Home, Newspaper, Thermometer, Map } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
 
@@ -116,6 +116,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
 
   const navItems = [
     { href: "/", label: "HOME", icon: Home },
+    { href: "/map", label: "MAP", icon: Map },
     { href: "/extremes", label: "EXTREMES", icon: Thermometer },
     { href: "/cloud-types", label: "CLOUD TYPES", icon: Cloud },
     { href: "/weather-systems", label: "WEATHER SYSTEMS", icon: Zap },
@@ -240,4 +241,4 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
       </nav>
     </>
   )
-} 
+}

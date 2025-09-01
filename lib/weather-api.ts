@@ -970,6 +970,7 @@ export const fetchWeatherData = async (locationInput: string): Promise<WeatherDa
       aqi: airQualityData.aqi,
       aqiCategory: airQualityData.category,
       pollen: pollenData,
+      coordinates: { lat, lon }
     };
 
     console.log('Final weather data:', weatherData);
@@ -1076,6 +1077,7 @@ export const fetchWeatherByLocation = async (coords: string): Promise<WeatherDat
       aqi: airQualityData.aqi,
       aqiCategory: airQualityData.category,
       pollen: pollenData,
+      coordinates: { lat: latitude, lon: longitude }
     }
 
     console.log('Final weather data:', weatherData)
