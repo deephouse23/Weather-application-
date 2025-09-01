@@ -19,3 +19,12 @@ components/api-test.tsx
 # git filter-branch artifacts
 .git-rewrite/
 .vercel
+
+# Build artifacts
+tsconfig.tsbuildinfo
+playwright-report/
+test-results/
+results/
+
+# Documentation archives
+docs/archive/
