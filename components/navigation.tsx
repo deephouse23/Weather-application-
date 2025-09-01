@@ -190,15 +190,14 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
             onMouseLeave={() => setIsEducationDropdownOpen(false)}
           >
             <button
-              className={`inline-flex items-center justify-center gap-0.5 px-3 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] h-[32px] ${
+              className={`flex items-center justify-center space-x-2 px-3 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] h-[32px] ${
                 isEducationActive 
                   ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black ${themeClasses.glow}`
                   : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`
               }`}
             >
-              <GraduationCap className="w-3 h-3 flex-shrink-0" />
-              <span>EDU</span>
-              <ChevronDown className="w-2 h-2 flex-shrink-0" />
+              <GraduationCap className="w-3 h-3" />
+              <span className="whitespace-nowrap">EDU ▾</span>
             </button>
 
             {/* Education Dropdown Menu */}
