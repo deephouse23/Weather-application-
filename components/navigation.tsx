@@ -21,6 +21,7 @@ import { usePathname } from "next/navigation"
 import { Menu, X, Cloud, Zap, BookOpen, Gamepad2, Info, Home, Newspaper, Thermometer, Map, ChevronDown, GraduationCap } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
+import AuthButton from "@/components/auth/auth-button"
 
 interface NavigationProps {
   weatherLocation?: string;
@@ -245,6 +246,11 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
               </Link>
             )
           })}
+        </div>
+
+        {/* Auth Button - TOP RIGHT */}
+        <div className="flex items-center">
+          <AuthButton />
         </div>
       </div>
 

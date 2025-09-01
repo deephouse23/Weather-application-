@@ -19,6 +19,7 @@ import { Inter } from "next/font/google"
 import { Analytics } from '@vercel/analytics/react'
 import AppThemeProvider from "@/app/providers/ThemeProvider"
 import { LocationProvider } from "@/components/location-context"
+import { AuthProvider } from "@/lib/auth"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -133,9 +134,11 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <AppThemeProvider>
-          <LocationProvider>
-            {children}
-          </LocationProvider>
+          <AuthProvider>
+            <LocationProvider>
+              {children}
+            </LocationProvider>
+          </AuthProvider>
         </AppThemeProvider>
         <Analytics />
       </body>
