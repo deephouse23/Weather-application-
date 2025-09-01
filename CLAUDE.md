@@ -88,11 +88,16 @@ NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY=your_google_pollen_api_key_here
 
 # Optional for enhanced air quality data
 NEXT_PUBLIC_GOOGLE_AIR_QUALITY_API_KEY=your_google_air_quality_key_here
+
+# Optional for error monitoring
+SENTRY_DSN=your_sentry_dsn_here
+SENTRY_AUTH_TOKEN=your_sentry_auth_token_here
 ```
 
 ### API Key Setup
 - **OpenWeatherMap**: Get free API key from [openweathermap.org/api](https://openweathermap.org/api)
 - **Google Pollen**: Get API key from [Google Maps Platform](https://developers.google.com/maps/documentation/pollen)
+- **Sentry Error Monitoring**: Configure at [16bitweather.sentry.io](https://16bitweather.sentry.io/insights/projects/javascript-nextjs/getting-started/)
 - Without Google APIs, app falls back to OpenWeather air pollution data for pollen/AQI estimates
 
 ## Data Flow & Caching
