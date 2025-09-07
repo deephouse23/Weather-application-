@@ -9,6 +9,21 @@ node_modules/
 # environment variables
 .env.local
 .env
+.env.production
+.env.development
+
+# Supabase secrets (CRITICAL - never commit these)
+.env.supabase
+**/supabase-key*
+**/*supabase*.env
+*SERVICE_ROLE_KEY*
+*SUPABASE_SERVICE_ROLE*
+
+# Specific Supabase key patterns to prevent accidental commits
+*eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9*
+*service_role*
+*anon_key*
+*cckcvyccjntadoohjntr*
 
 # TEMPORARY DEBUG FILES - NEVER COMMIT THESE
 local-dev-config.ts
@@ -28,3 +43,4 @@ results/
 
 # Documentation archives
 docs/archive/
+.claude/

@@ -21,6 +21,7 @@ import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { fetchWeatherData, fetchWeatherByLocation } from "@/lib/weather-api"
 import { useTheme } from '@/components/theme-provider'
+import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
 import { WeatherData } from '@/lib/types'
 import PageWrapper from "@/components/page-wrapper"
 import { Analytics } from "@vercel/analytics/react"
@@ -33,7 +34,9 @@ import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from "@/c
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/responsive-container"
 import { ErrorBoundary, SafeRender } from "@/components/error-boundary"
 import { useLocationContext } from "@/components/location-context"
+import { useAuth } from "@/lib/auth"
 import LazyWeatherMap from '@/components/lazy-weather-map'
+import { toastService } from "@/lib/toast-service"
 
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
@@ -55,8 +58,7 @@ const formatPressureByRegion = (pressureHPa: number, countryCode: string): strin
 
 // API keys are now handled by internal API routes
 
-// Theme types (dark only now)
-type ThemeType = 'dark';
+// Using ThemeType from theme-utils
 
 // Helper function to determine pressure unit (matches weather API logic)
 const getPressureUnit = (countryCode: string): 'hPa' | 'inHg' => {
@@ -67,6 +69,7 @@ const getPressureUnit = (countryCode: string): 'hPa' | 'inHg' => {
 
 function WeatherApp() {
   const { theme } = useTheme()
+  const themeClasses = getComponentStyles(theme as ThemeType, 'weather')
   const { 
     locationInput, 
     currentLocation, 
@@ -89,6 +92,8 @@ function WeatherApp() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [isAutoDetecting, setIsAutoDetecting] = useState(false)
   const [autoLocationAttempted, setAutoLocationAttempted] = useState(false)
+  // Auth context (profile + preferences from user portal)
+  const { profile, preferences, loading: authLoading } = useAuth()
 
   // localStorage keys
   const CACHE_KEY = 'bitweather_city'
@@ -123,7 +128,7 @@ function WeatherApp() {
       const locationKey = userCacheService.getLocationKey(location)
       const cachedWeather = userCacheService.getCachedWeatherData(locationKey)
       
-      if (cachedWeather) {
+      if (cachedWeather && cachedWeather.forecast && cachedWeather.forecast.length > 0) {
         console.log('Using cached weather data for detected location')
         setWeather(cachedWeather)
         setLocationInput(location.displayName)
@@ -131,6 +136,8 @@ function WeatherApp() {
         setHasSearched(true)
         setError('')
         return
+      } else if (cachedWeather) {
+        console.log('Cached weather data missing forecast, will fetch fresh data')
       }
       
       // Fetch fresh weather data
@@ -138,9 +145,12 @@ function WeatherApp() {
       setError('')
       
       const coords = userCacheService.getLocationKey(location).replace('_', ',')
-      const weatherData = await fetchWeatherByLocation(coords)
+      const unitSystem: 'metric' | 'imperial' = preferences?.temperature_unit === 'celsius' ? 'metric' : 'imperial'
+      const weatherData = await fetchWeatherByLocation(coords, unitSystem)
       
       if (weatherData) {
+        console.log('Weather data received:', weatherData)
+        console.log('Forecast data:', weatherData.forecast)
         setWeather(weatherData)
         setLocationInput(location.displayName)
         setCurrentLocation(location.displayName)
@@ -155,7 +165,7 @@ function WeatherApp() {
         
         console.log('Weather data loaded for auto-detected location')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to load weather for detected location:', error)
       setError('Failed to load weather data for your location')
     } finally {
@@ -165,42 +175,66 @@ function WeatherApp() {
 
   // Silent auto-location detection on first visit
   useEffect(() => {
-    if (!isClient || autoLocationAttempted) return
-    
+    // Wait for auth/preferences to finish loading so we can honor
+    // user portal settings (e.g., auto_location=false) on first load
+    if (!isClient || autoLocationAttempted || authLoading) return
+
     const tryAutoLocation = async () => {
       try {
+        // Respect user portal preference: disable auto-location if set to false
+        if (preferences && preferences.auto_location === false) {
+          console.log('Auto-location disabled by user preferences')
+          // If user has a default location set in profile, use it once
+          if (profile?.default_location) {
+            await handleSearch(profile.default_location)
+          }
+          setAutoLocationAttempted(true)
+          return
+        }
+
+        // If user saved a default location in the portal, prefer that over lastLocation/cache
+        if (profile?.default_location) {
+          console.log('Using profile default location:', profile.default_location)
+          await handleSearch(profile.default_location, false, true)
+          setAutoLocationAttempted(true)
+          return
+        }
+
         // Check if we have a recent last location
         const lastLocation = userCacheService.getLastLocation()
         if (lastLocation) {
           console.log('Using cached last location:', lastLocation)
           await handleLocationDetected(lastLocation)
+          setAutoLocationAttempted(true)
           return
         }
-        
+
         // Check if we have cached weather data first
         const cachedLocation = localStorage.getItem(CACHE_KEY)
         const cachedWeatherData = localStorage.getItem(WEATHER_KEY)
         const cacheTimestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY)
-        
+
         if (cachedLocation && cachedWeatherData && cacheTimestamp) {
           const cacheAge = Date.now() - parseInt(cacheTimestamp)
-          
+
           // If cache is fresh, use it and skip auto-detection for now
           if (cacheAge < 10 * 60 * 1000) {
             console.log('Using fresh cached data, skipping auto-location')
+            setAutoLocationAttempted(true)
             return
           }
         }
-        
+
         // Try silent location detection
         console.log('Attempting silent location detection...')
         setIsAutoDetecting(true)
-        
+
         try {
           const location = await locationService.getCurrentLocation()
           await handleLocationDetected(location)
-        } catch (error: any) {
-          console.log('Geolocation failed, trying IP fallback:', error.message)
+        } catch (error: unknown) {
+          const msg = error instanceof Error ? error.message : String(error)
+          console.log('Geolocation failed, trying IP fallback:', msg)
           try {
             const ipLocation = await locationService.getLocationByIP()
             await handleLocationDetected(ipLocation)
@@ -212,20 +246,19 @@ function WeatherApp() {
         } finally {
           setIsAutoDetecting(false)
         }
-        
+
         setAutoLocationAttempted(true)
-        
       } catch (error) {
         console.error('Auto-location initialization failed:', error)
         setIsAutoDetecting(false)
         setAutoLocationAttempted(true)
       }
     }
-    
+
     // Small delay to let other initialization complete
     const timer = setTimeout(tryAutoLocation, 1000)
     return () => clearTimeout(timer)
-  }, [isClient, autoLocationAttempted])
+  }, [isClient, autoLocationAttempted, authLoading, profile?.default_location, preferences?.auto_location])
 
   // Initialize search cache on mount
   useEffect(() => {
@@ -286,13 +319,21 @@ function WeatherApp() {
           if (cacheAge < 10 * 60 * 1000) {
             const weather = JSON.parse(cachedWeatherData)
             
-            // Note: UV index selective refresh removed since One Call API 2.5 was deprecated
-            // UV index is now estimated by the main weather API function
-            
-            setData(weather)
-            setLocationInput(cachedLocationData)
-            setHasSearched(true)
-            return // Exit early if we have cached data
+            // Check if cached data has forecast property
+            if (weather && weather.forecast && weather.forecast.length > 0) {
+              // Note: UV index selective refresh removed since One Call API 2.5 was deprecated
+              // UV index is now estimated by the main weather API function
+              
+              setData(weather)
+              setLocationInput(cachedLocationData)
+              setHasSearched(true)
+              return // Exit early if we have cached data
+            } else {
+              console.log('Cached weather data missing forecast, clearing cache')
+              // Clear invalid cache
+              localStorage.removeItem(WEATHER_KEY)
+              localStorage.removeItem(CACHE_TIMESTAMP_KEY)
+            }
           }
         }
         
@@ -308,23 +349,7 @@ function WeatherApp() {
   // Theme is now managed entirely by ThemeProvider, no local management needed
 
   // Semantic dark theme classes using CSS variables
-  const getThemeClasses = () => {
-    return {
-      background: 'bg-weather-bg-elev',
-      cardBg: 'bg-weather-bg-elev', 
-      borderColor: 'border-weather-border',
-      text: 'text-weather-text',
-      headerText: 'text-weather-primary',
-      secondaryText: 'text-weather-text',
-      accentText: 'text-weather-primary',
-      successText: 'text-weather-ok',
-      glow: 'glow',
-      specialBorder: 'border-weather-primary',
-      buttonHover: 'hover:bg-weather-primary hover:text-weather-bg'
-    }
-  }
 
-  const themeClasses = getThemeClasses()
 
   // Rate limiting functions
   const getRateLimitData = () => {
@@ -385,7 +410,7 @@ function WeatherApp() {
 
   const recordRequest = () => {
     const now = Date.now()
-    let data = getRateLimitData()
+    const data = getRateLimitData()
     
     // Add current request
     data.requests.push(now)
@@ -492,19 +517,23 @@ function WeatherApp() {
   // Helper function to safely access weather data
   const getWeatherData = <T,>(path: string, defaultValue: T): T => {
     try {
-      const value = path.split('.').reduce((obj, key) => obj?.[key], weather as any);
-      return value ?? defaultValue;
+      const value = path
+        .split('.')
+        .reduce((obj: any, key: string) => (obj ? obj[key] : undefined), weather as any)
+      return (value ?? defaultValue) as T
     } catch (error) {
-      console.error('Error accessing weather data:', error);
-      return defaultValue;
+      console.error('Error accessing weather data:', error)
+      return defaultValue
     }
-  };
+  }
 
   // Enhanced error handling for weather data
-  const handleWeatherError = (error: any) => {
+  const handleWeatherError = (error: Error | { message?: string }) => {
     console.error('Weather data error:', error);
-    setError(error.message || 'Failed to load weather data');
+    const errorMessage = error.message || 'Failed to load weather data';
+    setError(errorMessage);
     setWeather(null);
+    toastService.error('⚠️ Unable to fetch weather. Please try again.');
   };
 
   // Enhanced search handler with error handling
@@ -512,20 +541,26 @@ function WeatherApp() {
     console.log('Starting search for:', locationInput);
     
     if (!locationInput.trim()) {
-      setError("Please enter a location");
+      const errorMsg = "Please enter a location";
+      setError(errorMsg);
+      toastService.error('🔍 Please enter a location to search.');
       return;
     }
 
     // Minimum search length check
     if (locationInput.trim().length < 3) {
-      setError("Please enter at least 3 characters");
+      const errorMsg = "Please enter at least 3 characters";
+      setError(errorMsg);
+      toastService.error('🔍 Please enter at least 3 characters.');
       return;
     }
 
     if (!bypassRateLimit) {
       const rateLimitCheck = checkRateLimit();
       if (!rateLimitCheck.allowed) {
-        setRateLimitError(rateLimitCheck.message || "Rate limit exceeded");
+        const rateLimitMsg = rateLimitCheck.message || "Rate limit exceeded";
+        setRateLimitError(rateLimitMsg);
+        toastService.warning('⏱️ Too many requests. Please wait a moment.');
         return;
       }
     }
@@ -535,27 +570,36 @@ function WeatherApp() {
     setRateLimitError("");
 
     try {
-      console.log('Fetching weather data...');
       const cachedWeather = getFromSearchCache(locationInput);
-      if (cachedWeather) {
+      if (cachedWeather && cachedWeather.forecast && cachedWeather.forecast.length > 0) {
         console.log('Weather data found in cache');
         setWeather(cachedWeather);
         setHasSearched(true);
         setLastSearchTerm(locationInput);
         setCurrentLocation(locationInput);
+        toastService.success(`☀️ Weather updated for ${locationInput}`);
         return;
+      } else if (cachedWeather) {
+        console.log('Cached weather missing forecast, fetching fresh data');
       }
 
-      const weatherData = await fetchWeatherData(locationInput);
+      const unitSystem: 'metric' | 'imperial' = preferences?.temperature_unit === 'celsius' ? 'metric' : 'imperial'
+      const weatherData = await fetchWeatherData(locationInput, unitSystem);
       console.log('Weather data received:', weatherData);
+      console.log('Forecast in weather data:', weatherData?.forecast);
 
       if (!weatherData) {
-        throw new Error('No weather data received');
+        throw new Error('🔍 City not found. Try another location.');
       }
 
       // Validate required data
       if (!weatherData.temperature || !weatherData.condition) {
-        throw new Error('Invalid weather data received');
+        throw new Error('📡 Connection issue. Check your internet.');
+      }
+
+      if (!weatherData.forecast || weatherData.forecast.length === 0) {
+        console.error('Weather data missing forecast property');
+        throw new Error('Weather data incomplete. Please try again.');
       }
 
       setWeather(weatherData);
@@ -570,13 +614,16 @@ function WeatherApp() {
       // Record API call
       recordRequest();
       
+      // Success toast
+      toastService.success(`☀️ Weather updated for ${locationInput}`);
+      
       // Add to search cache
       addToSearchCache(locationInput, weatherData);
       
       console.log('Search completed successfully');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Search error:', error);
-      handleWeatherError(error);
+      handleWeatherError(error as { message?: string })
     } finally {
       setLoading(false);
     }
@@ -596,9 +643,10 @@ function WeatherApp() {
       const location = await locationService.getCurrentLocation()
       await handleLocationDetected(location)
       recordRequest()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Location error:", error)
-      setError(error.message || "Failed to get your location")
+      const msg = error instanceof Error ? error.message : "Failed to get your location"
+      setError(msg)
     } finally {
       setLoading(false)
     }
@@ -816,7 +864,7 @@ function WeatherApp() {
           )}
 
           {weather && !loading && !error && (
-            <ErrorBoundary componentName="Weather Display" theme={theme || 'dark'}>
+            <ErrorBoundary componentName="Weather Display">
               <div className="space-y-4 sm:space-y-6">
                 {/* Location Title */}
                 <div className="text-center mb-4">
@@ -910,15 +958,23 @@ function WeatherApp() {
                 return (
                   <>
                     {/* 5-Day Forecast - Moved Above Map */}
-                    <LazyForecast 
-                      forecast={(weather?.forecast || []).map((day, index) => ({
-                        ...day,
-                        country: weather?.country || 'US'
-                      }))} 
-                      theme={theme || 'dark'}
-                      onDayClick={handleDayClick}
-                      selectedDay={selectedDay}
-                    />
+                    {weather?.forecast && weather.forecast.length > 0 ? (
+                      <LazyForecast 
+                        forecast={weather.forecast.map((day, index) => ({
+                          ...day,
+                          country: weather?.country || 'US'
+                        }))} 
+                        theme={theme || 'dark'}
+                        onDayClick={handleDayClick}
+                        selectedDay={selectedDay}
+                      />
+                    ) : weather ? (
+                      <div className="bg-gray-800 p-4 rounded-none border-2 border-blue-500 text-center">
+                        <p className="text-white font-mono">
+                          No forecast data available
+                        </p>
+                      </div>
+                    ) : null}
 
                     {/* Expandable Details Section */}
                     <LazyForecastDetails 
