@@ -37,6 +37,9 @@ interface ForecastProps {
 }
 
 export default function Forecast({ forecast, theme = 'dark', onDayClick, selectedDay }: ForecastProps) {
+  // Validate theme prop
+  const validTheme = ['dark', 'miami', 'tron'].includes(theme) ? theme : 'dark'
+  
   // Enhanced theme-based color classes for three themes
   const getThemeClasses = (theme: ThemeType) => {
     switch (theme) {
@@ -102,10 +105,27 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
             borderColor: '#00FFFF'
           }
         }
+      default:
+        // Default to dark theme if invalid theme is provided
+        return {
+          cardBg: 'bg-[#16213e]',
+          itemBg: 'bg-[#1a1a2e]',
+          itemHover: 'hover:bg-[#1f2347]',
+          borderColor: 'border-[#00d4ff]',
+          itemBorder: 'border-[#4ecdc4]',
+          headerText: 'text-[#00d4ff]',
+          primaryText: 'text-[#4ecdc4]',
+          temperatureText: 'text-[#ffe66d]',
+          lowTempText: 'text-[#4ecdc4]',
+          glow: '',
+          specialBorder: '',
+          cardStyle: {},
+          itemStyle: {}
+        }
     }
   }
 
-  const themeClasses = getThemeClasses(theme)
+  const themeClasses = getThemeClasses(validTheme as ThemeType)
 
   return (
     <div className={`${themeClasses.cardBg} p-3 sm:p-4 lg:p-6 rounded-none border-2 sm:border-4 ${themeClasses.borderColor} pixel-shadow ${themeClasses.specialBorder}`}
@@ -120,7 +140,7 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
             day={day} 
             index={index}
             themeClasses={themeClasses} 
-            theme={theme}
+            theme={validTheme as ThemeType}
             onDayClick={onDayClick}
             isSelected={selectedDay === index}
           />
@@ -133,7 +153,21 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
 function ForecastCard({ day, index, themeClasses, theme, onDayClick, isSelected }: { 
   day: ForecastDay; 
   index: number;
-  themeClasses: any; 
+  themeClasses: {
+    cardBg: string;
+    itemBg: string;
+    itemHover: string;
+    borderColor: string;
+    itemBorder: string;
+    headerText: string;
+    primaryText: string;
+    temperatureText: string;
+    lowTempText: string;
+    glow: string;
+    specialBorder: string;
+    cardStyle: Record<string, string>;
+    itemStyle: Record<string, string>;
+  }; 
   theme: ThemeType;
   onDayClick?: (index: number) => void;
   isSelected?: boolean;
@@ -158,10 +192,17 @@ function ForecastCard({ day, index, themeClasses, theme, onDayClick, isSelected 
 
   return (
     <div 
-      className={`${themeClasses.itemBg} p-2 sm:p-3 border ${themeClasses.itemBorder} text-center transition-all duration-200 ${themeClasses.specialBorder}
-                  min-h-[120px] sm:min-h-[140px] lg:min-h-[160px] flex flex-col justify-between
-                  ${onDayClick ? 'cursor-pointer hover:scale-105' : ''} ${themeClasses.itemHover}
-                  ${isSelected ? `ring-2 ring-${theme === 'dark' ? '[#00d4ff]' : theme === 'miami' ? '[#ff1493]' : '[#00FFFF]'} ring-opacity-80` : ''}`}
+      className={cn(
+        "p-2 sm:p-3 border text-center transition-all duration-200",
+        "min-h-[120px] sm:min-h-[140px] lg:min-h-[160px] flex flex-col justify-between",
+        themeClasses.itemBg,
+        themeClasses.itemBorder,
+        themeClasses.specialBorder,
+        onDayClick && 'cursor-pointer hover:scale-105',
+        themeClasses.itemHover,
+        isSelected && `ring-2 ring-opacity-80`,
+        isSelected && (theme === 'dark' ? 'ring-[#00d4ff]' : theme === 'miami' ? 'ring-[#ff1493]' : 'ring-[#00FFFF]')
+      )}
       style={themeClasses.itemStyle}
       onClick={handleClick}
     >

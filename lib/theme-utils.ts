@@ -24,6 +24,7 @@ export type ThemeType = 'dark' | 'miami' | 'tron';
 export interface ThemeStyles {
   background: string;
   text: string;
+  mutedText?: string;
   borderColor: string;
   accentBg: string;
   accentText: string;
@@ -32,6 +33,8 @@ export interface ThemeStyles {
   glow: string;
   gradient?: string;
   secondary?: string;
+  headerText?: string;
+  secondaryText?: string;
 }
 
 export interface ComponentVariants {
@@ -39,6 +42,10 @@ export interface ComponentVariants {
   button: ThemeStyles;
   input: ThemeStyles;
   navigation: ThemeStyles;
+  weather: ThemeStyles;
+  dashboard: ThemeStyles;
+  modal: ThemeStyles;
+  auth: ThemeStyles;
 }
 
 // Core theme color definitions
@@ -79,17 +86,20 @@ const THEME_COLORS = {
  * Get base theme styles for any component
  */
 export const getThemeStyles = (theme: ThemeType): ThemeStyles => {
-  const colors = THEME_COLORS[theme];
+  // Default to 'dark' theme if invalid theme is provided
+  const validTheme = (theme && THEME_COLORS[theme]) ? theme : 'dark';
+  const colors = THEME_COLORS[validTheme];
   
   return {
     background: `bg-[${colors.background}]`,
     text: `text-[${colors.text}]`,
+    mutedText: `text-[${colors.textSecondary}]`,
     borderColor: `border-[${colors.border}]`,
     accentBg: `bg-[${colors.primary}]`,
     accentText: `text-[${colors.primary}]`,
     cardBg: `bg-[${colors.backgroundSecondary}]`,
     hoverBg: `hover:bg-[${colors.primary}] hover:text-[${colors.background}]`,
-    glow: `glow-${theme}`,
+    glow: `glow-${validTheme}`,
     secondary: `text-[${colors.textSecondary}]`
   };
 };
@@ -98,8 +108,10 @@ export const getThemeStyles = (theme: ThemeType): ThemeStyles => {
  * Get component-specific theme styles with variants
  */
 export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVariants): ThemeStyles => {
-  const base = getThemeStyles(theme);
-  const colors = THEME_COLORS[theme];
+  // Default to 'dark' theme if invalid theme is provided
+  const validTheme = (theme && THEME_COLORS[theme]) ? theme : 'dark';
+  const base = getThemeStyles(validTheme);
+  const colors = THEME_COLORS[validTheme];
 
   switch (variant) {
     case 'card':
@@ -132,6 +144,42 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
         background: `bg-[${colors.background}]`,
         borderColor: `border-[${colors.border}]`,
         hoverBg: `hover:bg-[${colors.primary}] hover:text-[${colors.background}]`
+      };
+
+    case 'weather':
+      return {
+        ...base,
+        background: `bg-[${colors.background}]`,
+        cardBg: `bg-[${colors.backgroundSecondary}]`,
+        borderColor: `border-[${colors.primary}]`,
+        headerText: `text-[${colors.primary}] font-mono font-bold`,
+        glow: `shadow-lg shadow-[${colors.primary}]/20`,
+        secondaryText: `text-[${colors.textSecondary}]`
+      };
+
+    case 'dashboard':
+      return {
+        ...base,
+        background: `bg-[${colors.backgroundSecondary}]`,
+        borderColor: `border-[${colors.border}]`,
+        accentBg: `bg-[${colors.primary}]`,
+        hoverBg: `hover:bg-[${colors.backgroundTertiary}]`
+      };
+
+    case 'modal':
+      return {
+        ...base,
+        background: `bg-[${colors.background}]`,
+        borderColor: `border-[${colors.primary}]`,
+        glow: `shadow-2xl shadow-[${colors.primary}]/30`
+      };
+
+    case 'auth':
+      return {
+        ...base,
+        background: `bg-[${colors.backgroundSecondary}]`,
+        borderColor: `border-[${colors.border}]`,
+        accentBg: `bg-[${colors.primary}]`
       };
 
     default:
@@ -226,3 +274,4 @@ export const PIXEL_EFFECTS = {
   shadow: 'pixel-shadow',
   font: 'pixel-font font-mono'
 } as const;
+
