@@ -14,6 +14,8 @@
 
 import Link from 'next/link'
 
+export const runtime = 'nodejs';
+
 export default function NotFound() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center justify-center">

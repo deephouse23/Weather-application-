@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/lib/auth'
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { theme } = useTheme()
@@ -138,5 +138,34 @@ export default function AuthCallbackPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="text-center p-8 border-4 max-w-md w-full bg-black border-green-500 shadow-lg shadow-green-500/20">
+        <div className="w-12 h-12 border-2 border-green-500 bg-green-500 flex items-center justify-center mx-auto mb-4 animate-pulse">
+          <span className="text-black font-bold text-lg">16</span>
+        </div>
+        <h1 className="text-xl font-bold uppercase tracking-wider font-mono mb-4 text-green-500">
+          Loading Authentication...
+        </h1>
+        <p className="text-sm font-mono mb-4 text-green-400">
+          Preparing authentication handler...
+        </p>
+        <div className="mt-4">
+          <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-green-500"></div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <AuthCallbackContent />
+    </Suspense>
   )
 }
