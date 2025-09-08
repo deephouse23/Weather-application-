@@ -65,8 +65,9 @@ export function useDebounce<T>(
  */
 export function useMemoizedCalculation<T>(
   callback: () => T,
-  dependencies: any[]
+  dependencies: readonly unknown[]
 ): T {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useCallback(callback, dependencies)()
 }
 
@@ -75,7 +76,7 @@ export function useMemoizedCalculation<T>(
  * @param importFn Dynamic import function
  * @returns [Component, loading, error] - Component, loading state, and error state
  */
-export function useLazyComponent<T extends React.ComponentType<any>>(
+export function useLazyComponent<T extends React.ComponentType<Record<string, unknown>>>(
   importFn: () => Promise<{ default: T }>
 ): [T | null, boolean, Error | null] {
   const [Component, setComponent] = useState<T | null>(null)

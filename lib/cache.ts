@@ -37,10 +37,10 @@ interface CacheEntry<T> {
 }
 
 // Cache store
-const cache = new Map<string, CacheEntry<any>>()
+const cache = new Map<string, CacheEntry<unknown>>()
 
 // Request deduplication
-const pendingRequests = new Map<string, Promise<any>>()
+const pendingRequests = new Map<string, Promise<unknown>>()
 
 /**
  * Get cached data with stale-while-revalidate pattern
@@ -85,12 +85,12 @@ export const deduplicateRequest = <T>(
   key: string,
   requestFn: () => Promise<T>
 ): Promise<T> => {
-  const pending = pendingRequests.get(key)
+  const pending = pendingRequests.get(key) as Promise<T> | undefined
   if (pending) return pending
 
-  const promise = requestFn().finally(() => {
+  const promise = (requestFn().finally(() => {
     pendingRequests.delete(key)
-  })
+  })) as Promise<T>
 
   pendingRequests.set(key, promise)
   return promise
@@ -148,13 +148,23 @@ export const getCachedWeatherData = (): {
 /**
  * Optimize historical data fetching
  */
+// Type for historical weather data response
+interface HistoricalWeatherResponse {
+  daily?: {
+    temperature_2m_max?: number[];
+    temperature_2m_min?: number[];
+    time?: string[];
+  };
+  [key: string]: unknown;
+}
+
 export const fetchHistoricalData = async (
   latitude: number,
   longitude: number,
   years: number = 30
-): Promise<any> => {
+): Promise<HistoricalWeatherResponse> => {
   const cacheKey = `historical_${latitude}_${longitude}`
-  const cached = getCachedData(cacheKey)
+  const cached = getCachedData<HistoricalWeatherResponse>(cacheKey)
   
   if (cached && !cached.isStale) {
     return cached.data
@@ -175,9 +185,9 @@ export const fetchHistoricalData = async (
       throw new Error('Failed to fetch historical data')
     }
 
-    return response.json()
+    return response.json() as Promise<HistoricalWeatherResponse>
   })
 
-  setCachedData(cacheKey, data)
+  setCachedData<HistoricalWeatherResponse>(cacheKey, data)
   return data
 } 

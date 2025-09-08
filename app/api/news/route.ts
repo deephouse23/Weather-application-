@@ -248,13 +248,15 @@ export async function GET(request: NextRequest) {
       },
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     const errorTime = Date.now() - startTime;
     
-    if (error.name === 'AbortError') {
+    if (error instanceof Error && error.name === 'AbortError') {
       console.error(`[NEWS API] Request timeout after ${errorTime}ms`);
-    } else {
+    } else if (error instanceof Error) {
       console.error(`[NEWS API] Error after ${errorTime}ms:`, error.message);
+    } else {
+      console.error(`[NEWS API] Unknown error after ${errorTime}ms:`, error);
     }
     
     // Always return graceful degradation to prevent UI breaks
@@ -279,7 +281,7 @@ export async function GET(request: NextRequest) {
 }
 
 // CORS preflight
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS(_request: NextRequest) {
   return new NextResponse(null, {
     status: 200,
     headers: {

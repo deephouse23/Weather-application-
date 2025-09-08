@@ -103,7 +103,7 @@ export default function CityAutocomplete({
       switch (e.key) {
         case 'ArrowDown':
           // Only prevent default if we're actually in the search input
-          const activeElement = document.activeElement as HTMLElement;
+          const activeElement = document.activeElement as HTMLInputElement;
           if (activeElement && (activeElement.type === 'text' || activeElement.tagName === 'INPUT')) {
             e.preventDefault();
             setSelectedIndex(prev => 
@@ -113,7 +113,7 @@ export default function CityAutocomplete({
           break;
         case 'ArrowUp':
           // Only prevent default if we're actually in the search input
-          const activeElementUp = document.activeElement as HTMLElement;
+          const activeElementUp = document.activeElement as HTMLInputElement;
           if (activeElementUp && (activeElementUp.type === 'text' || activeElementUp.tagName === 'INPUT')) {
             e.preventDefault();
             setSelectedIndex(prev => prev > 0 ? prev - 1 : -1);
@@ -121,7 +121,7 @@ export default function CityAutocomplete({
           break;
         case 'Enter':
           // Only handle Enter if we have a selected item and we're in the search input
-          const activeElementEnter = document.activeElement as HTMLElement;
+          const activeElementEnter = document.activeElement as HTMLInputElement;
           if (activeElementEnter && (activeElementEnter.type === 'text' || activeElementEnter.tagName === 'INPUT') &&
               selectedIndex >= 0 && selectedIndex < suggestions.length) {
             e.preventDefault();

@@ -115,6 +115,15 @@ export function LocationProvider({ children }: LocationProviderProps) {
   // Component mount detection
   useEffect(() => {
     console.log('[LocationProvider] Component mounted with pathname:', pathname)
+    // Cleanup legacy keys to avoid confusion with new cache system
+    try {
+      const legacyKey = 'weather-app-last-location'
+      const existed = safeStorage.getItem(legacyKey) !== null
+      if (existed) {
+        safeStorage.removeItem(legacyKey)
+        console.log(`[LocationProvider] Removed legacy key: ${legacyKey}`)
+      }
+    } catch {}
     logLocalStorageKeys('On mount')
   }, [])
 

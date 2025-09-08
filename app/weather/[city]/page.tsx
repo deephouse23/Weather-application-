@@ -28,20 +28,20 @@
 
 import { Suspense } from 'react'
 import CityWeatherClient from './client'
-import { cityData } from '@/lib/city-metadata';
+import { cityData as cityMetadata } from '@/lib/city-metadata';
 import { Metadata } from 'next';
 
 // Generate static pages for better SEO
 export async function generateStaticParams() {
-  return Object.keys(cityData).map((citySlug) => ({
+  return Object.keys(cityMetadata).map((citySlug) => ({
     city: citySlug,
   }))
 }
 
 // Generate metadata for each city page
-export async function generateMetadata({ params }: { params: { city: string } }): Promise<Metadata> {
-  const citySlug = params.city
-  const city = cityData[citySlug]
+export async function generateMetadata({ params }: { params: Promise<{ city: string }> }): Promise<Metadata> {
+  const { city: citySlug } = await params
+  const city = cityMetadata[citySlug]
 
   if (!city) {
     return {
@@ -86,14 +86,14 @@ export async function generateMetadata({ params }: { params: { city: string } })
 }
 
 interface PageParams {
-  params: {
+  params: Promise<{
     city: string
-  }
+  }>
 }
 
-export default function CityWeatherPage({ params }: PageParams) {
-  const citySlug = params.city
-  const city = cityData[citySlug]
+export default async function CityWeatherPage({ params }: PageParams) {
+  const { city: citySlug } = await params
+  const city = cityMetadata[citySlug]
 
   // If city doesn't exist in our predefined list, still render the client component
   // This allows for dynamic city searches while maintaining SEO for major cities
@@ -181,6 +181,27 @@ export default function CityWeatherPage({ params }: PageParams) {
       </Suspense>
     </>
   )
+}
+
+// Utility functions
+function formatCityName(slug: string): string {
+  return slug
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+}
+
+function citySlugToSearchTerm(slug: string): string {
+  const parts = slug.split('-')
+  if (parts.length > 1) {
+    const state = parts[parts.length - 1].toUpperCase()
+    const cityParts = parts.slice(0, -1)
+    const cityName = cityParts.map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ')
+    return `${cityName}, ${state}`
+  }
+  return formatCityName(slug)
 }
 
 // Force dynamic rendering to prevent build-time API calls  

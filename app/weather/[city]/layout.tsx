@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { fetchWeatherData } from '@/lib/weather-api'
 
 type Props = {
-  params: { city: string }
+  params: Promise<{ city: string }>
   children: React.ReactNode
 }
 
@@ -25,14 +25,15 @@ function citySlugToSearchTerm(citySlug: string): string {
   return formatCityName(citySlug)
 }
 
-export async function generateMetadata({ params }: { params: { city: string } }): Promise<Metadata> {
-  const cityName = formatCityName(params.city)
-  const searchTerm = citySlugToSearchTerm(params.city)
+export async function generateMetadata({ params }: { params: Promise<{ city: string }> }): Promise<Metadata> {
+  const { city } = await params
+  const cityName = formatCityName(city)
+  const searchTerm = citySlugToSearchTerm(city)
   
   // Default metadata
   const title = `${cityName} Weather Forecast | 16-Bit Retro Weather Terminal`
   const description = `Get ${cityName} weather in nostalgic 16-bit style. Real-time conditions, 7-day forecast, and atmospheric data for ${searchTerm}.`
-  const canonical = `https://16-bit-weather.vercel.app/weather/${params.city}`
+  const canonical = `https://16-bit-weather.vercel.app/weather/${city}`
   
   // Try to fetch weather data for enhanced metadata
   let weatherData = null
@@ -72,8 +73,8 @@ export async function generateMetadata({ params }: { params: { city: string } })
 
   // Add weather forecast structured data if available
   if (weatherData && weatherData.forecast && weatherData.forecast.length > 0) {
-    const weatherForecast = {
-      "@context": "https://schema.org",
+    // Replace mainEntity with the weather forecast as the main entity
+    structuredData.mainEntity = {
       "@type": "WeatherForecast",
       "dateModified": new Date().toISOString(),
       "expires": new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(), // 3 hours from now
@@ -96,18 +97,12 @@ export async function generateMetadata({ params }: { params: { city: string } })
         return {
           "@type": "DayOfWeek",
           "name": day.day || date.toLocaleDateString('en-US', { weekday: 'long' }),
-          "temperature": `${day.high}${weatherData.unit}`,
+          "temperature": `${day.highTemp}${weatherData.unit}`,
           "temperatureUnit": weatherData.unit === '°F' ? 'Fahrenheit' : 'Celsius',
           "conditions": day.condition || 'Partly Cloudy'
         }
       })
-    }
-    
-    // Merge weather forecast into structured data
-    structuredData.mainEntity = {
-      ...structuredData.mainEntity,
-      "hasMap": weatherForecast
-    }
+    } as any
   }
 
   return {

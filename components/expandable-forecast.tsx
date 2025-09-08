@@ -19,6 +19,7 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { ChevronDown, ChevronUp, Droplets, Wind, Eye, Gauge, Sunrise, Sunset, Cloud, Info } from "lucide-react"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
+import { WeatherData } from "@/lib/types"
 
 // Enhanced forecast interface with detailed weather data
 interface DetailedForecastDay {
@@ -62,6 +63,25 @@ interface ExpandableForecastProps {
     sunrise: string;
     sunset: string;
   };
+}
+
+interface ComponentThemeClasses {
+  background: string;
+  cardBg: string;
+  borderColor: string;
+  accentText: string;
+  text: string;
+  secondary: string;
+  hoverBg: string;
+}
+
+interface CurrentWeatherData {
+  humidity: number;
+  wind: { speed: number; direction?: string };
+  pressure: string;
+  uvIndex: number;
+  sunrise: string;
+  sunset: string;
 }
 
 // Information tooltip component
@@ -140,8 +160,8 @@ function ExpandableForecastCard({
   isExpanded: boolean;
   onToggle: () => void;
   theme: ThemeType;
-  themeClasses: any;
-  currentWeatherData?: any;
+  themeClasses: ComponentThemeClasses;
+  currentWeatherData?: CurrentWeatherData;
 }) {
   const isUSALocation = day.country === 'US' || day.country === 'USA';
   const tempUnit = isUSALocation ? '°F' : '°C';
@@ -238,7 +258,12 @@ function ExpandableForecastCard({
   );
 }
 
-function DetailedWeatherInfo({ details, theme, themeClasses, tempUnit }: any) {
+function DetailedWeatherInfo({ details, theme, themeClasses, tempUnit }: {
+  details: DetailedForecastDay['details'];
+  theme: ThemeType;
+  themeClasses: ComponentThemeClasses;
+  tempUnit: string;
+}) {
   const weatherMetrics = [
     {
       icon: <Droplets className="w-4 h-4" />,
@@ -291,7 +316,7 @@ function DetailedWeatherInfo({ details, theme, themeClasses, tempUnit }: any) {
           <div className="min-w-0 flex-1">
             <div className={`text-xs ${themeClasses.secondary} opacity-70 flex items-center`}>
               {metric.label}
-              {(metric as any).tooltip && <InfoTooltip text={(metric as any).tooltip} theme={theme} />}
+              {(metric as {tooltip?: string}).tooltip && <InfoTooltip text={(metric as {tooltip?: string}).tooltip} theme={theme} />}
             </div>
             <div className={`text-sm font-medium ${themeClasses.text} truncate`}>
               {metric.value}
@@ -303,14 +328,19 @@ function DetailedWeatherInfo({ details, theme, themeClasses, tempUnit }: any) {
   );
 }
 
-function HourlyForecast({ hourlyData, theme, themeClasses, tempUnit }: any) {
+function HourlyForecast({ hourlyData, theme, themeClasses, tempUnit }: {
+  hourlyData: DetailedForecastDay['hourlyForecast'];
+  theme: ThemeType;
+  themeClasses: ComponentThemeClasses;
+  tempUnit: string;
+}) {
   return (
     <div className="mt-4 pt-3 border-t border-opacity-30" style={{ borderColor: themeClasses.borderColor }}>
       <h4 className={`text-sm font-bold ${themeClasses.accentText} mb-3 uppercase tracking-wider`}>
         Hourly Forecast
       </h4>
       <div className="flex space-x-3 overflow-x-auto pb-2">
-        {hourlyData.slice(0, 8).map((hour: any, index: number) => (
+        {hourlyData?.slice(0, 8).map((hour: NonNullable<DetailedForecastDay['hourlyForecast']>[0], index: number) => (
           <div key={index} className={`flex-shrink-0 text-center p-2 rounded ${themeClasses.cardBg} border ${themeClasses.borderColor} min-w-[60px]`}>
             <div className={`text-xs ${themeClasses.secondary} mb-1`}>
               {hour.time}

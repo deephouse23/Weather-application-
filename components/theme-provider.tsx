@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * 16-Bit Weather Platform - BETA v0.3.2
+ * 16-Bit Weather Platform - BETA v0.5.0
  * 
  * Copyright (C) 2025 16-Bit Weather
  * Licensed under Fair Source License, Version 0.9
@@ -14,15 +14,17 @@
  * Report issues: https://github.com/deephouse23/Weather-application-/issues
  */
 
-
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { safeStorage } from '@/lib/safe-storage'
 
-type Theme = 'dark'
+export type Theme = 'dark' | 'miami' | 'tron'
 
 interface ThemeContextType {
   theme: Theme
+  setTheme: (theme: Theme) => void
   toggleTheme: () => void
+  availableThemes: Theme[]
+  isAuthenticated: boolean
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
@@ -37,52 +39,64 @@ export function useTheme() {
 
 interface ThemeProviderProps {
   children: React.ReactNode
-  defaultTheme?: Theme
-  storageKey?: string
-  themes?: Theme[]
-  attribute?: string
-  enableSystem?: boolean
 }
 
-export function ThemeProvider({
-  children,
-  defaultTheme = 'dark',
-  storageKey = 'weather-edu-theme',
-  themes = ['dark'],
-  attribute = 'class',
-  enableSystem = false
-}: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(defaultTheme)
+export function ThemeProvider({ children }: ThemeProviderProps) {
+  const [theme, setThemeState] = useState<Theme>('dark')
+  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<any>(null)
+  const [preferences, setPreferences] = useState<any>(null)
+  const [authLoading, setAuthLoading] = useState(true)
 
-  useEffect(() => {
+  const availableThemes: Theme[] = ['dark', 'miami', 'tron']
+  const isAuthenticated = !!user
+
+  // Set theme and persist to localStorage
+  const setTheme = async (newTheme: Theme) => {
+    setThemeState(newTheme)
+
+    // Save to localStorage for persistence
     if (typeof window !== 'undefined') {
-      const storedTheme = safeStorage.getItem(storageKey) as Theme
-      if (storedTheme && themes.includes(storedTheme)) {
-        setTheme(storedTheme)
-      }
+      safeStorage.setItem('weather-edu-theme', newTheme)
     }
-  }, [storageKey, themes])
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const root = window.document.documentElement
-      root.classList.remove(...themes)
-      root.classList.add(theme)
-      root.setAttribute('data-theme', theme)
-      
-      // Save theme to storage
-      safeStorage.setItem(storageKey, theme)
-    }
-  }, [theme, themes, storageKey])
-
-  const toggleTheme = () => {
-    // Theme is locked to dark - no-op
-    // Keeping function for compatibility but does nothing
   }
 
+  // Toggle function (cycles through available themes)
+  const toggleTheme = () => {
+    const currentIndex = availableThemes.indexOf(theme)
+    const nextIndex = (currentIndex + 1) % availableThemes.length
+    setTheme(availableThemes[nextIndex])
+  }
+
+  // Load theme on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedTheme = safeStorage.getItem('weather-edu-theme') as Theme || 'dark'
+      setThemeState(savedTheme)
+    }
+    setLoading(false)
+    setAuthLoading(false)
+  }, [])
+
+  // Apply theme to DOM
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !loading) {
+      const root = window.document.documentElement
+      root.classList.remove('dark', 'miami', 'tron')
+      root.classList.add(theme)
+      root.setAttribute('data-theme', theme)
+    }
+  }, [theme, loading])
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
+    <ThemeContext.Provider value={{ 
+      theme, 
+      setTheme, 
+      toggleTheme, 
+      availableThemes, 
+      isAuthenticated 
+    }}>
+      {loading || authLoading ? <div>{children}</div> : children}
     </ThemeContext.Provider>
   )
 } 

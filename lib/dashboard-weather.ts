@@ -12,19 +12,13 @@ interface DashboardWeatherData {
   visibility: number
 }
 
-const OPENWEATHER_API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY
-
 export async function getDashboardWeather(latitude: number, longitude: number): Promise<DashboardWeatherData | null> {
-  if (!OPENWEATHER_API_KEY) {
-    console.error('OpenWeather API key not configured')
-    return null
-  }
-
   try {
+    // Use our API route instead of calling OpenWeather directly
     const response = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${OPENWEATHER_API_KEY}&units=imperial`,
+      `/api/dashboard-weather?lat=${latitude}&lon=${longitude}`,
       { 
-        next: { revalidate: 600 }, // Cache for 10 minutes
+        cache: 'default',
         headers: {
           'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200'
         }
@@ -32,21 +26,14 @@ export async function getDashboardWeather(latitude: number, longitude: number): 
     )
 
     if (!response.ok) {
-      throw new Error(`Weather API error: ${response.status}`)
+      const errorData = await response.json()
+      throw new Error(errorData.error || `Weather API error: ${response.status}`)
     }
 
     const data = await response.json()
-
-    return {
-      temperature: Math.round(data.main.temp),
-      description: data.weather[0].description,
-      humidity: data.main.humidity,
-      windSpeed: data.wind.speed,
-      icon: data.weather[0].icon,
-      feelsLike: Math.round(data.main.feels_like),
-      pressure: data.main.pressure,
-      visibility: data.visibility ? Math.round(data.visibility / 1000) : 0 // Convert to km
-    }
+    
+    // Data is already transformed by the API route
+    return data
   } catch (error) {
     console.error('Error fetching dashboard weather:', error)
     return null

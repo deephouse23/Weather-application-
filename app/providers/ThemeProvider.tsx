@@ -19,13 +19,7 @@ import { ReactNode } from 'react'
 
 export default function AppThemeProvider({ children }: { children: ReactNode }) {
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="dark"
-      enableSystem={false}
-      storageKey="weather-edu-theme"
-      themes={["dark"]}
-    >
+    <ThemeProvider>
       {children}
     </ThemeProvider>
   )

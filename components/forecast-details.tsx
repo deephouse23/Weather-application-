@@ -19,6 +19,7 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { ChevronDown, ChevronUp, Droplets, Wind, Eye, Gauge, Sunrise, Sunset, Cloud, Info } from "lucide-react"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
+import { WeatherData } from "@/lib/types"
 
 interface ForecastDay {
   day: string;
@@ -126,10 +127,36 @@ function DetailedWeatherInfo({
   currentWeatherData 
 }: { 
   selectedDay: number;
-  forecastDay: any;
+  forecastDay: ForecastDay & {
+    details?: {
+      humidity?: number;
+      windSpeed?: number;
+      windDirection?: string;
+      pressure?: string;
+      uvIndex?: number;
+      precipitationChance?: number;
+      cloudCover?: number;
+      visibility?: number;
+    };
+  };
   theme: ThemeType; 
-  themeClasses: any; 
-  currentWeatherData?: any; 
+  themeClasses: {
+    background: string;
+    cardBg: string;
+    borderColor: string;
+    accentText: string;
+    text: string;
+    secondary: string;
+    hoverBg: string;
+  }; 
+  currentWeatherData?: {
+    humidity: number;
+    wind: { speed: number; direction?: string };
+    pressure: string;
+    uvIndex: number;
+    sunrise: string;
+    sunset: string;
+  }; 
 }) {
   // Use forecast day details first, fallback to current weather for today
   const isToday = selectedDay === 0;
@@ -198,7 +225,7 @@ function DetailedWeatherInfo({
           <div className="min-w-0 flex-1">
             <div className={`text-xs ${themeClasses.secondary} opacity-70 flex items-center`}>
               {metric.label}
-              {(metric as any).tooltip && <InfoTooltip text={(metric as any).tooltip} theme={theme} />}
+              {(metric as {tooltip?: string}).tooltip && <InfoTooltip text={(metric as {tooltip?: string}).tooltip} theme={theme} />}
             </div>
             <div className={`text-sm font-medium ${themeClasses.text} truncate`}>
               {metric.value}

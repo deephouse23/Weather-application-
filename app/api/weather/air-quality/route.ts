@@ -10,6 +10,42 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 
+// Type definitions for Google Air Quality API responses
+interface GoogleAQIIndex {
+  code: string;
+  aqi: number;
+  category?: string;
+  displayName?: string;
+  dominantPollutant?: string;
+}
+
+interface GoogleAQIResponse {
+  indexes?: GoogleAQIIndex[];
+  healthRecommendations?: {
+    generalPopulation?: string;
+  };
+  pollutants?: unknown[];
+}
+
+// Type definitions for OpenWeather API responses
+interface OpenWeatherComponents {
+  pm2_5?: number;
+  pm10?: number;
+  o3?: number;
+  no2?: number;
+  so2?: number;
+  co?: number;
+}
+
+interface OpenWeatherAirPollutionResponse {
+  list?: Array<{
+    main?: {
+      aqi?: number;
+    };
+    components?: OpenWeatherComponents;
+  }>;
+}
+
 const CACHE_DURATION = 600; // 10 minutes
 
 export async function GET(request: NextRequest) {
@@ -107,7 +143,7 @@ export async function GET(request: NextRequest) {
         console.log('Google API Response Status:', response.status);
         
         if (response.ok) {
-          const data = await response.json()
+          const data: GoogleAQIResponse = await response.json()
           console.log('✅ Google API Success - Raw Response:', JSON.stringify(data, null, 2));
           
           // Process Google's response
@@ -118,13 +154,13 @@ export async function GET(request: NextRequest) {
           // Look for indexes in the response
           if (data.indexes && Array.isArray(data.indexes)) {
             // Priority order: US EPA > Universal AQI > Any available
-            const usEpaIndex = data.indexes.find((idx: any) => 
+            const usEpaIndex = data.indexes.find((idx: GoogleAQIIndex) => 
               idx.code === 'usa_epa' || 
               idx.code === 'US_EPA' ||
               idx.displayName?.toLowerCase().includes('us epa')
             );
             
-            const universalIndex = data.indexes.find((idx: any) => 
+            const universalIndex = data.indexes.find((idx: GoogleAQIIndex) => 
               idx.code === 'uaqi' || 
               idx.displayName?.toLowerCase().includes('universal')
             );
@@ -169,7 +205,7 @@ export async function GET(request: NextRequest) {
                   googleIndexUsed: selectedIndex.code,
                   originalValue: selectedIndex.aqi,
                   convertedValue: aqiValue,
-                  allIndexes: data.indexes?.map((idx: any) => ({
+                  allIndexes: data.indexes?.map((idx: GoogleAQIIndex) => ({
                     code: idx.code,
                     aqi: idx.aqi,
                     displayName: idx.displayName
@@ -195,10 +231,10 @@ export async function GET(request: NextRequest) {
             error: errorText
           });
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('❌ Google Air Quality API error:', {
-          message: error.message,
-          name: error.name
+          message: error instanceof Error ? error.message : 'Unknown error',
+          name: error instanceof Error ? error.name : 'Unknown'
         });
       }
     } else {
@@ -240,7 +276,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const data = await response.json()
+    const data: OpenWeatherAirPollutionResponse = await response.json()
     console.log('OpenWeather Air Pollution Response:', data);
     
     // Convert OpenWeather's 1-5 scale to EPA 0-500 scale
@@ -300,7 +336,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Air quality API critical error:', error);
     return NextResponse.json(
       { 

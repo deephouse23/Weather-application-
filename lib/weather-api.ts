@@ -23,8 +23,7 @@
  * - UV Index, pressure, and moon phase calculations
  */
 
-import { WeatherData, HistoricalData } from './types'
-import { deduplicateRequest, withRetry, cacheWeatherData, getCachedWeatherData } from './cache'
+import { WeatherData, HourlyForecast } from './types'
 
 interface OpenWeatherMapCurrentResponse {
   main: {
@@ -119,7 +118,7 @@ const getApiUrl = (path: string): string => {
     // Server-side/build time
     const baseUrl = process.env.VERCEL_URL 
       ? `https://${process.env.VERCEL_URL}`
-      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3003';
     return `${baseUrl}${path}`;
   }
   // Client-side
@@ -234,8 +233,8 @@ const formatWindDisplay = (speed: number, direction?: number, gust?: number, cou
   
   // Convert speed if needed (OpenWeatherMap returns in meters/sec by default, but we request imperial)
   // When using imperial units, API returns mph; when metric, it returns m/s
-  let displaySpeed = speed;
-  let speedUnit = useMetric ? 'km/h' : 'mph';
+  const displaySpeed = speed;
+  const speedUnit = useMetric ? 'km/h' : 'mph';
   
   // Format wind speed
   if (displaySpeed < 1) {
@@ -626,7 +625,7 @@ const processDailyForecast = (forecastData: OpenWeatherMapForecastResponse, useF
     windDir: string[];
     cloudCover: number[];
     precipChance: number[];
-    hourlyForecast: any[];
+    hourlyForecast: HourlyForecast[];
   } } = {};
   
   forecastData.list.forEach((item) => {
@@ -889,7 +888,10 @@ const fetchAirQualityData = async (lat: number, lon: number, cityName?: string):
 
 // Note: AQI calculation functions moved to server-side API routes
 
-export const fetchWeatherData = async (locationInput: string): Promise<WeatherData> => {
+export const fetchWeatherData = async (
+  locationInput: string,
+  unitSystem: 'metric' | 'imperial' = 'imperial'
+): Promise<WeatherData> => {
   console.log('Fetching weather data for:', locationInput);
   
   try {
@@ -902,7 +904,9 @@ export const fetchWeatherData = async (locationInput: string): Promise<WeatherDa
     console.log('Geocoded location:', { lat, lon, displayName });
 
     // Fetch current weather using internal API
-    const currentWeatherResponse = await fetch(getApiUrl(`/api/weather/current?lat=${lat}&lon=${lon}&units=imperial`));
+    const currentWeatherResponse = await fetch(
+      getApiUrl(`/api/weather/current?lat=${lat}&lon=${lon}&units=${unitSystem}`)
+    );
     if (!currentWeatherResponse.ok) {
       throw new Error(`Current weather API call failed: ${currentWeatherResponse.status}`);
     }
@@ -910,7 +914,9 @@ export const fetchWeatherData = async (locationInput: string): Promise<WeatherDa
     console.log('Current weather response:', currentWeatherData);
 
     // Fetch forecast using internal API
-    const forecastResponse = await fetch(getApiUrl(`/api/weather/forecast?lat=${lat}&lon=${lon}&units=imperial`));
+    const forecastResponse = await fetch(
+      getApiUrl(`/api/weather/forecast?lat=${lat}&lon=${lon}&units=${unitSystem}`)
+    );
     if (!forecastResponse.ok) {
       throw new Error(`Forecast API call failed: ${forecastResponse.status}`);
     }
@@ -999,7 +1005,10 @@ const getLocationNotFoundError = (locationQuery: LocationQuery): string => {
 };
 
 // Function to get user's location and fetch weather
-export const fetchWeatherByLocation = async (coords: string): Promise<WeatherData> => {
+export const fetchWeatherByLocation = async (
+  coords: string,
+  unitSystem: 'metric' | 'imperial' = 'imperial'
+): Promise<WeatherData> => {
   const [latitude, longitude] = coords.split(',').map(Number)
   
   if (isNaN(latitude) || isNaN(longitude)) {
@@ -1008,7 +1017,9 @@ export const fetchWeatherByLocation = async (coords: string): Promise<WeatherDat
 
   try {
     // Fetch current weather using internal API
-    const currentWeatherResponse = await fetch(getApiUrl(`/api/weather/current?lat=${latitude}&lon=${longitude}&units=imperial`))
+    const currentWeatherResponse = await fetch(
+      getApiUrl(`/api/weather/current?lat=${latitude}&lon=${longitude}&units=${unitSystem}`)
+    )
     if (!currentWeatherResponse.ok) {
       throw new Error(`Current weather API call failed: ${currentWeatherResponse.status}`)
     }
@@ -1016,7 +1027,9 @@ export const fetchWeatherByLocation = async (coords: string): Promise<WeatherDat
     console.log('Current weather response:', currentWeatherData)
 
     // Fetch forecast using internal API
-    const forecastResponse = await fetch(getApiUrl(`/api/weather/forecast?lat=${latitude}&lon=${longitude}&units=imperial`))
+    const forecastResponse = await fetch(
+      getApiUrl(`/api/weather/forecast?lat=${latitude}&lon=${longitude}&units=${unitSystem}`)
+    )
     if (!forecastResponse.ok) {
       throw new Error(`Forecast API call failed: ${forecastResponse.status}`)
     }

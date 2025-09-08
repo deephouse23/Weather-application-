@@ -16,6 +16,34 @@
   --danger: #ef4444;     /* error */
 }
 
+/* Miami Vice theme */
+:root[data-theme="miami"] {
+  --bg: #1a0b2e;           /* Deep purple background */
+  --bg-elev: #2a1810;     /* Darker purple panels */
+  --border: #f97316;      /* Orange borders */
+  --text: #f97316;        /* Orange text */
+  --text-muted: #ec4899;  /* Pink muted text */
+  --primary: #f97316;     /* Orange primary */
+  --accent: #ec4899;      /* Pink accent */
+  --ok: #22c55e;          /* Green success */
+  --warn: #f59e0b;        /* Yellow warning */
+  --danger: #ef4444;      /* Red error */
+}
+
+/* TRON theme */
+:root[data-theme="tron"] {
+  --bg: #000000;          /* Pure black background */
+  --bg-elev: #0a0a0a;     /* Slightly elevated black */
+  --border: #00ffff;      /* Cyan borders */
+  --text: #00ffff;        /* Cyan text */
+  --text-muted: #4dd0e1;  /* Light cyan muted */
+  --primary: #00ffff;     /* Cyan primary */
+  --accent: #1de9b6;      /* Teal accent */
+  --ok: #4caf50;          /* Green success */
+  --warn: #ff9800;        /* Orange warning */
+  --danger: #f44336;      /* Red error */
+}
+
 /* Default fallback (same as dark) */
 :root {
   --bg: #0d1117;
@@ -118,6 +146,78 @@ button {
     font-size: 16px;
     line-height: 1.6;
   }
+}
+
+/* Global theme utility classes */
+.theme-bg {
+  background-color: var(--bg);
+}
+
+.theme-bg-elev {
+  background-color: var(--bg-elev);
+}
+
+.theme-border {
+  border-color: var(--border);
+}
+
+.theme-text {
+  color: var(--text);
+}
+
+.theme-text-muted {
+  color: var(--text-muted);
+}
+
+.theme-primary {
+  color: var(--primary);
+}
+
+.theme-accent {
+  color: var(--accent);
+}
+
+.theme-primary-bg {
+  background-color: var(--primary);
+}
+
+.theme-accent-bg {
+  background-color: var(--accent);
+}
+
+/* Global theme application */
+body {
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+/* Override hardcoded colors with theme variables */
+.bg-gray-900 {
+  background-color: var(--bg) !important;
+}
+
+.bg-gray-800 {
+  background-color: var(--bg-elev) !important;
+}
+
+.text-green-400,
+.text-cyan-400,
+.text-orange-400 {
+  color: var(--primary) !important;
+}
+
+.border-green-400,
+.border-cyan-400,
+.border-orange-400 {
+  border-color: var(--primary) !important;
+}
+
+.text-gray-400 {
+  color: var(--text-muted) !important;
+}
+
+.border-gray-700 {
+  border-color: var(--border) !important;
 }
 
 /* Better overflow handling for long text */
@@ -339,5 +439,189 @@ input:focus,
     .grid-responsive-1-3 {
       grid-template-columns: repeat(3, 1fr);
     }
+  }
+}
+
+@layer base {
+  /* Dark theme - 16-bit terminal aesthetic */
+  :root[data-theme="dark"] {
+    --background: 220 41% 7%; /* #0d1117 */
+    --foreground: 210 17% 82%; /* #e5e7eb */
+    --card: 217 33% 15%; /* #111827 */
+    --card-foreground: 210 17% 82%; /* #e5e7eb */
+    --popover: 217 33% 15%; /* #111827 */
+    --popover-foreground: 210 17% 82%; /* #e5e7eb */
+    --primary: 191 100% 50%; /* #00d4ff */
+    --primary-foreground: 220 41% 7%; /* #0d1117 */
+    --secondary: 264 85% 62%; /* #7c3aed */
+    --secondary-foreground: 210 17% 82%; /* #e5e7eb */
+    --muted: 217 19% 27%; /* #1f2937 */
+    --muted-foreground: 210 13% 50%; /* #9ca3af */
+    --accent: 264 85% 62%; /* #7c3aed */
+    --accent-foreground: 210 17% 82%; /* #e5e7eb */
+    --destructive: 0 72% 61%; /* #ef4444 */
+    --destructive-foreground: 210 17% 82%; /* #e5e7eb */
+    --border: 217 19% 27%; /* #1f2937 */
+    --input: 217 19% 27%; /* #1f2937 */
+    --ring: 191 100% 50%; /* #00d4ff */
+    --chart-1: 191 100% 50%;
+    --chart-2: 264 85% 62%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 0 72% 61%;
+    --radius: 0;
+  }
+  
+  /* Miami Vice theme */
+  :root[data-theme="miami"] {
+    --background: 256 62% 13%; /* #1a0b2e */
+    --foreground: 23 100% 73%; /* #f97316 */
+    --card: 300 68% 18%; /* #2a1810 */
+    --card-foreground: 23 100% 73%; /* #f97316 */
+    --popover: 300 68% 18%; /* #2a1810 */
+    --popover-foreground: 23 100% 73%; /* #f97316 */
+    --primary: 23 100% 73%; /* #f97316 */
+    --primary-foreground: 256 62% 13%; /* #1a0b2e */
+    --secondary: 328 73% 59%; /* #ec4899 */
+    --secondary-foreground: 256 62% 13%; /* #1a0b2e */
+    --muted: 256 100% 10%; /* #1a0033 */
+    --muted-foreground: 328 73% 59%; /* #ec4899 */
+    --accent: 328 73% 59%; /* #ec4899 */
+    --accent-foreground: 256 62% 13%; /* #1a0b2e */
+    --destructive: 0 72% 61%; /* #ef4444 */
+    --destructive-foreground: 23 100% 73%; /* #f97316 */
+    --border: 23 100% 73%; /* #f97316 */
+    --input: 300 68% 18%; /* #2a1810 */
+    --ring: 23 100% 73%; /* #f97316 */
+    --chart-1: 23 100% 73%;
+    --chart-2: 328 73% 59%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 0 72% 61%;
+    --radius: 0;
+  }
+  
+  /* TRON theme */
+  :root[data-theme="tron"] {
+    --background: 0 0% 0%; /* #000000 */
+    --foreground: 180 100% 50%; /* #00ffff */
+    --card: 0 0% 4%; /* #0a0a0a */
+    --card-foreground: 180 100% 50%; /* #00ffff */
+    --popover: 0 0% 4%; /* #0a0a0a */
+    --popover-foreground: 180 100% 50%; /* #00ffff */
+    --primary: 180 100% 50%; /* #00ffff */
+    --primary-foreground: 0 0% 0%; /* #000000 */
+    --secondary: 165 59% 62%; /* #1de9b6 */
+    --secondary-foreground: 0 0% 0%; /* #000000 */
+    --muted: 180 100% 7%; /* #001111 */
+    --muted-foreground: 189 100% 76%; /* #4dd0e1 */
+    --accent: 165 59% 62%; /* #1de9b6 */
+    --accent-foreground: 0 0% 0%; /* #000000 */
+    --destructive: 4 90% 58%; /* #f44336 */
+    --destructive-foreground: 180 100% 50%; /* #00ffff */
+    --border: 180 100% 50%; /* #00ffff */
+    --input: 180 100% 7%; /* #001111 */
+    --ring: 180 100% 50%; /* #00ffff */
+    --chart-1: 180 100% 50%;
+    --chart-2: 165 59% 62%;
+    --chart-3: 122 39% 49%;
+    --chart-4: 36 100% 50%;
+    --chart-5: 4 90% 58%;
+    --radius: 0;
+  }
+  
+  /* Default fallback (dark theme) */
+  :root {
+    --background: 220 41% 7%;
+    --foreground: 210 17% 82%;
+    --card: 217 33% 15%;
+    --card-foreground: 210 17% 82%;
+    --popover: 217 33% 15%;
+    --popover-foreground: 210 17% 82%;
+    --primary: 191 100% 50%;
+    --primary-foreground: 220 41% 7%;
+    --secondary: 264 85% 62%;
+    --secondary-foreground: 210 17% 82%;
+    --muted: 217 19% 27%;
+    --muted-foreground: 210 13% 50%;
+    --accent: 264 85% 62%;
+    --accent-foreground: 210 17% 82%;
+    --destructive: 0 72% 61%;
+    --destructive-foreground: 210 17% 82%;
+    --border: 217 19% 27%;
+    --input: 217 19% 27%;
+    --ring: 191 100% 50%;
+    --chart-1: 191 100% 50%;
+    --chart-2: 264 85% 62%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 0 72% 61%;
+    --radius: 0;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* 16-bit themed shadcn/ui component overrides */
+@layer components {
+  /* Pixel-perfect borders for all shadcn components */
+  .border, [class*="border-"] {
+    border-style: solid !important;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+  
+  /* 16-bit button styling */
+  [data-theme="dark"] button[class*="bg-primary"],
+  [data-theme="dark"] .bg-primary {
+    box-shadow: 0 0 10px hsl(var(--primary) / 0.5), 
+                inset 0 0 5px hsl(var(--primary) / 0.2);
+    text-shadow: 0 0 5px currentColor;
+  }
+  
+  [data-theme="miami"] button[class*="bg-primary"],
+  [data-theme="miami"] .bg-primary {
+    box-shadow: 0 0 15px hsl(var(--primary) / 0.6), 
+                inset 0 0 8px hsl(var(--primary) / 0.3);
+    text-shadow: 0 0 8px currentColor;
+  }
+  
+  [data-theme="tron"] button[class*="bg-primary"],
+  [data-theme="tron"] .bg-primary {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.8), 
+                inset 0 0 10px hsl(var(--primary) / 0.4);
+    text-shadow: 0 0 10px currentColor;
+  }
+  
+  /* Card glow effects */
+  [data-theme="dark"] [class*="border-"] {
+    box-shadow: 0 0 5px hsl(var(--primary) / 0.3);
+  }
+  
+  [data-theme="miami"] [class*="border-"] {
+    box-shadow: 0 0 8px hsl(var(--primary) / 0.5);
+  }
+  
+  [data-theme="tron"] [class*="border-"] {
+    box-shadow: 0 0 10px hsl(var(--primary) / 0.7),
+                inset 0 0 5px hsl(var(--primary) / 0.2);
+  }
+  
+  /* Monospace font for all text */
+  * {
+    font-family: 'Courier New', Monaco, 'Lucida Console', monospace !important;
+  }
+  
+  /* Remove rounded corners for pixel aesthetic */
+  * {
+    border-radius: 0 !important;
   }
 }

@@ -47,7 +47,7 @@ export default function ResetPasswordPage() {
           <h1 className={`text-2xl font-bold uppercase tracking-wider font-mono mb-2 ${themeClasses.text}`}>
             Reset Password
           </h1>
-          <p className={`text-sm ${themeClasses.mutedText}`}>
+          <p className={`text-sm ${themeClasses.secondary || themeClasses.text}`}>
             Enter your email address and we'll send you a password reset link
           </p>
         </div>

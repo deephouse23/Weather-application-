@@ -17,6 +17,8 @@
 
 import { useState, useEffect } from "react"
 import { Search, Loader2, MapPin, X } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 // APP_CONSTANTS removed - no longer needed for themes
 import CityAutocomplete from "./city-autocomplete"
 import { type CityData } from "@/lib/city-database"
@@ -172,9 +174,9 @@ export default function WeatherSearch({
             onFocus={() => searchTerm.length >= 2 && setShowAutocomplete(true)}
             placeholder={isDisabled ? "Rate limit reached..." : "ZIP, City+State, or City+Country..."}
             disabled={controlsDisabled}
-            className={`w-full px-3 sm:px-4 py-3 sm:py-4 pr-10 sm:pr-12 ${themeClasses.cardBg} border-2 ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.placeholderText} 
-                     font-mono text-sm sm:text-base uppercase tracking-wider focus:outline-none ${themeClasses.hoverBorder} 
-                     transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed pixel-font ${themeClasses.specialBorder}
+            className={`w-full px-3 sm:px-4 py-3 sm:py-4 pr-10 sm:pr-12 ${themeClasses.cardBg} border-2 ${theme === 'miami' ? 'border-weather-accent' : themeClasses.borderColor} ${themeClasses.text} ${themeClasses.placeholderText} 
+                     font-mono text-sm sm:text-base uppercase tracking-wider focus:outline-none ${theme === 'miami' ? 'hover:border-weather-accent' : themeClasses.hoverBorder} 
+                     transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed pixel-font ${theme === 'miami' ? 'border-weather-accent' : themeClasses.specialBorder}
                      min-h-[48px] touch-manipulation`}
             style={{
               imageRendering: "pixelated",
@@ -185,33 +187,42 @@ export default function WeatherSearch({
           <div className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
             {/* Clear button */}
             {searchTerm && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={handleClearClick}
                 disabled={controlsDisabled}
-                className={`p-2 ${themeClasses.secondaryText} hover:text-red-400 
-                         transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed
-                         min-w-[40px] min-h-[40px] flex items-center justify-center touch-manipulation`}
+                className={cn(
+                  "h-10 w-10",
+                  themeClasses.secondaryText,
+                  "hover:text-red-400"
+                )}
                 title="Clear search"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             )}
             
             {/* Search button */}
-            <button
+            <Button
               type="submit"
+              variant="ghost"
+              size="icon"
               disabled={controlsDisabled || !searchTerm.trim()}
-              className={`p-2 ${themeClasses.secondaryText} hover:text-[#ffe66d] 
-                       transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${themeClasses.glow}
-                       min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation`}
+              className={cn(
+                "h-10 w-10",
+                themeClasses.secondaryText,
+                "hover:text-[#ffe66d]",
+                themeClasses.glow
+              )}
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
               ) : (
                 <Search className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
-            </button>
+            </Button>
           </div>
 
           {/* City Autocomplete */}
@@ -229,32 +240,29 @@ export default function WeatherSearch({
       {/* Location Button - Mobile friendly - Hidden when auto-location is enabled */}
       {!hideLocationButton && onLocationSearch && (
         <div className="flex justify-center px-2 sm:px-0">
-          <button
+          <Button
             onClick={handleLocationClick}
             disabled={controlsDisabled}
-            className={`flex items-center gap-2 px-4 sm:px-6 py-3 ${themeClasses.buttonBg} border ${themeClasses.buttonBorder} 
-                     ${themeClasses.buttonText} ${themeClasses.buttonHover} transition-all duration-200 
-                     text-xs sm:text-sm uppercase tracking-wider font-mono disabled:opacity-50 
-                     disabled:cursor-not-allowed pixel-font ${themeClasses.specialBorder}
-                     min-h-[48px] touch-manipulation w-full sm:w-auto max-w-xs`}
-              style={{
-                imageRendering: "pixelated",
-                fontFamily: "monospace",
-                fontSize: "clamp(11px, 2.5vw, 14px)" // Responsive font size
-              }}
+            variant="outline"
+            className={cn(
+              "w-full sm:w-auto max-w-xs min-h-[48px]",
+              "text-xs sm:text-sm uppercase tracking-wider font-mono",
+              "border-2",
+              theme === 'miami' && "border-weather-accent hover:bg-weather-accent hover:text-weather-bg"
+            )}
           >
-            <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-            <span className="break-words text-center">
+            <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+            <span>
               {isLoading ? "LOADING..." : isDisabled ? "RATE LIMITED" : "USE MY LOCATION"}
             </span>
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Error Display - Mobile responsive */}
       {(error || rateLimitError) && (
         <div className={`p-3 sm:p-4 mx-2 sm:mx-0 ${themeClasses.errorBg} border ${themeClasses.errorText} 
-                      text-xs sm:text-sm text-center pixel-font ${themeClasses.specialBorder}`}>
+                      text-xs sm:text-sm text-center pixel-font ${theme === 'miami' ? 'border-weather-accent' : themeClasses.specialBorder}`}>
           <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
             <span>⚠</span>
             <span className="uppercase tracking-wider break-words">{error || rateLimitError}</span>
@@ -267,30 +275,45 @@ export default function WeatherSearch({
                 Try these format examples:
               </div>
               <div className="grid grid-cols-1 gap-1 text-xs">
-                <button 
+                <Button 
+                  variant="link"
                   onClick={() => setSearchTerm("90210")}
-                  className={`${themeClasses.warningText} hover:text-[#00d4ff] transition-colors cursor-pointer underline ${themeClasses.glow}
-                           py-2 px-3 touch-manipulation min-h-[44px] text-left`}
+                  className={cn(
+                    "justify-start h-auto py-2",
+                    themeClasses.warningText,
+                    "hover:text-[#00d4ff]",
+                    themeClasses.glow
+                  )}
                   disabled={isDisabled}
                 >
                   ► ZIP: 90210
-                </button>
-                <button 
+                </Button>
+                <Button 
+                  variant="link"
                   onClick={() => setSearchTerm("New York, NY")}
-                  className={`${themeClasses.warningText} hover:text-[#00d4ff] transition-colors cursor-pointer underline ${themeClasses.glow}
-                           py-2 px-3 touch-manipulation min-h-[44px] text-left`}
+                  className={cn(
+                    "justify-start h-auto py-2",
+                    themeClasses.warningText,
+                    "hover:text-[#00d4ff]",
+                    themeClasses.glow
+                  )}
                   disabled={isDisabled}
                 >
                   ► City + State: New York, NY
-                </button>
-                <button 
+                </Button>
+                <Button 
+                  variant="link"
                   onClick={() => setSearchTerm("London, UK")}
-                  className={`${themeClasses.warningText} hover:text-[#00d4ff] transition-colors cursor-pointer underline ${themeClasses.glow}
-                           py-2 px-3 touch-manipulation min-h-[44px] text-left`}
+                  className={cn(
+                    "justify-start h-auto py-2",
+                    themeClasses.warningText,
+                    "hover:text-[#00d4ff]",
+                    themeClasses.glow
+                  )}
                   disabled={isDisabled}
                 >
                   ► City + Country: London, UK
-                </button>
+                </Button>
               </div>
             </div>
           )}

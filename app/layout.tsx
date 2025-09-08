@@ -20,6 +20,8 @@ import { Analytics } from '@vercel/analytics/react'
 import AppThemeProvider from "@/app/providers/ThemeProvider"
 import { LocationProvider } from "@/components/location-context"
 import { AuthProvider } from "@/lib/auth"
+import { Toaster } from "@/components/ui/toaster"
+import AuthDebug from "@/components/auth/auth-debug"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -133,13 +135,15 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://www.google.com" />
       </head>
       <body className={inter.className}>
-        <AppThemeProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <AppThemeProvider>
             <LocationProvider>
               {children}
+              <Toaster />
+              <AuthDebug />
             </LocationProvider>
-          </AuthProvider>
-        </AppThemeProvider>
+          </AppThemeProvider>
+        </AuthProvider>
         <Analytics />
       </body>
     </html>

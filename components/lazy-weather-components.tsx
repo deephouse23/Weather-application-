@@ -43,7 +43,7 @@ function WeatherComponentLoader({ theme }: { theme: 'dark' | 'miami' | 'tron' })
 }
 
 // Lazy wrapper components with fallback loading states
-export function LazyForecast(props: any) {
+export function LazyForecast(props: { theme?: 'dark' | 'miami' | 'tron'; [key: string]: unknown }) {
   return (
     <ErrorBoundary componentName="Weather Forecast" theme={props.theme}>
       <Suspense fallback={<WeatherComponentLoader theme={props.theme} />}>
@@ -53,7 +53,7 @@ export function LazyForecast(props: any) {
   )
 }
 
-export function LazyForecastDetails(props: any) {
+export function LazyForecastDetails(props: { theme?: 'dark' | 'miami' | 'tron'; [key: string]: unknown }) {
   return (
     <ErrorBoundary componentName="Forecast Details" theme={props.theme}>
       <Suspense fallback={<WeatherComponentLoader theme={props.theme} />}>
@@ -63,7 +63,7 @@ export function LazyForecastDetails(props: any) {
   )
 }
 
-export function LazyEnvironmentalDisplay(props: any) {
+export function LazyEnvironmentalDisplay(props: { theme?: 'dark' | 'miami' | 'tron'; [key: string]: unknown }) {
   return (
     <ErrorBoundary componentName="Environmental Display" theme={props.theme}>
       <Suspense fallback={<WeatherComponentLoader theme={props.theme} />}>
