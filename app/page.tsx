@@ -987,7 +987,7 @@ function WeatherApp() {
                       currentWeatherData={{
                         humidity: weather?.humidity || 0,
                         wind: weather?.wind || { speed: 0, direction: '', gust: null },
-                        pressure: weather?.pressure || 1013,
+                        pressure: weather?.pressure || '1013',
                         uvIndex: weather?.uvIndex || 0,
                         sunrise: weather?.sunrise || 'N/A',
                         sunset: weather?.sunset || 'N/A'

@@ -21,6 +21,7 @@ import { lazy, Suspense } from 'react'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ErrorBoundary } from './error-boundary'
+import { WeatherData } from '@/lib/types'
 
 // Lazy load weather components
 const Forecast = lazy(() => import('./forecast'))
@@ -43,29 +44,59 @@ function WeatherComponentLoader({ theme }: { theme: 'dark' | 'miami' | 'tron' })
 }
 
 // Lazy wrapper components with fallback loading states
-export function LazyForecast(props: { theme?: 'dark' | 'miami' | 'tron'; [key: string]: unknown }) {
+interface ForecastDay {
+  day: string;
+  highTemp: number;
+  lowTemp: number;
+  condition: string;
+  description: string;
+  country?: string;
+}
+
+export function LazyForecast(props: { 
+  forecast: ForecastDay[]; 
+  theme?: 'dark' | 'miami' | 'tron'; 
+  onDayClick?: (index: number) => void;
+  selectedDay?: number | null;
+}) {
   return (
-    <ErrorBoundary componentName="Weather Forecast" theme={props.theme}>
-      <Suspense fallback={<WeatherComponentLoader theme={props.theme} />}>
+    <ErrorBoundary componentName="Weather Forecast">
+      <Suspense fallback={<WeatherComponentLoader theme={props.theme || 'dark'} />}>
         <Forecast {...props} />
       </Suspense>
     </ErrorBoundary>
   )
 }
 
-export function LazyForecastDetails(props: { theme?: 'dark' | 'miami' | 'tron'; [key: string]: unknown }) {
+export function LazyForecastDetails(props: { 
+  forecast: ForecastDay[];
+  selectedDay: number | null;
+  theme?: 'dark' | 'miami' | 'tron';
+  currentWeatherData?: {
+    humidity: number;
+    wind: { speed: number; direction?: string };
+    pressure: string;
+    uvIndex: number;
+    sunrise: string;
+    sunset: string;
+  };
+}) {
   return (
-    <ErrorBoundary componentName="Forecast Details" theme={props.theme}>
-      <Suspense fallback={<WeatherComponentLoader theme={props.theme} />}>
+    <ErrorBoundary componentName="Forecast Details">
+      <Suspense fallback={<WeatherComponentLoader theme={props.theme || 'dark'} />}>
         <ForecastDetails {...props} />
       </Suspense>
     </ErrorBoundary>
   )
 }
 
-export function LazyEnvironmentalDisplay(props: { theme?: 'dark' | 'miami' | 'tron'; [key: string]: unknown }) {
+export function LazyEnvironmentalDisplay(props: { 
+  weather: WeatherData;
+  theme: 'dark' | 'miami' | 'tron';
+  className?: string;
+}) {
   return (
-    <ErrorBoundary componentName="Environmental Display" theme={props.theme}>
+    <ErrorBoundary componentName="Environmental Display">
       <Suspense fallback={<WeatherComponentLoader theme={props.theme} />}>
         <EnvironmentalDisplay {...props} />
       </Suspense>

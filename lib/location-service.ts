@@ -317,24 +317,27 @@ export class LocationService {
       let latitude: number, longitude: number, city: string, region: string, country: string;
 
       if (serviceUrl.includes('ipapi.co')) {
-        latitude = parseFloat(data.latitude);
-        longitude = parseFloat(data.longitude);
-        city = data.city || 'Unknown City';
-        region = data.region || '';
-        country = data.country_name || data.country || 'Unknown Country';
+        const ipapiData = data as IPApiCoResponse;
+        latitude = parseFloat(ipapiData.latitude.toString());
+        longitude = parseFloat(ipapiData.longitude.toString());
+        city = ipapiData.city || 'Unknown City';
+        region = ipapiData.region || '';
+        country = ipapiData.country_name || ipapiData.country || 'Unknown Country';
       } else if (serviceUrl.includes('ipinfo.io')) {
-        const [lat, lon] = (data.loc || '0,0').split(',').map(parseFloat);
+        const ipinfoData = data as IPInfoResponse;
+        const [lat, lon] = (ipinfoData.loc || '0,0').split(',').map(parseFloat);
         latitude = lat;
         longitude = lon;
-        city = data.city || 'Unknown City';
-        region = data.region || '';
-        country = data.country || 'Unknown Country';
+        city = ipinfoData.city || 'Unknown City';
+        region = ipinfoData.region || '';
+        country = ipinfoData.country || 'Unknown Country';
       } else if (serviceUrl.includes('ipgeolocation.io')) {
-        latitude = parseFloat(data.latitude);
-        longitude = parseFloat(data.longitude);
-        city = data.city || 'Unknown City';
-        region = data.state_prov || '';
-        country = data.country_name || 'Unknown Country';
+        const ipgeoData = data as IPGeolocationResponse;
+        latitude = parseFloat(ipgeoData.latitude.toString());
+        longitude = parseFloat(ipgeoData.longitude.toString());
+        city = ipgeoData.city || 'Unknown City';
+        region = ipgeoData.state_prov || '';
+        country = ipgeoData.country_name || 'Unknown Country';
       } else {
         return null;
       }

@@ -267,16 +267,16 @@ const WeatherMapAnimated = ({
       <div 
         className="absolute bottom-0 left-0 right-0 z-[1000] pointer-events-auto"
         style={{ 
-          display: 'block !important',
-          visibility: 'visible !important',
-          position: 'absolute !important'
+          display: 'block',
+          visibility: 'visible',
+          position: 'absolute'
         }}
       >
         <div 
           className={`${themeStyles.controls} border-t backdrop-blur-md p-4 min-h-[120px]`} 
           style={{ 
-            display: 'block !important', 
-            visibility: 'visible !important',
+            display: 'block', 
+            visibility: 'visible',
             position: 'relative',
             zIndex: 1002
           }}

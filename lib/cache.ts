@@ -46,7 +46,7 @@ const pendingRequests = new Map<string, Promise<unknown>>()
  * Get cached data with stale-while-revalidate pattern
  */
 export const getCachedData = <T>(key: string): CacheEntry<T> | null => {
-  const entry = cache.get(key)
+  const entry = cache.get(key) as CacheEntry<T> | undefined
   if (!entry) return null
 
   const now = Date.now()
@@ -149,7 +149,7 @@ export const getCachedWeatherData = (): {
  * Optimize historical data fetching
  */
 // Type for historical weather data response
-interface HistoricalWeatherResponse {
+export interface HistoricalWeatherResponse {
   daily?: {
     temperature_2m_max?: number[];
     temperature_2m_min?: number[];

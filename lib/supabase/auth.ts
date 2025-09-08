@@ -92,7 +92,7 @@ export const updatePassword = async (password: string) => {
 }
 
 // Update user profile
-export const updateProfile = async (updates: {
+export const updateAuthProfile = async (updates: {
   username?: string
   full_name?: string
   avatar_url?: string
