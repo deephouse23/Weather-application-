@@ -3,8 +3,8 @@ import { cookies } from 'next/headers'
 import { Database } from './types'
 
 // Create a server-side supabase client
-export const createServerSupabaseClient = () => {
-  const cookieStore = cookies()
+export const createServerSupabaseClient = async () => {
+  const cookieStore = await cookies()
   
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,7 +31,7 @@ export const createServerSupabaseClient = () => {
 
 // Helper function to get user on server
 export const getServerUser = async () => {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
   const { data: { user }, error } = await supabase.auth.getUser()
   
   if (error) {
@@ -44,7 +44,7 @@ export const getServerUser = async () => {
 
 // Helper function to get session on server
 export const getServerSession = async () => {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
   const { data: { session }, error } = await supabase.auth.getSession()
   
   if (error) {

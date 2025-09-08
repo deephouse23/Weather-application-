@@ -305,7 +305,7 @@ export class UserCacheService {
               metrics.expiredEntries++;
             }
           }
-        } catch (error) {
+        } catch {
           console.warn(`Corrupted cache entry: ${key}`);
           metrics.expiredEntries++;
         }
@@ -370,7 +370,7 @@ export class UserCacheService {
             removedCount++;
           }
         }
-      } catch (error) {
+      } catch {
         // Remove corrupted entries
         safeStorage.removeItem(key);
         removedCount++;
@@ -402,7 +402,7 @@ export class UserCacheService {
             size: stored.length * 2
           });
         }
-      } catch (error) {
+      } catch {
         // Add corrupted entries for removal
         entries.push({
           key,
@@ -454,7 +454,7 @@ export class UserCacheService {
   /**
    * Validate and migrate old preference data
    */
-  private validateAndMigratePreferences(preferences: any): UserPreferences {
+  private validateAndMigratePreferences(preferences: unknown): UserPreferences {
     const defaultPreferences: UserPreferences = {
       settings: {
         units: 'imperial',
@@ -464,15 +464,42 @@ export class UserCacheService {
       updatedAt: Date.now()
     };
 
-    // Merge with defaults to handle missing properties
-    return {
+    // Type guard for preferences
+    const isValidPreferences = (obj: unknown): obj is Partial<UserPreferences> => {
+      return typeof obj === 'object' && obj !== null;
+    };
+
+    if (!isValidPreferences(preferences)) {
+      return defaultPreferences;
+    }
+
+    // Type guard for settings
+    const isValidSettings = (obj: unknown): obj is Partial<UserPreferences['settings']> => {
+      return typeof obj === 'object' && obj !== null;
+    };
+
+    // Safely merge with defaults to handle missing properties
+    const validatedPreferences: UserPreferences = {
       ...defaultPreferences,
-      ...preferences,
+      lastLocation: preferences.lastLocation || defaultPreferences.lastLocation,
+      updatedAt: typeof preferences.updatedAt === 'number' ? preferences.updatedAt : defaultPreferences.updatedAt,
       settings: {
         ...defaultPreferences.settings,
-        ...preferences.settings
+        ...(isValidSettings(preferences.settings) ? {
+          units: preferences.settings.units === 'metric' || preferences.settings.units === 'imperial' 
+            ? preferences.settings.units 
+            : defaultPreferences.settings.units,
+          theme: preferences.settings.theme === 'dark' || preferences.settings.theme === 'miami' || preferences.settings.theme === 'tron'
+            ? preferences.settings.theme 
+            : defaultPreferences.settings.theme,
+          cacheEnabled: typeof preferences.settings.cacheEnabled === 'boolean' 
+            ? preferences.settings.cacheEnabled 
+            : defaultPreferences.settings.cacheEnabled
+        } : {})
       }
     };
+
+    return validatedPreferences;
   }
 
   /**

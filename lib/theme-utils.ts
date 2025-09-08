@@ -26,13 +26,14 @@ export interface ThemeStyles {
   text: string;
   mutedText?: string;
   borderColor: string;
+  border: string;
   accentBg: string;
   accentText: string;
   cardBg: string;
   hoverBg: string;
   glow: string;
   gradient?: string;
-  secondary?: string;
+  secondary: string;
   headerText?: string;
   secondaryText?: string;
 }
@@ -95,6 +96,7 @@ export const getThemeStyles = (theme: ThemeType): ThemeStyles => {
     text: `text-[${colors.text}]`,
     mutedText: `text-[${colors.textSecondary}]`,
     borderColor: `border-[${colors.border}]`,
+    border: `border-[${colors.border}]`,
     accentBg: `bg-[${colors.primary}]`,
     accentText: `text-[${colors.primary}]`,
     cardBg: `bg-[${colors.backgroundSecondary}]`,
@@ -119,6 +121,7 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
         ...base,
         background: `bg-[${colors.backgroundSecondary}]`,
         borderColor: `border-[${colors.border}]`,
+        border: `border-[${colors.border}]`,
         cardBg: `bg-[${colors.backgroundTertiary}]`
       };
 
@@ -127,7 +130,8 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
         ...base,
         background: `bg-[${colors.backgroundSecondary}]`,
         hoverBg: `hover:bg-[${colors.primary}] hover:text-[${colors.background}] hover:scale-105`,
-        borderColor: `border-[${colors.border}]`
+        borderColor: `border-[${colors.border}]`,
+        border: `border-[${colors.border}]`
       };
 
     case 'input':
@@ -135,6 +139,7 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
         ...base,
         background: `bg-[${colors.backgroundTertiary}]`,
         borderColor: `border-[${colors.border}] focus:border-[${colors.primary}]`,
+        border: `border-[${colors.border}] focus:border-[${colors.primary}]`,
         text: `text-[${colors.text}] placeholder:text-[${colors.textSecondary}]`
       };
 
@@ -143,6 +148,7 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
         ...base,
         background: `bg-[${colors.background}]`,
         borderColor: `border-[${colors.border}]`,
+        border: `border-[${colors.border}]`,
         hoverBg: `hover:bg-[${colors.primary}] hover:text-[${colors.background}]`
       };
 
@@ -152,6 +158,7 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
         background: `bg-[${colors.background}]`,
         cardBg: `bg-[${colors.backgroundSecondary}]`,
         borderColor: `border-[${colors.primary}]`,
+        border: `border-[${colors.primary}]`,
         headerText: `text-[${colors.primary}] font-mono font-bold`,
         glow: `shadow-lg shadow-[${colors.primary}]/20`,
         secondaryText: `text-[${colors.textSecondary}]`
@@ -162,6 +169,7 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
         ...base,
         background: `bg-[${colors.backgroundSecondary}]`,
         borderColor: `border-[${colors.border}]`,
+        border: `border-[${colors.border}]`,
         accentBg: `bg-[${colors.primary}]`,
         hoverBg: `hover:bg-[${colors.backgroundTertiary}]`
       };
@@ -171,6 +179,7 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
         ...base,
         background: `bg-[${colors.background}]`,
         borderColor: `border-[${colors.primary}]`,
+        border: `border-[${colors.primary}]`,
         glow: `shadow-2xl shadow-[${colors.primary}]/30`
       };
 
@@ -179,6 +188,7 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
         ...base,
         background: `bg-[${colors.backgroundSecondary}]`,
         borderColor: `border-[${colors.border}]`,
+        border: `border-[${colors.border}]`,
         accentBg: `bg-[${colors.primary}]`
       };
 

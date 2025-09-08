@@ -56,8 +56,15 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
           lowTempText: 'text-[#4ecdc4]',
           glow: '',
           specialBorder: '',
-          cardStyle: {},
-          itemStyle: {}
+          cardStyle: {
+            boxShadow: undefined,
+            textShadow: undefined
+          },
+          itemStyle: {
+            background: undefined,
+            boxShadow: undefined,
+            borderColor: undefined
+          }
         }
       case 'miami':
         return {
@@ -119,8 +126,15 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
           lowTempText: 'text-[#4ecdc4]',
           glow: '',
           specialBorder: '',
-          cardStyle: {},
-          itemStyle: {}
+          cardStyle: {
+            boxShadow: undefined,
+            textShadow: undefined
+          },
+          itemStyle: {
+            background: undefined,
+            boxShadow: undefined,
+            borderColor: undefined
+          }
         }
     }
   }
@@ -165,8 +179,8 @@ function ForecastCard({ day, index, themeClasses, theme, onDayClick, isSelected 
     lowTempText: string;
     glow: string;
     specialBorder: string;
-    cardStyle: Record<string, string>;
-    itemStyle: Record<string, string>;
+    cardStyle: Record<string, string | undefined>;
+    itemStyle: Record<string, string | undefined>;
   }; 
   theme: ThemeType;
   onDayClick?: (index: number) => void;

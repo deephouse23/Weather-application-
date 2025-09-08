@@ -8,14 +8,14 @@ import { toggleLocationFavorite, deleteSavedLocation } from '@/lib/supabase/data
 import { getDashboardWeather, getWeatherIcon, getTemperatureColor } from '@/lib/dashboard-weather'
 import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
-import { WeatherData as FullWeatherData } from '@/lib/types'
+import { WeatherData } from '@/lib/types'
 
 interface LocationCardProps {
   location: SavedLocation
   onUpdate: () => void
 }
 
-interface WeatherData {
+interface BasicWeatherData {
   temperature: number
   description: string
   humidity: number
@@ -26,12 +26,35 @@ interface WeatherData {
   visibility: number
 }
 
+interface DetailedWeatherData {
+  current: BasicWeatherData
+  forecast: Array<{
+    day: string
+    highTemp: number
+    lowTemp: number
+    condition: string
+    description: string
+  }>
+  uvIndex: number
+  airQuality: {
+    aqi: number
+    category: string
+    pm25: number
+    pm10: number
+    o3: number
+    no2: number
+    so2: number
+    co: number
+  }
+  alerts: any[]
+}
+
 export default function LocationCard({ location, onUpdate }: LocationCardProps) {
-  const [weather, setWeather] = useState<WeatherData | null>(null)
+  const [weather, setWeather] = useState<BasicWeatherData | null>(null)
   const [loading, setLoading] = useState(false)
   const [actionLoading, setActionLoading] = useState<'favorite' | 'delete' | null>(null)
   const [showDetailedWeather, setShowDetailedWeather] = useState(false)
-  const [detailedWeatherData, setDetailedWeatherData] = useState<FullWeatherData | null>(null)
+  const [detailedWeatherData, setDetailedWeatherData] = useState<DetailedWeatherData | null>(null)
   const [detailedLoading, setDetailedLoading] = useState(false)
   const { theme } = useTheme()
   const themeClasses = getComponentStyles(theme as ThemeType, 'dashboard')
@@ -142,7 +165,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
       }) || []
       
       // Combine all data
-      const fullWeatherData: FullWeatherData = {
+      const fullWeatherData: DetailedWeatherData = {
         current: currentData,
         forecast: processedForecast,
         uvIndex: uvIndex,

@@ -1,17 +1,64 @@
-'use client'
-
-import { supabase } from './client'
+import { createClient } from '@supabase/supabase-js'
 import { Profile, ProfileUpdate, SavedLocation, SavedLocationInsert, SavedLocationUpdate, UserPreferences, UserPreferencesUpdate } from './types'
+import { DbSavedLocation, dbToSavedLocation, savedLocationToDb } from './schema-adapter'
+
+// Create a supabase client that works in both server and client contexts
+const getSupabaseClient = () => {
+  if (typeof window !== 'undefined') {
+    // Client-side: use the browser client
+    const { supabase } = require('./client')
+    return supabase
+  } else {
+    // Server-side: create a service role client
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+  }
+}
 
 // Profile operations
 export const getProfile = async (userId: string): Promise<Profile | null> => {
-  const { data, error } = await supabase
+  const supabase = getSupabaseClient()
+  
+  // Try with all columns first, fallback to essential columns only
+  let { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id, username, full_name, email, default_location, avatar_url, preferred_units, timezone, created_at, updated_at')
     .eq('id', userId)
     .single()
 
-  if (error) {
+  if (error && error.message.includes('does not exist')) {
+    console.warn('Some profile columns missing, using fallback query:', error.message)
+    // Fallback to only columns we know exist
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from('profiles')
+      .select('id, username, created_at, updated_at')
+      .eq('id', userId)
+      .single()
+    
+    if (fallbackError) {
+      console.error('Error fetching profile (fallback):', fallbackError)
+      return null
+    }
+    
+    // Return with default values for missing columns
+    data = {
+      ...fallbackData,
+      full_name: null,
+      email: null,
+      default_location: null,
+      avatar_url: null,
+      preferred_units: 'imperial' as const,
+      timezone: 'UTC'
+    }
+  } else if (error) {
     console.error('Error fetching profile:', error)
     return null
   }
@@ -20,14 +67,39 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
 }
 
 export const updateProfile = async (userId: string, updates: ProfileUpdate): Promise<Profile | null> => {
-  const { data, error } = await supabase
+  const supabase = getSupabaseClient()
+  
+  // Filter out updates for columns that might not exist
+  const safeUpdates: any = {}
+  
+  // Only include updates for columns we're sure exist or can be safely ignored
+  if (updates.username !== undefined) safeUpdates.username = updates.username
+  
+  // Try to update with full column set first
+  let { data, error } = await supabase
     .from('profiles')
     .update(updates)
     .eq('id', userId)
     .select()
     .single()
 
-  if (error) {
+  if (error && error.message.includes('does not exist')) {
+    console.warn('Some profile columns missing during update, using safe updates:', error.message)
+    // Fallback to only safe updates
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from('profiles')
+      .update(safeUpdates)
+      .eq('id', userId)
+      .select()
+      .single()
+    
+    if (fallbackError) {
+      console.error('Error updating profile (fallback):', fallbackError)
+      return null
+    }
+    
+    data = fallbackData
+  } else if (error) {
     console.error('Error updating profile:', error)
     return null
   }
@@ -37,6 +109,7 @@ export const updateProfile = async (userId: string, updates: ProfileUpdate): Pro
 
 // Saved locations operations
 export const getSavedLocations = async (userId: string): Promise<SavedLocation[]> => {
+  const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('saved_locations')
     .select('*')
@@ -53,6 +126,8 @@ export const getSavedLocations = async (userId: string): Promise<SavedLocation[]
 }
 
 export const saveLocation = async (locationData: SavedLocationInsert): Promise<SavedLocation | null> => {
+  const supabase = getSupabaseClient()
+  
   const { data, error } = await supabase
     .from('saved_locations')
     .insert(locationData)
@@ -60,7 +135,10 @@ export const saveLocation = async (locationData: SavedLocationInsert): Promise<S
     .single()
 
   if (error) {
-    console.error('Error saving location:', error)
+    console.error('Error saving location to database:', error.message)
+    if (error.code) {
+      console.error('Database error code:', error.code)
+    }
     return null
   }
 
@@ -71,6 +149,7 @@ export const updateSavedLocation = async (
   locationId: string, 
   updates: SavedLocationUpdate
 ): Promise<SavedLocation | null> => {
+  const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('saved_locations')
     .update(updates)
@@ -87,6 +166,7 @@ export const updateSavedLocation = async (
 }
 
 export const deleteSavedLocation = async (locationId: string): Promise<boolean> => {
+  const supabase = getSupabaseClient()
   const { error } = await supabase
     .from('saved_locations')
     .delete()
@@ -101,6 +181,7 @@ export const deleteSavedLocation = async (locationId: string): Promise<boolean> 
 }
 
 export const toggleLocationFavorite = async (locationId: string, isFavorite: boolean): Promise<boolean> => {
+  const supabase = getSupabaseClient()
   const { error } = await supabase
     .from('saved_locations')
     .update({ is_favorite: isFavorite })
@@ -116,6 +197,7 @@ export const toggleLocationFavorite = async (locationId: string, isFavorite: boo
 
 // User preferences operations
 export const getUserPreferences = async (userId: string): Promise<UserPreferences | null> => {
+  const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('user_preferences')
     .select('*')
@@ -134,6 +216,7 @@ export const updateUserPreferences = async (
   userId: string, 
   updates: UserPreferencesUpdate
 ): Promise<UserPreferences | null> => {
+  const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('user_preferences')
     .update(updates)
@@ -151,6 +234,7 @@ export const updateUserPreferences = async (
 
 // Utility functions for weather app integration
 export const getLocationsByUser = async (userId: string, limit: number = 10): Promise<SavedLocation[]> => {
+  const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('saved_locations')
     .select('*')
@@ -168,6 +252,7 @@ export const getLocationsByUser = async (userId: string, limit: number = 10): Pr
 }
 
 export const getFavoriteLocations = async (userId: string): Promise<SavedLocation[]> => {
+  const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('saved_locations')
     .select('*')
@@ -184,6 +269,7 @@ export const getFavoriteLocations = async (userId: string): Promise<SavedLocatio
 }
 
 export const searchSavedLocations = async (userId: string, searchTerm: string): Promise<SavedLocation[]> => {
+  const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('saved_locations')
     .select('*')

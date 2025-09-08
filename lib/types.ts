@@ -12,6 +12,16 @@
  * Report issues: https://github.com/deephouse23/Weather-application-/issues
  */
 
+export interface HourlyForecast {
+  time: string;
+  temp: number;
+  condition: string;
+  precipChance: number;
+  windSpeed?: number;
+  windDirection?: string;
+  humidity?: number;
+}
+
 export interface WeatherData {
   location: string;
   country: string;
@@ -48,12 +58,7 @@ export interface WeatherData {
       visibility?: number;
       uvIndex?: number;
     };
-    hourlyForecast?: Array<{
-      time: string;
-      temp: number;
-      condition: string;
-      precipChance: number;
-    }>;
+    hourlyForecast?: HourlyForecast[];
   }>;
   moonPhase: {
     phase: string;

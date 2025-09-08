@@ -43,4 +43,7 @@ export const cityData: { [key: string]: {
     content: {
       intro: 'Chicago experiences a continental climate with hot, humid summers and cold, snowy winters. The city\'s location on Lake Michigan significantly influences its weather patterns, moderating temperatures and increasing precipitation.',
       climate: 'Summer highs average in the low 80s°F (27°C) with high humidity, while winter temperatures often drop below freezing with average lows around 20°F (-7°C). The city receives about 38 inches of precipitation annually, including significant snowfall in winter.',
-      patterns: 'Lake Michigan creates a \
+      patterns: 'Lake Michigan creates a significant "lake effect" that moderates temperatures year-round but can produce heavy snow in winter. The city experiences rapid weather changes due to its location in the path of many storm systems moving across the Great Plains. Summers can bring severe thunderstorms, while winters feature blizzards and frigid Arctic air masses.'
+    }
+  }
+}

@@ -16,6 +16,88 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const GEO_URL = 'https://api.openweathermap.org/geo/1.0'
 
+interface GeocodingResponse {
+  name: string;
+  local_names?: { [key: string]: string };
+  lat: number;
+  lon: number;
+  country: string;
+  state?: string;
+}
+
+// Helper function to try multiple geocoding strategies
+const tryGeocoding = async (queries: string[], apiKey: string, limit: string): Promise<GeocodingResponse[]> => {
+  for (const query of queries) {
+    const geocodingUrl = `${GEO_URL}/direct?q=${encodeURIComponent(query)}&limit=${limit}&appid=${apiKey}`
+    
+    const response = await fetch(geocodingUrl)
+    
+    if (response.ok) {
+      const data = await response.json()
+      
+      if (data && data.length > 0) {
+        console.log(`✓ Geocoding success with query: "${query}"`)
+        return data
+      }
+    }
+    // Try next fallback query if this one failed
+  }
+  
+  return []
+}
+
+// US State mapping for fallback queries
+const US_STATE_MAPPING: Record<string, string> = {
+  'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+  'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+  'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+  'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+  'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+  'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+  'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+  'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+  'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+  'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming',
+  'DC': 'District of Columbia'
+}
+
+// Generate fallback queries for US locations
+const generateFallbackQueries = (originalQuery: string): string[] => {
+  const queries = [originalQuery]
+  
+  // Parse comma-separated input
+  if (originalQuery.includes(',')) {
+    const parts = originalQuery.split(',').map(p => p.trim())
+    
+    if (parts.length === 2) {
+      const [city, stateOrCountry] = parts
+      const stateAbbrev = stateOrCountry.toUpperCase()
+      
+      // If it's a US state abbreviation, try multiple formats
+      if (US_STATE_MAPPING[stateAbbrev]) {
+        const fullStateName = US_STATE_MAPPING[stateAbbrev]
+        
+        // Try with full state name + US
+        queries.push(`${city},${fullStateName},US`)
+        // Try with just city + US
+        queries.push(`${city},US`)
+        // Try with just the city
+        queries.push(city)
+        // Try original with US at the end
+        queries.push(`${originalQuery},US`)
+      } else {
+        // Not a US state, try adding city alone as fallback
+        queries.push(city)
+      }
+    }
+  } else {
+    // Single word query, try as-is
+    // No additional fallbacks needed for simple city names
+  }
+  
+  return queries
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Get API key from server-side environment
@@ -42,13 +124,26 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    let geocodingUrl: string
-
     if (zip) {
-      // ZIP code geocoding
-      geocodingUrl = `${GEO_URL}/zip?zip=${encodeURIComponent(zip)}&appid=${apiKey}`
+      // ZIP code geocoding - this usually works reliably
+      const geocodingUrl = `${GEO_URL}/zip?zip=${encodeURIComponent(zip)}&appid=${apiKey}`
+
+      const response = await fetch(geocodingUrl)
+      
+      if (!response.ok) {
+        const errorData = await response.text()
+        console.error('OpenWeatherMap ZIP geocoding API error:', response.status, errorData)
+        
+        return NextResponse.json(
+          { error: 'ZIP code not found' },
+          { status: 404 }
+        )
+      }
+
+      const geocodingData = await response.json()
+      return NextResponse.json(geocodingData)
     } else {
-      // Direct geocoding
+      // Direct geocoding with fallback strategies
       const limitNum = parseInt(limit, 10)
       if (isNaN(limitNum) || limitNum < 1 || limitNum > 5) {
         return NextResponse.json(
@@ -57,33 +152,21 @@ export async function GET(request: NextRequest) {
         )
       }
       
-      geocodingUrl = `${GEO_URL}/direct?q=${encodeURIComponent(q!)}&limit=${limitNum}&appid=${apiKey}`
-    }
-
-    // Make request to OpenWeatherMap Geocoding API
-    const response = await fetch(geocodingUrl)
-    
-    if (!response.ok) {
-      const errorData = await response.text()
-      console.error('OpenWeatherMap geocoding API error:', response.status, errorData)
+      // Generate fallback queries
+      const queries = generateFallbackQueries(q!)
       
-      if (response.status === 404) {
+      // Try each query in sequence until one works
+      const geocodingData = await tryGeocoding(queries, apiKey, limit)
+      
+      if (!geocodingData || geocodingData.length === 0) {
         return NextResponse.json(
           { error: 'Location not found' },
           { status: 404 }
         )
       }
       
-      return NextResponse.json(
-        { error: `Geocoding service unavailable: ${response.status}` },
-        { status: response.status }
-      )
+      return NextResponse.json(geocodingData)
     }
-
-    const geocodingData = await response.json()
-    
-    // Return the geocoding data
-    return NextResponse.json(geocodingData)
 
   } catch (error) {
     console.error('Geocoding API error:', error)

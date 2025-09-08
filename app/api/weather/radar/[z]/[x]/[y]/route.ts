@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 
 export async function GET(
   request: Request,
-  { params }: { params: { z: string; x: string; y: string } }
+  { params }: { params: Promise<{ z: string; x: string; y: string }> }
 ) {
-  const { z, x, y } = params
+  const { z, x, y } = await params
   const apiKey = process.env.OPENWEATHER_API_KEY || process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY
 
   console.log('Radar API called:', { z, x, y, hasApiKey: !!apiKey })

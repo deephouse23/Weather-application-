@@ -18,6 +18,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { fetchWeatherData } from '@/lib/weather-api'
+import { useAuth } from '@/lib/auth'
 import { WeatherData } from '@/lib/types'
 import PageWrapper from '@/components/page-wrapper'
 import WeatherSearch from '@/components/weather-search'
@@ -66,6 +67,7 @@ interface CityWeatherClientProps {
 export default function CityWeatherClient({ city, citySlug, isPredefinedCity = false }: CityWeatherClientProps) {
   const router = useRouter()
   const { theme } = useTheme()
+  const { preferences } = useAuth()
   const { 
     setLocationInput, 
     setCurrentLocation,
@@ -95,7 +97,8 @@ export default function CityWeatherClient({ city, citySlug, isPredefinedCity = f
       
       console.log(`Loading weather for city: ${city.name}, ${city.state} (${city.searchTerm})`)
       
-      const weatherData = await fetchWeatherData(city.searchTerm)
+      const unitSystem: 'metric' | 'imperial' = preferences?.temperature_unit === 'celsius' ? 'metric' : 'imperial'
+      const weatherData = await fetchWeatherData(city.searchTerm, unitSystem)
       console.log(`Weather data loaded for ${city.name}:`, weatherData.location)
       setWeather(weatherData)
       
@@ -172,7 +175,8 @@ export default function CityWeatherClient({ city, citySlug, isPredefinedCity = f
       // API key is now handled by internal API routes
       
       const { fetchWeatherByLocation } = await import('@/lib/weather-api')
-      const weatherData = await fetchWeatherByLocation(`${latitude},${longitude}`)
+      const unitSystem: 'metric' | 'imperial' = preferences?.temperature_unit === 'celsius' ? 'metric' : 'imperial'
+      const weatherData = await fetchWeatherByLocation(`${latitude},${longitude}`, unitSystem)
       setWeather(weatherData)
     } catch (err) {
       console.error("Location error:", err)

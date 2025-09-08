@@ -1,9 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { X, MapPin, Search, Plus } from 'lucide-react'
+import { X, MapPin, Search, Plus, Star } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
-import { saveLocation } from '@/lib/supabase/database'
 import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
 
@@ -29,20 +28,38 @@ export default function AddLocationModal({ isOpen, onClose, onLocationAdded }: A
     e.preventDefault()
     if (!user || !searchTerm.trim()) return
 
+    
     setLoading(true)
     setError('')
 
     try {
-      // Use OpenWeatherMap Geocoding API
-      const response = await fetch(
-        `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(searchTerm.trim())}&limit=1&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
-      )
+      // Use internal geocoding API with timeout
+      const geocodeUrl = `/api/geocode?q=${encodeURIComponent(searchTerm.trim())}&limit=1`
+      
+      console.log('Starting geocoding for:', searchTerm.trim())
+      
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      
+      const response = await fetch(geocodeUrl, { 
+        signal: controller.signal 
+      }).catch(err => {
+        if (err.name === 'AbortError') {
+          throw new Error('Geocoding request timed out. Please try again.')
+        }
+        throw err
+      })
+      
+      clearTimeout(timeoutId)
       
       if (!response.ok) {
-        throw new Error('Failed to geocode location')
+        const errorData = await response.json()
+        console.error('Geocoding failed:', errorData)
+        throw new Error(errorData.error || 'Failed to geocode location')
       }
       
       const locationData = await response.json()
+      console.log('Geocoding successful:', locationData)
       
       if (!locationData || locationData.length === 0) {
         setError('Location not found. Please try a different search term.')
@@ -51,8 +68,8 @@ export default function AddLocationModal({ isOpen, onClose, onLocationAdded }: A
 
       const location = locationData[0]
       
-      // Save to database
-      const savedLocation = await saveLocation({
+      // Save to database via API
+      const saveData = {
         user_id: user.id,
         location_name: `${location.name}, ${location.state || location.country}`,
         city: location.name,
@@ -63,7 +80,61 @@ export default function AddLocationModal({ isOpen, onClose, onLocationAdded }: A
         is_favorite: isFavorite,
         custom_name: customName.trim() || null,
         notes: notes.trim() || null
+      }
+      
+      // Get auth token from Supabase session
+      console.log('Getting Supabase session...')
+      const { supabase } = await import('@/lib/supabase/client')
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      console.log('Session result:', { 
+        hasSession: !!session, 
+        sessionError, 
+        userId: session?.user?.id 
       })
+      
+      if (sessionError || !session) {
+        console.error('Session error:', sessionError)
+        throw new Error('You must be logged in to save locations')
+      }
+      
+      console.log('Got access token, length:', session.access_token?.length)
+      
+      console.log('Starting location save to database...')
+      
+      const saveController = new AbortController()
+      const saveTimeoutId = setTimeout(() => saveController.abort(), 15000) // 15 second timeout
+      
+      const saveResponse = await fetch('/api/locations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify(saveData),
+        signal: saveController.signal
+      }).catch(err => {
+        if (err.name === 'AbortError') {
+          throw new Error('Save request timed out. Please check your connection and try again.')
+        }
+        throw err
+      })
+      
+      clearTimeout(saveTimeoutId)
+      
+      if (!saveResponse.ok) {
+        const errorData = await saveResponse.json()
+        console.error('Save failed with status:', saveResponse.status, errorData)
+        
+        if (saveResponse.status === 409 && errorData.existing) {
+          throw new Error('This location is already in your saved locations.')
+        }
+        
+        throw new Error(errorData.error || 'Failed to save location')
+      }
+      
+      const savedLocation = await saveResponse.json()
+      console.log('Location saved successfully:', savedLocation)
 
       if (savedLocation) {
         onLocationAdded()
@@ -72,8 +143,9 @@ export default function AddLocationModal({ isOpen, onClose, onLocationAdded }: A
         setError('Failed to save location. It may already be saved.')
       }
     } catch (error) {
-      console.error('Error saving location:', error)
-      setError('Failed to save location. Please try again.')
+      console.error('Error adding location:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save location. Please try again.'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }

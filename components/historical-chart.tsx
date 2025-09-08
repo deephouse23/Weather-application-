@@ -28,8 +28,7 @@ import {
   Legend,
   ChartOptions
 } from 'chart.js'
-import { fetchHistoricalData } from '@/lib/cache'
-import { HistoricalData } from '@/lib/types'
+import { fetchHistoricalData, HistoricalWeatherResponse } from '@/lib/cache'
 import { ThemeType, themeUtils, APP_CONSTANTS } from '@/lib/utils'
 
 // Register ChartJS components
@@ -51,7 +50,7 @@ interface HistoricalChartProps {
 }
 
 export default function HistoricalChart({ currentTheme, latitude, longitude, locationName }: HistoricalChartProps) {
-  const [historicalData, setHistoricalData] = useState<HistoricalData | null>(null)
+  const [historicalData, setHistoricalData] = useState<HistoricalWeatherResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>("")
 
@@ -96,7 +95,7 @@ export default function HistoricalChart({ currentTheme, latitude, longitude, loc
     )
   }
 
-  if (!historicalData) {
+  if (!historicalData || !historicalData.daily || !historicalData.daily.time || !historicalData.daily.temperature_2m_max || !historicalData.daily.temperature_2m_min) {
     return null
   }
 

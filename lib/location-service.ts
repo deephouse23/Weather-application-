@@ -46,6 +46,48 @@ export interface LocationError {
   suggestion?: string;
 }
 
+// IP geolocation service response types
+interface IPApiCoResponse {
+  latitude: string | number;
+  longitude: string | number;
+  city?: string;
+  region?: string;
+  country_name?: string;
+  country?: string;
+}
+
+interface IPInfoResponse {
+  loc?: string;
+  city?: string;
+  region?: string;
+  country?: string;
+}
+
+interface IPGeolocationResponse {
+  latitude: string | number;
+  longitude: string | number;
+  city?: string;
+  state_prov?: string;
+  country_name?: string;
+}
+
+type IPLocationResponse = IPApiCoResponse | IPInfoResponse | IPGeolocationResponse;
+
+// Nominatim reverse geocoding response
+interface NominatimResponse {
+  address?: {
+    city?: string;
+    town?: string;
+    village?: string;
+    hamlet?: string;
+    state?: string;
+    province?: string;
+    region?: string;
+    country?: string;
+  };
+  [key: string]: unknown;
+}
+
 export class LocationService {
   private static instance: LocationService;
   private currentPosition: LocationData | null = null;
@@ -162,9 +204,12 @@ export class LocationService {
 
       return this.currentPosition;
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Geolocation error:', error);
-      throw this.handleGeolocationError(error);
+      if (error instanceof GeolocationPositionError) {
+        throw this.handleGeolocationError(error);
+      }
+      throw this.createLocationError('POSITION_UNAVAILABLE', 'Failed to get location');
     }
   }
 
@@ -192,7 +237,7 @@ export class LocationService {
             continue;
           }
 
-          const data = await response.json();
+          const data: IPLocationResponse = await response.json();
           console.log(`IP service response from ${serviceUrl}:`, data);
 
           // Parse response based on service format
@@ -213,7 +258,7 @@ export class LocationService {
 
       throw this.createLocationError('NETWORK_ERROR', 'All IP-based location services failed');
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('IP location detection failed:', error);
       throw error;
     }
@@ -233,7 +278,7 @@ export class LocationService {
         throw new Error(`Reverse geocoding failed: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data: NominatimResponse = await response.json();
       console.log('Reverse geocoding response:', data);
 
       const address = data.address || {};
@@ -267,29 +312,32 @@ export class LocationService {
   /**
    * Parse IP location service responses
    */
-  private parseIPLocationResponse(data: any, serviceUrl: string): LocationData | null {
+  private parseIPLocationResponse(data: IPLocationResponse, serviceUrl: string): LocationData | null {
     try {
       let latitude: number, longitude: number, city: string, region: string, country: string;
 
       if (serviceUrl.includes('ipapi.co')) {
-        latitude = parseFloat(data.latitude);
-        longitude = parseFloat(data.longitude);
-        city = data.city || 'Unknown City';
-        region = data.region || '';
-        country = data.country_name || data.country || 'Unknown Country';
+        const ipapiData = data as IPApiCoResponse;
+        latitude = parseFloat(ipapiData.latitude.toString());
+        longitude = parseFloat(ipapiData.longitude.toString());
+        city = ipapiData.city || 'Unknown City';
+        region = ipapiData.region || '';
+        country = ipapiData.country_name || ipapiData.country || 'Unknown Country';
       } else if (serviceUrl.includes('ipinfo.io')) {
-        const [lat, lon] = (data.loc || '0,0').split(',').map(parseFloat);
+        const ipinfoData = data as IPInfoResponse;
+        const [lat, lon] = (ipinfoData.loc || '0,0').split(',').map(parseFloat);
         latitude = lat;
         longitude = lon;
-        city = data.city || 'Unknown City';
-        region = data.region || '';
-        country = data.country || 'Unknown Country';
+        city = ipinfoData.city || 'Unknown City';
+        region = ipinfoData.region || '';
+        country = ipinfoData.country || 'Unknown Country';
       } else if (serviceUrl.includes('ipgeolocation.io')) {
-        latitude = parseFloat(data.latitude);
-        longitude = parseFloat(data.longitude);
-        city = data.city || 'Unknown City';
-        region = data.state_prov || '';
-        country = data.country_name || 'Unknown Country';
+        const ipgeoData = data as IPGeolocationResponse;
+        latitude = parseFloat(ipgeoData.latitude.toString());
+        longitude = parseFloat(ipgeoData.longitude.toString());
+        city = ipgeoData.city || 'Unknown City';
+        region = ipgeoData.state_prov || '';
+        country = ipgeoData.country_name || 'Unknown Country';
       } else {
         return null;
       }
@@ -333,11 +381,17 @@ export class LocationService {
       try {
         console.log('Attempting geolocation detection...');
         return await this.getCurrentLocation();
-      } catch (error: any) {
-        console.log('Geolocation failed, trying fallback:', error.message);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.log('Geolocation failed, trying fallback:', errorMessage);
+        
+        // Type guard for LocationError
+        const isLocationError = (err: unknown): err is LocationError => {
+          return typeof err === 'object' && err !== null && 'code' in err;
+        };
         
         // If user denied permission, don't try IP fallback
-        if (error.code === 'PERMISSION_DENIED') {
+        if (isLocationError(error) && error.code === 'PERMISSION_DENIED') {
           throw error;
         }
       }

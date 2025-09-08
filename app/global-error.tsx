@@ -3,6 +3,8 @@
 import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 
+export const runtime = 'nodejs';
+
 export default function GlobalError({
   error,
   reset,
