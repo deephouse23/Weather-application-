@@ -19,7 +19,9 @@
  * color management and responsive design patterns.
  */
 
-export type ThemeType = 'dark' | 'miami' | 'tron';
+import { ThemeType, getThemeDefinition, THEME_DEFINITIONS } from './theme-config';
+
+export type { ThemeType };
 
 export interface ThemeStyles {
   background: string;
@@ -49,47 +51,19 @@ export interface ComponentVariants {
   auth: ThemeStyles;
 }
 
-// Core theme color definitions
-const THEME_COLORS = {
-  dark: {
-    background: '#0a0a1a',
-    backgroundSecondary: '#0f0f0f',
-    backgroundTertiary: '#16213e',
-    primary: '#00d4ff',
-    text: '#e0e0e0',
-    textSecondary: '#4ecdc4',
-    accent: '#ffe66d',
-    border: '#00d4ff'
-  },
-  miami: {
-    background: '#0a0025',
-    backgroundSecondary: '#2d1b69',
-    backgroundTertiary: '#4a0e4e',
-    primary: '#ff1493',
-    text: '#00ffff',
-    textSecondary: '#22d3ee',
-    accent: '#ff1493',
-    border: '#ff1493'
-  },
-  tron: {
-    background: '#000000',
-    backgroundSecondary: '#000000',
-    backgroundTertiary: '#0a0a0a',
-    primary: '#00FFFF',
-    text: '#FFFFFF',
-    textSecondary: '#88CCFF',
-    accent: '#00FFFF',
-    border: '#00FFFF'
-  }
-} as const;
+// Get theme colors from the new configuration
+const getThemeColors = (theme: ThemeType) => {
+  const definition = getThemeDefinition(theme);
+  return definition.colors;
+};
 
 /**
  * Get base theme styles for any component
  */
 export const getThemeStyles = (theme: ThemeType): ThemeStyles => {
   // Default to 'dark' theme if invalid theme is provided
-  const validTheme = (theme && THEME_COLORS[theme]) ? theme : 'dark';
-  const colors = THEME_COLORS[validTheme];
+  const validTheme = (theme && THEME_DEFINITIONS[theme]) ? theme : 'dark';
+  const colors = getThemeColors(validTheme);
   
   return {
     background: `bg-[${colors.background}]`,
@@ -111,9 +85,9 @@ export const getThemeStyles = (theme: ThemeType): ThemeStyles => {
  */
 export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVariants): ThemeStyles => {
   // Default to 'dark' theme if invalid theme is provided
-  const validTheme = (theme && THEME_COLORS[theme]) ? theme : 'dark';
+  const validTheme = (theme && THEME_DEFINITIONS[theme]) ? theme : 'dark';
   const base = getThemeStyles(validTheme);
-  const colors = THEME_COLORS[validTheme];
+  const colors = getThemeColors(validTheme);
 
   switch (variant) {
     case 'card':
@@ -201,6 +175,8 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
  * Get theme-specific gradient definitions
  */
 export const getThemeGradients = (theme: ThemeType): { primary: string; accent: string; card: string } => {
+  const colors = getThemeColors(theme);
+  
   switch (theme) {
     case 'dark':
       return {
@@ -221,6 +197,34 @@ export const getThemeGradients = (theme: ThemeType): { primary: string; accent: 
         primary: 'linear-gradient(135deg, #000000 0%, #0a0a0a 100%)',
         accent: 'linear-gradient(90deg, #00FFFF 0%, #88CCFF 100%)',
         card: 'linear-gradient(135deg, #000000 0%, #001111 100%)'
+      };
+
+    case 'atari2600':
+      return {
+        primary: `linear-gradient(135deg, ${colors.background} 0%, ${colors.backgroundTertiary} 100%)`,
+        accent: `linear-gradient(90deg, ${colors.highlight || colors.primary} 0%, ${colors.accent} 100%)`,
+        card: `linear-gradient(135deg, ${colors.backgroundSecondary} 0%, ${colors.backgroundTertiary} 100%)`
+      };
+
+    case 'monochromeGreen':
+      return {
+        primary: `linear-gradient(135deg, ${colors.background} 0%, ${colors.backgroundTertiary} 100%)`,
+        accent: `linear-gradient(90deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+        card: `linear-gradient(135deg, ${colors.backgroundSecondary} 0%, ${colors.backgroundTertiary} 100%)`
+      };
+
+    case '8bitClassic':
+      return {
+        primary: `linear-gradient(135deg, ${colors.background} 0%, ${colors.backgroundSecondary} 100%)`,
+        accent: `linear-gradient(90deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+        card: `linear-gradient(135deg, ${colors.backgroundSecondary} 0%, ${colors.backgroundTertiary} 100%)`
+      };
+
+    case '16bitSnes':
+      return {
+        primary: `linear-gradient(135deg, ${colors.background} 0%, ${colors.backgroundSecondary} 100%)`,
+        accent: `linear-gradient(90deg, ${colors.primary} 0%, ${colors.highlight || colors.accent} 100%)`,
+        card: `linear-gradient(135deg, ${colors.backgroundSecondary} 0%, ${colors.backgroundTertiary} 100%)`
       };
 
     default:
