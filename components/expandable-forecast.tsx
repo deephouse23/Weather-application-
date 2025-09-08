@@ -316,7 +316,7 @@ function DetailedWeatherInfo({ details, theme, themeClasses, tempUnit }: {
           <div className="min-w-0 flex-1">
             <div className={`text-xs ${themeClasses.secondary} opacity-70 flex items-center`}>
               {metric.label}
-              {(metric as {tooltip?: string}).tooltip && <InfoTooltip text={(metric as {tooltip?: string}).tooltip} theme={theme} />}
+              {(metric as {tooltip?: string}).tooltip && <InfoTooltip text={(metric as {tooltip?: string}).tooltip!} theme={theme} />}
             </div>
             <div className={`text-sm font-medium ${themeClasses.text} truncate`}>
               {metric.value}
