@@ -116,8 +116,11 @@ const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
 const getApiUrl = (path: string): string => {
   if (typeof window === 'undefined') {
     // Server-side/build time
+    // Try multiple environment variables for maximum compatibility
     const baseUrl = process.env.VERCEL_URL 
       ? `https://${process.env.VERCEL_URL}`
+      : process.env.NEXT_PUBLIC_VERCEL_URL
+      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
       : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3003';
     return `${baseUrl}${path}`;
   }
@@ -504,7 +507,16 @@ const geocodeLocation = async (locationQuery: LocationQuery): Promise<{ lat: num
     );
     
     if (!response.ok) {
-      throw new Error('ZIP code not found. Please check the ZIP code and try again.');
+      let errorMessage = 'ZIP code not found. Please check the ZIP code and try again.';
+      try {
+        const errorData = await response.json();
+        if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } catch (e) {
+        // If response is not JSON, use default error message
+      }
+      throw new Error(errorMessage);
     }
     
     const data = await response.json();
@@ -529,7 +541,16 @@ const geocodeLocation = async (locationQuery: LocationQuery): Promise<{ lat: num
     );
     
     if (!response.ok) {
-      throw new Error(`Geocoding API error: ${response.status}`);
+      let errorMessage = `Geocoding API error: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } catch (e) {
+        // If response is not JSON, use default error message
+      }
+      throw new Error(errorMessage);
     }
     
     const data: GeocodingResponse[] = await response.json();
