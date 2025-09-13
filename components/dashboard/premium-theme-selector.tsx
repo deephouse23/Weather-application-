@@ -13,7 +13,7 @@ import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
 import { THEME_DEFINITIONS, isThemePremium, type ThemeDefinition } from '@/lib/theme-config'
 import { ThemeService } from '@/lib/services/theme-service'
 import { supabase } from '@/lib/supabase/client'
-import { toast } from '@/lib/toast-service'
+import { toastService } from '@/lib/toast-service'
 
 interface ThemeOptionDisplay {
   theme: ThemeDefinition
@@ -112,7 +112,7 @@ export default function PremiumThemeSelector() {
     // Check if user can access the theme
     if (!ThemeService.canAccessTheme(themeId, !!user)) {
       setShowLoginPrompt(true)
-      toast.info('Register for free to unlock premium themes!')
+      toastService.info('Register for free to unlock premium themes!')
       return
     }
 
@@ -131,10 +131,10 @@ export default function PremiumThemeSelector() {
         await ThemeService.saveThemeToDatabase(supabase, user.id, themeId)
       }
       
-      toast.success(`Theme changed to ${THEME_DEFINITIONS[themeId].displayName}`)
+      toastService.success(`Theme changed to ${THEME_DEFINITIONS[themeId].displayName}`)
     } catch (error) {
       console.error('Error changing theme:', error)
-      toast.error('Failed to change theme')
+      toastService.error('Failed to change theme')
     } finally {
       setIsLoading(false)
     }
