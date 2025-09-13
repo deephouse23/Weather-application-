@@ -182,6 +182,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Initialize authentication
     const initializeAuth = async () => {
       try {
+        // Check if Supabase is properly configured
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+          console.warn('Supabase not configured - running in anonymous mode')
+          if (isMounted) {
+            setLoading(false)
+            setIsInitialized(true)
+          }
+          return
+        }
+
         // Get initial session
         const { data: { session }, error } = await supabase.auth.getSession()
         
@@ -206,14 +216,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     }
 
-    // Set up auth state change listener
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (isMounted) {
-        await handleAuthState(event, session)
+    // Set up auth state change listener with timeout
+    const setupAuthListener = () => {
+      try {
+        // Check if Supabase is configured before setting up listener
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+          return { unsubscribe: () => {} }
+        }
+
+        const {
+          data: { subscription },
+        } = supabase.auth.onAuthStateChange(async (event, session) => {
+          if (isMounted) {
+            await handleAuthState(event, session)
+          }
+        })
+        
+        return subscription
+      } catch (error) {
+        console.error('Error setting up auth listener:', error)
+        return { unsubscribe: () => {} }
       }
-    })
+    }
+
+    const subscription = setupAuthListener()
+
+    // Initialize with timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      if (isMounted && loading) {
+        console.warn('Auth initialization timeout - proceeding without auth')
+        setLoading(false)
+        setIsInitialized(true)
+      }
+    }, 3000) // 3 second timeout
 
     // Initialize
     initializeAuth()
@@ -221,6 +256,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Cleanup function
     return () => {
       isMounted = false
+      clearTimeout(timeoutId)
       subscription.unsubscribe()
     }
   }, [handleAuthState])

@@ -177,6 +177,7 @@ function WeatherApp() {
   useEffect(() => {
     // Wait for auth/preferences to finish loading so we can honor
     // user portal settings (e.g., auto_location=false) on first load
+    console.log('Auto-location check:', { isClient, autoLocationAttempted, authLoading })
     if (!isClient || autoLocationAttempted || authLoading) return
 
     const tryAutoLocation = async () => {
