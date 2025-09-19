@@ -111,7 +111,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Handle authentication state changes
   const handleAuthState = useCallback(async (event: AuthChangeEvent, session: Session | null) => {
-    console.log('Auth state change:', event, session?.user?.id || 'no user')
+    console.log('[AuthProvider] Auth state change', { event, hasSession: !!session, userId: session?.user?.id ?? null })
     
     // Update refs immediately to prevent race conditions
     authStateRef.current = {
@@ -194,6 +194,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         // Get initial session
         const { data: { session }, error } = await supabase.auth.getSession()
+        console.log('[AuthProvider] Initial session fetch', { hasSession: !!session, error: error?.message })
         
         if (error) {
           console.error('Error getting initial session:', error)
@@ -279,3 +280,4 @@ export function AuthProvider({ children }: AuthProviderProps) {
     </AuthContext.Provider>
   )
 }
+
