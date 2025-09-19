@@ -26,10 +26,11 @@ import {
   AQI_SCALE_LABELS,
   AQI_COLOR_SEGMENTS
 } from '@/lib/air-quality-utils'
+import { ThemeType } from '@/lib/theme-config'
 
 interface AirQualityDisplayProps {
   aqi: number
-  theme: 'dark' | 'miami' | 'tron'
+  theme: ThemeType
   className?: string
 }
 
@@ -60,6 +61,38 @@ export function AirQualityDisplay({ aqi, theme, className }: AirQualityDisplayPr
           text: 'text-white',
           border: 'border-[#00FFFF66]',
           shadow: '0 0 15px #00FFFF33'
+        }
+      case 'atari2600':
+        return {
+          container: 'bg-[#000000] border-[#702800]',
+          header: 'text-[#E0EC9C]',
+          text: 'text-[#FFFFFF]',
+          border: 'border-[#70280066]',
+          shadow: '0 0 15px #70280033'
+        }
+      case 'monochromeGreen':
+        return {
+          container: 'bg-[#0D0D0D] border-[#009900]',
+          header: 'text-[#33FF33]',
+          text: 'text-[#33FF33]',
+          border: 'border-[#00990066]',
+          shadow: '0 0 15px #00990033'
+        }
+      case '8bitClassic':
+        return {
+          container: 'bg-[#D3D3D3] border-[#000000]',
+          header: 'text-[#CC0000]',
+          text: 'text-[#000000]',
+          border: 'border-[#00000066]',
+          shadow: '0 0 15px #00000033'
+        }
+      case '16bitSnes':
+        return {
+          container: 'bg-[#B8B8D0] border-[#5B5B8B]',
+          header: 'text-[#FFD700]',
+          text: 'text-[#2C2C3E]',
+          border: 'border-[#5B5B8B66]',
+          shadow: '0 0 15px #5B5B8B33'
         }
       default:
         return {

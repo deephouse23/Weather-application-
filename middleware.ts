@@ -3,7 +3,16 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
+  // Skip Supabase session handling for API routes; they manage auth inside the handler
+  if (request.nextUrl.pathname.startsWith('/api')) {
+    return NextResponse.next({
+      request: {
+        headers: request.headers,
+      },
+    })
+  }
+
+  const response = NextResponse.next({
     request: {
       headers: request.headers,
     },
@@ -18,32 +27,23 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
+          cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options)
-          )
+          })
         },
       },
     }
   )
 
   // Refresh session if expired - required for Server Components
-  const { data: { session } } = await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
 
   // Protected routes that require authentication
-  const protectedRoutes = [
-    '/dashboard',
-    '/profile',
-    '/settings',
-    '/saved-locations'
-  ]
+  const protectedRoutes = ['/dashboard', '/profile', '/settings', '/saved-locations']
 
-  const isProtectedRoute = protectedRoutes.some(route => 
+  const isProtectedRoute = protectedRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   )
 
@@ -56,7 +56,7 @@ export async function middleware(request: NextRequest) {
 
   // Redirect to home if accessing auth pages while logged in
   const authRoutes = ['/auth/login', '/auth/signup']
-  const isAuthRoute = authRoutes.some(route => 
+  const isAuthRoute = authRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   )
 
@@ -74,8 +74,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - api routes that don't require auth
      */
-    '/((?!_next/static|_next/image|favicon.ico|api/weather|api/extremes|api/news).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 }

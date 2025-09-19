@@ -16,9 +16,7 @@
 
 
 import { cn } from "@/lib/utils"
-
-// Theme types
-type ThemeType = 'dark' | 'miami' | 'tron';
+import { ThemeType } from "@/lib/theme-config"
 
 interface ForecastDay {
   day: string;
@@ -38,7 +36,8 @@ interface ForecastProps {
 
 export default function Forecast({ forecast, theme = 'dark', onDayClick, selectedDay }: ForecastProps) {
   // Validate theme prop
-  const validTheme = ['dark', 'miami', 'tron'].includes(theme) ? theme : 'dark'
+  const validThemes: ThemeType[] = ['dark', 'miami', 'tron', 'atari2600', 'monochromeGreen', '8bitClassic', '16bitSnes']
+  const validTheme = validThemes.includes(theme) ? theme : 'dark'
   
   // Enhanced theme-based color classes for three themes
   const getThemeClasses = (theme: ThemeType) => {
@@ -111,6 +110,70 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
             boxShadow: '0 0 25px #00FFFF, inset 0 0 20px rgba(0, 255, 255, 0.1)',
             borderColor: '#00FFFF'
           }
+        }
+      case 'atari2600':
+        return {
+          cardBg: 'bg-[#000000]',
+          itemBg: 'bg-[#1a1a1a]',
+          itemHover: 'hover:bg-[#2d2d2d]',
+          borderColor: 'border-[#702800]',
+          itemBorder: 'border-[#702800]',
+          headerText: 'text-[#E0EC9C]',
+          primaryText: 'text-[#FFFFFF]',
+          temperatureText: 'text-[#E0EC9C]',
+          lowTempText: 'text-[#888888]',
+          glow: '',
+          specialBorder: '',
+          cardStyle: { boxShadow: undefined, textShadow: undefined },
+          itemStyle: { background: undefined, boxShadow: undefined, borderColor: undefined }
+        }
+      case 'monochromeGreen':
+        return {
+          cardBg: 'bg-[#0D0D0D]',
+          itemBg: 'bg-[#1a1a1a]',
+          itemHover: 'hover:bg-[#262626]',
+          borderColor: 'border-[#009900]',
+          itemBorder: 'border-[#009900]',
+          headerText: 'text-[#33FF33]',
+          primaryText: 'text-[#33FF33]',
+          temperatureText: 'text-[#33FF33]',
+          lowTempText: 'text-[#66FF66]',
+          glow: '',
+          specialBorder: '',
+          cardStyle: { boxShadow: undefined, textShadow: undefined },
+          itemStyle: { background: undefined, boxShadow: undefined, borderColor: undefined }
+        }
+      case '8bitClassic':
+        return {
+          cardBg: 'bg-[#D3D3D3]',
+          itemBg: 'bg-[#C0C0C0]',
+          itemHover: 'hover:bg-[#A9A9A9]',
+          borderColor: 'border-[#000000]',
+          itemBorder: 'border-[#000000]',
+          headerText: 'text-[#CC0000]',
+          primaryText: 'text-[#000000]',
+          temperatureText: 'text-[#CC0000]',
+          lowTempText: 'text-[#666666]',
+          glow: '',
+          specialBorder: '',
+          cardStyle: { boxShadow: undefined, textShadow: undefined },
+          itemStyle: { background: undefined, boxShadow: undefined, borderColor: undefined }
+        }
+      case '16bitSnes':
+        return {
+          cardBg: 'bg-[#B8B8D0]',
+          itemBg: 'bg-[#9E9EB8]',
+          itemHover: 'hover:bg-[#8484A0]',
+          borderColor: 'border-[#5B5B8B]',
+          itemBorder: 'border-[#5B5B8B]',
+          headerText: 'text-[#FFD700]',
+          primaryText: 'text-[#2C2C3E]',
+          temperatureText: 'text-[#FFD700]',
+          lowTempText: 'text-[#5B5B8B]',
+          glow: '',
+          specialBorder: '',
+          cardStyle: { boxShadow: undefined, textShadow: undefined },
+          itemStyle: { background: undefined, boxShadow: undefined, borderColor: undefined }
         }
       default:
         // Default to dark theme if invalid theme is provided

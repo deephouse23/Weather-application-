@@ -33,7 +33,9 @@ components/api-test.tsx
 
 # git filter-branch artifacts
 .git-rewrite/
-.vercel
+# Allow committing Vercel project link file while ignoring other Vercel artifacts
+.vercel/*
+!.vercel/project.json
 
 # Build artifacts
 tsconfig.tsbuildinfo

@@ -12,6 +12,7 @@ import {
   Clock, 
   CloudRain
 } from 'lucide-react'
+import { ThemeType } from '@/lib/theme-config'
 
 // Fix for default icon issue with webpack
 delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
@@ -26,7 +27,7 @@ interface WeatherMapAnimatedProps {
   latitude?: number
   longitude?: number
   locationName?: string
-  theme?: 'dark' | 'miami' | 'tron'
+  theme?: ThemeType
   apiKey?: string
 }
 

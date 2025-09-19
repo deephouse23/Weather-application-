@@ -22,6 +22,7 @@ import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ErrorBoundary } from './error-boundary'
 import { WeatherData } from '@/lib/types'
+import { ThemeType } from '@/lib/theme-config'
 
 // Lazy load weather components
 const Forecast = lazy(() => import('./forecast'))
@@ -29,14 +30,18 @@ const ForecastDetails = lazy(() => import('./forecast-details'))
 const EnvironmentalDisplay = lazy(() => import('./environmental-display'))
 
 // Loading spinner component
-function WeatherComponentLoader({ theme }: { theme: 'dark' | 'miami' | 'tron' }) {
+function WeatherComponentLoader({ theme }: { theme: ThemeType }) {
   return (
     <div className="flex justify-center items-center py-8">
       <Loader2 className={cn(
         "h-8 w-8 animate-spin",
         theme === "dark" && "text-blue-500",
         theme === "miami" && "text-pink-500",
-        theme === "tron" && "text-cyan-500"
+        theme === "tron" && "text-cyan-500",
+        theme === "atari2600" && "text-[#E0EC9C]",
+        theme === "monochromeGreen" && "text-[#33FF33]",
+        theme === "8bitClassic" && "text-[#CC0000]",
+        theme === "16bitSnes" && "text-[#FFD700]"
       )} />
       <span className="ml-2 text-white text-sm">Loading weather data...</span>
     </div>
@@ -55,7 +60,7 @@ interface ForecastDay {
 
 export function LazyForecast(props: { 
   forecast: ForecastDay[]; 
-  theme?: 'dark' | 'miami' | 'tron'; 
+  theme?: ThemeType; 
   onDayClick?: (index: number) => void;
   selectedDay?: number | null;
 }) {
@@ -71,7 +76,7 @@ export function LazyForecast(props: {
 export function LazyForecastDetails(props: { 
   forecast: ForecastDay[];
   selectedDay: number | null;
-  theme?: 'dark' | 'miami' | 'tron';
+  theme?: ThemeType;
   currentWeatherData?: {
     humidity: number;
     wind: { speed: number; direction?: string };
@@ -92,7 +97,7 @@ export function LazyForecastDetails(props: {
 
 export function LazyEnvironmentalDisplay(props: { 
   weather: WeatherData;
-  theme: 'dark' | 'miami' | 'tron';
+  theme: ThemeType;
   className?: string;
 }) {
   return (
