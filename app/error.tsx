@@ -14,7 +14,7 @@
 
 'use client'
 
-export const runtime = 'nodejs';
+// export const runtime = 'nodejs';
 
 export default function Error({
   error,
