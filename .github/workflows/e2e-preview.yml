@@ -9,6 +9,7 @@ jobs:
       github.event.deployment_status.state == 'success' &&
       (github.event.deployment.environment == 'Preview' || github.event.deployment.environment == 'preview')
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
       deployments: read
@@ -29,17 +30,22 @@ jobs:
       - run: npx playwright install --with-deps
 
       - name: Wait for preview to be reachable
-        run: npx --yes wait-on ${{ env.PLAYWRIGHT_TEST_BASE_URL }}
+        run: |
+          echo "Waiting for preview URL: ${{ env.PLAYWRIGHT_TEST_BASE_URL }}"
+          npx --yes wait-on "${{ env.PLAYWRIGHT_TEST_BASE_URL }}" --timeout 300000 --interval 2000 --verbose
+        timeout-minutes: 5
 
       - name: Run Playwright on preview
         run: npx playwright test
         env:
           CI: true
+          PLAYWRIGHT_BASE_URL: ${{ env.PLAYWRIGHT_TEST_BASE_URL }}
 
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-preview
+          name: playwright-report-preview-${{ github.run_id }}
           path: playwright-report
+          retention-days: 7
 
