@@ -1,0 +1,99 @@
+name: Playwright Tests on Vercel Preview (Optional)
+
+# This workflow is optional and only works if you have valid Vercel tokens
+# To use this workflow:
+# 1. Go to https://vercel.com/account/tokens
+# 2. Create a new token with "Full Account" scope
+# 3. Add these secrets to GitHub:
+#    - VERCEL_TOKEN (the token you just created)
+#    - VERCEL_ORG_ID (from .vercel/project.json)
+#    - VERCEL_PROJECT_ID (from .vercel/project.json)
+
+on:
+  workflow_dispatch: # Manual trigger only
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'never-match-this-path/**' # Disabled by default
+
+jobs:
+  playwright-tests-vercel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+    steps:
+      - name: Check Vercel Token
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "❌ VERCEL_TOKEN is not set. Please add it to GitHub Secrets."
+            echo "Get a new token at: https://vercel.com/account/tokens"
+            exit 1
+          fi
+          echo "✅ VERCEL_TOKEN is configured"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Setup project link and pull env (preview)
+        run: vercel pull --yes --environment=preview --token "$VERCEL_TOKEN"
+        continue-on-error: true
+
+      - name: Create environment file
+        run: |
+          echo "Creating environment from GitHub secrets..."
+          
+          # Start with Vercel's environment if it exists
+          if [ -f .vercel/.env.preview.local ]; then
+            cp .vercel/.env.preview.local .env.production.local
+            echo "Using Vercel environment as base"
+          else
+            touch .env.production.local
+            echo "No Vercel environment found, using GitHub secrets only"
+          fi
+          
+          # Add/Override with GitHub secrets
+          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}" >> .env.production.local
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key' }}" >> .env.production.local
+          echo "NEXT_PUBLIC_OPENWEATHER_API_KEY=${{ secrets.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'test-api-key' }}" >> .env.production.local
+
+      - name: Build with Vercel
+        run: vercel build --token "$VERCEL_TOKEN"
+
+      - name: Deploy to Vercel Preview
+        id: vercel-deploy
+        run: |
+          url=$(vercel deploy --prebuilt --yes --token "$VERCEL_TOKEN" 2>&1 | tail -1)
+          echo "deployment-url=$url" >> "$GITHUB_OUTPUT"
+          echo "Preview URL: $url"
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests against Vercel Preview
+        env:
+          PLAYWRIGHT_TEST_BASE_URL: ${{ steps.vercel-deploy.outputs.deployment-url }}
+        run: npx playwright test --project=chromium
+
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-vercel
+          path: playwright-report/
+          retention-days: 7

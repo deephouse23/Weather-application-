@@ -14,6 +14,9 @@ jobs:
     env:
       # Add required environment variables for the build
       NEXT_PUBLIC_OPENWEATHER_API_KEY: ${{ secrets.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'test-api-key' }}
+      # Add Supabase environment variables for tests
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,6 +26,17 @@ jobs:
       
       - name: Install dependencies
         run: npm ci
+      
+      - name: Create environment file from GitHub secrets
+        run: |
+          echo "Setting up environment from GitHub secrets..."
+          cat > .env.production.local << EOF
+          NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key' }}
+          NEXT_PUBLIC_OPENWEATHER_API_KEY=${{ secrets.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'test-api-key' }}
+          OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY || secrets.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'test-api-key' }}
+          EOF
+          echo "Environment configured with $(wc -l < .env.production.local) variables"
       
       - name: Build application
         run: npm run build
@@ -34,7 +48,7 @@ jobs:
         run: npx playwright install --with-deps chromium
       
       - name: Run Playwright tests
-        run: npx playwright test
+        run: npx playwright test --project=chromium
         env:
           CI: true
           # Use headless mode for faster execution

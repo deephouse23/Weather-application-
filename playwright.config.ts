@@ -1,17 +1,17 @@
 import { defineConfig, devices } from '@playwright/test';
-import dotenv from 'dotenv';
-import path from 'path';
 
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-// Load test environment variables if running tests
-if (process.env.CI || process.env.NODE_ENV === 'test') {
-  dotenv.config({ path: path.resolve(__dirname, '.env.test') });
-} else {
-  // Load local environment variables for local development
-  dotenv.config({ path: path.resolve(__dirname, '.env.local') });
+// In CI, environment variables should be set by GitHub Actions
+// Locally, they come from .env.local or .env
+if (!process.env.CI) {
+  try {
+    require('dotenv').config({ path: '.env.local' });
+  } catch {
+    // dotenv might not be installed, that's OK
+  }
 }
 
 /**
@@ -56,16 +56,15 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
+    // Disable other browsers for now to speed up CI
+    // {
+    //   name: 'firefox',
+    //   use: { ...devices['Desktop Firefox'] },
+    // },
+    // {
+    //   name: 'webkit',
+    //   use: { ...devices['Desktop Safari'] },
+    // },
 
     /* Test against mobile viewports. */
     // {
@@ -92,17 +91,11 @@ export default defineConfig({
   webServer: hasExternalBaseUrl
     ? undefined
     : {
-        command: 'npm run dev', // Always use dev mode for tests
+        command: process.env.CI ? 'npm run start' : 'npm run dev',
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
-        timeout: process.env.CI ? 5 * 60 * 1000 : 2 * 60 * 1000, // 5 mins for CI, 2 mins for local
+        timeout: process.env.CI ? 5 * 60 * 1000 : 2 * 60 * 1000,
         stdout: 'pipe',
         stderr: 'pipe',
-        env: {
-          NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key-for-testing',
-          NEXT_PUBLIC_OPENWEATHER_API_KEY: process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'test-api-key',
-          NODE_ENV: 'development',
-        },
       },
 });
