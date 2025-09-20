@@ -11,6 +11,7 @@ node_modules/
 .env
 .env.production
 .env.development
+.env.test
 
 # Supabase secrets (CRITICAL - never commit these)
 .env.supabase

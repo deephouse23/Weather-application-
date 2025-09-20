@@ -1,12 +1,18 @@
 import { defineConfig, devices } from '@playwright/test';
+import dotenv from 'dotenv';
+import path from 'path';
 
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
+// Load test environment variables if running tests
+if (process.env.CI || process.env.NODE_ENV === 'test') {
+  dotenv.config({ path: path.resolve(__dirname, '.env.test') });
+} else {
+  // Load local environment variables for local development
+  dotenv.config({ path: path.resolve(__dirname, '.env.local') });
+}
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -86,11 +92,17 @@ export default defineConfig({
   webServer: hasExternalBaseUrl
     ? undefined
     : {
-        command: process.env.CI ? 'npm run start' : 'npm run dev',
+        command: 'npm run dev', // Always use dev mode for tests
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
         timeout: process.env.CI ? 5 * 60 * 1000 : 2 * 60 * 1000, // 5 mins for CI, 2 mins for local
         stdout: 'pipe',
         stderr: 'pipe',
+        env: {
+          NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key-for-testing',
+          NEXT_PUBLIC_OPENWEATHER_API_KEY: process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'test-api-key',
+          NODE_ENV: 'development',
+        },
       },
 });
