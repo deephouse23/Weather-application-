@@ -11,6 +11,8 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
+const hasExternalBaseUrl = !!process.env.PLAYWRIGHT_TEST_BASE_URL;
+
 export default defineConfig({
   testDir: './tests',
   /* Run tests in files in parallel */
@@ -71,10 +73,10 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: process.env.CI
+  webServer: hasExternalBaseUrl
     ? undefined
     : {
-        command: 'npm run dev',
+        command: process.env.CI ? 'npm run start' : 'npm run dev',
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,
