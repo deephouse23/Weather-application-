@@ -36,7 +36,6 @@ import { ErrorBoundary, SafeRender } from "@/components/error-boundary"
 import { useLocationContext } from "@/components/location-context"
 import { useAuth } from "@/lib/auth"
 import LazyWeatherMap from '@/components/lazy-weather-map'
-import { toastService } from "@/lib/toast-service"
 
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
@@ -578,7 +577,6 @@ function WeatherApp() {
         setHasSearched(true);
         setLastSearchTerm(locationInput);
         setCurrentLocation(locationInput);
-        toastService.success(`☀️ Weather updated for ${locationInput}`);
         return;
       } else if (cachedWeather) {
         console.log('Cached weather missing forecast, fetching fresh data');
@@ -614,9 +612,6 @@ function WeatherApp() {
       
       // Record API call
       recordRequest();
-      
-      // Success toast
-      toastService.success(`☀️ Weather updated for ${locationInput}`);
       
       // Add to search cache
       addToSearchCache(locationInput, weatherData);
