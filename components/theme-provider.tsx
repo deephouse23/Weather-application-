@@ -16,8 +16,9 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { safeStorage } from '@/lib/safe-storage'
+import { ThemeType } from '@/lib/theme-config'
 
-export type Theme = 'dark' | 'miami' | 'tron'
+export type Theme = ThemeType
 
 interface ThemeContextType {
   theme: Theme
@@ -48,7 +49,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const [preferences, setPreferences] = useState<any>(null)
   const [authLoading, setAuthLoading] = useState(true)
 
-  const availableThemes: Theme[] = ['dark', 'miami', 'tron']
+  const availableThemes: Theme[] = ['dark', 'miami', 'tron', 'atari2600', 'monochromeGreen', '8bitClassic', '16bitSnes']
   const isAuthenticated = !!user
 
   // Set theme and persist to localStorage
@@ -82,11 +83,12 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   useEffect(() => {
     if (typeof window !== 'undefined' && !loading) {
       const root = window.document.documentElement
-      root.classList.remove('dark', 'miami', 'tron')
+      // Remove all possible theme classes
+      availableThemes.forEach(t => root.classList.remove(t))
       root.classList.add(theme)
       root.setAttribute('data-theme', theme)
     }
-  }, [theme, loading])
+  }, [theme, loading, availableThemes])
 
   return (
     <ThemeContext.Provider value={{ 

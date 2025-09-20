@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { LogIn, LogOut, User, ChevronDown, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
@@ -13,8 +13,30 @@ export default function AuthButton() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const themeClasses = getComponentStyles(theme as ThemeType, 'navigation')
 
-  // Show loading spinner only when not initialized or during auth transitions
-  if (!isInitialized || (loading && !user)) {
+  // Handle click to toggle dropdown
+  const handleButtonClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDropdownOpen(!isDropdownOpen)
+  }
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (!target.closest('.auth-dropdown-container')) {
+        setIsDropdownOpen(false)
+      }
+    }
+
+    if (isDropdownOpen) {
+      document.addEventListener('click', handleClickOutside)
+      return () => document.removeEventListener('click', handleClickOutside)
+    }
+  }, [isDropdownOpen])
+
+  // Show loading spinner only when not initialized
+  if (!isInitialized) {
     return (
       <div className={`flex items-center justify-center px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider min-w-[80px] h-[32px] ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text}`}>
         <div className={`animate-spin rounded-full h-3 w-3 border-b border-current`}></div>
@@ -35,17 +57,14 @@ export default function AuthButton() {
   }
 
   return (
-    <div 
-      className="relative"
-      onMouseEnter={() => setIsDropdownOpen(true)}
-      onMouseLeave={() => setIsDropdownOpen(false)}
-    >
+    <div className="relative auth-dropdown-container">
       <button
+        onClick={handleButtonClick}
         className={`flex items-center justify-center space-x-2 px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] h-[32px] ${themeClasses.accentBg} ${themeClasses.borderColor} text-black ${themeClasses.glow}`}
       >
         <User className="w-3 h-3" />
-        <span className="whitespace-nowrap">{profile?.username || 'USER'}</span>
-        <ChevronDown className="w-2 h-2 ml-0.5" />
+        <span className="whitespace-nowrap">{profile?.username || user?.email?.split('@')[0] || 'USER'}</span>
+        <ChevronDown className={`w-2 h-2 ml-0.5 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {/* User Dropdown Menu */}

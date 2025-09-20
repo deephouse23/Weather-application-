@@ -177,6 +177,7 @@ function WeatherApp() {
   useEffect(() => {
     // Wait for auth/preferences to finish loading so we can honor
     // user portal settings (e.g., auto_location=false) on first load
+    console.log('Auto-location check:', { isClient, autoLocationAttempted, authLoading })
     if (!isClient || autoLocationAttempted || authLoading) return
 
     const tryAutoLocation = async () => {
@@ -1333,6 +1334,13 @@ function PressureGauge({ pressure, unit, theme }: { pressure: number; unit: 'hPa
           case 'low': return { fill: '#FF1744', bg: '#330011', border: '#FF1744' }
           case 'high': return { fill: '#00FFFF', bg: '#003333', border: '#00FFFF' }
           default: return { fill: '#00FFFF', bg: '#001111', border: '#00FFFF' }
+        }
+      default:
+        // Default to dark theme colors
+        switch (pressureLevel) {
+          case 'low': return { fill: '#ff6b6b', bg: '#4a1520', border: '#ff1439' }
+          case 'high': return { fill: '#51cf66', bg: '#1a4a25', border: '#2dd14c' }
+          default: return { fill: '#74c0fc', bg: '#1a2a4a', border: '#339af0' }
         }
     }
   }

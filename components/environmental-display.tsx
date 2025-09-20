@@ -20,10 +20,11 @@
 import { AirQualityDisplay } from './air-quality-display'
 import { PollenDisplay } from './pollen-display'
 import { WeatherData } from '@/lib/types'
+import { ThemeType } from '@/lib/theme-config'
 
 interface EnvironmentalDisplayProps {
   weather: WeatherData
-  theme: 'dark' | 'miami' | 'tron'
+  theme: ThemeType
   className?: string
 }
 

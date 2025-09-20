@@ -1,0 +1,45 @@
+name: e2e-preview
+
+on:
+  deployment_status:
+
+jobs:
+  e2e-on-vercel-preview:
+    if: >
+      github.event.deployment_status.state == 'success' &&
+      (github.event.deployment.environment == 'Preview' || github.event.deployment.environment == 'preview')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: read
+    env:
+      PLAYWRIGHT_TEST_BASE_URL: ${{ github.event.deployment_status.target_url }}
+    steps:
+      - name: Checkout the deployed commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.deployment.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npx playwright install --with-deps
+
+      - name: Wait for preview to be reachable
+        run: npx --yes wait-on ${{ env.PLAYWRIGHT_TEST_BASE_URL }}
+
+      - name: Run Playwright on preview
+        run: npx playwright test
+        env:
+          CI: true
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-preview
+          path: playwright-report
+

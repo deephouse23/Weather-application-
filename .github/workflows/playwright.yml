@@ -7,8 +7,12 @@ on:
 jobs:
   playwright-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    
+    timeout-minutes: 30
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,42 +26,54 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Deploy to Vercel Preview
-        id: vercel-deploy
-        uses: vercel/action@v1
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          github-comment: false
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
-          GOOGLE_POLLEN_API_KEY: ${{ secrets.GOOGLE_POLLEN_API_KEY }}
-          GOOGLE_AIR_QUALITY_API_KEY: ${{ secrets.GOOGLE_AIR_QUALITY_API_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
 
-      - name: Install Playwright Browsers
-        run: npx playwright install chromium
+      - name: Setup project link and pull env (preview)
+        run: vercel pull --yes --environment=preview --token "$VERCEL_TOKEN"
+
+      - name: Build with Vercel
+        run: vercel build --token "$VERCEL_TOKEN" --debug
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Deploy prebuilt to Vercel
+        id: vercel-deploy
+        run: |
+          set -euo pipefail
+          url=$(vercel deploy --prebuilt --yes --token "$VERCEL_TOKEN" --json | jq -r '.url')
+          echo "deployment-url=https://$url" >> "$GITHUB_OUTPUT"
+          echo "Preview URL: https://$url"
 
       - name: Wait for deployment to be ready
+        env:
+          URL: ${{ steps.vercel-deploy.outputs.deployment-url }}
         run: |
-          echo "Waiting for deployment to be ready..."
-          sleep 30
-          curl -f ${{ steps.vercel-deploy.outputs.preview-url }} || exit 1
+          set -euo pipefail
+          echo "Waiting for $URL to be ready..."
+          for i in {1..40}; do
+            status=$(curl -sS -o /dev/null -w "%{http_code}" "$URL")
+            if [[ "$status" == "200" || "$status" == "301" || "$status" == "302" || "$status" == "404" ]]; then
+              echo "Deployment is responding with HTTP $status"
+              break
+            fi
+            echo "Attempt $i/40: not ready (status $status). Retrying in 10s..."
+            sleep 10
+          done
+          curl -f "$URL" || (echo "Deployment not ready at $URL" && exit 1)
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
 
       - name: Run Playwright tests
-        run: npx playwright test
         env:
-          PLAYWRIGHT_TEST_BASE_URL: ${{ steps.vercel-deploy.outputs.preview-url }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          PLAYWRIGHT_TEST_BASE_URL: ${{ steps.vercel-deploy.outputs.deployment-url }}
+        run: npx playwright test
 
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
           name: playwright-report
           path: playwright-report/

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&family=Fira+Code:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -42,6 +44,66 @@
   --ok: #4caf50;          /* Green success */
   --warn: #ff9800;        /* Orange warning */
   --danger: #f44336;      /* Red error */
+}
+
+/* Premium Theme: Atari 2600 */
+:root[data-theme="atari2600"] {
+  --bg: #000000;          /* Black background */
+  --bg-elev: #1a1a1a;     /* Dark gray panels */
+  --border: #702800;      /* Brown borders */
+  --text: #FFFFFF;        /* White text */
+  --text-muted: #888888;  /* Gray muted text */
+  --primary: #E0EC9C;     /* Light green primary */
+  --accent: #841800;      /* Rust accent */
+  --ok: #E0EC9C;          /* Light green success */
+  --warn: #841800;        /* Rust warning */
+  --danger: #841800;      /* Rust error */
+  --font-family: "VT323", "Press Start 2P", monospace;
+}
+
+/* Premium Theme: Terminal Green */
+:root[data-theme="monochromeGreen"] {
+  --bg: #0D0D0D;          /* Near black background */
+  --bg-elev: #1a1a1a;     /* Dark gray panels */
+  --border: #009900;      /* Dark green borders */
+  --text: #33FF33;        /* Bright green text */
+  --text-muted: #66FF66;  /* Lighter green muted */
+  --primary: #33FF33;     /* Bright green primary */
+  --accent: #99FF99;      /* Pale green accent */
+  --ok: #00FF00;          /* Pure green success */
+  --warn: #99FF99;        /* Pale green warning */
+  --danger: #33FF33;      /* Bright green error */
+  --font-family: "Fira Code", "Courier New", monospace;
+}
+
+/* Premium Theme: 8-Bit Classic */
+:root[data-theme="8bitClassic"] {
+  --bg: #D3D3D3;          /* Light gray background */
+  --bg-elev: #C0C0C0;     /* Silver panels */
+  --border: #000000;      /* Black borders */
+  --text: #000000;        /* Black text */
+  --text-muted: #666666;  /* Gray muted text */
+  --primary: #CC0000;     /* Red primary */
+  --accent: #0066CC;      /* Blue accent */
+  --ok: #00AA00;          /* Green success */
+  --warn: #FF8800;        /* Orange warning */
+  --danger: #CC0000;      /* Red error */
+  --font-family: "Press Start 2P", "Courier New", monospace;
+}
+
+/* Premium Theme: 16-Bit SNES */
+:root[data-theme="16bitSnes"] {
+  --bg: #B8B8D0;          /* Purple-gray background */
+  --bg-elev: #9E9EB8;     /* Medium purple panels */
+  --border: #5B5B8B;      /* Dark purple borders */
+  --text: #2C2C3E;        /* Dark purple text */
+  --text-muted: #6B6B8C;  /* Muted purple text */
+  --primary: #FFD700;     /* Gold primary */
+  --accent: #8B8BB8;      /* Light purple accent */
+  --ok: #4CAF50;          /* Green success */
+  --warn: #FF9800;        /* Orange warning */
+  --danger: #F44336;      /* Red error */
+  --font-family: "Courier New", "VT323", monospace;
 }
 
 /* Default fallback (same as dark) */

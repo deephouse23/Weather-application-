@@ -19,6 +19,7 @@
 
 import { cn } from '@/lib/utils'
 import { getPollenColor } from '@/lib/air-quality-utils'
+import { ThemeType } from '@/lib/theme-config'
 
 interface PollenData {
   tree: Record<string, string>
@@ -28,14 +29,14 @@ interface PollenData {
 
 interface PollenDisplayProps {
   pollen: PollenData
-  theme: 'dark' | 'miami' | 'tron'
+  theme: ThemeType
   className?: string
 }
 
 interface PollenCategoryProps {
   categoryName: string
   categoryData: Record<string, string>
-  theme: 'dark' | 'miami' | 'tron'
+  theme: ThemeType
 }
 
 function PollenCategory({ categoryName, categoryData, theme }: PollenCategoryProps) {
@@ -48,6 +49,14 @@ function PollenCategory({ categoryName, categoryData, theme }: PollenCategoryPro
         return 'text-[#00ffff]'
       case 'tron':
         return 'text-white'
+      case 'atari2600':
+        return 'text-[#FFFFFF]'
+      case 'monochromeGreen':
+        return 'text-[#33FF33]'
+      case '8bitClassic':
+        return 'text-[#000000]'
+      case '16bitSnes':
+        return 'text-[#2C2C3E]'
       default:
         return 'text-[#e0e0e0]'
     }
@@ -112,6 +121,30 @@ export function PollenDisplay({ pollen, theme, className }: PollenDisplayProps) 
           container: 'bg-black border-[#00FFFF]',
           header: 'text-[#00FFFF]',
           shadow: '0 0 15px #00FFFF33'
+        }
+      case 'atari2600':
+        return {
+          container: 'bg-[#000000] border-[#702800]',
+          header: 'text-[#E0EC9C]',
+          shadow: '0 0 15px #70280033'
+        }
+      case 'monochromeGreen':
+        return {
+          container: 'bg-[#0D0D0D] border-[#009900]',
+          header: 'text-[#33FF33]',
+          shadow: '0 0 15px #00990033'
+        }
+      case '8bitClassic':
+        return {
+          container: 'bg-[#D3D3D3] border-[#000000]',
+          header: 'text-[#CC0000]',
+          shadow: '0 0 15px #00000033'
+        }
+      case '16bitSnes':
+        return {
+          container: 'bg-[#B8B8D0] border-[#5B5B8B]',
+          header: 'text-[#FFD700]',
+          shadow: '0 0 15px #5B5B8B33'
         }
       default:
         return {
