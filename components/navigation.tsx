@@ -19,6 +19,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Menu, X, Cloud, Zap, BookOpen, Gamepad2, Info, Home, Newspaper, Thermometer, Map, ChevronDown, GraduationCap } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useTheme } from "@/components/theme-provider"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
 import AuthButton from "@/components/auth/auth-button"
@@ -185,48 +186,36 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
             )
           })}
 
-          {/* Education Dropdown */}
-          <div 
-            className="relative"
-            onMouseEnter={() => setIsEducationDropdownOpen(true)}
-            onMouseLeave={() => setIsEducationDropdownOpen(false)}
-          >
-            <button
-              className={`flex items-center justify-center space-x-2 px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] ${
-                isEducationActive 
-                  ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black ${themeClasses.glow}`
-                  : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`
-              }`}
-            >
-              <GraduationCap className="w-3 h-3" />
-              <span className="whitespace-nowrap">EDU ▾</span>
-            </button>
-
-            {/* Education Dropdown Menu */}
-            {isEducationDropdownOpen && (
-              <div className={`absolute top-full left-0 mt-1 w-48 border-2 z-50 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
-                {educationItems.map((item) => {
-                  const Icon = item.icon
-                  const isActive = pathname === item.href
-                  
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`flex items-center space-x-3 px-3 py-2 border-b-2 last:border-b-0 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 w-full ${
-                        isActive 
-                          ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black`
-                          : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`
-                      }`}
-                    >
+          {/* Education Dropdown (shadcn) */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={`flex items-center justify-center space-x-2 px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] ${
+                  isEducationActive 
+                    ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black ${themeClasses.glow}`
+                    : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`
+                }`}
+                aria-haspopup="menu"
+                aria-label="Education menu"
+              >
+                <GraduationCap className="w-3 h-3" />
+                <span className="whitespace-nowrap">EDU ▾</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-48">
+              {educationItems.map((item) => {
+                const Icon = item.icon
+                return (
+                  <DropdownMenuItem key={item.href} asChild>
+                    <Link href={item.href} className="flex items-center space-x-3 w-full">
                       <Icon className="w-3 h-3" />
                       <span>{item.label}</span>
                     </Link>
-                  )
-                })}
-              </div>
-            )}
-          </div>
+                  </DropdownMenuItem>
+                )
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {mainNavItems.slice(3).map((item) => {
             const Icon = item.icon

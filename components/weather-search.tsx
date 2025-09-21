@@ -24,6 +24,7 @@ import CityAutocomplete from "./city-autocomplete"
 import { type CityData } from "@/lib/city-database"
 import { useLocationContext } from "./location-context"
 import { useTheme } from "./theme-provider"
+import { Input } from "@/components/ui/input"
 
 interface WeatherSearchProps {
   onSearch: (location: string) => void;
@@ -166,7 +167,7 @@ export default function WeatherSearch({
       {/* Search Form - Mobile optimized */}
       <form onSubmit={handleSubmit} className="mb-3 sm:mb-4 px-2 sm:px-0">
         <div className="relative">
-          <input
+          <Input
             type="text"
             data-testid="location-search-input"
             value={searchTerm}
@@ -175,14 +176,15 @@ export default function WeatherSearch({
             onFocus={() => searchTerm.length >= 2 && setShowAutocomplete(true)}
             placeholder={isDisabled ? "Rate limit reached..." : "ZIP, City+State, or City+Country..."}
             disabled={controlsDisabled}
-            className={`w-full px-3 sm:px-4 py-3 sm:py-4 pr-10 sm:pr-12 ${themeClasses.cardBg} border-2 ${theme === 'miami' ? 'border-weather-accent' : themeClasses.borderColor} ${themeClasses.text} ${themeClasses.placeholderText} 
-                     font-mono text-sm sm:text-base uppercase tracking-wider focus:outline-none ${theme === 'miami' ? 'hover:border-weather-accent' : themeClasses.hoverBorder} 
+            aria-label="Search location"
+            className={`w-full pr-10 sm:pr-12 ${themeClasses.cardBg} border-2 ${theme === 'miami' ? 'border-weather-accent' : themeClasses.borderColor} ${themeClasses.text} ${themeClasses.placeholderText} 
+                     font-mono text-sm sm:text-base uppercase tracking-wider ${theme === 'miami' ? 'hover:border-weather-accent' : themeClasses.hoverBorder} 
                      transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed pixel-font ${theme === 'miami' ? 'border-weather-accent' : themeClasses.specialBorder}
-                     min-h-[48px] touch-manipulation`}
+                     min-h-[48px] touch-manipulation py-3 sm:py-4 px-3 sm:px-4`}
             style={{
               imageRendering: "pixelated",
               fontFamily: "monospace",
-              fontSize: "clamp(12px, 3vw, 16px)" // Responsive font size
+              fontSize: "clamp(12px, 3vw, 16px)"
             }}
           />
           <div className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
