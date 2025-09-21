@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
+import { setupStableApp } from './utils';
 
 test('Debug: Capture app structure', async ({ page }) => {
+  await setupStableApp(page);
   // Navigate to the app
   await page.goto('/');
   

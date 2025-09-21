@@ -1,12 +1,16 @@
 import { test, expect } from '@playwright/test';
+import { setupStableApp } from './utils';
 
 test.describe('NEWS Navigation Issue Debug', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupStableApp(page);
+  });
   test('direct NEWS page navigation test', async ({ page }) => {
     // Go directly to NEWS page
     await page.goto('/news');
     
-    // Wait and check what happens
-    await page.waitForTimeout(5000);
+    // Wait for header to render to confirm load
+    await expect(page.locator('h1').filter({ hasText: /16-BIT NEWS/i })).toBeVisible();
     
     console.log('Current URL after 5s:', await page.url());
     console.log('Page title:', await page.title());
@@ -33,7 +37,7 @@ test.describe('NEWS Navigation Issue Debug', () => {
       await homeLink.click();
       
       // Wait and see what URL we end up at
-      await page.waitForTimeout(3000);
+      await expect(page).toHaveURL('/');
       console.log('URL after clicking home:', await page.url());
     }
     
@@ -45,28 +49,28 @@ test.describe('NEWS Navigation Issue Debug', () => {
   test('test navigation from different pages', async ({ page }) => {
     // Start from home page
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await expect(page).toHaveTitle(/Weather|16/i);
     console.log('Started at:', await page.url());
     
     // Navigate to ABOUT first (known working page)
     const aboutLink = page.locator('a[href="/about"]');
     if (await aboutLink.count() > 0) {
       await aboutLink.click();
-      await page.waitForTimeout(2000);
+      await expect(page).toHaveURL('/about');
       console.log('About page URL:', await page.url());
       
       // From ABOUT, try to go to NEWS
       const newsLink = page.locator('a[href="/news"]');
       if (await newsLink.count() > 0) {
         await newsLink.click();
-        await page.waitForTimeout(3000);
+        await expect(page).toHaveURL('/news');
         console.log('News page URL from ABOUT:', await page.url());
         
         // Try to go back to ABOUT
         const aboutLinkFromNews = page.locator('a[href="/about"]');
         if (await aboutLinkFromNews.count() > 0) {
           await aboutLinkFromNews.click();
-          await page.waitForTimeout(3000);
+          await expect(page).toHaveURL('/about');
           console.log('Back to ABOUT URL:', await page.url());
         }
       }

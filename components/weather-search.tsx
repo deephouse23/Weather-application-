@@ -168,6 +168,7 @@ export default function WeatherSearch({
         <div className="relative">
           <input
             type="text"
+            data-testid="location-search-input"
             value={searchTerm}
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={handleInputKeyDown}

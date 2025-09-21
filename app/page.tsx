@@ -29,6 +29,7 @@ import WeatherSearch from "@/components/weather-search"
 import RandomCityLinks from "@/components/random-city-links"
 import { locationService, LocationData } from "@/lib/location-service"
 import { userCacheService } from "@/lib/user-cache-service"
+import { toastService } from "@/lib/toast-service"
 import { APP_CONSTANTS } from "@/lib/utils"
 import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from "@/components/lazy-weather-components"
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/responsive-container"
@@ -36,7 +37,6 @@ import { ErrorBoundary, SafeRender } from "@/components/error-boundary"
 import { useLocationContext } from "@/components/location-context"
 import { useAuth } from "@/lib/auth"
 import LazyWeatherMap from '@/components/lazy-weather-map'
-import { toastService } from "@/lib/toast-service"
 
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
@@ -578,7 +578,6 @@ function WeatherApp() {
         setHasSearched(true);
         setLastSearchTerm(locationInput);
         setCurrentLocation(locationInput);
-        toastService.success(`☀️ Weather updated for ${locationInput}`);
         return;
       } else if (cachedWeather) {
         console.log('Cached weather missing forecast, fetching fresh data');
@@ -614,9 +613,6 @@ function WeatherApp() {
       
       // Record API call
       recordRequest();
-      
-      // Success toast
-      toastService.success(`☀️ Weather updated for ${locationInput}`);
       
       // Add to search cache
       addToSearchCache(locationInput, weatherData);
@@ -853,13 +849,19 @@ function WeatherApp() {
           )}
 
           {error && (
-            <div className="text-red-500 text-center mt-4">
+            <div
+              data-testid="global-error"
+              className="text-red-500 text-center mt-4"
+            >
               {error}
             </div>
           )}
 
           {rateLimitError && (
-            <div className="text-yellow-500 text-center mt-4">
+            <div
+              data-testid="rate-limit-warning"
+              className="text-yellow-500 text-center mt-4"
+            >
               {rateLimitError}
             </div>
           )}
@@ -883,7 +885,12 @@ function WeatherApp() {
                 <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
                      style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
                   <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Temperature</h2>
-                  <p className={`text-3xl font-bold ${themeClasses.text}`}>{weather?.temperature || 'N/A'}{weather?.unit || '°F'}</p>
+                  <p
+                    data-testid="temperature-value"
+                    className={`text-3xl font-bold ${themeClasses.text}`}
+                  >
+                    {weather?.temperature || 'N/A'}{weather?.unit || '°F'}
+                  </p>
                 </div>
 
                 {/* Conditions Box */}
