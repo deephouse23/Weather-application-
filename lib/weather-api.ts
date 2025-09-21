@@ -943,19 +943,27 @@ export const fetchWeatherData = async (
     const temp = formatTemperature(oneCall.current?.temp ?? 0, countryCode);
     console.log('Formatted temperature:', temp);
 
-    // Process forecast data
-    // Build forecast from One Call daily/hourly
-    const mapped = {
-      list: Array.isArray(oneCall.hourly) ? oneCall.hourly.slice(0, 24).map((h: any) => ({
-        dt: h.dt,
-        main: { temp: h.temp, temp_min: h.temp, temp_max: h.temp, humidity: h.humidity ?? 0, pressure: h.pressure ?? 1013 },
-        weather: [{ main: (h.weather?.[0]?.main || 'Clear'), description: (h.weather?.[0]?.description || 'clear sky') }],
-        wind: { speed: h.wind_speed ?? 0, deg: h.wind_deg ?? 0 },
-        clouds: { all: h.clouds ?? 0 },
-        pop: h.pop ?? 0,
-      })) : []
-    } as any;
-    const forecast = processDailyForecast(mapped, useFahrenheit);
+    // Process forecast data: use One Call daily for 5-day view
+    const forecast = Array.isArray(oneCall.daily)
+      ? oneCall.daily.slice(0, 5).map((d: any) => ({
+          day: new Date(d.dt * 1000).toLocaleDateString('en-US', { weekday: 'long' }),
+          highTemp: Math.round(d.temp?.max ?? 0),
+          lowTemp: Math.round(d.temp?.min ?? 0),
+          condition: d.weather?.[0]?.main || 'Clear',
+          description: d.weather?.[0]?.description || 'clear sky',
+          details: {
+            humidity: d.humidity ?? 0,
+            windSpeed: Math.round(d.wind_speed ?? 0),
+            windDirection: d.wind_deg ? getWindDirection(d.wind_deg) : undefined,
+            pressure: `${d.pressure ?? 1013} hPa`,
+            cloudCover: d.clouds ?? 0,
+            precipitationChance: Math.round((d.pop ?? 0) * 100),
+            visibility: undefined,
+            uvIndex: Math.round(d.uvi ?? 0)
+          },
+          hourlyForecast: []
+        }))
+      : [];
     console.log('Processed forecast:', forecast);
 
     // Calculate moon phase
