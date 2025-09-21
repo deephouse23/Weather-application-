@@ -849,20 +849,27 @@ function WeatherApp() {
           )}
 
           {error && (
-            <div
-              data-testid="global-error"
-              className="text-red-500 text-center mt-4"
-            >
-              {error}
+            <div className="max-w-2xl mx-auto mt-4 px-2">
+              <div data-testid="global-error">
+                {/* shadcn Alert */}
+                {/* eslint-disable-next-line react/no-unknown-property */}
+                {/* Using inline to avoid import clutter here */}
+                <div role="alert" className="relative w-full rounded-lg border border-red-500/50 p-4 text-red-500">
+                  <div className="mb-1 font-medium leading-none tracking-tight">Error</div>
+                  <div className="text-sm">{error}</div>
+                </div>
+              </div>
             </div>
           )}
 
           {rateLimitError && (
-            <div
-              data-testid="rate-limit-warning"
-              className="text-yellow-500 text-center mt-4"
-            >
-              {rateLimitError}
+            <div className="max-w-2xl mx-auto mt-4 px-2">
+              <div data-testid="rate-limit-warning">
+                <div role="alert" className="relative w-full rounded-lg border border-yellow-500/50 p-4 text-yellow-400">
+                  <div className="mb-1 font-medium leading-none tracking-tight">Slow down</div>
+                  <div className="text-sm">{rateLimitError}</div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -879,39 +886,34 @@ function WeatherApp() {
                   </h1>
                 </div>
                 
-                {/* Current Weather */}
+                {/* Current Weather using Cards */}
                 <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
-                {/* Temperature Box */}
-                <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
-                     style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
-                  <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Temperature</h2>
-                  <p
-                    data-testid="temperature-value"
-                    className={`text-3xl font-bold ${themeClasses.text}`}
-                  >
-                    {weather?.temperature || 'N/A'}{weather?.unit || '°F'}
-                  </p>
-                </div>
-
-                {/* Conditions Box */}
-                <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
-                     style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
-                  <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Conditions</h2>
-                  <p className={`text-lg ${themeClasses.text}`}>{weather?.condition || 'Unknown'}</p>
-                  <p className={`text-sm ${themeClasses.secondaryText}`}>{weather?.description || 'No description available'}</p>
-                </div>
-
-                {/* Wind Box */}
-                <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
-                     style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
-                  <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Wind</h2>
-                  <p className={`text-lg ${themeClasses.text}`}>
-                    {weather?.wind?.direction ? `${weather.wind.direction} ` : ''}
-                    {weather?.wind?.speed || 'N/A'} mph
-                    {weather?.wind?.gust ? ` (gusts ${weather.wind.gust} mph)` : ''}
-                  </p>
-                </div>
-              </ResponsiveGrid>
+                  <div className={`p-0 rounded-lg ${themeClasses.cardBg} ${themeClasses.borderColor} border-2`}>
+                    <div className="p-4 text-center">
+                      <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Temperature</h2>
+                      <p data-testid="temperature-value" className={`text-3xl font-bold ${themeClasses.text}`}>
+                        {weather?.temperature || 'N/A'}{weather?.unit || '°F'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`p-0 rounded-lg ${themeClasses.cardBg} ${themeClasses.borderColor} border-2`}>
+                    <div className="p-4 text-center">
+                      <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Conditions</h2>
+                      <p className={`text-lg ${themeClasses.text}`}>{weather?.condition || 'Unknown'}</p>
+                      <p className={`text-sm ${themeClasses.secondaryText}`}>{weather?.description || 'No description available'}</p>
+                    </div>
+                  </div>
+                  <div className={`p-0 rounded-lg ${themeClasses.cardBg} ${themeClasses.borderColor} border-2`}>
+                    <div className="p-4 text-center">
+                      <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Wind</h2>
+                      <p className={`text-lg ${themeClasses.text}`}>
+                        {weather?.wind?.direction ? `${weather.wind.direction} ` : ''}
+                        {weather?.wind?.speed || 'N/A'} mph
+                        {weather?.wind?.gust ? ` (gusts ${weather.wind.gust} mph)` : ''}
+                      </p>
+                    </div>
+                  </div>
+                </ResponsiveGrid>
 
               {/* Sun Times, UV Index, Moon Phase */}
               <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">

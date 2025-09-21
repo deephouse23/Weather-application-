@@ -38,7 +38,8 @@ function NewsContent() {
     <div className="space-y-6">
       {/* News Categories */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className={`border-2 p-4 ${themeClasses.borderColor} ${themeClasses.background}`}>
+        <div className={`border-2 p-0 rounded-lg overflow-hidden ${themeClasses.borderColor} ${themeClasses.background}`}>
+          <div className="p-4">
           <h2 className={`text-lg font-bold font-mono mb-3 ${themeClasses.accentText}`}>WEATHER ALERTS</h2>
           <div className="space-y-2">
             <a 
@@ -66,18 +67,22 @@ function NewsContent() {
               {`•`} Flash flood warning
             </a>
           </div>
+          </div>
         </div>
 
-        <div className={`border-2 p-4 ${themeClasses.borderColor} ${themeClasses.background}`}>
+        <div className={`border-2 p-0 rounded-lg overflow-hidden ${themeClasses.borderColor} ${themeClasses.background}`}>
+          <div className="p-4">
           <h2 className={`text-lg font-bold font-mono mb-3 ${themeClasses.accentText}`}>ENVIRONMENTAL</h2>
           <div className="space-y-2">
             <div className={`text-sm font-mono ${themeClasses.text}`}>{`•`} Air quality updates</div>
             <div className={`text-sm font-mono ${themeClasses.text}`}>{`•`} Pollen forecasts</div>
             <div className={`text-sm font-mono ${themeClasses.text}`}>{`•`} UV index warnings</div>
           </div>
+          </div>
         </div>
 
-        <div className={`border-2 p-4 ${themeClasses.borderColor} ${themeClasses.background}`}>
+        <div className={`border-2 p-0 rounded-lg overflow-hidden ${themeClasses.borderColor} ${themeClasses.background}`}>
+          <div className="p-4">
           <h2 className={`text-lg font-bold font-mono mb-3 ${themeClasses.accentText}`}>CLIMATE</h2>
           <div className="space-y-2">
             <a 
@@ -105,11 +110,13 @@ function NewsContent() {
               {`•`} Research updates
             </a>
           </div>
+          </div>
         </div>
       </div>
 
       {/* Latest Headlines - Static for reliable navigation */}
-      <div className={`border-2 p-6 ${themeClasses.borderColor} ${themeClasses.background}`}>
+      <div className={`border-2 p-0 rounded-lg overflow-hidden ${themeClasses.borderColor} ${themeClasses.background}`}>
+        <div className="p-6">
         <h2 className={`text-xl font-bold font-mono mb-4 ${themeClasses.accentText}`}>LATEST HEADLINES</h2>
         <div className="space-y-3">
           <a
@@ -162,6 +169,7 @@ function NewsContent() {
             <span className="group-hover:underline">Climate science updates and research</span>
             <span className={`ml-2 text-xs opacity-60`}>(NASA Climate)</span>
           </a>
+        </div>
         </div>
       </div>
 
