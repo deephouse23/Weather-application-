@@ -94,9 +94,7 @@ test.describe('Weather Data Display', () => {
         pressure: '1015 hPa',
         sunrise: '6:00 am',
         sunset: '8:00 pm',
-        forecast: [
-          { time: '10 AM', temp: 70, condition: 'Sunny', precipChance: 0 },
-        ].length ? [{
+        forecast: [{
           day: 'Monday',
           highTemp: 75,
           lowTemp: 65,
@@ -104,7 +102,7 @@ test.describe('Weather Data Display', () => {
           description: 'Mild with clouds',
           details: { humidity: 55, windSpeed: 6, windDirection: 'NE', pressure: '1015 hPa', precipitationChance: 10, visibility: 10, uvIndex: 5 },
           hourlyForecast: [{ time: '10 AM', temp: 70, condition: 'Sunny', precipChance: 0 }]
-        }] : [],
+        }],
         moonPhase: { phase: 'Waxing Crescent', illumination: 20, emoji: 'Moon', phaseAngle: 45 },
         uvIndex: 5,
         aqi: 30,
