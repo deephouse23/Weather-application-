@@ -14,6 +14,7 @@ jobs:
       deployments: read
     env:
       PLAYWRIGHT_TEST_BASE_URL: ${{ github.event.deployment_status.target_url }}
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
     steps:
       - name: Checkout the deployed commit
         uses: actions/checkout@v4
@@ -28,8 +29,13 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps
 
-      - name: Wait for preview to be reachable
-        run: npx --yes wait-on ${{ env.PLAYWRIGHT_TEST_BASE_URL }}
+      - name: Wait for preview to be reachable (with bypass)
+        run: |
+          URL="${{ env.PLAYWRIGHT_TEST_BASE_URL }}"
+          if [ -n "${{ env.VERCEL_AUTOMATION_BYPASS_SECRET }}" ]; then
+            URL="$URL?x-vercel-protection-bypass=${{ env.VERCEL_AUTOMATION_BYPASS_SECRET }}"
+          fi
+          npx --yes wait-on "$URL"
 
       - name: Run Playwright on preview
         run: npx playwright test
