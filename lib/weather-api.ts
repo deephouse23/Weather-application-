@@ -924,37 +924,38 @@ export const fetchWeatherData = async (
     const { lat, lon, displayName } = await geocodeLocation(locationQuery);
     console.log('Geocoded location:', { lat, lon, displayName });
 
-    // Fetch current weather using internal API
-    const currentWeatherResponse = await fetch(
-      getApiUrl(`/api/weather/current?lat=${lat}&lon=${lon}&units=${unitSystem}`)
+    // Fetch One Call 3.0 aggregation using internal API
+    const oneCallResponse = await fetch(
+      getApiUrl(`/api/weather/onecall?lat=${lat}&lon=${lon}&units=${unitSystem}`)
     );
-    if (!currentWeatherResponse.ok) {
-      throw new Error(`Current weather API call failed: ${currentWeatherResponse.status}`);
+    if (!oneCallResponse.ok) {
+      throw new Error(`One Call API call failed: ${oneCallResponse.status}`);
     }
-    const currentWeatherData = await currentWeatherResponse.json();
-    console.log('Current weather response:', currentWeatherData);
-
-    // Fetch forecast using internal API
-    const forecastResponse = await fetch(
-      getApiUrl(`/api/weather/forecast?lat=${lat}&lon=${lon}&units=${unitSystem}`)
-    );
-    if (!forecastResponse.ok) {
-      throw new Error(`Forecast API call failed: ${forecastResponse.status}`);
-    }
-    const forecastData = await forecastResponse.json();
-    console.log('Forecast response:', forecastData);
+    const oneCall = await oneCallResponse.json();
+    console.log('One Call response:', oneCall);
 
     // Process and validate data
-    const countryCode = currentWeatherData.sys.country;
+    const countryCode = oneCall?.timezone?.includes('America') ? 'US' : (oneCall?.current?.sys?.country || 'US');
     const useFahrenheit = shouldUseFahrenheit(countryCode);
     console.log('Using Fahrenheit:', useFahrenheit);
 
     // Format temperature with proper unit handling
-    const temp = formatTemperature(currentWeatherData.main.temp, countryCode);
+    const temp = formatTemperature(oneCall.current?.temp ?? 0, countryCode);
     console.log('Formatted temperature:', temp);
 
     // Process forecast data
-    const forecast = processDailyForecast(forecastData, useFahrenheit);
+    // Build forecast from One Call daily/hourly
+    const mapped = {
+      list: Array.isArray(oneCall.hourly) ? oneCall.hourly.slice(0, 24).map((h: any) => ({
+        dt: h.dt,
+        main: { temp: h.temp, temp_min: h.temp, temp_max: h.temp, humidity: h.humidity ?? 0, pressure: h.pressure ?? 1013 },
+        weather: [{ main: (h.weather?.[0]?.main || 'Clear'), description: (h.weather?.[0]?.description || 'clear sky') }],
+        wind: { speed: h.wind_speed ?? 0, deg: h.wind_deg ?? 0 },
+        clouds: { all: h.clouds ?? 0 },
+        pop: h.pop ?? 0,
+      })) : []
+    } as any;
+    const forecast = processDailyForecast(mapped, useFahrenheit);
     console.log('Processed forecast:', forecast);
 
     // Calculate moon phase
@@ -963,7 +964,7 @@ export const fetchWeatherData = async (
 
     // Fetch UV Index with debugging
     console.log('=== FETCHING UV INDEX ===');
-    const uvIndex = await fetchUVIndex(lat, lon);
+    const uvIndex = Math.round(oneCall.current?.uvi ?? 0);
     console.log('UV Index fetched:', uvIndex);
 
     // Fetch Pollen data
@@ -980,17 +981,17 @@ export const fetchWeatherData = async (
       country: countryCode,
       temperature: temp.value,
       unit: temp.unit,
-      condition: currentWeatherData.weather[0].main,
-      description: currentWeatherData.weather[0].description,
-      humidity: currentWeatherData.main.humidity,
+      condition: oneCall.current?.weather?.[0]?.main ?? 'Clear',
+      description: oneCall.current?.weather?.[0]?.description ?? 'clear sky',
+      humidity: oneCall.current?.humidity ?? 0,
       wind: {
-        speed: currentWeatherData.wind.speed,
-        direction: currentWeatherData.wind.deg ? getCompassDirection(currentWeatherData.wind.deg) : undefined,
-        gust: currentWeatherData.wind.gust
+        speed: oneCall.current?.wind_speed ?? 0,
+        direction: oneCall.current?.wind_deg ? getCompassDirection(oneCall.current.wind_deg) : undefined,
+        gust: oneCall.current?.wind_gust
       } as WindData,
-      pressure: formatPressureByRegion(currentWeatherData.main.pressure, countryCode),
-      sunrise: formatTime(currentWeatherData.sys.sunrise, currentWeatherData.timezone),
-      sunset: formatTime(currentWeatherData.sys.sunset, currentWeatherData.timezone),
+      pressure: formatPressureByRegion(oneCall.current?.pressure ?? 1013, countryCode),
+      sunrise: oneCall.current?.sunrise ? formatTime(oneCall.current.sunrise, oneCall.timezone_offset) : 'N/A',
+      sunset: oneCall.current?.sunset ? formatTime(oneCall.current.sunset, oneCall.timezone_offset) : 'N/A',
       forecast: forecast,
       moonPhase: moonPhase,
       uvIndex,
@@ -1037,37 +1038,37 @@ export const fetchWeatherByLocation = async (
   }
 
   try {
-    // Fetch current weather using internal API
-    const currentWeatherResponse = await fetch(
-      getApiUrl(`/api/weather/current?lat=${latitude}&lon=${longitude}&units=${unitSystem}`)
+    // Fetch One Call 3.0 aggregation using internal API
+    const oneCallResponse = await fetch(
+      getApiUrl(`/api/weather/onecall?lat=${latitude}&lon=${longitude}&units=${unitSystem}`)
     )
-    if (!currentWeatherResponse.ok) {
-      throw new Error(`Current weather API call failed: ${currentWeatherResponse.status}`)
+    if (!oneCallResponse.ok) {
+      throw new Error(`One Call API call failed: ${oneCallResponse.status}`)
     }
-    const currentWeatherData = await currentWeatherResponse.json()
-    console.log('Current weather response:', currentWeatherData)
-
-    // Fetch forecast using internal API
-    const forecastResponse = await fetch(
-      getApiUrl(`/api/weather/forecast?lat=${latitude}&lon=${longitude}&units=${unitSystem}`)
-    )
-    if (!forecastResponse.ok) {
-      throw new Error(`Forecast API call failed: ${forecastResponse.status}`)
-    }
-    const forecastData = await forecastResponse.json()
-    console.log('Forecast response:', forecastData)
+    const oneCall = await oneCallResponse.json()
+    console.log('One Call response:', oneCall)
 
     // Process and validate data
-    const countryCode = currentWeatherData.sys.country
+    const countryCode = oneCall?.timezone?.includes('America') ? 'US' : (oneCall?.current?.sys?.country || 'US')
     const useFahrenheit = shouldUseFahrenheit(countryCode)
     console.log('Using Fahrenheit:', useFahrenheit)
 
     // Format temperature with proper unit handling
-    const temp = formatTemperature(currentWeatherData.main.temp, countryCode)
+    const temp = formatTemperature(oneCall.current?.temp ?? 0, countryCode)
     console.log('Formatted temperature:', temp)
 
     // Process forecast data
-    const forecast = processDailyForecast(forecastData, useFahrenheit)
+    const mapped = {
+      list: Array.isArray(oneCall.hourly) ? oneCall.hourly.slice(0, 24).map((h: any) => ({
+        dt: h.dt,
+        main: { temp: h.temp, temp_min: h.temp, temp_max: h.temp, humidity: h.humidity ?? 0, pressure: h.pressure ?? 1013 },
+        weather: [{ main: (h.weather?.[0]?.main || 'Clear'), description: (h.weather?.[0]?.description || 'clear sky') }],
+        wind: { speed: h.wind_speed ?? 0, deg: h.wind_deg ?? 0 },
+        clouds: { all: h.clouds ?? 0 },
+        pop: h.pop ?? 0,
+      })) : []
+    } as any
+    const forecast = processDailyForecast(mapped, useFahrenheit)
     console.log('Processed forecast:', forecast)
 
     // Calculate moon phase
@@ -1076,7 +1077,7 @@ export const fetchWeatherByLocation = async (
 
     // Fetch UV Index with debugging
     console.log('=== FETCHING UV INDEX ===');
-    const uvIndex = await fetchUVIndex(latitude, longitude);
+    const uvIndex = Math.round(oneCall.current?.uvi ?? 0)
     console.log('UV Index fetched:', uvIndex);
 
     // Fetch Pollen data
@@ -1085,26 +1086,26 @@ export const fetchWeatherByLocation = async (
     console.log('Weather Data - Pollen:', pollenData);
 
     // Fetch Air Quality data
-    const airQualityData = await fetchAirQualityData(latitude, longitude, `${currentWeatherData.name}, ${currentWeatherData.sys.country}`);
+    const airQualityData = await fetchAirQualityData(latitude, longitude, `${oneCall?.timezone || 'Unknown'}`);
     console.log('Weather Data - Air Quality:', airQualityData);
 
     // Construct weather data object
     const weatherData: WeatherData = {
-      location: `${currentWeatherData.name}, ${currentWeatherData.sys.country}`,
+      location: `${oneCall?.timezone || 'Selected Location'}`,
       country: countryCode,
       temperature: temp.value,
       unit: temp.unit,
-      condition: currentWeatherData.weather[0].main,
-      description: currentWeatherData.weather[0].description,
-      humidity: currentWeatherData.main.humidity,
+      condition: oneCall.current?.weather?.[0]?.main ?? 'Clear',
+      description: oneCall.current?.weather?.[0]?.description ?? 'clear sky',
+      humidity: oneCall.current?.humidity ?? 0,
       wind: {
-        speed: currentWeatherData.wind.speed,
-        direction: currentWeatherData.wind.deg ? getCompassDirection(currentWeatherData.wind.deg) : undefined,
-        gust: currentWeatherData.wind.gust
+        speed: oneCall.current?.wind_speed ?? 0,
+        direction: oneCall.current?.wind_deg ? getCompassDirection(oneCall.current.wind_deg) : undefined,
+        gust: oneCall.current?.wind_gust
       },
-      pressure: formatPressureByRegion(currentWeatherData.main.pressure, countryCode),
-      sunrise: formatTime(currentWeatherData.sys.sunrise, currentWeatherData.timezone),
-      sunset: formatTime(currentWeatherData.sys.sunset, currentWeatherData.timezone),
+      pressure: formatPressureByRegion(oneCall.current?.pressure ?? 1013, countryCode),
+      sunrise: oneCall.current?.sunrise ? formatTime(oneCall.current.sunrise, oneCall.timezone_offset) : 'N/A',
+      sunset: oneCall.current?.sunset ? formatTime(oneCall.current.sunset, oneCall.timezone_offset) : 'N/A',
       forecast: forecast,
       moonPhase: moonPhase,
       uvIndex: uvIndex,
