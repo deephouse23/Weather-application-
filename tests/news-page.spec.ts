@@ -8,7 +8,7 @@ test.describe('NEWS Page Navigation Tests', () => {
   test('can navigate to NEWS page and back to other pages', async ({ page }) => {
     // Start on home page
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await expect(page).toHaveTitle(/Weather|16/i);
     
     // Navigate to NEWS page
     const newsLink = page.locator('a[href="/news"]');
@@ -19,8 +19,8 @@ test.describe('NEWS Page Navigation Tests', () => {
     await expect(page).toHaveURL('/news');
     await expect(page.locator('h1').filter({ hasText: /16-BIT NEWS/i })).toBeVisible();
     
-    // Wait for page to load completely
-    await page.waitForTimeout(3000);
+    // Headline should be visible as confirmation of render
+    await expect(page.locator('h1').filter({ hasText: /16-BIT NEWS/i })).toBeVisible();
     
     // Test navigation back to HOME
     const homeLink = page.locator('a[href="/"]');
@@ -29,11 +29,10 @@ test.describe('NEWS Page Navigation Tests', () => {
     
     // Verify we can navigate back to home
     await expect(page).toHaveURL('/');
-    await page.waitForTimeout(2000);
     
     // Test navigation to other pages from NEWS
     await page.goto('/news');
-    await page.waitForTimeout(3000);
+    await expect(page.locator('h1').filter({ hasText: /16-BIT NEWS/i })).toBeVisible();
     
     // Test ABOUT navigation
     const aboutLink = page.locator('a[href="/about"]');
@@ -45,7 +44,7 @@ test.describe('NEWS Page Navigation Tests', () => {
     
     // Test GAMES navigation
     await page.goto('/news');
-    await page.waitForTimeout(3000);
+    await expect(page.locator('h1').filter({ hasText: /16-BIT NEWS/i })).toBeVisible();
     const gamesLink = page.locator('a[href="/games"]');
     if (await gamesLink.count() > 0) {
       await gamesLink.click();
@@ -55,7 +54,7 @@ test.describe('NEWS Page Navigation Tests', () => {
 
   test('NEWS page headline links work correctly', async ({ page }) => {
     await page.goto('/news');
-    await page.waitForTimeout(3000);
+    await expect(page.locator('h1').filter({ hasText: /16-BIT NEWS/i })).toBeVisible();
     
     // Check that headline links exist and are clickable
     const headlineLinks = page.locator('a[target="_blank"]').filter({ hasText: /weather|alerts|climate/i });
@@ -81,8 +80,8 @@ test.describe('NEWS Page Navigation Tests', () => {
     // Navigate to NEWS page
     await page.goto('/news');
     
-    // Wait for initial load
-    await page.waitForTimeout(1000);
+    // Wait for initial render
+    await expect(page.locator('h1').filter({ hasText: /16-BIT NEWS/i })).toBeVisible();
     
     // Immediately try to navigate away - this should not be blocked
     const homeLink = page.locator('a[href="/"]');
@@ -94,7 +93,7 @@ test.describe('NEWS Page Navigation Tests', () => {
 
   test('NEWS page displays all required sections', async ({ page }) => {
     await page.goto('/news');
-    await page.waitForTimeout(3000);
+    await expect(page.locator('h1').filter({ hasText: /16-BIT NEWS/i })).toBeVisible();
     
     // Check for main sections
     await expect(page.locator('h1').filter({ hasText: /16-BIT NEWS/i })).toBeVisible();

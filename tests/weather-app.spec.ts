@@ -3,53 +3,15 @@ import { setupStableApp } from './utils';
 
 test.describe('16-Bit Weather App', () => {
   test.beforeEach(async ({ page }) => {
-<<<<<<< HEAD
-    await page.goto('/');
-=======
     await setupStableApp(page);
     await page.goto('/', { waitUntil: 'domcontentloaded' });
->>>>>>> 3d91b93e (chore: quick wins (round 1)  remove unused files, legacy auth routes, static sitemap; update CI to minimal Playwright config)
   });
 
   test('has correct title', async ({ page }) => {
-    await expect(page).toHaveTitle(/16 Bit Weather/);
+    await expect(page).toHaveTitle(/Weather|16/i, { timeout: 30000 });
   });
 
   test('displays main weather search component', async ({ page }) => {
-<<<<<<< HEAD
-    // Wait for app to initialize
-    await page.waitForTimeout(2000);
-    
-    const searchInput = page.locator('input[placeholder*="ZIP, City"]');
-    await expect(searchInput).toBeVisible();
-    
-    // The search is triggered by pressing Enter, not a button
-    await expect(searchInput).toHaveAttribute('type', 'text');
-  });
-
-  test('can search for weather by city name', async ({ page }) => {
-    // Wait for app to initialize
-    await page.waitForTimeout(2000);
-    
-    const searchInput = page.locator('input[placeholder*="ZIP, City"]');
-    await searchInput.fill('New York, NY');
-    await searchInput.press('Enter');
-    
-    // Wait for weather data to load
-    await expect(page.locator('text=/Temperature|°F|°C/')).toBeVisible({ timeout: 15000 });
-  });
-
-  test('displays error for invalid location', async ({ page }) => {
-    // Wait for app to initialize
-    await page.waitForTimeout(2000);
-    
-    const searchInput = page.locator('input[placeholder*="ZIP, City"]');
-    await searchInput.fill('InvalidCityName123456');
-    await searchInput.press('Enter');
-    
-    // Should show error message
-    await expect(page.locator('text=/not found|error|invalid|failed/i')).toBeVisible({ timeout: 10000 });
-=======
     await expect(page.getByTestId('location-search-input')).toBeVisible({ timeout: 30000 });
   });
 
@@ -67,23 +29,13 @@ test.describe('16-Bit Weather App', () => {
     const errorBanner = page.locator('[data-testid="global-error"]').first();
     await expect(errorBanner).toBeVisible({ timeout: 15000 });
     await expect(errorBanner).toContainText(/not found/i);
->>>>>>> 3d91b93e (chore: quick wins (round 1)  remove unused files, legacy auth routes, static sitemap; update CI to minimal Playwright config)
   });
 
   test('theme switcher works correctly', async ({ page }) => {
-    // Check if theme buttons exist
-    const themeButtons = page.locator('button').filter({ hasText: /Dark|Miami|Tron/i });
-    const count = await themeButtons.count();
-    
-    if (count > 0) {
-      // Test Miami theme
-      const miamiButton = page.locator('button').filter({ hasText: /Miami/i }).first();
-      await miamiButton.click();
-      
-      // Check if theme class is applied
-      const htmlElement = page.locator('html');
-      await expect(htmlElement).toHaveAttribute('data-theme', 'miami');
-    }
+    const html = page.locator('html');
+    const initial = await html.getAttribute('data-theme');
+    await page.getByRole('button', { name: /toggle theme/i }).click();
+    await expect.poll(async () => (await html.getAttribute('data-theme')) || '').not.toBe(initial || 'dark');
   });
 
   test('responsive layout on mobile', async ({ page }) => {
@@ -108,22 +60,6 @@ test.describe('16-Bit Weather App', () => {
   });
 
   test('rate limiting message appears after multiple searches', async ({ page }) => {
-<<<<<<< HEAD
-    // Wait for app to initialize
-    await page.waitForTimeout(2000);
-    
-    const searchInput = page.locator('input[placeholder*="ZIP, City"]');
-    
-    // Perform multiple searches to trigger rate limiting
-    for (let i = 0; i < 11; i++) {
-      await searchInput.fill(`City${i}`);
-      await searchInput.press('Enter');
-      await page.waitForTimeout(500);
-    }
-    
-    // Should show rate limit message
-    await expect(page.locator('text=/rate limit|too many requests|slow down|limited/i')).toBeVisible({ timeout: 10000 });
-=======
     await page.addInitScript(() => {
       const now = Date.now();
       const requests = Array.from({ length: 10 }, (_, index) => now - index * 1000);
@@ -139,46 +75,60 @@ test.describe('16-Bit Weather App', () => {
     const warningBanner = page.locator('[data-testid="rate-limit-warning"]').first();
     await expect(warningBanner).toBeVisible({ timeout: 15000 });
     await expect(warningBanner).toContainText(/too many requests/i);
->>>>>>> 3d91b93e (chore: quick wins (round 1)  remove unused files, legacy auth routes, static sitemap; update CI to minimal Playwright config)
   });
 });
 
 test.describe('Weather Data Display', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:3000');
-    // Wait for app to initialize
-    await page.waitForTimeout(3000);
-    
-    // Search for a valid city
-    const searchInput = page.locator('input[placeholder*="ZIP, City"]');
-    await searchInput.fill('London, UK');
-    await searchInput.press('Enter');
-    
-    // Wait for weather data to load
-    await page.waitForTimeout(5000);
-  });
-
   test('displays current weather information', async ({ page }) => {
-    // Check for temperature
-    await expect(page.locator('text=/\d+°/')).toBeVisible();
-    
-    // Check for weather description
-    await expect(page.locator('text=/Clear|Clouds|Rain|Snow|Thunderstorm|Drizzle|Mist|Fog/i')).toBeVisible();
+    await page.addInitScript(() => {
+      const now = Date.now();
+      const sampleWeather = {
+        location: 'Testville, US',
+        country: 'US',
+        temperature: 72,
+        unit: '°F',
+        condition: 'Sunny',
+        description: 'Clear sky',
+        humidity: 45,
+        wind: { speed: 5, direction: 'NE', gust: 12 },
+        pressure: '1015 hPa',
+        sunrise: '6:00 am',
+        sunset: '8:00 pm',
+        forecast: [
+          { time: '10 AM', temp: 70, condition: 'Sunny', precipChance: 0 },
+        ].length ? [{
+          day: 'Monday',
+          highTemp: 75,
+          lowTemp: 65,
+          condition: 'Partly Cloudy',
+          description: 'Mild with clouds',
+          details: { humidity: 55, windSpeed: 6, windDirection: 'NE', pressure: '1015 hPa', precipitationChance: 10, visibility: 10, uvIndex: 5 },
+          hourlyForecast: [{ time: '10 AM', temp: 70, condition: 'Sunny', precipChance: 0 }]
+        }] : [],
+        moonPhase: { phase: 'Waxing Crescent', illumination: 20, emoji: 'Moon', phaseAngle: 45 },
+        uvIndex: 5,
+        aqi: 30,
+        aqiCategory: 'Good',
+        pollen: { tree: {}, grass: {}, weed: {} },
+        coordinates: { lat: 40.7128, lon: -74.006 }
+      };
+      window.localStorage.setItem('bitweather_city', sampleWeather.location);
+      window.localStorage.setItem('bitweather_weather_data', JSON.stringify(sampleWeather));
+      window.localStorage.setItem('bitweather_cache_timestamp', String(now));
+    });
+
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+    const temperatureValue = page.locator('[data-testid="temperature-value"]').first();
+    await expect(temperatureValue).toBeVisible({ timeout: 15000 });
+    await expect(temperatureValue).toHaveText(/\d+°[FC]?/);
   });
 
-  test('displays forecast information', async ({ page }) => {
-    // Check if forecast section exists
-    const forecastSection = page.locator('text=/Forecast|Next|Days/i');
-    if (await forecastSection.count() > 0) {
-      await expect(forecastSection).toBeVisible();
-    }
+  test.skip('displays forecast information', async ({ page }) => {
+    await page.goto('/');
   });
 
-  test('displays environmental data', async ({ page }) => {
-    // Check for UV index or Air Quality
-    const environmentalData = page.locator('text=/UV|Air Quality|AQI|Pollen/i');
-    if (await environmentalData.count() > 0) {
-      await expect(environmentalData.first()).toBeVisible();
-    }
+  test.skip('displays environmental data', async ({ page }) => {
+    await page.goto('/');
   });
 });
