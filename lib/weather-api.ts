@@ -924,37 +924,105 @@ export const fetchWeatherData = async (
     const { lat, lon, displayName } = await geocodeLocation(locationQuery);
     console.log('Geocoded location:', { lat, lon, displayName });
 
-    // Fetch current weather using internal API
-    const currentWeatherResponse = await fetch(
-      getApiUrl(`/api/weather/current?lat=${lat}&lon=${lon}&units=${unitSystem}`)
+    // Fetch One Call 3.0 aggregation using internal API
+    const oneCallResponse = await fetch(
+      getApiUrl(`/api/weather/onecall?lat=${lat}&lon=${lon}&units=${unitSystem}`)
     );
-    if (!currentWeatherResponse.ok) {
-      throw new Error(`Current weather API call failed: ${currentWeatherResponse.status}`);
+    if (!oneCallResponse.ok) {
+      throw new Error(`One Call API call failed: ${oneCallResponse.status}`);
     }
-    const currentWeatherData = await currentWeatherResponse.json();
-    console.log('Current weather response:', currentWeatherData);
-
-    // Fetch forecast using internal API
-    const forecastResponse = await fetch(
-      getApiUrl(`/api/weather/forecast?lat=${lat}&lon=${lon}&units=${unitSystem}`)
-    );
-    if (!forecastResponse.ok) {
-      throw new Error(`Forecast API call failed: ${forecastResponse.status}`);
-    }
-    const forecastData = await forecastResponse.json();
-    console.log('Forecast response:', forecastData);
+    const oneCall = await oneCallResponse.json();
+    console.log('One Call response received. daily length:', Array.isArray(oneCall?.daily) ? oneCall.daily.length : 'missing', 'hourly length:', Array.isArray(oneCall?.hourly) ? oneCall.hourly.length : 'missing');
 
     // Process and validate data
-    const countryCode = currentWeatherData.sys.country;
+    const countryCode = oneCall?.timezone?.includes('America') ? 'US' : (oneCall?.current?.sys?.country || 'US');
     const useFahrenheit = shouldUseFahrenheit(countryCode);
     console.log('Using Fahrenheit:', useFahrenheit);
 
     // Format temperature with proper unit handling
-    const temp = formatTemperature(currentWeatherData.main.temp, countryCode);
+    const temp = formatTemperature(oneCall.current?.temp ?? 0, countryCode);
     console.log('Formatted temperature:', temp);
 
-    // Process forecast data
-    const forecast = processDailyForecast(forecastData, useFahrenheit);
+    // Process forecast data: use One Call daily for 5-day view
+    const baseDaily = Array.isArray(oneCall.daily)
+      ? oneCall.daily.slice(0, 5).map((d: any) => ({
+          day: new Date(d.dt * 1000).toLocaleDateString('en-US', { weekday: 'long' }),
+          highTemp: Math.round(d.temp?.max ?? 0),
+          lowTemp: Math.round(d.temp?.min ?? 0),
+          condition: d.weather?.[0]?.main || 'Clear',
+          description: d.weather?.[0]?.description || 'clear sky',
+          details: {
+            humidity: d.humidity ?? 0,
+            windSpeed: Math.round(d.wind_speed ?? 0),
+            windDirection: d.wind_deg ? getWindDirection(d.wind_deg) : undefined,
+            pressure: `${d.pressure ?? 1013} hPa`,
+            cloudCover: d.clouds ?? 0,
+            precipitationChance: Math.round((d.pop ?? 0) * 100),
+            visibility: undefined,
+            uvIndex: Math.round(d.uvi ?? 0)
+          },
+          hourlyForecast: []
+        }))
+      : []
+
+    const ensureFiveDays = (list: any[]) => {
+      const result = [...list]
+      const now = oneCall?.current?.dt ?? Math.floor(Date.now() / 1000)
+      let dayIndex = result.length
+      while (result.length < 5) {
+        const start = now + dayIndex * 86400
+        const end = start + 86400
+        const hours: any[] = Array.isArray(oneCall.hourly)
+          ? oneCall.hourly.filter((h: any) => h.dt >= start && h.dt < end)
+          : []
+        if (hours.length > 0) {
+          const temps = hours.map(h => h.temp)
+          const high = Math.max(...temps)
+          const low = Math.min(...temps)
+          const humidity = Math.round(hours.reduce((a, b) => a + (b.humidity ?? 0), 0) / hours.length)
+          const windSpeed = Math.round(hours.reduce((a, b) => a + (b.wind_speed ?? 0), 0) / hours.length)
+          const windDeg = Math.round(hours.reduce((a, b) => a + (b.wind_deg ?? 0), 0) / hours.length)
+          const pressure = Math.round(hours.reduce((a, b) => a + (b.pressure ?? 1013), 0) / hours.length)
+          const clouds = Math.round(hours.reduce((a, b) => a + (b.clouds ?? 0), 0) / hours.length)
+          const pop = Math.min(100, Math.round((hours.reduce((a, b) => a + (b.pop ?? 0), 0) / hours.length) * 100))
+          const wx = hours.find(h => h.weather?.[0])?.weather?.[0]
+          result.push({
+            day: new Date(start * 1000).toLocaleDateString('en-US', { weekday: 'long' }),
+            highTemp: Math.round(high),
+            lowTemp: Math.round(low),
+            condition: wx?.main || 'Clear',
+            description: wx?.description || 'clear sky',
+            details: {
+              humidity,
+              windSpeed,
+              windDirection: getWindDirection(windDeg),
+              pressure: `${pressure} hPa`,
+              cloudCover: clouds,
+              precipitationChance: pop,
+              visibility: undefined,
+              uvIndex: 0,
+            },
+            hourlyForecast: [],
+          })
+        } else {
+          // Graceful placeholder
+          result.push({
+            day: new Date(start * 1000).toLocaleDateString('en-US', { weekday: 'long' }),
+            highTemp: 0,
+            lowTemp: 0,
+            condition: 'Clear',
+            description: 'No data',
+            details: { humidity: 0, windSpeed: 0, windDirection: undefined, pressure: '1013 hPa', cloudCover: 0, precipitationChance: 0, visibility: undefined, uvIndex: 0 },
+            hourlyForecast: [],
+          })
+        }
+        dayIndex += 1
+      }
+      return result
+    }
+
+    const forecast = ensureFiveDays(baseDaily)
+    console.log('Forecast days after mapping:', forecast.length)
     console.log('Processed forecast:', forecast);
 
     // Calculate moon phase
@@ -963,7 +1031,7 @@ export const fetchWeatherData = async (
 
     // Fetch UV Index with debugging
     console.log('=== FETCHING UV INDEX ===');
-    const uvIndex = await fetchUVIndex(lat, lon);
+    const uvIndex = Math.round(oneCall.current?.uvi ?? 0);
     console.log('UV Index fetched:', uvIndex);
 
     // Fetch Pollen data
@@ -980,17 +1048,17 @@ export const fetchWeatherData = async (
       country: countryCode,
       temperature: temp.value,
       unit: temp.unit,
-      condition: currentWeatherData.weather[0].main,
-      description: currentWeatherData.weather[0].description,
-      humidity: currentWeatherData.main.humidity,
+      condition: oneCall.current?.weather?.[0]?.main ?? 'Clear',
+      description: oneCall.current?.weather?.[0]?.description ?? 'clear sky',
+      humidity: oneCall.current?.humidity ?? 0,
       wind: {
-        speed: currentWeatherData.wind.speed,
-        direction: currentWeatherData.wind.deg ? getCompassDirection(currentWeatherData.wind.deg) : undefined,
-        gust: currentWeatherData.wind.gust
+        speed: oneCall.current?.wind_speed ?? 0,
+        direction: oneCall.current?.wind_deg ? getCompassDirection(oneCall.current.wind_deg) : undefined,
+        gust: oneCall.current?.wind_gust
       } as WindData,
-      pressure: formatPressureByRegion(currentWeatherData.main.pressure, countryCode),
-      sunrise: formatTime(currentWeatherData.sys.sunrise, currentWeatherData.timezone),
-      sunset: formatTime(currentWeatherData.sys.sunset, currentWeatherData.timezone),
+      pressure: formatPressureByRegion(oneCall.current?.pressure ?? 1013, countryCode),
+      sunrise: oneCall.current?.sunrise ? formatTime(oneCall.current.sunrise, oneCall.timezone_offset) : 'N/A',
+      sunset: oneCall.current?.sunset ? formatTime(oneCall.current.sunset, oneCall.timezone_offset) : 'N/A',
       forecast: forecast,
       moonPhase: moonPhase,
       uvIndex,
@@ -1037,37 +1105,103 @@ export const fetchWeatherByLocation = async (
   }
 
   try {
-    // Fetch current weather using internal API
-    const currentWeatherResponse = await fetch(
-      getApiUrl(`/api/weather/current?lat=${latitude}&lon=${longitude}&units=${unitSystem}`)
+    // Fetch One Call 3.0 aggregation using internal API
+    const oneCallResponse = await fetch(
+      getApiUrl(`/api/weather/onecall?lat=${latitude}&lon=${longitude}&units=${unitSystem}`)
     )
-    if (!currentWeatherResponse.ok) {
-      throw new Error(`Current weather API call failed: ${currentWeatherResponse.status}`)
+    if (!oneCallResponse.ok) {
+      throw new Error(`One Call API call failed: ${oneCallResponse.status}`)
     }
-    const currentWeatherData = await currentWeatherResponse.json()
-    console.log('Current weather response:', currentWeatherData)
-
-    // Fetch forecast using internal API
-    const forecastResponse = await fetch(
-      getApiUrl(`/api/weather/forecast?lat=${latitude}&lon=${longitude}&units=${unitSystem}`)
-    )
-    if (!forecastResponse.ok) {
-      throw new Error(`Forecast API call failed: ${forecastResponse.status}`)
-    }
-    const forecastData = await forecastResponse.json()
-    console.log('Forecast response:', forecastData)
+    const oneCall = await oneCallResponse.json()
+    console.log('One Call response:', oneCall)
 
     // Process and validate data
-    const countryCode = currentWeatherData.sys.country
+    const countryCode = oneCall?.timezone?.includes('America') ? 'US' : (oneCall?.current?.sys?.country || 'US')
     const useFahrenheit = shouldUseFahrenheit(countryCode)
     console.log('Using Fahrenheit:', useFahrenheit)
 
     // Format temperature with proper unit handling
-    const temp = formatTemperature(currentWeatherData.main.temp, countryCode)
+    const temp = formatTemperature(oneCall.current?.temp ?? 0, countryCode)
     console.log('Formatted temperature:', temp)
 
-    // Process forecast data
-    const forecast = processDailyForecast(forecastData, useFahrenheit)
+    // Build 5-day forecast from One Call daily, with hourly fallback
+    const baseDaily = Array.isArray(oneCall.daily)
+      ? oneCall.daily.slice(0, 5).map((d: any) => ({
+          day: new Date(d.dt * 1000).toLocaleDateString('en-US', { weekday: 'long' }),
+          highTemp: Math.round(d.temp?.max ?? 0),
+          lowTemp: Math.round(d.temp?.min ?? 0),
+          condition: d.weather?.[0]?.main || 'Clear',
+          description: d.weather?.[0]?.description || 'clear sky',
+          details: {
+            humidity: d.humidity ?? 0,
+            windSpeed: Math.round(d.wind_speed ?? 0),
+            windDirection: d.wind_deg ? getWindDirection(d.wind_deg) : undefined,
+            pressure: `${d.pressure ?? 1013} hPa`,
+            cloudCover: d.clouds ?? 0,
+            precipitationChance: Math.round((d.pop ?? 0) * 100),
+            visibility: undefined,
+            uvIndex: Math.round(d.uvi ?? 0)
+          },
+          hourlyForecast: []
+        }))
+      : []
+
+    const ensureFiveDays = (list: any[]) => {
+      const result = [...list]
+      const now = oneCall?.current?.dt ?? Math.floor(Date.now() / 1000)
+      let dayIndex = result.length
+      while (result.length < 5) {
+        const start = now + dayIndex * 86400
+        const end = start + 86400
+        const hours: any[] = Array.isArray(oneCall.hourly)
+          ? oneCall.hourly.filter((h: any) => h.dt >= start && h.dt < end)
+          : []
+        if (hours.length > 0) {
+          const temps = hours.map(h => h.temp)
+          const high = Math.max(...temps)
+          const low = Math.min(...temps)
+          const humidity = Math.round(hours.reduce((a, b) => a + (b.humidity ?? 0), 0) / hours.length)
+          const windSpeed = Math.round(hours.reduce((a, b) => a + (b.wind_speed ?? 0), 0) / hours.length)
+          const windDeg = Math.round(hours.reduce((a, b) => a + (b.wind_deg ?? 0), 0) / hours.length)
+          const pressure = Math.round(hours.reduce((a, b) => a + (b.pressure ?? 1013), 0) / hours.length)
+          const clouds = Math.round(hours.reduce((a, b) => a + (b.clouds ?? 0), 0) / hours.length)
+          const pop = Math.min(100, Math.round((hours.reduce((a, b) => a + (b.pop ?? 0), 0) / hours.length) * 100))
+          const wx = hours.find(h => h.weather?.[0])?.weather?.[0]
+          result.push({
+            day: new Date(start * 1000).toLocaleDateString('en-US', { weekday: 'long' }),
+            highTemp: Math.round(high),
+            lowTemp: Math.round(low),
+            condition: wx?.main || 'Clear',
+            description: wx?.description || 'clear sky',
+            details: {
+              humidity,
+              windSpeed,
+              windDirection: getWindDirection(windDeg),
+              pressure: `${pressure} hPa`,
+              cloudCover: clouds,
+              precipitationChance: pop,
+              visibility: undefined,
+              uvIndex: 0,
+            },
+            hourlyForecast: [],
+          })
+        } else {
+          result.push({
+            day: new Date(start * 1000).toLocaleDateString('en-US', { weekday: 'long' }),
+            highTemp: 0,
+            lowTemp: 0,
+            condition: 'Clear',
+            description: 'No data',
+            details: { humidity: 0, windSpeed: 0, windDirection: undefined, pressure: '1013 hPa', cloudCover: 0, precipitationChance: 0, visibility: undefined, uvIndex: 0 },
+            hourlyForecast: [],
+          })
+        }
+        dayIndex += 1
+      }
+      return result
+    }
+
+    const forecast = ensureFiveDays(baseDaily)
     console.log('Processed forecast:', forecast)
 
     // Calculate moon phase
@@ -1076,7 +1210,7 @@ export const fetchWeatherByLocation = async (
 
     // Fetch UV Index with debugging
     console.log('=== FETCHING UV INDEX ===');
-    const uvIndex = await fetchUVIndex(latitude, longitude);
+    const uvIndex = Math.round(oneCall.current?.uvi ?? 0)
     console.log('UV Index fetched:', uvIndex);
 
     // Fetch Pollen data
@@ -1085,26 +1219,26 @@ export const fetchWeatherByLocation = async (
     console.log('Weather Data - Pollen:', pollenData);
 
     // Fetch Air Quality data
-    const airQualityData = await fetchAirQualityData(latitude, longitude, `${currentWeatherData.name}, ${currentWeatherData.sys.country}`);
+    const airQualityData = await fetchAirQualityData(latitude, longitude, `${oneCall?.timezone || 'Unknown'}`);
     console.log('Weather Data - Air Quality:', airQualityData);
 
     // Construct weather data object
     const weatherData: WeatherData = {
-      location: `${currentWeatherData.name}, ${currentWeatherData.sys.country}`,
+      location: `${oneCall?.timezone || 'Selected Location'}`,
       country: countryCode,
       temperature: temp.value,
       unit: temp.unit,
-      condition: currentWeatherData.weather[0].main,
-      description: currentWeatherData.weather[0].description,
-      humidity: currentWeatherData.main.humidity,
+      condition: oneCall.current?.weather?.[0]?.main ?? 'Clear',
+      description: oneCall.current?.weather?.[0]?.description ?? 'clear sky',
+      humidity: oneCall.current?.humidity ?? 0,
       wind: {
-        speed: currentWeatherData.wind.speed,
-        direction: currentWeatherData.wind.deg ? getCompassDirection(currentWeatherData.wind.deg) : undefined,
-        gust: currentWeatherData.wind.gust
+        speed: oneCall.current?.wind_speed ?? 0,
+        direction: oneCall.current?.wind_deg ? getCompassDirection(oneCall.current.wind_deg) : undefined,
+        gust: oneCall.current?.wind_gust
       },
-      pressure: formatPressureByRegion(currentWeatherData.main.pressure, countryCode),
-      sunrise: formatTime(currentWeatherData.sys.sunrise, currentWeatherData.timezone),
-      sunset: formatTime(currentWeatherData.sys.sunset, currentWeatherData.timezone),
+      pressure: formatPressureByRegion(oneCall.current?.pressure ?? 1013, countryCode),
+      sunrise: oneCall.current?.sunrise ? formatTime(oneCall.current.sunrise, oneCall.timezone_offset) : 'N/A',
+      sunset: oneCall.current?.sunset ? formatTime(oneCall.current.sunset, oneCall.timezone_offset) : 'N/A',
       forecast: forecast,
       moonPhase: moonPhase,
       uvIndex: uvIndex,
