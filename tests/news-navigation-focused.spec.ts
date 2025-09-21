@@ -1,6 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { setupStableApp } from './utils';
 
 test.describe('NEWS Navigation Issue Debug', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupStableApp(page);
+  });
   test('direct NEWS page navigation test', async ({ page }) => {
     // Go directly to NEWS page
     await page.goto('/news');

@@ -1,6 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { setupStableApp } from './utils';
 
 test.describe('NEWS Page Navigation Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupStableApp(page);
+  });
   test('can navigate to NEWS page and back to other pages', async ({ page }) => {
     // Start on home page
     await page.goto('/');

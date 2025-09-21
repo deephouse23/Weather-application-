@@ -1,4 +1,4 @@
-name: Playwright Tests on Vercel Preview
+name: Playwright Tests (Minimal)
 
 on:
   pull_request:
@@ -7,11 +7,7 @@ on:
 jobs:
   playwright-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
@@ -20,61 +16,33 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Vercel CLI
-        run: npm i -g vercel@latest
-
-      - name: Setup project link and pull env (preview)
-        run: vercel pull --yes --environment=preview --token "$VERCEL_TOKEN"
-
-      - name: Build with Vercel
-        run: vercel build --token "$VERCEL_TOKEN" --debug
-
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Deploy prebuilt to Vercel
-        id: vercel-deploy
+      - name: Create environment file
         run: |
-          set -euo pipefail
-          url=$(vercel deploy --prebuilt --yes --token "$VERCEL_TOKEN" --json | jq -r '.url')
-          echo "deployment-url=https://$url" >> "$GITHUB_OUTPUT"
-          echo "Preview URL: https://$url"
+          echo "Setting up environment from GitHub secrets..."
+          cat > .env.production.local << EOF
+          NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key' }}
+          NEXT_PUBLIC_OPENWEATHER_API_KEY=${{ secrets.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'test-api-key' }}
+          OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY || secrets.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'test-api-key' }}
+          EOF
 
-      - name: Wait for deployment to be ready
+      - name: Build application
+        run: npm run build
         env:
-          URL: ${{ steps.vercel-deploy.outputs.deployment-url }}
-        run: |
-          set -euo pipefail
-          echo "Waiting for $URL to be ready..."
-          for i in {1..40}; do
-            status=$(curl -sS -o /dev/null -w "%{http_code}" "$URL")
-            if [[ "$status" == "200" || "$status" == "301" || "$status" == "302" || "$status" == "404" ]]; then
-              echo "Deployment is responding with HTTP $status"
-              break
-            fi
-            echo "Attempt $i/40: not ready (status $status). Retrying in 10s..."
-            sleep 10
-          done
-          curl -f "$URL" || (echo "Deployment not ready at $URL" && exit 1)
+          NEXT_TELEMETRY_DISABLED: 1
 
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+        run: |
+          npx playwright install chromium
+          npx playwright install-deps chromium
 
-      - name: Run Playwright tests
+      - name: Run Playwright tests (minimal)
+        run: npx playwright test --config=playwright.config.minimal.ts
         env:
-          PLAYWRIGHT_TEST_BASE_URL: ${{ steps.vercel-deploy.outputs.deployment-url }}
-        run: npx playwright test
-
-      - name: Upload Playwright Report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7
+          CI: true

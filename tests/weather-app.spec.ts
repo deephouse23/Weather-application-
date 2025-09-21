@@ -1,8 +1,14 @@
 import { test, expect } from '@playwright/test';
+import { setupStableApp } from './utils';
 
 test.describe('16-Bit Weather App', () => {
   test.beforeEach(async ({ page }) => {
+<<<<<<< HEAD
     await page.goto('/');
+=======
+    await setupStableApp(page);
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+>>>>>>> 3d91b93e (chore: quick wins (round 1)  remove unused files, legacy auth routes, static sitemap; update CI to minimal Playwright config)
   });
 
   test('has correct title', async ({ page }) => {
@@ -10,6 +16,7 @@ test.describe('16-Bit Weather App', () => {
   });
 
   test('displays main weather search component', async ({ page }) => {
+<<<<<<< HEAD
     // Wait for app to initialize
     await page.waitForTimeout(2000);
     
@@ -42,6 +49,25 @@ test.describe('16-Bit Weather App', () => {
     
     // Should show error message
     await expect(page.locator('text=/not found|error|invalid|failed/i')).toBeVisible({ timeout: 10000 });
+=======
+    await expect(page.getByTestId('location-search-input')).toBeVisible({ timeout: 30000 });
+  });
+
+  test('can search for weather by city name', async ({ page }) => {
+    const searchInput = page.getByTestId('location-search-input');
+    await searchInput.fill('New York');
+    await searchInput.press('Enter');
+    await expect(page.getByTestId('temperature-value')).toBeVisible({ timeout: 15000 });
+  });
+
+  test('displays error for invalid location', async ({ page }) => {
+    const searchInput = page.getByTestId('location-search-input');
+    await searchInput.fill('Invalidopolis');
+    await searchInput.press('Enter');
+    const errorBanner = page.locator('[data-testid="global-error"]').first();
+    await expect(errorBanner).toBeVisible({ timeout: 15000 });
+    await expect(errorBanner).toContainText(/not found/i);
+>>>>>>> 3d91b93e (chore: quick wins (round 1)  remove unused files, legacy auth routes, static sitemap; update CI to minimal Playwright config)
   });
 
   test('theme switcher works correctly', async ({ page }) => {
@@ -68,8 +94,7 @@ test.describe('16-Bit Weather App', () => {
     await page.waitForTimeout(2000);
     
     // Check that the app is still functional
-    const searchInput = page.locator('input[placeholder*="ZIP, City"]');
-    await expect(searchInput).toBeVisible();
+    await expect(page.getByTestId('location-search-input')).toBeVisible();
   });
 
   test('navigation links work correctly', async ({ page }) => {
@@ -83,6 +108,7 @@ test.describe('16-Bit Weather App', () => {
   });
 
   test('rate limiting message appears after multiple searches', async ({ page }) => {
+<<<<<<< HEAD
     // Wait for app to initialize
     await page.waitForTimeout(2000);
     
@@ -97,6 +123,23 @@ test.describe('16-Bit Weather App', () => {
     
     // Should show rate limit message
     await expect(page.locator('text=/rate limit|too many requests|slow down|limited/i')).toBeVisible({ timeout: 10000 });
+=======
+    await page.addInitScript(() => {
+      const now = Date.now();
+      const requests = Array.from({ length: 10 }, (_, index) => now - index * 1000);
+      window.localStorage.setItem('weather-app-rate-limit', JSON.stringify({ requests, lastReset: now }));
+    });
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+
+    const searchInput = page.getByTestId('location-search-input');
+    await searchInput.fill('Los Angeles');
+    await searchInput.press('Enter');
+
+    const warningBanner = page.locator('[data-testid="rate-limit-warning"]').first();
+    await expect(warningBanner).toBeVisible({ timeout: 15000 });
+    await expect(warningBanner).toContainText(/too many requests/i);
+>>>>>>> 3d91b93e (chore: quick wins (round 1)  remove unused files, legacy auth routes, static sitemap; update CI to minimal Playwright config)
   });
 });
 
