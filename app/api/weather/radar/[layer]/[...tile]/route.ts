@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
+
+export const runtime = 'nodejs'
 
 // Proxy OpenWeather map tiles with optional time parameter
 // GET /api/weather/radar/{layer}/{time?}/{z}/{x}/{y}
@@ -15,7 +17,7 @@ const LAYER_MAP: Record<string, string> = {
 }
 
 export async function GET(
-  request: NextRequest,
+  request: Request,
   { params }: { params: { layer: string; tile: string[] } }
 ) {
   const apiKey = process.env.OPENWEATHER_API_KEY || process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY
