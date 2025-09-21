@@ -932,7 +932,7 @@ export const fetchWeatherData = async (
       throw new Error(`One Call API call failed: ${oneCallResponse.status}`);
     }
     const oneCall = await oneCallResponse.json();
-    console.log('One Call response:', oneCall);
+    console.log('One Call response received. daily length:', Array.isArray(oneCall?.daily) ? oneCall.daily.length : 'missing', 'hourly length:', Array.isArray(oneCall?.hourly) ? oneCall.hourly.length : 'missing');
 
     // Process and validate data
     const countryCode = oneCall?.timezone?.includes('America') ? 'US' : (oneCall?.current?.sys?.country || 'US');
@@ -1022,6 +1022,7 @@ export const fetchWeatherData = async (
     }
 
     const forecast = ensureFiveDays(baseDaily)
+    console.log('Forecast days after mapping:', forecast.length)
     console.log('Processed forecast:', forecast);
 
     // Calculate moon phase
@@ -1123,18 +1124,84 @@ export const fetchWeatherByLocation = async (
     const temp = formatTemperature(oneCall.current?.temp ?? 0, countryCode)
     console.log('Formatted temperature:', temp)
 
-    // Process forecast data
-    const mapped = {
-      list: Array.isArray(oneCall.hourly) ? oneCall.hourly.slice(0, 24).map((h: any) => ({
-        dt: h.dt,
-        main: { temp: h.temp, temp_min: h.temp, temp_max: h.temp, humidity: h.humidity ?? 0, pressure: h.pressure ?? 1013 },
-        weather: [{ main: (h.weather?.[0]?.main || 'Clear'), description: (h.weather?.[0]?.description || 'clear sky') }],
-        wind: { speed: h.wind_speed ?? 0, deg: h.wind_deg ?? 0 },
-        clouds: { all: h.clouds ?? 0 },
-        pop: h.pop ?? 0,
-      })) : []
-    } as any
-    const forecast = processDailyForecast(mapped, useFahrenheit)
+    // Build 5-day forecast from One Call daily, with hourly fallback
+    const baseDaily = Array.isArray(oneCall.daily)
+      ? oneCall.daily.slice(0, 5).map((d: any) => ({
+          day: new Date(d.dt * 1000).toLocaleDateString('en-US', { weekday: 'long' }),
+          highTemp: Math.round(d.temp?.max ?? 0),
+          lowTemp: Math.round(d.temp?.min ?? 0),
+          condition: d.weather?.[0]?.main || 'Clear',
+          description: d.weather?.[0]?.description || 'clear sky',
+          details: {
+            humidity: d.humidity ?? 0,
+            windSpeed: Math.round(d.wind_speed ?? 0),
+            windDirection: d.wind_deg ? getWindDirection(d.wind_deg) : undefined,
+            pressure: `${d.pressure ?? 1013} hPa`,
+            cloudCover: d.clouds ?? 0,
+            precipitationChance: Math.round((d.pop ?? 0) * 100),
+            visibility: undefined,
+            uvIndex: Math.round(d.uvi ?? 0)
+          },
+          hourlyForecast: []
+        }))
+      : []
+
+    const ensureFiveDays = (list: any[]) => {
+      const result = [...list]
+      const now = oneCall?.current?.dt ?? Math.floor(Date.now() / 1000)
+      let dayIndex = result.length
+      while (result.length < 5) {
+        const start = now + dayIndex * 86400
+        const end = start + 86400
+        const hours: any[] = Array.isArray(oneCall.hourly)
+          ? oneCall.hourly.filter((h: any) => h.dt >= start && h.dt < end)
+          : []
+        if (hours.length > 0) {
+          const temps = hours.map(h => h.temp)
+          const high = Math.max(...temps)
+          const low = Math.min(...temps)
+          const humidity = Math.round(hours.reduce((a, b) => a + (b.humidity ?? 0), 0) / hours.length)
+          const windSpeed = Math.round(hours.reduce((a, b) => a + (b.wind_speed ?? 0), 0) / hours.length)
+          const windDeg = Math.round(hours.reduce((a, b) => a + (b.wind_deg ?? 0), 0) / hours.length)
+          const pressure = Math.round(hours.reduce((a, b) => a + (b.pressure ?? 1013), 0) / hours.length)
+          const clouds = Math.round(hours.reduce((a, b) => a + (b.clouds ?? 0), 0) / hours.length)
+          const pop = Math.min(100, Math.round((hours.reduce((a, b) => a + (b.pop ?? 0), 0) / hours.length) * 100))
+          const wx = hours.find(h => h.weather?.[0])?.weather?.[0]
+          result.push({
+            day: new Date(start * 1000).toLocaleDateString('en-US', { weekday: 'long' }),
+            highTemp: Math.round(high),
+            lowTemp: Math.round(low),
+            condition: wx?.main || 'Clear',
+            description: wx?.description || 'clear sky',
+            details: {
+              humidity,
+              windSpeed,
+              windDirection: getWindDirection(windDeg),
+              pressure: `${pressure} hPa`,
+              cloudCover: clouds,
+              precipitationChance: pop,
+              visibility: undefined,
+              uvIndex: 0,
+            },
+            hourlyForecast: [],
+          })
+        } else {
+          result.push({
+            day: new Date(start * 1000).toLocaleDateString('en-US', { weekday: 'long' }),
+            highTemp: 0,
+            lowTemp: 0,
+            condition: 'Clear',
+            description: 'No data',
+            details: { humidity: 0, windSpeed: 0, windDirection: undefined, pressure: '1013 hPa', cloudCover: 0, precipitationChance: 0, visibility: undefined, uvIndex: 0 },
+            hourlyForecast: [],
+          })
+        }
+        dayIndex += 1
+      }
+      return result
+    }
+
+    const forecast = ensureFiveDays(baseDaily)
     console.log('Processed forecast:', forecast)
 
     // Calculate moon phase
