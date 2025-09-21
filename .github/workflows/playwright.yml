@@ -45,10 +45,9 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: 1
 
-      - name: Install Playwright Browsers
+      - name: Install Playwright Browsers (all)
         run: |
-          npx playwright install chromium
-          npx playwright install-deps chromium
+          npx playwright install --with-deps
 
       - name: Run Playwright tests
         run: npx playwright test
