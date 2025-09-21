@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 // One Call 3.0 aggregation endpoint
-// GET /api/weather/onecall?lat=..&lon=..&units=metric|imperial
+// GET /api/weather/onecall?lat=..&lon=..&units=metric|imperial[&exclude=parts]
 export async function GET(request: NextRequest) {
   try {
     const apiKey = process.env.OPENWEATHER_API_KEY
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const lat = sp.get('lat')
     const lon = sp.get('lon')
     const units = sp.get('units') || 'imperial'
-    const exclude = sp.get('exclude') || '' // allow callers to exclude parts
+    const exclude = sp.get('exclude') || ''
 
     if (!lat || !lon) {
       return NextResponse.json({ error: 'Missing required parameters: lat, lon' }, { status: 400 })
@@ -28,7 +28,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Coordinates out of valid range' }, { status: 400 })
     }
 
-    // Minute-bucket cache (revalidate every 60s)
     const url = new URL('https://api.openweathermap.org/data/3.0/onecall')
     url.searchParams.set('lat', latitude.toString())
     url.searchParams.set('lon', longitude.toString())
@@ -42,7 +41,6 @@ export async function GET(request: NextRequest) {
     })
 
     if (!response.ok) {
-      // Map common One Call 3.0 errors
       const text = await response.text().catch(() => '')
       const status = response.status
       if (status === 400) return NextResponse.json({ error: 'Bad Request', detail: text }, { status })
@@ -53,8 +51,6 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json()
-
-    // Return the One Call payload directly (current, minutely, hourly, daily, alerts)
     return NextResponse.json(data, {
       headers: {
         'Cache-Control': 'public, max-age=60, s-maxage=60',
