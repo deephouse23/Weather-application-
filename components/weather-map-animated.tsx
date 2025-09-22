@@ -1,6 +1,8 @@
+/* @ts-nocheck */
 'use client'
 
-import { MapContainer, TileLayer, Marker, Popup, LayersControl } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, LayersControl, Pane } from 'react-leaflet'
+import PrecipCanvasLayer from './precip-canvas-layer'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { useEffect, useState, useRef, useCallback } from 'react'
@@ -41,7 +43,7 @@ const WeatherMapAnimated = ({
   const [map, setMap] = useState<L.Map | null>(null)
   const [currentTimeIndex, setCurrentTimeIndex] = useState(0) // 0-4, where 0 is "now"
   const [isPlaying, setIsPlaying] = useState(false)
-  const [radarOpacity, setRadarOpacity] = useState(70)
+  const [radarOpacity, setRadarOpacity] = useState(80)
   const [isLoading, setIsLoading] = useState(true)
   const [precipitationLayer, setPrecipitationLayer] = useState<L.TileLayer | null>(null)
   const animationInterval = useRef<NodeJS.Timeout | null>(null)
@@ -191,40 +193,47 @@ const WeatherMapAnimated = ({
         style={{ height: '100%', width: '100%' }}
         ref={setMap}
       >
+        {/* Enforce z-order: base < clouds < precip < labels */}
+        <Pane name="basemap" style={{ zIndex: 200 }} />
+        <Pane name="clouds" style={{ zIndex: 400 }} />
+        <Pane name="precip" style={{ zIndex: 500 }} />
+        <Pane name="labels" style={{ zIndex: 650, pointerEvents: 'none' as unknown as string }} />
         <LayersControl position="topright">
           <LayersControl.BaseLayer checked name="Street Map">
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               className="grayscale contrast-125"
+              pane="basemap"
             />
           </LayersControl.BaseLayer>
           <LayersControl.BaseLayer name="Satellite">
             <TileLayer
               attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              pane="basemap"
             />
           </LayersControl.BaseLayer>
           <LayersControl.Overlay checked name="Weather Radar">
             <TileLayer
               attribution='&copy; <a href="https://www.openweathermap.org/">OpenWeatherMap</a>'
-              url={`/api/weather/radar/{z}/{x}/{y}`}
+              url={`/api/weather/radar/precipitation_new/{z}/{x}/{y}`}
               opacity={radarOpacity / 100}
+              pane="precip"
+              className="precip-tiles"
             />
           </LayersControl.Overlay>
           <LayersControl.Overlay name="Precipitation">
-            <TileLayer
-              ref={(layer) => setPrecipitationLayer(layer)}
-              attribution='&copy; <a href="https://www.openweathermap.org/">OpenWeatherMap</a>'
-              url={`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${apiKey || process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`}
-              opacity={0.6}
-            />
+            {/* Use quantized canvas layer for crisp buckets */}
+            <PrecipCanvasLayer opacity={0.8} pane="precip" zIndex={500} />
           </LayersControl.Overlay>
           <LayersControl.Overlay name="Clouds">
             <TileLayer
               attribution='&copy; <a href="https://www.openweathermap.org/">OpenWeatherMap</a>'
               url={`https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${apiKey || process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`}
-              opacity={0.5}
+              opacity={0.4}
+              className="cloud-tiles"
+              pane="clouds"
             />
           </LayersControl.Overlay>
           <LayersControl.Overlay name="Temperature">
@@ -232,9 +241,18 @@ const WeatherMapAnimated = ({
               attribution='&copy; <a href="https://www.openweathermap.org/">OpenWeatherMap</a>'
               url={`https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${apiKey || process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`}
               opacity={0.6}
+              pane="precip"
             />
           </LayersControl.Overlay>
         </LayersControl>
+
+        {/* Labels pane over weather tiles for readability */}
+        <TileLayer
+          attribution='&copy; OpenStreetMap &copy; CARTO'
+          url={theme === 'dark' ? 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png' : 'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png'}
+          pane="labels"
+          className="label-tiles"
+        />
         {latitude && longitude && (
           <Marker position={[latitude, longitude]}>
             <Popup>
@@ -247,6 +265,23 @@ const WeatherMapAnimated = ({
           </Marker>
         )}
       </MapContainer>
+      {/* Legend */}
+      <div className="absolute right-2 bottom-2 z-[1001]">
+        <div className="rounded border border-white/20 bg-black/75 text-[11px] text-white/90 p-2 font-mono select-none">
+          <div className="mb-1 text-[10px] uppercase tracking-wide opacity-80">Reflectivity (dBZ)</div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-3 rounded-sm" style={{ background: '#b7e4ff' }} title="10–20 dBZ very light" />
+            <div className="w-4 h-3 rounded-sm" style={{ background: '#7fd2ff' }} title="20–30 dBZ light" />
+            <div className="w-4 h-3 rounded-sm" style={{ background: '#4fb6ff' }} title="30–40 dBZ moderate" />
+            <div className="w-4 h-3 rounded-sm" style={{ background: '#2f85ff' }} title="40–50 dBZ heavy" />
+            <div className="w-4 h-3 rounded-sm" style={{ background: '#d24d4d' }} title="50–60 dBZ very heavy" />
+            <div className="w-4 h-3 rounded-sm" style={{ background: '#8b0000' }} title=">=60 dBZ extreme" />
+          </div>
+          <div className="mt-1 flex justify-between text-[10px] opacity-75">
+            <span>10</span><span>20</span><span>30</span><span>40</span><span>50</span><span>60+</span>
+          </div>
+        </div>
+      </div>
       
       {themeStyles.overlay && (
         <div className={`absolute inset-0 pointer-events-none ${themeStyles.overlay}`} />

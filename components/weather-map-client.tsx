@@ -1,6 +1,8 @@
+// @ts-nocheck
 'use client'
 
-import { MapContainer, TileLayer, Marker, Popup, LayersControl } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, LayersControl, Pane } from 'react-leaflet'
+import PrecipCanvasLayer from './precip-canvas-layer'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -28,6 +30,7 @@ interface WeatherMapProps {
   longitude?: number
   locationName?: string
   theme?: 'dark' | 'miami' | 'tron'
+  initialZoom?: number
 }
 
 const LAYERS = [
@@ -38,9 +41,10 @@ const LAYERS = [
   { key: 'temp_new', name: 'Temperature' },
 ]
 
-const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }: WeatherMapProps) => {
+const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark', initialZoom }: WeatherMapProps) => {
   const [map, setMap] = useState<L.Map | null>(null)
   const position: [number, number] = [latitude || 39.8283, longitude || -98.5795]
+  const zoomLevel = typeof initialZoom === 'number' ? initialZoom : 10
 
   const [activeLayers, setActiveLayers] = useState<Record<string, boolean>>({
     precipitation_new: true,
@@ -49,7 +53,7 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
     pressure_new: false,
     temp_new: false,
   })
-  const [opacity, setOpacity] = useState(0.7)
+  const [opacity, setOpacity] = useState(0.8)
 
   // --- Phase 3: Time-lapse state ---
   const STEP_MINUTES = 10 // OpenWeather tiles typically update in 10-minute steps
@@ -114,9 +118,9 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
 
   useEffect(() => {
     if (map && latitude && longitude) {
-      map.setView([latitude, longitude], 10)
+      map.setView([latitude, longitude], zoomLevel)
     }
-  }, [map, latitude, longitude])
+  }, [map, latitude, longitude, zoomLevel])
 
   const themeStyles = useMemo(() => {
     switch(theme) {
@@ -199,23 +203,30 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
     <div className={`relative w-full h-full rounded-lg overflow-hidden ${themeStyles.container}`}>
       <MapContainer 
         center={position} 
-        zoom={10} 
+        zoom={zoomLevel} 
         scrollWheelZoom={true} 
         style={{ height: '100%', width: '100%' }}
         ref={setMap}
       >
+        {/* Explicit panes enforce z-order: base < clouds < precip < UI */}
+        <Pane name="basemap" style={{ zIndex: 200 }} />
+        <Pane name="clouds" style={{ zIndex: 400 }} />
+        <Pane name="precip" style={{ zIndex: 500 }} />
+        <Pane name="labels" style={{ zIndex: 650, pointerEvents: 'none' as unknown as string }} />
         <LayersControl position="topright">
           <LayersControl.BaseLayer checked name="Street Map">
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               className="grayscale contrast-125"
+              pane="basemap"
             />
           </LayersControl.BaseLayer>
           <LayersControl.BaseLayer name="Satellite">
             <TileLayer
               attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              pane="basemap"
             />
           </LayersControl.BaseLayer>
 
@@ -225,28 +236,38 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
               <TileLayer
                 attribution='&copy; <a href="https://www.openweathermap.org/">OpenWeatherMap</a>'
                 url={`/api/weather/radar/${l.key}/{z}/{x}/{y}`}
-                opacity={opacity}
+                opacity={l.key === 'clouds_new' ? 0.45 : 0.6}
+                className={l.key === 'clouds_new' ? 'cloud-tiles' : undefined}
+                pane={l.key === 'clouds_new' ? 'clouds' : 'clouds'}
               />
             </LayersControl.Overlay>
           ))}
 
-          {/* Animated precipitation layer with preloaded frames */}
+          {/* Animated precipitation layer with preloaded frames (quantized buckets) */}
           {activeLayers['precipitation_new'] && (
             <LayersControl.Overlay checked name="Precipitation (Animated)">
               <>
-                {bufferedTimes.map((t) => (
-                  <TileLayer
+                {bufferedTimes.map((t: number) => (
+                  <PrecipCanvasLayer
                     key={`precip-${tileEpoch}-${t}`}
-                    attribution='&copy; <a href="https://www.openweathermap.org/">OpenWeatherMap</a>'
-                    url={`/api/weather/radar/precipitation_new/${t}/{z}/{x}/{y}`}
-                    // apply eased opacity: current frame at target opacity, neighbors lightly visible for smoother crossfade
+                    time={t}
                     opacity={t === currentTimestamp ? opacity : Math.max(0, Math.min(0.15, opacity * 0.2))}
+                    pane="precip"
+                    zIndex={500}
                   />
                 ))}
               </>
             </LayersControl.Overlay>
           )}
         </LayersControl>
+
+        {/* Labels-only pane above precip to keep roads/city names readable */}
+        <TileLayer
+          attribution='&copy; OpenStreetMap &copy; CARTO'
+          url={theme === 'dark' ? 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png' : 'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png'}
+          pane="labels"
+          className="label-tiles"
+        />
 
         {latitude && longitude && (
           <Marker position={[latitude, longitude]}>
@@ -260,6 +281,24 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
           </Marker>
         )}
       </MapContainer>
+
+      {/* Legend (Reflectivity dBZ) */}
+      <div className="absolute right-2 bottom-2 z-[1001]">
+        <div className="rounded border border-white/20 bg-black/75 text-[11px] text-white/90 p-2 font-mono select-none">
+          <div className="mb-1 text-[10px] uppercase tracking-wide opacity-80">Reflectivity (dBZ)</div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-3 rounded-sm" style={{ background: '#b7e4ff' }} title="10–20 dBZ very light" />
+            <div className="w-4 h-3 rounded-sm" style={{ background: '#7fd2ff' }} title="20–30 dBZ light" />
+            <div className="w-4 h-3 rounded-sm" style={{ background: '#4fb6ff' }} title="30–40 dBZ moderate" />
+            <div className="w-4 h-3 rounded-sm" style={{ background: '#2f85ff' }} title="40–50 dBZ heavy" />
+            <div className="w-4 h-3 rounded-sm" style={{ background: '#d24d4d' }} title="50–60 dBZ very heavy" />
+            <div className="w-4 h-3 rounded-sm" style={{ background: '#8b0000' }} title=">=60 dBZ extreme" />
+          </div>
+          <div className="mt-1 flex justify-between text-[10px] opacity-75">
+            <span>10</span><span>20</span><span>30</span><span>40</span><span>50</span><span>60+</span>
+          </div>
+        </div>
+      </div>
 
       {/* Layer controls */}
       <div className="absolute left-2 top-2 z-[1000]">

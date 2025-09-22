@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 
 const WeatherMap = dynamic(() => import('@/components/weather-map'), {
   ssr: false,
@@ -16,6 +17,11 @@ const WeatherMap = dynamic(() => import('@/components/weather-map'), {
 })
 
 export default function MapPage() {
+  const sp = useSearchParams()
+  const lat = sp.get('lat') ? parseFloat(sp.get('lat') as string) : undefined
+  const lon = sp.get('lon') ? parseFloat(sp.get('lon') as string) : undefined
+  const name = sp.get('name') || undefined
+  const z = sp.get('z') ? parseInt(sp.get('z') as string, 10) : undefined
   return (
     <div className="h-[calc(100vh-4rem)] w-full">
       <div className="p-2">
@@ -23,7 +29,7 @@ export default function MapPage() {
           ← Home
         </Link>
       </div>
-      <WeatherMap />
+      <WeatherMap latitude={lat} longitude={lon} locationName={name} theme="dark" initialZoom={z} />
     </div>
   )
 }

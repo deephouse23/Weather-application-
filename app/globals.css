@@ -151,6 +151,21 @@ body {
   image-rendering: crisp-edges;
 }
 
+/* Radar tiles: keep precip crisp and high-contrast */
+.precip-tiles img, .leaflet-pane.precip-pane img {
+  /* Prefer nearest-neighbor to avoid blurry buckets */
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* Cloud tiles slightly softened but still secondary */
+.cloud-tiles img, .leaflet-pane.clouds-pane img {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  opacity: 0.95;
+}
+
 /* Responsive wind speed styling */
 .wind-speed {
   color: inherit;
