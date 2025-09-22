@@ -1256,3 +1256,14 @@ export const fetchWeatherByLocation = async (
     throw error
   }
 } 
+
+// One Call 3.0 minutely nowcast helper for overlays
+export async function fetchMinutelyNowcast(lat: number, lon: number, units: 'metric' | 'imperial') {
+  try {
+    const res = await fetch(getApiUrl(`/api/weather/onecall/minutely?lat=${lat}&lon=${lon}&units=${units}`), { cache: 'no-store' })
+    if (!res.ok) return { minutely: [] }
+    return res.json()
+  } catch {
+    return { minutely: [] }
+  }
+}
