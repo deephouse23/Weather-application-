@@ -120,7 +120,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
 
   const mainNavItems = [
     { href: "/", label: "HOME", icon: Home },
-    { href: "/map", label: "MAP", icon: Map },
+    { href: "/map", label: "RADAR", icon: Map },
     { href: "/extremes", label: "EXTREMES", icon: Thermometer },
     { href: "/news", label: "NEWS", icon: Newspaper },
     { href: "/games", label: "GAMES", icon: Gamepad2 },

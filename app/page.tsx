@@ -1007,10 +1007,10 @@ function WeatherApp() {
                 );
               })()}
 
-              {/* Weather Radar Map - Moved Below Forecast */}
+              {/* Weather Radar - Moved Below Forecast */}
               <div className="mt-6">
                 <h2 className={`text-xl font-semibold mb-4 text-center ${themeClasses.headerText} ${themeClasses.glow}`}>
-                  Weather Radar & Map
+                  Weather Radar
                 </h2>
                 <div className="h-96 rounded-lg overflow-hidden">
                   <LazyWeatherMap 
