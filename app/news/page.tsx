@@ -1,11 +1,14 @@
+"use client"
 import React from "react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { useThemeClasses } from "@/components/theme-provider"
+import { useTheme } from "@/components/theme-provider"
+import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
 
 export default function NewsPage() {
-  const themeClasses = useThemeClasses()
+  const { theme } = useTheme()
+  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather')
   return (
     <main className={cn("container mx-auto px-4 py-6", themeClasses.background)}>
       <h1 className={cn("text-2xl sm:text-3xl font-extrabold mb-4 font-mono", themeClasses.accentText)}>
