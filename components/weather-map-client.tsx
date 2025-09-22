@@ -3,8 +3,10 @@
 import { MapContainer, TileLayer, Marker, Popup, LayersControl } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 // Fix for default icon issue with webpack
 let iconsInitialized = false
@@ -49,6 +51,67 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
   })
   const [opacity, setOpacity] = useState(0.7)
 
+  // --- Phase 3: Time-lapse state ---
+  const STEP_MINUTES = 10 // OpenWeather tiles typically update in 10-minute steps
+  const PAST_STEPS = 6 // 1 hour past (6 x 10min)
+  const FUTURE_STEPS = 12 // ~2 hours future (12 x 10min)
+  const [frameTimes, setFrameTimes] = useState<number[]>([])
+  const [frameIndex, setFrameIndex] = useState<number>(0)
+  const [isPlaying, setIsPlaying] = useState<boolean>(false)
+  const [speed, setSpeed] = useState<0.5 | 1 | 2>(1) // playback speed multiplier
+  const timerRef = useRef<number | null>(null)
+  const lastNowRef = useRef<number>(0)
+
+  const quantizeToStep = (ms: number, stepMinutes: number) => {
+    const stepMs = stepMinutes * 60 * 1000
+    return Math.floor(ms / stepMs) * stepMs
+  }
+
+  const buildTimeIndex = useCallback(() => {
+    const now = Date.now()
+    lastNowRef.current = now
+    const base = quantizeToStep(now, STEP_MINUTES)
+    const past: number[] = []
+    for (let i = PAST_STEPS; i > 0; i -= 1) past.push(base - i * STEP_MINUTES * 60 * 1000)
+    const future: number[] = []
+    for (let i = 0; i <= FUTURE_STEPS; i += 1) future.push(base + i * STEP_MINUTES * 60 * 1000)
+    const frames = [...past, ...future]
+    setFrameTimes(frames)
+    // place the index at "now" (first element of future array inside frames)
+    setFrameIndex(past.length)
+  }, [])
+
+  useEffect(() => {
+    buildTimeIndex()
+    const id = setInterval(() => {
+      // Rebuild index roughly every 5 minutes to follow the wall clock
+      buildTimeIndex()
+    }, 5 * 60 * 1000)
+    return () => clearInterval(id)
+  }, [buildTimeIndex])
+
+  // Playback timer
+  useEffect(() => {
+    if (!isPlaying || frameTimes.length === 0) return
+    const baseInterval = 600 // ms per frame at 1x
+    const interval = baseInterval / speed
+    const handle = window.setInterval(() => {
+      setFrameIndex((idx) => (idx + 1) % frameTimes.length)
+    }, interval)
+    timerRef.current = handle as unknown as number
+    return () => {
+      if (timerRef.current) window.clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+  }, [isPlaying, speed, frameTimes])
+
+  const currentTimestamp = frameTimes[frameIndex]
+  const humanTime = useMemo(() => {
+    if (!currentTimestamp) return ''
+    const d = new Date(currentTimestamp)
+    return d.toUTCString().replace(' GMT', '')
+  }, [currentTimestamp])
+
   useEffect(() => {
     if (map && latitude && longitude) {
       map.setView([latitude, longitude], 10)
@@ -69,6 +132,27 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
   const toggleLayer = (key: string) => {
     setActiveLayers(prev => ({ ...prev, [key]: !prev[key] }))
   }
+
+  const goNow = () => {
+    // Snap to the frame closest to current quantized now
+    const nowQ = quantizeToStep(Date.now(), STEP_MINUTES)
+    let closest = 0
+    let minDiff = Number.MAX_SAFE_INTEGER
+    frameTimes.forEach((t, i) => {
+      const diff = Math.abs(t - nowQ)
+      if (diff < minDiff) { minDiff = diff; closest = i }
+    })
+    setFrameIndex(closest)
+  }
+
+  // Preload buffer around current frame for smooth cross-fade
+  const PRELOAD_RADIUS = 1 // previous, current, next
+  const bufferedTimes = useMemo(() => {
+    if (frameTimes.length === 0) return [] as number[]
+    const start = Math.max(0, frameIndex - PRELOAD_RADIUS)
+    const end = Math.min(frameTimes.length - 1, frameIndex + PRELOAD_RADIUS)
+    return frameTimes.slice(start, end + 1)
+  }, [frameTimes, frameIndex])
 
   return (
     <div className={`relative w-full h-full rounded-lg overflow-hidden ${themeStyles.container}`}>
@@ -94,7 +178,8 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
             />
           </LayersControl.BaseLayer>
 
-          {LAYERS.map(l => (
+          {/* Static layers (non-animated) */}
+          {LAYERS.filter(l => l.key !== 'precipitation_new').map(l => (
             <LayersControl.Overlay key={l.key} checked={activeLayers[l.key]} name={l.name}>
               <TileLayer
                 attribution='&copy; <a href="https://www.openweathermap.org/">OpenWeatherMap</a>'
@@ -103,6 +188,22 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
               />
             </LayersControl.Overlay>
           ))}
+
+          {/* Animated precipitation layer with preloaded frames */}
+          {activeLayers['precipitation_new'] && (
+            <LayersControl.Overlay checked name="Precipitation (Animated)">
+              <>
+                {bufferedTimes.map((t) => (
+                  <TileLayer
+                    key={`precip-${t}`}
+                    attribution='&copy; <a href="https://www.openweathermap.org/">OpenWeatherMap</a>'
+                    url={`/api/weather/radar/precipitation_new/${t}/{z}/{x}/{y}`}
+                    opacity={t === currentTimestamp ? opacity : 0}
+                  />
+                ))}
+              </>
+            </LayersControl.Overlay>
+          )}
         </LayersControl>
 
         {latitude && longitude && (
@@ -137,6 +238,34 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
             </div>
           </DropdownMenuContent>
         </DropdownMenu>
+      </div>
+
+      {/* Animation controls */}
+      <div className="absolute left-2 bottom-2 z-[1000] flex items-center gap-2 bg-black/50 p-2 rounded">
+        <Button size="sm" variant="secondary" onClick={() => setIsPlaying(p => !p)}>
+          {isPlaying ? 'Pause' : 'Play'}
+        </Button>
+        <Button size="sm" variant="secondary" onClick={goNow}>Now</Button>
+        <div className="text-xs text-white/80 px-1">{humanTime}</div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-white/70">Speed</span>
+          <ToggleGroup type="single" value={String(speed)} onValueChange={(v) => v && setSpeed(Number(v) as 0.5 | 1 | 2)}>
+            <ToggleGroupItem value="0.5">0.5×</ToggleGroupItem>
+            <ToggleGroupItem value="1">1×</ToggleGroupItem>
+            <ToggleGroupItem value="2">2×</ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+        <div className="min-w-[160px]">
+          <input
+            type="range"
+            min={0}
+            max={Math.max(0, frameTimes.length - 1)}
+            step={1}
+            value={frameIndex}
+            onChange={(e) => setFrameIndex(parseInt(e.target.value))}
+            className="w-48"
+          />
+        </div>
       </div>
 
       {themeStyles.overlay && (
