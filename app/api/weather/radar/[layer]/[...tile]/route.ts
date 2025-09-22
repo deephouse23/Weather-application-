@@ -21,7 +21,7 @@ export async function GET(
   context: any
 ) {
   const { params } = context as { params: { layer: string; tile: string[] } }
-  const apiKey = process.env.OPENWEATHER_API_KEY || process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY
+  const apiKey = process.env.OPENWEATHER_API_KEY
   if (!apiKey) {
     return new NextResponse('API key not configured', { status: 500 })
   }
@@ -52,11 +52,20 @@ export async function GET(
   try {
     const response = await fetch(url, {
       headers: { 'User-Agent': '16-Bit-Weather/radar-proxy' },
+      // Timeouts via AbortSignal timeout; keep short for "now" tiles
+      // @ts-ignore
+      signal: AbortSignal.timeout(8000)
     })
 
     if (!response.ok) {
-      if (response.status === 401) return new NextResponse('Invalid API key', { status: 401 })
-      if (response.status === 429) return new NextResponse('Rate limit exceeded', { status: 429 })
+      if (response.status === 401) {
+        console.error('Radar proxy 401 Unauthorized', { layer: mapped, path })
+        return new NextResponse('Invalid API key', { status: 401 })
+      }
+      if (response.status === 429) {
+        console.warn('Radar proxy 429 Rate limited', { layer: mapped, path })
+        return new NextResponse('Rate limit exceeded', { status: 429 })
+      }
       // transparent 1x1 png
       const transparentPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64')
       return new NextResponse(transparentPng, {
@@ -68,19 +77,23 @@ export async function GET(
     }
 
     const buf = await response.arrayBuffer()
+    // Adaptive caching: short TTL for now-frame, longer for past frames
+    const isNowFrame = !time || Math.abs(Date.now() - Number(time)) < 15 * 60 * 1000
     const headers = new Headers({
       'Content-Type': 'image/png',
-      // cache 10 minutes on edge, allow SWR
-      'Cache-Control': 'public, max-age=600, s-maxage=600, stale-while-revalidate=300',
+      'Cache-Control': isNowFrame
+        ? 'public, max-age=60, s-maxage=60, stale-while-revalidate=60'
+        : 'public, max-age=1800, s-maxage=3600, stale-while-revalidate=1800',
       'Access-Control-Allow-Origin': '*',
     })
     return new NextResponse(buf, { headers })
   } catch (e) {
+    console.error('Radar proxy fetch error', { layer: mapped, path, error: String(e) })
     const transparentPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64')
     return new NextResponse(transparentPng, {
       headers: {
         'Content-Type': 'image/png',
-        'Cache-Control': 'public, max-age=60',
+        'Cache-Control': 'public, max-age=30',
       },
     })
   }

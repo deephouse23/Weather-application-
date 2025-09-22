@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
 
     const response = await fetch(url.toString(), {
       next: { revalidate: 60 },
+      cache: 'no-store',
       headers: { 'User-Agent': '16-Bit-Weather/onecall' },
     })
 
@@ -44,9 +45,15 @@ export async function GET(request: NextRequest) {
       const text = await response.text().catch(() => '')
       const status = response.status
       if (status === 400) return NextResponse.json({ error: 'Bad Request', detail: text }, { status })
-      if (status === 401) return NextResponse.json({ error: 'Unauthorized (API key)', detail: text }, { status })
+      if (status === 401) {
+        console.error('OneCall 401 Unauthorized')
+        return NextResponse.json({ error: 'Unauthorized (API key)', detail: text }, { status })
+      }
       if (status === 404) return NextResponse.json({ error: 'Not Found', detail: text }, { status })
-      if (status === 429) return NextResponse.json({ error: 'Too Many Requests', detail: text }, { status })
+      if (status === 429) {
+        console.warn('OneCall 429 Rate Limited')
+        return NextResponse.json({ error: 'Too Many Requests', detail: text }, { status })
+      }
       return NextResponse.json({ error: 'Weather service unavailable', detail: text }, { status })
     }
 
