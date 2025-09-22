@@ -146,13 +146,54 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
   }
 
   // Preload buffer around current frame for smooth cross-fade
-  const PRELOAD_RADIUS = 1 // previous, current, next
+  const PRELOAD_RADIUS = 2 // keep ±2 buffered
   const bufferedTimes = useMemo(() => {
     if (frameTimes.length === 0) return [] as number[]
     const start = Math.max(0, frameIndex - PRELOAD_RADIUS)
     const end = Math.min(frameTimes.length - 1, frameIndex + PRELOAD_RADIUS)
     return frameTimes.slice(start, end + 1)
   }, [frameTimes, frameIndex])
+
+  // Abort in-flight tile fetches on scrub by forcing a remount key
+  const [tileEpoch, setTileEpoch] = useState<number>(0)
+  useEffect(() => {
+    // When user scrubs (frameIndex changes via input), bump epoch
+    // This causes TileLayers to remount and let previous requests be GC'ed/aborted by browser
+    setTileEpoch((e) => (e + 1) % Number.MAX_SAFE_INTEGER)
+  }, [frameIndex])
+
+  // Reduced FPS indicator and easing opacity
+  const [reducedFps, setReducedFps] = useState<boolean>(false)
+  const networkSlowRef = useRef<number>(0)
+  useEffect(() => {
+    const handler = () => {
+      // naive heuristic: if 3+ rapid frame changes within 500ms (likely scrub), show reduced FPS for 3s
+      const now = performance.now()
+      if (now - networkSlowRef.current < 500) setReducedFps(true)
+      networkSlowRef.current = now
+      const id = setTimeout(() => setReducedFps(false), 3000)
+      return () => clearTimeout(id)
+    }
+    // listen to index changes
+    handler()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frameIndex])
+
+  // Keyboard accessibility: Space toggles play/pause, ArrowLeft/Right scrubs
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        e.preventDefault()
+        setIsPlaying(p => !p)
+      } else if (e.code === 'ArrowRight') {
+        setFrameIndex(i => Math.min(i + 1, Math.max(0, frameTimes.length - 1)))
+      } else if (e.code === 'ArrowLeft') {
+        setFrameIndex(i => Math.max(i - 1, 0))
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [frameTimes.length])
 
   return (
     <div className={`relative w-full h-full rounded-lg overflow-hidden ${themeStyles.container}`}>
@@ -195,10 +236,11 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
               <>
                 {bufferedTimes.map((t) => (
                   <TileLayer
-                    key={`precip-${t}`}
+                    key={`precip-${tileEpoch}-${t}`}
                     attribution='&copy; <a href="https://www.openweathermap.org/">OpenWeatherMap</a>'
                     url={`/api/weather/radar/precipitation_new/${t}/{z}/{x}/{y}`}
-                    opacity={t === currentTimestamp ? opacity : 0}
+                    // apply eased opacity: current frame at target opacity, neighbors lightly visible for smoother crossfade
+                    opacity={t === currentTimestamp ? opacity : Math.max(0, Math.min(0.15, opacity * 0.2))}
                   />
                 ))}
               </>
@@ -241,21 +283,21 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
       </div>
 
       {/* Animation controls */}
-      <div className="absolute left-2 bottom-2 z-[1000] flex items-center gap-2 bg-black/50 p-2 rounded">
-        <Button size="sm" variant="secondary" onClick={() => setIsPlaying(p => !p)}>
+      <div className="absolute left-2 bottom-2 z-[1000] flex items-center gap-2 bg-black/60 p-2 rounded">
+        <Button size="sm" variant="secondary" aria-label={isPlaying ? 'Pause animation (Space)' : 'Play animation (Space)'} onClick={() => setIsPlaying(p => !p)}>
           {isPlaying ? 'Pause' : 'Play'}
         </Button>
-        <Button size="sm" variant="secondary" onClick={goNow}>Now</Button>
-        <div className="text-xs text-white/80 px-1">{humanTime}</div>
-        <div className="flex items-center gap-2">
+        <Button size="sm" variant="secondary" aria-label="Snap to current time" onClick={goNow}>Now</Button>
+        <div className="text-xs text-white/80 px-1" aria-live="polite" title="Frame time (UTC)">{humanTime}</div>
+        <div className="flex items-center gap-2" title="Playback speed">
           <span className="text-xs text-white/70">Speed</span>
           <ToggleGroup type="single" value={String(speed)} onValueChange={(v) => v && setSpeed(Number(v) as 0.5 | 1 | 2)}>
-            <ToggleGroupItem value="0.5">0.5×</ToggleGroupItem>
-            <ToggleGroupItem value="1">1×</ToggleGroupItem>
-            <ToggleGroupItem value="2">2×</ToggleGroupItem>
+            <ToggleGroupItem value="0.5" aria-label="Speed 0.5x">0.5×</ToggleGroupItem>
+            <ToggleGroupItem value="1" aria-label="Speed 1x">1×</ToggleGroupItem>
+            <ToggleGroupItem value="2" aria-label="Speed 2x">2×</ToggleGroupItem>
           </ToggleGroup>
         </div>
-        <div className="min-w-[160px]">
+        <div className="min-w-[160px]" title="Scrub frames (Left/Right arrows)">
           <input
             type="range"
             min={0}
@@ -264,8 +306,12 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
             value={frameIndex}
             onChange={(e) => setFrameIndex(parseInt(e.target.value))}
             className="w-48"
+            aria-label="Scrub frames"
           />
         </div>
+        {reducedFps && (
+          <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-300 border border-yellow-300/40" aria-live="polite">reduced FPS</span>
+        )}
       </div>
 
       {themeStyles.overlay && (
