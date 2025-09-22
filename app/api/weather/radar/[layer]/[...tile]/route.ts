@@ -18,8 +18,9 @@ const LAYER_MAP: Record<string, string> = {
 
 export async function GET(
   request: Request,
-  { params }: { params: { layer: string; tile: string[] } }
+  context: any
 ) {
+  const { params } = context as { params: { layer: string; tile: string[] } }
   const apiKey = process.env.OPENWEATHER_API_KEY || process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY
   if (!apiKey) {
     return new NextResponse('API key not configured', { status: 500 })
