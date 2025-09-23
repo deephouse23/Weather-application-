@@ -7,6 +7,7 @@ interface WeatherMapProps {
   longitude?: number
   locationName?: string
   theme?: 'dark' | 'miami' | 'tron'
+  initialZoom?: number
 }
 
 // Create a completely dynamic map component with no SSR
