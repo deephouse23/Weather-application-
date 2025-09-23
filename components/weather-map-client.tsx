@@ -212,7 +212,7 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark', i
         <Pane name="basemap" style={{ zIndex: 200 }} />
         <Pane name="clouds" style={{ zIndex: 400 }} />
         <Pane name="precip" style={{ zIndex: 500 }} />
-        <Pane name="labels" style={{ zIndex: 650, pointerEvents: 'none' as unknown as string }} />
+        <Pane name="labels" style={{ zIndex: 650 }} />
         <LayersControl position="topright">
           <LayersControl.BaseLayer checked name="Street Map">
             <TileLayer
