@@ -8,33 +8,39 @@ export async function middleware(request: NextRequest) {
       headers: requestHeaders,
     },
   })
+  // Skip Supabase auth in tests or when env is not configured
+  const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const isTestRuntime = process.env.PLAYWRIGHT_TEST === '1' || process.env.NODE_ENV === 'test'
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
+  let session: { user: unknown } | null = null
+  if (SUPABASE_URL && SUPABASE_ANON && !isTestRuntime) {
+    const supabase = createServerClient(
+      SUPABASE_URL,
+      SUPABASE_ANON,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              response.cookies.set(name, value, options)
+              const existingCookies = requestHeaders.get('cookie')
+              const newCookieValue = `${name}=${value}`
+              requestHeaders.set(
+                'cookie',
+                existingCookies ? `${existingCookies}; ${newCookieValue}` : newCookieValue
+              )
+            })
+          },
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options)
-            const existingCookies = requestHeaders.get('cookie')
-            const newCookieValue = `${name}=${value}`
-            requestHeaders.set(
-              'cookie',
-              existingCookies ? `${existingCookies}; ${newCookieValue}` : newCookieValue
-            )
-          })
-        },
-      },
-    }
-  )
+      }
+    )
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+    const result = await supabase.auth.getSession()
+    session = result.data.session
+  }
 
   const protectedRoutes = ['/dashboard', '/profile', '/settings', '/saved-locations']
   const isProtectedRoute = protectedRoutes.some((route) =>

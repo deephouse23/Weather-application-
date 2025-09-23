@@ -76,6 +76,57 @@ export async function stubWeatherApis(page: Page, opts: StubOptions = {}): Promi
     });
   });
 
+  // One Call 3.0 aggregate (used by the app search flow)
+  await page.route('**/api/weather/onecall**', async (route) => {
+    const now = Math.floor(Date.now() / 1000);
+    const daily = Array.from({ length: 5 }, (_, i) => ({
+      dt: now + i * 86400,
+      temp: { max: o.tempF + 3, min: o.tempF - 3 },
+      weather: [{ main: o.conditionMain, description: o.conditionDescription }],
+      humidity: o.humidity,
+      wind_speed: 5,
+      wind_deg: 45,
+      pressure: o.pressure,
+      clouds: 10,
+      pop: 0,
+      uvi: 5,
+    }));
+    const hourly = Array.from({ length: 24 }, (_, i) => ({
+      dt: now + i * 3600,
+      temp: o.tempF,
+      humidity: o.humidity,
+      wind_speed: 5,
+      wind_deg: 45,
+      pressure: o.pressure,
+      clouds: 10,
+      pop: 0,
+      weather: [{ main: o.conditionMain, description: o.conditionDescription }],
+    }));
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        timezone: 'America/New_York',
+        timezone_offset: -4 * 3600,
+        current: {
+          dt: now,
+          temp: o.tempF,
+          humidity: o.humidity,
+          wind_speed: 5,
+          wind_deg: 45,
+          wind_gust: 12,
+          pressure: o.pressure,
+          sunrise: now - 6 * 3600,
+          sunset: now + 6 * 3600,
+          weather: [{ main: o.conditionMain, description: o.conditionDescription }],
+          uvi: 5,
+        },
+        daily,
+        hourly,
+      })
+    })
+  })
+
   // Forecast: Provide several 3h slices so processDailyForecast can build days
   await page.route('**/api/weather/forecast**', async (route) => {
     const now = Math.floor(Date.now() / 1000);

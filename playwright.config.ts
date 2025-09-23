@@ -81,7 +81,7 @@ export default defineConfig({
   webServer: hasExternalBaseUrl
     ? undefined
     : {
-        command: process.env.CI ? 'npm run start' : 'npm run dev',
+        command: process.env.CI ? 'npm run start' : 'PLAYWRIGHT_TEST=1 npm run dev',
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,
