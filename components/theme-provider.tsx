@@ -54,10 +54,16 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   // Set theme and persist to localStorage
   const setTheme = async (newTheme: Theme) => {
+    // For guest users, prevent theme changes (always stay on dark)
+    if (!user && !isAuthenticated) {
+      console.log('Theme changes not allowed for guest users')
+      return
+    }
+
     setThemeState(newTheme)
 
-    // Save to localStorage for persistence
-    if (typeof window !== 'undefined') {
+    // Save to localStorage for persistence (only for authenticated users)
+    if (typeof window !== 'undefined' && isAuthenticated) {
       safeStorage.setItem('weather-edu-theme', newTheme)
     }
   }
@@ -69,15 +75,23 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     setTheme(availableThemes[nextIndex])
   }
 
-  // Load theme on mount
+  // Load theme on mount and when auth state changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedTheme = safeStorage.getItem('weather-edu-theme') as Theme || 'dark'
-      setThemeState(savedTheme)
+      // For guest users, always force dark theme
+      if (!isAuthenticated) {
+        setThemeState('dark')
+        // Remove any previously saved theme preference for guests
+        safeStorage.removeItem('weather-edu-theme')
+      } else {
+        // For authenticated users, load saved theme or default to dark
+        const savedTheme = safeStorage.getItem('weather-edu-theme') as Theme || 'dark'
+        setThemeState(savedTheme)
+      }
     }
     setLoading(false)
     setAuthLoading(false)
-  }, [])
+  }, [isAuthenticated])
 
   // Apply theme to DOM
   useEffect(() => {
