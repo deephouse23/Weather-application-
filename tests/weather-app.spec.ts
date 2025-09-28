@@ -35,11 +35,14 @@ test.describe('16-Bit Weather App', () => {
     }
   });
 
-  test('theme switcher works correctly', async ({ page }) => {
+  test('defaults to dark theme for guest users', async ({ page }) => {
     const html = page.locator('html');
-    const initial = await html.getAttribute('data-theme');
-    await page.getByRole('button', { name: /toggle theme/i }).click();
-    await expect.poll(async () => (await html.getAttribute('data-theme')) || '').not.toBe(initial || 'dark');
+    const theme = await html.getAttribute('data-theme');
+    expect(theme).toBe('dark');
+
+    // Verify theme toggle is not visible in navigation for guest users
+    const themeToggleButton = page.getByRole('button', { name: /toggle theme/i });
+    await expect(themeToggleButton).toHaveCount(0);
   });
 
   test('responsive layout on mobile', async ({ page }) => {
