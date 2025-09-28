@@ -14,7 +14,7 @@
  * Report issues: https://github.com/deephouse23/Weather-application-/issues
  */
 
-import { Moon, Sun, Zap, Check, Tv, Computer, Skull, Gamepad2, Terminal } from 'lucide-react'
+import { Moon, Sun, Zap, Check, Tv, Skull, Gamepad2, Terminal } from 'lucide-react'
 import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
 
