@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Documentation
+    url: https://github.com/deephouse23/Weather-application-/blob/main/README.md
+    about: Check the README and documentation for setup and usage information
+  - name: 💬 Discussions
+    url: https://github.com/deephouse23/Weather-application-/discussions
+    about: Ask questions, share ideas, or discuss the project with the community
+  - name: 🌐 Live Application
+    url: https://16bitweather.co
+    about: Try the live application to see current features and functionality

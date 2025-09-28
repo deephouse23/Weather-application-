@@ -1,0 +1,160 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement for the 16-Bit Weather application
+title: "[FEATURE] "
+labels: ["enhancement", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please fill out the form below to help us understand your idea.
+
+  - type: checkboxes
+    id: existing-requests
+    attributes:
+      label: Pre-submission Checklist
+      description: Please check that you've completed these steps before submitting.
+      options:
+        - label: I searched existing issues and feature requests to avoid duplicates
+          required: true
+        - label: I have read the README.md and current feature documentation
+          required: true
+
+  - type: dropdown
+    id: feature-category
+    attributes:
+      label: Feature Category
+      description: What type of feature are you requesting?
+      options:
+        - Weather Data & Display
+        - User Interface & Themes
+        - Location & Search
+        - User Authentication & Accounts
+        - Mobile & Responsive Design
+        - Performance & Optimization
+        - Accessibility
+        - API & Integration
+        - Games & Entertainment
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: feature-summary
+    attributes:
+      label: Feature Summary
+      description: A clear and concise description of the feature you'd like to see.
+      placeholder: Briefly describe the feature...
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem-statement
+    attributes:
+      label: Problem or Use Case
+      description: What problem does this feature solve? What use case does it address?
+      placeholder: |
+        - What problem are you trying to solve?
+        - What would this feature enable you to do?
+        - How would this improve the user experience?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: Detailed description of how you envision this feature working.
+      placeholder: |
+        Describe your proposed solution in detail:
+        - How should it work?
+        - Where should it appear in the UI?
+        - What should the user experience be like?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternative-solutions
+    attributes:
+      label: Alternative Solutions
+      description: Are there any alternative approaches you've considered?
+      placeholder: Describe any alternative solutions or features you've considered...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: user-type
+    attributes:
+      label: Target User Type
+      description: Who would primarily benefit from this feature?
+      options:
+        - All users
+        - New users
+        - Regular users
+        - Power users
+        - Mobile users
+        - Desktop users
+        - Developers
+        - Accessibility users
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority Level
+      description: How important is this feature to you?
+      options:
+        - Low - Nice to have
+        - Medium - Would improve my experience
+        - High - Important for my use case
+        - Critical - Blocking my usage
+    validations:
+      required: true
+
+  - type: textarea
+    id: mockups-examples
+    attributes:
+      label: Mockups or Examples
+      description: Any mockups, wireframes, or examples from other applications?
+      placeholder: |
+        - Include links to similar features in other apps
+        - Attach mockups or wireframes
+        - Describe visual examples
+    validations:
+      required: false
+
+  - type: textarea
+    id: technical-considerations
+    attributes:
+      label: Technical Considerations
+      description: Any technical aspects or constraints to consider? (Optional - for technical users)
+      placeholder: |
+        - API limitations or requirements
+        - Performance considerations
+        - Browser compatibility needs
+        - Third-party service integrations
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: implementation-offer
+    attributes:
+      label: Implementation
+      description: Are you interested in helping implement this feature?
+      options:
+        - label: I would be interested in implementing this feature myself
+        - label: I can provide additional design/UX input
+        - label: I can help with testing once implemented
+        - label: I can provide domain expertise for this feature
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any additional context, screenshots, or information about the feature request.
+      placeholder: Add any other context or screenshots about the feature request here...
+    validations:
+      required: false

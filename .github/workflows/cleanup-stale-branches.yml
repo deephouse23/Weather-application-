@@ -1,0 +1,115 @@
+name: Cleanup Stale Branches
+
+on:
+  schedule:
+    # Run monthly on the 1st at 2 AM UTC
+    - cron: '0 2 1 * *'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  cleanup-stale-branches:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all branches
+
+      - name: Setup GitHub CLI
+        run: |
+          gh auth status
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Identify stale branches
+        id: stale-branches
+        run: |
+          # Define cutoff date (6 months ago)
+          CUTOFF_DATE=$(date -d '6 months ago' +%Y-%m-%d)
+          echo "Cutoff date: $CUTOFF_DATE"
+
+          # Get protected branches (main, master, develop)
+          PROTECTED_BRANCHES="main master develop"
+
+          # Get currently active PR branches
+          ACTIVE_PR_BRANCHES=$(gh pr list --state open --json headRefName --jq '.[].headRefName' | tr '\n' ' ')
+          echo "Active PR branches: $ACTIVE_PR_BRANCHES"
+
+          # Find stale branches (older than cutoff, not protected, no active PRs)
+          STALE_BRANCHES=""
+
+          for branch in $(git branch -r --format='%(refname:short)' | grep -v 'origin/HEAD' | sed 's/origin\///'); do
+            # Skip protected branches
+            if echo "$PROTECTED_BRANCHES" | grep -q "$branch"; then
+              continue
+            fi
+
+            # Skip active PR branches
+            if echo "$ACTIVE_PR_BRANCHES" | grep -q "$branch"; then
+              continue
+            fi
+
+            # Check last commit date
+            LAST_COMMIT_DATE=$(git log -1 --format=%ci "origin/$branch" | cut -d' ' -f1)
+
+            if [[ "$LAST_COMMIT_DATE" < "$CUTOFF_DATE" ]]; then
+              STALE_BRANCHES="$STALE_BRANCHES $branch"
+              echo "Stale branch found: $branch (last commit: $LAST_COMMIT_DATE)"
+            fi
+          done
+
+          echo "stale_branches=$STALE_BRANCHES" >> $GITHUB_OUTPUT
+          echo "Total stale branches: $(echo $STALE_BRANCHES | wc -w)"
+
+      - name: Create cleanup issue
+        if: steps.stale-branches.outputs.stale_branches != ''
+        run: |
+          STALE_BRANCHES="${{ steps.stale-branches.outputs.stale_branches }}"
+
+          # Create issue body
+          cat > issue_body.md << 'EOF'
+          ## Stale Branch Cleanup Report
+
+          The following branches have been inactive for more than 6 months and may be candidates for cleanup:
+
+          ### Stale Branches
+          EOF
+
+          for branch in $STALE_BRANCHES; do
+            LAST_COMMIT=$(git log -1 --format="%ci by %an" "origin/$branch")
+            echo "- \`$branch\` - Last commit: $LAST_COMMIT" >> issue_body.md
+          done
+
+          cat >> issue_body.md << 'EOF'
+
+          ### Recommended Actions
+
+          1. **Review each branch** to determine if it contains important unmerged work
+          2. **Merge valuable changes** into main if needed
+          3. **Delete obsolete branches** using: `git push origin --delete <branch-name>`
+          4. **Document any important context** before deletion
+
+          ### Automatic Cleanup
+
+          To enable automatic cleanup of these branches, add a comment: `/cleanup-approved`
+
+          ---
+          *This issue was automatically created by the stale branch cleanup workflow.*
+          EOF
+
+          # Create the issue
+          gh issue create \
+            --title "Stale Branch Cleanup - $(date +%Y-%m)" \
+            --body-file issue_body.md \
+            --label "maintenance,automated"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment on success
+        if: steps.stale-branches.outputs.stale_branches == ''
+        run: |
+          echo "✅ No stale branches found - repository is clean!"

@@ -1,0 +1,56 @@
+# Fair Source License, Version 0.9
+
+Copyright (C) 2025 16-Bit Weather
+
+Licensor: 16-Bit Weather
+Software: 16-Bit Weather Platform
+Use Limitation: 5 users
+License Grant Date: January 2025
+Licensed Work Published: https://github.com/deephouse23/Weather-application-
+Change Date: Four years from License Grant Date
+Change License: MIT
+
+## Terms
+
+**Acceptance.** By using the Software, you agree to the terms of this license.
+
+**Permitted Use.** Licensor grants you a non-exclusive, worldwide license to use, copy, distribute, make available, and prepare derivative works of the Software, subject to the Use Limitation and the conditions below.
+
+**Use Limitation.** The Software may be used for any purpose, including commercial purposes, for up to 5 users. A "user" is any individual person who has access to the Software.
+
+**Conditions.**
+- You must conspicuously display this license on each original or modified copy of the Software.
+- If you receive the Software in original or modified form from a third party, the terms and conditions set forth in this license apply to your use of that work.
+- Any use of the Software in violation of this license will automatically terminate your rights under this license for the current and all future versions of the Software.
+- You may not use the Software in any way that violates applicable law.
+
+**No Other Rights.** These terms do not allow you to sublicense or transfer any of your rights to third parties, except as expressly permitted above.
+
+**Termination.** If you violate any of the terms of this license, your license will terminate immediately and automatically.
+
+**No Warranty.** The Software is provided "as is," without any warranties, express or implied. The Licensor will not be liable for any damages arising from the use of the Software.
+
+**Definitions.**
+- "Software" means the 16-Bit Weather Platform software and associated documentation files.
+- "Licensor" means the copyright owner or entity authorized by the copyright owner that is granting the license.
+
+---
+
+## BETA SOFTWARE NOTICE
+
+⚠️ **This software is currently in BETA (v0.5.0)**
+
+This means:
+- Features may change without notice
+- Bugs and issues are expected
+- API interfaces may be modified
+- Performance optimizations are ongoing
+- Production use is at your own risk
+
+Please report issues at: https://github.com/deephouse23/Weather-application-/issues
+
+---
+
+After the Change Date, this Software will be licensed under the MIT License.
+
+For more information about the Fair Source License, visit: https://fair.io

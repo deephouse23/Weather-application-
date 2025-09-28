@@ -1,0 +1,704 @@
+@import url('https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&family=Fira+Code:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Dark theme semantic tokens */
+:root[data-theme="dark"] {
+  --bg: #0d1117;         /* page background */
+  --bg-elev: #111827;    /* cards/panels */
+  --border: #1f2937;     /* borders/dividers */
+  --text: #e5e7eb;       /* primary text */
+  --text-muted: #9ca3af; /* secondary text */
+  --primary: #00d4ff;    /* retro cyan accent */
+  --accent: #7c3aed;     /* secondary accent */
+  --ok: #22c55e;         /* success */
+  --warn: #f59e0b;       /* warning */
+  --danger: #ef4444;     /* error */
+}
+
+/* Miami Vice theme */
+:root[data-theme="miami"] {
+  --bg: #1a0b2e;           /* Deep purple background */
+  --bg-elev: #2a1810;     /* Darker purple panels */
+  --border: #f97316;      /* Orange borders */
+  --text: #f97316;        /* Orange text */
+  --text-muted: #ec4899;  /* Pink muted text */
+  --primary: #f97316;     /* Orange primary */
+  --accent: #ec4899;      /* Pink accent */
+  --ok: #22c55e;          /* Green success */
+  --warn: #f59e0b;        /* Yellow warning */
+  --danger: #ef4444;      /* Red error */
+}
+
+/* TRON theme */
+:root[data-theme="tron"] {
+  --bg: #000000;          /* Pure black background */
+  --bg-elev: #0a0a0a;     /* Slightly elevated black */
+  --border: #00ffff;      /* Cyan borders */
+  --text: #00ffff;        /* Cyan text */
+  --text-muted: #4dd0e1;  /* Light cyan muted */
+  --primary: #00ffff;     /* Cyan primary */
+  --accent: #1de9b6;      /* Teal accent */
+  --ok: #4caf50;          /* Green success */
+  --warn: #ff9800;        /* Orange warning */
+  --danger: #f44336;      /* Red error */
+}
+
+/* Premium Theme: Atari 2600 */
+:root[data-theme="atari2600"] {
+  --bg: #000000;          /* Black background */
+  --bg-elev: #1a1a1a;     /* Dark gray panels */
+  --border: #702800;      /* Brown borders */
+  --text: #FFFFFF;        /* White text */
+  --text-muted: #888888;  /* Gray muted text */
+  --primary: #E0EC9C;     /* Light green primary */
+  --accent: #841800;      /* Rust accent */
+  --ok: #E0EC9C;          /* Light green success */
+  --warn: #841800;        /* Rust warning */
+  --danger: #841800;      /* Rust error */
+  --font-family: "VT323", "Press Start 2P", monospace;
+}
+
+/* Premium Theme: Terminal Green */
+:root[data-theme="monochromeGreen"] {
+  --bg: #0D0D0D;          /* Near black background */
+  --bg-elev: #1a1a1a;     /* Dark gray panels */
+  --border: #009900;      /* Dark green borders */
+  --text: #33FF33;        /* Bright green text */
+  --text-muted: #66FF66;  /* Lighter green muted */
+  --primary: #33FF33;     /* Bright green primary */
+  --accent: #99FF99;      /* Pale green accent */
+  --ok: #00FF00;          /* Pure green success */
+  --warn: #99FF99;        /* Pale green warning */
+  --danger: #33FF33;      /* Bright green error */
+  --font-family: "Fira Code", "Courier New", monospace;
+}
+
+/* Premium Theme: 8-Bit Classic */
+:root[data-theme="8bitClassic"] {
+  --bg: #D3D3D3;          /* Light gray background */
+  --bg-elev: #C0C0C0;     /* Silver panels */
+  --border: #000000;      /* Black borders */
+  --text: #000000;        /* Black text */
+  --text-muted: #666666;  /* Gray muted text */
+  --primary: #CC0000;     /* Red primary */
+  --accent: #0066CC;      /* Blue accent */
+  --ok: #00AA00;          /* Green success */
+  --warn: #FF8800;        /* Orange warning */
+  --danger: #CC0000;      /* Red error */
+  --font-family: "Press Start 2P", "Courier New", monospace;
+}
+
+/* Premium Theme: 16-Bit SNES */
+:root[data-theme="16bitSnes"] {
+  --bg: #B8B8D0;          /* Purple-gray background */
+  --bg-elev: #9E9EB8;     /* Medium purple panels */
+  --border: #5B5B8B;      /* Dark purple borders */
+  --text: #2C2C3E;        /* Dark purple text */
+  --text-muted: #6B6B8C;  /* Muted purple text */
+  --primary: #FFD700;     /* Gold primary */
+  --accent: #8B8BB8;      /* Light purple accent */
+  --ok: #4CAF50;          /* Green success */
+  --warn: #FF9800;        /* Orange warning */
+  --danger: #F44336;      /* Red error */
+  --font-family: "Courier New", "VT323", monospace;
+}
+
+/* Default fallback (same as dark) */
+:root {
+  --bg: #0d1117;
+  --bg-elev: #111827;
+  --border: #1f2937;
+  --text: #e5e7eb;
+  --text-muted: #9ca3af;
+  --primary: #00d4ff;
+  --accent: #7c3aed;
+  --ok: #22c55e;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+}
+
+/* Global mobile-first responsive base styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  /* Enable smooth scrolling */
+  scroll-behavior: smooth;
+  /* Prevent horizontal scrolling */
+  overflow-x: hidden;
+}
+
+body {
+  /* Prevent horizontal scrolling */
+  overflow-x: hidden;
+  /* Improve text rendering on mobile */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Better touch scrolling on mobile */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile-optimized pixel border styles */
+.pixel-border {
+  /* Smoother borders on high-DPI displays */
+  border-style: solid;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* Radar tiles: keep precip crisp and high-contrast */
+.precip-tiles img, .leaflet-pane.precip-pane img {
+  /* Prefer nearest-neighbor to avoid blurry buckets */
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* Cloud tiles slightly softened but still secondary */
+.cloud-tiles img, .leaflet-pane.clouds-pane img {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  opacity: 0.95;
+}
+
+/* Responsive wind speed styling */
+.wind-speed {
+  color: inherit;
+  font-weight: bold;
+  /* Ensure text wraps on mobile */
+  word-break: break-word;
+}
+
+/* Mobile touch improvements */
+button {
+  /* Better touch targets for mobile */
+  min-height: 44px;
+  /* Prevent tap highlight on mobile */
+  -webkit-tap-highlight-color: transparent;
+  /* Improve touch responsiveness */
+  touch-action: manipulation;
+}
+
+/* Mobile-optimized text scaling */
+@media (max-width: 640px) {
+  /* Ensure readable text on small screens */
+  body {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  
+  /* Better spacing for mobile cards */
+  .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 1rem;
+  }
+  
+  /* Mobile-friendly grid adjustments */
+  .grid {
+    gap: 0.75rem;
+  }
+  
+  /* Ensure images don't overflow */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 641px) and (max-width: 1024px) {
+  body {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+}
+
+/* Desktop and larger screens */
+@media (min-width: 1025px) {
+  body {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+}
+
+/* Global theme utility classes */
+.theme-bg {
+  background-color: var(--bg);
+}
+
+.theme-bg-elev {
+  background-color: var(--bg-elev);
+}
+
+.theme-border {
+  border-color: var(--border);
+}
+
+.theme-text {
+  color: var(--text);
+}
+
+.theme-text-muted {
+  color: var(--text-muted);
+}
+
+.theme-primary {
+  color: var(--primary);
+}
+
+.theme-accent {
+  color: var(--accent);
+}
+
+.theme-primary-bg {
+  background-color: var(--primary);
+}
+
+.theme-accent-bg {
+  background-color: var(--accent);
+}
+
+/* Global theme application */
+body {
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+/* Override hardcoded colors with theme variables */
+.bg-gray-900 {
+  background-color: var(--bg) !important;
+}
+
+.bg-gray-800 {
+  background-color: var(--bg-elev) !important;
+}
+
+.text-green-400,
+.text-cyan-400,
+.text-orange-400 {
+  color: var(--primary) !important;
+}
+
+.border-green-400,
+.border-cyan-400,
+.border-orange-400 {
+  border-color: var(--primary) !important;
+}
+
+.text-gray-400 {
+  color: var(--text-muted) !important;
+}
+
+.border-gray-700 {
+  border-color: var(--border) !important;
+}
+
+/* Better overflow handling for long text */
+.break-words {
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* Improved focus states for accessibility */
+button:focus,
+input:focus,
+[tabindex]:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* Mobile navigation improvements */
+@media (max-width: 768px) {
+  /* Ensure navigation elements are touch-friendly */
+  nav a, nav button {
+    min-height: 48px;
+    padding: 12px 16px;
+  }
+}
+
+/* Prevent text selection on touch devices for better UX */
+.select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Better scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Respect user's reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.pixel-font {
+  font-family: "Courier New", "Monaco", "Lucida Console", monospace;
+  letter-spacing: 1px;
+  image-rendering: pixelated;
+}
+
+.pixel-glow {
+  text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
+}
+
+/* Dark theme glow effect */
+.glow {
+  text-shadow: 0 0 8px var(--primary), 0 0 16px var(--primary), 0 0 24px var(--primary);
+  box-shadow: inset 0 0 20px rgba(0, 212, 255, 0.1);
+}
+
+.pixel-shadow {
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.8), 8px 8px 0 rgba(0, 212, 255, 0.3);
+}
+
+
+
+@keyframes tronWave {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100vw); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { 
+    text-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+    transform: scale(1);
+  }
+  50% { 
+    text-shadow: 0 0 12px currentColor, 0 0 24px currentColor, 0 0 36px currentColor;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes slideIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+
+/* Animation utility classes */
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+  will-change: transform, text-shadow;
+  contain: layout style paint;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.5s ease-out forwards;
+  will-change: transform, opacity;
+  contain: layout style paint;
+}
+
+/* Optimized transitions */
+.transition-optimized {
+  transition: all 0.2s ease-out;
+  will-change: transform, opacity;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+  will-change: transform;
+}
+
+/* Standardized responsive utility patterns */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Responsive font sizing utilities */
+  .text-responsive-sm {
+    font-size: clamp(0.75rem, 2vw, 0.875rem);
+  }
+  
+  .text-responsive-base {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+  }
+  
+  .text-responsive-lg {
+    font-size: clamp(1rem, 3vw, 1.25rem);
+  }
+  
+  .text-responsive-xl {
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
+  }
+  
+  .text-responsive-2xl {
+    font-size: clamp(1.5rem, 5vw, 2rem);
+  }
+  
+  /* Responsive spacing utilities */
+  .space-responsive {
+    gap: clamp(0.5rem, 2vw, 1rem);
+  }
+  
+  .padding-responsive {
+    padding: clamp(0.75rem, 3vw, 1.5rem);
+  }
+  
+  .margin-responsive {
+    margin: clamp(0.5rem, 2vw, 1rem);
+  }
+  
+  /* Touch-optimized components */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Container width utilities */
+  .container-responsive {
+    width: 100%;
+    max-width: min(100% - 2rem, 1200px);
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  /* Grid responsive patterns */
+  .grid-responsive-1-2 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(0.75rem, 2vw, 1.5rem);
+  }
+  
+  @media (min-width: 641px) {
+    .grid-responsive-1-2 {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  
+  .grid-responsive-1-3 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(0.75rem, 2vw, 1.5rem);
+  }
+  
+  @media (min-width: 641px) {
+    .grid-responsive-1-3 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (min-width: 1025px) {
+    .grid-responsive-1-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+}
+
+@layer base {
+  /* Dark theme - 16-bit terminal aesthetic */
+  :root[data-theme="dark"] {
+    --background: 220 41% 7%; /* #0d1117 */
+    --foreground: 210 17% 82%; /* #e5e7eb */
+    --card: 217 33% 15%; /* #111827 */
+    --card-foreground: 210 17% 82%; /* #e5e7eb */
+    --popover: 217 33% 15%; /* #111827 */
+    --popover-foreground: 210 17% 82%; /* #e5e7eb */
+    --primary: 191 100% 50%; /* #00d4ff */
+    --primary-foreground: 220 41% 7%; /* #0d1117 */
+    --secondary: 264 85% 62%; /* #7c3aed */
+    --secondary-foreground: 210 17% 82%; /* #e5e7eb */
+    --muted: 217 19% 27%; /* #1f2937 */
+    --muted-foreground: 210 13% 50%; /* #9ca3af */
+    --accent: 264 85% 62%; /* #7c3aed */
+    --accent-foreground: 210 17% 82%; /* #e5e7eb */
+    --destructive: 0 72% 61%; /* #ef4444 */
+    --destructive-foreground: 210 17% 82%; /* #e5e7eb */
+    --border: 217 19% 27%; /* #1f2937 */
+    --input: 217 19% 27%; /* #1f2937 */
+    --ring: 191 100% 50%; /* #00d4ff */
+    --chart-1: 191 100% 50%;
+    --chart-2: 264 85% 62%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 0 72% 61%;
+    --radius: 0;
+  }
+  
+  /* Miami Vice theme */
+  :root[data-theme="miami"] {
+    --background: 256 62% 13%; /* #1a0b2e */
+    --foreground: 23 100% 73%; /* #f97316 */
+    --card: 300 68% 18%; /* #2a1810 */
+    --card-foreground: 23 100% 73%; /* #f97316 */
+    --popover: 300 68% 18%; /* #2a1810 */
+    --popover-foreground: 23 100% 73%; /* #f97316 */
+    --primary: 23 100% 73%; /* #f97316 */
+    --primary-foreground: 256 62% 13%; /* #1a0b2e */
+    --secondary: 328 73% 59%; /* #ec4899 */
+    --secondary-foreground: 256 62% 13%; /* #1a0b2e */
+    --muted: 256 100% 10%; /* #1a0033 */
+    --muted-foreground: 328 73% 59%; /* #ec4899 */
+    --accent: 328 73% 59%; /* #ec4899 */
+    --accent-foreground: 256 62% 13%; /* #1a0b2e */
+    --destructive: 0 72% 61%; /* #ef4444 */
+    --destructive-foreground: 23 100% 73%; /* #f97316 */
+    --border: 23 100% 73%; /* #f97316 */
+    --input: 300 68% 18%; /* #2a1810 */
+    --ring: 23 100% 73%; /* #f97316 */
+    --chart-1: 23 100% 73%;
+    --chart-2: 328 73% 59%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 0 72% 61%;
+    --radius: 0;
+  }
+  
+  /* TRON theme */
+  :root[data-theme="tron"] {
+    --background: 0 0% 0%; /* #000000 */
+    --foreground: 180 100% 50%; /* #00ffff */
+    --card: 0 0% 4%; /* #0a0a0a */
+    --card-foreground: 180 100% 50%; /* #00ffff */
+    --popover: 0 0% 4%; /* #0a0a0a */
+    --popover-foreground: 180 100% 50%; /* #00ffff */
+    --primary: 180 100% 50%; /* #00ffff */
+    --primary-foreground: 0 0% 0%; /* #000000 */
+    --secondary: 165 59% 62%; /* #1de9b6 */
+    --secondary-foreground: 0 0% 0%; /* #000000 */
+    --muted: 180 100% 7%; /* #001111 */
+    --muted-foreground: 189 100% 76%; /* #4dd0e1 */
+    --accent: 165 59% 62%; /* #1de9b6 */
+    --accent-foreground: 0 0% 0%; /* #000000 */
+    --destructive: 4 90% 58%; /* #f44336 */
+    --destructive-foreground: 180 100% 50%; /* #00ffff */
+    --border: 180 100% 50%; /* #00ffff */
+    --input: 180 100% 7%; /* #001111 */
+    --ring: 180 100% 50%; /* #00ffff */
+    --chart-1: 180 100% 50%;
+    --chart-2: 165 59% 62%;
+    --chart-3: 122 39% 49%;
+    --chart-4: 36 100% 50%;
+    --chart-5: 4 90% 58%;
+    --radius: 0;
+  }
+  
+  /* Default fallback (dark theme) */
+  :root {
+    --background: 220 41% 7%;
+    --foreground: 210 17% 82%;
+    --card: 217 33% 15%;
+    --card-foreground: 210 17% 82%;
+    --popover: 217 33% 15%;
+    --popover-foreground: 210 17% 82%;
+    --primary: 191 100% 50%;
+    --primary-foreground: 220 41% 7%;
+    --secondary: 264 85% 62%;
+    --secondary-foreground: 210 17% 82%;
+    --muted: 217 19% 27%;
+    --muted-foreground: 210 13% 50%;
+    --accent: 264 85% 62%;
+    --accent-foreground: 210 17% 82%;
+    --destructive: 0 72% 61%;
+    --destructive-foreground: 210 17% 82%;
+    --border: 217 19% 27%;
+    --input: 217 19% 27%;
+    --ring: 191 100% 50%;
+    --chart-1: 191 100% 50%;
+    --chart-2: 264 85% 62%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 0 72% 61%;
+    --radius: 0;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* 16-bit themed shadcn/ui component overrides */
+@layer components {
+  /* Pixel-perfect borders for all shadcn components */
+  .border, [class*="border-"] {
+    border-style: solid !important;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+  
+  /* 16-bit button styling */
+  [data-theme="dark"] button[class*="bg-primary"],
+  [data-theme="dark"] .bg-primary {
+    box-shadow: 0 0 10px hsl(var(--primary) / 0.5), 
+                inset 0 0 5px hsl(var(--primary) / 0.2);
+    text-shadow: 0 0 5px currentColor;
+  }
+  
+  [data-theme="miami"] button[class*="bg-primary"],
+  [data-theme="miami"] .bg-primary {
+    box-shadow: 0 0 15px hsl(var(--primary) / 0.6), 
+                inset 0 0 8px hsl(var(--primary) / 0.3);
+    text-shadow: 0 0 8px currentColor;
+  }
+  
+  [data-theme="tron"] button[class*="bg-primary"],
+  [data-theme="tron"] .bg-primary {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.8), 
+                inset 0 0 10px hsl(var(--primary) / 0.4);
+    text-shadow: 0 0 10px currentColor;
+  }
+  
+  /* Card glow effects */
+  [data-theme="dark"] [class*="border-"] {
+    box-shadow: 0 0 5px hsl(var(--primary) / 0.3);
+  }
+  
+  [data-theme="miami"] [class*="border-"] {
+    box-shadow: 0 0 8px hsl(var(--primary) / 0.5);
+  }
+  
+  [data-theme="tron"] [class*="border-"] {
+    box-shadow: 0 0 10px hsl(var(--primary) / 0.7),
+                inset 0 0 5px hsl(var(--primary) / 0.2);
+  }
+  
+  /* Monospace font for all text */
+  * {
+    font-family: 'Courier New', Monaco, 'Lucida Console', monospace !important;
+  }
+  
+  /* Remove rounded corners for pixel aesthetic */
+  * {
+    border-radius: 0 !important;
+  }
+}

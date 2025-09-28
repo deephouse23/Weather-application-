@@ -1,0 +1,261 @@
+name: Automated Release
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Type of release'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      pre_release:
+        description: 'Create as pre-release'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
+
+jobs:
+  check-changes:
+    name: Check for Release-worthy Changes
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+      new_version: ${{ steps.version.outputs.new_version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Check for significant changes
+        id: check
+        run: |
+          # Get the last release tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Last tag: $LAST_TAG"
+
+          # Check for significant changes since last release
+          CHANGES=$(git log $LAST_TAG..HEAD --oneline --grep="feat:" --grep="fix:" --grep="BREAKING CHANGE:" --grep="!:" | wc -l)
+          echo "Significant changes: $CHANGES"
+
+          # Manual trigger always releases
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            echo "Manual release triggered"
+          elif [ $CHANGES -gt 0 ]; then
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            echo "Found $CHANGES significant changes"
+          else
+            echo "should_release=false" >> $GITHUB_OUTPUT
+            echo "No significant changes found"
+          fi
+
+      - name: Calculate next version
+        id: version
+        if: steps.check.outputs.should_release == 'true'
+        run: |
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+
+          # Determine release type
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            RELEASE_TYPE="${{ github.event.inputs.release_type }}"
+          else
+            # Auto-determine from commit messages
+            LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+            BREAKING_CHANGES=$(git log $LAST_TAG..HEAD --grep="BREAKING CHANGE:" --grep="!:" | wc -l)
+            FEATURES=$(git log $LAST_TAG..HEAD --grep="feat:" | wc -l)
+
+            if [ $BREAKING_CHANGES -gt 0 ]; then
+              RELEASE_TYPE="major"
+            elif [ $FEATURES -gt 0 ]; then
+              RELEASE_TYPE="minor"
+            else
+              RELEASE_TYPE="patch"
+            fi
+          fi
+
+          echo "Release type: $RELEASE_TYPE"
+
+          # Calculate new version
+          npm install -g semver
+          NEW_VERSION=$(semver -i $RELEASE_TYPE $CURRENT_VERSION)
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version will be: $NEW_VERSION"
+
+  tests:
+    name: Run Tests Before Release
+    runs-on: ubuntu-latest
+    needs: check-changes
+    if: needs.check-changes.outputs.should_release == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm run test
+
+      - name: Build application
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Run E2E tests
+        run: |
+          # Create minimal env for testing
+          echo "NEXT_PUBLIC_OPENWEATHER_API_KEY=test-key" > .env.local
+          echo "NEXT_PUBLIC_SUPABASE_URL=https://test.supabase.co" >> .env.local
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=test-key" >> .env.local
+
+          npx playwright install --with-deps
+          npx playwright test
+        env:
+          CI: true
+
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [check-changes, tests]
+    if: needs.check-changes.outputs.should_release == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Update version in package.json
+        run: |
+          NEW_VERSION="${{ needs.check-changes.outputs.new_version }}"
+          npm version $NEW_VERSION --no-git-tag-version
+          echo "Updated package.json to version $NEW_VERSION"
+
+      - name: Update version in documentation
+        run: |
+          NEW_VERSION="${{ needs.check-changes.outputs.new_version }}"
+
+          # Update README badge
+          sed -i "s/Version-v[0-9]\+\.[0-9]\+\.[0-9]\+/Version-v$NEW_VERSION/g" README.md
+
+          # Update LICENSE
+          sed -i "s/v[0-9]\+\.[0-9]\+\.[0-9]\+/v$NEW_VERSION/g" LICENSE
+
+          echo "Updated documentation to version $NEW_VERSION"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get the last release tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+          if [ -z "$LAST_TAG" ]; then
+            echo "## What's New" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            echo "This is the first release of 16-Bit Weather!" >> CHANGELOG.md
+          else
+            echo "## What's New" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+
+            # Features
+            FEATURES=$(git log $LAST_TAG..HEAD --pretty=format:"- %s" --grep="feat:")
+            if [ ! -z "$FEATURES" ]; then
+              echo "### ✨ New Features" >> CHANGELOG.md
+              echo "$FEATURES" >> CHANGELOG.md
+              echo "" >> CHANGELOG.md
+            fi
+
+            # Bug fixes
+            FIXES=$(git log $LAST_TAG..HEAD --pretty=format:"- %s" --grep="fix:")
+            if [ ! -z "$FIXES" ]; then
+              echo "### 🐛 Bug Fixes" >> CHANGELOG.md
+              echo "$FIXES" >> CHANGELOG.md
+              echo "" >> CHANGELOG.md
+            fi
+
+            # Other changes
+            OTHER=$(git log $LAST_TAG..HEAD --pretty=format:"- %s" --grep="chore:" --grep="docs:" --grep="style:" --grep="refactor:")
+            if [ ! -z "$OTHER" ]; then
+              echo "### 🔧 Other Changes" >> CHANGELOG.md
+              echo "$OTHER" >> CHANGELOG.md
+              echo "" >> CHANGELOG.md
+            fi
+          fi
+
+          echo "### 📋 Full Changelog" >> CHANGELOG.md
+          echo "**Full Changelog**: https://github.com/deephouse23/Weather-application-/compare/$LAST_TAG...v${{ needs.check-changes.outputs.new_version }}" >> CHANGELOG.md
+
+      - name: Commit version updates
+        run: |
+          NEW_VERSION="${{ needs.check-changes.outputs.new_version }}"
+          git add package.json package-lock.json README.md LICENSE
+          git commit -m "chore: bump version to v$NEW_VERSION"
+          git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
+
+      - name: Push changes
+        run: |
+          git push origin main
+          git push origin --tags
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ needs.check-changes.outputs.new_version }}
+          release_name: Release v${{ needs.check-changes.outputs.new_version }}
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: ${{ github.event.inputs.pre_release == 'true' }}
+
+      - name: Notify success
+        run: |
+          echo "🎉 Successfully created release v${{ needs.check-changes.outputs.new_version }}"
+          echo "📦 Release URL: https://github.com/deephouse23/Weather-application-/releases/tag/v${{ needs.check-changes.outputs.new_version }}"

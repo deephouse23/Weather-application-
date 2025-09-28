@@ -1,0 +1,184 @@
+name: 🌤️ Weather Data Issue
+description: Report issues with weather data accuracy, API problems, or location-specific bugs
+title: "[WEATHER] "
+labels: ["weather-data", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a weather data issue! This helps us maintain accurate and reliable weather information.
+
+  - type: checkboxes
+    id: preliminary-checks
+    attributes:
+      label: Pre-submission Checklist
+      description: Please check these items before submitting.
+      options:
+        - label: I checked if this is a widespread issue or location-specific
+          required: true
+        - label: I verified my internet connection is stable
+          required: true
+        - label: I tried refreshing the page or searching for the location again
+          required: true
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Type of Weather Data Issue
+      description: What kind of weather data problem are you experiencing?
+      options:
+        - Location not found
+        - Incorrect temperature data
+        - Wrong weather conditions
+        - Missing forecast data
+        - Incorrect UV index
+        - Wrong air quality data
+        - Incorrect pollen information
+        - Sunrise/sunset times wrong
+        - Wind data issues
+        - API timeout or errors
+        - Other data accuracy issue
+    validations:
+      required: true
+
+  - type: input
+    id: location-search
+    attributes:
+      label: Location Searched
+      description: Exact text you entered in the search box
+      placeholder: e.g., "New York, NY" or "90210" or "40.7128,-74.0060"
+    validations:
+      required: true
+
+  - type: input
+    id: expected-location
+    attributes:
+      label: Expected Location
+      description: What location should this search return?
+      placeholder: e.g., "New York City, New York, United States"
+    validations:
+      required: true
+
+  - type: input
+    id: returned-location
+    attributes:
+      label: Actual Location Returned
+      description: What location was actually found/displayed?
+      placeholder: e.g., "New York Mills, Minnesota, United States" or "Location not found"
+    validations:
+      required: false
+
+  - type: textarea
+    id: weather-data-details
+    attributes:
+      label: Weather Data Details
+      description: Specific details about the incorrect weather data
+      placeholder: |
+        Please provide details such as:
+        - What was shown: Temperature, conditions, etc.
+        - What you expected: Compare with other weather sources
+        - Time of day when checked
+        - Date when this occurred
+    validations:
+      required: true
+
+  - type: input
+    id: comparison-source
+    attributes:
+      label: Comparison Source
+      description: What other weather source did you compare this to? (Optional)
+      placeholder: e.g., Weather.com, local news, Weather Underground, etc.
+    validations:
+      required: false
+
+  - type: input
+    id: timestamp
+    attributes:
+      label: When Did This Occur?
+      description: Date and approximate time when you noticed this issue
+      placeholder: e.g., "December 15, 2024 around 3:00 PM EST"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: data-category
+    attributes:
+      label: Affected Data Category
+      description: Which weather data categories seem incorrect?
+      multiple: true
+      options:
+        - Current Temperature
+        - "Feels Like" Temperature
+        - Weather Conditions/Description
+        - Humidity
+        - Wind Speed/Direction
+        - Atmospheric Pressure
+        - Visibility
+        - UV Index
+        - Air Quality Index (AQI)
+        - Pollen Count
+        - 5-Day Forecast
+        - Sunrise/Sunset Times
+        - Moon Phase
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-messages
+    attributes:
+      label: Error Messages
+      description: Any error messages displayed by the application
+      placeholder: Copy and paste any error messages you see...
+      render: text
+    validations:
+      required: false
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: How Often Does This Occur?
+      description: Is this a one-time issue or recurring problem?
+      options:
+        - First time I've noticed this
+        - Happens occasionally
+        - Happens frequently for this location
+        - Always happens for this location
+        - Happens for multiple locations
+    validations:
+      required: true
+
+  - type: textarea
+    id: network-details
+    attributes:
+      label: Network/Location Details
+      description: Additional context that might help diagnose the issue
+      placeholder: |
+        - Your general geographic region (helps identify regional API issues)
+        - Internet service provider (if relevant)
+        - Any VPN or proxy usage
+        - Time zone you're in
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Screenshots showing the incorrect data or error messages
+      placeholder: Drag and drop screenshots here...
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other information that might help us fix this weather data issue
+      placeholder: |
+        - Have you noticed patterns in when this occurs?
+        - Does this affect other weather features?
+        - Any other relevant details...
+    validations:
+      required: false
