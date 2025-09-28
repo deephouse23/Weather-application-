@@ -10,7 +10,8 @@ const customJestConfig = {
     '\\.(css|scss|sass)$': 'identity-obj-proxy',
     '\\.(png|jpg|jpeg|gif|webp|svg)$': '<rootDir>/test/__mocks__/fileMock.js'
   },
-  testMatch: ['**/?(*.)+(test|spec).[tj]s?(x)']
+  testMatch: ['**/?(*.)+(test|spec).[tj]s?(x)'],
+  testPathIgnorePatterns: ['<rootDir>/tests/', '<rootDir>/node_modules/']
 };
 
 export default createJestConfig(customJestConfig);
