@@ -1,0 +1,330 @@
+/* Retro Theme Special Effects and Animations */
+
+/* Synthwave 84 Special Effects */
+.theme-synthwave84 {
+  --neon-text-shadow:
+    0 0 10px var(--primary),
+    0 0 20px var(--primary),
+    0 0 30px var(--primary);
+}
+
+.theme-synthwave84 .temperature {
+  text-shadow: var(--neon-text-shadow);
+  animation: neon-flicker 2s infinite alternate;
+}
+
+.theme-synthwave84 .weather-card {
+  box-shadow:
+    0 0 20px rgba(255, 126, 219, 0.3),
+    inset 0 0 20px rgba(255, 126, 219, 0.1);
+}
+
+.theme-synthwave84::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 126, 219, 0.1) 2px,
+      rgba(255, 126, 219, 0.1) 4px
+    );
+  pointer-events: none;
+  opacity: 0.5;
+  z-index: 1;
+}
+
+@keyframes neon-flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+/* Terminal Green Scanlines */
+.theme-terminal::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 255, 65, 0.03),
+      rgba(0, 255, 65, 0.03) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+  pointer-events: none;
+  animation: scanlines 8s linear infinite;
+  z-index: 1;
+}
+
+.theme-terminal .weather-text {
+  text-shadow: var(--glow);
+  font-family: 'Fira Code', 'Courier New', monospace;
+}
+
+.theme-terminal .weather-card {
+  border: 2px solid var(--primary);
+  background: var(--bg-elev);
+  box-shadow:
+    0 0 10px rgba(0, 255, 65, 0.3),
+    inset 0 0 10px rgba(0, 255, 65, 0.1);
+}
+
+@keyframes scanlines {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(10px); }
+}
+
+/* Cyberpunk Glitch Effect */
+.theme-cyberpunk .weather-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-cyberpunk .weather-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 98px,
+      rgba(252, 238, 10, 0.03) 100px
+    );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.theme-cyberpunk .temperature {
+  text-shadow: var(--glow);
+  animation: cyber-glitch 3s infinite;
+}
+
+.theme-cyberpunk .weather-condition {
+  position: relative;
+}
+
+.theme-cyberpunk .weather-condition::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 2px;
+  color: var(--accent);
+  overflow: hidden;
+  animation: glitch-1 0.6s infinite linear alternate-reverse;
+  z-index: -1;
+}
+
+@keyframes cyber-glitch {
+  0%, 100% {
+    transform: translate(0);
+    filter: hue-rotate(0deg);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+    filter: hue-rotate(90deg);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+    filter: hue-rotate(180deg);
+  }
+  60% {
+    transform: translate(2px, 2px);
+    filter: hue-rotate(270deg);
+  }
+  80% {
+    transform: translate(2px, -2px);
+    filter: hue-rotate(360deg);
+  }
+}
+
+@keyframes glitch-1 {
+  0% { clip: rect(132px, 9999px, 142px, 0); }
+  5% { clip: rect(17px, 9999px, 99px, 0); }
+  10% { clip: rect(40px, 9999px, 100px, 0); }
+  15% { clip: rect(87px, 9999px, 134px, 0); }
+  20% { clip: rect(130px, 9999px, 180px, 0); }
+  25% { clip: rect(20px, 9999px, 80px, 0); }
+  30% { clip: rect(67px, 9999px, 122px, 0); }
+  35% { clip: rect(10px, 9999px, 60px, 0); }
+  40% { clip: rect(105px, 9999px, 160px, 0); }
+  45% { clip: rect(45px, 9999px, 90px, 0); }
+  50% { clip: rect(78px, 9999px, 125px, 0); }
+  55% { clip: rect(12px, 9999px, 70px, 0); }
+  60% { clip: rect(95px, 9999px, 145px, 0); }
+  65% { clip: rect(35px, 9999px, 85px, 0); }
+  70% { clip: rect(115px, 9999px, 165px, 0); }
+  75% { clip: rect(55px, 9999px, 105px, 0); }
+  80% { clip: rect(25px, 9999px, 75px, 0); }
+  85% { clip: rect(85px, 9999px, 135px, 0); }
+  90% { clip: rect(50px, 9999px, 100px, 0); }
+  95% { clip: rect(110px, 9999px, 160px, 0); }
+  100% { clip: rect(70px, 9999px, 120px, 0); }
+}
+
+/* Tokyo Night Smooth Transitions */
+.theme-tokyonight * {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-tokyonight .weather-card {
+  background: linear-gradient(135deg, var(--bg-elev) 0%, rgba(157, 124, 216, 0.1) 100%);
+  border: 1px solid rgba(157, 124, 216, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.theme-tokyonight .temperature {
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Dracula Gothic Borders */
+.theme-dracula .weather-card {
+  border: 2px solid var(--primary);
+  box-shadow:
+    0 4px 20px rgba(189, 147, 249, 0.3),
+    inset 0 2px 4px rgba(189, 147, 249, 0.1);
+  background: linear-gradient(180deg, var(--bg-elev) 0%, rgba(189, 147, 249, 0.05) 100%);
+}
+
+.theme-dracula .weather-card:hover {
+  box-shadow:
+    0 8px 30px rgba(189, 147, 249, 0.4),
+    inset 0 2px 4px rgba(189, 147, 249, 0.2);
+  transform: translateY(-2px);
+}
+
+.theme-dracula .temperature {
+  color: var(--primary);
+  font-weight: bold;
+}
+
+.theme-dracula .weather-condition {
+  color: var(--accent);
+}
+
+/* Temperature Color Coding for All Themes */
+.temperature-hot {
+  color: var(--temp-hot, var(--danger));
+}
+
+.temperature-warm {
+  color: var(--temp-warm, var(--warn));
+}
+
+.temperature-cool {
+  color: var(--temp-cool, var(--primary));
+}
+
+.temperature-cold {
+  color: var(--temp-cold, var(--accent));
+}
+
+/* Weather Condition Animations */
+.weather-rain.theme-synthwave84 {
+  animation: neon-rain 1.5s infinite;
+}
+
+.weather-rain.theme-terminal {
+  position: relative;
+}
+
+.weather-rain.theme-terminal::before {
+  content: '01010101';
+  position: absolute;
+  top: -10px;
+  left: 0;
+  color: var(--primary);
+  opacity: 0.3;
+  animation: matrix-fall 2s infinite;
+}
+
+.weather-storm.theme-cyberpunk {
+  animation: cyber-storm 0.8s infinite;
+}
+
+@keyframes neon-rain {
+  0%, 100% { text-shadow: var(--neon-text-shadow); }
+  50% { text-shadow: var(--neon-text-shadow), 0 0 40px var(--primary); }
+}
+
+@keyframes matrix-fall {
+  0% { transform: translateY(-20px); opacity: 0; }
+  50% { opacity: 0.7; }
+  100% { transform: translateY(20px); opacity: 0; }
+}
+
+@keyframes cyber-storm {
+  0%, 100% { filter: hue-rotate(0deg) brightness(1); }
+  25% { filter: hue-rotate(90deg) brightness(1.2); }
+  50% { filter: hue-rotate(180deg) brightness(0.8); }
+  75% { filter: hue-rotate(270deg) brightness(1.1); }
+}
+
+/* Responsive Design - Reduce effects on mobile for performance */
+@media (max-width: 768px) {
+  .theme-synthwave84 {
+    --neon-text-shadow: 0 0 5px var(--primary);
+  }
+
+  .theme-synthwave84::before {
+    display: none; /* Hide grid on mobile */
+  }
+
+  .theme-terminal::after {
+    animation-duration: 12s; /* Slower scanlines on mobile */
+  }
+
+  .theme-cyberpunk .temperature {
+    animation: none; /* Disable glitch on mobile */
+  }
+
+  .theme-cyberpunk .weather-condition::after {
+    display: none; /* Hide glitch text on mobile */
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .theme-synthwave84,
+  .theme-terminal,
+  .theme-cyberpunk {
+    --neon-text-shadow: none;
+    --glow: none;
+  }
+
+  .theme-synthwave84::before,
+  .theme-terminal::after,
+  .theme-cyberpunk .weather-card::before {
+    display: none;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .theme-synthwave84 .temperature,
+  .theme-terminal::after,
+  .theme-cyberpunk .temperature,
+  .weather-rain,
+  .weather-storm {
+    animation: none;
+  }
+
+  .theme-tokyonight * {
+    transition: none;
+  }
+}

@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Moon, Sun, Zap, Gamepad2, Terminal, Grid3x3, Crown, Lock, Check } from 'lucide-react'
+import { Moon, Sun, Zap, Gamepad2, Terminal, Grid3x3, Crown, Lock, Check, Tv, Computer, Skull } from 'lucide-react'
 import { useTheme } from '@/components/theme-provider'
 import { useAuth } from '@/lib/auth'
 import { useRouter } from 'next/navigation'
@@ -34,7 +34,12 @@ const getThemeIcon = (themeId: ThemeType): React.ComponentType<{ className?: str
     'atari2600': Gamepad2,
     'monochromeGreen': Terminal,
     '8bitClassic': Grid3x3,
-    '16bitSnes': Gamepad2
+    '16bitSnes': Gamepad2,
+    'synthwave84': Tv,
+    'tokyonight': Moon,
+    'dracula': Skull,
+    'cyberpunk': Computer,
+    'terminal': Terminal
   }
   return icons[themeId] || Moon
 }
@@ -82,6 +87,36 @@ const getThemePreviewColors = (themeId: ThemeType) => {
       border: 'border-[#5B5B8B]',
       text: 'text-[#2C2C3E]',
       accent: 'text-[#FFD700]'
+    },
+    'synthwave84': {
+      bg: 'bg-purple-900',
+      border: 'border-pink-400',
+      text: 'text-pink-400',
+      accent: 'text-cyan-400'
+    },
+    'tokyonight': {
+      bg: 'bg-slate-800',
+      border: 'border-purple-400',
+      text: 'text-purple-300',
+      accent: 'text-orange-400'
+    },
+    'dracula': {
+      bg: 'bg-gray-800',
+      border: 'border-purple-400',
+      text: 'text-purple-300',
+      accent: 'text-pink-400'
+    },
+    'cyberpunk': {
+      bg: 'bg-black',
+      border: 'border-yellow-400',
+      text: 'text-yellow-400',
+      accent: 'text-red-400'
+    },
+    'terminal': {
+      bg: 'bg-black',
+      border: 'border-green-400',
+      text: 'text-green-400',
+      accent: 'text-green-300'
     }
   }
   return previews[themeId] || previews.dark

@@ -49,7 +49,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const [preferences, setPreferences] = useState<any>(null)
   const [authLoading, setAuthLoading] = useState(true)
 
-  const availableThemes: Theme[] = ['dark', 'miami', 'tron', 'atari2600', 'monochromeGreen', '8bitClassic', '16bitSnes']
+  const availableThemes: Theme[] = ['dark', 'miami', 'tron', 'atari2600', 'monochromeGreen', '8bitClassic', '16bitSnes', 'synthwave84', 'tokyonight', 'dracula', 'cyberpunk', 'terminal']
   const isAuthenticated = !!user
 
   // Set theme and persist to localStorage

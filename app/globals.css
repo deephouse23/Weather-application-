@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&family=Fira+Code:wght@300;400;500;600;700&display=swap');
+@import './themes.css';
 
 @tailwind base;
 @tailwind components;
@@ -104,6 +105,101 @@
   --warn: #FF9800;        /* Orange warning */
   --danger: #F44336;      /* Red error */
   --font-family: "Courier New", "VT323", monospace;
+}
+
+/* New Retro Themes */
+
+/* Synthwave '84 Theme */
+:root[data-theme="synthwave84"] {
+  --bg: #1a0033;             /* Deep purple-black background */
+  --bg-elev: #2D1B69;        /* Electric purple panels */
+  --border: #ff7edb;         /* Hot pink borders */
+  --text: #ffffff;           /* White text */
+  --text-muted: #b794f6;     /* Muted purple text */
+  --primary: #ff7edb;        /* Hot pink primary */
+  --accent: #ffaa00;         /* Neon orange accent */
+  --ok: #00ff88;             /* Neon green success */
+  --warn: #ffaa00;           /* Neon orange warning */
+  --danger: #ff0080;         /* Hot magenta error */
+  --temp-hot: #ff0080;       /* Magenta for hot temps */
+  --temp-warm: #ff7edb;      /* Pink for warm */
+  --temp-cool: #00ffff;      /* Cyan for cool */
+  --temp-cold: #0080ff;      /* Blue for cold */
+  --glow: 0 0 20px #ff7edb;  /* Pink glow effect */
+}
+
+/* Tokyo Night Theme */
+:root[data-theme="tokyonight"] {
+  --bg: #1a1b26;             /* Deep blue-black background */
+  --bg-elev: #24283b;        /* Slightly lighter surface */
+  --border: #565f89;         /* Muted blue-gray borders */
+  --text: #c0caf5;           /* Light purple-white text */
+  --text-muted: #565f89;     /* Muted blue-gray text */
+  --primary: #9d7cd8;        /* Soft purple primary */
+  --accent: #ff9e64;         /* Warm orange accent */
+  --ok: #9ece6a;             /* Green success */
+  --warn: #e0af68;           /* Yellow warning */
+  --danger: #f7768e;         /* Red-pink error */
+  --temp-hot: #f7768e;       /* Red-pink for hot */
+  --temp-warm: #ff9e64;      /* Orange for warm */
+  --temp-cool: #7dcfff;      /* Cyan for cool */
+  --temp-cold: #9d7cd8;      /* Purple for cold */
+}
+
+/* Dracula Theme */
+:root[data-theme="dracula"] {
+  --bg: #282a36;             /* Dark gray-purple background */
+  --bg-elev: #44475a;        /* Lighter gray panels */
+  --border: #6272a4;         /* Comment blue borders */
+  --text: #f8f8f2;           /* Foreground white text */
+  --text-muted: #6272a4;     /* Comment blue text */
+  --primary: #bd93f9;        /* Purple primary */
+  --accent: #ffb86c;         /* Orange accent */
+  --ok: #50fa7b;             /* Green success */
+  --warn: #f1fa8c;           /* Yellow warning */
+  --danger: #ff5555;         /* Red error */
+  --temp-hot: #ff5555;       /* Red for hot */
+  --temp-warm: #ffb86c;      /* Orange for warm */
+  --temp-cool: #8be9fd;      /* Cyan for cool */
+  --temp-cold: #bd93f9;      /* Purple for cold */
+}
+
+/* Cyberpunk 2077 Theme */
+:root[data-theme="cyberpunk"] {
+  --bg: #0d0d0d;             /* Near black background */
+  --bg-elev: #1a1a1a;        /* Dark gray panels */
+  --border: #fcee0a;         /* Yellow borders */
+  --text: #ffffff;           /* White text */
+  --text-muted: #808080;     /* Gray text */
+  --primary: #fcee0a;        /* Yellow primary */
+  --accent: #ff003c;         /* Magenta-red accent */
+  --ok: #00ff00;             /* Bright green success */
+  --warn: #fcee0a;           /* Yellow warning */
+  --danger: #ff003c;         /* Red error */
+  --temp-hot: #ff003c;       /* Red for hot */
+  --temp-warm: #fcee0a;      /* Yellow for warm */
+  --temp-cool: #00ffff;      /* Cyan for cool */
+  --temp-cold: #0080ff;      /* Blue for cold */
+  --glow: 0 0 15px #fcee0a;  /* Yellow glow */
+}
+
+/* Terminal Green Theme */
+:root[data-theme="terminal"] {
+  --bg: #000000;             /* Pure black background */
+  --bg-elev: #0d0d0d;        /* Near black panels */
+  --border: #008f11;         /* Dark green borders */
+  --text: #00ff41;           /* Bright green text */
+  --text-muted: #008f11;     /* Dark green text */
+  --primary: #00ff41;        /* Bright green primary */
+  --accent: #ffb000;         /* Amber accent */
+  --ok: #00ff41;             /* Bright green success */
+  --warn: #ffb000;           /* Amber warning */
+  --danger: #ff0000;         /* Red error */
+  --temp-hot: #ffb000;       /* Amber for hot */
+  --temp-warm: #00ff41;      /* Bright green for warm */
+  --temp-cool: #00cc33;      /* Medium green for cool */
+  --temp-cold: #008f11;      /* Dark green for cold */
+  --glow: 0 0 10px #00ff41;  /* Green glow */
 }
 
 /* Default fallback (same as dark) */

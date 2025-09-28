@@ -14,7 +14,7 @@
  * Report issues: https://github.com/deephouse23/Weather-application-/issues
  */
 
-import { Moon, Sun, Zap, Check } from 'lucide-react'
+import { Moon, Sun, Zap, Check, Tv, Computer, Skull, Gamepad2, Terminal } from 'lucide-react'
 import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
 
@@ -59,6 +59,56 @@ const themeOptions: ThemeOption[] = [
     previewBorder: 'border-cyan-400',
     previewText: 'text-cyan-400',
     previewAccent: 'text-cyan-400'
+  },
+  {
+    id: 'synthwave84',
+    name: "Synthwave '84",
+    description: 'Neon 80s aesthetic with hot pink',
+    icon: Tv,
+    previewBg: 'bg-purple-900',
+    previewBorder: 'border-pink-400',
+    previewText: 'text-pink-400',
+    previewAccent: 'text-cyan-400'
+  },
+  {
+    id: 'tokyonight',
+    name: 'Tokyo Night',
+    description: 'Modern Japanese city nights',
+    icon: Moon,
+    previewBg: 'bg-slate-800',
+    previewBorder: 'border-purple-400',
+    previewText: 'text-purple-300',
+    previewAccent: 'text-orange-400'
+  },
+  {
+    id: 'dracula',
+    name: 'Dracula',
+    description: 'Gothic vampire vibes',
+    icon: Skull,
+    previewBg: 'bg-gray-800',
+    previewBorder: 'border-purple-400',
+    previewText: 'text-purple-300',
+    previewAccent: 'text-pink-400'
+  },
+  {
+    id: 'cyberpunk',
+    name: 'Cyberpunk 2077',
+    description: 'Futuristic dystopian',
+    icon: Gamepad2,
+    previewBg: 'bg-black',
+    previewBorder: 'border-yellow-400',
+    previewText: 'text-yellow-400',
+    previewAccent: 'text-red-400'
+  },
+  {
+    id: 'terminal',
+    name: 'Terminal Green',
+    description: 'Classic Matrix style',
+    icon: Terminal,
+    previewBg: 'bg-black',
+    previewBorder: 'border-green-400',
+    previewText: 'text-green-400',
+    previewAccent: 'text-green-300'
   }
 ]
 
@@ -72,7 +122,7 @@ export default function ThemeSelector() {
         Theme Settings
       </h3>
       
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {themeOptions.map((option) => {
           const isActive = theme === option.id
           const isAvailable = availableThemes.includes(option.id)
