@@ -23,7 +23,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useTheme } from "@/components/theme-provider"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
 import AuthButton from "@/components/auth/auth-button"
-import { ThemeToggle } from "@/components/theme-toggle"
 
 interface NavigationProps {
   weatherLocation?: string;
@@ -238,9 +237,8 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
           })}
         </div>
 
-        {/* Theme Toggle & Auth Button - TOP RIGHT */}
+        {/* Auth Button - TOP RIGHT */}
         <div className="flex items-center space-x-2">
-          <ThemeToggle />
           <AuthButton />
         </div>
       </div>
