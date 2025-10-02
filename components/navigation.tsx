@@ -366,12 +366,9 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
               )
             })}
             
-            {/* Mobile Theme Toggle & Auth */}
+            {/* Mobile Auth */}
             <div className="flex items-center space-x-2 pt-4 border-t-2 border-current mt-4">
-              <ThemeToggle />
-              <div className="flex-1">
-                <AuthButton />
-              </div>
+              <AuthButton />
             </div>
           </div>
         </div>
