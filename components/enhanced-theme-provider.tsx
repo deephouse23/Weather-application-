@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/auth'
 import { ThemeType, THEME_LIST, FREE_THEMES, PREMIUM_THEMES, getThemeDefinition } from '@/lib/theme-config'
 import { ThemeService } from '@/lib/services/theme-service'
 import { supabase } from '@/lib/supabase/client'
+import { getThemeObserver } from '@/lib/utils/theme-observer'
 
 interface ThemeContextType {
   theme: ThemeType
@@ -58,6 +59,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     
     // Apply to document
     ThemeService.applyThemeToDocument(validTheme)
+    
+    // Initialize/Update ThemeObserver for dynamic content
+    const observer = getThemeObserver(validTheme)
+    observer.initialize(validTheme)
     
     // Save to localStorage
     ThemeService.saveThemeToLocalStorage(validTheme)
@@ -116,11 +121,19 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         setThemeState(validTheme)
         ThemeService.applyThemeToDocument(validTheme)
         
+        // Initialize ThemeObserver for dynamic content
+        const observer = getThemeObserver(validTheme)
+        observer.initialize(validTheme)
+        
       } catch (error) {
         console.error('Error loading theme:', error)
         // Use default theme on error
         setThemeState('dark')
         ThemeService.applyThemeToDocument('dark')
+        
+        // Initialize observer with default theme
+        const observer = getThemeObserver('dark')
+        observer.initialize('dark')
       } finally {
         setIsLoading(false)
       }

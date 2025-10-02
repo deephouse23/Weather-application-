@@ -1,0 +1,413 @@
+/**
+ * 16-Bit Weather - DRAMATIC Theme System
+ * Each theme is visually distinct with unique backgrounds, effects, and animations
+ */
+
+/* ═══════════════════════════════════════════════════════════
+   SYNTHWAVE '84 Theme - Neon 1980s Miami 
+   ═══════════════════════════════════════════════════════════ */
+
+body.theme-synthwave84 {
+  background: linear-gradient(180deg, #241b2f 0%, #1a0f2e 100%) fixed !important;
+  color: #ffffff;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Grid background overlay */
+body.theme-synthwave84::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(rgba(0, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Scanline effect */
+body.theme-synthwave84::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.12),
+    rgba(0, 0, 0, 0.12) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 9999;
+  animation: scanlines 8s linear infinite;
+}
+
+@keyframes scanlines {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(10px); }
+}
+
+/* Headings with neon glow */
+.theme-synthwave84 h1,
+.theme-synthwave84 h2,
+.theme-synthwave84 h3 {
+  color: #ff7edb !important;
+  text-shadow: 
+    0 0 10px #ff7edb,
+    0 0 20px #ff7edb,
+    0 0 30px #ff7edb !important;
+  font-weight: bold;
+}
+
+/* Cards and containers */
+.theme-synthwave84 [class*="card"],
+.theme-synthwave84 [class*="Card"],
+.theme-synthwave84 [class*="container"] {
+  background: rgba(45, 27, 105, 0.6) !important;
+  border: 2px solid #ff7edb !important;
+  box-shadow: 
+    0 0 20px rgba(255, 126, 219, 0.5),
+    inset 0 0 20px rgba(0, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px);
+}
+
+/* Alternating cyan border cards */
+.theme-synthwave84 [class*="card"]:nth-child(even),
+.theme-synthwave84 [class*="Card"]:nth-child(even) {
+  border-color: #00ffff !important;
+  box-shadow: 
+    0 0 20px rgba(0, 255, 255, 0.5),
+    inset 0 0 20px rgba(255, 126, 219, 0.1) !important;
+}
+
+/* Temperature values with gradient */
+.theme-synthwave84 [class*="temperature"],
+.theme-synthwave84 [data-temperature] {
+  background: linear-gradient(135deg, #ff7edb 0%, #00ffff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: bold;
+  filter: drop-shadow(0 0 20px #ff7edb);
+}
+
+/* All text glows slightly */
+.theme-synthwave84 p,
+.theme-synthwave84 span,
+.theme-synthwave84 div {
+  text-shadow: 0 0 5px rgba(255, 126, 219, 0.3);
+}
+
+/* Buttons */
+.theme-synthwave84 button,
+.theme-synthwave84 a[role="button"] {
+  background: rgba(45, 27, 105, 0.8) !important;
+  border: 2px solid #ff7edb !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 15px rgba(255, 126, 219, 0.5);
+  transition: all 0.3s ease;
+}
+
+.theme-synthwave84 button:hover,
+.theme-synthwave84 a[role="button"]:hover {
+  box-shadow: 0 0 25px #ff7edb, 0 0 50px #ff7edb;
+  transform: translateY(-2px);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   TOKYO NIGHT Theme - Modern Japanese Cityscape
+   ═══════════════════════════════════════════════════════════ */
+
+body.theme-tokyoNight {
+  background: linear-gradient(180deg, #1a1b26 0%, #16161e 100%) fixed !important;
+  color: #c0caf5;
+  position: relative;
+}
+
+/* Subtle bokeh light effects */
+body.theme-tokyoNight::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(157, 124, 216, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(125, 207, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255, 158, 100, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+  animation: bokehFloat 20s ease-in-out infinite;
+}
+
+@keyframes bokehFloat {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(30px, -30px); }
+}
+
+.theme-tokyoNight h1,
+.theme-tokyoNight h2,
+.theme-tokyoNight h3 {
+  color: #7dcfff !important;
+  text-shadow: 0 0 10px rgba(125, 207, 255, 0.5);
+}
+
+.theme-tokyoNight [class*="card"],
+.theme-tokyoNight [class*="Card"] {
+  background: rgba(36, 40, 59, 0.9) !important;
+  border: 2px solid #9d7cd8 !important;
+  box-shadow: 0 0 15px rgba(125, 207, 255, 0.3);
+  backdrop-filter: blur(8px);
+}
+
+.theme-tokyoNight [class*="temperature"],
+.theme-tokyoNight [data-temperature] {
+  color: #ff9e64;
+  text-shadow: 0 0 10px rgba(255, 158, 100, 0.6);
+  font-weight: bold;
+}
+
+.theme-tokyoNight button {
+  background: rgba(36, 40, 59, 0.8) !important;
+  border: 2px solid #9d7cd8 !important;
+  color: #c0caf5 !important;
+  box-shadow: 0 0 10px rgba(157, 124, 216, 0.4);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   DRACULA Theme - Gothic Purple
+   ═══════════════════════════════════════════════════════════ */
+
+body.theme-dracula {
+  background: linear-gradient(180deg, #282a36 0%, #1e1f29 100%) fixed !important;
+  color: #f8f8f2;
+  position: relative;
+}
+
+.theme-dracula h1,
+.theme-dracula h2,
+.theme-dracula h3 {
+  color: #ff79c6 !important;
+  text-shadow: 0 0 10px rgba(255, 121, 198, 0.6);
+}
+
+.theme-dracula [class*="card"],
+.theme-dracula [class*="Card"] {
+  background: rgba(68, 71, 90, 0.8) !important;
+  border: 2px solid #ff79c6 !important;
+  box-shadow: 
+    0 0 20px rgba(255, 121, 198, 0.4),
+    inset 0 0 15px rgba(189, 147, 249, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.theme-dracula [class*="temperature"],
+.theme-dracula [data-temperature] {
+  color: #50fa7b;
+  text-shadow: 0 0 10px rgba(80, 250, 123, 0.6);
+  font-weight: bold;
+}
+
+.theme-dracula button {
+  background: rgba(68, 71, 90, 0.9) !important;
+  border: 2px solid #bd93f9 !important;
+  color: #f8f8f2 !important;
+  box-shadow: 0 0 15px rgba(189, 147, 249, 0.5);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   CYBERPUNK 2077 Theme - Dystopian Future
+   ═══════════════════════════════════════════════════════════ */
+
+body.theme-cyberpunk {
+  background: radial-gradient(ellipse at bottom, #0d0d0d 0%, #000000 100%) fixed !important;
+  color: #fcee0a;
+  position: relative;
+}
+
+/* Glitch animation */
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+.theme-cyberpunk h1,
+.theme-cyberpunk h2,
+.theme-cyberpunk h3 {
+  color: #fcee0a !important;
+  text-shadow: 
+    0 0 10px #fcee0a,
+    0 0 20px #fcee0a,
+    2px 2px 0 #ff003c;
+  animation: glitch 5s infinite;
+}
+
+.theme-cyberpunk [class*="card"],
+.theme-cyberpunk [class*="Card"] {
+  background: rgba(20, 20, 20, 0.9) !important;
+  border: 2px solid #00ffff !important;
+  box-shadow: 
+    0 0 25px rgba(252, 238, 10, 0.4),
+    0 0 15px rgba(0, 255, 255, 0.3);
+  backdrop-filter: blur(5px);
+  position: relative;
+}
+
+/* Glitch border effect */
+.theme-cyberpunk [class*="card"]::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #fcee0a, #ff003c, #00ffff);
+  z-index: -1;
+  opacity: 0;
+  animation: borderGlitch 3s infinite;
+}
+
+@keyframes borderGlitch {
+  0%, 90% { opacity: 0; }
+  91%, 93% { opacity: 0.5; }
+  92%, 100% { opacity: 0; }
+}
+
+.theme-cyberpunk [class*="temperature"],
+.theme-cyberpunk [data-temperature] {
+  color: #fcee0a;
+  text-shadow: 
+    0 0 15px #fcee0a,
+    0 0 30px #fcee0a;
+  font-weight: bold;
+}
+
+.theme-cyberpunk button {
+  background: rgba(20, 20, 20, 0.95) !important;
+  border: 2px solid #fcee0a !important;
+  color: #fcee0a !important;
+  box-shadow: 0 0 20px rgba(252, 238, 10, 0.5);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   MATRIX / TERMINAL GREEN Theme - Hacker Aesthetic
+   ═══════════════════════════════════════════════════════════ */
+
+body.theme-matrix {
+  background: linear-gradient(180deg, #000000 0%, #001400 100%) fixed !important;
+  color: #00ff41;
+  position: relative;
+  font-family: 'Courier New', 'VT323', monospace;
+}
+
+/* CRT Scanlines */
+body.theme-matrix::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 9999;
+  animation: crtScan 10s linear infinite;
+}
+
+@keyframes crtScan {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(8px); }
+}
+
+.theme-matrix h1,
+.theme-matrix h2,
+.theme-matrix h3 {
+  color: #00ff41 !important;
+  text-shadow: 
+    0 0 10px #00ff41,
+    0 0 20px #00ff41,
+    0 0 30px #00ff41;
+  font-family: 'Courier New', 'VT323', monospace;
+}
+
+.theme-matrix [class*="card"],
+.theme-matrix [class*="Card"] {
+  background: rgba(0, 20, 0, 0.8) !important;
+  border: 2px solid #008f11 !important;
+  box-shadow: 
+    0 0 20px rgba(0, 255, 65, 0.4),
+    inset 0 0 10px rgba(0, 255, 65, 0.1);
+  backdrop-filter: blur(5px);
+}
+
+.theme-matrix [class*="temperature"],
+.theme-matrix [data-temperature],
+.theme-matrix p,
+.theme-matrix span,
+.theme-matrix div {
+  color: #00ff41 !important;
+  text-shadow: 0 0 10px #00ff41;
+}
+
+.theme-matrix button {
+  background: rgba(0, 20, 0, 0.9) !important;
+  border: 2px solid #00ff41 !important;
+  color: #00ff41 !important;
+  box-shadow: 0 0 15px rgba(0, 255, 65, 0.6);
+  font-family: 'Courier New', 'VT323', monospace;
+}
+
+/* Phosphor glow on all text */
+.theme-matrix * {
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   GLOBAL THEME UTILITIES
+   ═══════════════════════════════════════════════════════════ */
+
+/* Smooth theme transitions */
+body,
+body * {
+  transition: 
+    background 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* Ensure z-index hierarchy */
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Force theme styles on dynamically loaded content */
+[data-theme-target] {
+  transition: all 0.3s ease;
+}
+
