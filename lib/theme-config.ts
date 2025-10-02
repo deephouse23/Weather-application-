@@ -24,6 +24,18 @@ export interface ThemeDefinition {
   };
   font?: string;
   description?: string;
+  // Enhanced theme properties
+  effects?: {
+    backgroundGradient?: string; // CSS gradient
+    cardGlow?: string; // CSS box-shadow glow
+    textGlow?: string; // CSS text-shadow
+    borderGlow?: string; // CSS box-shadow for borders
+    scanlines?: boolean; // Enable scanline overlay
+    gridPattern?: boolean; // Enable grid background
+    matrixRain?: boolean; // Enable Matrix rain effect
+    glitchEffect?: boolean; // Enable glitch animations
+    bokeh?: boolean; // Enable bokeh light effects
+  };
 }
 
 export const THEME_DEFINITIONS: Record<ThemeType, ThemeDefinition> = {
@@ -161,26 +173,37 @@ export const THEME_DEFINITIONS: Record<ThemeType, ThemeDefinition> = {
     displayName: 'Synthwave \'84 🌆',
     isPremium: true,
     colors: {
-      background: '#241b30',
-      backgroundSecondary: '#2d2142',
-      backgroundTertiary: '#3a2a52',
+      background: '#1a0f2e',
+      backgroundSecondary: 'rgba(45, 27, 105, 0.6)',
+      backgroundTertiary: '#2D1B69',
       primary: '#ff7edb',
       text: '#ffffff',
-      textSecondary: '#ffd9f2',
+      textSecondary: '#ff7edb',
       accent: '#00ffff',
       border: '#ff7edb',
-      highlight: '#00ffff',
+      highlight: '#ffaa00',
       comments: '#a19eb5'
     },
     font: '"VT323", monospace',
-    description: 'Neon-soaked 1980s Miami aesthetic - perfect for sunset/sunrise times'
+    description: 'Neon-soaked 1980s Miami aesthetic - perfect for sunset/sunrise times',
+    effects: {
+      backgroundGradient: 'linear-gradient(180deg, #241b2f 0%, #1a0f2e 100%)',
+      cardGlow: '0 0 20px rgba(255, 126, 219, 0.5), inset 0 0 20px rgba(0, 255, 255, 0.1)',
+      textGlow: '0 0 10px #ff7edb, 0 0 20px #ff7edb, 0 0 30px #ff7edb',
+      borderGlow: '0 0 20px #ff7edb, 0 0 40px #ff7edb',
+      scanlines: true,
+      gridPattern: true,
+      matrixRain: false,
+      glitchEffect: false,
+      bokeh: false
+    }
   },
   tokyoNight: {
     name: 'tokyoNight',
     displayName: 'Tokyo Night 🌃',
     isPremium: true,
     colors: {
-      background: '#1a1b26',
+      background: '#16161e',
       backgroundSecondary: '#24283b',
       backgroundTertiary: '#2f3549',
       primary: '#7dcfff',
@@ -188,19 +211,30 @@ export const THEME_DEFINITIONS: Record<ThemeType, ThemeDefinition> = {
       textSecondary: '#a9b1d6',
       accent: '#ff9e64',
       border: '#9d7cd8',
-      highlight: '#ff9e64',
+      highlight: '#f7768e',
       comments: '#565f89'
     },
     font: '"Fira Code", monospace',
-    description: 'Modern Japanese city at night with neon signs - perfect balance of style and readability'
+    description: 'Modern Japanese city at night with neon signs - perfect balance of style and readability',
+    effects: {
+      backgroundGradient: 'linear-gradient(180deg, #1a1b26 0%, #16161e 100%)',
+      cardGlow: '0 0 15px rgba(125, 207, 255, 0.3)',
+      textGlow: '0 0 5px rgba(125, 207, 255, 0.5)',
+      borderGlow: '0 0 10px rgba(157, 124, 216, 0.6)',
+      scanlines: false,
+      gridPattern: false,
+      matrixRain: false,
+      glitchEffect: false,
+      bokeh: true
+    }
   },
   dracula: {
     name: 'dracula',
     displayName: 'Dracula 🦇',
     isPremium: true,
     colors: {
-      background: '#282a36',
-      backgroundSecondary: '#363849',
+      background: '#1e1f29',
+      backgroundSecondary: 'rgba(68, 71, 90, 0.8)',
       backgroundTertiary: '#44475a',
       primary: '#ff79c6',
       text: '#f8f8f2',
@@ -211,7 +245,18 @@ export const THEME_DEFINITIONS: Record<ThemeType, ThemeDefinition> = {
       comments: '#6272a4'
     },
     font: '"Fira Code", monospace',
-    description: 'Gothic vampire castle meets modern development - extremely popular in dev community'
+    description: 'Gothic vampire castle meets modern development - extremely popular in dev community',
+    effects: {
+      backgroundGradient: 'linear-gradient(180deg, #282a36 0%, #1e1f29 100%)',
+      cardGlow: '0 0 20px rgba(255, 121, 198, 0.4), inset 0 0 15px rgba(189, 147, 249, 0.1)',
+      textGlow: '0 0 8px rgba(255, 121, 198, 0.6)',
+      borderGlow: '0 0 15px #ff79c6',
+      scanlines: false,
+      gridPattern: false,
+      matrixRain: false,
+      glitchEffect: false,
+      bokeh: false
+    }
   },
   cyberpunk: {
     name: 'cyberpunk',
@@ -219,18 +264,29 @@ export const THEME_DEFINITIONS: Record<ThemeType, ThemeDefinition> = {
     isPremium: true,
     colors: {
       background: '#0d0d0d',
-      backgroundSecondary: '#1a1a1a',
+      backgroundSecondary: 'rgba(20, 20, 20, 0.9)',
       backgroundTertiary: '#262626',
       primary: '#fcee0a',
-      text: '#ffffff',
-      textSecondary: '#cccccc',
+      text: '#fcee0a',
+      textSecondary: '#ffffff',
       accent: '#ff003c',
       border: '#00ffff',
-      highlight: '#fcee0a',
+      highlight: '#ff003c',
       comments: '#888888'
     },
     font: '"Courier New", monospace',
-    description: 'Futuristic dystopian cityscape with glitch effects - edgy and trendy'
+    description: 'Futuristic dystopian cityscape with glitch effects - edgy and trendy',
+    effects: {
+      backgroundGradient: 'radial-gradient(ellipse at bottom, #0d0d0d 0%, #000000 100%)',
+      cardGlow: '0 0 25px rgba(252, 238, 10, 0.4), 0 0 15px rgba(0, 255, 255, 0.3)',
+      textGlow: '0 0 10px #fcee0a, 0 0 20px #fcee0a',
+      borderGlow: '0 0 15px #00ffff, 0 0 25px #00ffff',
+      scanlines: false,
+      gridPattern: false,
+      matrixRain: false,
+      glitchEffect: true,
+      bokeh: false
+    }
   },
   matrix: {
     name: 'matrix',
@@ -238,8 +294,8 @@ export const THEME_DEFINITIONS: Record<ThemeType, ThemeDefinition> = {
     isPremium: true,
     colors: {
       background: '#000000',
-      backgroundSecondary: '#0a0a0a',
-      backgroundTertiary: '#141414',
+      backgroundSecondary: 'rgba(0, 20, 0, 0.8)',
+      backgroundTertiary: '#001400',
       primary: '#00ff41',
       text: '#00ff41',
       textSecondary: '#33ff66',
@@ -249,7 +305,18 @@ export const THEME_DEFINITIONS: Record<ThemeType, ThemeDefinition> = {
       comments: '#006611'
     },
     font: '"Courier New", "VT323", monospace',
-    description: 'Classic phosphor terminal with Matrix rain effects - for hackers and minimalists'
+    description: 'Classic phosphor terminal with Matrix rain effects - for hackers and minimalists',
+    effects: {
+      backgroundGradient: 'linear-gradient(180deg, #000000 0%, #001400 100%)',
+      cardGlow: '0 0 20px rgba(0, 255, 65, 0.4), inset 0 0 10px rgba(0, 255, 65, 0.1)',
+      textGlow: '0 0 10px #00ff41, 0 0 20px #00ff41',
+      borderGlow: '0 0 15px #00ff41',
+      scanlines: true,
+      gridPattern: false,
+      matrixRain: true,
+      glitchEffect: false,
+      bokeh: false
+    }
   }
 };
 
