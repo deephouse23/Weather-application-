@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Moon, Sun, Zap, Gamepad2, Terminal, Grid3x3, Crown, Lock, Check } from 'lucide-react'
+import { Moon, Sun, Zap, Gamepad2, Terminal, Grid3x3, Crown, Lock, Check, Sparkles, Building2, Ghost, Cpu, Code } from 'lucide-react'
 import { useTheme } from '@/components/theme-provider'
 import { useAuth } from '@/lib/auth'
 import { useRouter } from 'next/navigation'
@@ -34,7 +34,12 @@ const getThemeIcon = (themeId: ThemeType): React.ComponentType<{ className?: str
     'atari2600': Gamepad2,
     'monochromeGreen': Terminal,
     '8bitClassic': Grid3x3,
-    '16bitSnes': Gamepad2
+    '16bitSnes': Gamepad2,
+    'synthwave84': Sparkles,
+    'tokyoNight': Building2,
+    'dracula': Ghost,
+    'cyberpunk': Cpu,
+    'matrix': Code
   }
   return icons[themeId] || Moon
 }
@@ -82,6 +87,36 @@ const getThemePreviewColors = (themeId: ThemeType) => {
       border: 'border-[#5B5B8B]',
       text: 'text-[#2C2C3E]',
       accent: 'text-[#FFD700]'
+    },
+    'synthwave84': {
+      bg: 'bg-[#241b30]',
+      border: 'border-[#ff7edb]',
+      text: 'text-white',
+      accent: 'text-[#00ffff]'
+    },
+    'tokyoNight': {
+      bg: 'bg-[#1a1b26]',
+      border: 'border-[#9d7cd8]',
+      text: 'text-[#c0caf5]',
+      accent: 'text-[#ff9e64]'
+    },
+    'dracula': {
+      bg: 'bg-[#282a36]',
+      border: 'border-[#ff79c6]',
+      text: 'text-[#f8f8f2]',
+      accent: 'text-[#50fa7b]'
+    },
+    'cyberpunk': {
+      bg: 'bg-[#0d0d0d]',
+      border: 'border-[#00ffff]',
+      text: 'text-white',
+      accent: 'text-[#fcee0a]'
+    },
+    'matrix': {
+      bg: 'bg-black',
+      border: 'border-[#008f11]',
+      text: 'text-[#00ff41]',
+      accent: 'text-[#00ff41]'
     }
   }
   return previews[themeId] || previews.dark
@@ -249,7 +284,7 @@ export default function PremiumThemeSelector() {
       {!user && (
         <div className={`mt-4 p-4 border ${themeClasses.borderColor} ${themeClasses.background}`}>
           <p className={`text-sm font-mono ${themeClasses.text} mb-3`}>
-            🎮 Register for free to unlock 4 additional retro themes!
+            🎮 Register for free to unlock 9 additional premium themes!
           </p>
           <button
             onClick={handleLoginClick}
