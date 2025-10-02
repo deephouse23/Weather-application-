@@ -35,11 +35,11 @@ test.describe('16-Bit Weather App', () => {
     }
   });
 
-  test('theme switcher works correctly', async ({ page }) => {
-    const html = page.locator('html');
-    const initial = await html.getAttribute('data-theme');
-    await page.getByRole('button', { name: /toggle theme/i }).click();
-    await expect.poll(async () => (await html.getAttribute('data-theme')) || '').not.toBe(initial || 'dark');
+  // Theme toggle removed - themes are now changed via Profile/Dashboard settings
+  test.skip('theme switcher works correctly', async ({ page }) => {
+    // This test is skipped because the theme toggle button was removed from navigation
+    // Users now change themes via their Profile/Dashboard page
+    // To test theme changes, visit /profile or /dashboard and use the theme selector there
   });
 
   test('responsive layout on mobile', async ({ page }) => {
