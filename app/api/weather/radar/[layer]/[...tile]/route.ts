@@ -21,8 +21,10 @@ export async function GET(
   context: any
 ) {
   const { params } = context as { params: { layer: string; tile: string[] } }
-  const apiKey = process.env.OPENWEATHER_API_KEY
+  // Try both server-side and client-side env var names
+  const apiKey = process.env.OPENWEATHER_API_KEY || process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY
   if (!apiKey) {
+    console.error('[Radar Proxy] API key not found. Checked OPENWEATHER_API_KEY and NEXT_PUBLIC_OPENWEATHER_API_KEY')
     return new NextResponse('API key not configured', { status: 500 })
   }
 
