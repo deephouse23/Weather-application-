@@ -23,7 +23,12 @@ export function ThemeWrapper({ children, className = '' }: ThemeWrapperProps) {
     atari2600: 'theme-atari2600 bg-[var(--bg)] text-[var(--text)]',
     monochromeGreen: 'theme-monochromeGreen bg-[var(--bg)] text-[var(--text)]',
     '8bitClassic': 'theme-8bitClassic bg-[var(--bg)] text-[var(--text)]',
-    '16bitSnes': 'theme-16bitSnes bg-[var(--bg)] text-[var(--text)]'
+    '16bitSnes': 'theme-16bitSnes bg-[var(--bg)] text-[var(--text)]',
+    synthwave84: 'theme-synthwave84 bg-[var(--bg)] text-[var(--text)]',
+    tokyoNight: 'theme-tokyoNight bg-[var(--bg)] text-[var(--text)]',
+    dracula: 'theme-dracula bg-[var(--bg)] text-[var(--text)]',
+    cyberpunk: 'theme-cyberpunk bg-[var(--bg)] text-[var(--text)]',
+    matrix: 'theme-matrix bg-[var(--bg)] text-[var(--text)]'
   }
   
   return (
