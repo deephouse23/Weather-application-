@@ -1,0 +1,197 @@
+/**
+ * CRITICAL THEME ENFORCEMENT CSS
+ * This file ensures complete theme application across ALL components
+ * Load this AFTER all other stylesheets
+ */
+
+/* ═══════════════════════════════════════════════════════════
+   FORCE THEME VARIABLES ON EVERYTHING
+   ═══════════════════════════════════════════════════════════ */
+
+/* Reset all colors to inherit theme */
+* {
+  /* Remove any inline color styles */
+  color: inherit !important;
+  border-color: inherit !important;
+}
+
+/* Force backgrounds on all elements */
+html, body, #__next, #root, .app, main {
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+/* Weather component specific overrides */
+[class*="weather"], [class*="Weather"],
+[class*="forecast"], [class*="Forecast"],
+[class*="temperature"], [class*="Temperature"] {
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+/* Card components must use elevated background */
+[class*="card"], [class*="Card"],
+.pixel-border, .border-2, .border-4,
+.p-4, .p-6, .p-8 {
+  background-color: var(--bg-elev) !important;
+  border-color: var(--border) !important;
+}
+
+/* Text elements MUST use theme colors */
+p, span, div, a, li, td, th, label, 
+.text-sm, .text-base, .text-lg, .text-xl,
+[class*="text-"] {
+  color: var(--text) !important;
+}
+
+/* Headers and important text */
+h1, h2, h3, h4, h5, h6,
+.font-bold, .font-semibold,
+[class*="heading"], [class*="title"] {
+  color: var(--primary) !important;
+  text-shadow: 0 0 10px currentColor !important;
+}
+
+/* Muted/secondary text */
+.text-muted, .text-secondary,
+[class*="muted"], [class*="secondary"],
+.text-xs, .text-gray-400, .text-gray-500 {
+  color: var(--text-muted) !important;
+}
+
+/* Links and interactive elements */
+a:not([role="button"]), 
+.link, [class*="link"] {
+  color: var(--accent) !important;
+}
+
+/* Buttons must be themed */
+button, [role="button"],
+.btn, [class*="button"] {
+  background-color: var(--bg-elev) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--primary) !important;
+}
+
+button:hover, [role="button"]:hover {
+  background-color: var(--primary) !important;
+  color: var(--bg) !important;
+}
+
+/* Input fields */
+input, textarea, select {
+  background-color: var(--bg-elev) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME-SPECIFIC AGGRESSIVE OVERRIDES
+   ═══════════════════════════════════════════════════════════ */
+
+/* MIAMI VICE - Force neon colors everywhere */
+:root[data-theme="miami"] * {
+  text-shadow: 0 0 5px currentColor !important;
+}
+
+:root[data-theme="miami"] [class*="card"],
+:root[data-theme="miami"] .pixel-border {
+  box-shadow: 
+    0 0 20px rgba(249, 115, 22, 0.5),
+    inset 0 0 20px rgba(236, 72, 153, 0.1) !important;
+}
+
+/* TRON - Force cyber grid aesthetic */
+:root[data-theme="tron"] * {
+  text-shadow: 0 0 8px currentColor !important;
+}
+
+:root[data-theme="tron"] [class*="card"],
+:root[data-theme="tron"] .pixel-border {
+  box-shadow: 
+    0 0 25px rgba(0, 255, 255, 0.6),
+    inset 0 0 15px rgba(0, 255, 255, 0.2) !important;
+  position: relative !important;
+}
+
+:root[data-theme="tron"] [class*="card"]::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, transparent, #00ffff, transparent);
+  opacity: 0.5;
+  z-index: -1;
+  animation: tronBorderPulse 3s linear infinite;
+}
+
+@keyframes tronBorderPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   COMPONENT-SPECIFIC ENFORCEMENT
+   ═══════════════════════════════════════════════════════════ */
+
+/* Weather display components */
+.weather-current, .weather-forecast,
+[class*="weather-card"], [class*="forecast-card"] {
+  background-color: var(--bg-elev) !important;
+  border: 2px solid var(--border) !important;
+}
+
+/* Temperature displays */
+.temp-display, [class*="temperature"],
+.weather-temp, .forecast-temp {
+  color: var(--primary) !important;
+  font-weight: bold !important;
+  text-shadow: 0 0 15px currentColor !important;
+}
+
+/* Weather icons and emojis */
+.weather-icon, .weather-emoji,
+[class*="icon"], [class*="emoji"] {
+  filter: drop-shadow(0 0 10px var(--primary)) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   OVERRIDE INLINE STYLES
+   ═══════════════════════════════════════════════════════════ */
+
+/* Use !important to override any inline styles */
+[style*="background-color"],
+[style*="background"],
+[style*="color"],
+[style*="border-color"] {
+  background-color: inherit !important;
+  color: inherit !important;
+  border-color: inherit !important;
+}
+
+/* Specific overrides for problematic inline styles */
+[style*="background-color: rgb"],
+[style*="background-color: #"],
+[style*="color: rgb"],
+[style*="color: #"] {
+  background-color: var(--bg-elev) !important;
+  color: var(--text) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ANIMATION ENFORCEMENT
+   ═══════════════════════════════════════════════════════════ */
+
+/* Ensure all transitions respect theme changes */
+*, *::before, *::after {
+  transition: 
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    text-shadow 0.3s ease !important;
+}
+
+/* Disable transitions during theme change for instant update */
+.theme-changing * {
+  transition: none !important;
+}

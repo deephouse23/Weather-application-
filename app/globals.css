@@ -21,9 +21,9 @@
 /* Miami Vice theme */
 :root[data-theme="miami"] {
   --bg: #1a0b2e;           /* Deep purple background */
-  --bg-elev: #2a1810;     /* Darker purple panels */
+  --bg-elev: #2d1b4e;     /* Purple elevated panels - more visible */
   --border: #f97316;      /* Orange borders */
-  --text: #f97316;        /* Orange text */
+  --text: #fbbf24;        /* Bright yellow text for better visibility */
   --text-muted: #ec4899;  /* Pink muted text */
   --primary: #f97316;     /* Orange primary */
   --accent: #ec4899;      /* Pink accent */
@@ -35,7 +35,7 @@
 /* TRON theme */
 :root[data-theme="tron"] {
   --bg: #000000;          /* Pure black background */
-  --bg-elev: #0a0a0a;     /* Slightly elevated black */
+  --bg-elev: #0f1419;     /* Dark blue-black elevated - more visible */
   --border: #00ffff;      /* Cyan borders */
   --text: #00ffff;        /* Cyan text */
   --text-muted: #4dd0e1;  /* Light cyan muted */
@@ -247,39 +247,80 @@ button {
   background-color: var(--accent);
 }
 
-/* Global theme application */
+/* AGGRESSIVE THEME ENFORCEMENT - Force complete theme application */
 body {
-  background-color: var(--bg);
-  color: var(--text);
-}
-
-/* Override hardcoded colors with theme variables */
-.bg-gray-900 {
   background-color: var(--bg) !important;
+  color: var(--text) !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.bg-gray-800 {
-  background-color: var(--bg-elev) !important;
+/* Force theme on ALL elements */
+* {
+  color: inherit;
 }
 
-.text-green-400,
-.text-cyan-400,
-.text-orange-400 {
+/* Ensure all text elements use theme colors */
+p, span, div, a, li, td, th, label {
+  color: var(--text) !important;
+}
+
+/* Headers use primary color */
+h1, h2, h3, h4, h5, h6 {
   color: var(--primary) !important;
 }
 
-.border-green-400,
-.border-cyan-400,
-.border-orange-400 {
+/* Force background inheritance */
+.theme-bg-inherit {
+  background-color: inherit !important;
+}
+
+/* AGGRESSIVE COLOR OVERRIDES - Replace ALL hardcoded colors */
+/* Background overrides */
+.bg-gray-900, .bg-gray-800, .bg-gray-700, .bg-gray-600,
+.bg-black, .bg-slate-900, .bg-slate-800,
+[class*="bg-gray-"], [class*="bg-slate-"] {
+  background-color: var(--bg) !important;
+}
+
+/* Elevated/card backgrounds */
+.bg-gray-800, .bg-gray-700,
+[class*="card"], [class*="Card"],
+.pixel-border, .rounded-lg, .rounded-md {
+  background-color: var(--bg-elev) !important;
+}
+
+/* Text color overrides */
+.text-gray-100, .text-gray-200, .text-gray-300,
+.text-white, .text-slate-100, .text-slate-200,
+[class*="text-gray-"], [class*="text-slate-"] {
+  color: var(--text) !important;
+}
+
+/* Primary/accent color overrides */
+.text-green-400, .text-cyan-400, .text-orange-400,
+.text-blue-400, .text-purple-400, .text-pink-400,
+[class*="text-green-"], [class*="text-cyan-"],
+[class*="text-blue-"], [class*="text-purple-"] {
+  color: var(--primary) !important;
+}
+
+/* Border color overrides */
+.border-gray-700, .border-gray-600, .border-gray-500,
+[class*="border-gray-"], [class*="border-slate-"] {
+  border-color: var(--border) !important;
+}
+
+.border-green-400, .border-cyan-400, .border-orange-400,
+.border-blue-400, .border-purple-400,
+[class*="border-green-"], [class*="border-cyan-"],
+[class*="border-blue-"], [class*="border-purple-"] {
   border-color: var(--primary) !important;
 }
 
-.text-gray-400 {
+/* Muted text overrides */
+.text-gray-400, .text-gray-500, .text-gray-600,
+.text-slate-400, .text-slate-500 {
   color: var(--text-muted) !important;
-}
-
-.border-gray-700 {
-  border-color: var(--border) !important;
 }
 
 /* Better overflow handling for long text */
@@ -633,9 +674,18 @@ input:focus,
 
 /* 16-bit themed shadcn/ui component overrides */
 @layer components {
+  /* FORCE THEME ON ALL COMPONENTS */
+  /* Apply theme to every element with aggressive specificity */
+  body * {
+    --tw-bg-opacity: 1;
+    --tw-text-opacity: 1;
+    --tw-border-opacity: 1;
+  }
+  
   /* Pixel-perfect borders for all shadcn components */
   .border, [class*="border-"] {
     border-style: solid !important;
+    border-color: var(--border) !important;
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
@@ -686,4 +736,142 @@ input:focus,
   * {
     border-radius: 0 !important;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME-SPECIFIC BACKGROUNDS & EFFECTS
+   ═══════════════════════════════════════════════════════════ */
+
+/* MIAMI VICE THEME - Neon sunset with palm trees */
+:root[data-theme="miami"] body {
+  background: 
+    linear-gradient(180deg, 
+      #1a0b2e 0%, 
+      #2d1b4e 30%, 
+      #4a2875 60%, 
+      #f97316 90%, 
+      #ec4899 100%
+    ) fixed !important;
+  position: relative;
+  overflow-x: hidden;
+}
+
+:root[data-theme="miami"] body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(249, 115, 22, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(249, 115, 22, 0.1) 0%, transparent 70%);
+  z-index: 0;
+  animation: miamiGlow 10s ease-in-out infinite;
+}
+
+@keyframes miamiGlow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* TRON THEME - Digital grid with light cycles */
+:root[data-theme="tron"] body {
+  background: #000000 !important;
+  position: relative;
+  overflow: hidden;
+}
+
+:root[data-theme="tron"] body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  z-index: 0;
+  animation: tronGrid 20s linear infinite;
+}
+
+@keyframes tronGrid {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(50px, 50px); }
+}
+
+:root[data-theme="tron"] body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    #00ffff 45%, 
+    #1de9b6 50%, 
+    #00ffff 55%, 
+    transparent 100%
+  );
+  z-index: 1;
+  animation: tronScan 5s linear infinite;
+  box-shadow: 0 0 20px #00ffff;
+}
+
+@keyframes tronScan {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(100vh); }
+}
+
+/* Premium theme backgrounds */
+:root[data-theme="atari2600"] body {
+  background: #000000 !important;
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      #000000,
+      #000000 2px,
+      #1a1a1a 2px,
+      #1a1a1a 4px
+    ) !important;
+}
+
+:root[data-theme="monochromeGreen"] body {
+  background: #0D0D0D !important;
+  position: relative;
+}
+
+:root[data-theme="monochromeGreen"] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 0%, rgba(13, 13, 13, 0.8) 100%);
+  z-index: 0;
+}
+
+:root[data-theme="8bitClassic"] body {
+  background: #D3D3D3 !important;
+  background-image: 
+    repeating-linear-gradient(
+      45deg,
+      #D3D3D3,
+      #D3D3D3 10px,
+      #C0C0C0 10px,
+      #C0C0C0 20px
+    ) !important;
+}
+
+:root[data-theme="16bitSnes"] body {
+  background: 
+    linear-gradient(180deg, #B8B8D0 0%, #9E9EB8 100%) fixed !important;
+}
+
+/* Ensure content stays above background effects */
+body > * {
+  position: relative;
+  z-index: 2;
 }

@@ -79,14 +79,34 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     setAuthLoading(false)
   }, [])
 
-  // Apply theme to DOM
+  // Apply theme to DOM with aggressive enforcement
   useEffect(() => {
     if (typeof window !== 'undefined' && !loading) {
       const root = window.document.documentElement
+      const body = window.document.body
+      
       // Remove all possible theme classes
-      availableThemes.forEach(t => root.classList.remove(t))
+      availableThemes.forEach(t => {
+        root.classList.remove(t)
+        body.classList.remove(`theme-${t}`)
+      })
+      
+      // Apply new theme classes
       root.classList.add(theme)
       root.setAttribute('data-theme', theme)
+      body.classList.add(`theme-${theme}`)
+      
+      // Force style recalculation
+      root.style.display = 'none'
+      root.offsetHeight // Trigger reflow
+      root.style.display = ''
+      
+      // Also update body background color directly for immediate effect
+      const computedStyle = window.getComputedStyle(root)
+      const bgColor = computedStyle.getPropertyValue('--bg')
+      if (bgColor) {
+        body.style.backgroundColor = bgColor.trim()
+      }
     }
   }, [theme, loading, availableThemes])
 
