@@ -15,6 +15,7 @@
 import type React from "react"
 import "./globals.css"
 import "./themes.css"
+import "./theme-enforcement.css"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Analytics } from '@vercel/analytics/react'
@@ -135,11 +136,13 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://pollen.googleapis.com" />
         <link rel="dns-prefetch" href="https://www.google.com" />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} min-h-screen`} style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
         <AuthProvider>
           <AppThemeProvider>
             <LocationProvider>
-              {children}
+              <div className="theme-enforced min-h-screen" style={{ backgroundColor: 'inherit', color: 'inherit' }}>
+                {children}
+              </div>
               <Toaster />
               <AuthDebug />
             </LocationProvider>
