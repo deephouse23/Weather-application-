@@ -76,7 +76,9 @@ async function getSession(supabase: any, sessionKey: string) {
     // Cleanup old entries (simple LRU-like behavior)
     if (sessionCache.size > 100) {
       const firstKey = sessionCache.keys().next().value
-      sessionCache.delete(firstKey)
+      if (firstKey !== undefined) {
+        sessionCache.delete(firstKey)
+      }
     }
   }
 
