@@ -410,13 +410,11 @@ input:focus,
 }
 
 @keyframes pulseGlow {
-  0%, 100% { 
+  0%, 100% {
     text-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
-    transform: scale(1);
   }
-  50% { 
+  50% {
     text-shadow: 0 0 12px currentColor, 0 0 24px currentColor, 0 0 36px currentColor;
-    transform: scale(1.02);
   }
 }
 
@@ -436,7 +434,7 @@ input:focus,
 
 .animate-pulse-glow {
   animation: pulseGlow 2s ease-in-out infinite;
-  will-change: transform, text-shadow;
+  will-change: text-shadow;
   contain: layout style paint;
 }
 
