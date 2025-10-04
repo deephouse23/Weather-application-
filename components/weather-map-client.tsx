@@ -7,6 +7,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { WMSTileLayer } from './WMSTileLayer'
+import { isInMRMSCoverage } from '@/lib/utils/location-utils'
 
 // Fix for default icon issue with webpack
 let iconsInitialized = false
@@ -49,7 +51,16 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
     pressure_new: false,
     temp_new: false,
   })
-  const [opacity, setOpacity] = useState(0.7)
+  const [opacity, setOpacity] = useState(0.85) // Increased for better visibility
+
+  // MRMS (NOAA Multi-Radar/Multi-Sensor) state - US only, high quality, FREE
+  const isUSLocation = useMemo(() => {
+    if (!latitude || !longitude) return false
+    return isInMRMSCoverage(latitude, longitude)
+  }, [latitude, longitude])
+
+  const [useMRMS, setUseMRMS] = useState(false) // Toggle between MRMS and OpenWeather
+  const [mrmsOpacity, setMrmsOpacity] = useState(0.85) // Increased for better visibility
 
   // --- Phase 3: Time-lapse state ---
   const STEP_MINUTES = 10 // OpenWeather tiles typically update in 10-minute steps
@@ -230,8 +241,8 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
             </LayersControl.Overlay>
           ))}
 
-          {/* Animated precipitation layer with preloaded frames */}
-          {activeLayers['precipitation_new'] && (
+          {/* Animated precipitation layer with preloaded frames - OpenWeatherMap */}
+          {activeLayers['precipitation_new'] && !useMRMS && (
             <LayersControl.Overlay checked name="Precipitation (Animated)">
               <>
                 {bufferedTimes.map((t) => (
@@ -243,6 +254,21 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
                     opacity={t === currentTimestamp ? opacity : Math.max(0, Math.min(0.15, opacity * 0.2))}
                   />
                 ))}
+              </>
+            </LayersControl.Overlay>
+          )}
+
+          {/* NOAA MRMS High-Resolution Radar (US Only, FREE, real-time updates) */}
+          {activeLayers['precipitation_new'] && useMRMS && isUSLocation && (
+            <LayersControl.Overlay checked name="MRMS Radar (US High-Res)">
+              <>
+                <TileLayer
+                  key={`mrms-${tileEpoch}`}
+                  attribution='&copy; <a href="https://www.noaa.gov/">NOAA MRMS via nowCOAST</a>'
+                  url="https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=1&STYLES=&FORMAT=image%2Fpng&TRANSPARENT=true&HEIGHT=256&WIDTH=256&CRS=EPSG%3A3857&BBOX={bbox-epsg-3857}"
+                  opacity={mrmsOpacity}
+                  zIndex={500}
+                />
               </>
             </LayersControl.Overlay>
           )}
@@ -274,9 +300,34 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
                 {l.name}
               </DropdownMenuItem>
             ))}
-            <div className="px-2 py-1 text-xs text-muted-foreground">Opacity: {(opacity*100)|0}%</div>
+
+            {/* MRMS Toggle - US Locations Only */}
+            {isUSLocation && activeLayers['precipitation_new'] && (
+              <>
+                <div className="h-px bg-gray-700 my-1"></div>
+                <DropdownMenuItem onClick={() => setUseMRMS(!useMRMS)}>
+                  <span className={`inline-block w-3 h-3 mr-2 rounded ${useMRMS ? 'bg-blue-400' : 'bg-gray-400'}`}></span>
+                  <div className="flex flex-col">
+                    <span>NOAA MRMS Radar</span>
+                    <span className="text-[10px] text-gray-400">US only, real-time, FREE</span>
+                  </div>
+                </DropdownMenuItem>
+              </>
+            )}
+
+            <div className="px-2 py-1 text-xs text-muted-foreground">
+              Opacity: {(useMRMS ? mrmsOpacity : opacity) * 100 | 0}%
+            </div>
             <div className="px-2 pb-2">
-              <input type="range" min={0.3} max={1} step={0.05} value={opacity} onChange={e => setOpacity(parseFloat(e.target.value))} className="w-full" />
+              <input
+                type="range"
+                min={0.3}
+                max={1}
+                step={0.05}
+                value={useMRMS ? mrmsOpacity : opacity}
+                onChange={e => useMRMS ? setMrmsOpacity(parseFloat(e.target.value)) : setOpacity(parseFloat(e.target.value))}
+                className="w-full"
+              />
             </div>
           </DropdownMenuContent>
         </DropdownMenu>
