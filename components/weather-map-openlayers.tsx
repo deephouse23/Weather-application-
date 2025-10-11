@@ -213,12 +213,16 @@ const WeatherMapOpenLayers = ({ latitude, longitude, locationName, theme = 'dark
       const wmsSource = new TileWMS({
         url: '/api/weather/noaa-wms',
         params: {
-          'LAYERS': '3',  // Try layer 3 - should be just radar precipitation
+          'SERVICE': 'WMS',
+          'REQUEST': 'GetMap',
+          'LAYERS': '1',
+          'STYLES': '',  // Empty styles to avoid default basemap
           'FORMAT': 'image/png',
           'TRANSPARENT': 'TRUE',
-          'TIME': timeISO,
           'VERSION': '1.3.0',
-          'STYLES': '',
+          'TIME': timeISO,
+          'WIDTH': '256',
+          'HEIGHT': '256',
         },
         projection: 'EPSG:3857',
         serverType: 'mapserver',
