@@ -366,7 +366,7 @@ function HourlyForecast({ hourlyData, theme, themeClasses, tempUnit }: {
 function WeatherIcon({ condition, size, theme }: { condition: string; size: "small" | "medium" | "large"; theme: ThemeType }) {
   const sizeClasses = {
     small: "w-6 h-6",
-    medium: "w-8 h-8", 
+    medium: "w-8 h-8",
     large: "w-12 h-12"
   };
 
@@ -375,38 +375,68 @@ function WeatherIcon({ condition, size, theme }: { condition: string; size: "sma
     filter: "contrast(1.2) saturate(1.3)",
   };
 
-  // Weather icon implementation (same as existing but with theme colors)
-  switch (condition.toLowerCase()) {
-    case "sunny":
-    case "clear":
-      return (
-        <div className={cn("relative", sizeClasses[size])} style={iconStyle}>
-          <div className="absolute inset-0 bg-[#ffe66d] rounded-full animate-pulse-glow"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-[#ffcc02] rounded-full"></div>
-        </div>
-      );
-    case "cloudy":
-    case "overcast":
-      return (
-        <div className={cn("relative", sizeClasses[size])} style={iconStyle}>
-          <div className="absolute bottom-0 left-0 w-3/4 h-3/4 bg-[#e0e0e0] rounded-full"></div>
-          <div className="absolute top-0 right-0 w-3/4 h-3/4 bg-[#b0b0b0] rounded-full"></div>
-        </div>
-      );
-    case "rainy":
-    case "rain":
-      return (
-        <div className={cn("relative", sizeClasses[size])} style={iconStyle}>
-          <div className="absolute top-0 left-0 w-3/4 h-1/2 bg-[#6c7b7f] rounded-full"></div>
-          <div className="absolute bottom-0 left-1/4 w-1 h-1/3 bg-[#00d4ff] animate-slide-in"></div>
-          <div className="absolute bottom-0 right-1/4 w-1 h-1/3 bg-[#00d4ff] animate-slide-in"></div>
-        </div>
-      );
-    default:
-      return (
-        <div className={cn("relative", sizeClasses[size])} style={iconStyle}>
-          <div className="absolute inset-0 bg-[#ffe66d] rounded-full"></div>
-        </div>
-      );
+  const conditionLower = condition.toLowerCase();
+
+  // Sunny/Clear conditions
+  if (conditionLower.includes('clear') || conditionLower.includes('sunny') || conditionLower === 'sun') {
+    return (
+      <div className={cn("relative", sizeClasses[size])} style={iconStyle}>
+        <div className="absolute inset-0 bg-[#ffe66d] rounded-full animate-pulse-glow"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-[#ffcc02] rounded-full"></div>
+      </div>
+    );
   }
+
+  // Rainy conditions (includes rain, drizzle, thunderstorm)
+  if (conditionLower.includes('rain') || conditionLower.includes('drizzle') || conditionLower.includes('thunder')) {
+    return (
+      <div className={cn("relative", sizeClasses[size])} style={iconStyle}>
+        <div className="absolute top-0 left-0 w-3/4 h-1/2 bg-[#6c7b7f] rounded-full"></div>
+        <div className="absolute bottom-0 left-1/4 w-1 h-1/3 bg-[#00d4ff] animate-slide-in"></div>
+        <div className="absolute bottom-0 right-1/4 w-1 h-1/3 bg-[#00d4ff] animate-slide-in"></div>
+      </div>
+    );
+  }
+
+  // Snowy conditions
+  if (conditionLower.includes('snow') || conditionLower.includes('sleet') || conditionLower.includes('ice')) {
+    return (
+      <div className={cn("relative", sizeClasses[size])} style={iconStyle}>
+        <div className="absolute top-0 left-0 w-3/4 h-1/2 bg-[#d0d0d0] rounded-full"></div>
+        <div className="absolute top-1/4 right-0 w-3/4 h-1/2 bg-[#b8b8b8] rounded-full"></div>
+        <div className="absolute bottom-1 left-1/4 w-2 h-2 bg-white transform rotate-45"></div>
+        <div className="absolute bottom-0 left-1/2 w-2 h-2 bg-white transform rotate-45"></div>
+        <div className="absolute bottom-1 right-1/4 w-2 h-2 bg-white transform rotate-45"></div>
+      </div>
+    );
+  }
+
+  // Foggy/Misty conditions
+  if (conditionLower.includes('fog') || conditionLower.includes('mist') || conditionLower.includes('haze') || conditionLower.includes('smoke')) {
+    return (
+      <div className={cn("relative", sizeClasses[size])} style={iconStyle}>
+        <div className="absolute top-1/4 left-0 right-0 h-1 bg-[#c0c0c0]"></div>
+        <div className="absolute top-1/2 left-1/4 right-1/4 h-1 bg-[#d0d0d0]"></div>
+        <div className="absolute bottom-1/4 left-0 right-0 h-1 bg-[#b0b0b0]"></div>
+      </div>
+    );
+  }
+
+  // Cloudy conditions (default for clouds, overcast, partly cloudy)
+  if (conditionLower.includes('cloud') || conditionLower.includes('overcast')) {
+    return (
+      <div className={cn("relative", sizeClasses[size])} style={iconStyle}>
+        <div className="absolute bottom-0 left-0 w-3/4 h-3/4 bg-[#e0e0e0] rounded-full"></div>
+        <div className="absolute top-0 right-0 w-3/4 h-3/4 bg-[#b0b0b0] rounded-full"></div>
+      </div>
+    );
+  }
+
+  // Default fallback - cloudy icon for unknown conditions
+  return (
+    <div className={cn("relative", sizeClasses[size])} style={iconStyle}>
+      <div className="absolute bottom-0 left-0 w-3/4 h-3/4 bg-[#e0e0e0] rounded-full"></div>
+      <div className="absolute top-0 right-0 w-3/4 h-3/4 bg-[#b0b0b0] rounded-full"></div>
+    </div>
+  );
 }
