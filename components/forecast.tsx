@@ -338,56 +338,82 @@ function WeatherIcon({ condition, size }: { condition: string; size: "small" | "
     filter: "contrast(1.2) saturate(1.3)",
   }
 
-  switch (condition.toLowerCase()) {
-    case "sunny":
-      return (
-        <div className={cn("relative", sizeClass)} style={iconStyle}>
-          <div className="absolute inset-0 bg-[#ffe66d] rounded-full"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-[#ffcc02] rounded-full"></div>
-          {/* Sun rays */}
-          <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-3 bg-[#ffe66d]"></div>
-          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-3 bg-[#ffe66d]"></div>
-          <div className="absolute top-1/2 -left-1 transform -translate-y-1/2 w-3 h-1 bg-[#ffe66d]"></div>
-          <div className="absolute top-1/2 -right-1 transform -translate-y-1/2 w-3 h-1 bg-[#ffe66d]"></div>
-        </div>
-      )
-    case "cloudy":
-      return (
-        <div className={cn("relative", sizeClass)} style={iconStyle}>
-          <div className="absolute bottom-0 left-0 w-3/4 h-3/4 bg-[#e0e0e0] rounded-full"></div>
-          <div className="absolute top-0 right-0 w-3/4 h-3/4 bg-[#b0b0b0] rounded-full"></div>
-          <div className="absolute top-1/4 left-1/4 w-1/2 h-1/2 bg-[#d0d0d0] rounded-full"></div>
-        </div>
-      )
-    case "rainy":
-      return (
-        <div className={cn("relative", sizeClass)} style={iconStyle}>
-          {/* Cloud */}
-          <div className="absolute top-0 left-0 w-3/4 h-1/2 bg-[#6c7b7f] rounded-full"></div>
-          <div className="absolute top-1/4 right-0 w-3/4 h-1/2 bg-[#5a6c70] rounded-full"></div>
-          {/* Rain drops */}
-          <div className="absolute bottom-0 left-1/4 w-1 h-1/3 bg-[#00d4ff]"></div>
-          <div className="absolute bottom-0 left-1/2 w-1 h-1/4 bg-[#00d4ff]"></div>
-          <div className="absolute bottom-0 right-1/4 w-1 h-1/3 bg-[#00d4ff]"></div>
-        </div>
-      )
-    case "snowy":
-      return (
-        <div className={cn("relative", sizeClass)} style={iconStyle}>
-          {/* Cloud */}
-          <div className="absolute top-0 left-0 w-3/4 h-1/2 bg-[#d0d0d0] rounded-full"></div>
-          <div className="absolute top-1/4 right-0 w-3/4 h-1/2 bg-[#b8b8b8] rounded-full"></div>
-          {/* Snow flakes */}
-          <div className="absolute bottom-1 left-1/4 w-2 h-2 bg-white transform rotate-45"></div>
-          <div className="absolute bottom-0 left-1/2 w-2 h-2 bg-white transform rotate-45"></div>
-          <div className="absolute bottom-1 right-1/4 w-2 h-2 bg-white transform rotate-45"></div>
-        </div>
-      )
-    default:
-      return (
-        <div className={cn("relative", sizeClass)} style={iconStyle}>
-          <div className="absolute inset-0 bg-[#ffe66d] rounded-full"></div>
-        </div>
-      )
+  const conditionLower = condition.toLowerCase()
+
+  // Sunny/Clear conditions
+  if (conditionLower.includes('clear') || conditionLower.includes('sunny') || conditionLower === 'sun') {
+    return (
+      <div className={cn("relative", sizeClass)} style={iconStyle}>
+        <div className="absolute inset-0 bg-[#ffe66d] rounded-full"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-[#ffcc02] rounded-full"></div>
+        {/* Sun rays */}
+        <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-3 bg-[#ffe66d]"></div>
+        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-3 bg-[#ffe66d]"></div>
+        <div className="absolute top-1/2 -left-1 transform -translate-y-1/2 w-3 h-1 bg-[#ffe66d]"></div>
+        <div className="absolute top-1/2 -right-1 transform -translate-y-1/2 w-3 h-1 bg-[#ffe66d]"></div>
+      </div>
+    )
   }
+
+  // Rainy conditions (includes rain, drizzle, thunderstorm)
+  if (conditionLower.includes('rain') || conditionLower.includes('drizzle') || conditionLower.includes('thunder')) {
+    return (
+      <div className={cn("relative", sizeClass)} style={iconStyle}>
+        {/* Cloud */}
+        <div className="absolute top-0 left-0 w-3/4 h-1/2 bg-[#6c7b7f] rounded-full"></div>
+        <div className="absolute top-1/4 right-0 w-3/4 h-1/2 bg-[#5a6c70] rounded-full"></div>
+        {/* Rain drops */}
+        <div className="absolute bottom-0 left-1/4 w-1 h-1/3 bg-[#00d4ff]"></div>
+        <div className="absolute bottom-0 left-1/2 w-1 h-1/4 bg-[#00d4ff]"></div>
+        <div className="absolute bottom-0 right-1/4 w-1 h-1/3 bg-[#00d4ff]"></div>
+      </div>
+    )
+  }
+
+  // Snowy conditions
+  if (conditionLower.includes('snow') || conditionLower.includes('sleet') || conditionLower.includes('ice')) {
+    return (
+      <div className={cn("relative", sizeClass)} style={iconStyle}>
+        {/* Cloud */}
+        <div className="absolute top-0 left-0 w-3/4 h-1/2 bg-[#d0d0d0] rounded-full"></div>
+        <div className="absolute top-1/4 right-0 w-3/4 h-1/2 bg-[#b8b8b8] rounded-full"></div>
+        {/* Snow flakes */}
+        <div className="absolute bottom-1 left-1/4 w-2 h-2 bg-white transform rotate-45"></div>
+        <div className="absolute bottom-0 left-1/2 w-2 h-2 bg-white transform rotate-45"></div>
+        <div className="absolute bottom-1 right-1/4 w-2 h-2 bg-white transform rotate-45"></div>
+      </div>
+    )
+  }
+
+  // Foggy/Misty conditions
+  if (conditionLower.includes('fog') || conditionLower.includes('mist') || conditionLower.includes('haze') || conditionLower.includes('smoke')) {
+    return (
+      <div className={cn("relative", sizeClass)} style={iconStyle}>
+        {/* Fog layers */}
+        <div className="absolute top-1/4 left-0 right-0 h-1 bg-[#c0c0c0]"></div>
+        <div className="absolute top-1/2 left-1/4 right-1/4 h-1 bg-[#d0d0d0]"></div>
+        <div className="absolute bottom-1/4 left-0 right-0 h-1 bg-[#b0b0b0]"></div>
+      </div>
+    )
+  }
+
+  // Cloudy conditions (default for clouds, overcast, partly cloudy)
+  if (conditionLower.includes('cloud') || conditionLower.includes('overcast')) {
+    return (
+      <div className={cn("relative", sizeClass)} style={iconStyle}>
+        <div className="absolute bottom-0 left-0 w-3/4 h-3/4 bg-[#e0e0e0] rounded-full"></div>
+        <div className="absolute top-0 right-0 w-3/4 h-3/4 bg-[#b0b0b0] rounded-full"></div>
+        <div className="absolute top-1/4 left-1/4 w-1/2 h-1/2 bg-[#d0d0d0] rounded-full"></div>
+      </div>
+    )
+  }
+
+  // Default fallback - cloudy icon for unknown conditions
+  return (
+    <div className={cn("relative", sizeClass)} style={iconStyle}>
+      <div className="absolute bottom-0 left-0 w-3/4 h-3/4 bg-[#e0e0e0] rounded-full"></div>
+      <div className="absolute top-0 right-0 w-3/4 h-3/4 bg-[#b0b0b0] rounded-full"></div>
+      <div className="absolute top-1/4 left-1/4 w-1/2 h-1/2 bg-[#d0d0d0] rounded-full"></div>
+    </div>
+  )
 } 
