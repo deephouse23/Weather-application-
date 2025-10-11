@@ -211,15 +211,17 @@ const WeatherMapOpenLayers = ({ latitude, longitude, locationName, theme = 'dark
       })
 
       const wmsSource = new TileWMS({
-        url: 'https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer',
+        url: '/api/weather/noaa-wms',
         params: {
           'LAYERS': '1',
           'FORMAT': 'image/png',
           'TRANSPARENT': true,
-          'TIME': timeISO, // OpenLayers handles TIME parameter natively!
+          'TIME': timeISO,
+          'VERSION': '1.3.0',
         },
+        projection: 'EPSG:3857',
         serverType: 'mapserver',
-        crossOrigin: 'anonymous',
+        transition: 0,
       })
 
       const wmsLayer = new TileLayer({
