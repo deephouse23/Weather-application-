@@ -58,15 +58,13 @@ export function WMSTileLayer({
       zIndex
     })
 
-    // Create WMS layer
-    const wmsLayer = L.tileLayer.wms(url, {
+    // Create WMS layer with proper TIME parameter handling
+    const wmsOptions: any = {
       layers,
       format,
       transparent,
       opacity,
       attribution,
-      // @ts-ignore - time parameter may not be in types but is valid for WMS
-      time: time || undefined,
       version: '1.3.0',
       crs: L.CRS.EPSG3857,
       // Performance optimizations
@@ -77,7 +75,15 @@ export function WMSTileLayer({
       maxZoom: 18,
       tileSize: 256,
       zIndex
-    })
+    }
+
+    // Add TIME parameter to uppercase option name for WMS compatibility
+    if (time) {
+      wmsOptions.TIME = typeof time === 'string' ? time : new Date(time).toISOString()
+      console.log('  📅 TIME parameter set to:', wmsOptions.TIME)
+    }
+
+    const wmsLayer = L.tileLayer.wms(url, wmsOptions)
 
     // ADD EVENT LISTENERS FOR DEBUGGING
     wmsLayer.on('loading', () => {
@@ -131,9 +137,11 @@ export function WMSTileLayer({
   // Update time parameter when it changes
   useEffect(() => {
     if (layerRef.current && time !== undefined) {
-      // Force redraw with new time parameter
-      // @ts-ignore - time parameter may not be in types but is valid for time-enabled WMS
-      layerRef.current.setParams({ time: time }, false)
+      // Force redraw with new time parameter (uppercase TIME for WMS standard)
+      const timeValue = typeof time === 'string' ? time : new Date(time).toISOString()
+      console.log('⏰ Updating TIME parameter to:', timeValue)
+      // @ts-ignore - TIME parameter may not be in types but is valid for time-enabled WMS
+      layerRef.current.setParams({ TIME: timeValue }, false)
       layerRef.current.redraw()
     }
   }, [time])
