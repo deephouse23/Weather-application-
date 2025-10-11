@@ -48,9 +48,9 @@ const WeatherMapOpenLayers = ({ latitude, longitude, locationName, theme = 'dark
   const [speed, setSpeed] = useState<0.5 | 1 | 2>(1)
   const timerRef = useRef<number | null>(null)
 
-  // MRMS configuration
-  const MRMS_STEP_MINUTES = 10
-  const MRMS_PAST_STEPS = 24 // 4 hours past
+  // NEXRAD configuration
+  const NEXRAD_STEP_MINUTES = 10
+  const NEXRAD_PAST_STEPS = 24 // 4 hours past
   const PRELOAD_RADIUS = 2
 
   // Check if location is in US
@@ -59,20 +59,20 @@ const WeatherMapOpenLayers = ({ latitude, longitude, locationName, theme = 'dark
     return isInMRMSCoverage(latitude, longitude)
   }, [latitude, longitude])
 
-  // Generate MRMS timestamps
+  // Generate NEXRAD timestamps
   const mrmsTimestamps = useMemo(() => {
     if (!isUSLocation) return []
     
     const now = Date.now()
-    const quantize = (ms: number) => Math.floor(ms / (MRMS_STEP_MINUTES * 60 * 1000)) * (MRMS_STEP_MINUTES * 60 * 1000)
+    const quantize = (ms: number) => Math.floor(ms / (NEXRAD_STEP_MINUTES * 60 * 1000)) * (NEXRAD_STEP_MINUTES * 60 * 1000)
     const base = quantize(now)
     const times: number[] = []
     
-    for (let i = MRMS_PAST_STEPS; i >= 0; i -= 1) {
-      times.push(base - i * MRMS_STEP_MINUTES * 60 * 1000)
+    for (let i = NEXRAD_PAST_STEPS; i >= 0; i -= 1) {
+      times.push(base - i * NEXRAD_STEP_MINUTES * 60 * 1000)
     }
     
-    console.log(`🕐 Generated ${times.length} MRMS timestamps`)
+    console.log(`🕐 Generated ${times.length} NEXRAD timestamps`)
     console.log('  First:', new Date(times[0]).toISOString())
     console.log('  Last:', new Date(times[times.length - 1]).toISOString())
     
@@ -188,41 +188,36 @@ const WeatherMapOpenLayers = ({ latitude, longitude, locationName, theme = 'dark
 
     const map = mapInstanceRef.current
 
-    console.log('🎯 Setting up MRMS WMS layers')
+    console.log('🎯 Setting up NEXRAD WMS layers')
     console.log('  Buffered times:', bufferedTimes.length)
     console.log('  Current frame:', frameIndex)
 
-    // Remove existing MRMS layers
+    // Remove existing NEXRAD layers
     mrmsLayersRef.current.forEach(layer => {
       map.removeLayer(layer)
     })
     mrmsLayersRef.current = []
 
-    // Create new MRMS layers for buffered times
+    // Create new NEXRAD layers for buffered times
     bufferedTimes.forEach((timestamp, idx) => {
       const timeISO = new Date(timestamp).toISOString()
       const isCurrentFrame = idx === Math.min(frameIndex - (frameIndex - PRELOAD_RADIUS), bufferedTimes.length - 1)
       const layerOpacity = isCurrentFrame ? opacity : 0.15
 
-      console.log(`  🗺️ Creating MRMS layer ${idx}:`, {
+      console.log(`  🗺️ Creating NEXRAD layer ${idx}:`, {
         time: timeISO,
         isCurrentFrame,
         opacity: layerOpacity
       })
 
       const wmsSource = new TileWMS({
-        url: '/api/weather/noaa-wms',
+        url: '/api/weather/iowa-nexrad',
         params: {
-          'SERVICE': 'WMS',
-          'REQUEST': 'GetMap',
-          'LAYERS': '1',
-          'STYLES': '',  // Empty styles to avoid default basemap
+          'LAYERS': 'nexrad-n0q-900913',  // Base reflectivity, high quality
           'FORMAT': 'image/png',
           'TRANSPARENT': 'TRUE',
-          'VERSION': '1.3.0',
+          'VERSION': '1.1.1',
           'TIME': timeISO,
-          'WIDTH': '256',
-          'HEIGHT': '256',
         },
         projection: 'EPSG:3857',
         serverType: 'mapserver',
@@ -240,22 +235,22 @@ const WeatherMapOpenLayers = ({ latitude, longitude, locationName, theme = 'dark
 
       // Add event listeners for debugging
       wmsSource.on('tileloadstart', () => {
-        console.log(`🔄 MRMS tile loading for ${timeISO}`)
+        console.log(`🔄 NEXRAD tile loading for ${timeISO}`)
       })
 
       wmsSource.on('tileloadend', () => {
-        console.log(`✅ MRMS tile loaded for ${timeISO}`)
+        console.log(`✅ NEXRAD tile loaded for ${timeISO}`)
       })
 
       wmsSource.on('tileloaderror', (error) => {
-        console.error(`❌ MRMS tile error for ${timeISO}:`, error)
+        console.error(`❌ NEXRAD tile error for ${timeISO}:`, error)
       })
 
       map.addLayer(wmsLayer)
       mrmsLayersRef.current.push(wmsLayer)
     })
 
-    console.log(`✅ Added ${mrmsLayersRef.current.length} MRMS layers`)
+    console.log(`✅ Added ${mrmsLayersRef.current.length} NEXRAD layers`)
   }, [bufferedTimes, frameIndex, isUSLocation, activeLayers.precipitation, opacity])
 
   // Update layer opacities when frame changes
@@ -335,7 +330,7 @@ const WeatherMapOpenLayers = ({ latitude, longitude, locationName, theme = 'dark
       {/* Status Badge */}
       <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-md border-2 font-mono text-xs font-bold z-10 ${themeStyles.badge}`}>
         {isUSLocation ? (
-          <span>⚡ NOAA MRMS • HIGH-RES • LIVE</span>
+          <span>⚡ NEXRAD • HIGH-RES • LIVE</span>
         ) : (
           <span>🌎 US LOCATIONS ONLY</span>
         )}
@@ -363,7 +358,7 @@ const WeatherMapOpenLayers = ({ latitude, longitude, locationName, theme = 'dark
                 activeLayers.precipitation ? 'bg-cyan-600/30 text-cyan-300' : 'text-gray-300'
               }`}
             >
-              {activeLayers.precipitation ? '✓' : '○'} Precipitation {isUSLocation ? '(MRMS)' : ''}
+              {activeLayers.precipitation ? '✓' : '○'} Precipitation {isUSLocation ? '(NEXRAD)' : ''}
             </button>
           </div>
         )}
