@@ -32,8 +32,31 @@ export function WMSTileLayer({
   const map = useMap()
   const layerRef = useRef<L.TileLayer.WMS | null>(null)
 
+  // ADD THIS DEBUGGING
+  console.log('🔧 WMSTileLayer render:', {
+    url,
+    layers,
+    format,
+    transparent,
+    opacity,
+    time,
+    zIndex,
+    hasMap: !!map
+  })
+
   useEffect(() => {
-    if (!map) return
+    if (!map) {
+      console.error('❌ WMSTileLayer: No map instance!')
+      return
+    }
+
+    console.log('🎬 Creating WMS layer with params:', {
+      url,
+      layers,
+      time,
+      opacity,
+      zIndex
+    })
 
     // Create WMS layer
     const wmsLayer = L.tileLayer.wms(url, {
@@ -56,10 +79,41 @@ export function WMSTileLayer({
       zIndex
     })
 
+    // ADD EVENT LISTENERS FOR DEBUGGING
+    wmsLayer.on('loading', () => {
+      console.log('⏳ WMS tiles loading...')
+    })
+
+    wmsLayer.on('load', () => {
+      console.log('✅ WMS tiles loaded successfully')
+    })
+
+    wmsLayer.on('tileerror', (error: any) => {
+      console.error('❌ WMS tile error:', error)
+    })
+
+    wmsLayer.on('tileloadstart', (e: any) => {
+      console.log('🔄 Tile load start:', e.url || 'no url')
+    })
+
+    wmsLayer.on('tileload', (e: any) => {
+      console.log('✅ Tile loaded:', e.url || 'no url')
+    })
+
+    console.log('➕ Adding WMS layer to map')
     wmsLayer.addTo(map)
     layerRef.current = wmsLayer
 
+    // Log the actual URL being requested
+    try {
+      const exampleUrl = (wmsLayer as any).getTileUrl({ x: 0, y: 0, z: 5 })
+      console.log('📍 WMS GetMap URL example:', exampleUrl)
+    } catch (e) {
+      console.warn('Could not generate example URL:', e)
+    }
+
     return () => {
+      console.log('🗑️ Removing WMS layer from map')
       if (layerRef.current) {
         map.removeLayer(layerRef.current)
         layerRef.current = null

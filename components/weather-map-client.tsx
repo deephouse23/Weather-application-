@@ -55,6 +55,12 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
   })
   const [opacity, setOpacity] = useState(0.85)
 
+  // Debug: Log active layers state
+  console.log('📊 Active Layers State:', activeLayers)
+  console.log('  precipitation_new:', activeLayers['precipitation_new'])
+  console.log('  clouds_new:', activeLayers['clouds_new'])
+  console.log('  wind_new:', activeLayers['wind_new'])
+
   // MRMS (NOAA Multi-Radar/Multi-Sensor) - US only, high quality, FREE
   // This is the ONLY radar source - no fallback to OpenWeather
   const isUSLocation = useMemo(() => {
@@ -173,7 +179,17 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
 
   // MRMS-specific buffered times (uses 4-hour past window instead of past+future)
   const mrmsBufferedTimes = useMemo(() => {
-    if (!isUSLocation) return []
+    console.log('🕐 Building mrmsBufferedTimes:', {
+      isUSLocation,
+      frameIndex,
+      MRMS_PAST_STEPS
+    })
+
+    if (!isUSLocation) {
+      console.log('  ⏭️ Skipping - not US location')
+      return []
+    }
+
     const now = Date.now()
     const base = quantizeToStep(now, MRMS_STEP_MINUTES)
     const times: number[] = []
@@ -181,11 +197,20 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
     for (let i = MRMS_PAST_STEPS; i >= 0; i -= 1) {
       times.push(base - i * MRMS_STEP_MINUTES * 60 * 1000)
     }
+
+    console.log(`  ✅ Generated ${times.length} timestamps`)
+    console.log('  First:', new Date(times[0]).toISOString())
+    console.log('  Last:', new Date(times[times.length - 1]).toISOString())
+
     // Buffer around current frame within MRMS times
     const mrmsFrameIndex = Math.min(frameIndex, times.length - 1)
     const start = Math.max(0, mrmsFrameIndex - PRELOAD_RADIUS)
     const end = Math.min(times.length - 1, mrmsFrameIndex + PRELOAD_RADIUS)
-    return times.slice(start, end + 1)
+    const buffered = times.slice(start, end + 1)
+
+    console.log(`  📦 Buffered ${buffered.length} times (indices ${start}-${end})`)
+
+    return buffered
   }, [isUSLocation, frameIndex])
 
   // Abort in-flight tile fetches on scrub by forcing a remount key
@@ -288,24 +313,60 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
           ))}
 
           {/* NOAA MRMS Precipitation - US Only */}
+          {(() => {
+            console.log('🔍 MRMS Render Check:', {
+              'activeLayers[precipitation_new]': activeLayers['precipitation_new'],
+              'isUSLocation': isUSLocation,
+              'mrmsBufferedTimes.length': mrmsBufferedTimes.length,
+              'willRender': activeLayers['precipitation_new'] && isUSLocation && mrmsBufferedTimes.length > 0
+            })
+            return null
+          })()}
           {activeLayers['precipitation_new'] && isUSLocation && mrmsBufferedTimes.length > 0 && (
-            <LayersControl.Overlay checked name="NOAA MRMS Radar">
-              <>
-                {mrmsBufferedTimes.map((t) => (
-                  <WMSTileLayer
-                    key={`mrms-${tileEpoch}-${t}`}
-                    url="https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer"
-                    layers="1"
-                    format="image/png"
-                    transparent={true}
-                    opacity={t === mrmsBufferedTimes[Math.min(frameIndex, mrmsBufferedTimes.length - 1)] ? mrmsOpacity : Math.max(0, Math.min(0.15, mrmsOpacity * 0.2))}
-                    time={new Date(t).toISOString()}
-                    attribution='&copy; <a href="https://www.noaa.gov/">NOAA MRMS</a>'
-                    zIndex={500}
-                  />
-                ))}
-              </>
-            </LayersControl.Overlay>
+            <>
+              {(() => {
+                console.log('🎯 MRMS RENDERING CONDITIONS:')
+                console.log('  activeLayers precipitation_new:', activeLayers['precipitation_new'])
+                console.log('  isUSLocation:', isUSLocation)
+                console.log('  mrmsBufferedTimes.length:', mrmsBufferedTimes.length)
+                console.log('  mrmsBufferedTimes:', mrmsBufferedTimes)
+                console.log('  frameIndex:', frameIndex)
+                console.log('  Current timestamp:', mrmsBufferedTimes[Math.min(frameIndex, mrmsBufferedTimes.length - 1)])
+                console.log('  mrmsOpacity:', mrmsOpacity)
+                return null
+              })()}
+              
+              <LayersControl.Overlay checked name="NOAA MRMS Radar">
+                <>
+                  {mrmsBufferedTimes.map((t, idx) => {
+                    const currentFrameTime = mrmsBufferedTimes[Math.min(frameIndex, mrmsBufferedTimes.length - 1)]
+                    const isCurrentFrame = t === currentFrameTime
+                    const layerOpacity = isCurrentFrame ? mrmsOpacity : Math.max(0, Math.min(0.15, mrmsOpacity * 0.2))
+                    
+                    console.log(`  🗺️ Rendering WMSTileLayer ${idx}:`, {
+                      time: new Date(t).toISOString(),
+                      isCurrentFrame,
+                      opacity: layerOpacity,
+                      key: `mrms-${tileEpoch}-${t}`
+                    })
+                    
+                    return (
+                      <WMSTileLayer
+                        key={`mrms-${tileEpoch}-${t}`}
+                        url="https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer"
+                        layers="1"
+                        format="image/png"
+                        transparent={true}
+                        opacity={layerOpacity}
+                        time={new Date(t).toISOString()}
+                        attribution='&copy; <a href="https://www.noaa.gov/">NOAA MRMS</a>'
+                        zIndex={500}
+                      />
+                    )
+                  })}
+                </>
+              </LayersControl.Overlay>
+            </>
           )}
         </LayersControl>
 
