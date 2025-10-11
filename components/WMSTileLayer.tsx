@@ -77,8 +77,9 @@ export function WMSTileLayer({
   // Update time parameter when it changes
   useEffect(() => {
     if (layerRef.current && time !== undefined) {
-      // Force redraw with new time
-      layerRef.current.setParams({ time: time } as any, false)
+      // Force redraw with new time parameter
+      // @ts-ignore - time parameter may not be in types but is valid for time-enabled WMS
+      layerRef.current.setParams({ time: time }, false)
       layerRef.current.redraw()
     }
   }, [time])
