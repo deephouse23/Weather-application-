@@ -28,15 +28,13 @@ interface WeatherMapAnimatedProps {
   longitude?: number
   locationName?: string
   theme?: ThemeType
-  apiKey?: string
 }
 
-const WeatherMapAnimated = ({ 
-  latitude, 
-  longitude, 
-  locationName, 
-  theme = 'dark',
-  apiKey 
+const WeatherMapAnimated = ({
+  latitude,
+  longitude,
+  locationName,
+  theme = 'dark'
 }: WeatherMapAnimatedProps) => {
   const [map, setMap] = useState<L.Map | null>(null)
   const [currentTimeIndex, setCurrentTimeIndex] = useState(0) // 0-4, where 0 is "now"
@@ -104,17 +102,16 @@ const WeatherMapAnimated = ({
     }
   }, [isPlaying])
   
-  // Update precipitation layer URL when time changes (free plan compatible)
+  // Update precipitation layer URL when time changes
   useEffect(() => {
-    if (precipitationLayer && apiKey) {
-      // Free plan: use current precipitation tiles for all timeframes
-      // Note: Historical data requires Weather Maps 2.0 API (paid plan)
-      const url = `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${apiKey}`
+    if (precipitationLayer) {
+      // All tiles now proxied through secure API route
+      const url = `/api/weather/radar/precipitation_new/{z}/{x}/{y}`
       precipitationLayer.setUrl(url)
-      
+
       console.log(`Loading precipitation for: ${timeLabels[currentTimeIndex]}`)
     }
-  }, [currentTimeIndex, precipitationLayer, apiKey, timeLabels])
+  }, [currentTimeIndex, precipitationLayer, timeLabels])
   
   // Theme-based styles
   const getThemeStyles = () => {
@@ -216,21 +213,21 @@ const WeatherMapAnimated = ({
             <TileLayer
               ref={(layer) => setPrecipitationLayer(layer)}
               attribution='&copy; <a href="https://www.openweathermap.org/">OpenWeatherMap</a>'
-              url={`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${apiKey || process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`}
+              url={`/api/weather/radar/precipitation_new/{z}/{x}/{y}`}
               opacity={0.6}
             />
           </LayersControl.Overlay>
           <LayersControl.Overlay name="Clouds">
             <TileLayer
               attribution='&copy; <a href="https://www.openweathermap.org/">OpenWeatherMap</a>'
-              url={`https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${apiKey || process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`}
+              url={`/api/weather/radar/clouds_new/{z}/{x}/{y}`}
               opacity={0.5}
             />
           </LayersControl.Overlay>
           <LayersControl.Overlay name="Temperature">
             <TileLayer
               attribution='&copy; <a href="https://www.openweathermap.org/">OpenWeatherMap</a>'
-              url={`https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${apiKey || process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`}
+              url={`/api/weather/radar/temp_new/{z}/{x}/{y}`}
               opacity={0.6}
             />
           </LayersControl.Overlay>
