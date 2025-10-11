@@ -45,12 +45,6 @@ const LAYERS = [
 const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }: WeatherMapProps) => {
   const [map, setMap] = useState<L.Map | null>(null)
   const position: [number, number] = [latitude || 39.8283, longitude || -98.5795]
-  
-  // Debug logging
-  useEffect(() => {
-    console.log('WeatherMap props received:', { latitude, longitude, locationName })
-    console.log('isUSLocation:', latitude && longitude ? isInMRMSCoverage(latitude, longitude) : 'no coordinates')
-  }, [latitude, longitude, locationName])
 
   const [activeLayers, setActiveLayers] = useState<Record<string, boolean>>({
     precipitation_new: true,
