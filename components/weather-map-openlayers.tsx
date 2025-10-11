@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { Play, Pause, SkipBack, SkipForward, Layers, ChevronDown } from 'lucide-react'
-import { isInMRMSCoverage } from '@/lib/weather-api'
+import { isInMRMSCoverage } from '@/lib/utils/location-utils'
 import { ThemeType } from '@/lib/theme-config'
 
 // OpenLayers imports
