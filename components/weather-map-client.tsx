@@ -10,6 +10,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { WMSTileLayer } from './WMSTileLayer'
 import { isInMRMSCoverage } from '@/lib/utils/location-utils'
 import { Activity, AlertCircle, Info } from 'lucide-react'
+import { ThemeType } from '@/lib/theme-config'
 
 // Fix for default icon issue with webpack
 let iconsInitialized = false
@@ -30,7 +31,7 @@ interface WeatherMapProps {
   latitude?: number
   longitude?: number
   locationName?: string
-  theme?: 'dark' | 'miami' | 'tron'
+  theme?: ThemeType
 }
 
 const LAYERS = [
