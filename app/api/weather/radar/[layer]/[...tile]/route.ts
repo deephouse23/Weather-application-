@@ -9,7 +9,8 @@ export const runtime = 'nodejs'
 // /api/weather/radar/precipitation_new/163/395/598  (no time)
 
 const LAYER_MAP: Record<string, string> = {
-  precipitation_new: 'precipitation_new',
+  // precipitation_new removed - use NOAA MRMS via WMS instead
+  // OpenWeather free tier doesn't support time-series animation
   clouds_new: 'clouds_new',
   wind_new: 'wind_new',
   pressure_new: 'pressure_new',
@@ -29,6 +30,21 @@ export async function GET(
   }
 
   const { layer, tile } = params
+  
+  // Early return for unsupported precipitation layer
+  if (layer === 'precipitation_new') {
+    return new NextResponse(
+      JSON.stringify({ 
+        error: 'precipitation_new removed - use NOAA MRMS via WMS',
+        message: 'OpenWeather radar replaced with NOAA MRMS for higher quality'
+      }), 
+      { 
+        status: 410, // 410 Gone - resource permanently removed
+        headers: { 'Content-Type': 'application/json' }
+      }
+    )
+  }
+  
   const mapped = LAYER_MAP[layer]
   if (!mapped) {
     return new NextResponse('Unsupported layer', { status: 400 })
