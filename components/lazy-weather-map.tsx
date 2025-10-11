@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic'
 import { Loader2 } from 'lucide-react'
 
-const WeatherMap = dynamic(() => import('./weather-map-animated'), {
+const WeatherMap = dynamic(() => import('./weather-map-client'), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center h-96 bg-gray-900 rounded-lg border-2 border-gray-600">
