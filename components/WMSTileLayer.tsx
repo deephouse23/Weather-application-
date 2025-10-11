@@ -59,6 +59,17 @@ export function WMSTileLayer({
     })
 
     // Create WMS layer with proper TIME parameter handling
+    // Leaflet doesn't natively support 'time' in options, so we append it to the URL
+    const timeValue = time ? (typeof time === 'string' ? time : new Date(time).toISOString()) : undefined
+    
+    let wmsUrl = url
+    if (timeValue) {
+      // Append TIME parameter to URL
+      const separator = url.includes('?') ? '&' : '?'
+      wmsUrl = `${url}${separator}TIME=${encodeURIComponent(timeValue)}`
+      console.log('  📅 TIME parameter appended to URL:', timeValue)
+    }
+
     const wmsOptions: any = {
       layers,
       format,
@@ -77,13 +88,7 @@ export function WMSTileLayer({
       zIndex
     }
 
-    // Add TIME parameter to uppercase option name for WMS compatibility
-    if (time) {
-      wmsOptions.TIME = typeof time === 'string' ? time : new Date(time).toISOString()
-      console.log('  📅 TIME parameter set to:', wmsOptions.TIME)
-    }
-
-    const wmsLayer = L.tileLayer.wms(url, wmsOptions)
+    const wmsLayer = L.tileLayer.wms(wmsUrl, wmsOptions)
 
     // ADD EVENT LISTENERS FOR DEBUGGING
     wmsLayer.on('loading', () => {
@@ -125,7 +130,7 @@ export function WMSTileLayer({
         layerRef.current = null
       }
     }
-  }, [map, url])
+  }, [map, url, time]) // Recreate layer when time changes (since TIME is in URL)
 
   // Update opacity when it changes
   useEffect(() => {
@@ -133,18 +138,6 @@ export function WMSTileLayer({
       layerRef.current.setOpacity(opacity)
     }
   }, [opacity])
-
-  // Update time parameter when it changes
-  useEffect(() => {
-    if (layerRef.current && time !== undefined) {
-      // Force redraw with new time parameter (uppercase TIME for WMS standard)
-      const timeValue = typeof time === 'string' ? time : new Date(time).toISOString()
-      console.log('⏰ Updating TIME parameter to:', timeValue)
-      // @ts-ignore - TIME parameter may not be in types but is valid for time-enabled WMS
-      layerRef.current.setParams({ TIME: timeValue }, false)
-      layerRef.current.redraw()
-    }
-  }, [time])
 
   return null // This component doesn't render anything directly
 }
