@@ -262,13 +262,19 @@ const WeatherMapClient = ({ latitude, longitude, locationName, theme = 'dark' }:
           {activeLayers['precipitation_new'] && useMRMS && isUSLocation && (
             <LayersControl.Overlay checked name="MRMS Radar (US High-Res)">
               <>
-                <TileLayer
-                  key={`mrms-${tileEpoch}`}
-                  attribution='&copy; <a href="https://www.noaa.gov/">NOAA MRMS via nowCOAST</a>'
-                  url="https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=1&STYLES=&FORMAT=image%2Fpng&TRANSPARENT=true&HEIGHT=256&WIDTH=256&CRS=EPSG%3A3857&BBOX={bbox-epsg-3857}"
-                  opacity={mrmsOpacity}
-                  zIndex={500}
-                />
+                {bufferedTimes.map((t) => (
+                  <WMSTileLayer
+                    key={`mrms-${tileEpoch}-${t}`}
+                    url="https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer"
+                    layers="1"
+                    format="image/png"
+                    transparent={true}
+                    opacity={t === currentTimestamp ? mrmsOpacity : Math.max(0, Math.min(0.15, mrmsOpacity * 0.2))}
+                    time={new Date(t).toISOString()}
+                    attribution='&copy; <a href="https://www.noaa.gov/">NOAA MRMS via nowCOAST</a>'
+                    zIndex={500}
+                  />
+                ))}
               </>
             </LayersControl.Overlay>
           )}
