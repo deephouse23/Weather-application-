@@ -217,7 +217,8 @@ const WeatherMapOpenLayers = ({ latitude, longitude, locationName, theme = 'dark
           'FORMAT': 'image/png',
           'TRANSPARENT': 'TRUE',
           'VERSION': '1.1.1',
-          'TIME': timeISO,
+          // Temporarily remove TIME to test if service works without it
+          // 'TIME': timeISO,
         },
         projection: 'EPSG:3857',
         serverType: 'mapserver',
