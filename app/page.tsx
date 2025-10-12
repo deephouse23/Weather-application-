@@ -634,6 +634,15 @@ function WeatherApp() {
       return
     }
 
+    // Clear cache to prevent interference with explicit location detection
+    // This ensures that when user explicitly clicks "detect your location",
+    // the fresh detected location data is displayed immediately
+    if (isClient) {
+      localStorage.removeItem(CACHE_KEY)
+      localStorage.removeItem(WEATHER_KEY)
+      localStorage.removeItem(CACHE_TIMESTAMP_KEY)
+    }
+
     setLoading(true)
     setError("")
 
@@ -1027,7 +1036,7 @@ function WeatherApp() {
                     longitude={weather?.coordinates?.lon}
                     locationName={weather?.location}
                     theme={theme || 'dark'}
-                    defaultMode="static"
+                    defaultMode="animation"
                   />
                 </div>
               </div>
