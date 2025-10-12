@@ -1,16 +1,18 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { ThemeType } from '@/lib/theme-config'
 
 interface WeatherMapProps {
   latitude?: number
   longitude?: number
   locationName?: string
-  theme?: 'dark' | 'miami' | 'tron'
+  theme?: ThemeType
+  defaultMode?: 'static' | 'animation'
 }
 
 // Create a completely dynamic map component with no SSR
-const MapComponent = dynamic(() => import('./weather-map-client'), { 
+const MapComponent = dynamic(() => import('./weather-map-openlayers'), { 
   ssr: false,
   loading: () => (
     <div className="w-full h-full bg-gray-900 rounded-lg flex items-center justify-center">

@@ -17,6 +17,7 @@
 
 import React, { useState, useEffect, Suspense } from "react"
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { fetchWeatherData, fetchWeatherByLocation } from "@/lib/weather-api"
@@ -1009,15 +1010,24 @@ function WeatherApp() {
 
               {/* Weather Radar - Moved Below Forecast */}
               <div className="mt-6">
-                <h2 className={`text-xl font-semibold mb-4 text-center ${themeClasses.headerText} ${themeClasses.glow}`}>
-                  Weather Radar
-                </h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className={`text-xl font-semibold text-center flex-1 ${themeClasses.headerText} ${themeClasses.glow}`}>
+                    Weather Radar
+                  </h2>
+                  <Link 
+                    href="/map"
+                    className={`px-3 py-1.5 border-2 rounded-md font-mono text-xs font-bold transition-colors hover:scale-105 ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`}
+                  >
+                    VIEW FULL MAP →
+                  </Link>
+                </div>
                 <div className="h-96 rounded-lg overflow-hidden">
                   <LazyWeatherMap 
                     latitude={weather?.coordinates?.lat}
                     longitude={weather?.coordinates?.lon}
                     locationName={weather?.location}
                     theme={theme || 'dark'}
+                    defaultMode="static"
                   />
                 </div>
               </div>
