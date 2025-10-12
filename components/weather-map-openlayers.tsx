@@ -233,21 +233,22 @@ const WeatherMapOpenLayers = ({
 
     console.log('🖼️ Setting up static RadMap image layer')
 
-    // Calculate extent for the image (bbox in EPSG:3857)
-    // Increased from 0.75 to 2.5 degrees (~175 miles radius) for better regional view
-    const radiusDegrees = 2.5
-    const extent = transformExtent(
-      [longitude - radiusDegrees, latitude - radiusDegrees, longitude + radiusDegrees, latitude + radiusDegrees],
-      'EPSG:4326',
-      'EPSG:3857'
-    )
+    // Show entire continental USA
+    // Bounds: approximately -125 to -65 longitude, 24 to 50 latitude
+    const usaBounds = [-125, 24, -65, 50]
+    const extent = transformExtent(usaBounds, 'EPSG:4326', 'EPSG:3857')
+    
+    // Use center of USA for RadMap request, with large radius to cover entire country
+    const usaCenterLon = -95
+    const usaCenterLat = 37
+    const radiusDegrees = 30 // Large radius to cover entire USA
 
     // Build RadMap URL
     const radmapUrl = buildRadMapUrl({
-      latitude,
-      longitude,
-      width: 1024,
-      height: 1024,
+      latitude: usaCenterLat,
+      longitude: usaCenterLon,
+      width: 2048,
+      height: 1536,
       layers: ['nexrad', 'uscounties'],
       radiusDegrees
     })
@@ -317,48 +318,31 @@ const WeatherMapOpenLayers = ({
         opacity: layerOpacity
       })
 
-      // Use Iowa State's RIDGE tile cache (simple XYZ tiles, not WMS!)
-      // Format timestamp for Iowa State: YYYYMMDD-HHMM (UTC)
-      const timestampFormatted = new Date(timestamp).toISOString()
-        .replace(/[-:]/g, '')
-        .replace('T', '-')
-        .substring(0, 13) // YYYYMMDD-HHMM
-      
-      console.log(`  🔧 Creating XYZ tile layer for timestamp: ${timestampFormatted}`)
-      
-      const tileUrl = `/api/weather/iowa-nexrad-tiles/${timestampFormatted}/{z}/{x}/{y}.png`
-      
-      const xyzSource = new XYZ({
-        url: tileUrl,
-        crossOrigin: 'anonymous',
+      // Use Iowa State's WMS service for historical radar data
+      // TMS tiles (nexrad-n0q) only work for current data, not historical timestamps
+      const wmsSource = new TileWMS({
+        url: 'https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0q.cgi',
+        params: {
+          'LAYERS': 'nexrad-n0q-900913',
+          'FORMAT': 'image/png',
+          'TRANSPARENT': true,
+          'TIME': timeISO,
+        },
+        serverType: 'mapserver',
         transition: 0,
+        crossOrigin: 'anonymous',
       })
       
-      console.log(`  ✅ XYZ source created with URL pattern: ${tileUrl}`)
+      console.log(`  ✅ WMS source created for timestamp: ${timeISO}`)
 
       const radarLayer = new TileLayer({
-        source: xyzSource,
+        source: wmsSource,
         opacity: layerOpacity,
         zIndex: 500,
       })
-      
-      console.log(`  ✅ Tile layer created successfully`)
 
       radarLayer.set('name', `nexrad-${timestamp}`)
       radarLayer.set('timestamp', timestamp)
-
-      // Add event listeners for debugging
-      xyzSource.on('tileloadstart', () => {
-        console.log(`🔄 NEXRAD tile loading for ${timestampFormatted}`)
-      })
-
-      xyzSource.on('tileloadend', () => {
-        console.log(`✅ NEXRAD tile loaded for ${timestampFormatted}`)
-      })
-
-      xyzSource.on('tileloaderror', (error) => {
-        console.error(`❌ NEXRAD tile error for ${timestampFormatted}:`, error)
-      })
 
       map.addLayer(radarLayer)
       mrmsLayersRef.current.push(radarLayer)

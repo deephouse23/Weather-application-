@@ -16,11 +16,13 @@ export async function GET(
     return new NextResponse('Missing required parameters', { status: 400 })
   }
 
-  // Iowa State RIDGE tile cache URL format
-  // They use a simpler product name: ridge::USCOMP-N0Q-{timestamp}
+  // Iowa State TMS tile cache URL
+  // For current/latest: nexrad-n0q (EPSG:3857 Web Mercator)
+  // For historical with timestamp: nexrad-n0q-{timestamp}
   // timestamp format: YYYYMMDD-HHMM (UTC)
-  // Note: For current/recent data, you can also use ridge::USCOMP-N0Q-0 for "latest"
-  const iowaUrl = `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/ridge::USCOMP-N0Q-${timestamp}/${z}/${x}/${y}.png`
+  
+  // Try historical timestamp first, fallback to current if not available
+  const iowaUrl = `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-${timestamp}/${z}/${x}/${y}.png`
 
   console.log(`[Iowa NEXRAD Tiles] Fetching: ${iowaUrl}`)
 
