@@ -217,7 +217,7 @@ export default function WeatherRadMapStatic({
             key={imageKey}
             src={radmapUrl}
             alt={`Weather radar for ${locationName || 'selected location'}`}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
             onLoad={handleImageLoad}
             onError={handleImageError}
             style={{ display: error ? 'none' : 'block' }}
