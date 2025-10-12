@@ -42,7 +42,7 @@ const WeatherMapOpenLayers = ({
 }: WeatherMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<Map | null>(null)
-  const mrmsLayersRef = useRef<TileLayer<TileWMS>[]>([])
+  const mrmsLayersRef = useRef<(TileLayer<TileWMS> | TileLayer<XYZ>)[]>([])
   const staticImageLayerRef = useRef<ImageLayer<ImageStatic> | null>(null)
 
   // Load mode preference from localStorage
