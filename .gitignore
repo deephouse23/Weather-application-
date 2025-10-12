@@ -46,3 +46,6 @@ results/
 # Documentation archives
 docs/archive/
 .claude/
+
+# Sentry setup guide with potential secrets
+SENTRY_SETUP_GUIDE.md
