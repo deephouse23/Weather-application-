@@ -66,7 +66,7 @@ const WeatherMapOpenLayers = ({
 
   // Animation state
   const [isPlaying, setIsPlaying] = useState(false)
-  const [frameIndex, setFrameIndex] = useState(48) // Start at "now" (last frame)
+  const [frameIndex, setFrameIndex] = useState(0) // Start at beginning (4 hours ago)
   const [speed, setSpeed] = useState<0.5 | 1 | 2>(1)
   const timerRef = useRef<number | null>(null)
 
@@ -243,12 +243,21 @@ const WeatherMapOpenLayers = ({
     const usaCenterLat = 37
     const radiusDegrees = 30 // Large radius to cover entire USA
 
+    // Calculate proper aspect ratio for the geographical extent
+    const lonRange = 60  // -65 - (-125)
+    const latRange = 26  // 50 - 24
+    const aspectRatio = lonRange / latRange  // ~2.31
+    
+    // Use proper dimensions that match the geographical aspect ratio
+    const imageHeight = 1000
+    const imageWidth = Math.round(imageHeight * aspectRatio)  // ~2310
+
     // Build RadMap URL
     const radmapUrl = buildRadMapUrl({
       latitude: usaCenterLat,
       longitude: usaCenterLon,
-      width: 2048,
-      height: 1536,
+      width: imageWidth,
+      height: imageHeight,
       layers: ['nexrad', 'uscounties'],
       radiusDegrees
     })
@@ -389,6 +398,12 @@ const WeatherMapOpenLayers = ({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!isUSLocation || !activeLayers.precipitation) return
+
+      // Don't intercept keys when user is typing in an input field
+      const activeElement = document.activeElement as HTMLElement
+      if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+        return
+      }
 
       if (e.code === 'Space') {
         e.preventDefault()
