@@ -66,13 +66,14 @@ const WeatherMapOpenLayers = ({
 
   // Animation state
   const [isPlaying, setIsPlaying] = useState(false)
-  const [frameIndex, setFrameIndex] = useState(24) // Start at "now"
+  const [frameIndex, setFrameIndex] = useState(48) // Start at "now" (last frame)
   const [speed, setSpeed] = useState<0.5 | 1 | 2>(1)
   const timerRef = useRef<number | null>(null)
 
   // NEXRAD configuration
-  const NEXRAD_STEP_MINUTES = 10
-  const NEXRAD_PAST_STEPS = 24 // 4 hours past
+  // Iowa State NEXRAD data is available in 5-minute intervals
+  const NEXRAD_STEP_MINUTES = 5
+  const NEXRAD_PAST_STEPS = 48 // 4 hours past (5 min * 48 = 240 min = 4 hours)
   const PRELOAD_RADIUS = 2
 
   // Check if location is in US
@@ -233,7 +234,8 @@ const WeatherMapOpenLayers = ({
     console.log('🖼️ Setting up static RadMap image layer')
 
     // Calculate extent for the image (bbox in EPSG:3857)
-    const radiusDegrees = 0.75
+    // Increased from 0.75 to 2.5 degrees (~175 miles radius) for better regional view
+    const radiusDegrees = 2.5
     const extent = transformExtent(
       [longitude - radiusDegrees, latitude - radiusDegrees, longitude + radiusDegrees, latitude + radiusDegrees],
       'EPSG:4326',
