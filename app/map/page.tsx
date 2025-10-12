@@ -1,11 +1,23 @@
 'use client'
 
+/**
+ * 16-Bit Weather Platform - BETA v0.3.2
+ * 
+ * Copyright (C) 2025 16-Bit Weather
+ * Licensed under Fair Source License, Version 0.9
+ * 
+ * Use Limitation: 5 users
+ * See LICENSE file for full terms
+ */
+
 import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import { Home, Map as MapIcon, Share2 } from 'lucide-react'
 import { useLocationContext } from '@/components/location-context'
 import { userCacheService } from '@/lib/user-cache-service'
 import { WeatherData } from '@/lib/types'
+import { useTheme } from '@/components/theme-provider'
 
 const WeatherMap = dynamic(() => import('@/components/weather-map'), {
   ssr: false,
@@ -21,8 +33,10 @@ const WeatherMap = dynamic(() => import('@/components/weather-map'), {
 
 export default function MapPage() {
   const { currentLocation } = useLocationContext()
+  const { theme } = useTheme()
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [shareSuccess, setShareSuccess] = useState(false)
 
   useEffect(() => {
     const loadWeatherData = () => {
@@ -74,13 +88,42 @@ export default function MapPage() {
     loadWeatherData()
   }, [currentLocation])
 
+  // Share location handler
+  const handleShare = async () => {
+    if (!weatherData) return
+
+    const shareUrl = `${window.location.origin}/map?lat=${weatherData.coordinates?.lat}&lon=${weatherData.coordinates?.lon}`
+    
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `Weather Radar - ${weatherData.location}`,
+          text: `Check out the weather radar for ${weatherData.location}`,
+          url: shareUrl
+        })
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(shareUrl)
+        setShareSuccess(true)
+        setTimeout(() => setShareSuccess(false), 2000)
+      }
+    } catch (error) {
+      console.error('Share failed:', error)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="h-[calc(100vh-4rem)] w-full">
-        <div className="p-2">
-          <Link href="/" className="inline-block text-xs font-mono px-2 py-1 border-2 border-gray-600 hover:bg-gray-700 transition-colors" aria-label="Return to Home">
-            ← Home
+        <div className="p-3 bg-gray-900 border-b border-gray-700 flex items-center gap-3">
+          <Link href="/" className="inline-flex items-center gap-2 text-xs font-mono px-3 py-1.5 border-2 border-gray-600 hover:bg-gray-700 transition-colors rounded" aria-label="Return to Home">
+            <Home className="w-3 h-3" />
+            HOME
           </Link>
+          <div className="text-gray-500 text-xs font-mono">
+            <MapIcon className="w-3 h-3 inline mr-1" />
+            RADAR MAP
+          </div>
         </div>
         <div className="h-full flex items-center justify-center bg-gray-900">
           <div className="text-white text-center">
@@ -95,10 +138,15 @@ export default function MapPage() {
   if (!weatherData || !weatherData.coordinates) {
     return (
       <div className="h-[calc(100vh-4rem)] w-full">
-        <div className="p-2">
-          <Link href="/" className="inline-block text-xs font-mono px-2 py-1 border-2 border-gray-600 hover:bg-gray-700 transition-colors" aria-label="Return to Home">
-            ← Home
+        <div className="p-3 bg-gray-900 border-b border-gray-700 flex items-center gap-3">
+          <Link href="/" className="inline-flex items-center gap-2 text-xs font-mono px-3 py-1.5 border-2 border-gray-600 hover:bg-gray-700 transition-colors rounded" aria-label="Return to Home">
+            <Home className="w-3 h-3" />
+            HOME
           </Link>
+          <div className="text-gray-500 text-xs font-mono">
+            <MapIcon className="w-3 h-3 inline mr-1" />
+            RADAR MAP
+          </div>
         </div>
         <div className="h-full flex items-center justify-center bg-gray-900">
           <div className="text-white text-center max-w-md px-4">
@@ -108,9 +156,10 @@ export default function MapPage() {
             </div>
             <Link 
               href="/" 
-              className="inline-block text-sm font-mono px-4 py-2 border-2 border-cyan-500 text-cyan-400 hover:bg-cyan-500 hover:text-black transition-colors"
+              className="inline-flex items-center gap-2 text-sm font-mono px-4 py-2 border-2 border-cyan-500 text-cyan-400 hover:bg-cyan-500 hover:text-black transition-colors rounded"
             >
-              ← Return to Home & Search
+              <Home className="w-4 h-4" />
+              Return to Home & Search
             </Link>
           </div>
         </div>
@@ -119,17 +168,46 @@ export default function MapPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] w-full">
-      <div className="p-2">
-        <Link href="/" className="inline-block text-xs font-mono px-2 py-1 border-2 border-gray-600 hover:bg-gray-700 transition-colors" aria-label="Return to Home">
-          ← Home
-        </Link>
+    <div className="h-[calc(100vh-4rem)] w-full flex flex-col">
+      {/* Breadcrumb Header */}
+      <div className="p-3 bg-gray-900 border-b border-gray-700 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="inline-flex items-center gap-2 text-xs font-mono px-3 py-1.5 border-2 border-gray-600 hover:bg-gray-700 transition-colors rounded" aria-label="Return to Home">
+            <Home className="w-3 h-3" />
+            HOME
+          </Link>
+          <div className="text-white text-xs font-mono">
+            <MapIcon className="w-3 h-3 inline mr-1" />
+            RADAR MAP
+          </div>
+          {weatherData.location && (
+            <div className="text-cyan-400 text-xs font-mono font-bold">
+              → {weatherData.location}
+            </div>
+          )}
+        </div>
+        
+        {/* Share Button */}
+        <button
+          onClick={handleShare}
+          className="inline-flex items-center gap-2 text-xs font-mono px-3 py-1.5 border-2 border-gray-600 hover:bg-gray-700 transition-colors rounded"
+          title="Share this radar map"
+        >
+          <Share2 className="w-3 h-3" />
+          {shareSuccess ? 'COPIED!' : 'SHARE'}
+        </button>
       </div>
-      <WeatherMap 
-        latitude={weatherData.coordinates.lat}
-        longitude={weatherData.coordinates.lon}
-        locationName={weatherData.location}
-      />
+      
+      {/* Map Container */}
+      <div className="flex-1">
+        <WeatherMap 
+          latitude={weatherData.coordinates.lat}
+          longitude={weatherData.coordinates.lon}
+          locationName={weatherData.location}
+          theme={theme || 'dark'}
+          defaultMode="animation"
+        />
+      </div>
     </div>
   )
 }

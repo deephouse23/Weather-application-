@@ -1,7 +1,26 @@
 'use client'
 
+/**
+ * 16-Bit Weather Platform - BETA v0.3.2
+ * 
+ * Copyright (C) 2025 16-Bit Weather
+ * Licensed under Fair Source License, Version 0.9
+ * 
+ * Use Limitation: 5 users
+ * See LICENSE file for full terms
+ */
+
 import dynamic from 'next/dynamic'
 import { Loader2 } from 'lucide-react'
+import { ThemeType } from '@/lib/theme-config'
+
+interface LazyWeatherMapProps {
+  latitude?: number
+  longitude?: number
+  locationName?: string
+  theme?: ThemeType
+  defaultMode?: 'static' | 'animation'
+}
 
 const WeatherMap = dynamic(() => import('./weather-map-openlayers'), {
   ssr: false,
@@ -12,4 +31,6 @@ const WeatherMap = dynamic(() => import('./weather-map-openlayers'), {
   ),
 })
 
-export default WeatherMap
+export default function LazyWeatherMap(props: LazyWeatherMapProps) {
+  return <WeatherMap {...props} />
+}
