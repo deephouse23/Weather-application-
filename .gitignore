@@ -49,3 +49,6 @@ docs/archive/
 
 # Sentry setup guide with potential secrets
 SENTRY_SETUP_GUIDE.md
+
+# Plan files may contain sensitive information
+*.plan.md
