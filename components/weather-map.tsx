@@ -8,6 +8,7 @@ interface WeatherMapProps {
   longitude?: number
   locationName?: string
   theme?: ThemeType
+  defaultMode?: 'static' | 'animation'
 }
 
 // Create a completely dynamic map component with no SSR
