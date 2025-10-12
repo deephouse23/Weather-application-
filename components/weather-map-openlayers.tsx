@@ -11,6 +11,7 @@ import Map from 'ol/Map'
 import View from 'ol/View'
 import TileLayer from 'ol/layer/Tile'
 import TileWMS from 'ol/source/TileWMS'
+import XYZ from 'ol/source/XYZ'
 import OSM from 'ol/source/OSM'
 import { fromLonLat } from 'ol/proj'
 import Feature from 'ol/Feature'
@@ -210,45 +211,51 @@ const WeatherMapOpenLayers = ({ latitude, longitude, locationName, theme = 'dark
         opacity: layerOpacity
       })
 
-      const wmsSource = new TileWMS({
-        url: '/api/weather/iowa-nexrad',
-        params: {
-          'LAYERS': 'nexrad-n0q-900913',  // Base reflectivity, high quality
-          'FORMAT': 'image/png',
-          'TRANSPARENT': 'TRUE',
-          'VERSION': '1.1.1',
-          // Temporarily remove TIME to test if service works without it
-          // 'TIME': timeISO,
-        },
-        projection: 'EPSG:3857',
-        serverType: 'mapserver',
+      // Use Iowa State's RIDGE tile cache (simple XYZ tiles, not WMS!)
+      // Format timestamp for Iowa State: YYYYMMDD-HHMM (UTC)
+      const timestampFormatted = new Date(timestamp).toISOString()
+        .replace(/[-:]/g, '')
+        .replace('T', '-')
+        .substring(0, 13) // YYYYMMDD-HHMM
+      
+      console.log(`  🔧 Creating XYZ tile layer for timestamp: ${timestampFormatted}`)
+      
+      const tileUrl = `/api/weather/iowa-nexrad-tiles/${timestampFormatted}/{z}/{x}/{y}.png`
+      
+      const xyzSource = new XYZ({
+        url: tileUrl,
+        crossOrigin: 'anonymous',
         transition: 0,
       })
+      
+      console.log(`  ✅ XYZ source created with URL pattern: ${tileUrl}`)
 
-      const wmsLayer = new TileLayer({
-        source: wmsSource,
+      const radarLayer = new TileLayer({
+        source: xyzSource,
         opacity: layerOpacity,
         zIndex: 500,
       })
+      
+      console.log(`  ✅ Tile layer created successfully`)
 
-      wmsLayer.set('name', `mrms-${timestamp}`)
-      wmsLayer.set('timestamp', timestamp)
+      radarLayer.set('name', `nexrad-${timestamp}`)
+      radarLayer.set('timestamp', timestamp)
 
       // Add event listeners for debugging
-      wmsSource.on('tileloadstart', () => {
-        console.log(`🔄 NEXRAD tile loading for ${timeISO}`)
+      xyzSource.on('tileloadstart', () => {
+        console.log(`🔄 NEXRAD tile loading for ${timestampFormatted}`)
       })
 
-      wmsSource.on('tileloadend', () => {
-        console.log(`✅ NEXRAD tile loaded for ${timeISO}`)
+      xyzSource.on('tileloadend', () => {
+        console.log(`✅ NEXRAD tile loaded for ${timestampFormatted}`)
       })
 
-      wmsSource.on('tileloaderror', (error) => {
-        console.error(`❌ NEXRAD tile error for ${timeISO}:`, error)
+      xyzSource.on('tileloaderror', (error) => {
+        console.error(`❌ NEXRAD tile error for ${timestampFormatted}:`, error)
       })
 
-      map.addLayer(wmsLayer)
-      mrmsLayersRef.current.push(wmsLayer)
+      map.addLayer(radarLayer)
+      mrmsLayersRef.current.push(radarLayer)
     })
 
     console.log(`✅ Added ${mrmsLayersRef.current.length} NEXRAD layers`)
