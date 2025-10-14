@@ -31,8 +31,7 @@ export default function HourlyPage() {
       try {
         setLoading(true)
         const data = await fetchWeatherByLocation(
-          parseFloat(lat),
-          parseFloat(lon),
+          `${lat},${lon}`,
           'imperial'
         )
         setWeather(data)
