@@ -926,6 +926,18 @@ function WeatherApp() {
                   </div>
                 </ResponsiveGrid>
 
+              {/* Hourly Forecast Link */}
+              {weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
+                <div className="flex justify-center">
+                  <Link
+                    href={`/hourly?lat=${weather.coordinates?.lat || 0}&lon=${weather.coordinates?.lon || 0}&city=${encodeURIComponent(weather.location || '')}`}
+                    className={`px-6 py-3 border-2 rounded-md font-mono text-sm font-bold transition-all hover:scale-105 ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg} flex items-center gap-2`}
+                  >
+                    ⏰ VIEW HOURLY FORECAST →
+                  </Link>
+                </div>
+              )}
+
               {/* Sun Times, UV Index, Moon Phase */}
               <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
                 {/* Sun Times Box */}
@@ -969,15 +981,6 @@ function WeatherApp() {
 
               {/* AQI and Pollen Count - Using Lazy Loaded Shared Components */}
               <LazyEnvironmentalDisplay weather={weather} theme={theme || 'dark'} />
-
-              {/* NEW: 48-Hour Hourly Forecast */}
-              {weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
-                <LazyHourlyForecast
-                  hourly={weather.hourlyForecast}
-                  theme={theme || 'dark'}
-                  tempUnit={weather?.unit || '°F'}
-                />
-              )}
 
               {/* Day click handler */}
               {(() => {

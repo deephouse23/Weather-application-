@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16-Bit Weather - Hourly Forecast Mockup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #00d4ff;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .search-section {
+            background: #16213e;
+            border: 4px solid #00d4ff;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .search-input {
+            background: #1a1a2e;
+            border: 2px solid #4ecdc4;
+            color: #e0e0e0;
+            padding: 10px;
+            font-size: 16px;
+            width: 100%;
+            max-width: 400px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .location-display {
+            background: #16213e;
+            border: 4px solid #00d4ff;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .location-name {
+            color: #00d4ff;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .current-weather-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .weather-card {
+            background: #1a1a2e;
+            border: 2px solid #4ecdc4;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .card-label {
+            color: #4ecdc4;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .card-value {
+            color: #ffe66d;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        /* NEW: Hourly Forecast Section */
+        .hourly-section {
+            background: #16213e;
+            border: 4px solid #00d4ff;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            color: #00d4ff;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        .hourly-scroll {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 10px 0;
+            background: #1a1a2e;
+            border: 2px solid #4ecdc4;
+        }
+
+        .hourly-scroll::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .hourly-scroll::-webkit-scrollbar-track {
+            background: #1a1a2e;
+        }
+
+        .hourly-scroll::-webkit-scrollbar-thumb {
+            background: #4ecdc4;
+        }
+
+        .hourly-container {
+            display: inline-flex;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .hourly-card {
+            background: #1a1a2e;
+            border: 2px solid #4ecdc4;
+            padding: 15px 10px;
+            min-width: 80px;
+            text-align: center;
+            display: inline-block;
+        }
+
+        .hourly-card.current {
+            background: #1f2347;
+            border-color: #00d4ff;
+            box-shadow: 0 0 10px #00d4ff;
+        }
+
+        .hourly-time {
+            color: #4ecdc4;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .hourly-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .hourly-temp {
+            color: #ffe66d;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .hourly-precip {
+            color: #00d4ff;
+            font-size: 11px;
+        }
+
+        /* 5-Day Forecast */
+        .forecast-section {
+            background: #16213e;
+            border: 4px solid #00d4ff;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .forecast-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+        }
+
+        .forecast-card {
+            background: #1a1a2e;
+            border: 2px solid #4ecdc4;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .forecast-day {
+            color: #4ecdc4;
+            font-size: 14px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .forecast-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .forecast-temps {
+            color: #ffe66d;
+            font-size: 16px;
+        }
+
+        .forecast-desc {
+            color: #4ecdc4;
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        .map-section {
+            background: #16213e;
+            border: 4px solid #00d4ff;
+            padding: 20px;
+            text-align: center;
+            min-height: 300px;
+        }
+
+        .map-placeholder {
+            background: #1a1a2e;
+            border: 2px solid #4ecdc4;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4ecdc4;
+        }
+
+        .highlight {
+            background: #ffe66d;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .annotation {
+            background: #ff006e;
+            color: #fff;
+            padding: 5px 10px;
+            margin-top: 10px;
+            font-size: 12px;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            ⚡ 16-BIT WEATHER ⚡
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <input type="text" class="search-input" placeholder="Enter city name or ZIP code..." value="San Francisco, CA">
+        </div>
+
+        <!-- Location Display -->
+        <div class="location-display">
+            <div class="location-name">📍 SAN FRANCISCO, CA, US</div>
+            <div style="color: #4ecdc4; font-size: 14px;">Tuesday, October 13, 2025 • 2:45 PM</div>
+        </div>
+
+        <!-- Current Weather Cards -->
+        <div class="current-weather-grid">
+            <div class="weather-card">
+                <div class="card-label">TEMPERATURE</div>
+                <div class="card-value">68°F</div>
+                <div class="card-label" style="margin-top: 5px;">Feels like 65°F</div>
+            </div>
+            <div class="weather-card">
+                <div class="card-label">CONDITIONS</div>
+                <div class="card-value" style="font-size: 20px;">⛅ Partly Cloudy</div>
+            </div>
+            <div class="weather-card">
+                <div class="card-label">WIND</div>
+                <div class="card-value" style="font-size: 20px;">W 12 mph</div>
+            </div>
+        </div>
+
+        <!-- NEW: 48-Hour Hourly Forecast -->
+        <div class="hourly-section">
+            <div class="section-title">⏰ 48-HOUR FORECAST</div>
+            <div class="annotation">✨ NEW FEATURE - SCROLL HORIZONTALLY → → →</div>
+            <div class="hourly-scroll">
+                <div class="hourly-container">
+                    <div class="hourly-card current">
+                        <div class="hourly-time">NOW</div>
+                        <div class="hourly-icon">⛅</div>
+                        <div class="hourly-temp">68°</div>
+                        <div class="hourly-precip">💧 10%</div>
+                    </div>
+                    <div class="hourly-card">
+                        <div class="hourly-time">3 PM</div>
+                        <div class="hourly-icon">☀️</div>
+                        <div class="hourly-temp">70°</div>
+                        <div class="hourly-precip">💧 5%</div>
+                    </div>
+                    <div class="hourly-card">
+                        <div class="hourly-time">4 PM</div>
+                        <div class="hourly-icon">☀️</div>
+                        <div class="hourly-temp">72°</div>
+                        <div class="hourly-precip">💧 0%</div>
+                    </div>
+                    <div class="hourly-card">
+                        <div class="hourly-time">5 PM</div>
+                        <div class="hourly-icon">☀️</div>
+                        <div class="hourly-temp">73°</div>
+                        <div class="hourly-precip">💧 0%</div>
+                    </div>
+                    <div class="hourly-card">
+                        <div class="hourly-time">6 PM</div>
+                        <div class="hourly-icon">⛅</div>
+                        <div class="hourly-temp">71°</div>
+                        <div class="hourly-precip">💧 5%</div>
+                    </div>
+                    <div class="hourly-card">
+                        <div class="hourly-time">7 PM</div>
+                        <div class="hourly-icon">☁️</div>
+                        <div class="hourly-temp">68°</div>
+                        <div class="hourly-precip">💧 15%</div>
+                    </div>
+                    <div class="hourly-card">
+                        <div class="hourly-time">8 PM</div>
+                        <div class="hourly-icon">🌧️</div>
+                        <div class="hourly-temp">65°</div>
+                        <div class="hourly-precip">💧 40%</div>
+                    </div>
+                    <div class="hourly-card">
+                        <div class="hourly-time">9 PM</div>
+                        <div class="hourly-icon">🌧️</div>
+                        <div class="hourly-temp">63°</div>
+                        <div class="hourly-precip">💧 60%</div>
+                    </div>
+                    <div class="hourly-card">
+                        <div class="hourly-time">10 PM</div>
+                        <div class="hourly-icon">🌧️</div>
+                        <div class="hourly-temp">62°</div>
+                        <div class="hourly-precip">💧 70%</div>
+                    </div>
+                    <div class="hourly-card">
+                        <div class="hourly-time">11 PM</div>
+                        <div class="hourly-icon">☁️</div>
+                        <div class="hourly-temp">61°</div>
+                        <div class="hourly-precip">💧 40%</div>
+                    </div>
+                    <div class="hourly-card">
+                        <div class="hourly-time">12 AM</div>
+                        <div class="hourly-icon">☁️</div>
+                        <div class="hourly-temp">60°</div>
+                        <div class="hourly-precip">💧 20%</div>
+                    </div>
+                    <div class="hourly-card">
+                        <div class="hourly-time">1 AM</div>
+                        <div class="hourly-icon">☁️</div>
+                        <div class="hourly-temp">59°</div>
+                        <div class="hourly-precip">💧 10%</div>
+                    </div>
+                    <!-- Continue for 48 hours... -->
+                    <div class="hourly-card">
+                        <div class="hourly-time">2 AM</div>
+                        <div class="hourly-icon">☁️</div>
+                        <div class="hourly-temp">58°</div>
+                        <div class="hourly-precip">💧 5%</div>
+                    </div>
+                    <div class="hourly-card">
+                        <div class="hourly-time">...</div>
+                        <div class="hourly-icon">→</div>
+                        <div class="hourly-temp">--°</div>
+                        <div class="hourly-precip">More</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5-Day Forecast (Existing) -->
+        <div class="forecast-section">
+            <div class="section-title">📅 5-DAY FORECAST</div>
+            <div class="forecast-grid">
+                <div class="forecast-card">
+                    <div class="forecast-day">WEDNESDAY<br>10.14.25</div>
+                    <div class="forecast-icon">☀️</div>
+                    <div class="forecast-temps">75° / 58°</div>
+                    <div class="forecast-desc">Sunny</div>
+                </div>
+                <div class="forecast-card">
+                    <div class="forecast-day">THURSDAY<br>10.15.25</div>
+                    <div class="forecast-icon">⛅</div>
+                    <div class="forecast-temps">72° / 60°</div>
+                    <div class="forecast-desc">Partly Cloudy</div>
+                </div>
+                <div class="forecast-card">
+                    <div class="forecast-day">FRIDAY<br>10.16.25</div>
+                    <div class="forecast-icon">🌧️</div>
+                    <div class="forecast-temps">65° / 57°</div>
+                    <div class="forecast-desc">Rainy</div>
+                </div>
+                <div class="forecast-card">
+                    <div class="forecast-day">SATURDAY<br>10.17.25</div>
+                    <div class="forecast-icon">⛅</div>
+                    <div class="forecast-temps">68° / 55°</div>
+                    <div class="forecast-desc">Partly Cloudy</div>
+                </div>
+                <div class="forecast-card">
+                    <div class="forecast-day">SUNDAY<br>10.18.25</div>
+                    <div class="forecast-icon">☀️</div>
+                    <div class="forecast-temps">71° / 56°</div>
+                    <div class="forecast-desc">Sunny</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weather Map (Existing) -->
+        <div class="map-section">
+            <div class="section-title">🗺️ WEATHER RADAR</div>
+            <div class="map-placeholder">
+                [Interactive Weather Radar Map]
+            </div>
+        </div>
+    </div>
+</body>
+</html>

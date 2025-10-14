@@ -18,6 +18,7 @@ import { useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
 import { Droplets } from "lucide-react"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
+import ModernWeatherIcon from "./modern-weather-icon"
 
 export interface HourlyForecastData {
   dt: number;
@@ -183,7 +184,12 @@ function HourlyCard({
 
       {/* Weather Icon */}
       <div className="mb-2 flex items-center justify-center">
-        <WeatherIcon condition={hour.condition} size="small" theme={theme} />
+        <ModernWeatherIcon
+          code={hour.icon}
+          condition={hour.condition}
+          size={32}
+          className="hover:scale-110 transition-transform"
+        />
       </div>
 
       {/* Temperature */}
@@ -213,79 +219,6 @@ function HourlyCard({
           {Math.round(hour.windSpeed)} mph {hour.windDirection || ''}
         </div>
       )}
-    </div>
-  );
-}
-
-// Weather icon component matching your existing style
-function WeatherIcon({ condition, size, theme }: {
-  condition: string;
-  size: "small" | "medium";
-  theme: ThemeType;
-}) {
-  const sizeClasses = {
-    small: "w-6 h-6 sm:w-8 sm:h-8",
-    medium: "w-8 h-8 sm:w-10 sm:h-10"
-  };
-
-  const iconStyle = {
-    imageRendering: "pixelated" as const,
-    filter: "contrast(1.2) saturate(1.3)",
-  };
-
-  const conditionLower = condition.toLowerCase();
-
-  // Sunny/Clear conditions
-  if (conditionLower.includes('clear') || conditionLower.includes('sunny') || conditionLower === 'sun') {
-    return (
-      <div className={cn("relative", sizeClasses[size])} style={iconStyle}>
-        <div className="absolute inset-0 bg-[#ffe66d] rounded-full"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-[#ffcc02] rounded-full"></div>
-      </div>
-    );
-  }
-
-  // Rainy conditions
-  if (conditionLower.includes('rain') || conditionLower.includes('drizzle') || conditionLower.includes('thunder')) {
-    return (
-      <div className={cn("relative", sizeClasses[size])} style={iconStyle}>
-        <div className="absolute top-0 left-0 w-3/4 h-1/2 bg-[#6c7b7f] rounded-full"></div>
-        <div className="absolute top-1/4 right-0 w-3/4 h-1/2 bg-[#5a6c70] rounded-full"></div>
-        <div className="absolute bottom-0 left-1/4 w-1 h-1/3 bg-[#00d4ff]"></div>
-        <div className="absolute bottom-0 right-1/4 w-1 h-1/3 bg-[#00d4ff]"></div>
-      </div>
-    );
-  }
-
-  // Snowy conditions
-  if (conditionLower.includes('snow') || conditionLower.includes('sleet') || conditionLower.includes('ice')) {
-    return (
-      <div className={cn("relative", sizeClasses[size])} style={iconStyle}>
-        <div className="absolute top-0 left-0 w-3/4 h-1/2 bg-[#d0d0d0] rounded-full"></div>
-        <div className="absolute top-1/4 right-0 w-3/4 h-1/2 bg-[#b8b8b8] rounded-full"></div>
-        <div className="absolute bottom-1 left-1/4 w-2 h-2 bg-white transform rotate-45"></div>
-        <div className="absolute bottom-0 right-1/4 w-2 h-2 bg-white transform rotate-45"></div>
-      </div>
-    );
-  }
-
-  // Foggy/Misty conditions
-  if (conditionLower.includes('fog') || conditionLower.includes('mist') || conditionLower.includes('haze')) {
-    return (
-      <div className={cn("relative", sizeClasses[size])} style={iconStyle}>
-        <div className="absolute top-1/4 left-0 right-0 h-1 bg-[#c0c0c0]"></div>
-        <div className="absolute top-1/2 left-1/4 right-1/4 h-1 bg-[#d0d0d0]"></div>
-        <div className="absolute bottom-1/4 left-0 right-0 h-1 bg-[#b0b0b0]"></div>
-      </div>
-    );
-  }
-
-  // Cloudy conditions (default)
-  return (
-    <div className={cn("relative", sizeClasses[size])} style={iconStyle}>
-      <div className="absolute bottom-0 left-0 w-3/4 h-3/4 bg-[#e0e0e0] rounded-full"></div>
-      <div className="absolute top-0 right-0 w-3/4 h-3/4 bg-[#b0b0b0] rounded-full"></div>
-      <div className="absolute top-1/4 left-1/4 w-1/2 h-1/2 bg-[#d0d0d0] rounded-full"></div>
     </div>
   );
 }

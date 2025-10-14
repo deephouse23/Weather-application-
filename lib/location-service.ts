@@ -78,6 +78,7 @@ interface NominatimResponse {
   address?: {
     city?: string;
     town?: string;
+    suburb?: string; // Sometimes more accurate for smaller cities
     village?: string;
     hamlet?: string;
     state?: string;
@@ -266,12 +267,19 @@ export class LocationService {
 
   /**
    * Reverse geocode coordinates to get human-readable location
+   * Uses Nominatim with improved zoom level for better city precision
    */
   private async reverseGeocode(latitude: number, longitude: number): Promise<LocationData> {
     try {
-      // Use OpenStreetMap Nominatim for reverse geocoding (free service)
+      // Use zoom=18 for maximum precision (city/neighborhood level)
+      // addressdetails=1 to get detailed address components
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=en`
+        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=en&zoom=18&addressdetails=1`,
+        {
+          headers: {
+            'User-Agent': '16BitWeather/1.0' // Required by Nominatim usage policy
+          }
+        }
       );
 
       if (!response.ok) {
@@ -279,10 +287,13 @@ export class LocationService {
       }
 
       const data: NominatimResponse = await response.json();
-      console.log('Reverse geocoding response:', data);
+      console.log('Nominatim reverse geocoding response:', data);
 
       const address = data.address || {};
-      const city = address.city || address.town || address.village || address.hamlet || 'Unknown City';
+
+      // Prioritize city over town/village/hamlet for better accuracy
+      // suburb is sometimes more accurate for smaller cities
+      const city = address.city || address.town || address.suburb || address.village || address.hamlet || 'Unknown City';
       const region = address.state || address.province || address.region || '';
       const country = address.country || 'Unknown Country';
 
@@ -298,7 +309,7 @@ export class LocationService {
 
     } catch (error) {
       console.warn('Reverse geocoding failed, using coordinates:', error);
-      
+
       // Fallback to coordinate display
       return {
         latitude,
