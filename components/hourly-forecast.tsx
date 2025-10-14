@@ -145,7 +145,7 @@ function HourlyCard({
     <div
       className={cn(
         "flex-shrink-0 flex flex-col items-center justify-between",
-        "border-2 p-2 sm:p-3 min-w-[70px] sm:min-w-[80px]",
+        "border-2 p-2 sm:p-3 min-w-[85px] sm:min-w-[95px]",
         "transition-all duration-200 hover:scale-105",
         themeClasses.cardBg,
         themeClasses.borderColor,
@@ -182,13 +182,13 @@ function HourlyCard({
         </div>
       )}
 
-      {/* Weather Icon */}
+      {/* Weather Icon - Larger and more distinct */}
       <div className="mb-2 flex items-center justify-center">
         <ModernWeatherIcon
           code={hour.icon}
           condition={hour.condition}
-          size={32}
-          className="hover:scale-110 transition-transform"
+          size={48}
+          className="hover:scale-110 transition-transform drop-shadow-md"
         />
       </div>
 
@@ -202,13 +202,14 @@ function HourlyCard({
         {Math.round(hour.temp)}{tempUnit}
       </div>
 
-      {/* Precipitation Chance */}
-      {hour.precipChance > 0 && (
-        <div className="flex items-center gap-1 text-[10px] sm:text-xs text-blue-400">
-          <Droplets className="w-3 h-3" />
-          <span>{hour.precipChance}%</span>
-        </div>
-      )}
+      {/* Precipitation Chance - Always show */}
+      <div className={cn(
+        "flex items-center gap-1 text-[10px] sm:text-xs",
+        hour.precipChance > 0 ? "text-blue-400" : "text-gray-500 opacity-70"
+      )}>
+        <Droplets className="w-3 h-3" />
+        <span>{hour.precipChance}%</span>
+      </div>
 
       {/* Wind (optional, shown on hover for larger screens) */}
       {hour.windSpeed && (
