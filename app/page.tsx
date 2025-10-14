@@ -33,6 +33,7 @@ import { userCacheService } from "@/lib/user-cache-service"
 import { toastService } from "@/lib/toast-service"
 import { APP_CONSTANTS } from "@/lib/utils"
 import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from "@/components/lazy-weather-components"
+import LazyHourlyForecast from "@/components/lazy-hourly-forecast"
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/responsive-container"
 import { ErrorBoundary, SafeRender } from "@/components/error-boundary"
 import { useLocationContext } from "@/components/location-context"
@@ -93,6 +94,7 @@ function WeatherApp() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [isAutoDetecting, setIsAutoDetecting] = useState(false)
   const [autoLocationAttempted, setAutoLocationAttempted] = useState(false)
+  const [showHourlyForecast, setShowHourlyForecast] = useState(false)
   // Auth context (profile + preferences from user portal)
   const { profile, preferences, loading: authLoading } = useAuth()
 
@@ -911,6 +913,14 @@ function WeatherApp() {
                       <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Conditions</h2>
                       <p className={`text-lg ${themeClasses.text}`}>{weather?.condition || 'Unknown'}</p>
                       <p className={`text-sm ${themeClasses.secondaryText}`}>{weather?.description || 'No description available'}</p>
+                      {weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
+                        <button
+                          onClick={() => setShowHourlyForecast(!showHourlyForecast)}
+                          className={`mt-3 px-3 py-1.5 border rounded-md font-mono text-xs font-bold transition-all hover:scale-105 ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`}
+                        >
+                          {showHourlyForecast ? '▼ Hide Hourly' : '► Hourly'}
+                        </button>
+                      )}
                     </div>
                   </div>
                   <div className={`p-0 rounded-lg ${themeClasses.cardBg} ${themeClasses.borderColor} border-2`}>
@@ -968,6 +978,15 @@ function WeatherApp() {
 
               {/* AQI and Pollen Count - Using Lazy Loaded Shared Components */}
               <LazyEnvironmentalDisplay weather={weather} theme={theme || 'dark'} />
+
+              {/* Expandable Hourly Forecast */}
+              {showHourlyForecast && weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
+                <LazyHourlyForecast
+                  hourly={weather.hourlyForecast}
+                  theme={theme}
+                  tempUnit={weather.unit || '°F'}
+                />
+              )}
 
               {/* Day click handler */}
               {(() => {

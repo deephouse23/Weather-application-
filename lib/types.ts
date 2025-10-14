@@ -22,6 +22,22 @@ export interface HourlyForecast {
   humidity?: number;
 }
 
+// Enhanced hourly forecast data with additional details
+export interface EnhancedHourlyForecast {
+  dt: number;          // Unix timestamp
+  time: string;        // Formatted time (e.g., "2 PM")
+  temp: number;
+  feelsLike?: number;
+  condition: string;
+  description: string;
+  precipChance: number;
+  windSpeed?: number;
+  windDirection?: string;
+  humidity?: number;
+  uvIndex?: number;
+  icon?: string;
+}
+
 export interface WeatherData {
   location: string;
   country: string;
@@ -74,6 +90,7 @@ export interface WeatherData {
     grass: Record<string, string>;
     weed: Record<string, string>;
   };
+  hourlyForecast?: EnhancedHourlyForecast[]; // 48-hour forecast data
 }
 
 export interface HistoricalData {
