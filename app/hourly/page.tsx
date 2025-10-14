@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useTheme } from "@/components/theme-provider"
 import { ArrowLeft, Loader2 } from "lucide-react"
@@ -11,7 +11,7 @@ import type { WeatherData } from "@/lib/types"
 // Force dynamic rendering - this page requires search params at runtime
 export const dynamic = 'force-dynamic'
 
-export default function HourlyPage() {
+function HourlyPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { theme } = useTheme()
@@ -118,5 +118,20 @@ export default function HourlyPage() {
         <p className="mt-2">💧 Precipitation chances are displayed for each hour</p>
       </div>
     </div>
+  )
+}
+
+export default function HourlyPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-12 h-12 animate-spin text-[var(--accent)]" />
+          <span className="ml-4 text-xl text-[var(--text)]">Loading hourly forecast...</span>
+        </div>
+      </div>
+    }>
+      <HourlyPageContent />
+    </Suspense>
   )
 }
