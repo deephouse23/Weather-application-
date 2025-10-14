@@ -94,6 +94,7 @@ function WeatherApp() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [isAutoDetecting, setIsAutoDetecting] = useState(false)
   const [autoLocationAttempted, setAutoLocationAttempted] = useState(false)
+  const [showHourlyForecast, setShowHourlyForecast] = useState(false)
   // Auth context (profile + preferences from user portal)
   const { profile, preferences, loading: authLoading } = useAuth()
 
@@ -912,6 +913,14 @@ function WeatherApp() {
                       <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Conditions</h2>
                       <p className={`text-lg ${themeClasses.text}`}>{weather?.condition || 'Unknown'}</p>
                       <p className={`text-sm ${themeClasses.secondaryText}`}>{weather?.description || 'No description available'}</p>
+                      {weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
+                        <button
+                          onClick={() => setShowHourlyForecast(!showHourlyForecast)}
+                          className={`mt-3 px-3 py-1.5 border rounded-md font-mono text-xs font-bold transition-all hover:scale-105 ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`}
+                        >
+                          {showHourlyForecast ? '▼ Hide Hourly' : '► Hourly'}
+                        </button>
+                      )}
                     </div>
                   </div>
                   <div className={`p-0 rounded-lg ${themeClasses.cardBg} ${themeClasses.borderColor} border-2`}>
@@ -925,18 +934,6 @@ function WeatherApp() {
                     </div>
                   </div>
                 </ResponsiveGrid>
-
-              {/* Hourly Forecast Link */}
-              {weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
-                <div className="flex justify-center">
-                  <Link
-                    href={`/hourly?lat=${weather.coordinates?.lat || 0}&lon=${weather.coordinates?.lon || 0}&city=${encodeURIComponent(weather.location || '')}`}
-                    className={`px-6 py-3 border-2 rounded-md font-mono text-sm font-bold transition-all hover:scale-105 ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg} flex items-center gap-2`}
-                  >
-                    ⏰ VIEW HOURLY FORECAST →
-                  </Link>
-                </div>
-              )}
 
               {/* Sun Times, UV Index, Moon Phase */}
               <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
@@ -978,6 +975,15 @@ function WeatherApp() {
                   </div>
                 </div>
               </ResponsiveGrid>
+
+              {/* Expandable Hourly Forecast */}
+              {showHourlyForecast && weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
+                <LazyHourlyForecast
+                  hourly={weather.hourlyForecast}
+                  theme={theme}
+                  tempUnit={weather.unit || '°F'}
+                />
+              )}
 
               {/* AQI and Pollen Count - Using Lazy Loaded Shared Components */}
               <LazyEnvironmentalDisplay weather={weather} theme={theme || 'dark'} />
