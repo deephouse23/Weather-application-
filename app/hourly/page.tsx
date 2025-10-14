@@ -8,6 +8,9 @@ import { fetchWeatherByLocation } from "@/lib/weather-api"
 import HourlyForecast from "@/components/hourly-forecast"
 import type { WeatherData } from "@/lib/types"
 
+// Force dynamic rendering - this page requires search params at runtime
+export const dynamic = 'force-dynamic'
+
 export default function HourlyPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
