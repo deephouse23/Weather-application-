@@ -976,6 +976,9 @@ function WeatherApp() {
                 </div>
               </ResponsiveGrid>
 
+              {/* AQI and Pollen Count - Using Lazy Loaded Shared Components */}
+              <LazyEnvironmentalDisplay weather={weather} theme={theme || 'dark'} />
+
               {/* Expandable Hourly Forecast */}
               {showHourlyForecast && weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
                 <LazyHourlyForecast
@@ -984,9 +987,6 @@ function WeatherApp() {
                   tempUnit={weather.unit || '°F'}
                 />
               )}
-
-              {/* AQI and Pollen Count - Using Lazy Loaded Shared Components */}
-              <LazyEnvironmentalDisplay weather={weather} theme={theme || 'dark'} />
 
               {/* Day click handler */}
               {(() => {
