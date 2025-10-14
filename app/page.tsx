@@ -33,6 +33,7 @@ import { userCacheService } from "@/lib/user-cache-service"
 import { toastService } from "@/lib/toast-service"
 import { APP_CONSTANTS } from "@/lib/utils"
 import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from "@/components/lazy-weather-components"
+import LazyHourlyForecast from "@/components/lazy-hourly-forecast"
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/responsive-container"
 import { ErrorBoundary, SafeRender } from "@/components/error-boundary"
 import { useLocationContext } from "@/components/location-context"
@@ -968,6 +969,15 @@ function WeatherApp() {
 
               {/* AQI and Pollen Count - Using Lazy Loaded Shared Components */}
               <LazyEnvironmentalDisplay weather={weather} theme={theme || 'dark'} />
+
+              {/* NEW: 48-Hour Hourly Forecast */}
+              {weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
+                <LazyHourlyForecast
+                  hourly={weather.hourlyForecast}
+                  theme={theme || 'dark'}
+                  tempUnit={weather?.unit || '°F'}
+                />
+              )}
 
               {/* Day click handler */}
               {(() => {

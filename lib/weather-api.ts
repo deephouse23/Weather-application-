@@ -23,7 +23,7 @@
  * - UV Index, pressure, and moon phase calculations
  */
 
-import { WeatherData, HourlyForecast } from './types'
+import { WeatherData, HourlyForecast, EnhancedHourlyForecast } from './types'
 
 interface OpenWeatherMapCurrentResponse {
   main: {
@@ -909,6 +909,46 @@ const fetchAirQualityData = async (lat: number, lon: number, cityName?: string):
 
 // Note: AQI calculation functions moved to server-side API routes
 
+/**
+ * Process hourly forecast data from One Call API
+ * @param hourlyData - Array of hourly data from One Call API
+ * @param timezoneOffset - Timezone offset in seconds
+ * @returns Array of processed hourly forecast data (48 hours)
+ */
+const processHourlyForecast = (hourlyData: any[], timezoneOffset: number = 0): EnhancedHourlyForecast[] => {
+  if (!Array.isArray(hourlyData) || hourlyData.length === 0) {
+    return [];
+  }
+
+  // Process up to 48 hours
+  return hourlyData.slice(0, 48).map((hour: any) => {
+    const dt = hour.dt;
+    const hourTime = new Date(dt * 1000);
+
+    // Format time with timezone offset
+    const localTime = new Date((dt + timezoneOffset) * 1000);
+    const hours = localTime.getUTCHours();
+    const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const timeString = `${displayHours} ${ampm}`;
+
+    return {
+      dt: dt,
+      time: timeString,
+      temp: hour.temp ?? 0,
+      feelsLike: hour.feels_like,
+      condition: hour.weather?.[0]?.main || 'Clear',
+      description: hour.weather?.[0]?.description || 'clear sky',
+      precipChance: Math.round((hour.pop ?? 0) * 100),
+      windSpeed: hour.wind_speed,
+      windDirection: hour.wind_deg ? getWindDirection(hour.wind_deg) : undefined,
+      humidity: hour.humidity,
+      uvIndex: hour.uvi ? Math.round(hour.uvi) : undefined,
+      icon: hour.weather?.[0]?.icon
+    };
+  });
+}
+
 export const fetchWeatherData = async (
   locationInput: string,
   unitSystem: 'metric' | 'imperial' = 'imperial'
@@ -1042,6 +1082,10 @@ export const fetchWeatherData = async (
     const airQualityData = await fetchAirQualityData(lat, lon, displayName);
     console.log('Weather Data - Air Quality:', airQualityData);
 
+    // Process hourly forecast data (48 hours)
+    const hourlyForecast = processHourlyForecast(oneCall.hourly || [], oneCall.timezone_offset || 0);
+    console.log('Processed hourly forecast:', hourlyForecast.length, 'hours');
+
     // Construct weather data object
     const weatherData: WeatherData = {
       location: displayName,
@@ -1065,7 +1109,8 @@ export const fetchWeatherData = async (
       aqi: airQualityData.aqi,
       aqiCategory: airQualityData.category,
       pollen: pollenData,
-      coordinates: { lat, lon }
+      coordinates: { lat, lon },
+      hourlyForecast: hourlyForecast
     };
 
     console.log('Final weather data:', weatherData);
@@ -1222,6 +1267,10 @@ export const fetchWeatherByLocation = async (
     const airQualityData = await fetchAirQualityData(latitude, longitude, `${oneCall?.timezone || 'Unknown'}`);
     console.log('Weather Data - Air Quality:', airQualityData);
 
+    // Process hourly forecast data (48 hours)
+    const hourlyForecast = processHourlyForecast(oneCall.hourly || [], oneCall.timezone_offset || 0);
+    console.log('Processed hourly forecast:', hourlyForecast.length, 'hours');
+
     // Construct weather data object
     const weatherData: WeatherData = {
       location: `${oneCall?.timezone || 'Selected Location'}`,
@@ -1245,7 +1294,8 @@ export const fetchWeatherByLocation = async (
       aqi: airQualityData.aqi,
       aqiCategory: airQualityData.category,
       pollen: pollenData,
-      coordinates: { lat: latitude, lon: longitude }
+      coordinates: { lat: latitude, lon: longitude },
+      hourlyForecast: hourlyForecast
     }
 
     console.log('Final weather data:', weatherData)
