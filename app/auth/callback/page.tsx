@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
 import { supabase } from '@/lib/supabase/client'
@@ -19,6 +20,7 @@ function AuthCallbackContent() {
   const handleRedirect = useCallback((destination: string, delay = 1000) => {
     setTimeout(() => {
       router.replace(destination)
+      router.refresh() // Force refresh to update auth state
     }, delay)
   }, [router])
 
@@ -28,7 +30,7 @@ function AuthCallbackContent() {
         const code = searchParams.get('code')
         const error = searchParams.get('error')
         const errorDescription = searchParams.get('error_description')
-        const next = searchParams.get('next') || '/dashboard'
+        const next = searchParams.get('next') || '/' // Default to homepage instead of dashboard
 
         // Handle OAuth errors
         if (error) {
@@ -46,10 +48,10 @@ function AuthCallbackContent() {
           return
         }
 
-        setStatus('Exchanging code for session...')
-        
+        setStatus('Verifying your account...')
+
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
-        
+
         if (exchangeError) {
           console.error('Auth exchange error:', exchangeError)
           setError(exchangeError.message)
@@ -58,29 +60,30 @@ function AuthCallbackContent() {
           return
         }
 
-        setStatus('Authentication successful! Setting up your session...')
-        
-        // Wait for the auth context to initialize and recognize the user
+        setStatus('Authentication successful!')
+
+        // Simplified wait logic - reduced timeout to 3 seconds max
         let attempts = 0
-        const maxAttempts = 50 // 5 seconds max
-        
+        const maxAttempts = 20 // 2 seconds max (20 × 100ms)
+
         const waitForAuth = () => {
           attempts++
-          
+
           if (isInitialized && user) {
-            setStatus('Welcome! Redirecting to your dashboard...')
-            handleRedirect(next, 500)
+            setStatus('Welcome back! Redirecting...')
+            handleRedirect(next, 300)
           } else if (attempts >= maxAttempts) {
-            console.warn('Timeout waiting for auth initialization')
-            setStatus('Taking longer than expected. Redirecting...')
-            handleRedirect(next, 1000)
+            // Auth succeeded but context taking too long - redirect anyway
+            console.warn('Auth context initialization timeout - proceeding with redirect')
+            setStatus('Welcome! Redirecting...')
+            handleRedirect(next, 500)
           } else {
             setTimeout(waitForAuth, 100)
           }
         }
-        
+
         waitForAuth()
-        
+
       } catch (error) {
         console.error('Callback error:', error)
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -97,20 +100,31 @@ function AuthCallbackContent() {
   const isError = error !== null
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: 'var(--bg)' }}>
       <div className={`text-center p-8 border-4 max-w-md w-full ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
-        <div className={`w-12 h-12 border-2 flex items-center justify-center mx-auto mb-4 ${
-          isError ? 'border-red-500' : isSuccess ? 'border-green-500' : 'animate-pulse'
-        } ${themeClasses.accentBg} ${themeClasses.borderColor}`}>
-          <span className="text-black font-bold text-lg">16</span>
+        {/* 16-Bit Weather Logo */}
+        <div className="flex justify-center mb-6">
+          <div className={`w-24 h-24 flex items-center justify-center ${
+            isError ? 'opacity-50' : isSuccess ? 'opacity-100' : 'animate-pulse'
+          }`}>
+            <Image
+              src="/logo-16bit-weather.svg"
+              alt="16-Bit Weather"
+              width={96}
+              height={96}
+              className={themeClasses.text}
+              style={{ filter: isError ? 'grayscale(1)' : 'none' }}
+              priority
+            />
+          </div>
         </div>
-        
+
         <h1 className={`text-xl font-bold uppercase tracking-wider font-mono mb-4 ${themeClasses.text}`}>
-          {isError ? 'Authentication Failed' : 
-           isSuccess ? 'Authentication Complete!' : 
-           'Processing Authentication...'}
+          {isError ? 'Authentication Failed' :
+           isSuccess ? 'Welcome to 16-Bit Weather!' :
+           'Verifying Account...'}
         </h1>
-        
+
         <p className={`text-sm font-mono mb-4 ${
           isError ? 'text-red-400' : themeClasses.secondary || themeClasses.text
         }`}>
@@ -118,23 +132,26 @@ function AuthCallbackContent() {
         </p>
 
         {error && (
-          <div className={`text-xs font-mono text-red-400 mb-4 p-2 border border-red-500 rounded ${themeClasses.background}`}>
-            Error: {error}
+          <div className={`text-xs font-mono text-red-400 mb-4 p-3 border-2 border-red-500 ${themeClasses.background}`}>
+            <strong>Error:</strong> {error}
           </div>
         )}
 
         {!isError && (
-          <div className="mt-4">
-            <div className={`inline-block animate-spin rounded-full h-6 w-6 border-b-2 ${
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <div className={`inline-block animate-spin rounded-full h-6 w-6 border-2 border-t-transparent ${
               isSuccess ? 'border-green-500' : themeClasses.borderColor
             }`}></div>
+            {isSuccess && (
+              <span className="text-green-500 font-mono text-sm">✓</span>
+            )}
           </div>
         )}
 
-        <div className={`text-xs font-mono mt-4 opacity-70 ${themeClasses.text}`}>
-          {loading ? 'Initializing session...' : 
-           isInitialized && user ? 'Session ready' : 
-           'Waiting for authentication...'}
+        <div className={`text-xs font-mono mt-6 opacity-70 ${themeClasses.text}`}>
+          {loading ? 'Initializing your session...' :
+           isInitialized && user ? '✓ Session authenticated' :
+           'Connecting to server...'}
         </div>
       </div>
     </div>
@@ -143,19 +160,28 @@ function AuthCallbackContent() {
 
 function LoadingFallback() {
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: 'var(--bg, #0a0a0a)' }}>
       <div className="text-center p-8 border-4 max-w-md w-full bg-black border-green-500 shadow-lg shadow-green-500/20">
-        <div className="w-12 h-12 border-2 border-green-500 bg-green-500 flex items-center justify-center mx-auto mb-4 animate-pulse">
-          <span className="text-black font-bold text-lg">16</span>
+        <div className="flex justify-center mb-6">
+          <div className="w-24 h-24 animate-pulse">
+            <Image
+              src="/logo-16bit-weather.svg"
+              alt="16-Bit Weather"
+              width={96}
+              height={96}
+              className="text-green-500"
+              priority
+            />
+          </div>
         </div>
         <h1 className="text-xl font-bold uppercase tracking-wider font-mono mb-4 text-green-500">
-          Loading Authentication...
+          16-Bit Weather
         </h1>
         <p className="text-sm font-mono mb-4 text-green-400">
-          Preparing authentication handler...
+          Preparing authentication...
         </p>
         <div className="mt-4">
-          <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-green-500"></div>
+          <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-t-transparent border-green-500"></div>
         </div>
       </div>
     </div>

@@ -36,19 +36,22 @@ export default function AuthForm({ mode }: AuthFormProps) {
         if (error) {
           setError(error.message)
         } else if (user) {
+          // Redirect to homepage and refresh to update auth state
           router.push('/')
+          router.refresh()
         }
       } else {
-        const { user, error } = await signUp({ 
-          email, 
-          password, 
+        const { user, error } = await signUp({
+          email,
+          password,
           username: username || undefined,
           full_name: fullName || undefined
         })
         if (error) {
           setError(error.message)
         } else {
-          setError('Check your email for confirmation link')
+          // Show success message for email verification
+          setError('Success! Check your email for a confirmation link.')
         }
       }
     } catch (err) {
