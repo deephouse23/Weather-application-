@@ -50,8 +50,13 @@ export default function NewsPage() {
       const data = await response.json();
 
       if (data.status === 'ok' && data.items) {
-        setNews(data.items);
-        setFilteredNews(data.items);
+        // Convert timestamp strings to Date objects
+        const items = data.items.map((item: any) => ({
+          ...item,
+          timestamp: new Date(item.timestamp),
+        }));
+        setNews(items);
+        setFilteredNews(items);
       } else {
         throw new Error(data.message || 'No news available');
       }
@@ -77,7 +82,11 @@ export default function NewsPage() {
       const data = await response.json();
 
       if (data.status === 'ok' && data.featured) {
-        setFeaturedStory(data.featured);
+        // Convert timestamp string to Date object
+        setFeaturedStory({
+          ...data.featured,
+          timestamp: new Date(data.featured.timestamp),
+        });
       }
     } catch (err) {
       console.error('Error fetching featured story:', err);
