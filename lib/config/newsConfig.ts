@@ -13,10 +13,43 @@ export const newsConfig = {
     newsApiKey: process.env.NEXT_PUBLIC_NEWS_API_KEY || '',
     newsApiUrl: 'https://newsapi.org/v2',
     weatherAlertsUrl: 'https://api.weather.gov/alerts/active',
-    // Add backup news sources here
+    // Free news sources (no API key required)
     backupSources: [
-      'https://api.weather.gov/alerts/active', // NOAA weather alerts (no key required)
+      'https://api.weather.gov/alerts/active', // NOAA weather alerts
+      'https://earthobservatory.nasa.gov/feeds/earth-observatory.rss', // NASA Earth Observatory
+      'https://www.foxweather.com/feeds/public/latest.rss', // FOX Weather
+      'https://www.reddit.com/r/weather/.json', // Reddit weather
     ]
+  },
+
+  // Source Configuration
+  sources: {
+    noaa: {
+      enabled: true,
+      cacheDuration: 5 * 60 * 1000, // 5 minutes
+      priority: 1, // Highest priority
+    },
+    nasa: {
+      enabled: true,
+      cacheDuration: 60 * 60 * 1000, // 1 hour
+      priority: 2,
+    },
+    fox: {
+      enabled: true,
+      cacheDuration: 15 * 60 * 1000, // 15 minutes
+      priority: 3,
+    },
+    reddit: {
+      enabled: true,
+      cacheDuration: 10 * 60 * 1000, // 10 minutes
+      priority: 4,
+    },
+    newsapi: {
+      enabled: true,
+      cacheDuration: 15 * 60 * 1000, // 15 minutes
+      priority: 5,
+      requiresApiKey: true,
+    }
   },
 
   // Cache Configuration
