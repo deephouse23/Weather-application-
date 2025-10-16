@@ -53,11 +53,22 @@ export const signIn = async ({ email, password }: SignInData): Promise<AuthRespo
 }
 
 // Sign in with OAuth providers
-export const signInWithProvider = async (provider: 'google' | 'github' | 'discord') => {
+export const signInWithProvider = async (
+  provider: 'google' | 'github' | 'discord',
+  options?: { redirectTo?: string }
+) => {
+  // Build callback URL with optional next parameter
+  const callbackUrl = new URL(`${window.location.origin}/auth/callback`)
+  if (options?.redirectTo) {
+    callbackUrl.searchParams.set('next', options.redirectTo)
+  }
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${window.location.origin}/auth/callback`
+      redirectTo: callbackUrl.toString(),
+      // Skip confirmation for better UX
+      skipBrowserRedirect: false,
     }
   })
 
