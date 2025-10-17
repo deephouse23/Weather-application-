@@ -167,8 +167,25 @@ async function fetchWithStats(
 
 /**
  * Deduplicate news items across sources using fuzzy title matching
+ * Separates alerts from articles to prevent keyword overlap issues
  */
 function deduplicateNews(news: NewsItem[]): NewsItem[] {
+  // Separate alerts from articles
+  const alerts = news.filter((item) => item.category === 'alerts');
+  const articles = news.filter((item) => item.category !== 'alerts');
+
+  // Deduplicate each group separately
+  const deduplicatedAlerts = deduplicateGroup(alerts);
+  const deduplicatedArticles = deduplicateGroup(articles);
+
+  // Combine and return
+  return [...deduplicatedAlerts, ...deduplicatedArticles];
+}
+
+/**
+ * Deduplicate a group of news items
+ */
+function deduplicateGroup(news: NewsItem[]): NewsItem[] {
   const seen = new Map<string, NewsItem>();
   const titleKeys = new Set<string>();
 

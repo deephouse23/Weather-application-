@@ -38,7 +38,8 @@ export type NewsCategory =
   | 'severe' // Severe weather (subset of weather)
   | 'climate' // Climate news
   | 'tropical' // Tropical weather (hurricanes, etc.)
-  | 'community'; // Community posts (Reddit, etc.)
+  | 'community' // Community posts (Reddit, etc.)
+  | 'alerts'; // Weather alerts (NOAA/NWS)
 
 /**
  * Priority levels

@@ -23,7 +23,7 @@ export interface NewsItem {
   title: string;
   url: string;
   source: string;
-  category: 'breaking' | 'weather' | 'local' | 'general' | 'severe' | 'climate' | 'tropical' | 'community';
+  category: 'breaking' | 'weather' | 'local' | 'general' | 'severe' | 'climate' | 'tropical' | 'community' | 'alerts';
   priority: 'high' | 'medium' | 'low';
   timestamp: Date;
   description?: string;

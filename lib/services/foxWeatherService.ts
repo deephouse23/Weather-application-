@@ -53,7 +53,7 @@ export async function fetchFOXWeatherNews(
 /**
  * Fetch all FOX Weather feeds
  */
-export async function fetchAllFOXWeatherNews(maxItems: number = 20): Promise<NewsItem[]> {
+export async function fetchAllFOXWeatherNews(maxItems: number = 30): Promise<NewsItem[]> {
   try {
     const [latest, extreme, weatherNews] = await Promise.allSettled([
       fetchFOXWeatherNews('latest', 10),

@@ -29,6 +29,7 @@ interface NewsFilterProps {
 
 const categories: { id: NewsCategory | 'all'; label: string }[] = [
   { id: 'all', label: 'ALL' },
+  { id: 'alerts', label: 'ALERTS' },
   { id: 'breaking', label: 'BREAKING' },
   { id: 'severe', label: 'SEVERE' },
   { id: 'climate', label: 'CLIMATE' },
@@ -98,7 +99,7 @@ export default function NewsFilter({
       >
         <TabsList
           className={cn(
-            'w-full grid grid-cols-3 sm:grid-cols-6 gap-1 p-1 border-2 font-mono',
+            'w-full grid grid-cols-3 sm:grid-cols-7 gap-1 p-1 border-2 font-mono',
             themeClasses.background,
             themeClasses.borderColor
           )}

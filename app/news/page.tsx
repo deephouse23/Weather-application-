@@ -132,7 +132,7 @@ export default function NewsPage() {
   const getEmptyType = (): 'no-alerts' | 'no-results' | 'error' | 'no-news' => {
     if (error) return 'error';
     if (searchQuery || currentCategory !== 'all') return 'no-results';
-    if (currentCategory !== 'all' && (currentCategory === 'breaking' || currentCategory === 'severe')) return 'no-alerts';
+    if (currentCategory !== 'all' && (currentCategory === 'breaking' || currentCategory === 'severe' || currentCategory === 'alerts')) return 'no-alerts';
     return 'no-news';
   };
 

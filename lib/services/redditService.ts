@@ -127,10 +127,10 @@ export async function fetchRedditPosts(
 export async function fetchAllRedditWeatherNews(maxItems: number = 30): Promise<NewsItem[]> {
   try {
     const [weather, tropicalWeather, weatherGifs, severeWeather] = await Promise.allSettled([
-      fetchRedditPosts(WEATHER_SUBREDDITS.weather, 15, 50),
-      fetchRedditPosts(WEATHER_SUBREDDITS.tropicalWeather, 15, 30),
-      fetchRedditPosts(WEATHER_SUBREDDITS.weatherGifs, 10, 100),
-      fetchRedditPosts(WEATHER_SUBREDDITS.severWeather, 10, 30),
+      fetchRedditPosts(WEATHER_SUBREDDITS.weather, 15, 20),
+      fetchRedditPosts(WEATHER_SUBREDDITS.tropicalWeather, 15, 20),
+      fetchRedditPosts(WEATHER_SUBREDDITS.weatherGifs, 10, 50),
+      fetchRedditPosts(WEATHER_SUBREDDITS.severWeather, 10, 20),
     ]);
 
     const allPosts: NewsItem[] = [];

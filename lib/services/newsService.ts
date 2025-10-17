@@ -238,15 +238,15 @@ export class NewsService {
         }
       });
       
-      // Convert back to array and limit
-      const uniqueFeatures = Array.from(uniqueAlerts.values()).slice(0, 15);
-      
+      // Convert back to array and limit to 5 (reduced from 15)
+      const uniqueFeatures = Array.from(uniqueAlerts.values()).slice(0, 5);
+
       return uniqueFeatures.map(feature => ({
         id: feature.properties.id,
         title: feature.properties.headline,
         url: feature.properties.web,
         source: 'National Weather Service',
-        category: 'weather' as const,
+        category: 'alerts' as const,
         priority: this.mapSeverityToPriority(feature.properties.severity),
         timestamp: new Date(feature.properties.effective)
       }));
