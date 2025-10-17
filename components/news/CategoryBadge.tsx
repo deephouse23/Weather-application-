@@ -8,7 +8,7 @@
 'use client';
 
 import React from 'react';
-import { Cloud, AlertTriangle, Globe, Users, Thermometer, Wind } from 'lucide-react';
+import { Cloud, AlertTriangle, Globe, Users, Thermometer, Wind, Bell } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { NewsCategory } from '@/lib/types/news';
@@ -27,6 +27,11 @@ const categoryConfig: Record<
     colorClass: string;
   }
 > = {
+  alerts: {
+    label: 'ALERTS',
+    icon: Bell,
+    colorClass: 'bg-yellow-600 text-black border-yellow-800',
+  },
   breaking: {
     label: 'BREAKING',
     icon: AlertTriangle,
@@ -77,7 +82,7 @@ export default function CategoryBadge({ category, className }: CategoryBadgeProp
   // Adjust colors for Miami theme
   const themeColorClass =
     theme === 'miami'
-      ? category === 'breaking' || category === 'severe'
+      ? category === 'breaking' || category === 'severe' || category === 'alerts'
         ? 'bg-pink-600 text-white border-pink-800'
         : 'bg-purple-600 text-white border-purple-800'
       : theme === 'tron'
