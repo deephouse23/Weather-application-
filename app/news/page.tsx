@@ -1,93 +1,215 @@
-"use client"
-import React from "react"
-import Link from "next/link"
-import { cn } from "@/lib/utils"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { useTheme } from "@/components/theme-provider"
-import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
-import PageWrapper from "@/components/page-wrapper"
+/**
+ * 16-Bit Weather Platform - News Page (Redesigned)
+ *
+ * Copyright (C) 2025 16-Bit Weather
+ * Licensed under Fair Source License, Version 0.9
+ *
+ * Dynamic multi-source weather news aggregation with retro aesthetics
+ */
+
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { cn } from '@/lib/utils';
+import { useTheme } from '@/components/theme-provider';
+import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
+import PageWrapper from '@/components/page-wrapper';
+import NewsHero from '@/components/news/NewsHero';
+import NewsFilter from '@/components/news/NewsFilter';
+import NewsGrid from '@/components/news/NewsGrid';
+import NewsSkeleton from '@/components/news/NewsSkeleton';
+import type { NewsItem } from '@/components/NewsTicker/NewsTicker';
+import type { NewsCategory } from '@/lib/types/news';
 
 export default function NewsPage() {
-  const { theme } = useTheme()
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather')
+  const { theme } = useTheme();
+  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+
+  // State
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [featuredStory, setFeaturedStory] = useState<NewsItem | null>(null);
+  const [filteredNews, setFilteredNews] = useState<NewsItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentCategory, setCurrentCategory] = useState<NewsCategory | 'all'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Fetch news from aggregator API
+  const fetchNews = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Fetch aggregated news
+      const response = await fetch('/api/news/aggregate?maxItems=50');
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch news');
+      }
+
+      const data = await response.json();
+
+      if (data.status === 'ok' && data.items) {
+        // Convert timestamp strings to Date objects
+        const items = data.items.map((item: any) => ({
+          ...item,
+          timestamp: new Date(item.timestamp),
+        }));
+        setNews(items);
+        setFilteredNews(items);
+      } else {
+        throw new Error(data.message || 'No news available');
+      }
+    } catch (err) {
+      console.error('Error fetching news:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load news');
+      setNews([]);
+      setFilteredNews([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Fetch featured story
+  const fetchFeaturedStory = useCallback(async () => {
+    try {
+      const response = await fetch('/api/news/aggregate?featured=true');
+
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.status === 'ok' && data.featured) {
+        // Convert timestamp string to Date object
+        setFeaturedStory({
+          ...data.featured,
+          timestamp: new Date(data.featured.timestamp),
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching featured story:', err);
+    }
+  }, []);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchNews();
+    fetchFeaturedStory();
+  }, [fetchNews, fetchFeaturedStory]);
+
+  // Filter news based on category and search query
+  useEffect(() => {
+    let filtered = [...news];
+
+    // Filter by category
+    if (currentCategory !== 'all') {
+      filtered = filtered.filter((item) => item.category === currentCategory);
+    }
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          item.title.toLowerCase().includes(query) ||
+          item.description?.toLowerCase().includes(query) ||
+          item.source.toLowerCase().includes(query)
+      );
+    }
+
+    setFilteredNews(filtered);
+  }, [news, currentCategory, searchQuery]);
+
+  // Refresh handler
+  const handleRefresh = useCallback(() => {
+    fetchNews();
+    fetchFeaturedStory();
+  }, [fetchNews, fetchFeaturedStory]);
+
+  // Determine empty state type
+  const getEmptyType = (): 'no-alerts' | 'no-results' | 'error' | 'no-news' => {
+    if (error) return 'error';
+    if (searchQuery || currentCategory !== 'all') return 'no-results';
+    if (currentCategory !== 'all' && (currentCategory === 'breaking' || currentCategory === 'severe' || currentCategory === 'alerts')) return 'no-alerts';
+    return 'no-news';
+  };
+
   return (
     <PageWrapper>
-      <div className={cn("container mx-auto px-4 py-6", themeClasses.background)}>
-        <h1 className={cn("text-2xl sm:text-3xl font-extrabold mb-6 font-mono", themeClasses.accentText)}>
-          16-BIT NEWS
-        </h1>
-
-        {/* Required section headings for tests */}
-        <div className="space-y-6 mb-6">
-          <h2 className={cn("text-xl font-bold font-mono", themeClasses.headerText)}>WEATHER ALERTS</h2>
-          <ul className="list-disc ml-5 text-sm">
-            <li>
-              <a href="https://www.weather.gov/" target="_blank" rel="noopener noreferrer" className={cn("underline", themeClasses.accentText)}>
-                National Weather Service advisories
-              </a>
-            </li>
-          </ul>
-
-          <h2 className={cn("text-xl font-bold font-mono", themeClasses.headerText)}>ENVIRONMENTAL</h2>
-          <ul className="list-disc ml-5 text-sm">
-            <li>
-              <a href="https://www.epa.gov/" target="_blank" rel="noopener noreferrer" className={cn("underline", themeClasses.accentText)}>
-                EPA updates and environmental reports
-              </a>
-            </li>
-          </ul>
-
-          <h2 className={cn("text-xl font-bold font-mono", themeClasses.headerText)}>CLIMATE</h2>
-          <ul className="list-disc ml-5 text-sm">
-            <li>
-              <a href="https://www.climate.gov/" target="_blank" rel="noopener noreferrer" className={cn("underline", themeClasses.accentText)}>
-                NOAA climate news
-              </a>
-            </li>
-          </ul>
-
-          <h2 className={cn("text-xl font-bold font-mono", themeClasses.headerText)}>LATEST HEADLINES</h2>
+      <div className={cn('container mx-auto px-4 py-6', themeClasses.background)}>
+        {/* Header */}
+        <div className="mb-6">
+          <h1
+            className={cn(
+              'text-3xl sm:text-4xl md:text-5xl font-extrabold mb-2 font-mono',
+              themeClasses.accentText
+            )}
+          >
+            16-BIT WEATHER NEWS
+          </h1>
+          <p className={cn('text-sm sm:text-base font-mono', themeClasses.text)}>
+            Real-time weather news from NASA, NOAA, FOX Weather, Reddit, and more
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className={cn("border-2", themeClasses.borderColor, themeClasses.background)}>
-            <CardHeader>
-              <CardTitle className={cn("text-lg font-bold font-mono", themeClasses.headerText)}>Latest Headlines</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <ul className="list-disc ml-5">
-                <li>
-                  <a href="https://www.weather.gov/" target="_blank" rel="noopener noreferrer" className={cn("underline", themeClasses.accentText)}>Storm systems expected across the Midwest</a>
-                </li>
-                <li>
-                  <a href="https://www.noaa.gov/" target="_blank" rel="noopener noreferrer" className={cn("underline", themeClasses.accentText)}>Heat advisories issued for the Southwest</a>
-                </li>
-                <li>
-                  <a href="https://www.nhc.noaa.gov/" target="_blank" rel="noopener noreferrer" className={cn("underline", themeClasses.accentText)}>Coastal flood watch in effect for the Northeast</a>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
+        {/* Filter Controls */}
+        <NewsFilter
+          onCategoryChange={setCurrentCategory}
+          onSearchChange={setSearchQuery}
+          onRefresh={handleRefresh}
+          currentCategory={currentCategory}
+          searchQuery={searchQuery}
+          isLoading={isLoading}
+          className="mb-6"
+        />
 
-          <Card className={cn("border-2", themeClasses.borderColor, themeClasses.background)}>
-            <CardHeader>
-              <CardTitle className={cn("text-lg font-bold font-mono", themeClasses.headerText)}>Climate</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <ul className="list-disc ml-5">
-                <li>
-                  <a href="https://www.climate.gov/" target="_blank" rel="noopener noreferrer" className={cn("underline", themeClasses.accentText)}>Study highlights shifting rainfall patterns</a>
-                </li>
-                <li>
-                  <a href="https://www.airnow.gov/" target="_blank" rel="noopener noreferrer" className={cn("underline", themeClasses.accentText)}>Air quality improvements in urban centers</a>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
+        {/* Featured Story */}
+        {featuredStory && !isLoading && currentCategory === 'all' && !searchQuery && (
+          <div className="mb-8">
+            <h2 className={cn('text-xl font-bold font-mono mb-4', themeClasses.headerText)}>
+              🔥 FEATURED STORY
+            </h2>
+            <NewsHero item={featuredStory} />
+          </div>
+        )}
+
+        {/* News Grid */}
+        <div>
+          {currentCategory !== 'all' || searchQuery ? (
+            <h2 className={cn('text-xl font-bold font-mono mb-4', themeClasses.headerText)}>
+              {filteredNews.length} ARTICLE{filteredNews.length !== 1 ? 'S' : ''} FOUND
+            </h2>
+          ) : (
+            <h2 className={cn('text-xl font-bold font-mono mb-4', themeClasses.headerText)}>
+              LATEST NEWS
+            </h2>
+          )}
+
+          <NewsGrid
+            items={filteredNews}
+            isLoading={isLoading}
+            error={error}
+            emptyType={getEmptyType()}
+            onRetry={handleRefresh}
+          />
         </div>
+
+        {/* Stats Footer */}
+        {!isLoading && filteredNews.length > 0 && (
+          <div className={cn('mt-8 pt-6 border-t-2 text-center', themeClasses.borderColor)}>
+            <p className={cn('text-xs font-mono', themeClasses.text)}>
+              Displaying {filteredNews.length} of {news.length} articles
+              {currentCategory !== 'all' && ` in ${currentCategory.toUpperCase()}`}
+              {searchQuery && ` matching "${searchQuery}"`}
+            </p>
+            <p className={cn('text-xs font-mono mt-2', themeClasses.text)}>
+              Sources: NOAA • NASA • FOX Weather • Reddit • NewsAPI
+            </p>
+          </div>
+        )}
       </div>
     </PageWrapper>
-  )
+  );
 }
-
-

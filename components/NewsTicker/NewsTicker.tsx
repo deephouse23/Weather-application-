@@ -23,9 +23,12 @@ export interface NewsItem {
   title: string;
   url: string;
   source: string;
-  category: 'breaking' | 'weather' | 'local' | 'general';
+  category: 'breaking' | 'weather' | 'local' | 'general' | 'severe' | 'climate' | 'tropical' | 'community' | 'alerts';
   priority: 'high' | 'medium' | 'low';
   timestamp: Date;
+  description?: string;
+  imageUrl?: string;
+  author?: string;
 }
 
 export interface NewsTickerProps {

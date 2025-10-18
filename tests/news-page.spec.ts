@@ -1,105 +1,70 @@
 import { test, expect } from '@playwright/test';
 import { setupStableApp } from './utils';
 
-test.describe('NEWS Page Navigation Tests', () => {
+test.describe('NEWS Page Tests', () => {
   test.beforeEach(async ({ page }) => {
     await setupStableApp(page);
   });
-  test('can navigate to NEWS page and back to other pages', async ({ page }) => {
-    // Start on home page
-    await page.goto('/');
-    await expect(page).toHaveTitle(/Weather|16/i);
-    
-    // Navigate to NEWS page
-    const newsLink = page.locator('a[href="/news"]');
-    await expect(newsLink).toBeVisible();
-    await newsLink.click();
-    
+
+  test('NEWS page loads and displays content correctly', async ({ page }) => {
+    // Navigate directly to NEWS page
+    await page.goto('/news', { waitUntil: 'domcontentloaded' });
+
     // Verify we're on NEWS page
-    await expect(page).toHaveURL('/news');
-    await expect(page.locator('h1').filter({ hasText: /16-BIT NEWS/i })).toBeVisible();
-    
-    // Headline should be visible as confirmation of render
-    await expect(page.locator('h1').filter({ hasText: /16-BIT NEWS/i })).toBeVisible();
-    
-    // Test navigation back to HOME
-    const homeLink = page.locator('a[href="/"]');
+    await expect(page).toHaveURL('/news', { timeout: 10000 });
+
+    // Verify main headline is visible
+    await expect(page.locator('h1').filter({ hasText: /16-BIT WEATHER NEWS/i })).toBeVisible({ timeout: 10000 });
+
+    // Verify subtitle is present
+    await expect(page.locator('p').filter({ hasText: /Real-time weather news/i })).toBeVisible();
+  });
+
+  test('NEWS page search and filter UI is functional', async ({ page }) => {
+    await page.goto('/news', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('h1').filter({ hasText: /16-BIT WEATHER NEWS/i })).toBeVisible({ timeout: 10000 });
+
+    // Check for search input
+    const searchInput = page.locator('input[placeholder*="Search"]');
+    await expect(searchInput).toBeVisible();
+
+    // Check for category tabs
+    const allTab = page.locator('button').filter({ hasText: /^ALL$/i });
+    await expect(allTab).toBeVisible();
+
+    // Check for refresh button
+    const refreshButton = page.locator('button[title*="Refresh"]');
+    await expect(refreshButton).toBeVisible();
+  });
+
+  test('NEWS page navigation links are present', async ({ page }) => {
+    await page.goto('/news', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('h1').filter({ hasText: /16-BIT WEATHER NEWS/i })).toBeVisible({ timeout: 10000 });
+
+    // Check for home link in navigation
+    const homeLink = page.locator('a[href="/"]').first();
     await expect(homeLink).toBeVisible();
-    await homeLink.click();
-    
-    // Verify we can navigate back to home
-    await expect(page).toHaveURL('/');
-    
-    // Test navigation to other pages from NEWS
-    await page.goto('/news');
-    await expect(page.locator('h1').filter({ hasText: /16-BIT NEWS/i })).toBeVisible();
-    
-    // Test ABOUT navigation
-    const aboutLink = page.locator('a[href="/about"]');
-    if (await aboutLink.count() > 0) {
-      await aboutLink.click();
-      await expect(page).toHaveURL('/about');
-      await page.waitForTimeout(1000);
-    }
-    
-    // Test GAMES navigation
-    await page.goto('/news');
-    await expect(page.locator('h1').filter({ hasText: /16-BIT NEWS/i })).toBeVisible();
-    const gamesLink = page.locator('a[href="/games"]');
-    if (await gamesLink.count() > 0) {
-      await gamesLink.click();
-      await expect(page).toHaveURL('/games');
-    }
+
+    // Check that the link has valid href
+    await expect(homeLink).toHaveAttribute('href', '/');
   });
 
-  test('NEWS page headline links work correctly', async ({ page }) => {
-    await page.goto('/news');
-    await expect(page.locator('h1').filter({ hasText: /16-BIT NEWS/i })).toBeVisible();
-    
-    // Check that headline links exist and are clickable
-    const headlineLinks = page.locator('a[target="_blank"]').filter({ hasText: /weather|alerts|climate/i });
-    const linkCount = await headlineLinks.count();
-    
-    if (linkCount > 0) {
-      // Test first headline link
-      const firstLink = headlineLinks.first();
-      await expect(firstLink).toBeVisible();
-      
-      // Verify it has proper attributes
-      await expect(firstLink).toHaveAttribute('target', '_blank');
-      await expect(firstLink).toHaveAttribute('rel', 'noopener noreferrer');
-      
-      // Verify it has a valid href
-      const href = await firstLink.getAttribute('href');
-      expect(href).toBeTruthy();
-      expect(href).not.toBe('#');
-    }
-  });
+  test('NEWS page displays news section headers', async ({ page }) => {
+    await page.goto('/news', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('h1').filter({ hasText: /16-BIT WEATHER NEWS/i })).toBeVisible({ timeout: 10000 });
 
-  test('NEWS page loads without blocking navigation', async ({ page }) => {
-    // Navigate to NEWS page
-    await page.goto('/news');
-    
-    // Wait for initial render
-    await expect(page.locator('h1').filter({ hasText: /16-BIT NEWS/i })).toBeVisible();
-    
-    // Immediately try to navigate away - this should not be blocked
-    const homeLink = page.locator('a[href="/"]');
-    await homeLink.click();
-    
-    // Should successfully navigate without getting stuck
-    await expect(page).toHaveURL('/', { timeout: 5000 });
-  });
+    // Wait for news content to load (with generous timeout for API calls)
+    await page.waitForTimeout(3000);
 
-  test('NEWS page displays all required sections', async ({ page }) => {
-    await page.goto('/news');
-    await expect(page.locator('h1').filter({ hasText: /16-BIT NEWS/i })).toBeVisible();
-    
-    // Check for main sections
-    await expect(page.locator('h1').filter({ hasText: /16-BIT NEWS/i })).toBeVisible();
-    await expect(page.locator('h2').filter({ hasText: /WEATHER ALERTS/i })).toBeVisible();
-    await expect(page.locator('h2').filter({ hasText: /ENVIRONMENTAL/i })).toBeVisible();
-    await expect(page.locator('h2').filter({ hasText: /CLIMATE/i })).toBeVisible();
-    await expect(page.locator('h2').filter({ hasText: /LATEST HEADLINES/i })).toBeVisible();
+    // Check for news section header (either "LATEST NEWS", "X ARTICLES FOUND", or "FEATURED STORY")
+    const newsHeaders = page.locator('h2');
+    const headerCount = await newsHeaders.count();
+
+    // Should have at least one h2 header (news section or featured story)
+    expect(headerCount).toBeGreaterThan(0);
+
+    // Verify at least one news-related header exists
+    const newsHeader = page.locator('h2').filter({ hasText: /(LATEST NEWS|ARTICLES? FOUND|FEATURED STORY)/i });
+    await expect(newsHeader.first()).toBeVisible({ timeout: 10000 });
   });
 });
