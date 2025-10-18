@@ -200,12 +200,11 @@ export default function MapPage() {
       
       {/* Map Container */}
       <div className="flex-1">
-        <WeatherMap 
+        <WeatherMap
           latitude={weatherData.coordinates.lat}
           longitude={weatherData.coordinates.lon}
           locationName={weatherData.location}
           theme={theme || 'dark'}
-          defaultMode="animation"
         />
       </div>
     </div>
