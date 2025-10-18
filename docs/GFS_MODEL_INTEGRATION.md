@@ -9,6 +9,8 @@ The 16-Bit Weather news feed now includes **GFS (Global Forecast System) model g
 ### 1. GFS Model Graphics
 - **Tropical Atlantic**: Latest GFS model showing mean sea level pressure and precipitation for tropical regions
 - **Americas/CONUS**: North America weather model forecasts
+- **West Coast**: Western United States regional forecasts
+- **East Coast**: Eastern United States regional forecasts
 - **Eastern Pacific**: Tropical weather potential in the Eastern Pacific
 
 ### 2. NHC Tropical Outlooks
@@ -89,6 +91,18 @@ const gfsNews = await fetchAllGFSModelNews();
 - **Region**: North America
 - **Priority**: High
 
+### GFS West Coast
+- **URL Pattern**: `https://mag.ncep.noaa.gov/data/gfs/{run}/gfs_mslp_precip_wus_1.gif`
+- **Shows**: Mean sea level pressure, precipitation
+- **Region**: Western United States
+- **Priority**: High
+
+### GFS East Coast
+- **URL Pattern**: `https://mag.ncep.noaa.gov/data/gfs/{run}/gfs_mslp_precip_eus_1.gif`
+- **Shows**: Mean sea level pressure, precipitation
+- **Region**: Eastern United States
+- **Priority**: High
+
 ### GFS Eastern Pacific
 - **URL Pattern**: `https://mag.ncep.noaa.gov/data/gfs/{run}/gfs_mslp_precip_epac_1.gif`
 - **Shows**: Mean sea level pressure, precipitation
@@ -163,9 +177,16 @@ To modify cache duration, edit `CACHE_DURATION` in [lib/services/newsAggregator.
 - Error states display friendly fallback message
 
 ### 2. Priority Levels
-- **High**: Active storms, latest GFS tropical models, 2-day NHC outlook
-- **Medium**: GFS Americas, 7-day NHC outlook, Eastern Pacific
+- **High**: Active storms, latest GFS tropical models, 2-day NHC outlook, Americas, West Coast, East Coast
+- **Medium**: 7-day NHC outlook, Eastern Pacific
 - **Low**: Satellite imagery (supplementary content)
+
+### 2.5 Direct Image Links
+All GFS model cards now link directly to the image file (`.gif`) rather than NOAA's selection page. This allows users to:
+- View the full-size model graphic immediately
+- Right-click to save the image
+- Zoom and pan without additional navigation
+- Share direct links to specific model runs
 
 ### 3. Categorization
 - **Alerts**: NHC outlooks, active storm notifications
