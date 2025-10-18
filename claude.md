@@ -36,6 +36,7 @@ A professional weather application combining modern meteorological data with ret
 
 - **Real-time Weather Data**: Current conditions, forecasts, UV index, air quality, pollen counts
 - **Interactive Radar**: NEXRAD radar with animation timeline
+- **GFS Model Graphics**: Professional weather models and NHC tropical outlooks integrated into news feed
 - **Location Services**: GPS auto-detection, city search, ZIP code lookup
 - **User Authentication**: Supabase-powered accounts with saved locations
 - **Multi-Theme Support**: Dark, Miami, Tron themes
@@ -1215,6 +1216,32 @@ Automatic cache cleanup runs on mount:
 ---
 
 ## Recent Changes
+
+### January 2025 - GFS Model Integration & News Updates
+
+**GFS/Tropical Model Integration:**
+- ✅ Added GFS (Global Forecast System) model graphics to news feed
+- ✅ Integrated NHC (National Hurricane Center) tropical weather outlooks
+- ✅ Created ModelCard component for displaying weather model graphics
+- ✅ GFS models update 4x daily (00Z, 06Z, 12Z, 18Z)
+- ✅ Includes tropical Atlantic, Americas/CONUS, and Eastern Pacific forecasts
+- ✅ Active tropical storm detection from NHC RSS feeds
+- ✅ Public domain NOAA data with proper attribution
+
+**Documentation:**
+- ✅ Created comprehensive GFS integration documentation (`docs/GFS_MODEL_INTEGRATION.md`)
+- ✅ Updated news aggregator to include GFS as default source
+- ✅ All model graphics are unoptimized for real-time external updates
+
+**Files Added:**
+- New: `lib/services/gfsModelService.ts` - GFS model data fetching service
+- New: `components/news/ModelCard.tsx` - Special card for model graphics display
+- New: `docs/GFS_MODEL_INTEGRATION.md` - Complete integration documentation
+
+**Files Modified:**
+- Modified: `lib/services/newsAggregator.ts` - Added 'gfs' as news source
+- Modified: `components/news/NewsGrid.tsx` - Auto-detect and use ModelCard for GFS items
+- Modified: `components/news/NewsHero.tsx` - Featured model graphics support
 
 ### January 2025 - Location & Error Monitoring Fixes
 

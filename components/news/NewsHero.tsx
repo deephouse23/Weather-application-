@@ -17,6 +17,7 @@ import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import CategoryBadge from './CategoryBadge';
 import PriorityIndicator from './PriorityIndicator';
+import ModelCard from './ModelCard';
 import type { NewsItem } from '@/components/NewsTicker/NewsTicker';
 
 interface NewsHeroProps {
@@ -30,6 +31,13 @@ export default function NewsHero({ item, className }: NewsHeroProps) {
   const [imageError, setImageError] = useState(false);
 
   const timeAgo = getTimeAgo(item.timestamp);
+
+  // Check if this is a model graphic - if so, use ModelCard instead
+  const isModelGraphic = item.source === 'NOAA GFS' || item.source === 'NOAA NHC';
+
+  if (isModelGraphic) {
+    return <ModelCard item={item} variant="featured" className={className} />;
+  }
 
   // Priority border
   const priorityBorderClass =

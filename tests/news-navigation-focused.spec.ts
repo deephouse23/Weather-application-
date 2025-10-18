@@ -10,7 +10,7 @@ test.describe('NEWS Navigation Issue Debug', () => {
     await page.goto('/news');
     
     // Wait for header to render to confirm load
-    await expect(page.locator('h1').filter({ hasText: /16-BIT NEWS/i })).toBeVisible();
+    await expect(page.locator('h1').filter({ hasText: /16-BIT WEATHER NEWS/i })).toBeVisible();
     
     console.log('Current URL after 5s:', await page.url());
     console.log('Page title:', await page.title());

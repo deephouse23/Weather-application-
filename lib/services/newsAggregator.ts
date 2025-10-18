@@ -12,11 +12,12 @@ import { newsService } from './newsService'; // Existing NOAA + NewsAPI service
 import { fetchAllNASAWeatherNews } from './nasaService';
 import { fetchAllFOXWeatherNews } from './foxWeatherService';
 import { fetchAllRedditWeatherNews } from './redditService';
+import { fetchAllGFSModelNews } from './gfsModelService';
 
 export interface AggregatedNewsOptions {
   categories?: ('breaking' | 'weather' | 'local' | 'general')[];
   priority?: 'high' | 'medium' | 'low' | 'all';
-  sources?: ('noaa' | 'nasa' | 'fox' | 'reddit' | 'newsapi')[];
+  sources?: ('noaa' | 'nasa' | 'fox' | 'reddit' | 'newsapi' | 'gfs')[];
   maxItems?: number;
   maxAge?: number; // Maximum age in hours
 }
@@ -49,7 +50,7 @@ export async function aggregateNews(
   const {
     categories = ['weather'],
     priority = 'all',
-    sources = ['noaa', 'nasa', 'fox', 'reddit', 'newsapi'],
+    sources = ['noaa', 'nasa', 'fox', 'reddit', 'newsapi', 'gfs'],
     maxItems = 30,
     maxAge = 72, // 72 hours default
   } = options;
@@ -84,6 +85,12 @@ export async function aggregateNews(
   if (sources.includes('reddit')) {
     fetchPromises.push(
       fetchWithStats('Reddit', () => fetchAllRedditWeatherNews(maxItems))
+    );
+  }
+
+  if (sources.includes('gfs')) {
+    fetchPromises.push(
+      fetchWithStats('GFS Models', () => fetchAllGFSModelNews())
     );
   }
 

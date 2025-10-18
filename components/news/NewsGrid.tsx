@@ -10,6 +10,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import NewsCard from './NewsCard';
+import ModelCard from './ModelCard';
 import NewsEmpty from './NewsEmpty';
 import NewsSkeleton from './NewsSkeleton';
 import type { NewsItem } from '@/components/NewsTicker/NewsTicker';
@@ -48,13 +49,21 @@ export default function NewsGrid({
     return <NewsEmpty type={emptyType} />;
   }
 
+  // Helper to check if item is a model graphic
+  const isModelGraphic = (item: NewsItem) => {
+    return item.source === 'NOAA GFS' || item.source === 'NOAA NHC';
+  };
+
   // Compact variant
   if (variant === 'compact') {
     return (
       <div className={cn('space-y-3', className)}>
-        {items.map((item) => (
-          <NewsCard key={item.id} item={item} variant="compact" />
-        ))}
+        {items.map((item) => {
+          if (isModelGraphic(item)) {
+            return <ModelCard key={item.id} item={item} variant="default" />;
+          }
+          return <NewsCard key={item.id} item={item} variant="compact" />;
+        })}
       </div>
     );
   }
@@ -62,9 +71,12 @@ export default function NewsGrid({
   // Default grid layout
   return (
     <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4', className)}>
-      {items.map((item) => (
-        <NewsCard key={item.id} item={item} variant="default" />
-      ))}
+      {items.map((item) => {
+        if (isModelGraphic(item)) {
+          return <ModelCard key={item.id} item={item} variant="default" />;
+        }
+        return <NewsCard key={item.id} item={item} variant="default" />;
+      })}
     </div>
   );
 }
