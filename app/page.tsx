@@ -1050,12 +1050,11 @@ function WeatherApp() {
                   </Link>
                 </div>
                 <div className="h-96 rounded-lg overflow-hidden">
-                  <LazyWeatherMap 
+                  <LazyWeatherMap
                     latitude={weather?.coordinates?.lat}
                     longitude={weather?.coordinates?.lon}
                     locationName={weather?.location}
                     theme={theme || 'dark'}
-                    defaultMode="animation"
                   />
                 </div>
               </div>

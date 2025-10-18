@@ -1,22 +1,19 @@
 'use client'
 
-import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
-import { Play, Pause, SkipBack, SkipForward, Layers, ChevronDown, Camera, Film } from 'lucide-react'
+import { useEffect, useRef, useState, useMemo } from 'react'
+import { Play, Pause, SkipBack, SkipForward, Layers, ChevronDown } from 'lucide-react'
 import { isInMRMSCoverage } from '@/lib/utils/location-utils'
 import { ThemeType } from '@/lib/theme-config'
-import { buildRadMapUrl } from '@/lib/utils/radmap-utils'
 
 // OpenLayers imports
 import 'ol/ol.css'
 import Map from 'ol/Map'
 import View from 'ol/View'
 import TileLayer from 'ol/layer/Tile'
-import ImageLayer from 'ol/layer/Image'
 import TileWMS from 'ol/source/TileWMS'
-import ImageStatic from 'ol/source/ImageStatic'
 import XYZ from 'ol/source/XYZ'
 import OSM from 'ol/source/OSM'
-import { fromLonLat, transformExtent } from 'ol/proj'
+import { fromLonLat } from 'ol/proj'
 import Feature from 'ol/Feature'
 import Point from 'ol/geom/Point'
 import VectorLayer from 'ol/layer/Vector'
@@ -28,29 +25,17 @@ interface WeatherMapProps {
   longitude?: number
   locationName?: string
   theme?: ThemeType
-  defaultMode?: 'static' | 'animation'
 }
 
-type MapMode = 'static' | 'animation'
-
-const WeatherMapOpenLayers = ({ 
-  latitude, 
-  longitude, 
-  locationName, 
-  theme = 'dark',
-  defaultMode = 'animation'
+const WeatherMapOpenLayers = ({
+  latitude,
+  longitude,
+  locationName,
+  theme = 'dark'
 }: WeatherMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<Map | null>(null)
   const mrmsLayersRef = useRef<(TileLayer<TileWMS> | TileLayer<XYZ>)[]>([])
-  const staticImageLayerRef = useRef<ImageLayer<ImageStatic> | null>(null)
-
-  // Load mode preference from localStorage
-  const [mode, setMode] = useState<MapMode>(() => {
-    if (typeof window === 'undefined') return defaultMode
-    const saved = localStorage.getItem('weather-map-mode')
-    return (saved as MapMode) || defaultMode
-  })
 
   const [activeLayers, setActiveLayers] = useState<Record<string, boolean>>({
     precipitation: true,
@@ -59,10 +44,9 @@ const WeatherMapOpenLayers = ({
     pressure: false,
     temperature: false,
   })
-  
+
   const [opacity, setOpacity] = useState(0.85)
   const [layerMenuOpen, setLayerMenuOpen] = useState(false)
-  const [staticImageKey, setStaticImageKey] = useState(0)
 
   // Animation state
   const [isPlaying, setIsPlaying] = useState(false)
@@ -154,26 +138,6 @@ const WeatherMapOpenLayers = ({
     mapInstanceRef.current.getView().setZoom(10)
   }, [latitude, longitude])
 
-  // Save mode preference to localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('weather-map-mode', mode)
-    }
-  }, [mode])
-
-  // Handle mode toggle
-  const toggleMode = useCallback(() => {
-    setMode(prev => prev === 'static' ? 'animation' : 'static')
-    if (mode === 'animation') {
-      // Switching to static, pause animation
-      setIsPlaying(false)
-    }
-  }, [mode])
-
-  // Refresh static image
-  const refreshStaticImage = useCallback(() => {
-    setStaticImageKey(prev => prev + 1)
-  }, [])
 
   // Add location marker
   useEffect(() => {
@@ -219,82 +183,10 @@ const WeatherMapOpenLayers = ({
     console.log('📌 Location marker added')
   }, [latitude, longitude])
 
-  // Manage static image layer
+
+  // Manage MRMS WMS layers
   useEffect(() => {
-    if (!mapInstanceRef.current || !latitude || !longitude || mode !== 'static' || !isUSLocation) return
-
-    const map = mapInstanceRef.current
-
-    // Remove existing static image layer
-    if (staticImageLayerRef.current) {
-      map.removeLayer(staticImageLayerRef.current)
-      staticImageLayerRef.current = null
-    }
-
-    console.log('🖼️ Setting up static RadMap image layer')
-
-    // Show entire continental USA
-    // Bounds: approximately -125 to -65 longitude, 24 to 50 latitude
-    const usaBounds = [-125, 24, -65, 50]
-    const extent = transformExtent(usaBounds, 'EPSG:4326', 'EPSG:3857')
-    
-    // Use center of USA for RadMap request, with large radius to cover entire country
-    const usaCenterLon = -95
-    const usaCenterLat = 37
-    const radiusDegrees = 30 // Large radius to cover entire USA
-
-    // Calculate proper aspect ratio for the geographical extent
-    const lonRange = 60  // -65 - (-125)
-    const latRange = 26  // 50 - 24
-    const aspectRatio = lonRange / latRange  // ~2.31
-    
-    // Use proper dimensions that match the geographical aspect ratio
-    const imageHeight = 1000
-    const imageWidth = Math.round(imageHeight * aspectRatio)  // ~2310
-
-    // Build RadMap URL
-    const radmapUrl = buildRadMapUrl({
-      latitude: usaCenterLat,
-      longitude: usaCenterLon,
-      width: imageWidth,
-      height: imageHeight,
-      layers: ['nexrad', 'uscounties'],
-      radiusDegrees
-    })
-
-    console.log('  RadMap URL:', radmapUrl)
-
-    // Create static image source
-    const imageSource = new ImageStatic({
-      url: radmapUrl,
-      imageExtent: extent,
-      crossOrigin: 'anonymous',
-    })
-
-    // Create image layer
-    const imageLayer = new ImageLayer({
-      source: imageSource,
-      opacity: opacity,
-      zIndex: 500,
-    })
-
-    imageLayer.set('name', 'static-radmap')
-    map.addLayer(imageLayer)
-    staticImageLayerRef.current = imageLayer
-
-    console.log('✅ Static RadMap layer added')
-
-    return () => {
-      if (staticImageLayerRef.current) {
-        map.removeLayer(staticImageLayerRef.current)
-        staticImageLayerRef.current = null
-      }
-    }
-  }, [latitude, longitude, mode, isUSLocation, opacity, staticImageKey])
-
-  // Manage MRMS WMS layers (only in animation mode)
-  useEffect(() => {
-    if (!mapInstanceRef.current || !isUSLocation || !activeLayers.precipitation || mode !== 'animation') {
+    if (!mapInstanceRef.current || !isUSLocation || !activeLayers.precipitation) {
       // Remove existing MRMS layers
       mrmsLayersRef.current.forEach(layer => {
         mapInstanceRef.current?.removeLayer(layer)
@@ -358,7 +250,7 @@ const WeatherMapOpenLayers = ({
     })
 
     console.log(`✅ Added ${mrmsLayersRef.current.length} NEXRAD layers`)
-  }, [bufferedTimes, frameIndex, isUSLocation, activeLayers.precipitation, opacity, mode])
+  }, [bufferedTimes, frameIndex, isUSLocation, activeLayers.precipitation, opacity])
 
   // Update layer opacities when frame changes
   useEffect(() => {
@@ -443,38 +335,14 @@ const WeatherMapOpenLayers = ({
       {/* Status Badge */}
       <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-md border-2 font-mono text-xs font-bold z-10 ${themeStyles.badge}`}>
         {isUSLocation ? (
-          mode === 'static' ? (
-            <span>📷 STATIC • IOWA STATE</span>
-          ) : (
-            <span>🎬 ANIMATION • NEXRAD</span>
-          )
+          <span>🎬 NEXRAD RADAR • 4 HOUR HISTORY</span>
         ) : (
           <span>🌎 US LOCATIONS ONLY</span>
         )}
       </div>
 
-      {/* Mode Toggle and Layer Controls */}
+      {/* Layer Controls */}
       <div className="absolute top-4 right-4 z-10 flex gap-2">
-        {/* Mode Toggle */}
-        {isUSLocation && (
-          <button
-            onClick={toggleMode}
-            className={`flex items-center gap-2 px-3 py-1.5 border-2 rounded-md font-mono text-xs font-bold transition-colors ${
-              mode === 'static'
-                ? 'bg-cyan-600 border-cyan-500 text-white hover:bg-cyan-700'
-                : 'bg-gray-800/90 border-gray-600 text-white hover:bg-gray-700'
-            }`}
-            title={mode === 'static' ? 'Switch to Animation mode' : 'Switch to Static mode'}
-          >
-            {mode === 'static' ? (
-              <><Camera className="w-4 h-4" /> STATIC</>
-            ) : (
-              <><Film className="w-4 h-4" /> ANIM</>
-            )}
-          </button>
-        )}
-
-        {/* Layer Controls */}
         <button
           onClick={() => setLayerMenuOpen(!layerMenuOpen)}
           className="flex items-center gap-2 px-3 py-1.5 bg-gray-800/90 text-white border-2 border-gray-600 rounded-md font-mono text-xs font-bold hover:bg-gray-700 transition-colors"
@@ -501,8 +369,8 @@ const WeatherMapOpenLayers = ({
         )}
       </div>
 
-      {/* Animation Controls - Only for US locations with precipitation active in animation mode */}
-      {isUSLocation && activeLayers.precipitation && mrmsTimestamps.length > 0 && mode === 'animation' && (
+      {/* Animation Controls - Only for US locations with precipitation active */}
+      {isUSLocation && activeLayers.precipitation && mrmsTimestamps.length > 0 && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-10">
           {/* Timeline */}
           <div className="w-[600px] px-4 py-2 bg-gray-800/90 border-2 border-gray-600 rounded-md">
