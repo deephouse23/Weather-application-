@@ -9,15 +9,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import type { GameScore, LeaderboardEntry, ScoreSubmission } from '@/lib/types/games';
 
-interface RouteParams {
-  params: {
-    slug: string;
-  };
-}
-
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ slug: string }> }
+) {
   try {
-    const { slug } = params;
+    const { slug } = await params;
     const searchParams = request.nextUrl.searchParams;
     const period = searchParams.get('period') || 'all-time';
     const limit = parseInt(searchParams.get('limit') || '100');
@@ -70,9 +67,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ slug: string }> }
+) {
   try {
-    const { slug } = params;
+    const { slug } = await params;
     const supabase = await createServerSupabaseClient();
 
     // Get the game
