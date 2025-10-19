@@ -18,8 +18,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, Cloud, Zap, BookOpen, Gamepad2, Info, Home, Newspaper, Thermometer, Map, ChevronDown, GraduationCap } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Menu, X, Gamepad2, Info, Home, Newspaper, Thermometer, Map, GraduationCap } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
 import AuthButton from "@/components/auth/auth-button"
@@ -38,7 +37,6 @@ interface NavigationProps {
  */
 export default function Navigation({ weatherLocation, weatherTemperature, weatherUnit }: NavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isEducationDropdownOpen, setIsEducationDropdownOpen] = useState(false)
   const pathname = usePathname()
   const { theme } = useTheme()
 
@@ -120,20 +118,12 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
   const mainNavItems = [
     { href: "/", label: "HOME", icon: Home },
     { href: "/map", label: "RADAR", icon: Map },
+    { href: "/learn", label: "LEARN", icon: GraduationCap },
     { href: "/extremes", label: "EXTREMES", icon: Thermometer },
     { href: "/news", label: "NEWS", icon: Newspaper },
     { href: "/games", label: "GAMES", icon: Gamepad2 },
     { href: "/about", label: "ABOUT", icon: Info }
   ]
-
-  const educationItems = [
-    { href: "/cloud-types", label: "CLOUD TYPES", icon: Cloud },
-    { href: "/weather-systems", label: "WEATHER SYSTEMS", icon: Zap },
-    { href: "/fun-facts", label: "16-BIT TAKES", icon: BookOpen }
-  ]
-
-  // Check if any education item is currently active
-  const isEducationActive = educationItems.some(item => pathname === item.href)
 
   return (
     <>
@@ -165,67 +155,16 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
 
         {/* Main Navigation Links - TOP CENTER */}
         <div className="flex items-center space-x-4">
-          {mainNavItems.slice(0, 3).map((item) => {
+          {mainNavItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
-            
+
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`flex items-center justify-center space-x-2 px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] ${
-                  isActive 
-                    ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black ${themeClasses.glow}`
-                    : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`
-                }`}
-              >
-                <Icon className="w-3 h-3" />
-                <span className="whitespace-nowrap">{item.label}</span>
-              </Link>
-            )
-          })}
-
-          {/* Education Dropdown (shadcn) */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                className={`flex items-center justify-center space-x-2 px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] ${
-                  isEducationActive 
-                    ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black ${themeClasses.glow}`
-                    : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`
-                }`}
-                aria-haspopup="menu"
-                aria-label="Education menu"
-              >
-                <GraduationCap className="w-3 h-3" />
-                <span className="whitespace-nowrap">EDU ▾</span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-48">
-              {educationItems.map((item) => {
-                const Icon = item.icon
-                return (
-                  <DropdownMenuItem key={item.href} asChild>
-                    <Link href={item.href} className="flex items-center space-x-3 w-full">
-                      <Icon className="w-3 h-3" />
-                      <span>{item.label}</span>
-                    </Link>
-                  </DropdownMenuItem>
-                )
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {mainNavItems.slice(3).map((item) => {
-            const Icon = item.icon
-            const isActive = pathname === item.href
-            
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center justify-center space-x-2 px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] ${
-                  isActive 
+                  isActive
                     ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black ${themeClasses.glow}`
                     : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`
                 }`}
@@ -280,18 +219,18 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
       {isMobileMenuOpen && (
         <div className={`md:hidden absolute top-full left-0 right-0 border-4 border-t-0 z-50 ${themeClasses.background} ${themeClasses.borderColor}`}>
           <div className="p-4 space-y-2">
-            {/* Main nav items before Education */}
-            {mainNavItems.slice(0, 3).map((item) => {
+            {/* All main nav items */}
+            {mainNavItems.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
-              
+
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`flex items-center space-x-3 p-3 border-2 text-sm font-mono font-bold uppercase tracking-wider w-full h-[48px] ${
-                    isActive 
+                    isActive
                       ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black`
                       : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text}`
                   }`}
@@ -302,70 +241,6 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
               )
             })}
 
-            {/* Education Dropdown Toggle */}
-            <button
-              onClick={() => setIsEducationDropdownOpen(!isEducationDropdownOpen)}
-              className={`flex items-center justify-between p-3 border-2 text-sm font-mono font-bold uppercase tracking-wider w-full h-[48px] ${
-                isEducationActive 
-                  ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black`
-                  : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text}`
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <GraduationCap className="w-4 h-4" />
-                <span>EDUCATION</span>
-              </div>
-              <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isEducationDropdownOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {/* Education Submenu */}
-            {isEducationDropdownOpen && (
-              <div className="ml-4 space-y-2">
-                {educationItems.map((item) => {
-                  const Icon = item.icon
-                  const isActive = pathname === item.href
-                  
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`flex items-center space-x-3 p-3 border-2 text-sm font-mono font-bold uppercase tracking-wider w-full h-[48px] ${
-                        isActive 
-                          ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black`
-                          : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text}`
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                      <span>{item.label}</span>
-                    </Link>
-                  )
-                })}
-              </div>
-            )}
-
-            {/* Remaining main nav items after Education */}
-            {mainNavItems.slice(3).map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href
-              
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center space-x-3 p-3 border-2 text-sm font-mono font-bold uppercase tracking-wider w-full h-[48px] ${
-                    isActive 
-                      ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black`
-                      : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text}`
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </Link>
-              )
-            })}
-            
             {/* Mobile Auth */}
             <div className="flex items-center space-x-2 pt-4 border-t-2 border-current mt-4">
               <AuthButton />
