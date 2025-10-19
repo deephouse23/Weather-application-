@@ -184,6 +184,7 @@
         </div>
     </div>
 
+    <script src="/game-bridge.js"></script>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -529,17 +530,30 @@
         function gameOver() {
             gameRunning = false;
             document.getElementById('finalScore').textContent = score;
-            
+
+            // Submit score to parent window (if in iframe)
+            if (window.GameBridge && window.GameBridge.isInIframe) {
+                window.GameBridge.submitScore({
+                    gameSlug: 'pacman',
+                    score: score,
+                    level: level,
+                    metadata: {
+                        level: level,
+                        dotsEaten: dots.length
+                    }
+                });
+            }
+
             // Check for high score
             const isNewRecord = addHighScore(score, level);
             const newRecordElement = document.getElementById('newRecord');
-            
+
             if (isNewRecord && score > 0) {
                 newRecordElement.style.display = 'block';
             } else {
                 newRecordElement.style.display = 'none';
             }
-            
+
             displayHighScores();
             document.getElementById('gameOver').style.display = 'block';
         }
