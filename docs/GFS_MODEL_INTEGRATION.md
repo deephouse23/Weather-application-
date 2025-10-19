@@ -9,6 +9,8 @@ The 16-Bit Weather news feed now includes **GFS (Global Forecast System) model g
 ### 1. GFS Model Graphics
 - **Tropical Atlantic**: Latest GFS model showing mean sea level pressure and precipitation for tropical regions
 - **Americas/CONUS**: North America weather model forecasts
+- **West Coast**: Western United States regional forecasts
+- **East Coast**: Eastern United States regional forecasts
 - **Eastern Pacific**: Tropical weather potential in the Eastern Pacific
 
 ### 2. NHC Tropical Outlooks
@@ -48,6 +50,20 @@ lib/services/gfsModelService.ts
 ├── fetchGFSModelGraphics()        # GFS model runs
 ├── fetchActiveStorms()            # Active tropical system detection
 └── fetchAllGFSModelNews()         # Aggregates all GFS/tropical data
+
+app/api/gfs-image/route.ts
+└── GET /api/gfs-image              # Proxy route to fetch GFS images from NOAA
+    ├── Parameters: run, region
+    ├── Validates run format (00z, 06z, 12z, 18z)
+    ├── Validates region (us, wus, eus, tropatl, epac)
+    └── Returns: GIF image with 5-minute cache
+
+app/gfs-model/[region]/[run]/page.tsx
+└── GFS Model Viewer Page           # Full-screen model viewer
+    ├── Dynamic routing for all regions/runs
+    ├── Theme-aware styling
+    ├── Download functionality
+    └── Back navigation to news feed
 ```
 
 ### Integration Points
@@ -87,6 +103,18 @@ const gfsNews = await fetchAllGFSModelNews();
 - **URL Pattern**: `https://mag.ncep.noaa.gov/data/gfs/{run}/gfs_mslp_precip_us_1.gif`
 - **Shows**: Mean sea level pressure, precipitation
 - **Region**: North America
+- **Priority**: High
+
+### GFS West Coast
+- **URL Pattern**: `https://mag.ncep.noaa.gov/data/gfs/{run}/gfs_mslp_precip_wus_1.gif`
+- **Shows**: Mean sea level pressure, precipitation
+- **Region**: Western United States
+- **Priority**: High
+
+### GFS East Coast
+- **URL Pattern**: `https://mag.ncep.noaa.gov/data/gfs/{run}/gfs_mslp_precip_eus_1.gif`
+- **Shows**: Mean sea level pressure, precipitation
+- **Region**: Eastern United States
 - **Priority**: High
 
 ### GFS Eastern Pacific
@@ -163,9 +191,22 @@ To modify cache duration, edit `CACHE_DURATION` in [lib/services/newsAggregator.
 - Error states display friendly fallback message
 
 ### 2. Priority Levels
-- **High**: Active storms, latest GFS tropical models, 2-day NHC outlook
-- **Medium**: GFS Americas, 7-day NHC outlook, Eastern Pacific
+- **High**: Active storms, latest GFS tropical models, 2-day NHC outlook, Americas, West Coast, East Coast
+- **Medium**: 7-day NHC outlook, Eastern Pacific
 - **Low**: Satellite imagery (supplementary content)
+
+### 2.5 GFS Model Viewer Pages
+All GFS model cards now link to dedicated viewer pages on 16bitweather.co rather than external NOAA pages. This provides:
+- **No 403 errors**: Images are proxied through the server to avoid NOAA's direct access restrictions
+- **Full-size viewing**: Large, high-quality model graphics with proper theming
+- **Download option**: One-click download button for saving models
+- **Better UX**: Consistent viewing experience with retro terminal aesthetic
+- **Model information**: Run time, region details, and update schedule displayed
+- **Stay on site**: Users remain in the 16-Bit Weather ecosystem
+
+**URL Pattern**: `/gfs-model/{region}/{run}`
+- Example: `/gfs-model/wus/18z` - West Coast model from 18Z run
+- Example: `/gfs-model/tropatl/12z` - Tropical Atlantic from 12Z run
 
 ### 3. Categorization
 - **Alerts**: NHC outlooks, active storm notifications

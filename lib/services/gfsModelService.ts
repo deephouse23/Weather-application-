@@ -137,7 +137,7 @@ export async function fetchGFSModelGraphics(): Promise<NewsItem[]> {
       title: `GFS Model - Tropical Atlantic (${runTime})`,
       description: `Latest GFS ${runTime} model run showing mean sea level pressure and precipitation for the tropical Atlantic region. Updated 4 times daily.`,
       source: 'NOAA GFS',
-      url: `https://mag.ncep.noaa.gov/model-guidance-model-area.php?area=trop&model=GFS`,
+      url: `/gfs-model/tropatl/${modelRun}`, // Link to viewer page
       imageUrl: tropicsUrl,
       timestamp: now,
       category: 'severe' as NewsCategory,
@@ -152,8 +152,38 @@ export async function fetchGFSModelGraphics(): Promise<NewsItem[]> {
       title: `GFS Model - Americas (${runTime})`,
       description: `Latest GFS ${runTime} model run showing mean sea level pressure and precipitation for North America. Updated 4 times daily.`,
       source: 'NOAA GFS',
-      url: `https://mag.ncep.noaa.gov/model-guidance-model-area.php?area=us&model=GFS`,
+      url: `/gfs-model/us/${modelRun}`, // Link to viewer page
       imageUrl: americasUrl,
+      timestamp: now,
+      category: 'severe' as NewsCategory,
+      priority: 'high' as NewsPriority,
+    });
+
+    // West Coast (Western US) GFS Model
+    const westCoastUrl = `https://mag.ncep.noaa.gov/data/gfs/${modelRun}/gfs_mslp_precip_wus_1.gif`;
+
+    items.push({
+      id: `gfs-west-${modelRun}-${now.getTime()}`,
+      title: `GFS Model - West Coast (${runTime})`,
+      description: `Latest GFS ${runTime} model run for the Western United States showing mean sea level pressure and precipitation. Updated 4 times daily.`,
+      source: 'NOAA GFS',
+      url: `/gfs-model/wus/${modelRun}`, // Link to viewer page
+      imageUrl: westCoastUrl,
+      timestamp: now,
+      category: 'severe' as NewsCategory,
+      priority: 'high' as NewsPriority,
+    });
+
+    // East Coast (Eastern US) GFS Model
+    const eastCoastUrl = `https://mag.ncep.noaa.gov/data/gfs/${modelRun}/gfs_mslp_precip_eus_1.gif`;
+
+    items.push({
+      id: `gfs-east-${modelRun}-${now.getTime()}`,
+      title: `GFS Model - East Coast (${runTime})`,
+      description: `Latest GFS ${runTime} model run for the Eastern United States showing mean sea level pressure and precipitation. Updated 4 times daily.`,
+      source: 'NOAA GFS',
+      url: `/gfs-model/eus/${modelRun}`, // Link to viewer page
+      imageUrl: eastCoastUrl,
       timestamp: now,
       category: 'severe' as NewsCategory,
       priority: 'high' as NewsPriority,
@@ -167,7 +197,7 @@ export async function fetchGFSModelGraphics(): Promise<NewsItem[]> {
       title: `GFS Model - Eastern Pacific (${runTime})`,
       description: `Latest GFS ${runTime} model run showing tropical weather potential in the Eastern Pacific. Updated 4 times daily.`,
       source: 'NOAA GFS',
-      url: `https://mag.ncep.noaa.gov/model-guidance-model-area.php?area=epac&model=GFS`,
+      url: `/gfs-model/epac/${modelRun}`, // Link to viewer page
       imageUrl: epacUrl,
       timestamp: now,
       category: 'severe' as NewsCategory,
