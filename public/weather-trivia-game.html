@@ -267,6 +267,7 @@
         </div>
     </div>
 
+    <script src="/game-bridge.js"></script>
     <script>
         // Game state
         let currentQuestionIndex = 0;
@@ -592,12 +593,25 @@
         function endGame() {
             gameActive = false;
             const accuracy = Math.round((correctAnswers / 10) * 100);
-            
+
+            // Submit score to parent window (if in iframe)
+            if (window.GameBridge && window.GameBridge.isInIframe) {
+                window.GameBridge.submitScore({
+                    gameSlug: 'weather-trivia',
+                    score: score,
+                    metadata: {
+                        difficulty: difficulty,
+                        correctAnswers: correctAnswers,
+                        accuracy: accuracy
+                    }
+                });
+            }
+
             document.getElementById('gameArea').style.display = 'none';
             document.getElementById('gameOver').style.display = 'block';
             document.getElementById('finalScore').textContent = score;
             document.getElementById('accuracy').textContent = accuracy;
-            
+
             saveHighScore(score);
             displayHighScores();
         }
