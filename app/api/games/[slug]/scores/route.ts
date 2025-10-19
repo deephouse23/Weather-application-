@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import type { GameScore, LeaderboardEntry, ScoreSubmission } from '@/lib/types/games';
 
 interface RouteParams {
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const limit = parseInt(searchParams.get('limit') || '100');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
 
     // First, get the game ID from slug
     const { data: game, error: gameError } = await supabase
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const { slug } = params;
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
 
     // Get the game
     const { data: game, error: gameError } = await supabase

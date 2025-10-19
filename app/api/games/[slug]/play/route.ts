@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 interface RouteParams {
   params: {
@@ -16,7 +16,7 @@ interface RouteParams {
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const { slug } = params;
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
 
     // Call the increment_play_count function
     const { error } = await supabase.rpc('increment_play_count', {
