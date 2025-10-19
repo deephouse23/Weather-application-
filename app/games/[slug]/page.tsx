@@ -13,9 +13,11 @@ import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import PageWrapper from '@/components/page-wrapper';
 import Leaderboard from '@/components/games/Leaderboard';
+import ScoreSubmitModal from '@/components/games/ScoreSubmitModal';
 import { ArrowLeft, Maximize2, Minimize2, Play } from 'lucide-react';
 import type { Game } from '@/lib/types/games';
 import { fetchGames, incrementPlayCount } from '@/lib/services/gamesService';
+import { useAuth } from '@/lib/auth';
 
 export default function GameDetailPage() {
   const params = useParams();
@@ -31,9 +33,59 @@ export default function GameDetailPage() {
   const [gameStarted, setGameStarted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  const [showScoreModal, setShowScoreModal] = useState(false);
+  const [gameScore, setGameScore] = useState<any>(null);
+
+  const { user } = useAuth();
+
   useEffect(() => {
     loadGame();
   }, [slug]);
+
+  // Listen for score submissions from game iframe
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'GAME_SCORE_SUBMIT') {
+        console.log('Score received from game:', event.data);
+        setGameScore({
+          score: event.data.score,
+          level: event.data.level,
+          timePlayed: event.data.timePlayed,
+          metadata: event.data.metadata,
+        });
+
+        // Show modal for guests or auto-submit for authenticated users
+        if (!user) {
+          setShowScoreModal(true);
+        } else {
+          // Auto-submit for authenticated users
+          handleAuthenticatedScoreSubmit(event.data);
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [user]);
+
+  const handleAuthenticatedScoreSubmit = async (scoreData: any) => {
+    if (!game || !user) return;
+
+    try {
+      const { submitScore } = await import('@/lib/services/gamesService');
+      await submitScore(game.slug, {
+        game_slug: game.slug,
+        player_name: user.email || 'Player',
+        score: scoreData.score,
+        level_reached: scoreData.level,
+        time_played_seconds: scoreData.timePlayed,
+        metadata: scoreData.metadata,
+      });
+      console.log('Score auto-submitted for authenticated user');
+    } catch (err) {
+      console.error('Failed to submit score:', err);
+    }
+  };
 
   const loadGame = async () => {
     setIsLoading(true);
@@ -247,6 +299,24 @@ export default function GameDetailPage() {
             </div>
           )}
         </div>
+
+        {/* Score Submit Modal */}
+        {game && gameScore && (
+          <ScoreSubmitModal
+            isOpen={showScoreModal}
+            onClose={() => setShowScoreModal(false)}
+            gameSlug={game.slug}
+            gameTitle={game.title}
+            score={gameScore.score}
+            levelReached={gameScore.level}
+            timePlayed={gameScore.timePlayed}
+            metadata={gameScore.metadata}
+            onSuccess={() => {
+              // Refresh leaderboard after successful submission
+              window.location.reload();
+            }}
+          />
+        )}
       </div>
     </PageWrapper>
   );

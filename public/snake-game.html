@@ -153,6 +153,7 @@
             box-shadow: 0 0 10px #00ff41;
         }
     </style>
+    <script src="/game-bridge.js"></script>
 </head>
 <body>
     <div class="game-container">
@@ -328,17 +329,28 @@
         function gameOver() {
             gameRunning = false;
             finalScoreElement.textContent = score;
-            
+
+            // Submit score to parent window (if in iframe)
+            if (window.GameBridge && window.GameBridge.isInIframe) {
+                window.GameBridge.submitScore({
+                    gameSlug: 'snake',
+                    score: score,
+                    metadata: {
+                        snakeLength: snake.length
+                    }
+                });
+            }
+
             // Check for high score
             const isNewRecord = addHighScore(score);
             const newRecordElement = document.getElementById('newRecord');
-            
+
             if (isNewRecord && score > 0) {
                 newRecordElement.style.display = 'block';
             } else {
                 newRecordElement.style.display = 'none';
             }
-            
+
             displayHighScores();
             gameOverElement.style.display = 'block';
         }
