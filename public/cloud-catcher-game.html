@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16-Bit Weather Rush</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Orbitron', monospace;
+            color: #fff;
+        }
+
+        .game-container {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            border: 3px solid #87ceeb;
+            box-shadow: 0 0 20px #87ceeb;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #87ceeb;
+            font-weight: 900;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            font-weight: 700;
+        }
+
+        #gameCanvas {
+            border: 2px solid #87ceeb;
+            background: linear-gradient(to bottom, #1e3c72, #2a5298);
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 0 15px rgba(135, 206, 235, 0.5);
+        }
+
+        .controls {
+            margin-top: 20px;
+            font-size: 1em;
+            line-height: 1.8;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 30px;
+            border: 3px solid #87ceeb;
+            border-radius: 10px;
+            text-align: center;
+            color: #87ceeb;
+            font-size: 1.5em;
+            display: none;
+            box-shadow: 0 0 20px #87ceeb;
+            min-width: 400px;
+        }
+
+        .restart-btn {
+            background: #87ceeb;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            cursor: pointer;
+            margin: 10px 5px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .restart-btn:hover {
+            background: #b0e0f7;
+            box-shadow: 0 0 10px #87ceeb;
+        }
+
+        .high-scores {
+            margin-top: 20px;
+            padding: 15px;
+            border: 2px solid #87ceeb;
+            border-radius: 5px;
+            background: rgba(135, 206, 235, 0.1);
+        }
+
+        .high-scores h3 {
+            color: #87ceeb;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .score-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.8em;
+        }
+
+        .score-list li {
+            color: #87ceeb;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>WEATHER RUSH</h1>
+        <div class="game-info">
+            <div>SCORE: <span id="score">0</span></div>
+            <div>LIVES: <span id="lives">3</span></div>
+            <div>LEVEL: <span id="level">1</span></div>
+        </div>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div class="controls">
+            Arrow Keys or A/D to move your catcher
+            <br>
+            Catch clouds, rain, and snow! Avoid lightning and tornadoes!
+        </div>
+
+        <div class="game-over" id="gameOver">
+            <h2>GAME OVER</h2>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <p>Level Reached: <span id="finalLevel">1</span></p>
+            <div class="high-scores">
+                <h3>HIGH SCORES</h3>
+                <ol class="score-list" id="scoreList"></ol>
+            </div>
+            <button class="restart-btn" onclick="restartGame()">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script src="/game-bridge.js"></script>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game state
+        let score = 0;
+        let lives = 3;
+        let level = 1;
+        let gameRunning = true;
+        let gameSpeed = 2;
+
+        // Player (weather collector)
+        const player = {
+            x: canvas.width / 2 - 40,
+            y: canvas.height - 60,
+            width: 80,
+            height: 15,
+            speed: 8,
+            dx: 0
+        };
+
+        // Weather items
+        let weatherItems = [];
+
+        // Weather types
+        const weatherTypes = {
+            cloud: { emoji: '☁️', points: 10, good: true, speed: 2, size: 40 },
+            rain: { emoji: '💧', points: 15, good: true, speed: 3, size: 30 },
+            snow: { emoji: '❄️', points: 20, good: true, speed: 1.5, size: 35 },
+            sun: { emoji: '☀️', points: 30, good: true, speed: 2.5, size: 35 },
+            lightning: { emoji: '⚡', points: -30, good: false, speed: 5, size: 40 },
+            tornado: { emoji: '🌪️', points: -50, good: false, speed: 3.5, size: 45 }
+        };
+
+        function spawnWeatherItem() {
+            const types = Object.keys(weatherTypes);
+            const type = types[Math.floor(Math.random() * types.length)];
+            const config = weatherTypes[type];
+
+            weatherItems.push({
+                x: Math.random() * (canvas.width - config.size),
+                y: -config.size,
+                type: type,
+                size: config.size,
+                speed: config.speed * (1 + level * 0.1)
+            });
+        }
+
+        function drawPlayer() {
+            // Draw basket/collector
+            ctx.fillStyle = '#8b4513';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            // Basket rim
+            ctx.strokeStyle = '#a0522d';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(player.x, player.y, player.width, 3);
+
+            // Basket pattern
+            ctx.strokeStyle = '#654321';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 5; i++) {
+                const x = player.x + (i * player.width / 5);
+                ctx.beginPath();
+                ctx.moveTo(x, player.y);
+                ctx.lineTo(x, player.y + player.height);
+                ctx.stroke();
+            }
+        }
+
+        function drawWeatherItems() {
+            weatherItems.forEach(item => {
+                const config = weatherTypes[item.type];
+
+                // Draw emoji
+                ctx.font = `${item.size}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                // Add glow effect
+                if (config.good) {
+                    ctx.shadowColor = '#fff';
+                    ctx.shadowBlur = 10;
+                } else {
+                    ctx.shadowColor = '#f00';
+                    ctx.shadowBlur = 15;
+                }
+
+                ctx.fillText(config.emoji, item.x + item.size / 2, item.y + item.size / 2);
+                ctx.shadowBlur = 0;
+            });
+        }
+
+        function drawBackground() {
+            // Sky gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#1e3c72');
+            gradient.addColorStop(1, '#2a5298');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Ground
+            ctx.fillStyle = '#228b22';
+            ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
+        }
+
+        function draw() {
+            drawBackground();
+            drawPlayer();
+            drawWeatherItems();
+        }
+
+        function update() {
+            if (!gameRunning) return;
+
+            // Move player
+            player.x += player.dx;
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) {
+                player.x = canvas.width - player.width;
+            }
+
+            // Spawn weather items
+            if (Math.random() < 0.02 + level * 0.005) {
+                spawnWeatherItem();
+            }
+
+            // Move and check weather items
+            weatherItems = weatherItems.filter(item => {
+                item.y += item.speed * gameSpeed;
+
+                // Check collision with player
+                if (
+                    item.y + item.size > player.y &&
+                    item.y < player.y + player.height &&
+                    item.x + item.size > player.x &&
+                    item.x < player.x + player.width
+                ) {
+                    const config = weatherTypes[item.type];
+                    score += config.points;
+                    document.getElementById('score').textContent = score;
+
+                    if (!config.good) {
+                        lives--;
+                        document.getElementById('lives').textContent = lives;
+                        if (lives === 0) {
+                            gameOver();
+                        }
+                    }
+
+                    return false; // Remove item
+                }
+
+                // Remove if off screen
+                return item.y < canvas.height;
+            });
+
+            // Level up
+            if (score >= level * 500) {
+                level++;
+                document.getElementById('level').textContent = level;
+                gameSpeed += 0.1;
+            }
+        }
+
+        // High Score Management
+        function getHighScores() {
+            const scores = localStorage.getItem('cloudCatcherHighScores');
+            return scores ? JSON.parse(scores) : [];
+        }
+
+        function saveHighScores(scores) {
+            localStorage.setItem('cloudCatcherHighScores', JSON.stringify(scores));
+        }
+
+        function addHighScore(score, level) {
+            const scores = getHighScores();
+            const timestamp = new Date().toLocaleDateString();
+            scores.push({ score, level, date: timestamp });
+            scores.sort((a, b) => b.score - a.score);
+            scores.splice(5);
+            saveHighScores(scores);
+        }
+
+        function displayHighScores() {
+            const scores = getHighScores();
+            const scoreList = document.getElementById('scoreList');
+            scoreList.innerHTML = '';
+
+            if (scores.length === 0) {
+                scoreList.innerHTML = '<li style="text-align: center; opacity: 0.7;">No scores yet</li>';
+                return;
+            }
+
+            scores.forEach((scoreData, index) => {
+                const li = document.createElement('li');
+                li.textContent = `${index + 1}. ${scoreData.score} pts (Lvl ${scoreData.level}) - ${scoreData.date}`;
+                scoreList.appendChild(li);
+            });
+        }
+
+        function gameOver() {
+            gameRunning = false;
+
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalLevel').textContent = level;
+
+            // Submit score to parent window (if in iframe)
+            if (window.GameBridge && window.GameBridge.isInIframe) {
+                window.GameBridge.submitScore({
+                    gameSlug: 'cloud-catcher',
+                    score: score,
+                    level: level,
+                    metadata: {
+                        level: level,
+                        livesRemaining: lives
+                    }
+                });
+            }
+
+            addHighScore(score, level);
+            displayHighScores();
+            document.getElementById('gameOver').style.display = 'block';
+        }
+
+        function restartGame() {
+            score = 0;
+            lives = 3;
+            level = 1;
+            gameSpeed = 2;
+            weatherItems = [];
+
+            document.getElementById('score').textContent = score;
+            document.getElementById('lives').textContent = lives;
+            document.getElementById('level').textContent = level;
+            document.getElementById('gameOver').style.display = 'none';
+
+            gameRunning = true;
+        }
+
+        // Input handling
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a') {
+                player.dx = -player.speed;
+            } else if (e.key === 'ArrowRight' || e.key === 'd') {
+                player.dx = player.speed;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'ArrowRight' || e.key === 'd') {
+                player.dx = 0;
+            }
+        });
+
+        // Game loop
+        function gameLoop() {
+            update();
+            draw();
+        }
+
+        // Initialize game
+        setInterval(gameLoop, 1000 / 60); // 60 FPS
+    </script>
+</body>
+</html>
