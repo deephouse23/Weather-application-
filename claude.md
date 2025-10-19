@@ -28,6 +28,28 @@
 
 ---
 
+## IMPORTANT: No Emoji Policy
+
+**STRICTLY ENFORCED**: This project does NOT use emojis anywhere in:
+- Code comments
+- Commit messages
+- Pull request titles or descriptions
+- Documentation
+- Code files
+- Any project communications
+
+Use plain text descriptions instead. For example:
+- Instead of checkmark emoji: use "[x]", "DONE", or "COMPLETED"
+- Instead of robot emoji: use "Generated with Claude Code"
+- Instead of rocket emoji: use "Ready" or "Deployed"
+- Instead of tool emoji: use "Fix:" or "Updated:"
+
+**Rationale**: Emojis can cause encoding issues, are not accessible to screen readers, and maintain a professional tone appropriate for technical documentation.
+
+**Enforcement**: Git hooks will reject commits and PRs containing emojis.
+
+---
+
 ## Project Overview
 
 A professional weather application combining modern meteorological data with retro terminal aesthetics. Built with Next.js 15, React 19, and TypeScript, featuring comprehensive weather monitoring, interactive radar maps, and user authentication.
