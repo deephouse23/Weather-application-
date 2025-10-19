@@ -40,23 +40,29 @@ The migration will create:
 - Policies for authenticated users to submit and view scores
 - Admin policies for managing games
 
-### 3. Seed Initial Games Data
+### 3. Verify the Migration
 
-After running the migration, you need to add the 6 games to the `games` table:
+The migration includes seed data for all 6 games, so you don't need to run any additional SQL.
+
+To verify the games were created, run this query:
 
 ```sql
-INSERT INTO games (slug, title, description, category, difficulty, icon_emoji, html_file, featured, is_active) VALUES
-('snake', '16-Bit Snake', 'Classic snake game with retro graphics. Eat food, grow longer, avoid walls and yourself!', 'arcade', 'easy', '🐍', 'snake-game.html', true, true),
-('tetris', 'Retro Tetris', 'Stack falling blocks to clear lines. Speed increases as you level up!', 'puzzle', 'medium', '🔲', 'tetris-game.html', true, true),
-('asteroids', 'Retro Asteroids', 'Destroy asteroids and survive as long as possible in this classic space shooter.', 'shooter', 'medium', '🚀', 'asteroids-game.html', false, true),
-('pacman', 'Pac-Maze', 'Navigate the maze, eat dots, avoid ghosts, and chase high scores!', 'arcade', 'medium', '👾', 'pacman-game.html', true, true),
-('missile-command', 'Missile Command', 'Defend your cities from incoming missiles with defensive fire.', 'strategy', 'hard', '🚀', 'missile-command-game.html', false, true),
-('weather-trivia', 'Weather Trivia', 'Test your meteorology knowledge with this weather trivia quiz.', 'trivia', 'easy', '⛈️', 'weather-trivia-game.html', false, true);
+SELECT slug, title, category, difficulty, play_count
+FROM games
+ORDER BY sort_order;
 ```
 
-### 4. Verify Setup
+You should see 6 games:
+- tetris (RETRO TETRIS)
+- asteroids (RETRO ASTEROIDS)
+- pacman (MAZE RUNNER)
+- snake (RETRO SNAKE)
+- missile-command (DEFENSE GRID)
+- weather-trivia (WEATHER TRIVIA)
 
-After running both SQL scripts, verify the setup:
+### 4. Test the API
+
+After running the migration, test that everything works:
 
 1. Check that tables exist:
    ```sql
