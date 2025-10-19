@@ -137,7 +137,7 @@ export async function fetchGFSModelGraphics(): Promise<NewsItem[]> {
       title: `GFS Model - Tropical Atlantic (${runTime})`,
       description: `Latest GFS ${runTime} model run showing mean sea level pressure and precipitation for the tropical Atlantic region. Updated 4 times daily.`,
       source: 'NOAA GFS',
-      url: tropicsUrl, // Direct link to image for easy viewing
+      url: `/gfs-model/tropatl/${modelRun}`, // Link to viewer page
       imageUrl: tropicsUrl,
       timestamp: now,
       category: 'severe' as NewsCategory,
@@ -152,7 +152,7 @@ export async function fetchGFSModelGraphics(): Promise<NewsItem[]> {
       title: `GFS Model - Americas (${runTime})`,
       description: `Latest GFS ${runTime} model run showing mean sea level pressure and precipitation for North America. Updated 4 times daily.`,
       source: 'NOAA GFS',
-      url: americasUrl, // Direct link to image for easy viewing
+      url: `/gfs-model/us/${modelRun}`, // Link to viewer page
       imageUrl: americasUrl,
       timestamp: now,
       category: 'severe' as NewsCategory,
@@ -167,7 +167,7 @@ export async function fetchGFSModelGraphics(): Promise<NewsItem[]> {
       title: `GFS Model - West Coast (${runTime})`,
       description: `Latest GFS ${runTime} model run for the Western United States showing mean sea level pressure and precipitation. Updated 4 times daily.`,
       source: 'NOAA GFS',
-      url: westCoastUrl, // Direct link to image for easy viewing
+      url: `/gfs-model/wus/${modelRun}`, // Link to viewer page
       imageUrl: westCoastUrl,
       timestamp: now,
       category: 'severe' as NewsCategory,
@@ -182,7 +182,7 @@ export async function fetchGFSModelGraphics(): Promise<NewsItem[]> {
       title: `GFS Model - East Coast (${runTime})`,
       description: `Latest GFS ${runTime} model run for the Eastern United States showing mean sea level pressure and precipitation. Updated 4 times daily.`,
       source: 'NOAA GFS',
-      url: eastCoastUrl, // Direct link to image for easy viewing
+      url: `/gfs-model/eus/${modelRun}`, // Link to viewer page
       imageUrl: eastCoastUrl,
       timestamp: now,
       category: 'severe' as NewsCategory,
@@ -197,7 +197,7 @@ export async function fetchGFSModelGraphics(): Promise<NewsItem[]> {
       title: `GFS Model - Eastern Pacific (${runTime})`,
       description: `Latest GFS ${runTime} model run showing tropical weather potential in the Eastern Pacific. Updated 4 times daily.`,
       source: 'NOAA GFS',
-      url: epacUrl, // Direct link to image for easy viewing
+      url: `/gfs-model/epac/${modelRun}`, // Link to viewer page
       imageUrl: epacUrl,
       timestamp: now,
       category: 'severe' as NewsCategory,

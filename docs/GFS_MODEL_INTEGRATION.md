@@ -50,6 +50,20 @@ lib/services/gfsModelService.ts
 ├── fetchGFSModelGraphics()        # GFS model runs
 ├── fetchActiveStorms()            # Active tropical system detection
 └── fetchAllGFSModelNews()         # Aggregates all GFS/tropical data
+
+app/api/gfs-image/route.ts
+└── GET /api/gfs-image              # Proxy route to fetch GFS images from NOAA
+    ├── Parameters: run, region
+    ├── Validates run format (00z, 06z, 12z, 18z)
+    ├── Validates region (us, wus, eus, tropatl, epac)
+    └── Returns: GIF image with 5-minute cache
+
+app/gfs-model/[region]/[run]/page.tsx
+└── GFS Model Viewer Page           # Full-screen model viewer
+    ├── Dynamic routing for all regions/runs
+    ├── Theme-aware styling
+    ├── Download functionality
+    └── Back navigation to news feed
 ```
 
 ### Integration Points
@@ -181,12 +195,18 @@ To modify cache duration, edit `CACHE_DURATION` in [lib/services/newsAggregator.
 - **Medium**: 7-day NHC outlook, Eastern Pacific
 - **Low**: Satellite imagery (supplementary content)
 
-### 2.5 Direct Image Links
-All GFS model cards now link directly to the image file (`.gif`) rather than NOAA's selection page. This allows users to:
-- View the full-size model graphic immediately
-- Right-click to save the image
-- Zoom and pan without additional navigation
-- Share direct links to specific model runs
+### 2.5 GFS Model Viewer Pages
+All GFS model cards now link to dedicated viewer pages on 16bitweather.co rather than external NOAA pages. This provides:
+- **No 403 errors**: Images are proxied through the server to avoid NOAA's direct access restrictions
+- **Full-size viewing**: Large, high-quality model graphics with proper theming
+- **Download option**: One-click download button for saving models
+- **Better UX**: Consistent viewing experience with retro terminal aesthetic
+- **Model information**: Run time, region details, and update schedule displayed
+- **Stay on site**: Users remain in the 16-Bit Weather ecosystem
+
+**URL Pattern**: `/gfs-model/{region}/{run}`
+- Example: `/gfs-model/wus/18z` - West Coast model from 18Z run
+- Example: `/gfs-model/tropatl/12z` - Tropical Atlantic from 12Z run
 
 ### 3. Categorization
 - **Alerts**: NHC outlooks, active storm notifications
