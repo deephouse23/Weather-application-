@@ -143,19 +143,22 @@ export function LocationProvider({ children }: LocationProviderProps) {
     }
 
     const isNavigatingFromHomeToCityPage = lastPathname === '/' && pathname.startsWith('/weather/')
+    const isNavigatingFromHomeToMap = lastPathname === '/' && pathname === '/map'
     const isNavigatingFromCityPageToHome = lastPathname.startsWith('/weather/') && pathname === '/'
     const isNavigatingBetweenCityPages = lastPathname.startsWith('/weather/') && pathname.startsWith('/weather/') && lastPathname !== pathname
 
     console.log(`[LocationProvider] Route navigation analysis:`, {
       isNavigatingFromHomeToCityPage,
+      isNavigatingFromHomeToMap,
       isNavigatingFromCityPageToHome,
       isNavigatingBetweenCityPages,
       shouldClearOnRouteChange
     })
 
     // Always clear when navigating between different city pages or from city to home
-    const shouldClear = (isNavigatingFromCityPageToHome || isNavigatingBetweenCityPages) || 
-                       (shouldClearOnRouteChange && isNavigatingFromHomeToCityPage)
+    // DON'T clear when navigating from home to map (preserve location state)
+    const shouldClear = (isNavigatingFromCityPageToHome || isNavigatingBetweenCityPages) ||
+                       (shouldClearOnRouteChange && isNavigatingFromHomeToCityPage && !isNavigatingFromHomeToMap)
 
     if (shouldClear) {
       console.log(`[LocationProvider] 🔥 CLEARING TRIGGERED: Route change detected: ${lastPathname} -> ${pathname}`)
