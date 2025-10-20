@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16-Bit Retro Pong</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght:400;700;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(45deg, #0a0a0a, #1a1a1a);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Orbitron', monospace;
+            color: #0ff;
+        }
+
+        .game-container {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            border: 3px solid #0ff;
+            box-shadow: 0 0 20px #0ff;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #0ff;
+            font-weight: 900;
+        }
+
+        .scores {
+            font-size: 2em;
+            margin-bottom: 20px;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 50px;
+        }
+
+        .player-label {
+            font-size: 0.6em;
+            color: #0ff;
+            opacity: 0.7;
+        }
+
+        #gameCanvas {
+            border: 2px solid #0ff;
+            background: #000;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+
+        .controls {
+            margin-top: 20px;
+            font-size: 1em;
+            line-height: 1.8;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 30px;
+            border: 3px solid #0ff;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.5em;
+            display: none;
+            box-shadow: 0 0 20px #0ff;
+            min-width: 400px;
+        }
+
+        .winner {
+            color: #0ff;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            text-shadow: 0 0 15px #0ff;
+        }
+
+        .restart-btn {
+            background: #0ff;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            cursor: pointer;
+            margin: 10px 5px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .restart-btn:hover {
+            background: #40ffff;
+            box-shadow: 0 0 10px #0ff;
+        }
+
+        .high-scores {
+            margin-top: 20px;
+            padding: 15px;
+            border: 2px solid #0ff;
+            border-radius: 5px;
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .high-scores h3 {
+            color: #0ff;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .score-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.8em;
+        }
+
+        .score-list li {
+            color: #0ff;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>RETRO PONG</h1>
+        <div class="scores">
+            <div>
+                <div class="player-label">PLAYER</div>
+                <span id="playerScore">0</span>
+            </div>
+            <div>
+                <div class="player-label">CPU</div>
+                <span id="cpuScore">0</span>
+            </div>
+        </div>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div class="controls">
+            Use W/S or Arrow Keys to move your paddle
+            <br>
+            First to 11 points wins!
+        </div>
+
+        <div class="game-over" id="gameOver">
+            <div class="winner" id="winner"></div>
+            <p>Final Score: <span id="finalScore"></span></p>
+            <div class="high-scores" id="highScoresDisplay">
+                <h3>HIGH SCORES</h3>
+                <ol class="score-list" id="scoreList"></ol>
+            </div>
+            <button class="restart-btn" onclick="restartGame()">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script src="/game-bridge.js"></script>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game constants
+        const PADDLE_WIDTH = 10;
+        const PADDLE_HEIGHT = 100;
+        const BALL_SIZE = 10;
+        const WINNING_SCORE = 11;
+        const AI_SPEED = 4;
+
+        // Game state
+        let playerScore = 0;
+        let cpuScore = 0;
+        let gameRunning = false;
+        let rallies = 0;
+
+        // Paddle objects
+        const player = {
+            x: 20,
+            y: canvas.height / 2 - PADDLE_HEIGHT / 2,
+            width: PADDLE_WIDTH,
+            height: PADDLE_HEIGHT,
+            dy: 0
+        };
+
+        const cpu = {
+            x: canvas.width - 30,
+            y: canvas.height / 2 - PADDLE_HEIGHT / 2,
+            width: PADDLE_WIDTH,
+            height: PADDLE_HEIGHT
+        };
+
+        // Ball object
+        const ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            size: BALL_SIZE,
+            dx: 5,
+            dy: 3,
+            speed: 5
+        };
+
+        // Draw functions
+        function drawRect(x, y, width, height, color) {
+            ctx.fillStyle = color;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 10;
+            ctx.fillRect(x, y, width, height);
+            ctx.shadowBlur = 0;
+        }
+
+        function drawCircle(x, y, size, color) {
+            ctx.fillStyle = color;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+
+        function drawCenterLine() {
+            ctx.strokeStyle = '#0ff';
+            ctx.setLineDash([10, 10]);
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw center line
+            drawCenterLine();
+
+            // Draw paddles
+            drawRect(player.x, player.y, player.width, player.height, '#0ff');
+            drawRect(cpu.x, cpu.y, cpu.width, cpu.height, '#f0f');
+
+            // Draw ball
+            drawCircle(ball.x, ball.y, ball.size, '#ff0');
+        }
+
+        function update() {
+            if (!gameRunning) return;
+
+            // Move player paddle
+            player.y += player.dy;
+
+            // Keep player paddle in bounds
+            if (player.y < 0) player.y = 0;
+            if (player.y + player.height > canvas.height) {
+                player.y = canvas.height - player.height;
+            }
+
+            // AI paddle movement
+            const paddleCenter = cpu.y + cpu.height / 2;
+            if (ball.x > canvas.width / 2) {
+                if (paddleCenter < ball.y - 35) {
+                    cpu.y += AI_SPEED;
+                } else if (paddleCenter > ball.y + 35) {
+                    cpu.y -= AI_SPEED;
+                }
+            }
+
+            // Keep CPU paddle in bounds
+            if (cpu.y < 0) cpu.y = 0;
+            if (cpu.y + cpu.height > canvas.height) {
+                cpu.y = canvas.height - cpu.height;
+            }
+
+            // Move ball
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Ball collision with top/bottom walls
+            if (ball.y - ball.size < 0 || ball.y + ball.size > canvas.height) {
+                ball.dy *= -1;
+            }
+
+            // Ball collision with paddles
+            if (
+                ball.x - ball.size < player.x + player.width &&
+                ball.y > player.y &&
+                ball.y < player.y + player.height
+            ) {
+                ball.dx = Math.abs(ball.dx);
+                ball.dy += player.dy * 0.2;
+                ball.speed += 0.2;
+                rallies++;
+                updateBallSpeed();
+            }
+
+            if (
+                ball.x + ball.size > cpu.x &&
+                ball.y > cpu.y &&
+                ball.y < cpu.y + cpu.height
+            ) {
+                ball.dx = -Math.abs(ball.dx);
+                ball.dy += (ball.y - (cpu.y + cpu.height / 2)) * 0.1;
+                ball.speed += 0.2;
+                rallies++;
+                updateBallSpeed();
+            }
+
+            // Ball out of bounds (scoring)
+            if (ball.x - ball.size < 0) {
+                cpuScore++;
+                document.getElementById('cpuScore').textContent = cpuScore;
+                resetBall();
+                checkWin();
+            }
+
+            if (ball.x + ball.size > canvas.width) {
+                playerScore++;
+                document.getElementById('playerScore').textContent = playerScore;
+                resetBall();
+                checkWin();
+            }
+        }
+
+        function updateBallSpeed() {
+            const speed = Math.min(ball.speed, 12);
+            const angle = Math.atan2(ball.dy, ball.dx);
+            ball.dx = Math.cos(angle) * speed;
+            ball.dy = Math.sin(angle) * speed;
+        }
+
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.speed = 5;
+            ball.dx = (Math.random() > 0.5 ? 1 : -1) * 5;
+            ball.dy = (Math.random() * 4 - 2);
+            rallies = 0;
+        }
+
+        function checkWin() {
+            if (playerScore >= WINNING_SCORE || cpuScore >= WINNING_SCORE) {
+                gameOver();
+            }
+        }
+
+        // High Score Management
+        function getHighScores() {
+            const scores = localStorage.getItem('pongHighScores');
+            return scores ? JSON.parse(scores) : [];
+        }
+
+        function saveHighScores(scores) {
+            localStorage.setItem('pongHighScores', JSON.stringify(scores));
+        }
+
+        function addHighScore(score) {
+            const scores = getHighScores();
+            const timestamp = new Date().toLocaleDateString();
+            scores.push({ score, date: timestamp });
+            scores.sort((a, b) => b.score - a.score);
+            scores.splice(5); // Keep only top 5
+            saveHighScores(scores);
+        }
+
+        function displayHighScores() {
+            const scores = getHighScores();
+            const scoreList = document.getElementById('scoreList');
+            scoreList.innerHTML = '';
+
+            if (scores.length === 0) {
+                scoreList.innerHTML = '<li style="text-align: center; opacity: 0.7;">No scores yet</li>';
+                return;
+            }
+
+            scores.forEach((scoreData, index) => {
+                const li = document.createElement('li');
+                li.textContent = `${index + 1}. ${scoreData.score} pts - ${scoreData.date}`;
+                scoreList.appendChild(li);
+            });
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            const winner = playerScore > cpuScore ? 'YOU WIN!' : 'CPU WINS!';
+            const finalScore = `${playerScore} - ${cpuScore}`;
+
+            document.getElementById('winner').textContent = winner;
+            document.getElementById('finalScore').textContent = finalScore;
+
+            // Submit score to parent window (if in iframe)
+            if (window.GameBridge && window.GameBridge.isInIframe) {
+                window.GameBridge.submitScore({
+                    gameSlug: 'pong',
+                    score: playerScore,
+                    metadata: {
+                        playerScore: playerScore,
+                        cpuScore: cpuScore,
+                        won: playerScore > cpuScore
+                    }
+                });
+            }
+
+            // Save high score
+            addHighScore(playerScore);
+            displayHighScores();
+
+            document.getElementById('gameOver').style.display = 'block';
+        }
+
+        function restartGame() {
+            playerScore = 0;
+            cpuScore = 0;
+            document.getElementById('playerScore').textContent = playerScore;
+            document.getElementById('cpuScore').textContent = cpuScore;
+            document.getElementById('gameOver').style.display = 'none';
+            resetBall();
+            gameRunning = true;
+        }
+
+        // Input handling
+        document.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+
+            if (key === 'w' || key === 'arrowup') {
+                player.dy = -6;
+            } else if (key === 's' || key === 'arrowdown') {
+                player.dy = 6;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            const key = e.key.toLowerCase();
+
+            if (key === 'w' || key === 'arrowup' || key === 's' || key === 'arrowdown') {
+                player.dy = 0;
+            }
+        });
+
+        // Game loop
+        function gameLoop() {
+            update();
+            draw();
+        }
+
+        // Initialize game
+        gameRunning = true;
+        resetBall();
+        setInterval(gameLoop, 1000 / 60); // 60 FPS
+    </script>
+</body>
+</html>

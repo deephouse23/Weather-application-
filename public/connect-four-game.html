@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16-Bit Connect Grid</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(45deg, #4e0a2d, #0a4e2d);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Orbitron', monospace;
+            color: #ff0;
+        }
+
+        .game-container {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            border: 3px solid #ff0;
+            box-shadow: 0 0 20px #ff0;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #ff0;
+            font-weight: 900;
+        }
+
+        .game-info {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .turn-indicator {
+            color: #ff0;
+            text-shadow: 0 0 10px #ff0;
+        }
+
+        #gameCanvas {
+            border: 3px solid #ff0;
+            background: #001a33;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.5);
+            cursor: pointer;
+        }
+
+        .controls {
+            margin-top: 20px;
+            font-size: 1em;
+            line-height: 1.8;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 30px;
+            border: 3px solid #ff0;
+            border-radius: 10px;
+            text-align: center;
+            color: #ff0;
+            font-size: 1.5em;
+            display: none;
+            box-shadow: 0 0 20px #ff0;
+            min-width: 400px;
+        }
+
+        .winner {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            text-shadow: 0 0 15px #ff0;
+        }
+
+        .restart-btn {
+            background: #ff0;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            cursor: pointer;
+            margin: 10px 5px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .restart-btn:hover {
+            background: #ffff40;
+            box-shadow: 0 0 10px #ff0;
+        }
+
+        .high-scores {
+            margin-top: 20px;
+            padding: 15px;
+            border: 2px solid #ff0;
+            border-radius: 5px;
+            background: rgba(255, 255, 0, 0.1);
+        }
+
+        .high-scores h3 {
+            color: #ff0;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .score-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.8em;
+        }
+
+        .score-list li {
+            color: #ff0;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>CONNECT GRID</h1>
+        <div class="game-info">
+            <div class="turn-indicator" id="turnIndicator">Your Turn!</div>
+        </div>
+        <canvas id="gameCanvas" width="700" height="600"></canvas>
+        <div class="controls">
+            Click column to drop your disc
+            <br>
+            Connect 4 in a row to win! (Horizontal, Vertical, or Diagonal)
+        </div>
+
+        <div class="game-over" id="gameOver">
+            <div class="winner" id="winner"></div>
+            <p>Moves: <span id="totalMoves">0</span></p>
+            <div class="high-scores">
+                <h3>WIN STATS</h3>
+                <ol class="score-list" id="scoreList"></ol>
+            </div>
+            <button class="restart-btn" onclick="restartGame()">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script src="/game-bridge.js"></script>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game constants
+        const ROWS = 6;
+        const COLS = 7;
+        const CELL_SIZE = 90;
+        const DISC_RADIUS = 35;
+        const OFFSET_X = 35;
+        const OFFSET_Y = 35;
+
+        const PLAYER = 1;
+        const CPU = 2;
+        const EMPTY = 0;
+
+        // Game state
+        let board = [];
+        let currentPlayer = PLAYER;
+        let gameRunning = true;
+        let totalMoves = 0;
+        let wins = 0;
+        let losses = 0;
+        let draws = 0;
+
+        function initBoard() {
+            board = [];
+            for (let row = 0; row < ROWS; row++) {
+                board[row] = [];
+                for (let col = 0; col < COLS; col++) {
+                    board[row][col] = EMPTY;
+                }
+            }
+        }
+
+        function drawBoard() {
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#001a33');
+            gradient.addColorStop(1, '#003366');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw grid
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    const x = OFFSET_X + col * CELL_SIZE;
+                    const y = OFFSET_Y + row * CELL_SIZE;
+
+                    // Cell border
+                    ctx.strokeStyle = '#ff0';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(x, y, CELL_SIZE, CELL_SIZE);
+
+                    // Draw disc
+                    const centerX = x + CELL_SIZE / 2;
+                    const centerY = y + CELL_SIZE / 2;
+
+                    if (board[row][col] === PLAYER) {
+                        // Player disc (red)
+                        ctx.fillStyle = '#ff0000';
+                        ctx.shadowColor = '#ff0000';
+                        ctx.shadowBlur = 15;
+                        ctx.beginPath();
+                        ctx.arc(centerX, centerY, DISC_RADIUS, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    } else if (board[row][col] === CPU) {
+                        // CPU disc (yellow)
+                        ctx.fillStyle = '#ffff00';
+                        ctx.shadowColor = '#ffff00';
+                        ctx.shadowBlur = 15;
+                        ctx.beginPath();
+                        ctx.arc(centerX, centerY, DISC_RADIUS, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    }
+                }
+            }
+        }
+
+        function dropDisc(col) {
+            // Find lowest empty row in column
+            for (let row = ROWS - 1; row >= 0; row--) {
+                if (board[row][col] === EMPTY) {
+                    board[row][col] = currentPlayer;
+                    totalMoves++;
+                    return row;
+                }
+            }
+            return -1; // Column full
+        }
+
+        function checkWin(player) {
+            // Check horizontal
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLS - 3; col++) {
+                    if (
+                        board[row][col] === player &&
+                        board[row][col + 1] === player &&
+                        board[row][col + 2] === player &&
+                        board[row][col + 3] === player
+                    ) {
+                        return true;
+                    }
+                }
+            }
+
+            // Check vertical
+            for (let row = 0; row < ROWS - 3; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    if (
+                        board[row][col] === player &&
+                        board[row + 1][col] === player &&
+                        board[row + 2][col] === player &&
+                        board[row + 3][col] === player
+                    ) {
+                        return true;
+                    }
+                }
+            }
+
+            // Check diagonal (down-right)
+            for (let row = 0; row < ROWS - 3; row++) {
+                for (let col = 0; col < COLS - 3; col++) {
+                    if (
+                        board[row][col] === player &&
+                        board[row + 1][col + 1] === player &&
+                        board[row + 2][col + 2] === player &&
+                        board[row + 3][col + 3] === player
+                    ) {
+                        return true;
+                    }
+                }
+            }
+
+            // Check diagonal (down-left)
+            for (let row = 0; row < ROWS - 3; row++) {
+                for (let col = 3; col < COLS; col++) {
+                    if (
+                        board[row][col] === player &&
+                        board[row + 1][col - 1] === player &&
+                        board[row + 2][col - 2] === player &&
+                        board[row + 3][col - 3] === player
+                    ) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        function isBoardFull() {
+            for (let col = 0; col < COLS; col++) {
+                if (board[0][col] === EMPTY) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function cpuMove() {
+            // Simple AI: Try to win, block player, or random
+            let bestCol = -1;
+
+            // Try to win
+            for (let col = 0; col < COLS; col++) {
+                if (canDropInColumn(col)) {
+                    const row = getLowestEmptyRow(col);
+                    board[row][col] = CPU;
+                    if (checkWin(CPU)) {
+                        board[row][col] = EMPTY;
+                        bestCol = col;
+                        break;
+                    }
+                    board[row][col] = EMPTY;
+                }
+            }
+
+            // Try to block player
+            if (bestCol === -1) {
+                for (let col = 0; col < COLS; col++) {
+                    if (canDropInColumn(col)) {
+                        const row = getLowestEmptyRow(col);
+                        board[row][col] = PLAYER;
+                        if (checkWin(PLAYER)) {
+                            board[row][col] = EMPTY;
+                            bestCol = col;
+                            break;
+                        }
+                        board[row][col] = EMPTY;
+                    }
+                }
+            }
+
+            // Random move
+            if (bestCol === -1) {
+                const validCols = [];
+                for (let col = 0; col < COLS; col++) {
+                    if (canDropInColumn(col)) {
+                        validCols.push(col);
+                    }
+                }
+                if (validCols.length > 0) {
+                    bestCol = validCols[Math.floor(Math.random() * validCols.length)];
+                }
+            }
+
+            if (bestCol !== -1) {
+                setTimeout(() => {
+                    dropDisc(bestCol);
+                    drawBoard();
+
+                    if (checkWin(CPU)) {
+                        gameOver('CPU WINS!', false);
+                    } else if (isBoardFull()) {
+                        gameOver('DRAW!', null);
+                    } else {
+                        currentPlayer = PLAYER;
+                        document.getElementById('turnIndicator').textContent = 'Your Turn!';
+                    }
+                }, 500);
+            }
+        }
+
+        function canDropInColumn(col) {
+            return board[0][col] === EMPTY;
+        }
+
+        function getLowestEmptyRow(col) {
+            for (let row = ROWS - 1; row >= 0; row--) {
+                if (board[row][col] === EMPTY) {
+                    return row;
+                }
+            }
+            return -1;
+        }
+
+        // Stats Management
+        function getStats() {
+            const stats = localStorage.getItem('connectFourStats');
+            return stats ? JSON.parse(stats) : { wins: 0, losses: 0, draws: 0 };
+        }
+
+        function saveStats(stats) {
+            localStorage.setItem('connectFourStats', JSON.stringify(stats));
+        }
+
+        function displayStats() {
+            const stats = getStats();
+            const scoreList = document.getElementById('scoreList');
+            scoreList.innerHTML = `
+                <li>Wins: ${stats.wins}</li>
+                <li>Losses: ${stats.losses}</li>
+                <li>Draws: ${stats.draws}</li>
+                <li>Win Rate: ${stats.wins + stats.losses > 0 ? Math.round(stats.wins / (stats.wins + stats.losses) * 100) : 0}%</li>
+            `;
+        }
+
+        function gameOver(message, playerWon) {
+            gameRunning = false;
+
+            document.getElementById('winner').textContent = message;
+            document.getElementById('totalMoves').textContent = totalMoves;
+
+            // Update stats
+            const stats = getStats();
+            if (playerWon === true) {
+                stats.wins++;
+            } else if (playerWon === false) {
+                stats.losses++;
+            } else {
+                stats.draws++;
+            }
+            saveStats(stats);
+
+            // Submit score to parent window (if in iframe)
+            if (window.GameBridge && window.GameBridge.isInIframe) {
+                const score = playerWon === true ? 100 : (playerWon === null ? 50 : 0);
+                window.GameBridge.submitScore({
+                    gameSlug: 'connect-four',
+                    score: score,
+                    metadata: {
+                        won: playerWon === true,
+                        moves: totalMoves,
+                        wins: stats.wins,
+                        losses: stats.losses
+                    }
+                });
+            }
+
+            displayStats();
+            document.getElementById('gameOver').style.display = 'block';
+        }
+
+        function restartGame() {
+            initBoard();
+            currentPlayer = PLAYER;
+            gameRunning = true;
+            totalMoves = 0;
+
+            document.getElementById('turnIndicator').textContent = 'Your Turn!';
+            document.getElementById('gameOver').style.display = 'none';
+
+            drawBoard();
+        }
+
+        // Click handler
+        canvas.addEventListener('click', (e) => {
+            if (!gameRunning || currentPlayer !== PLAYER) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const col = Math.floor((x - OFFSET_X) / CELL_SIZE);
+
+            if (col >= 0 && col < COLS && canDropInColumn(col)) {
+                dropDisc(col);
+                drawBoard();
+
+                if (checkWin(PLAYER)) {
+                    gameOver('YOU WIN!', true);
+                } else if (isBoardFull()) {
+                    gameOver('DRAW!', null);
+                } else {
+                    currentPlayer = CPU;
+                    document.getElementById('turnIndicator').textContent = 'CPU Thinking...';
+                    cpuMove();
+                }
+            }
+        });
+
+        // Initialize game
+        initBoard();
+        drawBoard();
+    </script>
+</body>
+</html>
