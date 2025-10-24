@@ -149,6 +149,7 @@
         let level = 1;
         let gameRunning = true;
         let keys = {};
+        let gameStartTime = Date.now(); // Track when game started
         
         // Game objects
         let ship = null;
@@ -485,16 +486,29 @@
         function gameOver() {
             gameRunning = false;
 
+            // Calculate time played in seconds
+            const timePlayedSeconds = Math.floor((Date.now() - gameStartTime) / 1000);
+
             // Submit score to parent window (if in iframe)
             if (window.GameBridge && window.GameBridge.isInIframe) {
+                console.log('[Asteroids] Submitting score:', {
+                    score: score,
+                    level: level,
+                    timePlayed: timePlayedSeconds
+                });
+
                 window.GameBridge.submitScore({
                     gameSlug: 'asteroids',
                     score: score,
                     level: level,
+                    timePlayed: timePlayedSeconds,
                     metadata: {
-                        level: level
+                        level: level,
+                        finalLives: lives
                     }
                 });
+            } else {
+                console.log('[Asteroids] Not in iframe or GameBridge not available');
             }
 
             saveHighScore(score);
@@ -509,12 +523,13 @@
             lives = 3;
             level = 1;
             gameRunning = true;
-            
+            gameStartTime = Date.now(); // Reset start time
+
             document.getElementById('score').textContent = score;
             document.getElementById('lives').textContent = lives;
             document.getElementById('level').textContent = level;
             document.getElementById('gameOver').style.display = 'none';
-            
+
             initGame();
         }
         

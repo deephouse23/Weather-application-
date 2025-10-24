@@ -162,6 +162,7 @@
         let level = 1;
         let gameRunning = true;
         let gameSpeed = 2;
+        let gameStartTime = Date.now();
 
         // Player (weather collector)
         const player = {
@@ -356,20 +357,32 @@
         function gameOver() {
             gameRunning = false;
 
+            // Calculate time played in seconds
+            const timePlayedSeconds = Math.floor((Date.now() - gameStartTime) / 1000);
+
             document.getElementById('finalScore').textContent = score;
             document.getElementById('finalLevel').textContent = level;
 
             // Submit score to parent window (if in iframe)
             if (window.GameBridge && window.GameBridge.isInIframe) {
+                console.log('[CloudCatcher] Submitting score:', {
+                    score: score,
+                    level: level,
+                    timePlayed: timePlayedSeconds,
+                    livesRemaining: lives
+                });
                 window.GameBridge.submitScore({
                     gameSlug: 'cloud-catcher',
                     score: score,
                     level: level,
+                    timePlayed: timePlayedSeconds,
                     metadata: {
                         level: level,
                         livesRemaining: lives
                     }
                 });
+            } else {
+                console.log('[CloudCatcher] Not in iframe or GameBridge not available');
             }
 
             addHighScore(score, level);
@@ -383,6 +396,7 @@
             level = 1;
             gameSpeed = 2;
             weatherItems = [];
+            gameStartTime = Date.now(); // Reset start time
 
             document.getElementById('score').textContent = score;
             document.getElementById('lives').textContent = lives;

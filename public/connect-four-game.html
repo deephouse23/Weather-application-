@@ -183,6 +183,7 @@
         let wins = 0;
         let losses = 0;
         let draws = 0;
+        let gameStartTime = Date.now();
 
         function initBoard() {
             board = [];
@@ -422,6 +423,9 @@
         function gameOver(message, playerWon) {
             gameRunning = false;
 
+            // Calculate time played in seconds
+            const timePlayedSeconds = Math.floor((Date.now() - gameStartTime) / 1000);
+
             document.getElementById('winner').textContent = message;
             document.getElementById('totalMoves').textContent = totalMoves;
 
@@ -439,9 +443,16 @@
             // Submit score to parent window (if in iframe)
             if (window.GameBridge && window.GameBridge.isInIframe) {
                 const score = playerWon === true ? 100 : (playerWon === null ? 50 : 0);
+                console.log('[ConnectFour] Submitting score:', {
+                    score: score,
+                    timePlayed: timePlayedSeconds,
+                    won: playerWon === true,
+                    moves: totalMoves
+                });
                 window.GameBridge.submitScore({
                     gameSlug: 'connect-four',
                     score: score,
+                    timePlayed: timePlayedSeconds,
                     metadata: {
                         won: playerWon === true,
                         moves: totalMoves,
@@ -449,6 +460,8 @@
                         losses: stats.losses
                     }
                 });
+            } else {
+                console.log('[ConnectFour] Not in iframe or GameBridge not available');
             }
 
             displayStats();
@@ -460,6 +473,7 @@
             currentPlayer = PLAYER;
             gameRunning = true;
             totalMoves = 0;
+            gameStartTime = Date.now(); // Reset start time
 
             document.getElementById('turnIndicator').textContent = 'Your Turn!';
             document.getElementById('gameOver').style.display = 'none';

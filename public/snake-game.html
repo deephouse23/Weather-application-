@@ -198,6 +198,7 @@
         let score = 0;
         let gameRunning = true;
         let highScoresVisible = true;
+        let gameStartTime = Date.now(); // Track when game started
 
         // Generate random food position
         function randomFood() {
@@ -330,15 +331,27 @@
             gameRunning = false;
             finalScoreElement.textContent = score;
 
+            // Calculate time played in seconds
+            const timePlayedSeconds = Math.floor((Date.now() - gameStartTime) / 1000);
+
             // Submit score to parent window (if in iframe)
             if (window.GameBridge && window.GameBridge.isInIframe) {
+                console.log('[Snake] Submitting score:', {
+                    score: score,
+                    timePlayed: timePlayedSeconds,
+                    snakeLength: snake.length
+                });
+
                 window.GameBridge.submitScore({
                     gameSlug: 'snake',
                     score: score,
+                    timePlayed: timePlayedSeconds,
                     metadata: {
                         snakeLength: snake.length
                     }
                 });
+            } else {
+                console.log('[Snake] Not in iframe or GameBridge not available');
             }
 
             // Check for high score
@@ -363,6 +376,7 @@
             score = 0;
             scoreElement.textContent = score;
             gameRunning = true;
+            gameStartTime = Date.now(); // Reset start time
             gameOverElement.style.display = 'none';
             randomFood();
         }

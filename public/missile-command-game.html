@@ -149,6 +149,7 @@
         let wave = 1;
         let gameRunning = true;
         let waveActive = false;
+        let gameStartTime = Date.now();
         
         // Game objects
         let cities = [];
@@ -483,17 +484,29 @@
         function gameOver() {
             gameRunning = false;
 
+            // Calculate time played in seconds
+            const timePlayedSeconds = Math.floor((Date.now() - gameStartTime) / 1000);
+
             // Submit score to parent window (if in iframe)
             if (window.GameBridge && window.GameBridge.isInIframe) {
+                console.log('[MissileCommand] Submitting score:', {
+                    score: score,
+                    level: wave,
+                    timePlayed: timePlayedSeconds,
+                    citiesSaved: cities.filter(c => c.alive).length
+                });
                 window.GameBridge.submitScore({
                     gameSlug: 'missile-command',
                     score: score,
                     level: wave,
+                    timePlayed: timePlayedSeconds,
                     metadata: {
                         wave: wave,
                         citiesSaved: cities.filter(c => c.alive).length
                     }
                 });
+            } else {
+                console.log('[MissileCommand] Not in iframe or GameBridge not available');
             }
 
             saveHighScore(score);
@@ -508,11 +521,12 @@
             wave = 1;
             gameRunning = true;
             waveActive = false;
-            
+            gameStartTime = Date.now(); // Reset start time
+
             document.getElementById('score').textContent = score;
             document.getElementById('wave').textContent = wave;
             document.getElementById('gameOver').style.display = 'none';
-            
+
             initGame();
         }
         

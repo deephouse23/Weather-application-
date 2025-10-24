@@ -161,6 +161,7 @@
         let lives = 3;
         let wave = 1;
         let gameRunning = true;
+        let gameStartTime = Date.now();
 
         // Player
         const player = {
@@ -430,20 +431,32 @@
         function gameOver() {
             gameRunning = false;
 
+            // Calculate time played in seconds
+            const timePlayedSeconds = Math.floor((Date.now() - gameStartTime) / 1000);
+
             document.getElementById('finalScore').textContent = score;
             document.getElementById('finalWave').textContent = wave;
 
             // Submit score to parent window (if in iframe)
             if (window.GameBridge && window.GameBridge.isInIframe) {
+                console.log('[SpaceInvaders] Submitting score:', {
+                    score: score,
+                    level: wave,
+                    timePlayed: timePlayedSeconds,
+                    livesRemaining: lives
+                });
                 window.GameBridge.submitScore({
                     gameSlug: 'space-invaders',
                     score: score,
                     level: wave,
+                    timePlayed: timePlayedSeconds,
                     metadata: {
                         wave: wave,
                         livesRemaining: lives
                     }
                 });
+            } else {
+                console.log('[SpaceInvaders] Not in iframe or GameBridge not available');
             }
 
             addHighScore(score, wave);
@@ -456,6 +469,7 @@
             lives = 3;
             wave = 1;
             alienSpeed = 0.5;
+            gameStartTime = Date.now(); // Reset start time
 
             document.getElementById('score').textContent = score;
             document.getElementById('lives').textContent = lives;

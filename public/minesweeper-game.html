@@ -203,6 +203,7 @@
         let minesLeft = 0;
         let time = 0;
         let timer = null;
+        let gameStartTime = Date.now();
 
         function initGrid() {
             grid = [];
@@ -418,6 +419,9 @@
             gameRunning = false;
             stopTimer();
 
+            // Calculate time played in seconds
+            const timePlayedSeconds = Math.floor((Date.now() - gameStartTime) / 1000);
+
             // Reveal all cells
             for (let row = 0; row < config.rows; row++) {
                 for (let col = 0; col < config.cols; col++) {
@@ -437,15 +441,25 @@
                 // Submit score (lower time is better, so calculate score as 1000 - time)
                 const score = Math.max(0, 1000 - time);
                 if (window.GameBridge && window.GameBridge.isInIframe) {
+                    console.log('[Minesweeper] Submitting score:', {
+                        score: score,
+                        timePlayed: timePlayedSeconds,
+                        difficulty: currentDifficulty,
+                        time: time,
+                        mines: config.mines
+                    });
                     window.GameBridge.submitScore({
                         gameSlug: 'minesweeper',
                         score: score,
+                        timePlayed: timePlayedSeconds,
                         metadata: {
                             difficulty: currentDifficulty,
                             time: time,
                             mines: config.mines
                         }
                     });
+                } else {
+                    console.log('[Minesweeper] Not in iframe or GameBridge not available');
                 }
             }
 
@@ -476,6 +490,7 @@
             firstClick = true;
             minesLeft = config.mines;
             time = 0;
+            gameStartTime = Date.now(); // Reset start time
 
             document.getElementById('minesLeft').textContent = minesLeft;
             document.getElementById('time').textContent = time;
