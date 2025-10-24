@@ -201,6 +201,7 @@
         let dots = [];
         let powerPellets = [];
         let highScoresVisible = true;
+        let gameStartTime = Date.now();
         
         // Maze layout (1 = wall, 0 = path, 2 = dot, 3 = power pellet)
         const maze = [
@@ -529,19 +530,32 @@
 
         function gameOver() {
             gameRunning = false;
+
+            // Calculate time played in seconds
+            const timePlayedSeconds = Math.floor((Date.now() - gameStartTime) / 1000);
+
             document.getElementById('finalScore').textContent = score;
 
             // Submit score to parent window (if in iframe)
             if (window.GameBridge && window.GameBridge.isInIframe) {
+                console.log('[Pacman] Submitting score:', {
+                    score: score,
+                    level: level,
+                    timePlayed: timePlayedSeconds,
+                    dotsEaten: dots.length
+                });
                 window.GameBridge.submitScore({
                     gameSlug: 'pacman',
                     score: score,
                     level: level,
+                    timePlayed: timePlayedSeconds,
                     metadata: {
                         level: level,
                         dotsEaten: dots.length
                     }
                 });
+            } else {
+                console.log('[Pacman] Not in iframe or GameBridge not available');
             }
 
             // Check for high score
@@ -563,22 +577,23 @@
             lives = 3;
             level = 1;
             gameRunning = true;
-            
+            gameStartTime = Date.now(); // Reset start time
+
             document.getElementById('score').textContent = score;
             document.getElementById('lives').textContent = lives;
             document.getElementById('level').textContent = level;
             document.getElementById('gameOver').style.display = 'none';
-            
+
             player.x = 9;
             player.y = 15;
             player.direction = 0;
             player.nextDirection = 0;
             player.mouth = 0;
-            
+
             ghosts[0].x = 9; ghosts[0].y = 9;
             ghosts[1].x = 10; ghosts[1].y = 9;
             ghosts[2].x = 9; ghosts[2].y = 10;
-            
+
             initDots();
         }
         

@@ -185,6 +185,7 @@
         let cpuScore = 0;
         let gameRunning = false;
         let rallies = 0;
+        let gameStartTime = Date.now();
 
         // Paddle objects
         const player = {
@@ -396,6 +397,10 @@
 
         function gameOver() {
             gameRunning = false;
+
+            // Calculate time played in seconds
+            const timePlayedSeconds = Math.floor((Date.now() - gameStartTime) / 1000);
+
             const winner = playerScore > cpuScore ? 'YOU WIN!' : 'CPU WINS!';
             const finalScore = `${playerScore} - ${cpuScore}`;
 
@@ -404,15 +409,25 @@
 
             // Submit score to parent window (if in iframe)
             if (window.GameBridge && window.GameBridge.isInIframe) {
+                console.log('[Pong] Submitting score:', {
+                    score: playerScore,
+                    timePlayed: timePlayedSeconds,
+                    playerScore: playerScore,
+                    cpuScore: cpuScore,
+                    won: playerScore > cpuScore
+                });
                 window.GameBridge.submitScore({
                     gameSlug: 'pong',
                     score: playerScore,
+                    timePlayed: timePlayedSeconds,
                     metadata: {
                         playerScore: playerScore,
                         cpuScore: cpuScore,
                         won: playerScore > cpuScore
                     }
                 });
+            } else {
+                console.log('[Pong] Not in iframe or GameBridge not available');
             }
 
             // Save high score
@@ -425,6 +440,7 @@
         function restartGame() {
             playerScore = 0;
             cpuScore = 0;
+            gameStartTime = Date.now(); // Reset start time
             document.getElementById('playerScore').textContent = playerScore;
             document.getElementById('cpuScore').textContent = cpuScore;
             document.getElementById('gameOver').style.display = 'none';

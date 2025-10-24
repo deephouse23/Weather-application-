@@ -282,6 +282,7 @@
         let dropTime = 0;
         let dropInterval = 500;
         let highScoresVisible = true;
+        let gameStartTime = Date.now(); // Track when game started
         
         // Initialize board
         function initBoard() {
@@ -505,17 +506,30 @@
             gameRunning = false;
             document.getElementById('finalScore').textContent = score;
 
+            // Calculate time played in seconds
+            const timePlayedSeconds = Math.floor((Date.now() - gameStartTime) / 1000);
+
             // Submit score to parent window (if in iframe)
             if (window.GameBridge && window.GameBridge.isInIframe) {
+                console.log('[Tetris] Submitting score:', {
+                    score: score,
+                    level: level,
+                    lines: lines,
+                    timePlayed: timePlayedSeconds
+                });
+
                 window.GameBridge.submitScore({
                     gameSlug: 'tetris',
                     score: score,
                     level: level,
+                    timePlayed: timePlayedSeconds,
                     metadata: {
                         lines: lines,
                         level: level
                     }
                 });
+            } else {
+                console.log('[Tetris] Not in iframe or GameBridge not available');
             }
 
             // Check for high score
@@ -541,12 +555,13 @@
             dropInterval = 500;
             gameRunning = true;
             paused = false;
-            
+            gameStartTime = Date.now(); // Reset start time
+
             document.getElementById('score').textContent = score;
             document.getElementById('level').textContent = level;
             document.getElementById('lines').textContent = lines;
             document.getElementById('gameOver').style.display = 'none';
-            
+
             currentPiece = randomPiece();
             nextPiece = randomPiece();
         }

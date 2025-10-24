@@ -277,6 +277,7 @@
         let timer = null;
         let difficulty = 'easy';
         let gameActive = false;
+        let gameStartTime = Date.now();
         
         // Weather trivia questions
         const questions = {
@@ -481,12 +482,13 @@
             currentQuestionIndex = 0;
             score = 0;
             correctAnswers = 0;
-            
+            gameStartTime = Date.now(); // Reset start time
+
             document.getElementById('difficultySelect').style.display = 'none';
             document.getElementById('gameArea').style.display = 'block';
             document.getElementById('gameOver').style.display = 'none';
             document.getElementById('currentDifficulty').textContent = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
-            
+
             loadQuestion();
         }
         
@@ -592,19 +594,33 @@
         // End game
         function endGame() {
             gameActive = false;
+
+            // Calculate time played in seconds
+            const timePlayedSeconds = Math.floor((Date.now() - gameStartTime) / 1000);
+
             const accuracy = Math.round((correctAnswers / 10) * 100);
 
             // Submit score to parent window (if in iframe)
             if (window.GameBridge && window.GameBridge.isInIframe) {
+                console.log('[WeatherTrivia] Submitting score:', {
+                    score: score,
+                    timePlayed: timePlayedSeconds,
+                    difficulty: difficulty,
+                    correctAnswers: correctAnswers,
+                    accuracy: accuracy
+                });
                 window.GameBridge.submitScore({
                     gameSlug: 'weather-trivia',
                     score: score,
+                    timePlayed: timePlayedSeconds,
                     metadata: {
                         difficulty: difficulty,
                         correctAnswers: correctAnswers,
                         accuracy: accuracy
                     }
                 });
+            } else {
+                console.log('[WeatherTrivia] Not in iframe or GameBridge not available');
             }
 
             document.getElementById('gameArea').style.display = 'none';

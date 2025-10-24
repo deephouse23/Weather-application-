@@ -174,6 +174,7 @@
         let level = 1;
         let gameRunning = true;
         let bricksRemaining = 0;
+        let gameStartTime = Date.now();
 
         // Paddle
         const paddle = {
@@ -409,6 +410,9 @@
         function gameOver() {
             gameRunning = false;
 
+            // Calculate time played in seconds
+            const timePlayedSeconds = Math.floor((Date.now() - gameStartTime) / 1000);
+
             const title = document.getElementById('gameOverTitle');
             title.textContent = lives === 0 ? 'GAME OVER' : 'VICTORY!';
 
@@ -417,15 +421,24 @@
 
             // Submit score to parent window (if in iframe)
             if (window.GameBridge && window.GameBridge.isInIframe) {
+                console.log('[Breakout] Submitting score:', {
+                    score: score,
+                    level: level,
+                    timePlayed: timePlayedSeconds,
+                    livesRemaining: lives
+                });
                 window.GameBridge.submitScore({
                     gameSlug: 'breakout',
                     score: score,
                     level: level,
+                    timePlayed: timePlayedSeconds,
                     metadata: {
                         level: level,
                         livesRemaining: lives
                     }
                 });
+            } else {
+                console.log('[Breakout] Not in iframe or GameBridge not available');
             }
 
             // Save high score
@@ -440,6 +453,7 @@
             lives = 3;
             level = 1;
             ball.speed = 4;
+            gameStartTime = Date.now(); // Reset start time
 
             document.getElementById('score').textContent = score;
             document.getElementById('lives').textContent = lives;

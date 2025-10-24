@@ -46,7 +46,9 @@ export default function GameDetailPage() {
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === 'GAME_SCORE_SUBMIT') {
-        console.log('Score received from game:', event.data);
+        console.log('[Game Detail] Score received from game:', event.data);
+        console.log('[Game Detail] User authenticated:', !!user);
+
         setGameScore({
           score: event.data.score,
           level: event.data.level,
@@ -56,8 +58,10 @@ export default function GameDetailPage() {
 
         // Show modal for guests or auto-submit for authenticated users
         if (!user) {
+          console.log('[Game Detail] Showing score submit modal for guest');
           setShowScoreModal(true);
         } else {
+          console.log('[Game Detail] Auto-submitting score for authenticated user');
           // Auto-submit for authenticated users
           handleAuthenticatedScoreSubmit(event.data);
         }
@@ -69,11 +73,22 @@ export default function GameDetailPage() {
   }, [user]);
 
   const handleAuthenticatedScoreSubmit = async (scoreData: any) => {
-    if (!game || !user) return;
+    if (!game || !user) {
+      console.error('[Game Detail] Cannot submit - game or user missing:', { game: !!game, user: !!user });
+      return;
+    }
 
     try {
+      console.log('[Game Detail] Submitting score to API:', {
+        gameSlug: game.slug,
+        playerName: user.email || 'Player',
+        score: scoreData.score,
+        levelReached: scoreData.level,
+        timePlayed: scoreData.timePlayed
+      });
+
       const { submitScore } = await import('@/lib/services/gamesService');
-      await submitScore(game.slug, {
+      const result = await submitScore(game.slug, {
         game_slug: game.slug,
         player_name: user.email || 'Player',
         score: scoreData.score,
@@ -81,9 +96,15 @@ export default function GameDetailPage() {
         time_played_seconds: scoreData.timePlayed,
         metadata: scoreData.metadata,
       });
-      console.log('Score auto-submitted for authenticated user');
+
+      console.log('[Game Detail] ✅ Score submitted successfully:', result);
+      alert(`Score ${scoreData.score} submitted successfully!`);
+
+      // Reload to update leaderboard
+      setTimeout(() => window.location.reload(), 1500);
     } catch (err) {
-      console.error('Failed to submit score:', err);
+      console.error('[Game Detail] ❌ Failed to submit score:', err);
+      alert(`Failed to submit score: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
 
@@ -110,8 +131,18 @@ export default function GameDetailPage() {
   const handleStartGame = async () => {
     if (game) {
       setGameStarted(true);
+
       // Increment play count
-      await incrementPlayCount(game.slug);
+      try {
+        console.log('[Game Detail] Incrementing play count for:', game.slug);
+        await incrementPlayCount(game.slug);
+        console.log('[Game Detail] ✅ Play count incremented successfully');
+
+        // Optimistically update local state
+        setGame({ ...game, play_count: game.play_count + 1 });
+      } catch (err) {
+        console.error('[Game Detail] ❌ Failed to increment play count:', err);
+      }
     }
   };
 
