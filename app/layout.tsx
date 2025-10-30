@@ -19,6 +19,7 @@ import "./theme-enforcement.css"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import AppThemeProvider from "@/app/providers/ThemeProvider"
 import { LocationProvider } from "@/components/location-context"
 import { AuthProvider } from "@/lib/auth"
@@ -149,6 +150,7 @@ export default function RootLayout({
           </AppThemeProvider>
         </AuthProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )
