@@ -1,4 +1,5 @@
 'use client'
+// Build: v3 - WMS implementation with historical TIME support
 
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { Play, Pause, SkipBack, SkipForward, Layers, ChevronDown } from 'lucide-react'
