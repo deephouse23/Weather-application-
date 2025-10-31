@@ -252,7 +252,7 @@ const WeatherMapOpenLayers = ({
         crossOrigin: 'anonymous',
       })
 
-      console.log(`  WMS source created with TIME: ${timeISO}, Layer: nexrad-n0q-900913`)
+      console.log(`  [v2] WMS source created with TIME: ${timeISO}, Layer: nexrad-n0q-900913`)
 
       const radarLayer = new TileLayer({
         source: wmsSource,
