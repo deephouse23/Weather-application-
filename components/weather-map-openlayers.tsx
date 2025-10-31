@@ -244,13 +244,15 @@ const WeatherMapOpenLayers = ({
           'FORMAT': 'image/png',
           'TRANSPARENT': 'true',
           'TIME': timeISO,
+          'VERSION': '1.1.1',
         },
+        projection: 'EPSG:3857', // Web Mercator
         serverType: 'mapserver',
         transition: 0,
         crossOrigin: 'anonymous',
       })
 
-      console.log(`  ✅ WMS source created with TIME: ${timeISO}`)
+      console.log(`  WMS source created with TIME: ${timeISO}, Layer: nexrad-n0q-900913`)
 
       const radarLayer = new TileLayer({
         source: wmsSource,
