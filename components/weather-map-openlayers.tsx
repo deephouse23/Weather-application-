@@ -235,18 +235,27 @@ const WeatherMapOpenLayers = ({
         opacity: layerOpacity
       })
 
-      // Use Iowa State's tile cache for historical radar data
-      // This supports historical timestamps via the URL path
-      const tileSource = new XYZ({
-        url: `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-${iowaTimestamp}/{z}/{x}/{y}.png`,
-        crossOrigin: 'anonymous',
+      // Use Iowa State's WMS service with proper TIME parameter
+      // Format timestamps without dash for TIME parameter: YYYYMMDDHHmm
+      const wmsTimestamp = iowaTimestamp.replace('-', '')
+
+      const wmsSource = new TileWMS({
+        url: 'https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0q.cgi',
+        params: {
+          'LAYERS': 'nexrad-n0q-900913',
+          'FORMAT': 'image/png',
+          'TRANSPARENT': 'true',
+          'TIME': timeISO, // ISO format for TIME parameter
+        },
+        serverType: 'mapserver',
         transition: 0,
+        crossOrigin: 'anonymous',
       })
 
-      console.log(`  ✅ Tile source created: nexrad-n0q-${iowaTimestamp}`)
+      console.log(`  ✅ WMS source created with TIME: ${timeISO}`)
 
       const radarLayer = new TileLayer({
-        source: tileSource,
+        source: wmsSource,
         opacity: layerOpacity,
         zIndex: 500,
       })
