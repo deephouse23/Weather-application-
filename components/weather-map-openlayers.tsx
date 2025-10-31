@@ -94,6 +94,18 @@ const WeatherMapOpenLayers = ({
     return mrmsTimestamps.slice(start, end + 1)
   }, [mrmsTimestamps, frameIndex])
 
+  // Helper function to format timestamps for Iowa State tile cache
+  // Format: YYYYMMDD-HHMM (e.g., "20250130-1845")
+  const formatIowaTimestamp = (timestamp: number): string => {
+    const date = new Date(timestamp)
+    const year = date.getUTCFullYear()
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(date.getUTCDate()).padStart(2, '0')
+    const hour = String(date.getUTCHours()).padStart(2, '0')
+    const minute = String(date.getUTCMinutes()).padStart(2, '0')
+    return `${year}${month}${day}-${hour}${minute}`
+  }
+
   // Initialize map
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return
@@ -209,35 +221,32 @@ const WeatherMapOpenLayers = ({
 
     // Create new NEXRAD layers for buffered times
     bufferedTimes.forEach((timestamp, idx) => {
+      const currentTimestamp = mrmsTimestamps[frameIndex]
+      const isCurrentFrame = timestamp === currentTimestamp
+      const layerOpacity = isCurrentFrame ? opacity : 0 // Hide non-current frames completely
+
+      const iowaTimestamp = formatIowaTimestamp(timestamp)
       const timeISO = new Date(timestamp).toISOString()
-      const isCurrentFrame = idx === Math.min(frameIndex - (frameIndex - PRELOAD_RADIUS), bufferedTimes.length - 1)
-      const layerOpacity = isCurrentFrame ? opacity : 0.15
 
       console.log(`  🗺️ Creating NEXRAD layer ${idx}:`, {
         time: timeISO,
+        iowaFormat: iowaTimestamp,
         isCurrentFrame,
         opacity: layerOpacity
       })
 
-      // Use Iowa State's WMS service for historical radar data
-      // TMS tiles (nexrad-n0q) only work for current data, not historical timestamps
-      const wmsSource = new TileWMS({
-        url: 'https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0q.cgi',
-        params: {
-          'LAYERS': 'nexrad-n0q-900913',
-          'FORMAT': 'image/png',
-          'TRANSPARENT': true,
-          'TIME': timeISO,
-        },
-        serverType: 'mapserver',
-        transition: 0,
+      // Use Iowa State's tile cache for historical radar data
+      // This supports historical timestamps via the URL path
+      const tileSource = new XYZ({
+        url: `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-${iowaTimestamp}/{z}/{x}/{y}.png`,
         crossOrigin: 'anonymous',
+        transition: 0,
       })
-      
-      console.log(`  ✅ WMS source created for timestamp: ${timeISO}`)
+
+      console.log(`  ✅ Tile source created: nexrad-n0q-${iowaTimestamp}`)
 
       const radarLayer = new TileLayer({
-        source: wmsSource,
+        source: tileSource,
         opacity: layerOpacity,
         zIndex: 500,
       })
@@ -250,7 +259,8 @@ const WeatherMapOpenLayers = ({
     })
 
     console.log(`✅ Added ${mrmsLayersRef.current.length} NEXRAD layers`)
-  }, [bufferedTimes, frameIndex, isUSLocation, activeLayers.precipitation, opacity])
+  }, [bufferedTimes, isUSLocation, activeLayers.precipitation, opacity, mrmsTimestamps, frameIndex, formatIowaTimestamp])
+  // NOTE: Keeping frameIndex here temporarily - will be optimized in next iteration to prevent recreation
 
   // Update layer opacities when frame changes
   useEffect(() => {
@@ -316,6 +326,32 @@ const WeatherMapOpenLayers = ({
   const currentTime = mrmsTimestamps[frameIndex]
   const humanTime = currentTime ? new Date(currentTime).toUTCString().replace(' GMT', '') : ''
 
+  // Check if current frame is the most recent (LIVE)
+  const isLiveFrame = frameIndex === mrmsTimestamps.length - 1
+
+  // Calculate relative time for better UX
+  const relativeTime = useMemo(() => {
+    if (!currentTime) return ''
+    const now = Date.now()
+    const diff = currentTime - now
+    const diffMinutes = Math.round(diff / 60000)
+
+    // Within 3 minutes of now = LIVE
+    if (Math.abs(diffMinutes) < 3) return 'LIVE'
+
+    // Past frames
+    if (diffMinutes < 0) {
+      const absDiff = Math.abs(diffMinutes)
+      const hours = Math.floor(absDiff / 60)
+      const mins = absDiff % 60
+      if (hours > 0) return `${hours}h ${mins}m ago`
+      return `${mins}m ago`
+    }
+
+    // Future frames (shouldn't happen with current config, but keeping for safety)
+    return humanTime
+  }, [currentTime, humanTime])
+
   const themeStyles = useMemo(() => {
     switch(theme) {
       case 'miami':
@@ -335,7 +371,7 @@ const WeatherMapOpenLayers = ({
       {/* Status Badge */}
       <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-md border-2 font-mono text-xs font-bold z-10 ${themeStyles.badge}`}>
         {isUSLocation ? (
-          <span>🎬 NEXRAD RADAR • 4 HOUR HISTORY</span>
+          <span>{isLiveFrame ? '🔴 LIVE' : '🎬'} NEXRAD RADAR • 4 HOUR HISTORY</span>
         ) : (
           <span>🌎 US LOCATIONS ONLY</span>
         )}
@@ -385,8 +421,10 @@ const WeatherMapOpenLayers = ({
                 background: `linear-gradient(to right, #06b6d4 0%, #06b6d4 ${(frameIndex / (mrmsTimestamps.length - 1)) * 100}%, #374151 ${(frameIndex / (mrmsTimestamps.length - 1)) * 100}%, #374151 100%)`
               }}
             />
-            <div className="mt-1 text-center font-mono text-xs text-white">
-              {humanTime}
+            <div className="mt-1 flex justify-between items-center font-mono text-xs text-white">
+              <span className="text-gray-400">Frame {frameIndex + 1} / {mrmsTimestamps.length}</span>
+              <span className={isLiveFrame ? 'text-red-400 font-bold' : ''}>{relativeTime}</span>
+              <span className="text-gray-400 text-[10px]">{humanTime}</span>
             </div>
           </div>
 
