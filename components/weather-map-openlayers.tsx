@@ -235,17 +235,15 @@ const WeatherMapOpenLayers = ({
         opacity: layerOpacity
       })
 
-      // Use Iowa State's WMS service with proper TIME parameter
-      // Format timestamps without dash for TIME parameter: YYYYMMDDHHmm
-      const wmsTimestamp = iowaTimestamp.replace('-', '')
-
+      // Use Iowa State's WMS service for NEXRAD composite
+      // Reference: https://mesonet.agron.iastate.edu/ogc/
       const wmsSource = new TileWMS({
         url: 'https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0q.cgi',
         params: {
           'LAYERS': 'nexrad-n0q-900913',
           'FORMAT': 'image/png',
           'TRANSPARENT': 'true',
-          'TIME': timeISO, // ISO format for TIME parameter
+          'TIME': timeISO,
         },
         serverType: 'mapserver',
         transition: 0,
