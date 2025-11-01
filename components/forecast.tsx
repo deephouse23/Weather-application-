@@ -206,18 +206,18 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
   const themeClasses = getThemeClasses(validTheme as ThemeType)
 
   return (
-    <div className={`${themeClasses.cardBg} p-3 sm:p-4 lg:p-6 rounded-none border-2 sm:border-4 ${themeClasses.borderColor} pixel-shadow ${themeClasses.specialBorder}`}
-         style={themeClasses.cardStyle}>
+    <div className={`${themeClasses.cardBg} p-3 sm:p-4 lg:p-6 card-rounded-md border-2 shadow-theme-card weather-card-enter ${themeClasses.borderColor} ${themeClasses.specialBorder}`}
+         style={{ ...themeClasses.cardStyle, animationDelay: '300ms' }}>
       <h2 className={`text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4 ${themeClasses.headerText} uppercase tracking-wider ${themeClasses.glow} text-center`}
           style={{ textShadow: themeClasses.cardStyle.textShadow }}>5-DAY FORECAST</h2>
       {/* Mobile responsive grid - stack on very small screens, 3 cols on mobile+, 5 cols on desktop */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 lg:gap-4">
         {forecast.slice(0, 5).map((day, index) => (
-          <ForecastCard 
-            key={index} 
-            day={day} 
+          <ForecastCard
+            key={index}
+            day={day}
             index={index}
-            themeClasses={themeClasses} 
+            themeClasses={themeClasses}
             theme={validTheme as ThemeType}
             onDayClick={onDayClick}
             isSelected={selectedDay === index}
@@ -269,9 +269,9 @@ function ForecastCard({ day, index, themeClasses, theme, onDayClick, isSelected 
   };
 
   return (
-    <div 
+    <div
       className={cn(
-        "p-2 sm:p-3 border text-center transition-all duration-200",
+        "p-2 sm:p-3 border card-rounded-sm text-center transition-all duration-200",
         "min-h-[120px] sm:min-h-[140px] lg:min-h-[160px] flex flex-col justify-between",
         themeClasses.itemBg,
         themeClasses.itemBorder,

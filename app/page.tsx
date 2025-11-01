@@ -39,6 +39,7 @@ import { ErrorBoundary, SafeRender } from "@/components/error-boundary"
 import { useLocationContext } from "@/components/location-context"
 import { useAuth } from "@/lib/auth"
 import LazyWeatherMap from '@/components/lazy-weather-map'
+import { WeatherSkeleton } from '@/components/weather-skeleton'
 
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
@@ -213,28 +214,21 @@ function WeatherApp() {
           return
         }
 
-        // Check if we have cached weather data first
-        const cachedLocation = localStorage.getItem(CACHE_KEY)
-        const cachedWeatherData = localStorage.getItem(WEATHER_KEY)
-        const cacheTimestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY)
-
-        if (cachedLocation && cachedWeatherData && cacheTimestamp) {
-          const cacheAge = Date.now() - parseInt(cacheTimestamp)
-
-          // If cache is fresh, use it and skip auto-detection for now
-          if (cacheAge < 10 * 60 * 1000) {
-            console.log('Using fresh cached data, skipping auto-location')
-            setAutoLocationAttempted(true)
-            return
-          }
-        }
+        // Don't load cached data if we're going to detect location
+        // This prevents showing wrong city while location detection is in progress
 
         // Try silent location detection
         console.log('Attempting silent location detection...')
         setIsAutoDetecting(true)
 
         try {
-          const location = await locationService.getCurrentLocation()
+          // Add 5-second timeout for location detection
+          const locationPromise = locationService.getCurrentLocation()
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Location detection timeout')), 5000)
+          )
+
+          const location = await Promise.race([locationPromise, timeoutPromise]) as LocationData
           await handleLocationDetected(location)
         } catch (error: unknown) {
           const msg = error instanceof Error ? error.message : String(error)
@@ -243,9 +237,9 @@ function WeatherApp() {
             const ipLocation = await locationService.getLocationByIP()
             await handleLocationDetected(ipLocation)
           } catch (ipError) {
-            console.log('IP location also failed, using default location:', ipError)
-            // Use default location (San Francisco)
-            await handleSearch('San Francisco, CA')
+            console.log('All location detection methods failed:', ipError)
+            // Don't render any default city - let user manually search
+            // This prevents the "flash" of wrong city before actual location loads
           }
         } finally {
           setIsAutoDetecting(false)
@@ -306,28 +300,35 @@ function WeatherApp() {
   // Load cached data on component mount
   useEffect(() => {
     if (!isClient) return
-    
+
+    // Don't load cached data during auto-location detection
+    // This prevents showing Los Angeles (or other cached city) while detecting actual location
+    if (isAutoDetecting || !autoLocationAttempted) {
+      console.log('Skipping cache load - waiting for location detection')
+      return
+    }
+
     loadCachedLocation()
-    
+
     // Check for existing cached data when component mounts
     const checkCacheAndLoad = async () => {
       try {
         const cachedLocationData = localStorage.getItem(CACHE_KEY)
         const cachedWeatherData = localStorage.getItem(WEATHER_KEY)
         const cacheTimestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY)
-        
+
         if (cachedLocationData && cachedWeatherData && cacheTimestamp) {
           const cacheAge = Date.now() - parseInt(cacheTimestamp)
-          
+
           // Only auto-load if cache is fresh (less than 10 minutes) and user had a previous session
           if (cacheAge < 10 * 60 * 1000) {
             const weather = JSON.parse(cachedWeatherData)
-            
+
             // Check if cached data has forecast property
             if (weather && weather.forecast && weather.forecast.length > 0) {
               // Note: UV index selective refresh removed since One Call API 2.5 was deprecated
               // UV index is now estimated by the main weather API function
-              
+
               setData(weather)
               setLocationInput(cachedLocationData)
               setHasSearched(true)
@@ -340,15 +341,15 @@ function WeatherApp() {
             }
           }
         }
-        
+
         // Auto-location is handled by the separate useEffect hook
       } catch (error) {
         console.warn('Cache check failed:', error)
       }
     }
-    
+
     checkCacheAndLoad()
-  }, [isClient, locationInput, currentLocation])
+  }, [isClient, locationInput, currentLocation, isAutoDetecting, autoLocationAttempted])
 
   // Theme is now managed entirely by ThemeProvider, no local management needed
 
@@ -851,11 +852,17 @@ function WeatherApp() {
             </div>
           )}
 
-          {(loading || isAutoDetecting) && (
-            <div className="flex justify-center items-center mt-8">
+          {(loading || isAutoDetecting) && !weather && (
+            <div className="mt-8">
+              <WeatherSkeleton theme={theme as ThemeType} />
+            </div>
+          )}
+
+          {(loading || isAutoDetecting) && weather && (
+            <div className="flex justify-center items-center mt-4">
               <Loader2 className="h-8 w-8 animate-spin text-weather-primary" />
               <span className="ml-2 text-weather-text">
-                {isAutoDetecting ? 'Detecting your location...' : 'Loading weather data...'}
+                Updating weather data...
               </span>
             </div>
           )}
@@ -898,9 +905,9 @@ function WeatherApp() {
                   </h1>
                 </div>
                 
-                {/* Current Weather using Cards */}
+                {/* Current Weather using Cards with staggered animations */}
                 <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
-                  <div className={`p-0 rounded-lg ${themeClasses.cardBg} ${themeClasses.borderColor} border-2`}>
+                  <div className={`p-0 card-rounded-md ${themeClasses.cardBg} ${themeClasses.borderColor} border-2 shadow-theme-card weather-card-enter`} style={{ animationDelay: '0ms' }}>
                     <div className="p-4 text-center">
                       <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Temperature</h2>
                       <p data-testid="temperature-value" className={`text-3xl font-bold ${themeClasses.text}`}>
@@ -908,7 +915,7 @@ function WeatherApp() {
                       </p>
                     </div>
                   </div>
-                  <div className={`p-0 rounded-lg ${themeClasses.cardBg} ${themeClasses.borderColor} border-2`}>
+                  <div className={`p-0 card-rounded-md ${themeClasses.cardBg} ${themeClasses.borderColor} border-2 shadow-theme-card weather-card-enter`} style={{ animationDelay: '50ms' }}>
                     <div className="p-4 text-center">
                       <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Conditions</h2>
                       <p className={`text-lg ${themeClasses.text}`}>{weather?.condition || 'Unknown'}</p>
@@ -916,14 +923,14 @@ function WeatherApp() {
                       {weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
                         <button
                           onClick={() => setShowHourlyForecast(!showHourlyForecast)}
-                          className={`mt-3 px-3 py-1.5 border rounded-md font-mono text-xs font-bold transition-all hover:scale-105 ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`}
+                          className={`mt-3 px-3 py-1.5 border card-rounded-sm font-mono text-xs font-bold transition-all hover:scale-105 ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`}
                         >
                           {showHourlyForecast ? '▼ Hide Hourly' : '► Hourly'}
                         </button>
                       )}
                     </div>
                   </div>
-                  <div className={`p-0 rounded-lg ${themeClasses.cardBg} ${themeClasses.borderColor} border-2`}>
+                  <div className={`p-0 card-rounded-md ${themeClasses.cardBg} ${themeClasses.borderColor} border-2 shadow-theme-card weather-card-enter`} style={{ animationDelay: '100ms' }}>
                     <div className="p-4 text-center">
                       <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Wind</h2>
                       <p className={`text-lg ${themeClasses.text}`}>
@@ -935,11 +942,11 @@ function WeatherApp() {
                   </div>
                 </ResponsiveGrid>
 
-              {/* Sun Times, UV Index, Moon Phase */}
+              {/* Sun Times, UV Index, Moon Phase with staggered animations */}
               <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
                 {/* Sun Times Box */}
-                <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
-                     style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
+                <div className={`p-4 card-rounded-md text-center border-2 shadow-theme-card weather-card-enter ${themeClasses.cardBg} ${themeClasses.borderColor}`}
+                     style={{ animationDelay: '150ms' }}>
                   <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Sun Times</h2>
                   <div className="space-y-2">
                     <div className="flex items-center justify-center gap-2">
@@ -954,15 +961,15 @@ function WeatherApp() {
                 </div>
 
                 {/* UV Index Box */}
-                <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
-                     style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
+                <div className={`p-4 card-rounded-md text-center border-2 shadow-theme-card weather-card-enter ${themeClasses.cardBg} ${themeClasses.borderColor}`}
+                     style={{ animationDelay: '200ms' }}>
                   <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>UV Index</h2>
                   <p className={`text-lg font-bold ${themeClasses.text}`}>{weather?.uvIndex || 'N/A'}</p>
                 </div>
 
                 {/* Moon Phase Box */}
-                <div className={`p-4 rounded-lg text-center border-2 shadow-lg ${themeClasses.cardBg} ${themeClasses.borderColor}`}
-                     style={{ boxShadow: `0 0 15px ${themeClasses.borderColor.replace('border-[', '').replace(']', '')}33` }}>
+                <div className={`p-4 card-rounded-md text-center border-2 shadow-theme-card weather-card-enter ${themeClasses.cardBg} ${themeClasses.borderColor}`}
+                     style={{ animationDelay: '250ms' }}>
                   <h2 className={`text-xl font-semibold mb-2 ${themeClasses.headerText}`}>Moon Phase</h2>
                   <div className="space-y-2">
                     <div className="flex items-center justify-center gap-2">
