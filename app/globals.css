@@ -729,11 +729,9 @@ input:focus,
   * {
     font-family: 'Courier New', Monaco, 'Lucida Console', monospace !important;
   }
-  
-  /* Remove rounded corners for pixel aesthetic */
-  * {
-    border-radius: 0 !important;
-  }
+
+  /* REMOVED: border-radius override to allow modern rounded cards */
+  /* Pixel aesthetic is maintained through borders, fonts, and glow effects */
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -872,4 +870,86 @@ input:focus,
 body > * {
   position: relative;
   z-index: 2;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MODERN CARD DESIGN SYSTEM - Retro-Modern Hybrid
+   ═══════════════════════════════════════════════════════════ */
+
+/* Modern Card Border Radius System */
+.card-rounded-sm {
+  border-radius: 12px !important;
+}
+
+.card-rounded-md {
+  border-radius: 16px !important;
+}
+
+.card-rounded-lg {
+  border-radius: 20px !important;
+}
+
+/* Theme-Specific Modern Card Shadows */
+[data-theme="dark"] .shadow-theme-card {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+              0 2px 4px -2px rgba(0, 0, 0, 0.1),
+              0 0 5px rgba(0, 212, 255, 0.2);
+}
+
+[data-theme="miami"] .shadow-theme-card {
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.4),
+              0 0 40px rgba(236, 72, 153, 0.2),
+              0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="tron"] .shadow-theme-card {
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.5),
+              0 4px 20px rgba(0, 220, 255, 0.3),
+              inset 0 0 5px rgba(0, 255, 255, 0.1);
+}
+
+/* Premium themes - subtle shadows */
+[data-theme="atari2600"] .shadow-theme-card,
+[data-theme="monochromeGreen"] .shadow-theme-card,
+[data-theme="8bitClassic"] .shadow-theme-card,
+[data-theme="16bitSnes"] .shadow-theme-card {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+              0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* Progressive Fade-In Animation for Card Content */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.weather-card-enter {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+/* Stagger utility - apply via style prop with animation-delay */
+.weather-card-stagger-1 {
+  animation-delay: 50ms;
+}
+
+.weather-card-stagger-2 {
+  animation-delay: 100ms;
+}
+
+.weather-card-stagger-3 {
+  animation-delay: 150ms;
+}
+
+.weather-card-stagger-4 {
+  animation-delay: 200ms;
+}
+
+.weather-card-stagger-5 {
+  animation-delay: 250ms;
 }
