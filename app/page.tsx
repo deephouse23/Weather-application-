@@ -150,7 +150,7 @@ function WeatherApp() {
       
       const coords = userCacheService.getLocationKey(location).replace('_', ',')
       const unitSystem: 'metric' | 'imperial' = preferences?.temperature_unit === 'celsius' ? 'metric' : 'imperial'
-      const weatherData = await fetchWeatherByLocation(coords, unitSystem)
+      const weatherData = await fetchWeatherByLocation(coords, unitSystem, location.displayName)
       
       if (weatherData) {
         console.log('Weather data received:', weatherData)

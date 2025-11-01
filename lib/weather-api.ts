@@ -1141,7 +1141,8 @@ const getLocationNotFoundError = (locationQuery: LocationQuery): string => {
 // Function to get user's location and fetch weather
 export const fetchWeatherByLocation = async (
   coords: string,
-  unitSystem: 'metric' | 'imperial' = 'imperial'
+  unitSystem: 'metric' | 'imperial' = 'imperial',
+  locationName?: string
 ): Promise<WeatherData> => {
   const [latitude, longitude] = coords.split(',').map(Number)
   
@@ -1273,7 +1274,7 @@ export const fetchWeatherByLocation = async (
 
     // Construct weather data object
     const weatherData: WeatherData = {
-      location: `${oneCall?.timezone || 'Selected Location'}`,
+      location: locationName || `${oneCall?.timezone || 'Selected Location'}`,
       country: countryCode,
       temperature: temp.value,
       unit: temp.unit,
