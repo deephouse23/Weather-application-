@@ -1,6 +1,6 @@
 {
   "name": "16-bit-weather",
-  "version": "0.3.37",
+  "version": "0.6.0",
   "description": "A retro 16-bit weather education platform featuring global temperature extremes tracking, pixel art graphics, comprehensive location search, cloud atlas, interactive weather systems database, extreme weather phenomena collection, historical weather data, interactive games with high score tracking, and authentic 16-bit gaming experience. Now with Planet Extremes - real-time hottest and coldest places on Earth!",
   "private": true,
   "scripts": {

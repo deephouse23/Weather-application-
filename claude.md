@@ -1,9 +1,41 @@
 # 16-Bit Weather Platform - Comprehensive Documentation
 
-**Version:** 0.3.37
+**Version:** 0.6.0
 **Live URL:** [16bitweather.co](https://www.16bitweather.co/)
 **Repository:** Private development build
 **Last Updated:** January 2025
+
+---
+
+## Claude Code Assistant Instructions
+
+**IMPORTANT: Branch Creation Protocol**
+
+When the user requests to create a new branch, fix a bug, add a feature, or make a hotfix, you MUST:
+
+1. Ask the user to describe what they want to do
+2. Suggest the appropriate branch name following the convention:
+   - `feature/` - New features
+   - `fix/` - Bug fixes
+   - `hotfix/` - Urgent production fixes
+   - `chore/` - Maintenance tasks
+   - `refactor/` - Code refactoring
+   - `docs/` - Documentation
+   - `test/` - Testing
+   - `perf/` - Performance
+
+**Example Interaction:**
+```
+User: "Let's create a new branch to add hurricane tracking"
+Assistant: "I'll help you create a new branch for hurricane tracking.
+This sounds like a new feature, so I suggest:
+
+Branch name: feature/add-hurricane-tracker
+
+Does this work for you, or would you like a different name?"
+```
+
+Always confirm the branch name before creating it. Reference `WORKFLOW.md` for complete naming conventions.
 
 ---
 
