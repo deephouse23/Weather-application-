@@ -5,7 +5,7 @@
 
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { useRouter } from 'next/navigation'
-import { ProfileContent } from '@/app/profile/page'
+import ProfilePage from '@/app/profile/page'
 import { useAuth } from '@/lib/auth'
 import { updateProfile } from '@/lib/supabase/database'
 import { updateUserPreferencesAPI } from '@/lib/services/preferences-service'
@@ -48,7 +48,7 @@ jest.mock('@/components/navigation', () => {
   }
 })
 
-describe('ProfilePage', () => {
+describe('ProfilePage Component', () => {
   const mockRouter = {
     push: jest.fn(),
     replace: jest.fn(),
@@ -98,7 +98,7 @@ describe('ProfilePage', () => {
   })
 
   it('should render profile page with user data', () => {
-    render(<ProfileContent />)
+    render(<ProfilePage />)
     
     expect(screen.getByText('User Profile')).toBeInTheDocument()
     expect(screen.getByDisplayValue('testuser')).toBeInTheDocument()
@@ -107,7 +107,7 @@ describe('ProfilePage', () => {
   })
 
   it('should enable editing mode when Edit Profile is clicked', () => {
-    render(<ProfileContent />)
+    render(<ProfilePage />)
     
     const editButton = screen.getByText('Edit Profile')
     fireEvent.click(editButton)
@@ -121,7 +121,7 @@ describe('ProfilePage', () => {
     ;(updateProfile as jest.Mock).mockResolvedValue(updatedProfile)
     ;(updateUserPreferencesAPI as jest.Mock).mockResolvedValue(mockPreferences)
 
-    render(<ProfileContent />)
+    render(<ProfilePage />)
     
     // Enter edit mode
     fireEvent.click(screen.getByText('Edit Profile'))
@@ -169,7 +169,7 @@ describe('ProfilePage', () => {
   it('should show error message when profile update fails', async () => {
     ;(updateProfile as jest.Mock).mockResolvedValue(null)
 
-    render(<ProfileContent />)
+    render(<ProfilePage />)
     
     fireEvent.click(screen.getByText('Edit Profile'))
     fireEvent.click(screen.getByText('Save Changes'))
@@ -186,7 +186,7 @@ describe('ProfilePage', () => {
     ;(updateProfile as jest.Mock).mockResolvedValue(updatedProfile)
     ;(updateUserPreferencesAPI as jest.Mock).mockResolvedValue(null)
 
-    render(<ProfileContent />)
+    render(<ProfilePage />)
     
     fireEvent.click(screen.getByText('Edit Profile'))
     fireEvent.click(screen.getByText('Save Changes'))
@@ -201,7 +201,7 @@ describe('ProfilePage', () => {
   it('should handle network errors gracefully', async () => {
     ;(updateProfile as jest.Mock).mockRejectedValue(new Error('Network error'))
 
-    render(<ProfileContent />)
+    render(<ProfilePage />)
     
     fireEvent.click(screen.getByText('Edit Profile'))
     fireEvent.click(screen.getByText('Save Changes'))
@@ -214,7 +214,7 @@ describe('ProfilePage', () => {
   it('should handle permission errors gracefully', async () => {
     ;(updateProfile as jest.Mock).mockRejectedValue(new Error('Permission denied'))
 
-    render(<ProfileContent />)
+    render(<ProfilePage />)
     
     fireEvent.click(screen.getByText('Edit Profile'))
     fireEvent.click(screen.getByText('Save Changes'))
@@ -225,7 +225,7 @@ describe('ProfilePage', () => {
   })
 
   it('should cancel editing and reset form values', () => {
-    render(<ProfileContent />)
+    render(<ProfilePage />)
     
     fireEvent.click(screen.getByText('Edit Profile'))
     
@@ -247,7 +247,7 @@ describe('ProfilePage', () => {
     )
     ;(updateUserPreferencesAPI as jest.Mock).mockResolvedValue(mockPreferences)
 
-    render(<ProfileContent />)
+    render(<ProfilePage />)
     
     fireEvent.click(screen.getByText('Edit Profile'))
     fireEvent.click(screen.getByText('Save Changes'))

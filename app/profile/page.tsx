@@ -19,7 +19,7 @@ export default function ProfilePage() {
   )
 }
 
-export function ProfileContent() {
+function ProfileContent() {
   const router = useRouter()
   const { user, profile, preferences, refreshProfile, refreshPreferences } = useAuth()
   const { theme } = useTheme()
