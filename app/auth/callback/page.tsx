@@ -30,7 +30,7 @@ function AuthCallbackContent() {
         const code = searchParams.get('code')
         const error = searchParams.get('error')
         const errorDescription = searchParams.get('error_description')
-        const next = searchParams.get('next') || '/' // Default to homepage instead of dashboard
+        const next = searchParams.get('next') || '/dashboard' // Default to dashboard for better UX
 
         // Handle OAuth errors
         if (error) {
@@ -60,29 +60,10 @@ function AuthCallbackContent() {
           return
         }
 
-        setStatus('Authentication successful!')
-
-        // Simplified wait logic - reduced timeout to 3 seconds max
-        let attempts = 0
-        const maxAttempts = 20 // 2 seconds max (20 × 100ms)
-
-        const waitForAuth = () => {
-          attempts++
-
-          if (isInitialized && user) {
-            setStatus('Welcome back! Redirecting...')
-            handleRedirect(next, 300)
-          } else if (attempts >= maxAttempts) {
-            // Auth succeeded but context taking too long - redirect anyway
-            console.warn('Auth context initialization timeout - proceeding with redirect')
-            setStatus('Welcome! Redirecting...')
-            handleRedirect(next, 500)
-          } else {
-            setTimeout(waitForAuth, 100)
-          }
-        }
-
-        waitForAuth()
+        // Session created successfully - redirect immediately
+        // Profile and preferences will load on the destination page
+        setStatus('Authentication successful! Redirecting...')
+        handleRedirect(next, 1000)
 
       } catch (error) {
         console.error('Callback error:', error)
@@ -94,7 +75,9 @@ function AuthCallbackContent() {
     }
 
     handleAuthCallback()
-  }, [searchParams, handleRedirect, isInitialized, user])
+    // Only run once when searchParams change - don't re-run when auth state updates
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
 
   const isSuccess = status.includes('successful') || status.includes('Welcome')
   const isError = error !== null
