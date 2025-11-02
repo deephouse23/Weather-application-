@@ -36,8 +36,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
         if (error) {
           setError(error.message)
         } else if (user) {
-          // Redirect to homepage and refresh to update auth state
-          router.push('/')
+          // Redirect to dashboard for better UX (consistent with OAuth flow)
+          router.push('/dashboard')
           router.refresh()
         }
       } else {
