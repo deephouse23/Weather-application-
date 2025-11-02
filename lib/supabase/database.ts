@@ -80,32 +80,66 @@ export const updateProfile = async (userId: string, updates: ProfileUpdate): Pro
   if (updates.preferred_units !== undefined) safeUpdates.preferred_units = updates.preferred_units
   if (updates.timezone !== undefined) safeUpdates.timezone = updates.timezone
 
+  // Explicitly select all columns to ensure we get complete data back
+  const selectColumns = 'id, username, full_name, email, default_location, avatar_url, preferred_units, timezone, created_at, updated_at'
+
   // Try to update with full column set first
   let { data, error } = await supabase
     .from('profiles')
     .update(updates)
     .eq('id', userId)
-    .select()
+    .select(selectColumns)
     .single()
 
-  if (error && error.message.includes('does not exist')) {
-    console.warn('Some profile columns missing during update, using safe updates:', error.message)
-    // Fallback to only safe updates
-    const { data: fallbackData, error: fallbackError } = await supabase
-      .from('profiles')
-      .update(safeUpdates)
-      .eq('id', userId)
-      .select()
-      .single()
+  if (error) {
+    // Log detailed error information for debugging
+    console.error('Error updating profile:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+      userId,
+      updates
+    })
 
-    if (fallbackError) {
-      console.error('Error updating profile (fallback):', fallbackError)
+    // Check if error is due to missing columns
+    if (error.message.includes('does not exist')) {
+      console.warn('Some profile columns missing during update, using safe updates:', error.message)
+      // Fallback to only safe updates
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('profiles')
+        .update(safeUpdates)
+        .eq('id', userId)
+        .select(selectColumns)
+        .single()
+
+      if (fallbackError) {
+        console.error('Error updating profile (fallback):', {
+          message: fallbackError.message,
+          details: fallbackError.details,
+          hint: fallbackError.hint,
+          code: fallbackError.code
+        })
+        return null
+      }
+
+      // Validate that we got data back
+      if (!fallbackData) {
+        console.error('Profile update succeeded but no data returned (fallback)')
+        return null
+      }
+
+      data = fallbackData
+    } else {
+      // Other errors (RLS violations, constraints, etc.)
+      console.error('Profile update failed:', error.message)
       return null
     }
+  }
 
-    data = fallbackData
-  } else if (error) {
-    console.error('Error updating profile:', error)
+  // Validate that we got data back
+  if (!data) {
+    console.error('Profile update succeeded but no data returned')
     return null
   }
 
