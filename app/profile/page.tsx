@@ -53,7 +53,7 @@ function ProfileContent() {
 
   const handleSave = async () => {
     if (!user) return
-    
+
     setLoading(true)
     setMessage('')
 
@@ -66,24 +66,41 @@ function ProfileContent() {
 
       console.log('Updating profile with:', updates)
       const updatedProfile = await updateProfile(user.id, updates)
-      
+
       if (updatedProfile) {
         console.log('Profile updated successfully:', updatedProfile)
+
+        // Refresh profile to verify changes persisted
         await refreshProfile()
+
         // Save preferences updates (auto-location and units)
-        await updateUserPreferencesAPI({ 
-          auto_location: autoLocation, 
-          temperature_unit: temperatureUnit 
-        })
-        await refreshPreferences()
+        try {
+          await updateUserPreferencesAPI({
+            auto_location: autoLocation,
+            temperature_unit: temperatureUnit
+          })
+          await refreshPreferences()
+        } catch (prefError) {
+          console.error('Error updating preferences:', prefError)
+          setMessage('Profile updated, but preferences failed to save. Please try again.')
+          setLoading(false)
+          return
+        }
+
         setEditing(false)
         setMessage('Profile updated successfully!')
+
+        // Auto-clear success message after 3 seconds
+        setTimeout(() => setMessage(''), 3000)
       } else {
-        setMessage('Failed to update profile. Please try again.')
+        // updateProfile returned null - database error
+        console.error('updateProfile returned null - check database schema')
+        setMessage('Failed to update profile. Database error - check console for details.')
       }
     } catch (error) {
       console.error('Profile update error:', error)
-      setMessage(`Error updating profile: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      setMessage(`Error: ${errorMessage}. Check console for details.`)
     } finally {
       setLoading(false)
     }

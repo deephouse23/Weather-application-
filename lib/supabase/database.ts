@@ -68,13 +68,18 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
 
 export const updateProfile = async (userId: string, updates: ProfileUpdate): Promise<Profile | null> => {
   const supabase = getSupabaseClient()
-  
+
   // Filter out updates for columns that might not exist
   const safeUpdates: any = {}
-  
-  // Only include updates for columns we're sure exist or can be safely ignored
+
+  // Include all common profile fields in safe updates
   if (updates.username !== undefined) safeUpdates.username = updates.username
-  
+  if (updates.full_name !== undefined) safeUpdates.full_name = updates.full_name
+  if (updates.default_location !== undefined) safeUpdates.default_location = updates.default_location
+  if (updates.avatar_url !== undefined) safeUpdates.avatar_url = updates.avatar_url
+  if (updates.preferred_units !== undefined) safeUpdates.preferred_units = updates.preferred_units
+  if (updates.timezone !== undefined) safeUpdates.timezone = updates.timezone
+
   // Try to update with full column set first
   let { data, error } = await supabase
     .from('profiles')
@@ -92,12 +97,12 @@ export const updateProfile = async (userId: string, updates: ProfileUpdate): Pro
       .eq('id', userId)
       .select()
       .single()
-    
+
     if (fallbackError) {
       console.error('Error updating profile (fallback):', fallbackError)
       return null
     }
-    
+
     data = fallbackData
   } else if (error) {
     console.error('Error updating profile:', error)

@@ -59,9 +59,11 @@ export const signInWithProvider = async (
 ) => {
   // Build callback URL with optional next parameter
   const callbackUrl = new URL(`${window.location.origin}/auth/callback`)
-  if (options?.redirectTo) {
-    callbackUrl.searchParams.set('next', options.redirectTo)
-  }
+
+  // Default to dashboard for better UX (users expect to see their account after login)
+  // Can be overridden by passing redirectTo option
+  const finalDestination = options?.redirectTo || '/dashboard'
+  callbackUrl.searchParams.set('next', finalDestination)
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
