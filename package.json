@@ -1,6 +1,6 @@
 {
   "name": "16-bit-weather",
-  "version": "0.6.0",
+  "version": "0.6.2",
   "description": "A retro 16-bit weather education platform featuring global temperature extremes tracking, pixel art graphics, comprehensive location search, cloud atlas, interactive weather systems database, extreme weather phenomena collection, historical weather data, interactive games with high score tracking, and authentic 16-bit gaming experience. Now with Planet Extremes - real-time hottest and coldest places on Earth!",
   "private": true,
   "scripts": {
@@ -10,7 +10,8 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:ci": "jest --ci --runInBand"
+    "test:ci": "jest --ci --runInBand",
+    "test:profile": "tsx scripts/test-profile-save.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -60,6 +61,7 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.2.3",
     "eslint": "^9.32.0",
     "eslint-config-next": "^15.4.5",
     "identity-obj-proxy": "^3.0.0",
@@ -68,6 +70,7 @@
     "postcss": "^8",
     "tailwindcss": "^3.4.17",
     "ts-jest": "^29.2.5",
+    "tsx": "^4.20.6",
     "typescript": "^5"
   }
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { ProtectedRoute } from '@/lib/auth'
 import { useAuth } from '@/lib/auth'
 import { updateProfile } from '@/lib/supabase/database'
@@ -19,6 +20,7 @@ export default function ProfilePage() {
 }
 
 function ProfileContent() {
+  const router = useRouter()
   const { user, profile, preferences, refreshProfile, refreshPreferences } = useAuth()
   const { theme } = useTheme()
   const themeClasses = getComponentStyles(theme as ThemeType, 'auth')
@@ -31,6 +33,7 @@ function ProfileContent() {
   const [temperatureUnit, setTemperatureUnit] = useState<'fahrenheit' | 'celsius'>('fahrenheit')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [messageType, setMessageType] = useState<'success' | 'error'>('success')
   const [mounted, setMounted] = useState(false)
 
   // Handle mounting to prevent hydration issues
@@ -56,6 +59,7 @@ function ProfileContent() {
 
     setLoading(true)
     setMessage('')
+    setMessageType('success')
 
     try {
       const updates = {
@@ -75,33 +79,55 @@ function ProfileContent() {
 
         // Save preferences updates (auto-location and units)
         try {
-          await updateUserPreferencesAPI({
+          const preferencesResult = await updateUserPreferencesAPI({
             auto_location: autoLocation,
             temperature_unit: temperatureUnit
           })
+          
+          if (!preferencesResult) {
+            setMessageType('error')
+            setMessage('Profile saved, but preferences failed to save. Please try updating preferences again.')
+            setLoading(false)
+            return
+          }
+          
           await refreshPreferences()
         } catch (prefError) {
           console.error('Error updating preferences:', prefError)
-          setMessage('Profile updated, but preferences failed to save. Please try again.')
+          setMessageType('error')
+          setMessage('Profile saved, but preferences failed to save. Please try updating preferences again.')
           setLoading(false)
           return
         }
 
         setEditing(false)
-        setMessage('Profile updated successfully!')
+        setMessageType('success')
+        setMessage('Profile updated successfully! Redirecting...')
 
-        // Auto-clear success message after 3 seconds
-        setTimeout(() => setMessage(''), 3000)
+        // Redirect to dashboard after showing success message briefly
+        setTimeout(() => {
+          router.push('/dashboard')
+        }, 1500)
       } else {
         // updateProfile returned null - database error
-        console.error('updateProfile returned null - check database schema')
-        setMessage('Failed to update profile. Database error - check console for details.')
+        console.error('updateProfile returned null - check database schema and RLS policies')
+        setMessageType('error')
+        setMessage('Failed to update profile. Please check your database configuration or try again later.')
+        setLoading(false)
       }
     } catch (error) {
       console.error('Profile update error:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      setMessage(`Error: ${errorMessage}. Check console for details.`)
-    } finally {
+      setMessageType('error')
+      
+      // Provide user-friendly error messages based on error type
+      if (errorMessage.includes('permission') || errorMessage.includes('policy')) {
+        setMessage('Permission denied. Please ensure you are logged in and have permission to update your profile.')
+      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+        setMessage('Network error. Please check your internet connection and try again.')
+      } else {
+        setMessage(`Unable to save profile: ${errorMessage}. Please try again or contact support if the issue persists.`)
+      }
       setLoading(false)
     }
   }
@@ -137,9 +163,13 @@ function ProfileContent() {
             </p>
           </div>
 
-          {/* Success Message */}
+          {/* Success/Error Message */}
           {message && (
-            <div className={`p-3 mb-6 border-2 border-green-500 bg-green-100 text-green-700 text-sm font-mono`}>
+            <div className={`p-3 mb-6 border-2 text-sm font-mono ${
+              messageType === 'success' 
+                ? 'border-green-500 bg-green-100 text-green-700' 
+                : 'border-red-500 bg-red-100 text-red-700'
+            }`}>
               {message}
             </div>
           )}
