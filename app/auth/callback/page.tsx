@@ -27,10 +27,13 @@ function AuthCallbackContent() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        console.log('[Callback] Starting auth callback handler')
         const code = searchParams.get('code')
         const error = searchParams.get('error')
         const errorDescription = searchParams.get('error_description')
         const next = searchParams.get('next') || '/dashboard' // Default to dashboard for better UX
+
+        console.log('[Callback] Params:', { hasCode: !!code, hasError: !!error, next })
 
         // Handle OAuth errors
         if (error) {
@@ -50,7 +53,9 @@ function AuthCallbackContent() {
 
         setStatus('Verifying your account...')
 
+        console.log('[Callback] Exchanging code for session...')
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+        console.log('[Callback] Exchange result:', { hasError: !!exchangeError })
 
         if (exchangeError) {
           console.error('Auth exchange error:', exchangeError)
@@ -62,6 +67,7 @@ function AuthCallbackContent() {
 
         // Session created successfully - redirect immediately
         // Profile and preferences will load on the destination page
+        console.log('[Callback] Session created successfully, redirecting to:', next)
         setStatus('Authentication successful! Redirecting...')
         handleRedirect(next, 1000)
 
