@@ -5,9 +5,10 @@ test.describe('NEWS Page Production Issues', () => {
   test.beforeEach(async ({ page }) => {
     await setupStableApp(page);
   });
+
   test('check for hydration and rendering issues', async ({ page }) => {
     // Monitor console errors
-    const consoleErrors = [];
+    const consoleErrors: string[] = [];
     page.on('console', msg => {
       if (msg.type() === 'error') {
         consoleErrors.push(msg.text());
@@ -15,19 +16,16 @@ test.describe('NEWS Page Production Issues', () => {
     });
     
     // Monitor network failures
-    const networkErrors = [];
+    const networkErrors: string[] = [];
     page.on('requestfailed', request => {
       networkErrors.push(`${request.method()} ${request.url()} - ${request.failure()?.errorText}`);
     });
     
     // Navigate to NEWS page
-    await page.goto('/news');
+    await page.goto('/news', { waitUntil: 'domcontentloaded' });
     
-    // Wait for potential hydration issues
-    await page.waitForTimeout(5000);
-    
-    console.log('Console errors:', consoleErrors);
-    console.log('Network errors:', networkErrors);
+    // Wait for page to stabilize
+    await expect(page.locator('h1').filter({ hasText: /16-BIT WEATHER NEWS/i })).toBeVisible({ timeout: 10000 });
     
     // Check for React hydration mismatches
     const hydrationErrors = consoleErrors.filter(error => 
@@ -37,15 +35,14 @@ test.describe('NEWS Page Production Issues', () => {
       error.includes('client')
     );
     
-    if (hydrationErrors.length > 0) {
-      console.log('Hydration issues detected:', hydrationErrors);
-    }
+    // Should not have hydration errors
+    expect(hydrationErrors.length).toBe(0);
     
     // Check if page is actually rendered
     const mainContent = await page.locator('body').textContent();
-    console.log('Page loaded successfully:', mainContent?.includes('16-BIT NEWS'));
+    expect(mainContent).toContain('16-BIT');
     
-    // Test immediate navigation (the critical issue)
+    // Test navigation performance
     const startTime = Date.now();
     const homeLink = page.locator('a[href="/"]').first();
     await homeLink.click();
@@ -53,16 +50,15 @@ test.describe('NEWS Page Production Issues', () => {
     // Check how long navigation takes
     await page.waitForURL('/', { timeout: 10000 });
     const navigationTime = Date.now() - startTime;
-    console.log('Navigation time (ms):', navigationTime);
     
-    // Navigation should be fast in CI/build; allow more headroom in dev
+    // Navigation should be fast
     expect(navigationTime).toBeLessThan(6000);
   });
 
   test('check for blocking event listeners or infinite loops', async ({ page }) => {
     // Navigate to NEWS page
-    await page.goto('/news');
-    await page.waitForTimeout(2000);
+    await page.goto('/news', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('h1').filter({ hasText: /16-BIT WEATHER NEWS/i })).toBeVisible({ timeout: 10000 });
     
     // Check for excessive re-renders by monitoring DOM mutations
     const mutationCount = await page.evaluate(() => {
@@ -78,7 +74,7 @@ test.describe('NEWS Page Production Issues', () => {
       });
       
       // Wait 3 seconds and count mutations
-      return new Promise(resolve => {
+      return new Promise<number>(resolve => {
         setTimeout(() => {
           observer.disconnect();
           resolve(count);
@@ -86,11 +82,7 @@ test.describe('NEWS Page Production Issues', () => {
       });
     });
     
-    console.log('DOM mutations in 3 seconds:', mutationCount);
-    
     // Excessive mutations (>100) might indicate infinite re-renders
-    if (mutationCount > 100) {
-      console.log('WARNING: Excessive DOM mutations detected, possible infinite re-render');
-    }
+    expect(mutationCount).toBeLessThan(100);
   });
 });

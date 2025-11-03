@@ -183,5 +183,139 @@ export async function expectHomeLoaded(page: Page): Promise<void> {
   await expect(page.getByTestId('location-search-input')).toBeVisible({ timeout: 15000 });
 }
 
+// ═══════════════════════════════════════════════════════════
+//   AUTHENTICATION HELPERS
+//   ═══════════════════════════════════════════════════════════
+
+export async function setupMockAuth(page: Page, userId: string = 'test-user-id'): Promise<void> {
+  await page.addInitScript((data) => {
+    // Mock user session
+    window.localStorage.setItem('supabase.auth.token', JSON.stringify({
+      access_token: 'mock-token',
+      expires_at: Date.now() + 3600000,
+      user: {
+        id: data.userId,
+        email: 'test@example.com',
+      }
+    }));
+  }, { userId });
+}
+
+export async function stubSupabaseProfile(page: Page, profile: any): Promise<void> {
+  await page.route('**/api/auth/profile**', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify(profile)
+  }));
+
+  await page.route('**/api/auth/preferences**', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ auto_location: true, temperature_unit: 'fahrenheit' })
+  }));
+}
+
+export async function stubProfileUpdate(page: Page): Promise<void> {
+  await page.route('**/api/profile/update**', async (route) => {
+    const request = route.request();
+    const body = request.postDataJSON();
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ...body, id: 'test-user-id', updated_at: new Date().toISOString() })
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//   THEME HELPERS
+//   ═══════════════════════════════════════════════════════════
+
+export async function setTheme(page: Page, theme: string): Promise<void> {
+  await page.addInitScript((data) => {
+    document.documentElement.setAttribute('data-theme', data.theme);
+    document.body.className = `theme-${data.theme}`;
+    localStorage.setItem('theme', data.theme);
+  }, { theme });
+}
+
+export async function getCurrentTheme(page: Page): Promise<string> {
+  return await page.evaluate(() => {
+    return document.documentElement.getAttribute('data-theme') || 'dark';
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//   RADAR MAP HELPERS
+//   ═══════════════════════════════════════════════════════════
+
+export async function navigateToMapPage(page: Page): Promise<void> {
+  await page.goto('/map', { waitUntil: 'domcontentloaded' });
+  // Wait for map container to be visible
+  await page.locator('[data-radar-container]').waitFor({ timeout: 10000 }).catch(() => {
+    // If data-radar-container not found, wait for map to load
+    return page.locator('[class*="map"], [class*="Map"]').first().waitFor({ timeout: 10000 });
+  });
+}
+
+export async function waitForRadarToLoad(page: Page): Promise<void> {
+  // Wait for radar container or map element
+  await page.locator('[data-radar-container], [class*="map"], [class*="Map"]').first().waitFor({ timeout: 15000 });
+}
+
+export async function checkRadarVisibility(page: Page): Promise<boolean> {
+  const radarContainer = page.locator('[data-radar-container]').first();
+  if (await radarContainer.count() === 0) {
+    return false;
+  }
+  
+  // Check if radar container is visible and has proper z-index
+  const zIndex = await radarContainer.evaluate((el) => {
+    return window.getComputedStyle(el).zIndex;
+  });
+  
+  return parseInt(zIndex) >= 10000 || zIndex === 'auto';
+}
+
+// ═══════════════════════════════════════════════════════════
+//   PROFILE HELPERS
+//   ═══════════════════════════════════════════════════════════
+
+export async function navigateToProfile(page: Page): Promise<void> {
+  await page.goto('/profile', { waitUntil: 'domcontentloaded' });
+  // Wait for profile page to load
+  await expect(page.locator('h1, h2').filter({ hasText: /profile|settings/i })).toBeVisible({ timeout: 10000 });
+}
+
+export async function fillProfileForm(page: Page, fields: { username?: string; fullName?: string; defaultLocation?: string }): Promise<void> {
+  if (fields.username) {
+    const usernameInput = page.locator('input[name="username"], input[placeholder*="username" i]').first();
+    if (await usernameInput.count() > 0) {
+      await usernameInput.fill(fields.username);
+    }
+  }
+  
+  if (fields.fullName) {
+    const fullNameInput = page.locator('input[name="fullName"], input[name="full_name"], input[placeholder*="full name" i]').first();
+    if (await fullNameInput.count() > 0) {
+      await fullNameInput.fill(fields.fullName);
+    }
+  }
+  
+  if (fields.defaultLocation) {
+    const locationInput = page.locator('input[name="defaultLocation"], input[name="default_location"], input[placeholder*="location" i]').first();
+    if (await locationInput.count() > 0) {
+      await locationInput.fill(fields.defaultLocation);
+    }
+  }
+}
+
+export async function saveProfile(page: Page): Promise<void> {
+  const saveButton = page.locator('button').filter({ hasText: /save/i }).first();
+  await saveButton.click();
+  // Wait for save to complete
+  await page.waitForTimeout(500);
+}
+
 
 
