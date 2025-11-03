@@ -374,7 +374,10 @@ const WeatherMapOpenLayers = ({
   }, [theme])
 
   return (
-    <div className={`relative w-full h-[600px] rounded-lg overflow-hidden ${themeStyles.container}`}>
+    <div 
+      data-radar-container
+      className={`relative w-full h-[600px] rounded-lg overflow-hidden ${themeStyles.container}`}
+    >
       {/* Map Container */}
       <div ref={mapRef} className="w-full h-full bg-gray-900" />
 
