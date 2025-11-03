@@ -30,9 +30,14 @@ html, body, #__next, #root, .app, main {
 }
 
 /* Card components must use elevated background */
-[class*="card"], [class*="Card"],
-.pixel-border, .border-2, .border-4,
-.p-4, .p-6, .p-8 {
+[class*="card"]:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]),
+[class*="Card"]:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]),
+.pixel-border:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]),
+.border-2:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]),
+.border-4:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]),
+.p-4:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]),
+.p-6:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]),
+.p-8:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]) {
   background-color: var(--bg-elev) !important;
   border-color: var(--border) !important;
 }
@@ -132,6 +137,19 @@ input, textarea, select {
 /* ═══════════════════════════════════════════════════════════
    COMPONENT-SPECIFIC ENFORCEMENT
    ═══════════════════════════════════════════════════════════ */
+
+/* Exclude radar/map containers from theme enforcement */
+[class*="map"], [class*="Map"], [class*="radar"], [class*="Radar"],
+[data-radar-container] {
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+}
+
+/* Prevent theme enforcement from overriding radar-specific styles */
+[class*="map"] *, [class*="Map"] *, [class*="radar"] *, [class*="Radar"] *,
+[data-radar-container] * {
+  background-color: inherit !important;
+}
 
 /* Weather display components */
 .weather-current, .weather-forecast,

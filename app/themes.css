@@ -387,6 +387,68 @@ body.theme-matrix::after {
 
 
 /* ═══════════════════════════════════════════════════════════
+   RADAR/MAP CONTAINER EXCLUSIONS
+   ═══════════════════════════════════════════════════════════ */
+
+/* Exclude radar/map containers from theme overlays */
+[class*="map"], [class*="Map"], [class*="radar"], [class*="Radar"],
+[data-radar-container] {
+  position: relative !important;
+  z-index: 10000 !important;
+  backdrop-filter: none !important;
+  isolation: isolate !important;
+}
+
+/* Ensure radar containers are above scanlines in synthwave theme */
+.theme-synthwave84 [class*="map"],
+.theme-synthwave84 [class*="Map"],
+.theme-synthwave84 [class*="radar"],
+.theme-synthwave84 [class*="Radar"],
+.theme-synthwave84 [data-radar-container] {
+  z-index: 10000 !important;
+  position: relative !important;
+}
+
+/* Ensure radar containers are above scanlines in matrix theme */
+.theme-matrix [class*="map"],
+.theme-matrix [class*="Map"],
+.theme-matrix [class*="radar"],
+.theme-matrix [class*="Radar"],
+.theme-matrix [data-radar-container] {
+  z-index: 10000 !important;
+  position: relative !important;
+}
+
+/* Prevent backdrop-filter blur from affecting radar */
+.theme-synthwave84 [class*="map"],
+.theme-synthwave84 [class*="Map"],
+.theme-synthwave84 [class*="radar"],
+.theme-synthwave84 [class*="Radar"],
+.theme-synthwave84 [data-radar-container],
+.theme-tokyoNight [class*="map"],
+.theme-tokyoNight [class*="Map"],
+.theme-tokyoNight [class*="radar"],
+.theme-tokyoNight [class*="Radar"],
+.theme-tokyoNight [data-radar-container],
+.theme-dracula [class*="map"],
+.theme-dracula [class*="Map"],
+.theme-dracula [class*="radar"],
+.theme-dracula [class*="Radar"],
+.theme-dracula [data-radar-container],
+.theme-cyberpunk [class*="map"],
+.theme-cyberpunk [class*="Map"],
+.theme-cyberpunk [class*="radar"],
+.theme-cyberpunk [class*="Radar"],
+.theme-cyberpunk [data-radar-container],
+.theme-matrix [class*="map"],
+.theme-matrix [class*="Map"],
+.theme-matrix [class*="radar"],
+.theme-matrix [class*="Radar"],
+.theme-matrix [data-radar-container] {
+  backdrop-filter: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
    GLOBAL THEME UTILITIES
    ═══════════════════════════════════════════════════════════ */
 
