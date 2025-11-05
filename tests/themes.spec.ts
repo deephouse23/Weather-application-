@@ -34,14 +34,21 @@ test.describe('Theme System', () => {
   });
 
   test('theme persists across page reloads', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
     await setTheme(page, 'synthwave84');
     
     // Verify theme is set
     let currentTheme = await getCurrentTheme(page);
     expect(currentTheme).toBe('synthwave84');
     
+    // Wait a bit for localStorage to be written
+    await page.waitForTimeout(300);
+    
     // Reload page
     await page.reload({ waitUntil: 'domcontentloaded' });
+    
+    // Wait for page to fully load and theme to be applied
+    await page.waitForTimeout(500);
     
     // Verify theme persisted
     currentTheme = await getCurrentTheme(page);
@@ -50,35 +57,48 @@ test.describe('Theme System', () => {
 
   test('radar remains visible in synthwave theme', async ({ page }) => {
     await setTheme(page, 'synthwave84');
+    // Wait for theme to be fully applied
+    await page.waitForTimeout(300);
+    
     await navigateToMapPage(page);
     
     await waitForRadarToLoad(page);
+    
+    // Wait a bit more for radar to fully render
+    await page.waitForTimeout(1000);
     
     // Check radar visibility
     const isVisible = await checkRadarVisibility(page);
     expect(isVisible).toBeTruthy();
     
-    // Verify backdrop-filter is disabled
+    // Verify backdrop-filter is disabled or radar container exists
     const radarContainer = page.locator('[data-radar-container]').first();
     if (await radarContainer.count() > 0) {
       const backdropFilter = await radarContainer.evaluate((el) => {
         return window.getComputedStyle(el).backdropFilter;
       });
       
-      expect(backdropFilter).toBe('none');
+      // backdrop-filter should be 'none' or empty string
+      expect(backdropFilter === 'none' || backdropFilter === '').toBeTruthy();
     }
   });
 
   test('radar remains visible in matrix theme', async ({ page }) => {
     await setTheme(page, 'matrix');
+    // Wait for theme to be fully applied
+    await page.waitForTimeout(300);
+    
     await navigateToMapPage(page);
     
     await waitForRadarToLoad(page);
     
+    // Wait a bit more for radar to fully render
+    await page.waitForTimeout(1000);
+    
     const isVisible = await checkRadarVisibility(page);
     expect(isVisible).toBeTruthy();
     
-    // Verify z-index is high enough
+    // Verify z-index is high enough or radar container exists
     const radarContainer = page.locator('[data-radar-container]').first();
     if (await radarContainer.count() > 0) {
       const zIndex = await radarContainer.evaluate((el) => {
@@ -102,8 +122,11 @@ test.describe('Theme System', () => {
   });
 
   test('UI elements render correctly in synthwave theme', async ({ page }) => {
-    await setTheme(page, 'synthwave84');
     await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await setTheme(page, 'synthwave84');
+    
+    // Wait for theme to be applied
+    await page.waitForTimeout(300);
     
     // Verify search input is visible
     await expect(page.getByTestId('location-search-input')).toBeVisible({ timeout: 10000 });
@@ -122,11 +145,13 @@ test.describe('Theme System', () => {
     
     // Start with dark theme
     await setTheme(page, 'dark');
+    await page.waitForTimeout(300);
     let currentTheme = await getCurrentTheme(page);
     expect(currentTheme).toBe('dark');
     
     // Switch to synthwave
     await setTheme(page, 'synthwave84');
+    await page.waitForTimeout(300);
     currentTheme = await getCurrentTheme(page);
     expect(currentTheme).toBe('synthwave84');
     

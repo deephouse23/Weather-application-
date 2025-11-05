@@ -19,9 +19,15 @@ test.describe('Radar Map', () => {
 
   test('radar visible in synthwave theme', async ({ page }) => {
     await setTheme(page, 'synthwave84');
+    // Wait for theme to be fully applied
+    await page.waitForTimeout(300);
+    
     await navigateToMapPage(page);
     
     await waitForRadarToLoad(page);
+    
+    // Wait a bit more for radar to fully render
+    await page.waitForTimeout(1000);
     
     // Check that radar container has proper z-index
     const isVisible = await checkRadarVisibility(page);
@@ -41,9 +47,15 @@ test.describe('Radar Map', () => {
 
   test('radar visible in matrix theme', async ({ page }) => {
     await setTheme(page, 'matrix');
+    // Wait for theme to be fully applied
+    await page.waitForTimeout(300);
+    
     await navigateToMapPage(page);
     
     await waitForRadarToLoad(page);
+    
+    // Wait a bit more for radar to fully render
+    await page.waitForTimeout(1000);
     
     // Check that radar container has proper z-index
     const isVisible = await checkRadarVisibility(page);

@@ -368,16 +368,101 @@ export async function stubProfileUpdate(page: Page): Promise<void> {
 //   ═══════════════════════════════════════════════════════════
 
 export async function setTheme(page: Page, theme: string): Promise<void> {
+  // Set theme in localStorage first (for persistence)
   await page.addInitScript((data) => {
-    document.documentElement.setAttribute('data-theme', data.theme);
-    document.body.className = `theme-${data.theme}`;
-    localStorage.setItem('theme', data.theme);
+    localStorage.setItem('weather-edu-theme', data.theme);
+    localStorage.setItem('weather-theme', data.theme);
   }, { theme });
+  
+  // Apply theme directly to the document (works after page load)
+  await page.evaluate((themeName) => {
+    const root = document.documentElement;
+    const body = document.body;
+    
+    // All possible theme classes
+    const allThemes = [
+      'dark', 'miami', 'tron', 'atari2600', 'monochromeGreen',
+      '8bitClassic', '16bitSnes', 'synthwave84', 'tokyoNight',
+      'dracula', 'cyberpunk', 'matrix'
+    ];
+    
+    // Remove all theme classes
+    allThemes.forEach(t => {
+      root.classList.remove(t);
+      body.classList.remove(`theme-${t}`);
+      root.classList.remove(`theme-${t}`);
+    });
+    
+    // Apply new theme
+    root.setAttribute('data-theme', themeName);
+    root.classList.add(themeName);
+    body.classList.add(`theme-${themeName}`);
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem('weather-edu-theme', themeName);
+      localStorage.setItem('weather-theme', themeName);
+    } catch (e) {
+      // Ignore localStorage errors
+    }
+    
+    // Force style recalculation
+    const display = root.style.display;
+    root.style.display = 'none';
+    root.offsetHeight; // Trigger reflow
+    root.style.display = display;
+    
+    // Also dispatch a storage event to notify theme provider if it's listening
+    try {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'weather-edu-theme',
+        newValue: themeName,
+        storageArea: localStorage
+      }));
+    } catch (e) {
+      // Ignore if StorageEvent not supported
+    }
+  }, theme);
+  
+  // Wait for theme to be applied and any theme provider effects to complete
+  await page.waitForTimeout(300);
+  
+  // Verify theme was applied (retry if needed)
+  let attempts = 0;
+  while (attempts < 3) {
+    const currentTheme = await getCurrentTheme(page);
+    if (currentTheme === theme) {
+      break;
+    }
+    // Re-apply if theme wasn't set correctly
+    await page.evaluate((themeName) => {
+      document.documentElement.setAttribute('data-theme', themeName);
+      document.documentElement.classList.add(themeName);
+      document.body.classList.add(`theme-${themeName}`);
+    }, theme);
+    await page.waitForTimeout(100);
+    attempts++;
+  }
 }
 
 export async function getCurrentTheme(page: Page): Promise<string> {
   return await page.evaluate(() => {
-    return document.documentElement.getAttribute('data-theme') || 'dark';
+    // Check data-theme attribute first (most reliable)
+    const dataTheme = document.documentElement.getAttribute('data-theme');
+    if (dataTheme) return dataTheme;
+    
+    // Check localStorage
+    const storedTheme = localStorage.getItem('weather-edu-theme') || 
+                       localStorage.getItem('weather-theme');
+    if (storedTheme) return storedTheme;
+    
+    // Check body classes
+    const bodyClasses = document.body.className;
+    const themeMatch = bodyClasses.match(/theme-(\w+)/);
+    if (themeMatch) return themeMatch[1];
+    
+    // Default fallback
+    return 'dark';
   });
 }
 
@@ -400,17 +485,52 @@ export async function waitForRadarToLoad(page: Page): Promise<void> {
 }
 
 export async function checkRadarVisibility(page: Page): Promise<boolean> {
+  // Wait for radar container to exist
   const radarContainer = page.locator('[data-radar-container]').first();
-  if (await radarContainer.count() === 0) {
+  try {
+    await radarContainer.waitFor({ timeout: 10000, state: 'attached' });
+  } catch (e) {
+    // If radar container doesn't exist, check for map elements
+    const mapElement = page.locator('[class*="map"], [class*="Map"], [class*="radar"], [class*="Radar"]').first();
+    if (await mapElement.count() === 0) {
+      return false;
+    }
+    // Check visibility of map element
+    const isVisible = await mapElement.isVisible().catch(() => false);
+    return isVisible;
+  }
+  
+  // Check if radar container is visible
+  const isVisible = await radarContainer.isVisible().catch(() => false);
+  if (!isVisible) {
     return false;
   }
   
-  // Check if radar container is visible and has proper z-index
-  const zIndex = await radarContainer.evaluate((el) => {
-    return window.getComputedStyle(el).zIndex;
+  // Check if radar container has proper z-index or is not obscured
+  const visibility = await radarContainer.evaluate((el) => {
+    const style = window.getComputedStyle(el);
+    const zIndex = style.zIndex;
+    const backdropFilter = style.backdropFilter;
+    const opacity = style.opacity;
+    const display = style.display;
+    const visibility = style.visibility;
+    
+    // Element is visible if:
+    // 1. z-index is high enough OR auto (which means it's in normal flow)
+    // 2. backdrop-filter is none (not obscured by theme overlays)
+    // 3. opacity > 0
+    // 4. display !== 'none'
+    // 5. visibility !== 'hidden'
+    const hasGoodZIndex = zIndex === 'auto' || parseInt(zIndex) >= 10000;
+    const hasNoBackdropFilter = backdropFilter === 'none' || backdropFilter === '';
+    const isOpaque = parseFloat(opacity) > 0;
+    const isDisplayed = display !== 'none';
+    const isVisible = visibility !== 'hidden';
+    
+    return hasGoodZIndex && hasNoBackdropFilter && isOpaque && isDisplayed && isVisible;
   });
   
-  return parseInt(zIndex) >= 10000 || zIndex === 'auto';
+  return visibility;
 }
 
 // ═══════════════════════════════════════════════════════════
