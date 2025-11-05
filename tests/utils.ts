@@ -188,7 +188,88 @@ export async function expectHomeLoaded(page: Page): Promise<void> {
 //   ═══════════════════════════════════════════════════════════
 
 export async function setupMockAuth(page: Page, userId: string = 'test-user-id'): Promise<void> {
-  // Mock Supabase client responses
+  // Set up route mocking BEFORE any navigation
+  // Mock Supabase auth.getSession() response - this is critical for middleware
+  await page.route('**/auth/v1/token**', (route) => {
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        access_token: 'mock-access-token',
+        refresh_token: 'mock-refresh-token',
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        expires_in: 3600,
+        token_type: 'bearer',
+        user: {
+          id: userId,
+          email: 'test@example.com',
+          aud: 'authenticated',
+          role: 'authenticated',
+        }
+      })
+    });
+  });
+
+  // Mock Supabase auth.getUser() response
+  await page.route('**/auth/v1/user**', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      user: {
+        id: userId,
+        email: 'test@example.com',
+        aud: 'authenticated',
+        role: 'authenticated',
+      }
+    })
+  }));
+
+  // Mock Supabase auth.getSession() endpoint (used by middleware)
+  await page.route('**/auth/v1/**', (route) => {
+    const url = new URL(route.request().url());
+    const method = route.request().method();
+    
+    // Handle GET /auth/v1/user - get current user
+    if (url.pathname.includes('/user') && method === 'GET') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          user: {
+            id: userId,
+            email: 'test@example.com',
+            aud: 'authenticated',
+            role: 'authenticated',
+          }
+        })
+      });
+    }
+    
+    // Handle any session-related requests
+    if (url.pathname.includes('/session') || url.pathname.includes('/token')) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          access_token: 'mock-access-token',
+          refresh_token: 'mock-refresh-token',
+          expires_at: Math.floor(Date.now() / 1000) + 3600,
+          expires_in: 3600,
+          token_type: 'bearer',
+          user: {
+            id: userId,
+            email: 'test@example.com',
+            aud: 'authenticated',
+            role: 'authenticated',
+          }
+        })
+      });
+    }
+    
+    route.continue();
+  });
+
+  // Mock Supabase client responses via localStorage (must be done before page loads)
   await page.addInitScript((data) => {
     // Mock user session in localStorage (Supabase format)
     // Use a generic key format that Supabase client will recognize
@@ -226,35 +307,29 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
     });
   }, { userId });
 
-  // Mock Supabase auth.getUser() response
-  await page.route('**/auth/v1/user**', (route) => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({
-      user: {
-        id: userId,
-        email: 'test@example.com',
-      }
-    })
-  }));
-
-  // Mock Supabase auth.getSession() response
-  await page.route('**/auth/v1/**', (route) => {
-    const url = new URL(route.request().url());
-    if (url.pathname.includes('/user')) {
-      return route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          user: {
-            id: userId,
-            email: 'test@example.com',
-          }
-        })
-      });
-    }
-    route.continue();
-  });
+  // Set auth cookies for middleware (using localhost for CI)
+  try {
+    const baseUrl = page.url() || 'http://localhost:3000';
+    const domain = new URL(baseUrl).hostname;
+    
+    await page.context().addCookies([{
+      name: 'sb-access-token',
+      value: 'mock-access-token',
+      domain: domain,
+      path: '/',
+    }, {
+      name: 'sb-refresh-token',
+      value: 'mock-refresh-token',
+      domain: domain,
+      path: '/',
+    }]);
+  } catch (e) {
+    // If cookies can't be set (e.g., before navigation), that's okay
+    // The route mocking will handle it
+  }
+  
+  // Wait a bit to ensure init scripts are ready
+  await page.waitForTimeout(100);
 }
 
 export async function stubSupabaseProfile(page: Page, profile: any): Promise<void> {
@@ -538,15 +613,38 @@ export async function checkRadarVisibility(page: Page): Promise<boolean> {
 //   ═══════════════════════════════════════════════════════════
 
 export async function navigateToProfile(page: Page): Promise<void> {
-  await page.goto('/profile', { waitUntil: 'domcontentloaded' });
-  // Wait for profile page to load or handle redirect
-  // Check if redirected to login or if profile loaded
+  // Ensure auth is set up before navigating (must be called before goto)
+  await setupMockAuth(page);
+  
+  // Wait for auth setup to complete
+  await page.waitForTimeout(200);
+  
+  // Navigate to profile page
+  await page.goto('/profile', { waitUntil: 'networkidle' });
+  
+  // Wait for any redirects or auth checks to complete
+  await page.waitForTimeout(500);
+  
+  // Check if redirected to login
   const url = page.url();
   if (url.includes('/auth/login')) {
-    // If redirected to login, that's a test failure scenario
-    throw new Error('Profile page redirected to login - authentication not properly mocked');
+    // Wait a bit more for auth context to initialize
+    await page.waitForTimeout(1000);
+    const finalUrl = page.url();
+    
+    if (finalUrl.includes('/auth/login')) {
+      // Still on login page - this indicates auth mocking failed
+      // Check if we can see any error messages or debug info
+      const pageContent = await page.content();
+      throw new Error(
+        'Profile page redirected to login - authentication not properly mocked.\n' +
+        `Final URL: ${finalUrl}\n` +
+        'Make sure setupMockAuth() is called before navigateToProfile() and that all route mocks are set up correctly.'
+      );
+    }
   }
-  // Wait for either profile content or loading state
+  
+  // Wait for profile page to fully load (auth context initialization)
   await page.waitForTimeout(1000);
 }
 

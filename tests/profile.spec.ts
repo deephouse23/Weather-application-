@@ -4,7 +4,12 @@ import { setupStableApp, setupMockAuth, stubSupabaseProfile, stubProfileUpdate, 
 test.describe('Profile Settings', () => {
   test.beforeEach(async ({ page }) => {
     await setupStableApp(page);
+    
+    // CRITICAL: Set up auth mocking FIRST, before any navigation
     await setupMockAuth(page);
+    
+    // Wait for auth setup to complete
+    await page.waitForTimeout(200);
     
     // Mock profile data
     await stubSupabaseProfile(page, {
