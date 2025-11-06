@@ -225,6 +225,7 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
   }));
 
   // Mock Supabase auth.getSession() endpoint (used by middleware)
+  // This is critical - middleware calls this server-side
   await page.route('**/auth/v1/**', (route) => {
     const url = new URL(route.request().url());
     const method = route.request().method();
@@ -245,8 +246,8 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
       });
     }
     
-    // Handle any session-related requests
-    if (url.pathname.includes('/session') || url.pathname.includes('/token')) {
+    // Handle any session-related requests (middleware calls getSession)
+    if (url.pathname.includes('/session') || url.pathname.includes('/token') || url.searchParams.has('grant_type')) {
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -307,10 +308,11 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
     });
   }, { userId });
 
-  // Set auth cookies for middleware (using localhost for CI)
+  // Set auth cookies for middleware BEFORE navigation
+  // These cookies are read by the server-side middleware
   try {
-    const baseUrl = page.url() || 'http://localhost:3000';
-    const domain = new URL(baseUrl).hostname;
+    // Use localhost for CI/local development
+    const domain = 'localhost';
     
     await page.context().addCookies([{
       name: 'sb-access-token',
@@ -322,14 +324,26 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
       value: 'mock-refresh-token',
       domain: domain,
       path: '/',
+    }, {
+      // Supabase SSR also uses these cookie names
+      name: `sb-${domain}-auth-token`,
+      value: JSON.stringify({
+        access_token: 'mock-access-token',
+        refresh_token: 'mock-refresh-token',
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        expires_in: 3600,
+        token_type: 'bearer',
+      }),
+      domain: domain,
+      path: '/',
     }]);
   } catch (e) {
-    // If cookies can't be set (e.g., before navigation), that's okay
-    // The route mocking will handle it
+    // If cookies can't be set, continue - route mocking should handle it
+    // But this might cause middleware failures
   }
   
-  // Wait a bit to ensure init scripts are ready
-  await page.waitForTimeout(100);
+  // Wait a bit to ensure init scripts and cookies are ready
+  await page.waitForTimeout(200);
 }
 
 export async function stubSupabaseProfile(page: Page, profile: any): Promise<void> {
@@ -613,11 +627,8 @@ export async function checkRadarVisibility(page: Page): Promise<boolean> {
 //   ═══════════════════════════════════════════════════════════
 
 export async function navigateToProfile(page: Page): Promise<void> {
-  // Ensure auth is set up before navigating (must be called before goto)
-  await setupMockAuth(page);
-  
-  // Wait for auth setup to complete
-  await page.waitForTimeout(200);
+  // Note: setupMockAuth() MUST be called BEFORE calling this function
+  // It should be called in beforeEach or before navigation
   
   // Navigate to profile page
   await page.goto('/profile', { waitUntil: 'networkidle' });
@@ -634,12 +645,10 @@ export async function navigateToProfile(page: Page): Promise<void> {
     
     if (finalUrl.includes('/auth/login')) {
       // Still on login page - this indicates auth mocking failed
-      // Check if we can see any error messages or debug info
-      const pageContent = await page.content();
       throw new Error(
         'Profile page redirected to login - authentication not properly mocked.\n' +
         `Final URL: ${finalUrl}\n` +
-        'Make sure setupMockAuth() is called before navigateToProfile() and that all route mocks are set up correctly.'
+        'Make sure setupMockAuth() is called in beforeEach BEFORE calling navigateToProfile().'
       );
     }
   }
