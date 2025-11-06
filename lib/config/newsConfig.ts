@@ -17,7 +17,7 @@ export const newsConfig = {
     backupSources: [
       'https://api.weather.gov/alerts/active', // NOAA weather alerts
       'https://earthobservatory.nasa.gov/feeds/earth-observatory.rss', // NASA Earth Observatory
-      'https://www.foxweather.com/feeds/public/latest.rss', // FOX Weather
+      // FOX Weather RSS feeds disabled - returning 404
       'https://www.reddit.com/r/weather/.json', // Reddit weather
     ]
   },
@@ -35,7 +35,7 @@ export const newsConfig = {
       priority: 2,
     },
     fox: {
-      enabled: true,
+      enabled: false, // Disabled - RSS feeds return 404
       cacheDuration: 15 * 60 * 1000, // 15 minutes
       priority: 3,
     },

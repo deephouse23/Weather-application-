@@ -687,5 +687,149 @@ export async function saveProfile(page: Page): Promise<void> {
   await page.waitForTimeout(500);
 }
 
+// ═══════════════════════════════════════════════════════════
+//   NEWS API HELPERS
+//   ═══════════════════════════════════════════════════════════
+
+/**
+ * Mock news API responses for testing
+ * Returns realistic news data to avoid depending on external RSS feeds
+ */
+export async function stubNewsApi(page: Page): Promise<void> {
+  // Create realistic mock news items matching NewsItem interface
+  const mockNewsItems = [
+    {
+      id: 'test-news-1',
+      title: 'Severe Weather Alert: Major Storm System Approaching',
+      url: 'https://example.com/news/1',
+      source: 'NOAA',
+      category: 'breaking',
+      priority: 'high',
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+      description: 'A significant storm system is expected to bring heavy rain and strong winds across the region.',
+      imageUrl: 'https://example.com/image1.jpg',
+      author: 'Weather Service',
+    },
+    {
+      id: 'test-news-2',
+      title: 'NASA Satellite Images Show Unusual Weather Patterns',
+      url: 'https://example.com/news/2',
+      source: 'NASA',
+      category: 'weather',
+      priority: 'medium',
+      timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
+      description: 'Latest satellite imagery reveals interesting weather formations over the Pacific.',
+      imageUrl: 'https://example.com/image2.jpg',
+      author: 'NASA Earth Observatory',
+    },
+    {
+      id: 'test-news-3',
+      title: 'Local Forecast: Mild Conditions Expected This Week',
+      url: 'https://example.com/news/3',
+      source: 'Local Weather',
+      category: 'local',
+      priority: 'low',
+      timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
+      description: 'Residents can expect pleasant weather conditions throughout the week.',
+      author: 'Local Meteorologist',
+    },
+    {
+      id: 'test-news-4',
+      title: 'Hurricane Tracking Update: Storm Strengthening',
+      url: 'https://example.com/news/4',
+      source: 'NOAA',
+      category: 'weather',
+      priority: 'high',
+      timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
+      description: 'Meteorologists are monitoring a developing hurricane system.',
+      imageUrl: 'https://example.com/image4.jpg',
+    },
+    {
+      id: 'test-news-5',
+      title: 'Climate Research: New Insights into Weather Patterns',
+      url: 'https://example.com/news/5',
+      source: 'NASA',
+      category: 'climate',
+      priority: 'medium',
+      timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(), // 8 hours ago
+      description: 'Scientists publish findings on long-term climate trends.',
+    },
+  ];
+
+  // Mock the aggregate news API endpoint
+  await page.route('**/api/news/aggregate**', async (route) => {
+    const url = new URL(route.request().url());
+    const featuredParam = url.searchParams.get('featured');
+
+    // Handle featured story request
+    if (featuredParam === 'true') {
+      const featuredStory = mockNewsItems.find(item => item.priority === 'high') || mockNewsItems[0];
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          status: 'ok',
+          featured: featuredStory,
+        }),
+      });
+    }
+
+    // Handle regular news aggregation request
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        status: 'ok',
+        items: mockNewsItems,
+        stats: [
+          { source: 'NOAA', fetched: 2, included: 2, errors: 0 },
+          { source: 'NASA', fetched: 2, included: 2, errors: 0 },
+          { source: 'Local Weather', fetched: 1, included: 1, errors: 0 },
+        ],
+        totalFetched: mockNewsItems.length,
+        totalIncluded: mockNewsItems.length,
+        cacheHit: false,
+      }),
+    });
+  });
+
+  // Also mock individual news source endpoints if needed
+  await page.route('**/api/news/fox**', async (route) => {
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        status: 'ok',
+        items: [],
+        count: 0,
+      }),
+    });
+  });
+
+  await page.route('**/api/news/nasa**', async (route) => {
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        status: 'ok',
+        items: mockNewsItems.filter(item => item.source === 'NASA'),
+        count: 2,
+      }),
+    });
+  });
+
+  await page.route('**/api/news/reddit**', async (route) => {
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        status: 'ok',
+        items: [],
+        count: 0,
+      }),
+    });
+  });
+}
+
 
 

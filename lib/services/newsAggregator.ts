@@ -50,7 +50,7 @@ export async function aggregateNews(
   const {
     categories = ['weather'],
     priority = 'all',
-    sources = ['noaa', 'nasa', 'fox', 'reddit', 'newsapi', 'gfs'],
+    sources = ['noaa', 'nasa', 'reddit', 'newsapi', 'gfs'], // Removed 'fox' - RSS feeds return 404
     maxItems = 30,
     maxAge = 72, // 72 hours default
   } = options;

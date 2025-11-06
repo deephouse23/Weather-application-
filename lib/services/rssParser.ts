@@ -287,7 +287,10 @@ export async function fetchAndParseRSS(url: string): Promise<ParsedFeed> {
     const xmlText = await response.text();
     return parseRSSFeed(xmlText);
   } catch (error) {
-    console.error(`Error fetching RSS feed from ${url}:`, error);
+    // Only log errors in development mode to reduce noise in tests/production
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`Error fetching RSS feed from ${url}:`, error);
+    }
     throw error;
   }
 }

@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { setupStableApp } from './utils';
+import { setupStableApp, stubNewsApi } from './utils';
 
 test.describe('NEWS Navigation', () => {
   test.beforeEach(async ({ page }) => {
     await setupStableApp(page);
+    await stubNewsApi(page);
   });
 
   test('direct NEWS page navigation works', async ({ page }) => {
