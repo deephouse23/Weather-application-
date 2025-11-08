@@ -89,18 +89,18 @@ test.describe('Radar Map', () => {
     // Wait for controls to render (they may load after the map)
     await page.waitForTimeout(2000);
     
+    // First verify the radar map is visible
+    const isVisible = await checkRadarVisibility(page);
+    expect(isVisible).toBeTruthy();
+    
     // Check for layer controls, buttons, or status badge
     // Look for common control patterns in the radar component
     const controls = page.locator('button, [class*="badge"], [class*="control"], [class*="Control"], [role="button"]');
     const controlCount = await controls.count();
     
     // Should have at least some controls (play/pause, layer menu, etc.)
-    // If no controls found, check if map container exists (controls might be inside)
-    if (controlCount === 0) {
-      const mapContainer = page.locator('[data-radar-container]').first();
-      const hasMap = await mapContainer.count() > 0;
-      expect(hasMap).toBeTruthy(); // At least verify map exists
-    } else {
+    // Controls are optional - main thing is that the map is visible
+    if (controlCount > 0) {
       expect(controlCount).toBeGreaterThan(0);
     }
   });

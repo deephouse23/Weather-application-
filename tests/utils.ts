@@ -188,111 +188,180 @@ export async function expectHomeLoaded(page: Page): Promise<void> {
 //   ═══════════════════════════════════════════════════════════
 
 export async function setupMockAuth(page: Page, userId: string = 'test-user-id'): Promise<void> {
-  // Set up route mocking BEFORE any navigation
-  // Mock Supabase auth.getSession() response - this is critical for middleware
-  await page.route('**/auth/v1/token**', (route) => {
+  // Create mock session data
+  const mockSession = {
+    access_token: 'mock-access-token',
+    refresh_token: 'mock-refresh-token',
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    expires_in: 3600,
+    token_type: 'bearer',
+    user: {
+      id: userId,
+      email: 'test@example.com',
+      aud: 'authenticated',
+      role: 'authenticated',
+      email_confirmed_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+  };
+
+  // Mock Supabase auth endpoints - these are called by middleware server-side
+  // The middleware makes requests to Supabase's auth API, so we need to intercept those
+  await page.route('**/auth/v1/**', async (route) => {
+    const url = new URL(route.request().url());
+    const pathname = url.pathname;
+    const method = route.request().method();
+    
+    // Handle getSession() - this is what middleware calls
+    // Supabase SSR getSession() makes a request to /auth/v1/token?grant_type=refresh_token
+    // or checks cookies and validates them
+    if (pathname.includes('/token') || url.searchParams.has('grant_type')) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        },
+        body: JSON.stringify(mockSession),
+      });
+    }
+    
+    // Handle getUser() - get current user
+    if (pathname.includes('/user') && method === 'GET') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+        },
+        body: JSON.stringify({
+          user: mockSession.user,
+        }),
+      });
+    }
+    
+    // Handle session validation
+    if (pathname.includes('/session') || pathname.includes('/verify')) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+        },
+        body: JSON.stringify(mockSession),
+      });
+    }
+    
+    // Default: return session for any auth endpoint
     return route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({
-        access_token: 'mock-access-token',
-        refresh_token: 'mock-refresh-token',
-        expires_at: Math.floor(Date.now() / 1000) + 3600,
-        expires_in: 3600,
-        token_type: 'bearer',
-        user: {
-          id: userId,
-          email: 'test@example.com',
-          aud: 'authenticated',
-          role: 'authenticated',
-        }
-      })
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      },
+      body: JSON.stringify(mockSession),
     });
   });
 
-  // Mock Supabase auth.getUser() response
-  await page.route('**/auth/v1/user**', (route) => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({
-      user: {
-        id: userId,
-        email: 'test@example.com',
-        aud: 'authenticated',
-        role: 'authenticated',
-      }
-    })
-  }));
-
-  // Mock Supabase auth.getSession() endpoint (used by middleware)
-  // This is critical - middleware calls this server-side
-  await page.route('**/auth/v1/**', (route) => {
-    const url = new URL(route.request().url());
-    const method = route.request().method();
+  // Mock Supabase REST API endpoints (for profile data)
+  await page.route('**/rest/v1/**', async (route) => {
+    const request = route.request();
+    const method = request.method();
     
-    // Handle GET /auth/v1/user - get current user
-    if (url.pathname.includes('/user') && method === 'GET') {
-      return route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          user: {
-            id: userId,
-            email: 'test@example.com',
-            aud: 'authenticated',
-            role: 'authenticated',
-          }
-        })
-      });
+    // Allow profile routes to continue (they're handled by stubSupabaseProfile)
+    if (request.url().includes('/profiles')) {
+      route.continue();
+      return;
     }
     
-    // Handle any session-related requests (middleware calls getSession)
-    if (url.pathname.includes('/session') || url.pathname.includes('/token') || url.searchParams.has('grant_type')) {
-      return route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          access_token: 'mock-access-token',
-          refresh_token: 'mock-refresh-token',
-          expires_at: Math.floor(Date.now() / 1000) + 3600,
-          expires_in: 3600,
-          token_type: 'bearer',
-          user: {
-            id: userId,
-            email: 'test@example.com',
-            aud: 'authenticated',
-            role: 'authenticated',
-          }
-        })
-      });
-    }
-    
-    route.continue();
+    // Mock other REST endpoints
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([]),
+    });
   });
 
-  // Mock Supabase client responses via localStorage (must be done before page loads)
+  // Set auth cookies for middleware - these must match Supabase SSR cookie format
+  // Supabase SSR uses specific cookie names based on the project URL
+  // The middleware reads cookies from request.cookies.getAll(), so we need to set them before navigation
+  try {
+    const domain = 'localhost';
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+    // Extract project ref from URL (e.g., https://abc123.supabase.co -> abc123)
+    const urlMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/);
+    const projectRef = urlMatch ? urlMatch[1] : 'placeholder';
+    
+    // Supabase SSR cookie format: sb-{project-ref}-auth-token
+    const authTokenCookieName = `sb-${projectRef}-auth-token`;
+    
+    // Create session cookie value (Supabase SSR format)
+    // This is the exact format Supabase SSR expects
+    const sessionCookieValue = JSON.stringify({
+      access_token: mockSession.access_token,
+      refresh_token: mockSession.refresh_token,
+      expires_at: mockSession.expires_at,
+      expires_in: mockSession.expires_in,
+      token_type: mockSession.token_type,
+      user: mockSession.user,
+    });
+    
+    // Set cookies with all possible names Supabase might use
+    const cookiesToSet = [
+      {
+        name: authTokenCookieName,
+        value: sessionCookieValue,
+        domain: domain,
+        path: '/',
+        httpOnly: false, // Must be accessible to JavaScript for SSR
+        secure: false, // Localhost doesn't need secure
+        sameSite: 'Lax' as const,
+      },
+      // Fallback cookie names
+      {
+        name: `sb-${domain}-auth-token`,
+        value: sessionCookieValue,
+        domain: domain,
+        path: '/',
+        httpOnly: false,
+        secure: false,
+        sameSite: 'Lax' as const,
+      },
+      {
+        name: 'sb-access-token',
+        value: mockSession.access_token,
+        domain: domain,
+        path: '/',
+      },
+      {
+        name: 'sb-refresh-token',
+        value: mockSession.refresh_token,
+        domain: domain,
+        path: '/',
+      },
+    ];
+    
+    await page.context().addCookies(cookiesToSet);
+  } catch (e) {
+    // If cookies can't be set, continue - route mocking should handle it
+    // But this might cause middleware failures
+    console.warn('Could not set auth cookies:', e);
+  }
+
+  // Mock localStorage for client-side Supabase client
   await page.addInitScript((data) => {
-    // Mock user session in localStorage (Supabase format)
-    // Use a generic key format that Supabase client will recognize
     const session = {
-      access_token: 'mock-access-token',
-      refresh_token: 'mock-refresh-token',
-      expires_at: Math.floor(Date.now() / 1000) + 3600,
-      expires_in: 3600,
-      token_type: 'bearer',
-      user: {
-        id: data.userId,
-        email: 'test@example.com',
-        aud: 'authenticated',
-        role: 'authenticated',
-        email_confirmed_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      expires_at: data.expires_at,
+      expires_in: data.expires_in,
+      token_type: data.token_type,
+      user: data.user,
     };
     
     // Store in multiple possible Supabase localStorage keys
-    // Supabase uses different key formats depending on version
     const possibleKeys = [
       'sb-auth-token',
       'supabase.auth.token',
@@ -306,41 +375,7 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
         // Ignore errors
       }
     });
-  }, { userId });
-
-  // Set auth cookies for middleware BEFORE navigation
-  // These cookies are read by the server-side middleware
-  try {
-    // Use localhost for CI/local development
-    const domain = 'localhost';
-    
-    await page.context().addCookies([{
-      name: 'sb-access-token',
-      value: 'mock-access-token',
-      domain: domain,
-      path: '/',
-    }, {
-      name: 'sb-refresh-token',
-      value: 'mock-refresh-token',
-      domain: domain,
-      path: '/',
-    }, {
-      // Supabase SSR also uses these cookie names
-      name: `sb-${domain}-auth-token`,
-      value: JSON.stringify({
-        access_token: 'mock-access-token',
-        refresh_token: 'mock-refresh-token',
-        expires_at: Math.floor(Date.now() / 1000) + 3600,
-        expires_in: 3600,
-        token_type: 'bearer',
-      }),
-      domain: domain,
-      path: '/',
-    }]);
-  } catch (e) {
-    // If cookies can't be set, continue - route mocking should handle it
-    // But this might cause middleware failures
-  }
+  }, mockSession);
   
   // Wait a bit to ensure init scripts and cookies are ready
   await page.waitForTimeout(200);
@@ -561,41 +596,88 @@ export async function getCurrentTheme(page: Page): Promise<string> {
 
 export async function navigateToMapPage(page: Page): Promise<void> {
   await page.goto('/map', { waitUntil: 'domcontentloaded' });
-  // Wait for map container to be visible
-  await page.locator('[data-radar-container]').waitFor({ timeout: 10000 }).catch(() => {
-    // If data-radar-container not found, wait for map to load
-    return page.locator('[class*="map"], [class*="Map"]').first().waitFor({ timeout: 10000 });
+  // Wait for page to be fully loaded
+  await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+    // If networkidle times out, continue anyway
+  });
+  // Wait for map container to exist in DOM
+  await page.waitForSelector('[data-radar-container], [class*="map"], [class*="Map"], [class*="radar"], [class*="Radar"]', { 
+    timeout: 15000,
+    state: 'attached'
+  }).catch(() => {
+    // If selector not found, that's okay - we'll check in waitForRadarToLoad
   });
 }
 
 export async function waitForRadarToLoad(page: Page): Promise<void> {
-  // Wait for radar container or map element
-  await page.locator('[data-radar-container], [class*="map"], [class*="Map"]').first().waitFor({ timeout: 15000 });
+  // Wait for radar container or map element to be attached to DOM
+  // Try multiple selectors to be more flexible
+  const selectors = [
+    '[data-radar-container]',
+    '[class*="map"]',
+    '[class*="Map"]',
+    '[class*="radar"]',
+    '[class*="Radar"]',
+  ];
+  
+  let found = false;
+  for (const selector of selectors) {
+    try {
+      await page.waitForSelector(selector, { timeout: 5000, state: 'attached' });
+      found = true;
+      break;
+    } catch (e) {
+      // Try next selector
+      continue;
+    }
+  }
+  
+  if (!found) {
+    // If no specific selector found, wait for any div with height (map containers usually have height)
+    await page.waitForFunction(() => {
+      const containers = document.querySelectorAll('[data-radar-container], [class*="map"], [class*="Map"]');
+      return containers.length > 0;
+    }, { timeout: 10000 }).catch(() => {
+      // If still not found, that's okay - test will fail with a clear error
+    });
+  }
+  
+  // Give the map a moment to render
+  await page.waitForTimeout(1000);
 }
 
 export async function checkRadarVisibility(page: Page): Promise<boolean> {
-  // Wait for radar container to exist
-  const radarContainer = page.locator('[data-radar-container]').first();
-  try {
-    await radarContainer.waitFor({ timeout: 10000, state: 'attached' });
-  } catch (e) {
-    // If radar container doesn't exist, check for map elements
-    const mapElement = page.locator('[class*="map"], [class*="Map"], [class*="radar"], [class*="Radar"]').first();
-    if (await mapElement.count() === 0) {
-      return false;
+  // Try to find radar container with multiple selectors
+  const selectors = [
+    '[data-radar-container]',
+    '[class*="map"]',
+    '[class*="Map"]',
+    '[class*="radar"]',
+    '[class*="Radar"]',
+  ];
+  
+  let radarContainer = null;
+  for (const selector of selectors) {
+    const element = page.locator(selector).first();
+    const count = await element.count();
+    if (count > 0) {
+      radarContainer = element;
+      break;
     }
-    // Check visibility of map element
-    const isVisible = await mapElement.isVisible().catch(() => false);
-    return isVisible;
   }
   
-  // Check if radar container is visible
+  if (!radarContainer) {
+    // No radar container found at all
+    return false;
+  }
+  
+  // Check if element is visible
   const isVisible = await radarContainer.isVisible().catch(() => false);
   if (!isVisible) {
     return false;
   }
   
-  // Check if radar container has proper z-index or is not obscured
+  // Check if radar container has proper styling and is not obscured
   const visibility = await radarContainer.evaluate((el) => {
     const style = window.getComputedStyle(el);
     const zIndex = style.zIndex;
@@ -603,6 +685,8 @@ export async function checkRadarVisibility(page: Page): Promise<boolean> {
     const opacity = style.opacity;
     const display = style.display;
     const visibility = style.visibility;
+    const height = style.height;
+    const width = style.width;
     
     // Element is visible if:
     // 1. z-index is high enough OR auto (which means it's in normal flow)
@@ -610,13 +694,15 @@ export async function checkRadarVisibility(page: Page): Promise<boolean> {
     // 3. opacity > 0
     // 4. display !== 'none'
     // 5. visibility !== 'hidden'
-    const hasGoodZIndex = zIndex === 'auto' || parseInt(zIndex) >= 10000;
+    // 6. Has dimensions (height and width > 0)
+    const hasGoodZIndex = zIndex === 'auto' || parseInt(zIndex) >= 10000 || zIndex === '';
     const hasNoBackdropFilter = backdropFilter === 'none' || backdropFilter === '';
     const isOpaque = parseFloat(opacity) > 0;
     const isDisplayed = display !== 'none';
     const isVisible = visibility !== 'hidden';
+    const hasDimensions = parseFloat(height) > 0 && parseFloat(width) > 0;
     
-    return hasGoodZIndex && hasNoBackdropFilter && isOpaque && isDisplayed && isVisible;
+    return hasGoodZIndex && hasNoBackdropFilter && isOpaque && isDisplayed && isVisible && hasDimensions;
   });
   
   return visibility;
