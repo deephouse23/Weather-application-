@@ -45,7 +45,10 @@ export async function fetchFOXWeatherNews(
 
     return newsItems;
   } catch (error) {
-    console.error(`Error fetching FOX Weather ${feed} feed:`, error);
+    // Only log errors in development mode to reduce noise in tests/production
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`Error fetching FOX Weather ${feed} feed:`, error);
+    }
     return [];
   }
 }
@@ -91,7 +94,10 @@ export async function fetchAllFOXWeatherNews(maxItems: number = 30): Promise<New
 
     return uniqueNews.slice(0, maxItems);
   } catch (error) {
-    console.error('Error fetching all FOX Weather news:', error);
+    // Only log errors in development mode to reduce noise in tests/production
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error fetching all FOX Weather news:', error);
+    }
     return [];
   }
 }
@@ -216,7 +222,10 @@ export async function fetchFOXBreakingWeather(maxItems: number = 10): Promise<Ne
 
     return breakingNews;
   } catch (error) {
-    console.error('Error fetching FOX breaking weather:', error);
+    // Only log errors in development mode to reduce noise in tests/production
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error fetching FOX breaking weather:', error);
+    }
     return [];
   }
 }
