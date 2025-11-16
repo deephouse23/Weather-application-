@@ -86,7 +86,8 @@ export default defineConfig({
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,
         env: {
-          PLAYWRIGHT_TEST_MODE: 'true',
+          PLAYWRIGHT_TEST_MODE: 'true',  // Legacy - kept for backwards compatibility
+          NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE: 'true',  // Edge Runtime compatible
         },
       },
 });

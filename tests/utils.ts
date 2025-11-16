@@ -174,11 +174,11 @@ export async function seedFreshWeatherCache(page: Page, opts: StubOptions = {}):
 
 export async function setupStableApp(page: Page, opts: StubOptions = {}): Promise<void> {
   // Set test mode cookie to bypass middleware auth checks
+  // NOTE: Use URL instead of domain+path for localhost to ensure proper cookie propagation
   await page.context().addCookies([{
     name: 'playwright-test-mode',
     value: 'true',
-    domain: 'localhost',
-    path: '/',
+    url: 'http://localhost:3000',  // URL includes domain and path, don't set path separately
     httpOnly: false,
     secure: false,
     sameSite: 'Lax',
@@ -320,13 +320,14 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
     });
     
     // Set cookies with all possible names Supabase might use
+    // NOTE: Using URL instead of domain+path for localhost to ensure proper cookie propagation
+    const baseUrl = 'http://localhost:3000';
     const cookiesToSet = [
       // TEST MODE COOKIE: Bypass middleware auth checks
       {
         name: 'playwright-test-mode',
         value: 'true',
-        domain: domain,
-        path: '/',
+        url: baseUrl,  // URL includes domain and path, don't set path separately
         httpOnly: false,
         secure: false,
         sameSite: 'Lax' as const,
@@ -334,8 +335,7 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
       {
         name: authTokenCookieName,
         value: sessionCookieValue,
-        domain: domain,
-        path: '/',
+        url: baseUrl,
         httpOnly: false, // Must be accessible to JavaScript for SSR
         secure: false, // Localhost doesn't need secure
         sameSite: 'Lax' as const,
@@ -344,8 +344,7 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
       {
         name: `sb-${domain}-auth-token`,
         value: sessionCookieValue,
-        domain: domain,
-        path: '/',
+        url: baseUrl,
         httpOnly: false,
         secure: false,
         sameSite: 'Lax' as const,
@@ -353,14 +352,12 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
       {
         name: 'sb-access-token',
         value: mockSession.access_token,
-        domain: domain,
-        path: '/',
+        url: baseUrl,
       },
       {
         name: 'sb-refresh-token',
         value: mockSession.refresh_token,
-        domain: domain,
-        path: '/',
+        url: baseUrl,
       },
     ];
 
