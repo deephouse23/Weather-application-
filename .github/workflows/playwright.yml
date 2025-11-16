@@ -30,6 +30,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key' }}
           NEXT_PUBLIC_OPENWEATHER_API_KEY=${{ secrets.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'test-api-key' }}
+          NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE=true
           OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY || secrets.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'test-api-key' }}
           EOF
           # For dev server (npm run dev) if ever used
@@ -37,6 +38,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key' }}
           NEXT_PUBLIC_OPENWEATHER_API_KEY=${{ secrets.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'test-api-key' }}
+          NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE=true
           OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY || secrets.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'test-api-key' }}
           EOF
 
