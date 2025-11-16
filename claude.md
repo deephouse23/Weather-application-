@@ -53,10 +53,11 @@ Always confirm the branch name before creating it. Reference `WORKFLOW.md` for c
 10. [Theme System](#theme-system)
 11. [Location Services](#location-services)
 12. [Weather Radar & Maps](#weather-radar--maps)
-13. [Known Issues](#known-issues)
-14. [Recent Changes](#recent-changes)
-15. [Development Workflow](#development-workflow)
-16. [Deployment](#deployment)
+13. [Additional Documentation](#additional-documentation)
+14. [Known Issues](#known-issues)
+15. [Recent Changes](#recent-changes)
+16. [Development Workflow](#development-workflow)
+17. [Deployment](#deployment)
 
 ---
 
@@ -66,9 +67,12 @@ A professional weather application combining modern meteorological data with ret
 
 ### Key Features
 
-- **Real-time Weather Data**: Current conditions, forecasts, UV index, air quality, pollen counts
+- **Real-time Weather Data**: Current conditions, hourly/daily forecasts, UV index, air quality, pollen counts
 - **Interactive Radar**: NEXRAD radar with animation timeline
 - **GFS Model Graphics**: Professional weather models and NHC tropical outlooks integrated into news feed
+- **Multi-Source News**: Aggregated weather news from FOX Weather, NASA, Reddit, and NOAA
+- **Games Arcade**: 6 retro games with leaderboards and score tracking
+- **Learn Hub**: Educational content including cloud types, weather systems, and fun facts
 - **Location Services**: GPS auto-detection, city search, ZIP code lookup
 - **User Authentication**: Supabase-powered accounts with saved locations
 - **Multi-Theme Support**: Dark, Miami, Tron themes
@@ -89,12 +93,16 @@ app/
 │   ├── profile/                    # User profile management
 │   ├── weather/[city]/             # Dynamic city weather pages
 │   ├── map/                        # Interactive weather map
-│   ├── games/                      # Weather-themed games
+│   ├── hourly/                     # Hourly forecast page
+│   ├── games/                      # Games arcade hub
+│   │   └── [slug]/                 # Individual game pages
+│   ├── learn/                      # Educational hub
 │   ├── cloud-types/                # Cloud atlas
 │   ├── weather-systems/            # Weather phenomena database
 │   ├── extremes/                   # Global temperature extremes
-│   ├── fun-facts/                  # Weather trivia
-│   ├── news/                       # Weather news
+│   ├── fun-facts/                  # Weather trivia (16-Bit Takes)
+│   ├── news/                       # Multi-source weather news
+│   ├── gfs-model/[region]/[run]/   # GFS model viewer
 │   └── about/                      # About page
 ├── auth/
 │   ├── login/                      # Login page
@@ -107,7 +115,14 @@ app/
 │   ├── user/preferences/           # User preferences API
 │   ├── geocode/                    # Geocoding service
 │   ├── extremes/                   # Temperature extremes API
-│   └── news/                       # Weather news API
+│   ├── news/                       # News aggregation APIs
+│   │   ├── aggregate/              # Multi-source aggregator
+│   │   ├── fox/                    # FOX Weather
+│   │   ├── nasa/                   # NASA Earth Observatory
+│   │   └── reddit/                 # Reddit weather feeds
+│   ├── games/                      # Games API
+│   │   └── [slug]/                 # Game-specific endpoints
+│   └── gfs-image/                  # GFS model image proxy
 ├── layout.tsx                      # Root layout with auth provider
 ├── error.tsx                       # Error boundary
 ├── global-error.tsx                # Global error handler
@@ -135,8 +150,10 @@ app/
 - **Radix UI**: Accessible component primitives
   - Alert Dialog, Avatar, Dialog, Dropdown Menu, Label, Select, Separator, Switch, Tabs, Toast, Toggle
 - **Lucide React**: Icon library
+- **Meteocons**: Weather-specific icon library for modern weather icons
 - **Tailwind CSS 3.4**: Utility-first styling
 - **Class Variance Authority**: Type-safe component variants
+- **next-themes**: Theme management with system preference detection
 
 ### State Management
 - **React Context**: Location, Auth, Theme state
@@ -318,6 +335,100 @@ SENTRY_PROJECT=javascript-nextjs
 - Theme selector
 - Profile management
 
+### 7. Games System (New in v0.6.0)
+
+**Features:**
+- 6 retro-styled weather-themed games with authentic 16-bit experience
+- High score tracking with persistent leaderboards
+- Play counter tracking for each game
+- Guest and authenticated play support
+- Score submission with validation
+- Filtering by category and difficulty
+
+**Database Tables:**
+- `games` - Game metadata and configuration
+- `game_scores` - User high scores and rankings
+- `user_game_stats` - Play counts and statistics
+- `daily_challenges` - Daily challenge system
+
+**Key Files:**
+- `lib/services/gamesService.ts` - Games data and scoring service
+- `lib/types/games.ts` - TypeScript type definitions
+- `components/games/` - GameCard, Leaderboard, ScoreSubmitModal
+
+**API Routes:**
+- `GET /api/games` - List all games with metadata
+- `POST /api/games/[slug]/play` - Increment play counter
+- `GET /api/games/[slug]/scores` - Get leaderboard
+- `POST /api/games/[slug]/scores` - Submit score
+
+### 8. Multi-Source News Aggregation (New in v0.6.0)
+
+**News Sources:**
+- **NOAA GFS Models** - Weather model graphics updated 4x daily (00Z, 06Z, 12Z, 18Z)
+- **NASA Earth Observatory** - Satellite imagery and earth science articles
+- **FOX Weather RSS** - Breaking weather news and severe weather alerts
+- **Reddit** - Community weather discussions from r/weather, r/tropicalweather
+- **National Hurricane Center** - Tropical storm outlooks and forecasts
+
+**Features:**
+- Priority-based filtering (high/medium/low urgency)
+- Category-based filtering (breaking, weather, severe, alerts, tropical, climate, etc.)
+- Automatic deduplication and content ranking
+- 5-minute response caching for performance
+- Special ModelCard component for GFS graphics display
+- News ticker for breaking updates
+
+**Key Files:**
+- `lib/services/newsAggregator.ts` - Multi-source news aggregation engine
+- `lib/services/gfsModelService.ts` - GFS model data fetching
+- `lib/services/foxWeatherService.ts`, `nasaService.ts`, `redditService.ts` - Individual source services
+- `lib/config/newsConfig.ts` - News source configuration
+- `components/news/` - NewsGrid, NewsCard, ModelCard, NewsFilter, NewsHero, NewsTicker
+
+**API Routes:**
+- `GET /api/news/aggregate` - Aggregated multi-source news feed
+- `GET /api/news/fox` - FOX Weather RSS feed
+- `GET /api/news/nasa` - NASA Earth Observatory feed
+- `GET /api/news/reddit` - Reddit weather subreddit posts
+- `GET /api/gfs-image` - Proxy for GFS model graphics
+
+### 9. Learn Hub (New in v0.6.0)
+
+**Purpose:**
+Central educational portal aggregating weather knowledge content.
+
+**Content Sections:**
+- Cloud Types Atlas (10 cloud formations)
+- Weather Systems Database (12 weather phenomena)
+- Global Extremes Tracker (real-time hottest/coldest locations)
+- 16-Bit Takes (weather fun facts and trivia)
+- News Feed (educational weather articles)
+- Games Arcade (educational games)
+
+**Key Files:**
+- `app/learn/page.tsx` - Learn hub page
+- `components/learn/LearningCard.tsx` - Learning content cards
+
+### 10. Hourly Forecast (New in v0.6.0)
+
+**Features:**
+- 48-hour hourly forecast with detailed conditions
+- Modern weather icons using Meteocons library
+- Expandable hourly section in main weather card
+- Dedicated `/hourly` page for full view
+- Temperature, precipitation, wind, and humidity per hour
+- Visual temperature graphs
+
+**Key Files:**
+- `app/hourly/page.tsx` - Dedicated hourly forecast page
+- `components/hourly-forecast.tsx` - Hourly forecast component
+- `components/lazy-hourly-forecast.tsx` - Lazy-loaded wrapper
+- `components/modern-weather-icon.tsx` - Modern icon renderer
+
+**API Endpoints:**
+- Uses `/api/weather/onecall` with hourly data
+
 ---
 
 ## API Routes
@@ -425,10 +536,48 @@ All API routes are internal Next.js routes that proxy external APIs to keep API 
 - Returns: Current global temperature extremes
 - Source: Aggregated weather data
 
-#### `/api/news`
-**GET** - Weather news and updates
-- Returns: Array of weather news articles
-- Source: Curated weather news feed
+#### `/api/news/aggregate`
+**GET** - Multi-source aggregated weather news
+- Returns: Array of news articles from all sources (FOX, NASA, Reddit, GFS, NHC)
+- Query params: `priority` (optional), `category` (optional), `limit` (optional)
+- Source: Multiple sources aggregated and ranked
+
+#### `/api/news/fox`
+**GET** - FOX Weather RSS feed
+- Returns: Weather news from FOX Weather
+
+#### `/api/news/nasa`
+**GET** - NASA Earth Observatory feed
+- Returns: Earth science and satellite imagery articles
+
+#### `/api/news/reddit`
+**GET** - Reddit weather community posts
+- Returns: Posts from r/weather and r/tropicalweather
+
+#### `/api/games`
+**GET** - List all games
+- Returns: Array of game objects with metadata, play counts, and high scores
+
+#### `/api/games/[slug]/play`
+**POST** - Increment play counter for a game
+- Path param: `slug` (game identifier)
+- Returns: Updated play count
+
+#### `/api/games/[slug]/scores`
+**GET** - Get leaderboard for a game
+- Path param: `slug` (game identifier)
+- Returns: Array of high scores
+
+**POST** - Submit a score for a game
+- Path param: `slug` (game identifier)
+- Body: `{ score, playerName }`
+- Returns: Created score entry
+
+#### `/api/gfs-image`
+**GET** - Proxy for GFS model images
+- Query params: `region`, `run`, `forecast`
+- Returns: NOAA GFS model graphic image
+- Source: NOAA NCEP server
 
 ---
 
@@ -548,6 +697,58 @@ Authentication-related utilities and contexts.
 - `supabase/client.ts` - Supabase client initialization
 - `supabase/server.ts` - Server-side Supabase client
 - `supabase/middleware.ts` - Auth middleware for protected routes
+- `supabase/auth.ts` - Authentication utilities
+- `supabase/database.ts` - Database utilities and helpers
+- `supabase/schema-adapter.ts` - Schema compatibility layer
+
+### `lib/services/`
+Service layer for external API integrations and business logic.
+
+**Key Services:**
+- `gamesService.ts` - Games data management, scoring, and leaderboards
+- `gfsModelService.ts` - GFS weather model data fetching
+- `newsAggregator.ts` - Multi-source news aggregation engine
+- `newsService.ts` - News utilities and helpers
+- `foxWeatherService.ts` - FOX Weather RSS integration
+- `nasaService.ts` - NASA Earth Observatory integration
+- `redditService.ts` - Reddit weather subreddit integration
+- `rssParser.ts` - RSS feed parsing utilities
+- `theme-service.ts` - Theme management utilities
+
+### `lib/config/`
+Configuration files for application features.
+
+**Files:**
+- `newsConfig.ts` - News source configuration and endpoints
+
+### `lib/types/`
+TypeScript type definitions beyond the base `types.ts`.
+
+**Additional Type Files:**
+- `games.ts` - Games system type definitions
+- `news.ts` - Extended news types and interfaces
+
+### `lib/hooks/`
+Custom React hooks for common patterns.
+
+**Hooks:**
+- `useNewsFeed.ts` - News feed data fetching hook
+- `use-theme-preview.ts` - Theme preview functionality hook
+
+### `lib/utils/`
+Utility functions and helpers.
+
+**Files:**
+- `location-utils.ts` - Location-related utility functions
+- `theme-observer.ts` - Theme change observer
+
+### `lib/supabase/`
+Supabase-related migration and schema files.
+
+**SQL Files:**
+- `schema.sql` - Main database schema
+- `user-preferences-schema.sql` - User preferences table
+- `fix-saved-locations-schema.sql` - Location table fixes
 
 ---
 
@@ -692,6 +893,43 @@ Full weather details modal from dashboard.
 - Environmental data
 - Map view
 
+### News Components (New in v0.6.0)
+
+Located in `components/news/`:
+
+- **NewsGrid.tsx** - Grid layout for news articles with auto-detection of model cards
+- **NewsCard.tsx** - Standard news article card
+- **ModelCard.tsx** - Special card for GFS model graphics display
+- **NewsHero.tsx** - Featured news hero section
+- **NewsFilter.tsx** - Category and priority filtering UI
+- **NewsTicker/** - Breaking news ticker component
+  - `NewsTicker.tsx` - Main ticker container
+  - `NewsTickerItem.tsx` - Individual ticker item
+- **CategoryBadge.tsx** - Category indicator badges
+- **PriorityIndicator.tsx** - Priority level indicators
+- **NewsEmpty.tsx** - Empty state component
+- **NewsSkeleton.tsx** - Loading skeleton for news cards
+
+### Games Components (New in v0.6.0)
+
+Located in `components/games/`:
+
+- **GameCard.tsx** - Game card with metadata, play count, and preview
+- **Leaderboard.tsx** - High score leaderboard display
+- **ScoreSubmitModal.tsx** - Score submission modal with validation
+
+### Learn Components (New in v0.6.0)
+
+Located in `components/learn/`:
+
+- **LearningCard.tsx** - Educational content card with links to learning sections
+
+### Hourly Forecast Components (New in v0.6.0)
+
+- **hourly-forecast.tsx** - 48-hour hourly forecast component
+- **lazy-hourly-forecast.tsx** - Lazy-loaded wrapper for performance
+- **modern-weather-icon.tsx** - Modern weather icon renderer using Meteocons
+
 ### Authentication Components
 
 #### `components/auth/auth-button.tsx`
@@ -787,6 +1025,34 @@ All components are built with:
    - `units` (text: 'imperial' | 'metric')
    - `default_location_id` (UUID, optional)
    - `updated_at` (timestamp)
+   - Row-Level Security enabled
+
+5. **`games`** (New in v0.6.0)
+   - `id` (UUID, primary key)
+   - `slug` (text, unique)
+   - `title` (text)
+   - `description` (text)
+   - `category` (text)
+   - `difficulty` (text)
+   - `play_count` (integer)
+   - `created_at` (timestamp)
+
+6. **`game_scores`** (New in v0.6.0)
+   - `id` (UUID, primary key)
+   - `game_id` (UUID, foreign key to games)
+   - `user_id` (UUID, foreign key to auth.users, optional for guest play)
+   - `player_name` (text)
+   - `score` (integer)
+   - `created_at` (timestamp)
+   - Row-Level Security enabled
+
+7. **`user_game_stats`** (New in v0.6.0)
+   - `id` (UUID, primary key)
+   - `user_id` (UUID, foreign key to auth.users)
+   - `game_id` (UUID, foreign key to games)
+   - `total_plays` (integer)
+   - `high_score` (integer)
+   - `last_played` (timestamp)
    - Row-Level Security enabled
 
 ### Row-Level Security (RLS) Policies
@@ -1146,6 +1412,30 @@ Iowa State University NEXRAD (Next-Generation Radar) archive
 
 ---
 
+## Additional Documentation
+
+This CLAUDE.md file provides a comprehensive overview. For detailed information on specific features and workflows, refer to these specialized documentation files:
+
+### Feature Documentation
+- **`docs/GFS_MODEL_INTEGRATION.md`** - Complete guide to GFS weather model integration, including data sources, update schedules, and implementation details
+- **`GAMES_SETUP.md`** - Games system setup instructions, database schema, and configuration
+- **`docs/OAUTH_SETUP.md`** - OAuth authentication setup and configuration
+
+### Development Guides
+- **`WORKFLOW.md`** - Git workflow, branch naming conventions, and development best practices
+- **`TESTING_GUIDE.md`** - Testing strategies and guidelines
+- **`MIGRATION-INSTRUCTIONS.md`** - Database migration and schema setup instructions
+
+### Project Management
+- **`RELEASE-v0.6.0.md`** - Version 0.6.0 release notes with all new features and changes
+- **`cleanup-plan.md`** - Repository maintenance and cleanup guidelines
+
+### Reference Files
+- **`README.md`** - Quick start guide and project overview
+- **`.env.example`** - Example environment variable configuration
+
+---
+
 ## Known Issues
 
 ### 1. Sentry Error Monitoring - 403 Forbidden (DISABLED)
@@ -1249,33 +1539,45 @@ Automatic cache cleanup runs on mount:
 
 ## Recent Changes
 
-### January 2025 - GFS Model Integration & News Updates
+### January 2025 - Version 0.6.0 Major Feature Release
 
-**GFS/Tropical Model Integration:**
+**Games System:**
+- ✅ Complete games arcade with 6 retro weather-themed games
+- ✅ High score leaderboards with persistent storage
+- ✅ Play counter tracking and user statistics
+- ✅ Guest and authenticated play support
+- ✅ Database tables: games, game_scores, user_game_stats
+- ✅ Full API: /api/games, /api/games/[slug]/play, /api/games/[slug]/scores
+
+**Multi-Source News Aggregation:**
+- ✅ Integrated FOX Weather, NASA Earth Observatory, Reddit weather communities
 - ✅ Added GFS (Global Forecast System) model graphics to news feed
 - ✅ Integrated NHC (National Hurricane Center) tropical weather outlooks
-- ✅ Created ModelCard component for displaying weather model graphics
+- ✅ Priority-based filtering (high/medium/low) and category-based filtering
+- ✅ 5-minute caching for improved performance
+- ✅ Special ModelCard component for weather model graphics
+- ✅ News ticker for breaking updates
 - ✅ GFS models update 4x daily (00Z, 06Z, 12Z, 18Z)
-- ✅ Includes tropical Atlantic, Americas/CONUS, and Eastern Pacific forecasts
-- ✅ Active tropical storm detection from NHC RSS feeds
-- ✅ Public domain NOAA data with proper attribution
+
+**Learn Hub:**
+- ✅ New central educational portal at /learn
+- ✅ Aggregates cloud types, weather systems, extremes, fun facts
+- ✅ Integrated with games and news for complete learning experience
+
+**Hourly Forecast:**
+- ✅ 48-hour detailed hourly forecast
+- ✅ Modern weather icons using Meteocons library
+- ✅ Dedicated /hourly page
+- ✅ Expandable hourly section in main weather card
+- ✅ Temperature graphs and detailed metrics
 
 **Documentation:**
 - ✅ Created comprehensive GFS integration documentation (`docs/GFS_MODEL_INTEGRATION.md`)
-- ✅ Updated news aggregator to include GFS as default source
-- ✅ All model graphics are unoptimized for real-time external updates
+- ✅ Games setup guide (`GAMES_SETUP.md`)
+- ✅ Release notes (`RELEASE-v0.6.0.md`)
+- ✅ Updated CLAUDE.md with all new features
 
-**Files Added:**
-- New: `lib/services/gfsModelService.ts` - GFS model data fetching service
-- New: `components/news/ModelCard.tsx` - Special card for model graphics display
-- New: `docs/GFS_MODEL_INTEGRATION.md` - Complete integration documentation
-
-**Files Modified:**
-- Modified: `lib/services/newsAggregator.ts` - Added 'gfs' as news source
-- Modified: `components/news/NewsGrid.tsx` - Auto-detect and use ModelCard for GFS items
-- Modified: `components/news/NewsHero.tsx` - Featured model graphics support
-
-### January 2025 - Location & Error Monitoring Fixes
+### January 2025 - Location & Auth Improvements
 
 **Location Service Improvements:**
 - ✅ Improved Nominatim reverse geocoding with `zoom=18` parameter for city-level precision
@@ -1700,9 +2002,8 @@ This enables:
    - Climate comparison tools
 
 3. **Enhanced Forecasting:**
-   - Hourly forecast (currently daily)
    - 10-day extended forecast
-   - Precipitation minute-by-minute
+   - Precipitation minute-by-minute (radar-based nowcast)
 
 4. **Social Features:**
    - Share weather reports
@@ -1769,7 +2070,7 @@ This file (`claude.md`) is the comprehensive reference for the project.
 
 ---
 
-**Document Version:** 1.0
-**Last Updated:** January 2025
+**Document Version:** 1.1
+**Last Updated:** January 2025 (Updated with v0.6.0 features)
 **Maintained By:** Development Team
 **For:** Claude AI Assistant & Development Reference

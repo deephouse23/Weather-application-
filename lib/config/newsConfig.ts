@@ -10,7 +10,7 @@
 export const newsConfig = {
   // API Configuration
   api: {
-    newsApiKey: process.env.NEXT_PUBLIC_NEWS_API_KEY || '',
+    newsApiKey: process.env.NEXT_PUBLIC_NEWS_API_KEY || '', 
     newsApiUrl: 'https://newsapi.org/v2',
     weatherAlertsUrl: 'https://api.weather.gov/alerts/active',
     // Free news sources (no API key required)
