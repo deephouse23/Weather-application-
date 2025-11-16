@@ -35,6 +35,8 @@ jobs:
           OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY || secrets.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'test-api-key' }}
           EOF
       - run: npm run build
+        env:
+          NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE: true
       - run: npx playwright install --with-deps
       - run: npx playwright test
         env:

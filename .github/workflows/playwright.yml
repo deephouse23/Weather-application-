@@ -46,6 +46,7 @@ jobs:
         run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: 1
+          NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE: true
 
       - name: Install Playwright Browsers (all)
         run: |

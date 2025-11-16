@@ -34,9 +34,14 @@ export default defineConfig({
     trace: 'on-first-retry',
 
     /* Bypass Vercel preview protection if token provided */
-    extraHTTPHeaders: process.env.VERCEL_AUTOMATION_BYPASS_SECRET
-      ? { 'x-vercel-protection-bypass': process.env.VERCEL_AUTOMATION_BYPASS_SECRET }
-      : undefined,
+    extraHTTPHeaders: {
+      // Always set test mode header for E2E tests
+      'x-playwright-test-mode': 'true',
+      // Vercel bypass if token provided
+      ...(process.env.VERCEL_AUTOMATION_BYPASS_SECRET
+        ? { 'x-vercel-protection-bypass': process.env.VERCEL_AUTOMATION_BYPASS_SECRET }
+        : {}),
+    },
   },
 
   /* Configure projects for major browsers */

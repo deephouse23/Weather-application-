@@ -10,13 +10,15 @@ export async function middleware(request: NextRequest) {
   })
 
   // TEST MODE: Skip auth checks during E2E testing
-  // Auto-detect CI environment (GitHub Actions, GitLab CI, etc.)
-  // Also check explicit test mode flags for local testing
-  // Note: Edge Runtime only has access to NEXT_PUBLIC_* env vars
+  // Check multiple indicators:
+  // 1. Build-time environment variable (set during CI builds)
+  // 2. Request header (set by Playwright tests)
+  // 3. Cookie (set by Playwright tests)
+  const testModeHeader = request.headers.get('x-playwright-test-mode')
   const testModeCookie = request.cookies.get('playwright-test-mode')
-  const isTestMode = process.env.NEXT_PUBLIC_CI === 'true' ||
-                     process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true' ||
-                     (testModeCookie && testModeCookie.value === 'true')
+  const isTestMode = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true' ||
+                     testModeHeader === 'true' ||
+                     (testModeCookie?.value === 'true')
 
   if (isTestMode) {
     return response
