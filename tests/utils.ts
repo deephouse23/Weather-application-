@@ -173,6 +173,17 @@ export async function seedFreshWeatherCache(page: Page, opts: StubOptions = {}):
 }
 
 export async function setupStableApp(page: Page, opts: StubOptions = {}): Promise<void> {
+  // Set test mode cookie to bypass middleware auth checks
+  await page.context().addCookies([{
+    name: 'playwright-test-mode',
+    value: 'true',
+    domain: 'localhost',
+    path: '/',
+    httpOnly: false,
+    secure: false,
+    sameSite: 'Lax',
+  }]);
+
   await seedFreshWeatherCache(page, opts);
   await stubWeatherApis(page, opts);
 }
@@ -310,6 +321,16 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
     
     // Set cookies with all possible names Supabase might use
     const cookiesToSet = [
+      // TEST MODE COOKIE: Bypass middleware auth checks
+      {
+        name: 'playwright-test-mode',
+        value: 'true',
+        domain: domain,
+        path: '/',
+        httpOnly: false,
+        secure: false,
+        sameSite: 'Lax' as const,
+      },
       {
         name: authTokenCookieName,
         value: sessionCookieValue,
@@ -342,7 +363,7 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
         path: '/',
       },
     ];
-    
+
     await page.context().addCookies(cookiesToSet);
   } catch (e) {
     // If cookies can't be set, continue - route mocking should handle it
