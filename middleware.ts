@@ -12,13 +12,18 @@ export async function middleware(request: NextRequest) {
   // TEST MODE: Skip auth checks during E2E testing
   // Check multiple indicators:
   // 1. Build-time environment variable (set during CI builds)
-  // 2. Request header (set by Playwright tests)
-  // 3. Cookie (set by Playwright tests)
+  // 2. Runtime environment variable (set during local dev/test)
+  // 3. Request header (set by Playwright tests)
+  // 4. Cookie (set by Playwright tests)
   const testModeHeader = request.headers.get('x-playwright-test-mode')
   const testModeCookie = request.cookies.get('playwright-test-mode')
+
   // SECURITY: Only allow test mode bypass if the environment variable is explicitly set
   // This prevents users from spoofing headers in production to bypass auth
-  const isTestEnv = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true'
+  // We check both NEXT_PUBLIC_ (build-time) and standard (runtime) variables
+  const isTestEnv = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true' ||
+    process.env.PLAYWRIGHT_TEST_MODE === 'true'
+
   const isTestMode = isTestEnv && (
     testModeHeader === 'true' ||
     (testModeCookie?.value === 'true'))
