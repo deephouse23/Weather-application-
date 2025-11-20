@@ -16,9 +16,12 @@ export async function middleware(request: NextRequest) {
   // 3. Cookie (set by Playwright tests)
   const testModeHeader = request.headers.get('x-playwright-test-mode')
   const testModeCookie = request.cookies.get('playwright-test-mode')
-  const isTestMode = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true' ||
-                     testModeHeader === 'true' ||
-                     (testModeCookie?.value === 'true')
+  // SECURITY: Only allow test mode bypass if the environment variable is explicitly set
+  // This prevents users from spoofing headers in production to bypass auth
+  const isTestEnv = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true'
+  const isTestMode = isTestEnv && (
+    testModeHeader === 'true' ||
+    (testModeCookie?.value === 'true'))
 
   if (isTestMode) {
     return response
