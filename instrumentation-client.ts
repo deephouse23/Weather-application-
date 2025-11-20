@@ -1,5 +1,6 @@
 // Instrumentation client configuration
-// Note: Sentry is initialized in sentry.client.config.ts
-// This file is reserved for future client-side instrumentation needs
+import * as Sentry from '@sentry/nextjs';
 
-export {};
+// Export router transition tracking for Sentry navigation instrumentation
+// See: https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/#router-instrumentation
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
