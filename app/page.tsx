@@ -128,15 +128,16 @@ function WeatherApp() {
           </section>
 
           {/* Main Content Area */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {loading ? (
               <WeatherSkeleton />
             ) : weather ? (
               <>
-                {/* Current Weather & Map Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Main Weather Display */}
-                  <div className="lg:col-span-2 space-y-6">
+                {/* Magazine Layout - Bento Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  
+                  {/* Top Left: Main Weather + Forecast (Span 2 cols) */}
+                  <div className="lg:col-span-2 space-y-4">
                     <Suspense fallback={<WeatherSkeleton />}>
                       <LazyForecast
                         forecast={weather.forecast}
@@ -145,25 +146,26 @@ function WeatherApp() {
                         selectedDay={selectedDay}
                       />
                     </Suspense>
+                  </div>
 
-                    <Suspense fallback={<div className="h-48 bg-gray-800/50 rounded-lg animate-pulse" />}>
-                      <LazyEnvironmentalDisplay weather={weather} theme={theme as ThemeType} />
+                  {/* Top Right: Map (Span 1 col, matches height) */}
+                  <div className={cn(
+                    "rounded-xl overflow-hidden border-2 shadow-lg h-[300px] lg:h-auto min-h-[300px]", 
+                    themeClasses.border, 
+                    themeClasses.cardBg
+                  )}>
+                    <Suspense fallback={<div className="h-full bg-gray-900 flex items-center justify-center text-gray-500">Loading Map...</div>}>
+                      <LazyWeatherMap
+                        latitude={weather.coordinates?.lat}
+                        longitude={weather.coordinates?.lon}
+                        locationName={currentLocation || locationInput}
+                        theme={theme as ThemeType}
+                      />
                     </Suspense>
                   </div>
 
-                  {/* Map & Details Column */}
-                  <div className="space-y-6">
-                    <div className={cn("rounded-lg overflow-hidden border-2 shadow-lg", themeClasses.border, themeClasses.cardBg)}>
-                      <Suspense fallback={<div className="h-[300px] bg-gray-900 flex items-center justify-center text-gray-500">Loading Map...</div>}>
-                        <LazyWeatherMap
-                          latitude={weather.coordinates?.lat}
-                          longitude={weather.coordinates?.lon}
-                          locationName={currentLocation || locationInput}
-                          theme={theme as ThemeType}
-                        />
-                      </Suspense>
-                    </div>
-
+                  {/* Middle Left: Forecast Details */}
+                  <div className="lg:col-span-1">
                     <Suspense fallback={<div className="h-64 bg-gray-800/50 rounded-lg animate-pulse" />}>
                       <LazyForecastDetails
                         forecast={weather.forecast}
@@ -180,28 +182,26 @@ function WeatherApp() {
                       />
                     </Suspense>
                   </div>
-                </div>
 
-                {/* Hourly Forecast Section */}
-                <div className="mt-8">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className={cn("text-xl font-bold pixel-font", themeClasses.text)}>
-                      HOURLY FORECAST
-                    </h2>
-                    <button
-                      onClick={() => setShowHourlyForecast(!showHourlyForecast)}
-                      className={cn(
-                        "px-3 py-1 text-xs font-bold rounded border-2 transition-all",
-                        showHourlyForecast
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-transparent hover:bg-primary/10 border-primary/50 text-primary"
-                      )}
-                    >
-                      {showHourlyForecast ? 'HIDE' : 'SHOW'}
-                    </button>
-                  </div>
+                  {/* Middle Right: Environmental + Hourly (Span 2 cols) */}
+                  <div className="lg:col-span-2 space-y-4">
+                    {/* Combined Environmental Card */}
+                    <div className={cn(
+                      "p-4 rounded-xl border-2 shadow-lg backdrop-blur-md",
+                      themeClasses.cardBg,
+                      themeClasses.border
+                    )}>
+                       <div className="flex items-center justify-between mb-4">
+                          <h2 className={cn("text-xl font-bold pixel-font", themeClasses.text)}>
+                            CONDITIONS
+                          </h2>
+                       </div>
+                       <Suspense fallback={<div className="h-32 bg-gray-800/50 rounded-lg animate-pulse" />}>
+                          <LazyEnvironmentalDisplay weather={weather} theme={theme as ThemeType} minimal={true} />
+                       </Suspense>
+                    </div>
 
-                  {showHourlyForecast && (
+                    {/* Hourly Forecast Strip */}
                     <div className="animate-in fade-in slide-in-from-top-4 duration-500">
                       <Suspense fallback={<div className="h-48 bg-gray-800/50 rounded-lg animate-pulse" />}>
                         <LazyHourlyForecast
@@ -210,7 +210,38 @@ function WeatherApp() {
                         />
                       </Suspense>
                     </div>
-                  )}
+                  </div>
+
+                </div>
+                
+                {/* Bottom: 7-Day Forecast Grid (Full Width) */}
+                <div className="mt-4">
+                  <h2 className={cn("text-xl font-bold mb-4 pixel-font", themeClasses.text)}>
+                    7-DAY FORECAST
+                  </h2>
+                  <ResponsiveGrid cols={{ sm: 2, md: 4, lg: 7 }} className="gap-4">
+                    {weather.forecast.map((day, index) => (
+                      <div
+                        key={index}
+                        onClick={() => setSelectedDay(selectedDay === index ? null : index)}
+                        className={cn(
+                          "p-3 rounded-xl border transition-all cursor-pointer hover:scale-105 backdrop-blur-md",
+                          selectedDay === index
+                            ? "bg-primary/20 border-primary ring-2 ring-primary/50"
+                            : `${themeClasses.cardBg} border-white/10 hover:bg-white/5`
+                        )}
+                      >
+                        <div className="text-center space-y-1">
+                          <div className="font-bold text-sm uppercase">{day.day.substring(0, 3)}</div>
+                          <div className="text-3xl my-1">{getWeatherIcon(day.condition)}</div>
+                          <div className="flex justify-center gap-2 text-sm font-mono">
+                            <span className="text-red-400">{Math.round(day.highTemp)}°</span>
+                            <span className="text-blue-400">{Math.round(day.lowTemp)}°</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </ResponsiveGrid>
                 </div>
               </>
             ) : (
