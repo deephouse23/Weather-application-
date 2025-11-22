@@ -63,38 +63,36 @@ export default function HourlyForecast({
     return null;
   }
 
-  // Take first 48 hours
-  const displayHours = hourly.slice(0, 48);
+  // Take first 24 hours for a cleaner view (user can scroll)
+  const displayHours = hourly.slice(0, 24);
   const now = Date.now();
 
   return (
     <div className={cn(
-      "p-3 sm:p-4 lg:p-6 rounded-none border-2 sm:border-4 pixel-shadow",
+      "p-3 sm:p-4 lg:p-6 rounded-xl border-0 shadow-xl backdrop-blur-md",
       themeClasses.background,
-      themeClasses.borderColor
+      "bg-opacity-40" // Glass effect base
     )}>
       <h2 className={cn(
         "text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4 uppercase tracking-wider text-center pixel-glow",
         themeClasses.accentText
       )}>
-        ⏰ 48-HOUR FORECAST
+        HOURLY FORECAST
       </h2>
 
       {/* Scrollable container */}
       <div
         ref={scrollContainerRef}
         className={cn(
-          "overflow-x-auto overflow-y-hidden",
-          "border-2 p-2 sm:p-3",
-          themeClasses.cardBg,
-          themeClasses.borderColor
+          "overflow-x-auto overflow-y-hidden py-4 px-2",
+          "scrollbar-hide", // Custom scrollbar hiding if needed, or just thin
         )}
         style={{
           scrollbarWidth: 'thin',
-          scrollbarColor: `${theme === 'dark' ? '#4ecdc4' : theme === 'miami' ? '#ff1493' : '#00FFFF'} #1a1a2e`
+          scrollbarColor: `${theme === 'dark' ? '#4ecdc4' : theme === 'miami' ? '#ff1493' : '#00FFFF'} transparent`
         }}
       >
-        <div className="flex gap-2 sm:gap-3 pb-2">
+        <div className="flex gap-3 sm:gap-4 pb-2 w-max mx-auto sm:mx-0">
           {displayHours.map((hour, index) => {
             const hourTime = new Date(hour.dt * 1000);
             const isCurrentHour = Math.abs(hourTime.getTime() - now) < 1800000; // Within 30 min
@@ -145,23 +143,15 @@ function HourlyCard({
     <div
       className={cn(
         "flex-shrink-0 flex flex-col items-center justify-between",
-        "border-2 p-2 sm:p-3 min-w-[85px] sm:min-w-[95px]",
-        "transition-all duration-200 hover:scale-105",
-        themeClasses.cardBg,
-        themeClasses.borderColor,
-        isCurrentHour && "current-hour ring-2 ring-opacity-80 shadow-lg",
-        isCurrentHour && (
-          theme === 'dark' ? 'ring-[#00d4ff] bg-[#1f2347]' :
-          theme === 'miami' ? 'ring-[#ff1493] bg-[#4a0e4e]' :
-          'ring-[#00FFFF] bg-[#001111]'
-        ),
-        isMidnight && "border-t-4"
+        "rounded-xl p-3 sm:p-4 min-w-[100px] sm:min-w-[110px]",
+        "transition-all duration-300 hover:scale-105 hover:-translate-y-1",
+        "backdrop-blur-md border border-white/10", // Glass card
+        themeClasses.cardBg, // Fallback or base color
+        isCurrentHour 
+          ? "bg-white/10 border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.2)]" 
+          : "bg-black/20 hover:bg-white/5",
+        isMidnight && "border-l-4 border-l-white/20" // Separator for days
       )}
-      style={isCurrentHour ? {
-        boxShadow: theme === 'dark' ? '0 0 15px #00d4ff' :
-                   theme === 'miami' ? '0 0 15px #ff1493' :
-                   '0 0 15px #00FFFF'
-      } : undefined}
     >
       {/* Time */}
       <div className={cn(
@@ -175,26 +165,26 @@ function HourlyCard({
       {/* Day marker for midnight */}
       {isMidnight && !isCurrentHour && (
         <div className={cn(
-          "text-[10px] mb-1 font-bold",
+          "text-[10px] mb-1 font-bold uppercase tracking-widest opacity-80",
           themeClasses.accentText
         )}>
           {new Date(hour.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' })}
         </div>
       )}
 
-      {/* Weather Icon - Larger and more distinct */}
-      <div className="mb-2 flex items-center justify-center">
+      {/* Weather Icon */}
+      <div className="mb-3 flex items-center justify-center filter drop-shadow-lg">
         <ModernWeatherIcon
           code={hour.icon}
           condition={hour.condition}
-          size={48}
-          className="hover:scale-110 transition-transform drop-shadow-md"
+          size={54}
+          className="hover:scale-110 transition-transform"
         />
       </div>
 
       {/* Temperature */}
       <div className={cn(
-        "text-base sm:text-lg font-bold mb-1 pixel-glow",
+        "text-lg sm:text-xl font-bold mb-2 pixel-glow",
         theme === 'dark' ? 'text-[#ffe66d]' :
         theme === 'miami' ? 'text-[#ff1493]' :
         'text-[#00FFFF]'
@@ -202,24 +192,17 @@ function HourlyCard({
         {Math.round(hour.temp)}{tempUnit}
       </div>
 
-      {/* Precipitation Chance - Always show */}
-      <div className={cn(
-        "flex items-center gap-1 text-[10px] sm:text-xs",
-        hour.precipChance > 0 ? "text-blue-400" : "text-gray-500 opacity-70"
-      )}>
-        <Droplets className="w-3 h-3" />
-        <span>{hour.precipChance}%</span>
-      </div>
-
-      {/* Wind (optional, shown on hover for larger screens) */}
-      {hour.windSpeed && (
+      {/* Stats Row */}
+      <div className="flex items-center gap-3 w-full justify-center text-[10px] sm:text-xs opacity-80">
+        {/* Precip */}
         <div className={cn(
-          "hidden sm:block text-[10px] mt-1 opacity-0 group-hover:opacity-100 transition-opacity",
-          themeClasses.secondary
+          "flex items-center gap-0.5",
+          hour.precipChance > 0 ? "text-blue-300" : "text-gray-400"
         )}>
-          {Math.round(hour.windSpeed)} mph {hour.windDirection || ''}
+          <Droplets className="w-3 h-3" />
+          <span>{hour.precipChance}%</span>
         </div>
-      )}
+      </div>
     </div>
   );
 }

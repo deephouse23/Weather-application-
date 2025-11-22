@@ -212,58 +212,6 @@ function WeatherApp() {
                     </div>
                   )}
                 </div>
-
-                {/* 7-Day Forecast Grid */}
-                <div className="mt-8">
-                  <h2 className={cn("text-xl font-bold mb-4 pixel-font", themeClasses.text)}>
-                    7-DAY FORECAST
-                  </h2>
-                  <ResponsiveGrid cols={{ sm: 2, md: 3, lg: 4 }} className="gap-4">
-                    {weather.forecast.map((day, index) => (
-                      <div
-                        key={index}
-                        onClick={() => setSelectedDay(selectedDay === index ? null : index)}
-                        className={cn(
-                          "p-4 rounded-lg border-2 transition-all cursor-pointer hover:scale-105",
-                          selectedDay === index
-                            ? "bg-primary/20 border-primary ring-2 ring-primary/50"
-                            : `${themeClasses.cardBg} ${themeClasses.border} hover:border-primary/50`
-                        )}
-                      >
-                        <div className="text-center space-y-2">
-                          <div className="font-bold text-lg">{day.day.substring(0, 3)}</div>
-                          <div className="text-xs opacity-70">{new Date().toLocaleDateString()}</div>
-                          <div className="text-4xl my-2">{getWeatherIcon(day.condition)}</div>
-                          <div className="flex justify-center gap-2 text-sm font-mono">
-                            <span className="text-red-400">{Math.round(day.highTemp)}°</span>
-                            <span className="text-blue-400">{Math.round(day.lowTemp)}°</span>
-                          </div>
-                          <div className="text-xs font-bold mt-2 truncate px-1">
-                            {day.condition}
-                          </div>
-
-                          {/* Mini details for selected day */}
-                          {selectedDay === index && (
-                            <div className="mt-4 pt-4 border-t border-gray-700 text-xs space-y-1 text-left animate-in fade-in">
-                              <div className="flex justify-between">
-                                <span>Rain:</span>
-                                <span>{day.details?.precipitationChance || 0}%</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Wind:</span>
-                                <span>{day.details?.windSpeed || 0} mph</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Hum:</span>
-                                <span>{day.details?.humidity || 0}%</span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </ResponsiveGrid>
-                </div>
               </>
             ) : (
               /* Empty State / Initial View */
