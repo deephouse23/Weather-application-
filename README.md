@@ -1,13 +1,26 @@
 # 16-Bit Weather Platform
 
 [![License: Fair Source](https://img.shields.io/badge/License-Fair%20Source%200.9-yellow)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v0.5.0-blue)](https://github.com/deephouse23/Weather-application-/releases)
+[![Version](https://img.shields.io/badge/Version-v0.6.0-blue)](https://github.com/deephouse23/Weather-application-/releases)
 [![React](https://img.shields.io/badge/React-19+-61dafb)](https://reactjs.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
 
 A professional weather application that combines modern meteorological data with retro terminal aesthetics. Built with Next.js 15, React 19, and TypeScript, featuring comprehensive weather monitoring and user authentication.
 
 **Live Application:** [16bitweather.co](https://www.16bitweather.co/)
+
+## Documentation
+
+📚 **[Complete Documentation](./docs/README.md)** - Comprehensive guides for development, deployment, and troubleshooting
+
+**Quick Links:**
+- [Architecture & Tech Stack](./docs/ARCHITECTURE.md) - System design and technical details
+- [API Reference](./docs/API_REFERENCE.md) - Complete API endpoint documentation
+- [Deployment Guide](./docs/DEPLOYMENT.md) - Environment setup and deployment instructions
+- [Troubleshooting](./docs/TROUBLESHOOTING.md) - Common issues and solutions
+- [Workflow Guide](./WORKFLOW.md) - Git workflow and development best practices
+
+For AI assistant instructions, see [CLAUDE.md](./CLAUDE.md).
 
 ## Core Features
 
@@ -249,6 +262,14 @@ This project is licensed under the Fair Source License, Version 0.9. See the [LI
 
 ## Version History
 
+### v0.6.0 - Games, News Aggregation & Learning Hub (Latest)
+- Games arcade with 6 retro weather-themed games
+- Multi-source news aggregation (FOX Weather, NASA, Reddit, GFS models, NHC)
+- Educational Learn Hub with cloud types, weather systems, and fun facts
+- 48-hour hourly forecast with modern weather icons
+- Enhanced documentation structure and organization
+- See [releases/v0.6.0.md](./releases/v0.6.0.md) for complete changelog
+
 ### v0.5.0 - User Authentication and Dashboard
 - Complete Supabase authentication system integration
 - User dashboard with saved locations management
@@ -279,4 +300,4 @@ This project is licensed under the Fair Source License, Version 0.9. See the [LI
 
 ---
 
-**Production Status**: Version 0.5.0 represents a stable release with comprehensive user authentication, dashboard functionality, and production-ready deployment capabilities.
+**Production Status**: Version 0.6.0 represents a stable release with games arcade, multi-source news aggregation, educational content, comprehensive user authentication, and production-ready deployment capabilities.

@@ -26,9 +26,40 @@ interface EnvironmentalDisplayProps {
   weather: WeatherData
   theme: ThemeType
   className?: string
+  minimal?: boolean
 }
 
-export function EnvironmentalDisplay({ weather, theme, className }: EnvironmentalDisplayProps) {
+export function EnvironmentalDisplay({ weather, theme, className, minimal = false }: EnvironmentalDisplayProps) {
+  // If minimal, render a consolidated view
+  if (minimal) {
+    // We'll create a shared container style based on theme (can be extracted to a helper)
+    // reusing the logic from individual displays or just using the glassmorphism style directly
+    
+    return (
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${className || ''}`}>
+         {/* AQI Section - Minimal */}
+         <div className="flex flex-col justify-center">
+           <AirQualityDisplay 
+             aqi={weather.aqi} 
+             theme={theme}
+             minimal={true}
+             className="h-full border-none shadow-none p-0 bg-transparent"
+           />
+         </div>
+         
+         {/* Pollen Section - Minimal */}
+         <div className="flex flex-col justify-center border-t md:border-t-0 md:border-l border-white/10 pt-4 md:pt-0 md:pl-4">
+           <PollenDisplay 
+             pollen={weather.pollen} 
+             theme={theme}
+             minimal={true}
+             className="h-full border-none shadow-none p-0 bg-transparent"
+           />
+         </div>
+      </div>
+    )
+  }
+
   return (
     <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${className || ''}`}>
       <AirQualityDisplay 

@@ -48,7 +48,7 @@ export default function ResetPasswordPage() {
             Reset Password
           </h1>
           <p className={`text-sm ${themeClasses.secondary || themeClasses.text}`}>
-            Enter your email address and we'll send you a password reset link
+            Enter your email address and we&apos;ll send you a password reset link
           </p>
         </div>
 

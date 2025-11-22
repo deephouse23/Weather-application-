@@ -32,11 +32,20 @@ interface AirQualityDisplayProps {
   aqi: number
   theme: ThemeType
   className?: string
+  minimal?: boolean
 }
 
-export function AirQualityDisplay({ aqi, theme, className }: AirQualityDisplayProps) {
+export function AirQualityDisplay({ aqi, theme, className, minimal = false }: AirQualityDisplayProps) {
   // Theme-specific styles
   const getThemeStyles = () => {
+    if (minimal) return { 
+        container: '', 
+        header: '', 
+        text: 'text-white/80', 
+        border: 'border-white/20', 
+        shadow: 'none' 
+    };
+
     switch (theme) {
       case 'dark':
         return {
@@ -110,25 +119,25 @@ export function AirQualityDisplay({ aqi, theme, className }: AirQualityDisplayPr
   return (
     <div 
       className={cn(
-        "p-4 rounded-lg text-center border-2 shadow-lg",
-        styles.container,
+        !minimal && "p-4 rounded-lg text-center border-2 shadow-lg",
+        !minimal && styles.container,
         className
       )}
-      style={{ boxShadow: styles.shadow }}
+      style={!minimal ? { boxShadow: styles.shadow } : undefined}
     >
       {/* Header */}
-      <h2 className={cn("text-xl font-semibold mb-3", styles.header)}>
+      <h2 className={cn("text-xl font-semibold mb-3", styles.header, minimal && "text-lg mb-2 text-center md:text-left")}>
         Air Quality
       </h2>
       
       {/* AQI Value and Description */}
-      <p className={`text-lg font-bold mb-3 ${getAQIColor(aqi)}`}>
+      <p className={cn("text-lg font-bold mb-3", getAQIColor(aqi), minimal && "text-base mb-2")}>
         {aqi} - {getAQIDescription(aqi)}
       </p>
       
       {/* Horizontal AQI Color Bar */}
       <div className="mb-3">
-        <div className="relative w-full h-4 rounded-full overflow-hidden border border-gray-400">
+        <div className="relative w-full h-4 rounded-full overflow-hidden border border-gray-400/50">
           {/* Color segments */}
           <div className="absolute inset-0 flex">
             {AQI_COLOR_SEGMENTS.map((segment, index) => (
@@ -152,22 +161,26 @@ export function AirQualityDisplay({ aqi, theme, className }: AirQualityDisplayPr
         </div>
         
         {/* AQI Scale Labels */}
-        <div className="flex justify-between text-xs text-gray-400 mt-1 px-1">
-          {AQI_SCALE_LABELS.map((label, index) => (
-            <span key={index}>{label}</span>
-          ))}
-        </div>
+        {!minimal && (
+            <div className="flex justify-between text-xs text-gray-400 mt-1 px-1">
+            {AQI_SCALE_LABELS.map((label, index) => (
+                <span key={index}>{label}</span>
+            ))}
+            </div>
+        )}
       </div>
       
       {/* Health Recommendation */}
-      <p className={cn("text-sm font-medium mb-2", styles.text)}>
+      <p className={cn("text-sm font-medium mb-2", styles.text, minimal && "text-xs line-clamp-2")}>
         {getAQIRecommendation(aqi)}
       </p>
       
       {/* EPA AQI Legend - Updated */}
-      <div className={cn("text-xs border-t pt-2", styles.text, styles.border)}>
-        <p className="font-medium">EPA Air Quality Index • Lower = Better</p>
-      </div>
+      {!minimal && (
+        <div className={cn("text-xs border-t pt-2", styles.text, styles.border)}>
+            <p className="font-medium">EPA Air Quality Index • Lower = Better</p>
+        </div>
+      )}
     </div>
   )
 }

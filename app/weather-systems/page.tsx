@@ -641,7 +641,7 @@ export default function WeatherSystemsPage() {
                               <div className={`${themeClasses.accentText} mb-2 font-bold`}>16-Bit Description:</div>
                               <div className={`${themeClasses.text} italic p-2 border rounded`}
                                    style={{ borderColor: themeClasses.shadowColor + '50', backgroundColor: themeClasses.shadowColor + '10' }}>
-                                "{system.description16bit}"
+                                &quot;{system.description16bit}&quot;
                               </div>
                             </div>
                           </div>

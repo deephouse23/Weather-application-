@@ -35,19 +35,15 @@ test.describe('16-Bit Weather App', () => {
     }
   });
 
-  // Theme toggle removed - themes are now changed via Profile/Dashboard settings
-  test.skip('theme switcher works correctly', async ({ page }) => {
-    // This test is skipped because the theme toggle button was removed from navigation
-    // Users now change themes via their Profile/Dashboard page
-    // To test theme changes, visit /profile or /dashboard and use the theme selector there
-  });
+  // Theme switching is now done via Profile/Dashboard settings
+  // This test is moved to themes.spec.ts
 
   test('responsive layout on mobile', async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
     
-    // Wait for app to initialize
-    await page.waitForTimeout(2000);
+    // Wait for app to initialize - use proper wait instead of timeout
+    await expect(page.getByTestId('location-search-input')).toBeVisible({ timeout: 10000 });
     
     // Check that the app is still functional
     await expect(page.getByTestId('location-search-input')).toBeVisible();
@@ -130,11 +126,39 @@ test.describe('Weather Data Display', () => {
     await expect(temperatureValue).toHaveText(/\d+°[FC]?/);
   });
 
-  test.skip('displays forecast information', async ({ page }) => {
-    await page.goto('/');
+  test('displays forecast information', async ({ page }) => {
+    await setupStableApp(page);
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    
+    // Wait for weather data to load
+    await expect(page.getByTestId('temperature-value')).toBeVisible({ timeout: 15000 });
+    
+    // Look for forecast elements - could be forecast cards, daily forecast, etc.
+    const forecastElements = page.locator('[class*="forecast"], [data-testid*="forecast"]');
+    const forecastCount = await forecastElements.count();
+    
+    // Should have at least some forecast-related content
+    if (forecastCount > 0) {
+      await expect(forecastElements.first()).toBeVisible({ timeout: 10000 });
+    } else {
+      // Alternative: check for forecast text in body
+      await expect(page.locator('body')).toContainText(/forecast|monday|tuesday|wednesday|thursday|friday|saturday|sunday/i, { timeout: 10000 });
+    }
   });
 
-  test.skip('displays environmental data', async ({ page }) => {
-    await page.goto('/');
+  test('displays environmental data', async ({ page }) => {
+    await setupStableApp(page);
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    
+    // Wait for weather data to load
+    await expect(page.getByTestId('temperature-value')).toBeVisible({ timeout: 15000 });
+    
+    // Look for environmental data indicators (humidity, UV, AQI, etc.)
+    const environmentalData = page.locator('body').filter({ hasText: /(humidity|UV|AQI|air quality|pollen|wind|pressure)/i });
+    await expect(environmentalData.first()).toBeVisible({ timeout: 10000 });
+    
+    // Verify at least one environmental metric is displayed
+    const hasEnvironmentalData = await page.locator('body').textContent();
+    expect(hasEnvironmentalData).toMatch(/(humidity|UV|AQI|air quality|pollen|wind|pressure)/i);
   });
 });

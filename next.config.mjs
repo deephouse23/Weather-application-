@@ -93,7 +93,7 @@ const nextConfig = {
   experimental: {
     optimizeCss: false, // Disabled to fix critters module build error
     scrollRestoration: true,
-    instrumentationHook: true, // Enable Sentry instrumentation
+    // instrumentationHook removed - now available by default in Next.js 15
   },
 }
 
