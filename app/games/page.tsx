@@ -14,7 +14,6 @@ import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import PageWrapper from '@/components/page-wrapper';
-import GameCard from '@/components/games/GameCard';
 import { Search, Filter, Gamepad2, Trophy, Users, Zap } from 'lucide-react';
 import type { Game, GameCategory } from '@/lib/types/games';
 import { fetchGames } from '@/lib/services/gamesService';

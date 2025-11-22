@@ -664,7 +664,7 @@ export default function CloudTypesPage() {
                             <div className={`${themeClasses.accentText} mb-2 font-bold`}>16-Bit Description:</div>
                             <div className={`${themeClasses.text} italic p-2 border rounded`}
                                  style={{ borderColor: themeClasses.shadowColor + '50', backgroundColor: themeClasses.shadowColor + '10' }}>
-                              "{cloud.description16bit}"
+                              &quot;{cloud.description16bit}&quot;
                             </div>
                           </div>
                         </div>

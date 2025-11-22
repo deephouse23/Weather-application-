@@ -15,10 +15,7 @@
  */
 
 
-import React, { useState, useEffect, Suspense } from "react"
-import dynamic from 'next/dynamic'
-import Link from 'next/link'
-import { Loader2 } from "lucide-react"
+import React, { useState, Suspense } from "react"
 import { cn } from "@/lib/utils"
 import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
@@ -26,43 +23,21 @@ import PageWrapper from "@/components/page-wrapper"
 import { Analytics } from "@vercel/analytics/react"
 import WeatherSearch from "@/components/weather-search"
 import RandomCityLinks from "@/components/random-city-links"
-import { APP_CONSTANTS } from "@/lib/utils"
 import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from "@/components/lazy-weather-components"
 import LazyHourlyForecast from "@/components/lazy-hourly-forecast"
-import { ResponsiveContainer, ResponsiveGrid } from "@/components/responsive-container"
-import { ErrorBoundary, SafeRender } from "@/components/error-boundary"
+import { ResponsiveGrid } from "@/components/responsive-container"
 import { useLocationContext } from "@/components/location-context"
 import LazyWeatherMap from '@/components/lazy-weather-map'
 import { WeatherSkeleton } from '@/components/weather-skeleton'
 import { useWeatherController } from "@/hooks/useWeatherController"
+import { TronGridBackground } from "@/components/ui/tron-grid-background"
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
 // The main weather API handles UV index estimation for free accounts
 
-const formatPressureByRegion = (pressureHPa: number, countryCode: string): string => {
-  const shouldUseInchesOfMercury = (countryCode: string): boolean => {
-    const inHgCountries = ['US', 'CA', 'PR', 'VI', 'GU', 'AS', 'MP'];
-    return inHgCountries.includes(countryCode);
-  };
-
-  if (shouldUseInchesOfMercury(countryCode)) {
-    const inHg = pressureHPa * 0.02953;
-    return `${inHg.toFixed(2)} inHg`;
-  } else {
-    return `${Math.round(pressureHPa)} hPa`;
-  }
-};
-
 // API keys are now handled by internal API routes
 
 // Using ThemeType from theme-utils
-
-// Helper function to determine pressure unit (matches weather API logic)
-const getPressureUnit = (countryCode: string): 'hPa' | 'inHg' => {
-  const inHgCountries = ['US', 'CA', 'PR', 'VI', 'GU', 'AS', 'MP'];
-  return inHgCountries.includes(countryCode) ? 'inHg' : 'hPa';
-};
-
 
 function WeatherApp() {
   const { theme } = useTheme()
@@ -70,7 +45,6 @@ function WeatherApp() {
   const {
     locationInput,
     currentLocation,
-    setLocationInput
   } = useLocationContext()
 
   // Use the new controller hook
@@ -78,7 +52,6 @@ function WeatherApp() {
     weather,
     loading,
     error,
-    hasSearched,
     remainingSearches,
     handleSearch,
     handleLocationSearch,
@@ -87,175 +60,10 @@ function WeatherApp() {
 
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [showHourlyForecast, setShowHourlyForecast] = useState(false)
-  const [isClient, setIsClient] = useState(false)
-
-  // Client-side mount effect
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
 
   const handleSearchWrapper = (locationInput: string) => {
     handleSearch(locationInput)
   }
-
-  // Helper function to safely access weather data
-  const getWeatherData = <T,>(path: string, defaultValue: T): T => {
-    try {
-      const value = path
-        .split('.')
-        .reduce((obj: any, key: string) => (obj ? obj[key] : undefined), weather as any)
-      return (value ?? defaultValue) as T
-    } catch (error) {
-      console.error('Error accessing weather data:', error)
-      return defaultValue
-    }
-  }
-
-  const formatWindDisplayHTML = (windDisplay: string): string => {
-    // Convert wind display to HTML for colored wind speeds
-    return windDisplay.replace(/(\d+)\s*(mph|km\/h)/gi, '<span class="wind-speed">$1 $2</span>')
-  }
-
-  // Tron Animated Grid Background Component - Same as PageWrapper
-  const TronGridBackground = () => {
-    if ((theme || 'dark') !== 'tron') return null;
-
-    return (
-      <>
-        <style jsx>{`
-          @keyframes tronWave {
-            0% {
-              transform: translateY(100vh);
-              opacity: 0.8;
-            }
-            50% {
-              opacity: 1;
-            }
-            100% {
-              transform: translateY(-100vh);
-              opacity: 0.8;
-            }
-          }
-
-          .tron-grid-base {
-            background-image: 
-              linear-gradient(rgba(0, 220, 255, 0.18) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0, 220, 255, 0.18) 1px, transparent 1px);
-            background-size: 50px 50px;
-          }
-
-          .tron-grid-detail {
-            background-image: 
-              linear-gradient(rgba(0, 240, 255, 0.08) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0, 240, 255, 0.08) 1px, transparent 1px);
-            background-size: 10px 10px;
-          }
-
-          .tron-wave {
-            background: linear-gradient(
-              to top,
-              transparent 0%,
-              rgba(0, 204, 255, 0.4) 45%,
-              rgba(0, 240, 255, 0.6) 50%,
-              rgba(0, 204, 255, 0.4) 55%,
-              transparent 100%
-            );
-            height: 200px;
-            width: 100%;
-            animation: tronWave 3.5s infinite linear;
-            filter: blur(2px);
-          }
-
-          .tron-wave-glow {
-            background: linear-gradient(
-              to top,
-              transparent 0%,
-              rgba(0, 220, 255, 0.2) 40%,
-              rgba(0, 240, 255, 0.35) 50%,
-              rgba(0, 220, 255, 0.2) 60%,
-              transparent 100%
-            );
-            height: 300px;
-            width: 100%;
-            animation: tronWave 3.5s infinite linear;
-            animation-delay: 0.2s;
-            filter: blur(4px);
-          }
-
-          .tron-pulse-grid {
-            background-image: 
-              linear-gradient(rgba(0, 220, 255, 0.25) 2px, transparent 2px),
-              linear-gradient(90deg, rgba(0, 220, 255, 0.25) 2px, transparent 2px);
-            background-size: 50px 50px;
-            animation: tronGridPulse 3.5s infinite linear;
-          }
-
-          @keyframes tronGridPulse {
-            0%, 100% {
-              opacity: 0.1;
-            }
-            50% {
-              opacity: 0.3;
-            }
-          }
-        `}</style>
-
-        <div className="fixed inset-0 pointer-events-none z-0">
-          {/* Base static grid */}
-          <div className="absolute inset-0 tron-grid-base opacity-15" />
-
-          {/* Detail grid */}
-          <div className="absolute inset-0 tron-grid-detail opacity-8" />
-
-          {/* Pulsing grid overlay */}
-          <div className="absolute inset-0 tron-pulse-grid" />
-
-          {/* Animated wave effect */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="tron-wave absolute left-0 right-0" />
-          </div>
-
-          {/* Secondary wave with glow */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="tron-wave-glow absolute left-0 right-0" />
-          </div>
-
-          {/* Subtle corner accent lines */}
-          <div className="absolute top-0 left-0 w-32 h-32 border-l-2 border-t-2 border-[#00DCFF] opacity-25"></div>
-          <div className="absolute top-0 right-0 w-32 h-32 border-r-2 border-t-2 border-[#00DCFF] opacity-25"></div>
-          <div className="absolute bottom-0 left-0 w-32 h-32 border-l-2 border-b-2 border-[#00DCFF] opacity-25"></div>
-          <div className="absolute bottom-0 right-0 w-32 h-32 border-r-2 border-b-2 border-[#00DCFF] opacity-25"></div>
-        </div>
-      </>
-    );
-  };
-
-  // Helper function to format location display
-  const formatLocationDisplay = (location: string, country: string): string => {
-    // Handle edge cases for long city names
-    const maxLength = 30;
-    if (location.length > maxLength) {
-      return `${location.substring(0, maxLength - 3)}...`;
-    }
-    return location;
-  };
-
-
-  // Helper function to get moon phase icon
-  const getMoonPhaseIcon = (phase: string): string => {
-    const phaseLower = phase.toLowerCase();
-
-    if (phaseLower.includes('new')) return '●';
-    if (phaseLower.includes('waxing crescent')) return '☽';
-    if (phaseLower.includes('first quarter')) return '☽';
-    if (phaseLower.includes('waxing gibbous')) return '❍';
-    if (phaseLower.includes('full')) return '○';
-    if (phaseLower.includes('waning gibbous')) return '❍';
-    if (phaseLower.includes('last quarter')) return '☾';
-    if (phaseLower.includes('waning crescent')) return '☾';
-
-    return '○';
-  };
 
   // Helper function to get weather icon
   const getWeatherIcon = (condition: string): string => {
@@ -274,7 +82,7 @@ function WeatherApp() {
 
   return (
     <PageWrapper>
-      <TronGridBackground />
+      <TronGridBackground theme={theme} />
 
       <div className="min-h-screen p-4 md:p-8 relative z-10">
         <div className="max-w-6xl mx-auto space-y-6">
@@ -332,8 +140,9 @@ function WeatherApp() {
                     <Suspense fallback={<WeatherSkeleton />}>
                       <LazyForecast
                         forecast={weather.forecast}
-                        location={currentLocation || locationInput}
                         theme={theme as ThemeType}
+                        onDayClick={(index) => setSelectedDay(index)}
+                        selectedDay={selectedDay}
                       />
                     </Suspense>
 

@@ -34,16 +34,18 @@ interface WeatherSearchProps {
   isDisabled?: boolean;
   rateLimitError?: string;
   hideLocationButton?: boolean;
+  isAutoDetecting?: boolean;
 }
 
-export default function WeatherSearch({ 
-  onSearch, 
+export default function WeatherSearch({
+  onSearch,
   onLocationSearch,
-  isLoading, 
-  error, 
+  isLoading,
+  error,
   isDisabled = false,
   rateLimitError,
-  hideLocationButton = false
+  hideLocationButton = false,
+  isAutoDetecting = false
 }: WeatherSearchProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [showAutocomplete, setShowAutocomplete] = useState(false)
@@ -96,7 +98,7 @@ export default function WeatherSearch({
     setLocationInput(city.searchTerm)
     onSearch(city.searchTerm)
     setShowAutocomplete(false)
-    
+
     // Ensure the input remains focusable and editable after selection
     // This helps maintain natural editing behavior
     setTimeout(() => {
@@ -112,10 +114,10 @@ export default function WeatherSearch({
   const handleInputChange = (value: string) => {
     // Update local state immediately for responsive UI
     setSearchTerm(value)
-    
+
     // Update context state (debounced behavior handled by context)
     setLocationInput(value)
-    
+
     // Show autocomplete when typing, hide when empty
     setShowAutocomplete(value.length >= 2)
   }
@@ -143,7 +145,7 @@ export default function WeatherSearch({
       // Let the browser handle these keys naturally
       return;
     }
-    
+
     // For Enter key, submit the form if we don't have autocomplete visible
     if (e.key === 'Enter' && !showAutocomplete) {
       e.preventDefault();
@@ -206,7 +208,7 @@ export default function WeatherSearch({
                 <X className="w-4 h-4" />
               </Button>
             )}
-            
+
             {/* Search button */}
             <Button
               type="submit"
@@ -256,7 +258,7 @@ export default function WeatherSearch({
           >
             <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
             <span>
-              {isLoading ? "LOADING..." : isDisabled ? "RATE LIMITED" : "USE MY LOCATION"}
+              {isAutoDetecting ? "LOCATING..." : isLoading ? "LOADING..." : isDisabled ? "RATE LIMITED" : "USE MY LOCATION"}
             </span>
           </Button>
         </div>
@@ -270,7 +272,7 @@ export default function WeatherSearch({
             <span>⚠</span>
             <span className="uppercase tracking-wider break-words">{error || rateLimitError}</span>
           </div>
-          
+
           {/* Interactive suggestions based on error type - Mobile optimized */}
           {error?.includes('not found') && (
             <div className="space-y-2">
@@ -278,7 +280,7 @@ export default function WeatherSearch({
                 Try these format examples:
               </div>
               <div className="grid grid-cols-1 gap-1 text-xs">
-                <Button 
+                <Button
                   variant="link"
                   onClick={() => setSearchTerm("90210")}
                   className={cn(
@@ -291,7 +293,7 @@ export default function WeatherSearch({
                 >
                   ► ZIP: 90210
                 </Button>
-                <Button 
+                <Button
                   variant="link"
                   onClick={() => setSearchTerm("New York, NY")}
                   className={cn(
@@ -304,7 +306,7 @@ export default function WeatherSearch({
                 >
                   ► City + State: New York, NY
                 </Button>
-                <Button 
+                <Button
                   variant="link"
                   onClick={() => setSearchTerm("London, UK")}
                   className={cn(
@@ -320,19 +322,19 @@ export default function WeatherSearch({
               </div>
             </div>
           )}
-          
+
           {error?.includes('API key') && (
             <div className={`text-xs ${themeClasses.secondaryText} normal-case mt-2 break-words`}>
               Please configure your OpenWeatherMap API key in the environment variables.
             </div>
           )}
-          
+
           {error?.includes('location') && error?.includes('denied') && (
             <div className={`text-xs ${themeClasses.secondaryText} normal-case mt-2 break-words`}>
               Location access was denied. Try searching manually or enable location permissions.
             </div>
           )}
-          
+
           {(error?.includes('network') || error?.includes('fetch')) && (
             <div className={`text-xs ${themeClasses.secondaryText} normal-case mt-2 break-words`}>
               Network error. Please check your internet connection and try again.

@@ -65,7 +65,7 @@ export default function TestSentryPage() {
           <h2 className="font-semibold mb-2">Instructions:</h2>
           <ol className="text-sm text-gray-300 space-y-2 list-decimal list-inside">
             <li>Click one of the error buttons above</li>
-            <li>Check your browser console for "Sentry event captured" logs</li>
+            <li>Check your browser console for &quot;Sentry event captured&quot; logs</li>
             <li>Go to your Sentry dashboard: https://16bitweather.sentry.io/</li>
             <li>Navigate to Issues to see captured errors</li>
             <li>Errors should appear within 1-2 minutes</li>
