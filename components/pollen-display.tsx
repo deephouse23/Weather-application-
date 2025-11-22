@@ -31,21 +31,17 @@ interface PollenDisplayProps {
   pollen: PollenData
   theme: ThemeType
   className?: string
-  minimal?: boolean
 }
 
 interface PollenCategoryProps {
   categoryName: string
   categoryData: Record<string, string>
   theme: ThemeType
-  minimal?: boolean
 }
 
-function PollenCategory({ categoryName, categoryData, theme, minimal }: PollenCategoryProps) {
+function PollenCategory({ categoryName, categoryData, theme }: PollenCategoryProps) {
   // Theme-specific text styles
   const getTextStyles = () => {
-    if (minimal) return 'text-white/80';
-
     switch (theme) {
       case 'dark':
         return 'text-[#e0e0e0]'
@@ -104,15 +100,9 @@ function PollenCategory({ categoryName, categoryData, theme, minimal }: PollenCa
   )
 }
 
-export function PollenDisplay({ pollen, theme, className, minimal = false }: PollenDisplayProps) {
+export function PollenDisplay({ pollen, theme, className }: PollenDisplayProps) {
   // Theme-specific styles
   const getThemeStyles = () => {
-    if (minimal) return {
-        container: '',
-        header: '',
-        shadow: 'none'
-    };
-
     switch (theme) {
       case 'dark':
         return {
@@ -170,36 +160,33 @@ export function PollenDisplay({ pollen, theme, className, minimal = false }: Pol
   return (
     <div 
       className={cn(
-        !minimal && "p-4 rounded-lg text-center border-2 shadow-lg",
-        !minimal && styles.container,
+        "p-4 rounded-lg text-center border-2 shadow-lg",
+        styles.container,
         className
       )}
-      style={!minimal ? { boxShadow: styles.shadow } : undefined}
+      style={{ boxShadow: styles.shadow }}
     >
       {/* Header */}
-      <h2 className={cn("text-xl font-semibold mb-2", styles.header, minimal && "text-lg mb-2 text-center md:text-left")}>
+      <h2 className={cn("text-xl font-semibold mb-2", styles.header)}>
         Pollen Count
       </h2>
       
       {/* Pollen Categories Grid */}
-      <div className={cn("grid gap-2", minimal ? "grid-cols-3 md:grid-cols-1 lg:grid-cols-3" : "grid-cols-3")}>
+      <div className="grid grid-cols-3 gap-2">
         <PollenCategory 
           categoryName="Tree" 
           categoryData={pollen.tree} 
-          theme={theme}
-          minimal={minimal} 
+          theme={theme} 
         />
         <PollenCategory 
           categoryName="Grass" 
           categoryData={pollen.grass} 
           theme={theme} 
-          minimal={minimal}
         />
         <PollenCategory 
           categoryName="Weed" 
           categoryData={pollen.weed} 
           theme={theme} 
-          minimal={minimal}
         />
       </div>
     </div>
