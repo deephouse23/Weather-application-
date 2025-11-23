@@ -16,6 +16,8 @@
 
 
 import React, { useState, Suspense } from "react"
+import Link from 'next/link'
+import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
@@ -25,7 +27,8 @@ import WeatherSearch from "@/components/weather-search"
 import RandomCityLinks from "@/components/random-city-links"
 import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from "@/components/lazy-weather-components"
 import LazyHourlyForecast from "@/components/lazy-hourly-forecast"
-import { ResponsiveGrid } from "@/components/responsive-container"
+import { ResponsiveContainer, ResponsiveGrid } from "@/components/responsive-container"
+import { ErrorBoundary } from "@/components/error-boundary"
 import { useLocationContext } from "@/components/location-context"
 import LazyWeatherMap from '@/components/lazy-weather-map'
 import { WeatherSkeleton } from '@/components/weather-skeleton'
@@ -80,177 +83,277 @@ function WeatherApp() {
     return '🌈';
   };
 
+  // Helper function to get moon phase icon
+  const getMoonPhaseIcon = (phase: string): string => {
+    const phaseLower = phase.toLowerCase();
+    
+    if (phaseLower.includes('new')) return '🌑';
+    if (phaseLower.includes('waxing crescent')) return '🌒';
+    if (phaseLower.includes('first quarter')) return '🌓';
+    if (phaseLower.includes('waxing gibbous')) return '🌔';
+    if (phaseLower.includes('full')) return '🌕';
+    if (phaseLower.includes('waning gibbous')) return '🌖';
+    if (phaseLower.includes('last quarter')) return '🌗';
+    if (phaseLower.includes('waning crescent')) return '🌘';
+    
+    // Fallback for any other phases
+    return '🌑';
+  };
+
+  // Helper function to format location display
+  const formatLocationDisplay = (location: string, country: string): string => {
+    // Handle edge cases for long city names
+    const maxLength = 30;
+    if (location.length > maxLength) {
+      return `${location.substring(0, maxLength - 3)}...`;
+    }
+    return location;
+  };
+
   return (
-    <PageWrapper>
+    <PageWrapper
+      weatherLocation={weather?.location}
+      weatherTemperature={weather?.temperature}
+      weatherUnit={weather?.unit}
+    >
       <TronGridBackground theme={theme} />
-
-      <div className="min-h-screen p-4 md:p-8 relative z-10">
-        <div className="max-w-6xl mx-auto space-y-6">
-          {/* Header Section */}
-          <header className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
-            <div className="text-center md:text-left">
-              <h1 className={cn("text-3xl md:text-4xl font-bold mb-2 pixel-font tracking-tight", themeClasses.text)}>
-                16-BIT WEATHER
-              </h1>
-              <p className={cn("text-sm md:text-base opacity-80 font-mono", themeClasses.mutedText)}>
-                {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="hidden md:block text-right">
-                <div className={cn("text-xs font-mono", themeClasses.mutedText)}>
-                  REMAINING SEARCHES
-                </div>
-                <div className={cn("text-xl font-bold pixel-font",
-                  remainingSearches < 3 ? "text-red-500" : themeClasses.accentText
-                )}>
-                  {remainingSearches} / 10
-                </div>
-              </div>
-            </div>
-          </header>
-
-          {/* Search Section */}
-          <section className="w-full max-w-2xl mx-auto mb-8">
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-weather-bg">
+        <ResponsiveContainer maxWidth="xl" padding="md">
+          <ErrorBoundary componentName="Weather Search">
             <WeatherSearch
               onSearch={handleSearchWrapper}
               onLocationSearch={handleLocationSearch}
-              isLoading={loading}
-              isAutoDetecting={isAutoDetecting}
+              isLoading={loading || isAutoDetecting}
+              error={error}
+              rateLimitError=""
+              isDisabled={false}
+              hideLocationButton={true}
             />
+          </ErrorBoundary>
 
-            {error && (
-              <div className="mt-4 p-4 bg-red-500/10 border-2 border-red-500 rounded-lg text-red-500 text-center font-bold animate-in fade-in slide-in-from-top-2">
-                <p>⚠️ {error}</p>
+          {/* Welcome Message */}
+          {!weather && !loading && !error && (
+            <div className="text-center mt-8 mb-8 px-2 sm:px-0">
+              <div className="w-full max-w-xl mx-auto">
+                <div className="p-2 sm:p-3 border-2 shadow-lg bg-weather-bg-elev border-weather-primary shadow-weather-primary/20">
+                  <p className="text-sm font-mono font-bold uppercase tracking-wider text-white" style={{ 
+                    fontFamily: "monospace",
+                    fontSize: "clamp(10px, 2.4vw, 14px)"
+                  }}>
+                    ══ PRESS START TO INITIALIZE WEATHER DATA ══
+                  </p>
+                </div>
               </div>
-            )}
-          </section>
+            </div>
+          )}
 
-          {/* Main Content Area */}
-          <div className="space-y-6">
-            {loading ? (
-              <WeatherSkeleton />
-            ) : weather ? (
-              <>
-                {/* Current Weather & Map Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Main Weather Display */}
-                  <div className="lg:col-span-2 space-y-6">
-                    <Suspense fallback={<WeatherSkeleton />}>
-                      <LazyForecast
-                        forecast={weather.forecast}
-                        theme={theme as ThemeType}
-                        onDayClick={(index) => setSelectedDay(index)}
-                        selectedDay={selectedDay}
-                      />
-                    </Suspense>
+          {(loading || isAutoDetecting) && !weather && (
+            <div className="mt-8">
+              <WeatherSkeleton theme={theme as ThemeType} />
+            </div>
+          )}
 
-                    <Suspense fallback={<div className="h-48 bg-gray-800/50 rounded-lg animate-pulse" />}>
-                      <LazyEnvironmentalDisplay weather={weather} theme={theme as ThemeType} />
-                    </Suspense>
+          {(loading || isAutoDetecting) && weather && (
+            <div className="flex justify-center items-center mt-4">
+              <Loader2 className="h-8 w-8 animate-spin text-weather-primary" />
+              <span className="ml-2 text-weather-text">
+                Updating weather data...
+              </span>
+            </div>
+          )}
+
+          {error && (
+            <div className="max-w-2xl mx-auto mt-4 px-2">
+              <div data-testid="global-error">
+                <div role="alert" className="relative w-full rounded-lg border border-red-500/50 p-4 text-red-500">
+                  <div className="mb-1 font-medium leading-none tracking-tight">Error</div>
+                  <div className="text-sm">{error}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {weather && !loading && !error && (
+            <ErrorBoundary componentName="Weather Display">
+              <div className="space-y-4 sm:space-y-6">
+                {/* Location Title */}
+                <div className="text-center mb-4">
+                  <h1 className={cn("text-2xl sm:text-3xl font-bold uppercase tracking-wider", themeClasses.headerText, themeClasses.glow)} style={{
+                    fontFamily: "monospace",
+                    fontSize: "clamp(20px, 4vw, 32px)"
+                  }}>
+                    {weather.location} WEATHER
+                  </h1>
+                </div>
+                
+                {/* Current Weather using Cards with staggered animations */}
+                <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
+                  <div className={cn("p-0 card-rounded-md border-2 shadow-theme-card weather-card-enter", themeClasses.cardBg, themeClasses.borderColor)} style={{ animationDelay: '0ms' }}>
+                    <div className="p-4 text-center">
+                      <h2 className={cn("text-xl font-semibold mb-2", themeClasses.headerText)}>Temperature</h2>
+                      <p data-testid="temperature-value" className={cn("text-3xl font-bold", themeClasses.text)}>
+                        {weather?.temperature || 'N/A'}{weather?.unit || '°F'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className={cn("p-0 card-rounded-md border-2 shadow-theme-card weather-card-enter", themeClasses.cardBg, themeClasses.borderColor)} style={{ animationDelay: '50ms' }}>
+                    <div className="p-4 text-center">
+                      <h2 className={cn("text-xl font-semibold mb-2", themeClasses.headerText)}>Conditions</h2>
+                      <p className={cn("text-lg", themeClasses.text)}>{weather?.condition || 'Unknown'}</p>
+                      <p className={cn("text-sm", themeClasses.secondaryText)}>{weather?.description || 'No description available'}</p>
+                      {weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
+                        <button
+                          onClick={() => setShowHourlyForecast(!showHourlyForecast)}
+                          className={cn("mt-3 px-3 py-1.5 border card-rounded-sm font-mono text-xs font-bold transition-all hover:scale-105", themeClasses.borderColor, themeClasses.text, themeClasses.hoverBg)}
+                        >
+                          {showHourlyForecast ? '║ Hide Hourly' : '║ Hourly'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className={cn("p-0 card-rounded-md border-2 shadow-theme-card weather-card-enter", themeClasses.cardBg, themeClasses.borderColor)} style={{ animationDelay: '100ms' }}>
+                    <div className="p-4 text-center">
+                      <h2 className={cn("text-xl font-semibold mb-2", themeClasses.headerText)}>Wind</h2>
+                      <p className={cn("text-lg", themeClasses.text)}>
+                        {weather?.wind?.direction ? `${weather.wind.direction} ` : ''}
+                        {weather?.wind?.speed || 'N/A'} mph
+                        {weather?.wind?.gust ? ` (gusts ${weather.wind.gust} mph)` : ''}
+                      </p>
+                    </div>
+                  </div>
+                </ResponsiveGrid>
+
+                {/* Sun Times, UV Index, Moon Phase with staggered animations */}
+                <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
+                  {/* Sun Times Box */}
+                  <div className={cn("p-4 card-rounded-md text-center border-2 shadow-theme-card weather-card-enter", themeClasses.cardBg, themeClasses.borderColor)}
+                       style={{ animationDelay: '150ms' }}>
+                    <h2 className={cn("text-xl font-semibold mb-2", themeClasses.headerText)}>Sun Times</h2>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-yellow-400">☀️</span>
+                        <p className={themeClasses.text}>Sunrise: {weather?.sunrise || 'N/A'}</p>
+                      </div>
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-orange-400">🌅</span>
+                        <p className={themeClasses.text}>Sunset: {weather?.sunset || 'N/A'}</p>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Map & Details Column */}
-                  <div className="space-y-6">
-                    <div className={cn("rounded-lg overflow-hidden border-2 shadow-lg", themeClasses.border, themeClasses.cardBg)}>
-                      <Suspense fallback={<div className="h-[300px] bg-gray-900 flex items-center justify-center text-gray-500">Loading Map...</div>}>
-                        <LazyWeatherMap
-                          latitude={weather.coordinates?.lat}
-                          longitude={weather.coordinates?.lon}
-                          locationName={currentLocation || locationInput}
-                          theme={theme as ThemeType}
-                        />
-                      </Suspense>
-                    </div>
+                  {/* UV Index Box */}
+                  <div className={cn("p-4 card-rounded-md text-center border-2 shadow-theme-card weather-card-enter", themeClasses.cardBg, themeClasses.borderColor)}
+                       style={{ animationDelay: '200ms' }}>
+                    <h2 className={cn("text-xl font-semibold mb-2", themeClasses.headerText)}>UV Index</h2>
+                    <p className={cn("text-lg font-bold", themeClasses.text)}>{weather?.uvIndex || 'N/A'}</p>
+                  </div>
 
-                    <Suspense fallback={<div className="h-64 bg-gray-800/50 rounded-lg animate-pulse" />}>
-                      <LazyForecastDetails
-                        forecast={weather.forecast}
+                  {/* Moon Phase Box */}
+                  <div className={cn("p-4 card-rounded-md text-center border-2 shadow-theme-card weather-card-enter", themeClasses.cardBg, themeClasses.borderColor)}
+                       style={{ animationDelay: '250ms' }}>
+                    <h2 className={cn("text-xl font-semibold mb-2", themeClasses.headerText)}>Moon Phase</h2>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-2xl">{getMoonPhaseIcon(weather?.moonPhase?.phase || 'new')}</span>
+                        <p className={cn("text-lg font-semibold", themeClasses.text)}>{weather?.moonPhase?.phase || 'Unknown'}</p>
+                      </div>
+                      <p className={cn("text-sm font-medium", themeClasses.secondaryText)}>
+                        {weather?.moonPhase?.illumination || 0}% illuminated
+                      </p>
+                    </div>
+                  </div>
+                </ResponsiveGrid>
+
+                {/* AQI and Pollen Count - Using Lazy Loaded Shared Components */}
+                <LazyEnvironmentalDisplay weather={weather} theme={theme || 'dark'} />
+
+                {/* Expandable Hourly Forecast */}
+                {showHourlyForecast && weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
+                  <LazyHourlyForecast
+                    hourly={weather.hourlyForecast}
+                    theme={theme}
+                    tempUnit={weather.unit || '°F'}
+                  />
+                )}
+
+                {/* Day click handler */}
+                {(() => {
+                  const handleDayClick = (index: number) => {
+                    setSelectedDay(selectedDay === index ? null : index);
+                  };
+                  
+                  return (
+                    <>
+                      {/* 5-Day Forecast */}
+                      {weather?.forecast && weather.forecast.length > 0 ? (
+                        <LazyForecast 
+                          forecast={weather.forecast.map((day, index) => ({
+                            ...day,
+                            country: weather?.country || 'US'
+                          }))} 
+                          theme={theme || 'dark'}
+                          onDayClick={handleDayClick}
+                          selectedDay={selectedDay}
+                        />
+                      ) : weather ? (
+                        <div className="bg-gray-800 p-4 rounded-none border-2 border-blue-500 text-center">
+                          <p className="text-white font-mono">
+                            No forecast data available
+                          </p>
+                        </div>
+                      ) : null}
+
+                      {/* Expandable Details Section */}
+                      <LazyForecastDetails 
+                        forecast={(weather?.forecast || []).map((day, index) => ({
+                          ...day,
+                          country: weather?.country || 'US'
+                        }))} 
+                        theme={theme || 'dark'}
                         selectedDay={selectedDay}
-                        theme={theme as ThemeType}
                         currentWeatherData={{
-                          humidity: weather.humidity,
-                          wind: weather.wind,
-                          pressure: weather.pressure,
-                          uvIndex: weather.uvIndex,
-                          sunrise: weather.sunrise,
-                          sunset: weather.sunset
+                          humidity: weather?.humidity || 0,
+                          wind: weather?.wind || { speed: 0, direction: '', gust: null },
+                          pressure: weather?.pressure || '1013',
+                          uvIndex: weather?.uvIndex || 0,
+                          sunrise: weather?.sunrise || 'N/A',
+                          sunset: weather?.sunset || 'N/A'
                         }}
                       />
-                    </Suspense>
-                  </div>
-                </div>
+                    </>
+                  );
+                })()}
 
-                {/* Hourly Forecast Section */}
-                <div className="mt-8">
+                {/* Weather Radar - Moved Below Forecast */}
+                <div className="mt-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className={cn("text-xl font-bold pixel-font", themeClasses.text)}>
-                      HOURLY FORECAST
+                    <h2 className={cn("text-xl font-semibold text-center flex-1", themeClasses.headerText, themeClasses.glow)}>
+                      Weather Radar
                     </h2>
-                    <button
-                      onClick={() => setShowHourlyForecast(!showHourlyForecast)}
-                      className={cn(
-                        "px-3 py-1 text-xs font-bold rounded border-2 transition-all",
-                        showHourlyForecast
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-transparent hover:bg-primary/10 border-primary/50 text-primary"
-                      )}
+                    <Link 
+                      href="/map"
+                      className={cn("px-3 py-1.5 border-2 rounded-md font-mono text-xs font-bold transition-colors hover:scale-105", themeClasses.borderColor, themeClasses.text, themeClasses.hoverBg)}
                     >
-                      {showHourlyForecast ? 'HIDE' : 'SHOW'}
-                    </button>
+                      VIEW FULL MAP →
+                    </Link>
                   </div>
-
-                  {showHourlyForecast && (
-                    <div className="animate-in fade-in slide-in-from-top-4 duration-500">
-                      <Suspense fallback={<div className="h-48 bg-gray-800/50 rounded-lg animate-pulse" />}>
-                        <LazyHourlyForecast
-                          hourly={weather.hourlyForecast || []}
-                          theme={theme as ThemeType}
-                        />
-                      </Suspense>
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              /* Empty State / Initial View */
-              <div className="mt-12 text-center space-y-8 animate-in fade-in duration-700">
-                <div className="max-w-2xl mx-auto p-8 rounded-xl border-4 border-dashed border-gray-700 bg-gray-900/50">
-                  <div className="text-6xl mb-6 animate-bounce">🌍</div>
-                  <h2 className={cn("text-2xl font-bold mb-4 pixel-font", themeClasses.text)}>
-                    READY TO EXPLORE?
-                  </h2>
-                  <p className="text-gray-400 mb-8 max-w-md mx-auto">
-                    Enter a city name, ZIP code, or use your location to get started with the most retro weather experience on the web.
-                  </p>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left max-w-lg mx-auto">
-                    <div className="p-4 rounded bg-gray-800/50 border border-gray-700">
-                      <div className="text-xl mb-2">🎮</div>
-                      <div className="font-bold text-sm">Retro Games</div>
-                      <div className="text-xs text-gray-500">Play while it rains</div>
-                    </div>
-                    <div className="p-4 rounded bg-gray-800/50 border border-gray-700">
-                      <div className="text-xl mb-2">📡</div>
-                      <div className="font-bold text-sm">Live Radar</div>
-                      <div className="text-xs text-gray-500">NEXRAD integration</div>
-                    </div>
-                    <div className="p-4 rounded bg-gray-800/50 border border-gray-700">
-                      <div className="text-xl mb-2">🏆</div>
-                      <div className="font-bold text-sm">Leaderboards</div>
-                      <div className="text-xs text-gray-500">Compete globally</div>
-                    </div>
+                  <div className="h-96 rounded-lg overflow-hidden">
+                    <LazyWeatherMap
+                      latitude={weather?.coordinates?.lat}
+                      longitude={weather?.coordinates?.lon}
+                      locationName={weather?.location}
+                      theme={theme || 'dark'}
+                    />
                   </div>
                 </div>
-
-                <RandomCityLinks />
               </div>
-            )}
-          </div>
-        </div>
+            </ErrorBoundary>
+          )}
+          
+          {/* SEO City Links Section with Random Display */}
+          <RandomCityLinks theme={theme || 'dark'} />
+        </ResponsiveContainer>
       </div>
-
       <Analytics />
     </PageWrapper>
   )
