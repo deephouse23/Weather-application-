@@ -7,10 +7,9 @@ export const runtime = 'nodejs'
 // timestamp format: YYYYMMDD-HHMM (e.g., 20251011-2050)
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ timestamp: string; z: string; x: string; y: string }> }
+  { params }: { params: Promise<{ timestamp: string; z: string; x: string; y: string }> }
 ) {
-  const { params } = await context.params
-  const { timestamp, z, x, y } = params
+  const { timestamp, z, x, y } = await params
 
   if (!timestamp || !z || !x || !y) {
     return new NextResponse('Missing required parameters', { status: 400 })
