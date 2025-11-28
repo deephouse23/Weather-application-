@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
 
+test.beforeEach(async ({ page }) => {
+  await page.goto('/');
+});
+
 test('displays main weather search component', async ({ page }) => {
   await expect(page.getByTestId('location-search-input')).toBeVisible({ timeout: 30000 });
 });
