@@ -153,7 +153,7 @@ export async function seedFreshWeatherCache(page: Page, opts: StubOptions = {}):
           visibility: 10,
           uvIndex: 5,
         },
-        hourlyForecast: [ { time: '10 AM', temp: o.tempF, condition: 'Sunny', precipChance: 0 } ],
+        hourlyForecast: [{ time: '10 AM', temp: o.tempF, condition: 'Sunny', precipChance: 0 }],
       },
     ],
     moonPhase: { phase: 'Waxing Crescent', illumination: 20, emoji: 'Moon', phaseAngle: 45 },
@@ -169,10 +169,33 @@ export async function seedFreshWeatherCache(page: Page, opts: StubOptions = {}):
     window.localStorage.setItem('bitweather_city', data.sampleWeather.location);
     window.localStorage.setItem('bitweather_weather_data', JSON.stringify(data.sampleWeather));
     window.localStorage.setItem('bitweather_cache_timestamp', String(now));
+    // Ensure no rate limit is active
+    window.localStorage.removeItem('weather-app-rate-limit');
+    // Disable auto-location to prevent test interference
+    window.localStorage.setItem('bitweather_user_preferences', JSON.stringify({
+      settings: {
+        units: 'imperial',
+        theme: 'dark',
+        cacheEnabled: true,
+        auto_location: false
+      },
+      updatedAt: now
+    }));
   }, { sampleWeather });
 }
 
 export async function setupStableApp(page: Page, opts: StubOptions = {}): Promise<void> {
+  // Set test mode cookie to bypass middleware auth checks
+  // NOTE: Use URL instead of domain+path for localhost to ensure proper cookie propagation
+  await page.context().addCookies([{
+    name: 'playwright-test-mode',
+    value: 'true',
+    url: 'http://localhost:3000',  // URL includes domain and path, don't set path separately
+    httpOnly: false,
+    secure: false,
+    sameSite: 'Lax',
+  }]);
+
   await seedFreshWeatherCache(page, opts);
   await stubWeatherApis(page, opts);
 }
@@ -181,6 +204,756 @@ export async function expectHomeLoaded(page: Page): Promise<void> {
   await page.goto('/');
   await expect(page).toHaveTitle(/Weather|16/i);
   await expect(page.getByTestId('location-search-input')).toBeVisible({ timeout: 15000 });
+}
+
+// ═══════════════════════════════════════════════════════════
+//   AUTHENTICATION HELPERS
+//   ═══════════════════════════════════════════════════════════
+
+export async function setupMockAuth(page: Page, userId: string = 'test-user-id'): Promise<void> {
+  // Create mock session data
+  const mockSession = {
+    access_token: 'mock-access-token',
+    refresh_token: 'mock-refresh-token',
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    expires_in: 3600,
+    token_type: 'bearer',
+    user: {
+      id: userId,
+      email: 'test@example.com',
+      aud: 'authenticated',
+      role: 'authenticated',
+      email_confirmed_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+  };
+
+  // Mock Supabase auth endpoints - these are called by middleware server-side
+  // The middleware makes requests to Supabase's auth API, so we need to intercept those
+  await page.route('**/auth/v1/**', async (route) => {
+    const url = new URL(route.request().url());
+    const pathname = url.pathname;
+    const method = route.request().method();
+
+    // Handle getSession() - this is what middleware calls
+    // Supabase SSR getSession() makes a request to /auth/v1/token?grant_type=refresh_token
+    // or checks cookies and validates them
+    if (pathname.includes('/token') || url.searchParams.has('grant_type')) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        },
+        body: JSON.stringify(mockSession),
+      });
+    }
+
+    // Handle getUser() - get current user
+    if (pathname.includes('/user') && method === 'GET') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+        },
+        body: JSON.stringify({
+          user: mockSession.user,
+        }),
+      });
+    }
+
+    // Handle session validation
+    if (pathname.includes('/session') || pathname.includes('/verify')) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+        },
+        body: JSON.stringify(mockSession),
+      });
+    }
+
+    // Default: return session for any auth endpoint
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      },
+      body: JSON.stringify(mockSession),
+    });
+  });
+
+  // Mock Supabase REST API endpoints (for profile data)
+  await page.route('**/rest/v1/**', async (route) => {
+    const request = route.request();
+    const method = request.method();
+
+    // Allow profile routes to continue (they're handled by stubSupabaseProfile)
+    if (request.url().includes('/profiles')) {
+      route.continue();
+      return;
+    }
+
+    // Mock other REST endpoints
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([]),
+    });
+  });
+
+  // Set auth cookies for middleware - these must match Supabase SSR cookie format
+  // Supabase SSR uses specific cookie names based on the project URL
+  // The middleware reads cookies from request.cookies.getAll(), so we need to set them before navigation
+  try {
+    const domain = 'localhost';
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+    // Extract project ref from URL (e.g., https://abc123.supabase.co -> abc123)
+    const urlMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/);
+    const projectRef = urlMatch ? urlMatch[1] : 'placeholder';
+
+    // Supabase SSR cookie format: sb-{project-ref}-auth-token
+    const authTokenCookieName = `sb-${projectRef}-auth-token`;
+
+    // Create session cookie value (Supabase SSR format)
+    // This is the exact format Supabase SSR expects
+    const sessionCookieValue = JSON.stringify({
+      access_token: mockSession.access_token,
+      refresh_token: mockSession.refresh_token,
+      expires_at: mockSession.expires_at,
+      expires_in: mockSession.expires_in,
+      token_type: mockSession.token_type,
+      user: mockSession.user,
+    });
+
+    // Set cookies with all possible names Supabase might use
+    // NOTE: Using URL instead of domain+path for localhost to ensure proper cookie propagation
+    const baseUrl = 'http://localhost:3000';
+    const cookiesToSet = [
+      // TEST MODE COOKIE: Bypass middleware auth checks
+      {
+        name: 'playwright-test-mode',
+        value: 'true',
+        url: baseUrl,  // URL includes domain and path, don't set path separately
+        httpOnly: false,
+        secure: false,
+        sameSite: 'Lax' as const,
+      },
+      {
+        name: authTokenCookieName,
+        value: sessionCookieValue,
+        url: baseUrl,
+        httpOnly: false, // Must be accessible to JavaScript for SSR
+        secure: false, // Localhost doesn't need secure
+        sameSite: 'Lax' as const,
+      },
+      // Fallback cookie names
+      {
+        name: `sb-${domain}-auth-token`,
+        value: sessionCookieValue,
+        url: baseUrl,
+        httpOnly: false,
+        secure: false,
+        sameSite: 'Lax' as const,
+      },
+      {
+        name: 'sb-access-token',
+        value: mockSession.access_token,
+        url: baseUrl,
+      },
+      {
+        name: 'sb-refresh-token',
+        value: mockSession.refresh_token,
+        url: baseUrl,
+      },
+      // Add generic supabase-auth-token for good measure
+      {
+        name: 'supabase-auth-token',
+        value: sessionCookieValue,
+        url: baseUrl,
+        httpOnly: false,
+        secure: false,
+        sameSite: 'Lax' as const,
+      }
+    ];
+
+    await page.context().addCookies(cookiesToSet);
+  } catch (e) {
+    // If cookies can't be set, continue - route mocking should handle it
+    // But this might cause middleware failures
+    console.warn('Could not set auth cookies:', e);
+  }
+
+  // Mock localStorage for client-side Supabase client
+  await page.addInitScript((data) => {
+    const session = {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      expires_at: data.expires_at,
+      expires_in: data.expires_in,
+      token_type: data.token_type,
+      user: data.user,
+    };
+
+    // Store in multiple possible Supabase localStorage keys
+    const possibleKeys = [
+      'sb-auth-token',
+      'supabase.auth.token',
+      `sb-${window.location.hostname}-auth-token`,
+    ];
+
+    possibleKeys.forEach(key => {
+      try {
+        window.localStorage.setItem(key, JSON.stringify(session));
+      } catch (e) {
+        // Ignore errors
+      }
+    });
+  }, mockSession);
+
+  // Wait a bit to ensure init scripts and cookies are ready
+  await page.waitForTimeout(200);
+}
+
+export async function stubSupabaseProfile(page: Page, profile: any): Promise<void> {
+  // Mock Supabase profiles table queries
+  await page.route('**/rest/v1/profiles**', async (route) => {
+    const request = route.request();
+    const method = request.method();
+
+    if (method === 'GET') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([profile])
+      });
+    }
+
+    if (method === 'PATCH') {
+      const url = new URL(request.url());
+      const params = url.searchParams;
+      const select = params.get('select');
+
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([{ ...profile, ...request.postDataJSON() }])
+      });
+    }
+
+    route.continue();
+  });
+
+  // Mock preferences API
+  await page.route('**/api/user/preferences**', (route) => {
+    const method = route.request().method();
+
+    if (method === 'GET') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          preferences: {
+            user_id: profile.id || 'test-user-id',
+            auto_location: true,
+            temperature_unit: 'fahrenheit',
+            theme: 'dark'
+          }
+        })
+      });
+    }
+
+    if (method === 'PUT') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          preferences: {
+            user_id: profile.id || 'test-user-id',
+            auto_location: true,
+            temperature_unit: 'fahrenheit',
+            theme: 'dark'
+          }
+        })
+      });
+    }
+
+    route.continue();
+  });
+}
+
+export async function stubProfileUpdate(page: Page): Promise<void> {
+  // Mock Supabase profiles update
+  await page.route('**/rest/v1/profiles**', async (route) => {
+    const request = route.request();
+    if (request.method() === 'PATCH') {
+      const body = request.postDataJSON();
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([{
+          id: 'test-user-id',
+          ...body,
+          updated_at: new Date().toISOString()
+        }])
+      });
+    }
+    route.continue();
+  });
+
+  // Mock preferences update API
+  await page.route('**/api/user/preferences**', async (route) => {
+    if (route.request().method() === 'PUT') {
+      const body = route.request().postDataJSON();
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          preferences: {
+            user_id: 'test-user-id',
+            ...body,
+            updated_at: new Date().toISOString()
+          }
+        })
+      });
+    }
+    route.continue();
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//   THEME HELPERS
+//   ═══════════════════════════════════════════════════════════
+
+export async function setTheme(page: Page, theme: string): Promise<void> {
+  // Set theme in localStorage first (for persistence)
+  await page.addInitScript((data) => {
+    localStorage.setItem('weather-edu-theme', data.theme);
+    localStorage.setItem('weather-theme', data.theme);
+  }, { theme });
+
+  // Apply theme directly to the document (works after page load)
+  await page.evaluate((themeName) => {
+    const root = document.documentElement;
+    const body = document.body;
+
+    // All possible theme classes
+    const allThemes = [
+      'dark', 'miami', 'tron', 'atari2600', 'monochromeGreen',
+      '8bitClassic', '16bitSnes', 'synthwave84', 'tokyoNight',
+      'dracula', 'cyberpunk', 'matrix'
+    ];
+
+    // Remove all theme classes
+    allThemes.forEach(t => {
+      root.classList.remove(t);
+      body.classList.remove(`theme-${t}`);
+      root.classList.remove(`theme-${t}`);
+    });
+
+    // Apply new theme
+    root.setAttribute('data-theme', themeName);
+    root.classList.add(themeName);
+    body.classList.add(`theme-${themeName}`);
+
+    // Save to localStorage
+    try {
+      localStorage.setItem('weather-edu-theme', themeName);
+      localStorage.setItem('weather-theme', themeName);
+    } catch (e) {
+      // Ignore localStorage errors
+    }
+
+    // Force style recalculation
+    const display = root.style.display;
+    root.style.display = 'none';
+    root.offsetHeight; // Trigger reflow
+    root.style.display = display;
+
+    // Also dispatch a storage event to notify theme provider if it's listening
+    try {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'weather-edu-theme',
+        newValue: themeName,
+        storageArea: localStorage
+      }));
+    } catch (e) {
+      // Ignore if StorageEvent not supported
+    }
+  }, theme);
+
+  // Wait for theme to be applied and any theme provider effects to complete
+  await page.waitForTimeout(300);
+
+  // Verify theme was applied (retry if needed)
+  let attempts = 0;
+  while (attempts < 3) {
+    const currentTheme = await getCurrentTheme(page);
+    if (currentTheme === theme) {
+      break;
+    }
+    // Re-apply if theme wasn't set correctly
+    await page.evaluate((themeName) => {
+      document.documentElement.setAttribute('data-theme', themeName);
+      document.documentElement.classList.add(themeName);
+      document.body.classList.add(`theme-${themeName}`);
+    }, theme);
+    await page.waitForTimeout(100);
+    attempts++;
+  }
+}
+
+export async function getCurrentTheme(page: Page): Promise<string> {
+  return await page.evaluate(() => {
+    // Check data-theme attribute first (most reliable)
+    const dataTheme = document.documentElement.getAttribute('data-theme');
+    if (dataTheme) return dataTheme;
+
+    // Check localStorage
+    const storedTheme = localStorage.getItem('weather-edu-theme') ||
+      localStorage.getItem('weather-theme');
+    if (storedTheme) return storedTheme;
+
+    // Check body classes
+    const bodyClasses = document.body.className;
+    const themeMatch = bodyClasses.match(/theme-(\w+)/);
+    if (themeMatch) return themeMatch[1];
+
+    // Default fallback
+    return 'dark';
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//   RADAR MAP HELPERS
+//   ═══════════════════════════════════════════════════════════
+
+export async function navigateToMapPage(page: Page): Promise<void> {
+  await page.goto('/map', { waitUntil: 'domcontentloaded' });
+  // Wait for page to be fully loaded
+  await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+    // If networkidle times out, continue anyway
+  });
+  // Wait for map container to exist in DOM
+  await page.waitForSelector('[data-radar-container], [class*="map"], [class*="Map"], [class*="radar"], [class*="Radar"]', {
+    timeout: 15000,
+    state: 'attached'
+  }).catch(() => {
+    // If selector not found, that's okay - we'll check in waitForRadarToLoad
+  });
+}
+
+export async function waitForRadarToLoad(page: Page): Promise<void> {
+  // Wait for radar container or map element to be attached to DOM
+  // Try multiple selectors to be more flexible
+  const selectors = [
+    '[data-radar-container]',
+    '[class*="map"]',
+    '[class*="Map"]',
+    '[class*="radar"]',
+    '[class*="Radar"]',
+  ];
+
+  let found = false;
+  for (const selector of selectors) {
+    try {
+      await page.waitForSelector(selector, { timeout: 5000, state: 'attached' });
+      found = true;
+      break;
+    } catch (e) {
+      // Try next selector
+      continue;
+    }
+  }
+
+  if (!found) {
+    // If no specific selector found, wait for any div with height (map containers usually have height)
+    await page.waitForFunction(() => {
+      const containers = document.querySelectorAll('[data-radar-container], [class*="map"], [class*="Map"]');
+      return containers.length > 0;
+    }, { timeout: 10000 }).catch(() => {
+      // If still not found, that's okay - test will fail with a clear error
+    });
+  }
+
+  // Give the map a moment to render
+  await page.waitForTimeout(1000);
+}
+
+export async function checkRadarVisibility(page: Page): Promise<boolean> {
+  // Try to find radar container with multiple selectors
+  const selectors = [
+    '[data-radar-container]',
+    '[class*="map"]',
+    '[class*="Map"]',
+    '[class*="radar"]',
+    '[class*="Radar"]',
+  ];
+
+  let radarContainer = null;
+  for (const selector of selectors) {
+    const element = page.locator(selector).first();
+    const count = await element.count();
+    if (count > 0) {
+      radarContainer = element;
+      break;
+    }
+  }
+
+  if (!radarContainer) {
+    // No radar container found at all
+    return false;
+  }
+
+  // Check if element is visible
+  const isVisible = await radarContainer.isVisible().catch(() => false);
+  if (!isVisible) {
+    return false;
+  }
+
+  // Check if radar container has proper styling and is not obscured
+  const visibility = await radarContainer.evaluate((el) => {
+    const style = window.getComputedStyle(el);
+    const zIndex = style.zIndex;
+    const backdropFilter = style.backdropFilter;
+    const opacity = style.opacity;
+    const display = style.display;
+    const visibility = style.visibility;
+    const height = style.height;
+    const width = style.width;
+
+    // Element is visible if:
+    // 1. z-index is high enough OR auto (which means it's in normal flow)
+    // 2. backdrop-filter is none (not obscured by theme overlays)
+    // 3. opacity > 0
+    // 4. display !== 'none'
+    // 5. visibility !== 'hidden'
+    // 6. Has dimensions (height and width > 0)
+    const hasGoodZIndex = zIndex === 'auto' || parseInt(zIndex) >= 10000 || zIndex === '';
+    const hasNoBackdropFilter = backdropFilter === 'none' || backdropFilter === '';
+    const isOpaque = parseFloat(opacity) > 0;
+    const isDisplayed = display !== 'none';
+    const isVisible = visibility !== 'hidden';
+    const hasDimensions = parseFloat(height) > 0 && parseFloat(width) > 0;
+
+    return hasGoodZIndex && hasNoBackdropFilter && isOpaque && isDisplayed && isVisible && hasDimensions;
+  });
+
+  return visibility;
+}
+
+// ═══════════════════════════════════════════════════════════
+//   PROFILE HELPERS
+//   ═══════════════════════════════════════════════════════════
+
+export async function navigateToProfile(page: Page): Promise<void> {
+  // Note: setupMockAuth() MUST be called BEFORE calling this function
+  // It should be called in beforeEach or before navigation
+
+  // Navigate to profile page
+  await page.goto('/profile', { waitUntil: 'networkidle' });
+
+  // Wait for any redirects or auth checks to complete
+  await page.waitForTimeout(500);
+
+  // Check if redirected to login
+  const url = page.url();
+  if (url.includes('/auth/login')) {
+    // Wait a bit more for auth context to initialize
+    await page.waitForTimeout(1000);
+    const finalUrl = page.url();
+
+    if (finalUrl.includes('/auth/login')) {
+      // Still on login page - this indicates auth mocking failed
+      throw new Error(
+        'Profile page redirected to login - authentication not properly mocked.\n' +
+        `Final URL: ${finalUrl}\n` +
+        'Make sure setupMockAuth() is called in beforeEach BEFORE calling navigateToProfile().'
+      );
+    }
+  }
+
+  // Wait for profile page to fully load (auth context initialization)
+  await page.waitForTimeout(1000);
+}
+
+export async function fillProfileForm(page: Page, fields: { username?: string; fullName?: string; defaultLocation?: string }): Promise<void> {
+  if (fields.username) {
+    const usernameInput = page.locator('input[name="username"], input[placeholder*="username" i]').first();
+    if (await usernameInput.count() > 0) {
+      await usernameInput.fill(fields.username);
+    }
+  }
+
+  if (fields.fullName) {
+    const fullNameInput = page.locator('input[name="fullName"], input[name="full_name"], input[placeholder*="full name" i]').first();
+    if (await fullNameInput.count() > 0) {
+      await fullNameInput.fill(fields.fullName);
+    }
+  }
+
+  if (fields.defaultLocation) {
+    const locationInput = page.locator('input[name="defaultLocation"], input[name="default_location"], input[placeholder*="location" i]').first();
+    if (await locationInput.count() > 0) {
+      await locationInput.fill(fields.defaultLocation);
+    }
+  }
+}
+
+export async function saveProfile(page: Page): Promise<void> {
+  const saveButton = page.locator('button').filter({ hasText: /save/i }).first();
+  await saveButton.click();
+  // Wait for save to complete
+  await page.waitForTimeout(500);
+}
+
+// ═══════════════════════════════════════════════════════════
+//   NEWS API HELPERS
+//   ═══════════════════════════════════════════════════════════
+
+/**
+ * Mock news API responses for testing
+ * Returns realistic news data to avoid depending on external RSS feeds
+ */
+export async function stubNewsApi(page: Page): Promise<void> {
+  // Create realistic mock news items matching NewsItem interface
+  const mockNewsItems = [
+    {
+      id: 'test-news-1',
+      title: 'Severe Weather Alert: Major Storm System Approaching',
+      url: 'https://example.com/news/1',
+      source: 'NOAA',
+      category: 'breaking',
+      priority: 'high',
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+      description: 'A significant storm system is expected to bring heavy rain and strong winds across the region.',
+      imageUrl: 'https://example.com/image1.jpg',
+      author: 'Weather Service',
+    },
+    {
+      id: 'test-news-2',
+      title: 'NASA Satellite Images Show Unusual Weather Patterns',
+      url: 'https://example.com/news/2',
+      source: 'NASA',
+      category: 'weather',
+      priority: 'medium',
+      timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
+      description: 'Latest satellite imagery reveals interesting weather formations over the Pacific.',
+      imageUrl: 'https://example.com/image2.jpg',
+      author: 'NASA Earth Observatory',
+    },
+    {
+      id: 'test-news-3',
+      title: 'Local Forecast: Mild Conditions Expected This Week',
+      url: 'https://example.com/news/3',
+      source: 'Local Weather',
+      category: 'local',
+      priority: 'low',
+      timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
+      description: 'Residents can expect pleasant weather conditions throughout the week.',
+      author: 'Local Meteorologist',
+    },
+    {
+      id: 'test-news-4',
+      title: 'Hurricane Tracking Update: Storm Strengthening',
+      url: 'https://example.com/news/4',
+      source: 'NOAA',
+      category: 'weather',
+      priority: 'high',
+      timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
+      description: 'Meteorologists are monitoring a developing hurricane system.',
+      imageUrl: 'https://example.com/image4.jpg',
+    },
+    {
+      id: 'test-news-5',
+      title: 'Climate Research: New Insights into Weather Patterns',
+      url: 'https://example.com/news/5',
+      source: 'NASA',
+      category: 'climate',
+      priority: 'medium',
+      timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(), // 8 hours ago
+      description: 'Scientists publish findings on long-term climate trends.',
+    },
+  ];
+
+  // Mock the aggregate news API endpoint
+  await page.route('**/api/news/aggregate**', async (route) => {
+    const url = new URL(route.request().url());
+    const featuredParam = url.searchParams.get('featured');
+
+    // Handle featured story request
+    if (featuredParam === 'true') {
+      const featuredStory = mockNewsItems.find(item => item.priority === 'high') || mockNewsItems[0];
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          status: 'ok',
+          featured: featuredStory,
+        }),
+      });
+    }
+
+    // Handle regular news aggregation request
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        status: 'ok',
+        items: mockNewsItems,
+        stats: [
+          { source: 'NOAA', fetched: 2, included: 2, errors: 0 },
+          { source: 'NASA', fetched: 2, included: 2, errors: 0 },
+          { source: 'Local Weather', fetched: 1, included: 1, errors: 0 },
+        ],
+        totalFetched: mockNewsItems.length,
+        totalIncluded: mockNewsItems.length,
+        cacheHit: false,
+      }),
+    });
+  });
+
+  // Also mock individual news source endpoints if needed
+  await page.route('**/api/news/fox**', async (route) => {
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        status: 'ok',
+        items: [],
+        count: 0,
+      }),
+    });
+  });
+
+  await page.route('**/api/news/nasa**', async (route) => {
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        status: 'ok',
+        items: mockNewsItems.filter(item => item.source === 'NASA'),
+        count: 2,
+      }),
+    });
+  });
+
+  await page.route('**/api/news/reddit**', async (route) => {
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        status: 'ok',
+        items: [],
+        count: 0,
+      }),
+    });
+  });
 }
 
 

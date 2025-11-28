@@ -17,7 +17,6 @@ import PageWrapper from '@/components/page-wrapper';
 import NewsHero from '@/components/news/NewsHero';
 import NewsFilter from '@/components/news/NewsFilter';
 import NewsGrid from '@/components/news/NewsGrid';
-import NewsSkeleton from '@/components/news/NewsSkeleton';
 import type { NewsItem } from '@/components/NewsTicker/NewsTicker';
 import type { NewsCategory } from '@/lib/types/news';
 

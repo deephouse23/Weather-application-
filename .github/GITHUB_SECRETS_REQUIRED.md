@@ -26,9 +26,28 @@ This project requires the following secrets to be configured in your GitHub repo
 3. Click **New repository secret**
 4. Add each secret with the exact name listed above
 
+## Vercel Environment Variables
+
+For Playwright tests to work correctly against Vercel preview deployments, you need to configure the following environment variable in your Vercel project:
+
+### Required for Playwright Tests in Vercel Preview
+
+- `NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE` - Set to `true` to enable test mode bypass in middleware
+
+### How to Add Vercel Environment Variables
+
+1. Go to your Vercel project dashboard
+2. Navigate to **Settings** → **Environment Variables**
+3. Add `NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE` with value `true`
+4. Select **Preview** environment (or all environments if you want)
+5. Click **Save**
+
+**Note:** The middleware will automatically detect Vercel preview environments (`VERCEL_ENV=preview`) and allow test mode bypass when the test header/cookie is present. However, explicitly setting `NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE=true` in Vercel is recommended for clarity and reliability.
+
 ## Important Notes
 
 - The `OPENWEATHER_API_KEY` is **required** for the application to function properly
 - Without this key, all weather API endpoints will return error responses
 - Make sure to use the same API keys in your GitHub secrets as in your local `.env.local` file
 - The Playwright tests will fail if the weather API endpoints cannot return valid data
+- For Vercel preview deployments, ensure `NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE=true` is set in Vercel's environment variables

@@ -10,14 +10,13 @@
 import { NewsItem } from '@/components/NewsTicker/NewsTicker';
 import { newsService } from './newsService'; // Existing NOAA + NewsAPI service
 import { fetchAllNASAWeatherNews } from './nasaService';
-import { fetchAllFOXWeatherNews } from './foxWeatherService';
 import { fetchAllRedditWeatherNews } from './redditService';
 import { fetchAllGFSModelNews } from './gfsModelService';
 
 export interface AggregatedNewsOptions {
   categories?: ('breaking' | 'weather' | 'local' | 'general')[];
   priority?: 'high' | 'medium' | 'low' | 'all';
-  sources?: ('noaa' | 'nasa' | 'fox' | 'reddit' | 'newsapi' | 'gfs')[];
+  sources?: ('noaa' | 'nasa' | 'reddit' | 'newsapi' | 'gfs')[];
   maxItems?: number;
   maxAge?: number; // Maximum age in hours
 }
@@ -50,7 +49,7 @@ export async function aggregateNews(
   const {
     categories = ['weather'],
     priority = 'all',
-    sources = ['noaa', 'nasa', 'fox', 'reddit', 'newsapi', 'gfs'],
+    sources = ['noaa', 'nasa', 'reddit', 'newsapi', 'gfs'], // Removed 'fox' - RSS feeds return 404
     maxItems = 30,
     maxAge = 72, // 72 hours default
   } = options;
@@ -78,9 +77,7 @@ export async function aggregateNews(
     fetchPromises.push(fetchWithStats('NASA', () => fetchAllNASAWeatherNews(maxItems)));
   }
 
-  if (sources.includes('fox')) {
-    fetchPromises.push(fetchWithStats('FOX Weather', () => fetchAllFOXWeatherNews(maxItems)));
-  }
+  
 
   if (sources.includes('reddit')) {
     fetchPromises.push(
@@ -365,7 +362,7 @@ export function getNewsCacheStats(): { size: number; keys: string[] } {
 export async function fetchBreakingWeather(maxItems: number = 10): Promise<NewsItem[]> {
   const result = await aggregateNews({
     priority: 'high',
-    sources: ['noaa', 'fox', 'nasa'],
+    sources: ['noaa', 'nasa'],
     maxItems,
     maxAge: 24, // Last 24 hours only
   });

@@ -99,6 +99,7 @@ export function LazyEnvironmentalDisplay(props: {
   weather: WeatherData;
   theme: ThemeType;
   className?: string;
+  minimal?: boolean;
 }) {
   return (
     <ErrorBoundary componentName="Environmental Display">

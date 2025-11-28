@@ -4,9 +4,9 @@ import { defineConfig, devices } from '@playwright/test';
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
+import dotenv from 'dotenv';
+import path from 'path';
+dotenv.config({ path: path.resolve(__dirname, '.env.local') });
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -34,9 +34,14 @@ export default defineConfig({
     trace: 'on-first-retry',
 
     /* Bypass Vercel preview protection if token provided */
-    extraHTTPHeaders: process.env.VERCEL_AUTOMATION_BYPASS_SECRET
-      ? { 'x-vercel-protection-bypass': process.env.VERCEL_AUTOMATION_BYPASS_SECRET }
-      : undefined,
+    extraHTTPHeaders: {
+      // Always set test mode header for E2E tests
+      'x-playwright-test-mode': 'true',
+      // Vercel bypass if token provided
+      ...(process.env.VERCEL_AUTOMATION_BYPASS_SECRET
+        ? { 'x-vercel-protection-bypass': process.env.VERCEL_AUTOMATION_BYPASS_SECRET }
+        : {}),
+    },
   },
 
   /* Configure projects for major browsers */
@@ -81,9 +86,11 @@ export default defineConfig({
   webServer: hasExternalBaseUrl
     ? undefined
     : {
-        command: process.env.CI ? 'npm run start' : 'npm run dev',
-        url: 'http://localhost:3000',
-        reuseExistingServer: !process.env.CI,
-        timeout: 120 * 1000,
-      },
+      command: process.env.CI
+        ? 'npx cross-env PLAYWRIGHT_TEST_MODE=true NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE=true npm run start'
+        : 'npx cross-env PLAYWRIGHT_TEST_MODE=true NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE=true npm run dev',
+      url: 'http://localhost:3000',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+    },
 });

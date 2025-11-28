@@ -52,3 +52,19 @@ SENTRY_SETUP_GUIDE.md
 
 # Plan files may contain sensitive information
 *.plan.md
+
+# Screenshots and visual assets
+# Ignore temporary bug screenshots (don't commit to git)
+.github/images/bugs/*.png
+.github/images/bugs/*.jpg
+.github/images/bugs/*.jpeg
+.github/images/bugs/*.gif
+.github/images/temp/
+
+# Keep feature screenshots and documentation images (commit these)
+!.github/images/features/
+!docs/screenshots/
+
+# Archive screenshots (optional - can commit for reference or ignore)
+# Uncomment to ignore archive screenshots:
+# archive/screenshots/

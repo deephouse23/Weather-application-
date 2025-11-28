@@ -33,6 +33,7 @@ export interface UserPreferences {
     units: 'metric' | 'imperial';
     theme: 'dark' | 'miami' | 'tron';
     cacheEnabled: boolean;
+    auto_location?: boolean;
   };
   updatedAt: number;
 }
@@ -195,7 +196,7 @@ export class UserCacheService {
 
       const cacheKey = this.STORAGE_PREFIX + this.WEATHER_CACHE_KEY + '_' + this.sanitizeKey(locationKey);
       safeStorage.setItem(cacheKey, JSON.stringify(cacheEntry));
-      
+
       console.log(`Weather data cached for ${locationKey}, expires in ${Math.round(duration / 1000 / 60)} minutes`);
       return true;
     } catch (error) {
@@ -214,10 +215,10 @@ export class UserCacheService {
     try {
       const cacheKey = this.STORAGE_PREFIX + this.WEATHER_CACHE_KEY + '_' + this.sanitizeKey(locationKey);
       const stored = safeStorage.getItem(cacheKey);
-      
+
       if (stored) {
         const cacheEntry: CachedWeatherData = JSON.parse(stored);
-        
+
         // Check if cache is still valid
         if (Date.now() < cacheEntry.expiresAt) {
           console.log(`Using cached weather data for ${locationKey}`);
@@ -232,7 +233,7 @@ export class UserCacheService {
       console.warn('Failed to get cached weather data:', error);
       this.handleCorruptedData(locationKey);
     }
-    
+
     return null;
   }
 
@@ -251,10 +252,10 @@ export class UserCacheService {
       } else {
         // Clear all weather cache
         const keys = safeStorage.getAllKeys();
-        const weatherCacheKeys = keys.filter(key => 
+        const weatherCacheKeys = keys.filter(key =>
           key.startsWith(this.STORAGE_PREFIX + this.WEATHER_CACHE_KEY)
         );
-        
+
         weatherCacheKeys.forEach(key => safeStorage.removeItem(key));
         console.log(`All weather cache cleared (${weatherCacheKeys.length} entries)`);
       }
@@ -279,7 +280,7 @@ export class UserCacheService {
 
     try {
       const keys = safeStorage.getAllKeys();
-      const weatherCacheKeys = keys.filter(key => 
+      const weatherCacheKeys = keys.filter(key =>
         key.startsWith(this.STORAGE_PREFIX + this.WEATHER_CACHE_KEY)
       );
 
@@ -354,7 +355,7 @@ export class UserCacheService {
    */
   private cleanupExpiredEntries(): void {
     const keys = safeStorage.getAllKeys();
-    const weatherCacheKeys = keys.filter(key => 
+    const weatherCacheKeys = keys.filter(key =>
       key.startsWith(this.STORAGE_PREFIX + this.WEATHER_CACHE_KEY)
     );
 
@@ -385,7 +386,7 @@ export class UserCacheService {
    */
   private cleanupOldestEntries(): void {
     const keys = safeStorage.getAllKeys();
-    const weatherCacheKeys = keys.filter(key => 
+    const weatherCacheKeys = keys.filter(key =>
       key.startsWith(this.STORAGE_PREFIX + this.WEATHER_CACHE_KEY)
     );
 
@@ -486,15 +487,18 @@ export class UserCacheService {
       settings: {
         ...defaultPreferences.settings,
         ...(isValidSettings(preferences.settings) ? {
-          units: preferences.settings.units === 'metric' || preferences.settings.units === 'imperial' 
-            ? preferences.settings.units 
+          units: preferences.settings.units === 'metric' || preferences.settings.units === 'imperial'
+            ? preferences.settings.units
             : defaultPreferences.settings.units,
           theme: preferences.settings.theme === 'dark' || preferences.settings.theme === 'miami' || preferences.settings.theme === 'tron'
-            ? preferences.settings.theme 
+            ? preferences.settings.theme
             : defaultPreferences.settings.theme,
-          cacheEnabled: typeof preferences.settings.cacheEnabled === 'boolean' 
-            ? preferences.settings.cacheEnabled 
-            : defaultPreferences.settings.cacheEnabled
+          cacheEnabled: typeof preferences.settings.cacheEnabled === 'boolean'
+            ? preferences.settings.cacheEnabled
+            : defaultPreferences.settings.cacheEnabled,
+          auto_location: typeof preferences.settings.auto_location === 'boolean'
+            ? preferences.settings.auto_location
+            : defaultPreferences.settings.auto_location
         } : {})
       }
     };
@@ -518,9 +522,9 @@ export class UserCacheService {
     try {
       const keys = safeStorage.getAllKeys();
       const ourKeys = keys.filter(key => key.startsWith(this.STORAGE_PREFIX));
-      
+
       ourKeys.forEach(key => safeStorage.removeItem(key));
-      
+
       console.log(`All user data cleared (${ourKeys.length} entries)`);
       this.initializeDefaults();
       return true;
@@ -537,7 +541,7 @@ export class UserCacheService {
     try {
       const preferences = this.getPreferences();
       const metrics = this.getCacheMetrics();
-      
+
       const exportData = {
         version: '1.0',
         timestamp: Date.now(),
@@ -558,12 +562,12 @@ export class UserCacheService {
   importUserData(data: string): boolean {
     try {
       const importData = JSON.parse(data);
-      
+
       if (importData.preferences) {
         const validatedPreferences = this.validateAndMigratePreferences(importData.preferences);
         return this.savePreferences(validatedPreferences);
       }
-      
+
       return false;
     } catch (error) {
       console.error('Failed to import user data:', error);

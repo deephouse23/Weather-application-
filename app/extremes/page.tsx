@@ -17,7 +17,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import PageWrapper from "@/components/page-wrapper"
-import { Loader2, TrendingUp, TrendingDown, MapPin, RefreshCw, Thermometer } from "lucide-react"
+import { Loader2, TrendingUp, TrendingDown, MapPin, RefreshCw } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { ExtremesData } from "@/lib/extremes/extremes-data"
 
@@ -63,7 +63,6 @@ export default function ExtremesPage() {
   const [error, setError] = useState<string | null>(null)
   const [userCoords, setUserCoords] = useState<{ lat: number; lon: number } | null>(null)
   const [autoRefresh, setAutoRefresh] = useState(true)
-  const { theme } = useTheme()
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Fetch extremes data

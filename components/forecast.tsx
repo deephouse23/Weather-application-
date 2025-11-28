@@ -45,8 +45,8 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
     switch (theme) {
       case 'dark':
         return {
-          cardBg: 'bg-[#16213e]',
-          itemBg: 'bg-[#1a1a2e]',
+          cardBg: 'bg-[#16213e]/90 backdrop-blur-md',
+          itemBg: 'bg-[#1a1a2e]/80',
           itemHover: 'hover:bg-[#1f2347]',
           borderColor: 'border-[#00d4ff]',
           itemBorder: 'border-[#4ecdc4]',
@@ -68,7 +68,7 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
         }
       case 'miami':
         return {
-          cardBg: 'bg-gradient-to-br from-[#4a0e4e] via-[#2d1b69] to-[#1a0033]',
+          cardBg: 'bg-gradient-to-br from-[#4a0e4e]/90 via-[#2d1b69]/90 to-[#1a0033]/90 backdrop-blur-md',
           itemBg: 'bg-gradient-to-br from-[#2d1b69] to-[#4a0e4e]',
           itemHover: 'hover:bg-gradient-to-br hover:from-[#4a0e4e] hover:to-[#6a1b9a]',
           borderColor: 'border-[#ff1493]',
@@ -91,7 +91,7 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
         }
       case 'tron':
         return {
-          cardBg: 'bg-[#000000]',
+          cardBg: 'bg-[#000000]/90 backdrop-blur-md',
           itemBg: 'bg-[#000000]',
           itemHover: 'hover:bg-[#001111]',
           borderColor: 'border-[#00FFFF]',
@@ -114,7 +114,7 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
         }
       case 'atari2600':
         return {
-          cardBg: 'bg-[#000000]',
+          cardBg: 'bg-[#000000]/90 backdrop-blur-md',
           itemBg: 'bg-[#1a1a1a]',
           itemHover: 'hover:bg-[#2d2d2d]',
           borderColor: 'border-[#702800]',
@@ -130,7 +130,7 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
         }
       case 'monochromeGreen':
         return {
-          cardBg: 'bg-[#0D0D0D]',
+          cardBg: 'bg-[#0D0D0D]/90 backdrop-blur-md',
           itemBg: 'bg-[#1a1a1a]',
           itemHover: 'hover:bg-[#262626]',
           borderColor: 'border-[#009900]',
@@ -146,7 +146,7 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
         }
       case '8bitClassic':
         return {
-          cardBg: 'bg-[#D3D3D3]',
+          cardBg: 'bg-[#D3D3D3]/90 backdrop-blur-md',
           itemBg: 'bg-[#C0C0C0]',
           itemHover: 'hover:bg-[#A9A9A9]',
           borderColor: 'border-[#000000]',
@@ -162,7 +162,7 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
         }
       case '16bitSnes':
         return {
-          cardBg: 'bg-[#B8B8D0]',
+          cardBg: 'bg-[#B8B8D0]/90 backdrop-blur-md',
           itemBg: 'bg-[#9E9EB8]',
           itemHover: 'hover:bg-[#8484A0]',
           borderColor: 'border-[#5B5B8B]',
@@ -179,8 +179,8 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
       default:
         // Default to dark theme if invalid theme is provided
         return {
-          cardBg: 'bg-[#16213e]',
-          itemBg: 'bg-[#1a1a2e]',
+          cardBg: 'bg-[#16213e]/90 backdrop-blur-md',
+          itemBg: 'bg-[#1a1a2e]/80',
           itemHover: 'hover:bg-[#1f2347]',
           borderColor: 'border-[#00d4ff]',
           itemBorder: 'border-[#4ecdc4]',
@@ -204,15 +204,29 @@ export default function Forecast({ forecast, theme = 'dark', onDayClick, selecte
   }
 
   const themeClasses = getThemeClasses(validTheme as ThemeType)
+  
+  // Determine number of days to show (max 7, or length if less)
+  // If we have 7 days, we show them all. If 5, show 5.
+  // But the slice was limiting it to 5. We remove the slice or make it larger.
+  // We'll show up to 7 days if available.
+  const daysToShow = forecast.length >= 7 ? 7 : Math.min(forecast.length, 5);
+  const displayForecast = forecast.slice(0, daysToShow);
+  
+  const title = displayForecast.length > 5 ? "7-DAY FORECAST" : "5-DAY FORECAST";
+
+  // Dynamic grid columns based on number of days
+  const gridColsClass = displayForecast.length > 5 
+    ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7" // For 7 days: 2 on small, 3 on med, 4 on lg (2 rows), 7 on xl
+    : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"; // For 5 days: standard 5 cols
 
   return (
     <div className={`${themeClasses.cardBg} p-3 sm:p-4 lg:p-6 card-rounded-md border-2 shadow-theme-card weather-card-enter ${themeClasses.borderColor} ${themeClasses.specialBorder}`}
          style={{ ...themeClasses.cardStyle, animationDelay: '300ms' }}>
       <h2 className={`text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4 ${themeClasses.headerText} uppercase tracking-wider ${themeClasses.glow} text-center`}
-          style={{ textShadow: themeClasses.cardStyle.textShadow }}>5-DAY FORECAST</h2>
-      {/* Mobile responsive grid - stack on very small screens, 3 cols on mobile+, 5 cols on desktop */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 lg:gap-4">
-        {forecast.slice(0, 5).map((day, index) => (
+          style={{ textShadow: themeClasses.cardStyle.textShadow }}>{title}</h2>
+      {/* Mobile responsive grid - dynamic columns */}
+      <div className={`grid ${gridColsClass} gap-2 sm:gap-3 lg:gap-4`}>
+        {displayForecast.map((day, index) => (
           <ForecastCard
             key={index}
             day={day}
@@ -271,15 +285,16 @@ function ForecastCard({ day, index, themeClasses, theme, onDayClick, isSelected 
   return (
     <div
       className={cn(
-        "p-2 sm:p-3 border card-rounded-sm text-center transition-all duration-200",
+        "p-2 sm:p-3 border rounded-xl text-center transition-all duration-300",
         "min-h-[120px] sm:min-h-[140px] lg:min-h-[160px] flex flex-col justify-between",
+        "backdrop-blur-sm hover:backdrop-blur-md",
         themeClasses.itemBg,
         themeClasses.itemBorder,
         themeClasses.specialBorder,
-        onDayClick && 'cursor-pointer hover:scale-105',
+        onDayClick && 'cursor-pointer hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl',
         themeClasses.itemHover,
-        isSelected && `ring-2 ring-opacity-80`,
-        isSelected && (theme === 'dark' ? 'ring-[#00d4ff]' : theme === 'miami' ? 'ring-[#ff1493]' : 'ring-[#00FFFF]')
+        isSelected && `ring-2 ring-opacity-80 scale-105`,
+        isSelected && (theme === 'dark' ? 'ring-[#00d4ff] shadow-[0_0_15px_rgba(0,212,255,0.3)]' : theme === 'miami' ? 'ring-[#ff1493] shadow-[0_0_15px_rgba(255,20,147,0.3)]' : 'ring-[#00FFFF] shadow-[0_0_15px_rgba(0,255,255,0.3)]')
       )}
       style={themeClasses.itemStyle}
       onClick={handleClick}
