@@ -68,3 +68,6 @@ SENTRY_SETUP_GUIDE.md
 # Archive screenshots (optional - can commit for reference or ignore)
 # Uncomment to ignore archive screenshots:
 # archive/screenshots/
+
+# Logs
+/logs/
