@@ -30,7 +30,6 @@ export async function GET(
       headers: {
         'User-Agent': '16-Bit-Weather/iowa-nexrad-tiles',
       },
-      // @ts-expect-error - AbortSignal.timeout is supported in Node 18+
       signal: AbortSignal.timeout(10000),
     })
 
