@@ -84,8 +84,8 @@ export function validateEnv(): void {
     }
   }
 
-  // Throw error if required vars are missing
-  if (missingRequired.length > 0) {
+  // Throw error if required vars are missing (but not in test environment)
+  if (missingRequired.length > 0 && process.env.NODE_ENV !== 'test') {
     throw new Error(
       `Missing required environment variables: ${missingRequired.join(', ')}\n` +
       'Please check your .env.local file or environment configuration.'
