@@ -3,10 +3,13 @@
 ## Current Status
 
 ✅ **Fixed Issues:**
-- Added proper DSN validation (only initializes if DSN is present and valid)
-- Conditional debug mode (only enabled in development)
-- Proper error handling (won't crash if DSN is missing)
-- Reduced sample rates in production (0.1 vs 1.0)
+- ✅ Removed deprecated `sentry.client.config.ts` (migrated to `instrumentation-client.ts`)
+- ✅ Added proper DSN validation (only initializes if DSN is present and valid)
+- ✅ Conditional debug mode (only enabled in development)
+- ✅ Proper error handling (won't crash if DSN is missing)
+- ✅ Reduced sample rates in production (0.1 vs 1.0)
+- ✅ Fixed TypeScript errors in news aggregate route
+- ✅ No more deprecation warnings in build
 
 ## Configuration Files
 
