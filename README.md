@@ -7,25 +7,6 @@
 
 A professional weather application that combines modern meteorological data with retro terminal aesthetics. Built with Next.js 15, React 19, and TypeScript, featuring comprehensive weather monitoring and user authentication.
 
-**Live Application:** [16bitweather.co](https://www.16bitweather.co/)
-
-## Documentation
-
-📚 **[Complete Documentation](./docs/README.md)** - Comprehensive guides for development, deployment, and troubleshooting
-
-**Quick Links:**
-- [Architecture & Tech Stack](./docs/ARCHITECTURE.md) - System design and technical details
-- [API Reference](./docs/API_REFERENCE.md) - Complete API endpoint documentation
-- [Deployment Guide](./docs/DEPLOYMENT.md) - Environment setup and deployment instructions
-- [Troubleshooting](./docs/TROUBLESHOOTING.md) - Common issues and solutions
-- [Workflow Guide](./WORKFLOW.md) - Git workflow and development best practices
-
-For AI assistant instructions, see [CLAUDE.md](./CLAUDE.md).
-
-## Core Features
-
-### Weather Data
-- Real-time temperature monitoring with "feels like" calculations
 - Current atmospheric conditions with detailed descriptions
 - Wind speed, direction, and gust measurements
 - Humidity levels and visibility range tracking
