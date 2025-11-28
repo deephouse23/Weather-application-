@@ -153,7 +153,7 @@ export async function seedFreshWeatherCache(page: Page, opts: StubOptions = {}):
           visibility: 10,
           uvIndex: 5,
         },
-        hourlyForecast: [ { time: '10 AM', temp: o.tempF, condition: 'Sunny', precipChance: 0 } ],
+        hourlyForecast: [{ time: '10 AM', temp: o.tempF, condition: 'Sunny', precipChance: 0 }],
       },
     ],
     moonPhase: { phase: 'Waxing Crescent', illumination: 20, emoji: 'Moon', phaseAngle: 45 },
@@ -169,6 +169,18 @@ export async function seedFreshWeatherCache(page: Page, opts: StubOptions = {}):
     window.localStorage.setItem('bitweather_city', data.sampleWeather.location);
     window.localStorage.setItem('bitweather_weather_data', JSON.stringify(data.sampleWeather));
     window.localStorage.setItem('bitweather_cache_timestamp', String(now));
+    // Ensure no rate limit is active
+    window.localStorage.removeItem('weather-app-rate-limit');
+    // Disable auto-location to prevent test interference
+    window.localStorage.setItem('bitweather_user_preferences', JSON.stringify({
+      settings: {
+        units: 'imperial',
+        theme: 'dark',
+        cacheEnabled: true,
+        auto_location: false
+      },
+      updatedAt: now
+    }));
   }, { sampleWeather });
 }
 
@@ -223,7 +235,7 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
     const url = new URL(route.request().url());
     const pathname = url.pathname;
     const method = route.request().method();
-    
+
     // Handle getSession() - this is what middleware calls
     // Supabase SSR getSession() makes a request to /auth/v1/token?grant_type=refresh_token
     // or checks cookies and validates them
@@ -238,7 +250,7 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
         body: JSON.stringify(mockSession),
       });
     }
-    
+
     // Handle getUser() - get current user
     if (pathname.includes('/user') && method === 'GET') {
       return route.fulfill({
@@ -252,7 +264,7 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
         }),
       });
     }
-    
+
     // Handle session validation
     if (pathname.includes('/session') || pathname.includes('/verify')) {
       return route.fulfill({
@@ -264,7 +276,7 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
         body: JSON.stringify(mockSession),
       });
     }
-    
+
     // Default: return session for any auth endpoint
     return route.fulfill({
       status: 200,
@@ -280,13 +292,13 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
   await page.route('**/rest/v1/**', async (route) => {
     const request = route.request();
     const method = request.method();
-    
+
     // Allow profile routes to continue (they're handled by stubSupabaseProfile)
     if (request.url().includes('/profiles')) {
       route.continue();
       return;
     }
-    
+
     // Mock other REST endpoints
     route.fulfill({
       status: 200,
@@ -304,10 +316,10 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
     // Extract project ref from URL (e.g., https://abc123.supabase.co -> abc123)
     const urlMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/);
     const projectRef = urlMatch ? urlMatch[1] : 'placeholder';
-    
+
     // Supabase SSR cookie format: sb-{project-ref}-auth-token
     const authTokenCookieName = `sb-${projectRef}-auth-token`;
-    
+
     // Create session cookie value (Supabase SSR format)
     // This is the exact format Supabase SSR expects
     const sessionCookieValue = JSON.stringify({
@@ -318,7 +330,7 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
       token_type: mockSession.token_type,
       user: mockSession.user,
     });
-    
+
     // Set cookies with all possible names Supabase might use
     // NOTE: Using URL instead of domain+path for localhost to ensure proper cookie propagation
     const baseUrl = 'http://localhost:3000';
@@ -359,6 +371,15 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
         value: mockSession.refresh_token,
         url: baseUrl,
       },
+      // Add generic supabase-auth-token for good measure
+      {
+        name: 'supabase-auth-token',
+        value: sessionCookieValue,
+        url: baseUrl,
+        httpOnly: false,
+        secure: false,
+        sameSite: 'Lax' as const,
+      }
     ];
 
     await page.context().addCookies(cookiesToSet);
@@ -378,14 +399,14 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
       token_type: data.token_type,
       user: data.user,
     };
-    
+
     // Store in multiple possible Supabase localStorage keys
     const possibleKeys = [
       'sb-auth-token',
       'supabase.auth.token',
       `sb-${window.location.hostname}-auth-token`,
     ];
-    
+
     possibleKeys.forEach(key => {
       try {
         window.localStorage.setItem(key, JSON.stringify(session));
@@ -394,7 +415,7 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
       }
     });
   }, mockSession);
-  
+
   // Wait a bit to ensure init scripts and cookies are ready
   await page.waitForTimeout(200);
 }
@@ -404,7 +425,7 @@ export async function stubSupabaseProfile(page: Page, profile: any): Promise<voi
   await page.route('**/rest/v1/profiles**', async (route) => {
     const request = route.request();
     const method = request.method();
-    
+
     if (method === 'GET') {
       return route.fulfill({
         status: 200,
@@ -412,26 +433,26 @@ export async function stubSupabaseProfile(page: Page, profile: any): Promise<voi
         body: JSON.stringify([profile])
       });
     }
-    
+
     if (method === 'PATCH') {
       const url = new URL(request.url());
       const params = url.searchParams;
       const select = params.get('select');
-      
+
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify([{ ...profile, ...request.postDataJSON() }])
       });
     }
-    
+
     route.continue();
   });
 
   // Mock preferences API
   await page.route('**/api/user/preferences**', (route) => {
     const method = route.request().method();
-    
+
     if (method === 'GET') {
       return route.fulfill({
         status: 200,
@@ -446,7 +467,7 @@ export async function stubSupabaseProfile(page: Page, profile: any): Promise<voi
         })
       });
     }
-    
+
     if (method === 'PUT') {
       return route.fulfill({
         status: 200,
@@ -461,7 +482,7 @@ export async function stubSupabaseProfile(page: Page, profile: any): Promise<voi
         })
       });
     }
-    
+
     route.continue();
   });
 }
@@ -475,10 +496,10 @@ export async function stubProfileUpdate(page: Page): Promise<void> {
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify([{ 
-          id: 'test-user-id', 
+        body: JSON.stringify([{
+          id: 'test-user-id',
           ...body,
-          updated_at: new Date().toISOString() 
+          updated_at: new Date().toISOString()
         }])
       });
     }
@@ -515,31 +536,31 @@ export async function setTheme(page: Page, theme: string): Promise<void> {
     localStorage.setItem('weather-edu-theme', data.theme);
     localStorage.setItem('weather-theme', data.theme);
   }, { theme });
-  
+
   // Apply theme directly to the document (works after page load)
   await page.evaluate((themeName) => {
     const root = document.documentElement;
     const body = document.body;
-    
+
     // All possible theme classes
     const allThemes = [
       'dark', 'miami', 'tron', 'atari2600', 'monochromeGreen',
       '8bitClassic', '16bitSnes', 'synthwave84', 'tokyoNight',
       'dracula', 'cyberpunk', 'matrix'
     ];
-    
+
     // Remove all theme classes
     allThemes.forEach(t => {
       root.classList.remove(t);
       body.classList.remove(`theme-${t}`);
       root.classList.remove(`theme-${t}`);
     });
-    
+
     // Apply new theme
     root.setAttribute('data-theme', themeName);
     root.classList.add(themeName);
     body.classList.add(`theme-${themeName}`);
-    
+
     // Save to localStorage
     try {
       localStorage.setItem('weather-edu-theme', themeName);
@@ -547,13 +568,13 @@ export async function setTheme(page: Page, theme: string): Promise<void> {
     } catch (e) {
       // Ignore localStorage errors
     }
-    
+
     // Force style recalculation
     const display = root.style.display;
     root.style.display = 'none';
     root.offsetHeight; // Trigger reflow
     root.style.display = display;
-    
+
     // Also dispatch a storage event to notify theme provider if it's listening
     try {
       window.dispatchEvent(new StorageEvent('storage', {
@@ -565,10 +586,10 @@ export async function setTheme(page: Page, theme: string): Promise<void> {
       // Ignore if StorageEvent not supported
     }
   }, theme);
-  
+
   // Wait for theme to be applied and any theme provider effects to complete
   await page.waitForTimeout(300);
-  
+
   // Verify theme was applied (retry if needed)
   let attempts = 0;
   while (attempts < 3) {
@@ -592,17 +613,17 @@ export async function getCurrentTheme(page: Page): Promise<string> {
     // Check data-theme attribute first (most reliable)
     const dataTheme = document.documentElement.getAttribute('data-theme');
     if (dataTheme) return dataTheme;
-    
+
     // Check localStorage
-    const storedTheme = localStorage.getItem('weather-edu-theme') || 
-                       localStorage.getItem('weather-theme');
+    const storedTheme = localStorage.getItem('weather-edu-theme') ||
+      localStorage.getItem('weather-theme');
     if (storedTheme) return storedTheme;
-    
+
     // Check body classes
     const bodyClasses = document.body.className;
     const themeMatch = bodyClasses.match(/theme-(\w+)/);
     if (themeMatch) return themeMatch[1];
-    
+
     // Default fallback
     return 'dark';
   });
@@ -619,7 +640,7 @@ export async function navigateToMapPage(page: Page): Promise<void> {
     // If networkidle times out, continue anyway
   });
   // Wait for map container to exist in DOM
-  await page.waitForSelector('[data-radar-container], [class*="map"], [class*="Map"], [class*="radar"], [class*="Radar"]', { 
+  await page.waitForSelector('[data-radar-container], [class*="map"], [class*="Map"], [class*="radar"], [class*="Radar"]', {
     timeout: 15000,
     state: 'attached'
   }).catch(() => {
@@ -637,7 +658,7 @@ export async function waitForRadarToLoad(page: Page): Promise<void> {
     '[class*="radar"]',
     '[class*="Radar"]',
   ];
-  
+
   let found = false;
   for (const selector of selectors) {
     try {
@@ -649,7 +670,7 @@ export async function waitForRadarToLoad(page: Page): Promise<void> {
       continue;
     }
   }
-  
+
   if (!found) {
     // If no specific selector found, wait for any div with height (map containers usually have height)
     await page.waitForFunction(() => {
@@ -659,7 +680,7 @@ export async function waitForRadarToLoad(page: Page): Promise<void> {
       // If still not found, that's okay - test will fail with a clear error
     });
   }
-  
+
   // Give the map a moment to render
   await page.waitForTimeout(1000);
 }
@@ -673,7 +694,7 @@ export async function checkRadarVisibility(page: Page): Promise<boolean> {
     '[class*="radar"]',
     '[class*="Radar"]',
   ];
-  
+
   let radarContainer = null;
   for (const selector of selectors) {
     const element = page.locator(selector).first();
@@ -683,18 +704,18 @@ export async function checkRadarVisibility(page: Page): Promise<boolean> {
       break;
     }
   }
-  
+
   if (!radarContainer) {
     // No radar container found at all
     return false;
   }
-  
+
   // Check if element is visible
   const isVisible = await radarContainer.isVisible().catch(() => false);
   if (!isVisible) {
     return false;
   }
-  
+
   // Check if radar container has proper styling and is not obscured
   const visibility = await radarContainer.evaluate((el) => {
     const style = window.getComputedStyle(el);
@@ -705,7 +726,7 @@ export async function checkRadarVisibility(page: Page): Promise<boolean> {
     const visibility = style.visibility;
     const height = style.height;
     const width = style.width;
-    
+
     // Element is visible if:
     // 1. z-index is high enough OR auto (which means it's in normal flow)
     // 2. backdrop-filter is none (not obscured by theme overlays)
@@ -719,10 +740,10 @@ export async function checkRadarVisibility(page: Page): Promise<boolean> {
     const isDisplayed = display !== 'none';
     const isVisible = visibility !== 'hidden';
     const hasDimensions = parseFloat(height) > 0 && parseFloat(width) > 0;
-    
+
     return hasGoodZIndex && hasNoBackdropFilter && isOpaque && isDisplayed && isVisible && hasDimensions;
   });
-  
+
   return visibility;
 }
 
@@ -733,20 +754,20 @@ export async function checkRadarVisibility(page: Page): Promise<boolean> {
 export async function navigateToProfile(page: Page): Promise<void> {
   // Note: setupMockAuth() MUST be called BEFORE calling this function
   // It should be called in beforeEach or before navigation
-  
+
   // Navigate to profile page
   await page.goto('/profile', { waitUntil: 'networkidle' });
-  
+
   // Wait for any redirects or auth checks to complete
   await page.waitForTimeout(500);
-  
+
   // Check if redirected to login
   const url = page.url();
   if (url.includes('/auth/login')) {
     // Wait a bit more for auth context to initialize
     await page.waitForTimeout(1000);
     const finalUrl = page.url();
-    
+
     if (finalUrl.includes('/auth/login')) {
       // Still on login page - this indicates auth mocking failed
       throw new Error(
@@ -756,7 +777,7 @@ export async function navigateToProfile(page: Page): Promise<void> {
       );
     }
   }
-  
+
   // Wait for profile page to fully load (auth context initialization)
   await page.waitForTimeout(1000);
 }
@@ -768,14 +789,14 @@ export async function fillProfileForm(page: Page, fields: { username?: string; f
       await usernameInput.fill(fields.username);
     }
   }
-  
+
   if (fields.fullName) {
     const fullNameInput = page.locator('input[name="fullName"], input[name="full_name"], input[placeholder*="full name" i]').first();
     if (await fullNameInput.count() > 0) {
       await fullNameInput.fill(fields.fullName);
     }
   }
-  
+
   if (fields.defaultLocation) {
     const locationInput = page.locator('input[name="defaultLocation"], input[name="default_location"], input[placeholder*="location" i]').first();
     if (await locationInput.count() > 0) {

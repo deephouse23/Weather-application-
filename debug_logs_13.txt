@@ -1,0 +1,172 @@
+[dotenv@17.2.3] injecting env (10) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+
+Running 1 test using 1 worker
+
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+
+[1A[2K[1/1] [chromium] › tests\weather-app.spec.ts:59:7 › 16-Bit Weather App › rate limiting message appears after multiple searches
+[1A[2K[chromium] › tests\weather-app.spec.ts:59:7 › 16-Bit Weather App › rate limiting message appears after multiple searches
+[Browser] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+
+[1A[2K[Browser] [Sentry] Cannot initialize SDK with `debug` option using a non-debug bundle.
+
+[1A[2K[Browser] ✅ Sentry client initialized
+
+[1A[2K[Browser] [Sentry] Skipping initialization - DSN not configured
+
+[1A[2K[Browser] [Supabase] Client initialized {supabaseUrl: https://cckcvyccjntadoohjntr.supabase.co}
+
+[1A[2K[Browser] Preferences saved successfully
+
+[1A[2K[Browser] Cache metrics before cleanup: {totalEntries: 0, totalSize: 0, expiredEntries: 0}
+
+[1A[2K[Browser] Cache maintenance completed
+
+[1A[2K[Browser] Failed to load resource: the server responded with a status of 403 ()
+
+[1A[2K[Browser] [LocationProvider] Component mounted with pathname: /
+
+[1A[2K[Browser] [LocationProvider] On mount - localStorage keys: [weather-app-rate-limit, bitweather_cache_timestamp, bitweather_city, bitweather_weather_data, bitweather_user_preferences]
+
+[1A[2K[Browser]   weather-app-rate-limit: {"requests":[1764266476022,1764266475022,1764266474022,1764266473022,1764266472022,1764266471022,176...
+
+[1A[2K[Browser]   bitweather_cache_timestamp: 1764266476022
+
+[1A[2K[Browser]   bitweather_city: Testville, US
+
+[1A[2K[Browser]   bitweather_weather_data: {"location":"Testville, US","country":"US","temperature":72,"unit":"°F","condition":"Sunny","descrip...
+
+[1A[2K[Browser]   bitweather_user_preferences: {"settings":{"units":"imperial","theme":"dark","cacheEnabled":true},"updatedAt":1764266476530}
+
+[1A[2K[Browser] [LocationProvider] Route change effect triggered: {pathname: /, lastPathname: , shouldClearOnRouteChange: true, locationInput: , currentLocation: }
+
+[1A[2K[Browser] [LocationProvider] Route navigation analysis: {isNavigatingFromHomeToCityPage: false, isNavigatingFromHomeToMap: false, isNavigatingFromCityPageToHome: false, isNavigatingBetweenCityPages: false, shouldClearOnRouteChange: true}
+
+[1A[2K[Browser] [LocationProvider] ⏭️ CLEARING SKIPPED: Conditions not met
+
+[1A[2K[Browser] [LocationProvider] Updating lastPathname: "" -> "/"
+
+[1A[2K[Browser] [LocationProvider] Pathname initialization effect: {pathname: /, lastPathname: }
+
+[1A[2K[Browser] [LocationProvider] Initializing lastPathname: "" -> "/"
+
+[1A[2K[Browser] [LocationProvider] State change - locationInput: ""
+
+[1A[2K[Browser] [LocationProvider] State change - currentLocation: ""
+
+[1A[2K[Browser] [LocationProvider] State change - shouldClearOnRouteChange: true
+
+[1A[2K[Browser] [LocationProvider] Component mounted with pathname: /
+
+[1A[2K[Browser] [LocationProvider] On mount - localStorage keys: [weather-app-rate-limit, bitweather_cache_timestamp, bitweather_city, bitweather_weather_data, bitweather_user_preferences]
+
+[1A[2K[Browser]   weather-app-rate-limit: {"requests":[1764266476022,1764266475022,1764266474022,1764266473022,1764266472022,1764266471022,176...
+
+[1A[2K[Browser]   bitweather_cache_timestamp: 1764266476022
+
+[1A[2K[Browser]   bitweather_city: Testville, US
+
+[1A[2K[Browser]   bitweather_weather_data: {"location":"Testville, US","country":"US","temperature":72,"unit":"°F","condition":"Sunny","descrip...
+
+[1A[2K[Browser]   bitweather_user_preferences: {"settings":{"units":"imperial","theme":"dark","cacheEnabled":true},"updatedAt":1764266476530}
+
+[1A[2K[Browser] [LocationProvider] Route change effect triggered: {pathname: /, lastPathname: , shouldClearOnRouteChange: true, locationInput: , currentLocation: }
+
+[1A[2K[Browser] [LocationProvider] Route navigation analysis: {isNavigatingFromHomeToCityPage: false, isNavigatingFromHomeToMap: false, isNavigatingFromCityPageToHome: false, isNavigatingBetweenCityPages: false, shouldClearOnRouteChange: true}
+
+[1A[2K[Browser] [LocationProvider] ⏭️ CLEARING SKIPPED: Conditions not met
+
+[1A[2K[Browser] [LocationProvider] Updating lastPathname: "" -> "/"
+
+[1A[2K[Browser] [LocationProvider] Pathname initialization effect: {pathname: /, lastPathname: }
+
+[1A[2K[Browser] [LocationProvider] Initializing lastPathname: "" -> "/"
+
+[1A[2K[Browser] [LocationProvider] State change - locationInput: ""
+
+[1A[2K[Browser] [LocationProvider] State change - currentLocation: ""
+
+[1A[2K[Browser] [LocationProvider] State change - shouldClearOnRouteChange: true
+
+[1A[2K[Browser] [LocationProvider] Component mounted with pathname: /
+
+[1A[2K[Browser] [LocationProvider] On mount - localStorage keys: [weather-app-rate-limit, bitweather_cache_timestamp, bitweather_city, bitweather_weather_data, bitweather_user_preferences]
+
+[1A[2K[Browser]   weather-app-rate-limit: {"requests":[1764266476022,1764266475022,1764266474022,1764266473022,1764266472022,1764266471022,176...
+
+[1A[2K[Browser]   bitweather_cache_timestamp: 1764266476022
+
+[1A[2K[Browser]   bitweather_city: Testville, US
+
+[1A[2K[Browser]   bitweather_weather_data: {"location":"Testville, US","country":"US","temperature":72,"unit":"°F","condition":"Sunny","descrip...
+
+[1A[2K[Browser]   bitweather_user_preferences: {"settings":{"units":"imperial","theme":"dark","cacheEnabled":true},"updatedAt":1764266476530}
+
+[1A[2K[Browser] [LocationProvider] Route change effect triggered: {pathname: /, lastPathname: , shouldClearOnRouteChange: true, locationInput: , currentLocation: }
+
+[1A[2K[Browser] [LocationProvider] Route navigation analysis: {isNavigatingFromHomeToCityPage: false, isNavigatingFromHomeToMap: false, isNavigatingFromCityPageToHome: false, isNavigatingBetweenCityPages: false, shouldClearOnRouteChange: true}
+
+[1A[2K[Browser] [LocationProvider] ⏭️ CLEARING SKIPPED: Conditions not met
+
+[1A[2K[Browser] [LocationProvider] Updating lastPathname: "" -> "/"
+
+[1A[2K[Browser] [LocationProvider] Pathname initialization effect: {pathname: /, lastPathname: }
+
+[1A[2K[Browser] [LocationProvider] Initializing lastPathname: "" -> "/"
+
+[1A[2K[Browser] [LocationProvider] State change - locationInput: ""
+
+[1A[2K[Browser] [LocationProvider] State change - currentLocation: ""
+
+[1A[2K[Browser] [LocationProvider] State change - shouldClearOnRouteChange: true
+
+[1A[2K[Browser] [RateLimit] checkRateLimit data: {requests: Array(11), lastReset: 1764266476022}
+
+[1A[2K[Browser] [RateLimit] recentRequests: 11
+
+[1A[2K[Browser] [RateLimit] Mount check: {remaining: 0}
+
+[1A[2K[Browser] [LocationProvider] Route change effect triggered: {pathname: /, lastPathname: /, shouldClearOnRouteChange: true, locationInput: , currentLocation: }
+
+[1A[2K[Browser] [LocationProvider] No route change detected - returning early
+
+[1A[2K[Browser] [LocationProvider] Pathname initialization effect: {pathname: /, lastPathname: /}
+
+[1A[2K[Browser] [AuthProvider] Auth state change {event: INITIAL_SESSION, hasSession: false, userId: null}
+
+[1A[2K[Browser] [AuthProvider] Initial session fetch {hasSession: false, error: undefined}
+
+[1A[2K[Browser] [AuthProvider] Auth state change {event: INITIAL_SESSION, hasSession: false, userId: null}
+
+[1A[2K[Browser] [AuthProvider] Initial session fetch {hasSession: false, error: undefined}
+
+[1A[2K[Browser] [AuthProvider] Auth state change {event: INITIAL_SESSION, hasSession: false, userId: null}
+
+[1A[2K[Browser] %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
+
+[1A[2K[Browser] %c[Vercel Web Analytics]%c [pageview] http://localhost:3001/ color: rgb(120, 120, 120) color: inherit {o: http://localhost:3001/, sv: 0.1.3, sdkn: @vercel/analytics/react, sdkv: 1.5.0, ts: 1764266476785}
+
+[1A[2K[Browser] %c[Vercel Speed Insights]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
+
+[1A[2K[Browser] Failed to load resource: the server responded with a status of 403 ()
+
+[1A[2K[Browser] Requesting geolocation with options: {enableHighAccuracy: false, timeout: 5000, maximumAge: 300000, useCache: true}
+
+[1A[2K[Browser] Geolocation error: GeolocationPositionError
+
+[1A[2K[Browser] Attempting IP-based location detection...
+
+[1A[2K[Browser] Trying IP service: https://ipapi.co/json/
+
+[1A[2K[Browser] IP service response from https://ipapi.co/json/: {ip: 2601:644:8003:c320:15c4:b7c2:fa7c:4394, network: 2601:644:8003:c000::/51, version: IPv6, city: Livermore, region: California}
+
+[1A[2K[Browser] IP-based location detected: {latitude: 37.6864, longitude: -121.7654, city: Livermore, region: California, country: United States}
+
+[1A[2K[Browser] Preferences saved successfully
+
+[1A[2K  1 passed (4.6s)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

@@ -41,7 +41,7 @@ import { TronGridBackground } from "@/components/ui/tron-grid-background"
 // API keys are now handled by internal API routes
 
 // Using ThemeType from theme-utils
-
+// Force rebuild for debug logs
 function WeatherApp() {
   const { theme } = useTheme()
   const themeClasses = getComponentStyles(theme as ThemeType, 'weather')
@@ -86,7 +86,7 @@ function WeatherApp() {
   // Helper function to get moon phase icon
   const getMoonPhaseIcon = (phase: string): string => {
     const phaseLower = phase.toLowerCase();
-    
+
     if (phaseLower.includes('new')) return '🌑';
     if (phaseLower.includes('waxing crescent')) return '🌒';
     if (phaseLower.includes('first quarter')) return '🌓';
@@ -95,7 +95,7 @@ function WeatherApp() {
     if (phaseLower.includes('waning gibbous')) return '🌖';
     if (phaseLower.includes('last quarter')) return '🌗';
     if (phaseLower.includes('waning crescent')) return '🌘';
-    
+
     // Fallback for any other phases
     return '🌑';
   };
@@ -126,7 +126,7 @@ function WeatherApp() {
               isLoading={loading || isAutoDetecting}
               error={error}
               rateLimitError=""
-              isDisabled={false}
+              isDisabled={remainingSearches <= 0}
               hideLocationButton={true}
             />
           </ErrorBoundary>
@@ -136,7 +136,7 @@ function WeatherApp() {
             <div className="text-center mt-8 mb-8 px-2 sm:px-0">
               <div className="w-full max-w-xl mx-auto">
                 <div className="p-2 sm:p-3 border-2 shadow-lg bg-weather-bg-elev border-weather-primary shadow-weather-primary/20">
-                  <p className="text-sm font-mono font-bold uppercase tracking-wider text-white" style={{ 
+                  <p className="text-sm font-mono font-bold uppercase tracking-wider text-white" style={{
                     fontFamily: "monospace",
                     fontSize: "clamp(10px, 2.4vw, 14px)"
                   }}>
@@ -185,7 +185,7 @@ function WeatherApp() {
                     {weather.location} WEATHER
                   </h1>
                 </div>
-                
+
                 {/* Current Weather using Cards with staggered animations */}
                 <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
                   <div className={cn("p-0 card-rounded-md border-2 shadow-theme-card weather-card-enter", themeClasses.cardBg, themeClasses.borderColor)} style={{ animationDelay: '0ms' }}>
@@ -227,7 +227,7 @@ function WeatherApp() {
                 <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
                   {/* Sun Times Box */}
                   <div className={cn("p-4 card-rounded-md text-center border-2 shadow-theme-card weather-card-enter", themeClasses.cardBg, themeClasses.borderColor)}
-                       style={{ animationDelay: '150ms' }}>
+                    style={{ animationDelay: '150ms' }}>
                     <h2 className={cn("text-xl font-semibold mb-2", themeClasses.headerText)}>Sun Times</h2>
                     <div className="space-y-2">
                       <div className="flex items-center justify-center gap-2">
@@ -243,14 +243,14 @@ function WeatherApp() {
 
                   {/* UV Index Box */}
                   <div className={cn("p-4 card-rounded-md text-center border-2 shadow-theme-card weather-card-enter", themeClasses.cardBg, themeClasses.borderColor)}
-                       style={{ animationDelay: '200ms' }}>
+                    style={{ animationDelay: '200ms' }}>
                     <h2 className={cn("text-xl font-semibold mb-2", themeClasses.headerText)}>UV Index</h2>
                     <p className={cn("text-lg font-bold", themeClasses.text)}>{weather?.uvIndex || 'N/A'}</p>
                   </div>
 
                   {/* Moon Phase Box */}
                   <div className={cn("p-4 card-rounded-md text-center border-2 shadow-theme-card weather-card-enter", themeClasses.cardBg, themeClasses.borderColor)}
-                       style={{ animationDelay: '250ms' }}>
+                    style={{ animationDelay: '250ms' }}>
                     <h2 className={cn("text-xl font-semibold mb-2", themeClasses.headerText)}>Moon Phase</h2>
                     <div className="space-y-2">
                       <div className="flex items-center justify-center gap-2">
@@ -281,16 +281,16 @@ function WeatherApp() {
                   const handleDayClick = (index: number) => {
                     setSelectedDay(selectedDay === index ? null : index);
                   };
-                  
+
                   return (
                     <>
                       {/* 5-Day Forecast */}
                       {weather?.forecast && weather.forecast.length > 0 ? (
-                        <LazyForecast 
+                        <LazyForecast
                           forecast={weather.forecast.map((day, index) => ({
                             ...day,
                             country: weather?.country || 'US'
-                          }))} 
+                          }))}
                           theme={theme || 'dark'}
                           onDayClick={handleDayClick}
                           selectedDay={selectedDay}
@@ -304,11 +304,11 @@ function WeatherApp() {
                       ) : null}
 
                       {/* Expandable Details Section */}
-                      <LazyForecastDetails 
+                      <LazyForecastDetails
                         forecast={(weather?.forecast || []).map((day, index) => ({
                           ...day,
                           country: weather?.country || 'US'
-                        }))} 
+                        }))}
                         theme={theme || 'dark'}
                         selectedDay={selectedDay}
                         currentWeatherData={{
@@ -330,7 +330,7 @@ function WeatherApp() {
                     <h2 className={cn("text-xl font-semibold text-center flex-1", themeClasses.headerText, themeClasses.glow)}>
                       Weather Radar
                     </h2>
-                    <Link 
+                    <Link
                       href="/map"
                       className={cn("px-3 py-1.5 border-2 rounded-md font-mono text-xs font-bold transition-colors hover:scale-105", themeClasses.borderColor, themeClasses.text, themeClasses.hoverBg)}
                     >
@@ -349,7 +349,7 @@ function WeatherApp() {
               </div>
             </ErrorBoundary>
           )}
-          
+
           {/* SEO City Links Section with Random Display */}
           <RandomCityLinks theme={theme || 'dark'} />
         </ResponsiveContainer>

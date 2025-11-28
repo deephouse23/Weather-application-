@@ -1,0 +1,188 @@
+[dotenv@17.2.3] injecting env (10) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+
+Running 9 tests using 8 workers
+
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+[1A[2K[1/9] [chromium] › tests\weather-app.spec.ts:10:7 › 16-Bit Weather App › has correct title
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+
+[1A[2K[2/9] [chromium] › tests\weather-app.spec.ts:14:7 › 16-Bit Weather App › displays main weather search component
+[1A[2K[3/9] [chromium] › tests\weather-app.spec.ts:38:7 › 16-Bit Weather App › responsive layout on mobile
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+
+[1A[2K[4/9] [chromium] › tests\weather-app.spec.ts:49:7 › 16-Bit Weather App › navigation links work correctly
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+[1A[2K[5/9] [chromium] › tests\weather-app.spec.ts:18:7 › 16-Bit Weather App › can search for weather by city name
+[1A[2K[6/9] [chromium] › tests\weather-app.spec.ts:25:7 › 16-Bit Weather App › displays error for invalid location
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+[1A[2K[7/9] [chromium] › tests\weather-app.spec.ts:75:7 › Weather Data Display › displays current weather information
+[1A[2K[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+[1A[2K[8/9] [chromium] › tests\weather-app.spec.ts:119:7 › Weather Data Display › displays forecast information
+[1A[2K[9/9] [chromium] › tests\weather-app.spec.ts:136:7 › Weather Data Display › displays environmental data
+[1A[2K  1) [chromium] › tests\weather-app.spec.ts:75:7 › Weather Data Display › displays current weather information 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-testid="temperature-value"]').first()
+    Expected: visible
+    Timeout: 15000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 15000ms[22m
+    [2m  - waiting for locator('[data-testid="temperature-value"]').first()[22m
+
+
+      113 |
+      114 |     const temperatureValue = page.locator('[data-testid="temperature-value"]').first();
+    > 115 |     await expect(temperatureValue).toBeVisible({ timeout: 15000 });
+          |                                    ^
+      116 |     await expect(temperatureValue).toHaveText(/\d+°[FC]?/);
+      117 |   });
+      118 |
+        at C:\Users\justi\OneDrive\Desktop\Weather-application--main\tests\weather-app.spec.ts:115:36
+
+
+[1A[2K  2) [chromium] › tests\weather-app.spec.ts:119:7 › Weather Data Display › displays forecast information 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByTestId('temperature-value')
+    Expected: visible
+    Timeout: 15000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 15000ms[22m
+    [2m  - waiting for getByTestId('temperature-value')[22m
+
+
+      119 |   test('displays forecast information', async ({ page }) => {
+      120 |     // Wait for weather data to load
+    > 121 |     await expect(page.getByTestId('temperature-value')).toBeVisible({ timeout: 15000 });
+          |                                                         ^
+      122 |
+      123 |     // Look for forecast elements - could be forecast cards, daily forecast, etc.
+      124 |     const forecastElements = page.locator('[class*="forecast"], [data-testid*="forecast"]');
+        at C:\Users\justi\OneDrive\Desktop\Weather-application--main\tests\weather-app.spec.ts:121:57
+
+
+[1A[2K  3) [chromium] › tests\weather-app.spec.ts:136:7 › Weather Data Display › displays environmental data 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByTestId('temperature-value')
+    Expected: visible
+    Timeout: 15000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 15000ms[22m
+    [2m  - waiting for getByTestId('temperature-value')[22m
+
+
+      136 |   test('displays environmental data', async ({ page }) => {
+      137 |     // Wait for weather data to load
+    > 138 |     await expect(page.getByTestId('temperature-value')).toBeVisible({ timeout: 15000 });
+          |                                                         ^
+      139 |
+      140 |     // Look for environmental data indicators (humidity, UV, AQI, etc.)
+      141 |     const environmentalData = page.locator('body').filter({ hasText: /(humidity|UV|AQI|air quality|pollen|wind|pressure)/i });
+        at C:\Users\justi\OneDrive\Desktop\Weather-application--main\tests\weather-app.spec.ts:138:57
+
+
+[1A[2K  4) [chromium] › tests\weather-app.spec.ts:18:7 › 16-Bit Weather App › can search for weather by city name 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByTestId('temperature-value')
+    Expected: visible
+    Timeout: 15000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 15000ms[22m
+    [2m  - waiting for getByTestId('temperature-value')[22m
+
+
+      20 |     await searchInput.fill('New York');
+      21 |     await searchInput.press('Enter');
+    > 22 |     await expect(page.getByTestId('temperature-value')).toBeVisible({ timeout: 15000 });
+         |                                                         ^
+      23 |   });
+      24 |
+      25 |   test('displays error for invalid location', async ({ page }) => {
+        at C:\Users\justi\OneDrive\Desktop\Weather-application--main\tests\weather-app.spec.ts:22:57
+
+    Error Context: test-results\weather-app-16-Bit-Weather-f605f-ch-for-weather-by-city-name-chromium\error-context.md
+
+
+[1A[2K  5) [chromium] › tests\weather-app.spec.ts:25:7 › 16-Bit Weather App › displays error for invalid location 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoContainText[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator: locator('body')
+    Expected pattern: [32m/not found|zip code not found|postal code not found|city not found/i[39m
+    Received string:  [31m"12 Issues16BIT WEATHERHOMERADARLEARNEXTREMESNEWSGAMESABOUTLOGIN16BIT WEATHER► 90210 • NEW YORK, NY • LONDON, UK ◄► ZIP • CITY, STATE • CITY, COUNTRY ◄WEATHER BY CITY↻ SHUFFLECHARLOTTECOLUMBUSCHANDLERHOUSTONLOUISVILLELUBBOCKORLANDOSTOCKTONRIVERSIDEPITTSBURGHShowing 10 of 94 cities • Click shuffle for moreAUTH DEBUGLoading: falseInitialized: trueUser: NoneSession: NoneProfile: NonePreferences: NoneLast Updated: 9:49:46 AM"[39m
+    Timeout: 15000ms
+
+    Call log:
+    [2m  - Expect "toContainText" with timeout 15000ms[22m
+    [2m  - waiting for locator('body')[22m
+    [2m    4 × locator resolved to <body class="__className_f367f3 min-h-screen">…</body>[22m
+    [2m      - unexpected value "16BIT WEATHERHOMERADARLEARNEXTREMESNEWSGAMESABOUT16BIT WEATHER► 90210 • NEW YORK, NY • LONDON, UK ◄► ZIP • CITY, STATE • CITY, COUNTRY ◄══ PRESS START TO INITIALIZE WEATHER DATA ══Loading cities...AUTH DEBUGLoading: trueInitialized: falseUser: NoneSession: NoneProfile: NonePreferences: NoneLast Updated: 9:49:45 AM"[22m
+    [2m    - locator resolved to <body class="__className_f367f3 min-h-screen theme-dark">…</body>[22m
+    [2m    - unexpected value "01 Issue16BIT WEATHERHOMERADARLEARNEXTREMESNEWSGAMESABOUTLOGIN16BIT WEATHER► 90210 • NEW YORK, NY • LONDON, UK ◄► ZIP • CITY, STATE • CITY, COUNTRY ◄══ PRESS START TO INITIALIZE WEATHER DATA ══WEATHER BY CITY↻ SHUFFLECHARLOTTECOLUMBUSCHANDLERHOUSTONLOUISVILLELUBBOCKORLANDOSTOCKTONRIVERSIDEPITTSBURGHShowing 10 of 94 cities • Click shuffle for moreAUTH DEBUGLoading: falseInitialized: trueUser: NoneSession: NoneProfile: NonePreferences: NoneLast Updated: 9:49:46 AM"[22m
+    [2m    - locator resolved to <body class="__className_f367f3 min-h-screen theme-dark">…</body>[22m
+    [2m    - unexpected value "12 Issues16BIT WEATHERHOMERADARLEARNEXTREMESNEWSGAMESABOUTLOGIN16BIT WEATHER► 90210 • NEW YORK, NY • LONDON, UK ◄► ZIP • CITY, STATE • CITY, COUNTRY ◄══ PRESS START TO INITIALIZE WEATHER DATA ══WEATHER BY CITY↻ SHUFFLECHARLOTTECOLUMBUSCHANDLERHOUSTONLOUISVILLELUBBOCKORLANDOSTOCKTONRIVERSIDEPITTSBURGHShowing 10 of 94 cities • Click shuffle for moreAUTH DEBUGLoading: falseInitialized: trueUser: NoneSession: NoneProfile: NonePreferences: NoneLast Updated: 9:49:46 AM"[22m
+    [2m    12 × locator resolved to <body class="__className_f367f3 min-h-screen theme-dark">…</body>[22m
+    [2m       - unexpected value "12 Issues16BIT WEATHERHOMERADARLEARNEXTREMESNEWSGAMESABOUTLOGIN16BIT WEATHER► 90210 • NEW YORK, NY • LONDON, UK ◄► ZIP • CITY, STATE • CITY, COUNTRY ◄WEATHER BY CITY↻ SHUFFLECHARLOTTECOLUMBUSCHANDLERHOUSTONLOUISVILLELUBBOCKORLANDOSTOCKTONRIVERSIDEPITTSBURGHShowing 10 of 94 cities • Click shuffle for moreAUTH DEBUGLoading: falseInitialized: trueUser: NoneSession: NoneProfile: NonePreferences: NoneLast Updated: 9:49:46 AM"[22m
+
+
+      32 |       await expect(errorBanner).toContainText(/not found/i);
+      33 |     } else {
+    > 34 |       await expect(page.locator('body')).toContainText(/not found|zip code not found|postal code not found|city not found/i, { timeout: 15000 });
+         |                                          ^
+      35 |     }
+      36 |   });
+      37 |
+        at C:\Users\justi\OneDrive\Desktop\Weather-application--main\tests\weather-app.spec.ts:34:42
+
+    Error Context: test-results\weather-app-16-Bit-Weather-a5096--error-for-invalid-location-chromium\error-context.md
+
+
+[1A[2K  6) [chromium] › tests\weather-app.spec.ts:49:7 › 16-Bit Weather App › navigation links work correctly 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: expect.toHaveURL: Target page, context or browser has been closed
+
+      52 |     if (await aboutLink.count() > 0) {
+      53 |       await aboutLink.click();
+    > 54 |       await expect(page).toHaveURL('/about');
+         |                          ^
+      55 |       await expect(page.locator('h1, h2').filter({ hasText: /About/i })).toBeVisible();
+      56 |     }
+      57 |
+        at C:\Users\justi\OneDrive\Desktop\Weather-application--main\tests\weather-app.spec.ts:54:26
+
+
+[1A[2K  6 failed
+    [chromium] › tests\weather-app.spec.ts:18:7 › 16-Bit Weather App › can search for weather by city name 
+    [chromium] › tests\weather-app.spec.ts:25:7 › 16-Bit Weather App › displays error for invalid location 
+    [chromium] › tests\weather-app.spec.ts:49:7 › 16-Bit Weather App › navigation links work correctly 
+    [chromium] › tests\weather-app.spec.ts:75:7 › Weather Data Display › displays current weather information 
+    [chromium] › tests\weather-app.spec.ts:119:7 › Weather Data Display › displays forecast information 
+    [chromium] › tests\weather-app.spec.ts:136:7 › Weather Data Display › displays environmental data 
+  3 passed (38.3s)
+
+[36m  Serving HTML report at http://localhost:58718. Press Ctrl+C to quit.[39m
+^Cnpm error A complete log of this run can be found in: C:\Users\justi\AppData\Local\npm-cache\_logs\2025-11-27T17_49_37_175Z-debug-0.log

@@ -87,9 +87,13 @@ export default function WeatherSearch({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('[WeatherSearch] handleSubmit called', { searchTerm, isLoading, isDisabled });
     if (searchTerm.trim() && !isLoading && !isDisabled) {
+      console.log('[WeatherSearch] Calling onSearch');
       onSearch(searchTerm.trim())
       setShowAutocomplete(false)
+    } else {
+      console.log('[WeatherSearch] Search blocked');
     }
   }
 
@@ -344,4 +348,4 @@ export default function WeatherSearch({
       )}
     </div>
   )
-} 
+}

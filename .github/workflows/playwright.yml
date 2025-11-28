@@ -56,3 +56,5 @@ jobs:
         run: npx playwright test
         env:
           CI: true
+          PLAYWRIGHT_TEST_MODE: 'true'
+          NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE: 'true'

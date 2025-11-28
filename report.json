@@ -1,0 +1,10 @@
+[dotenv@17.2.3] injecting env (10) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+Error: No tests found.
+Make sure that arguments are regular expressions matching test files.
+You may need to escape symbols like "$" or "*" and quote the arguments.
+
+[1A[2K
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

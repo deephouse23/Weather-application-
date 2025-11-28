@@ -6,6 +6,7 @@ import { userCacheService } from '@/lib/user-cache-service'
 import { toastService } from '@/lib/toast-service'
 import { useLocationContext } from '@/components/location-context'
 import { useAuth } from '@/lib/auth'
+import { safeStorage } from '@/lib/safe-storage'
 
 // Constants
 const CACHE_KEY = 'bitweather_city'
@@ -43,26 +44,26 @@ export function useWeatherController() {
         setShouldClearOnRouteChange(true)
     }, [setShouldClearOnRouteChange])
 
+
+
     // Rate limiting logic
     const getRateLimitData = useCallback(() => {
-        if (!isClient) return { requests: [], lastReset: Date.now() }
         try {
-            const data = localStorage.getItem(RATE_LIMIT_KEY)
+            const data = safeStorage.getItem(RATE_LIMIT_KEY)
             return data ? JSON.parse(data) : { requests: [], lastReset: Date.now() }
         } catch (error) {
             console.warn('Failed to get rate limit data:', error)
             return { requests: [], lastReset: Date.now() }
         }
-    }, [isClient])
+    }, [])
 
     const saveRateLimitData = useCallback((data: { requests: number[], lastReset: number }) => {
-        if (!isClient) return
         try {
-            localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(data))
+            safeStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(data))
         } catch (error) {
             console.warn('Failed to save rate limit data:', error)
         }
-    }, [isClient])
+    }, [])
 
     const checkRateLimit = useCallback((): { allowed: boolean, remaining: number, message?: string } => {
         const now = Date.now()
@@ -90,6 +91,14 @@ export function useWeatherController() {
         return { allowed: true, remaining }
     }, [getRateLimitData, saveRateLimitData])
 
+    // Update remaining searches on mount
+    useEffect(() => {
+        if (isClient) {
+            const { remaining } = checkRateLimit()
+            setRemainingSearches(remaining)
+        }
+    }, [isClient, checkRateLimit])
+
     const recordRequest = useCallback(() => {
         const now = Date.now()
         const data = getRateLimitData()
@@ -106,28 +115,25 @@ export function useWeatherController() {
 
     // Cache management
     const saveLocationToCache = useCallback((location: string) => {
-        if (!isClient) return
         try {
-            localStorage.setItem(CACHE_KEY, location)
+            safeStorage.setItem(CACHE_KEY, location)
         } catch (error) {
             console.warn('Failed to save location to cache:', error)
         }
-    }, [isClient])
+    }, [])
 
     const saveWeatherToCache = useCallback((weatherData: WeatherData) => {
-        if (!isClient) return
         try {
-            localStorage.setItem(WEATHER_KEY, JSON.stringify(weatherData))
-            localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString())
+            safeStorage.setItem(WEATHER_KEY, JSON.stringify(weatherData))
+            safeStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString())
         } catch (error) {
             console.warn('Failed to save weather data to cache:', error)
         }
-    }, [isClient])
+    }, [])
 
     const getSearchCache = useCallback((): Map<string, { data: WeatherData; timestamp: number }> => {
-        if (!isClient) return new Map()
         try {
-            const cached = localStorage.getItem(SEARCH_CACHE_KEY)
+            const cached = safeStorage.getItem(SEARCH_CACHE_KEY)
             if (cached) {
                 const parsed = JSON.parse(cached)
                 const map = new Map<string, { data: WeatherData; timestamp: number }>()
@@ -146,17 +152,16 @@ export function useWeatherController() {
             console.warn('Failed to get search cache:', error)
         }
         return new Map()
-    }, [isClient])
+    }, [])
 
     const saveSearchCache = useCallback((cache: Map<string, { data: WeatherData; timestamp: number }>) => {
-        if (!isClient) return
         try {
             const obj = Object.fromEntries(cache)
-            localStorage.setItem(SEARCH_CACHE_KEY, JSON.stringify(obj))
+            safeStorage.setItem(SEARCH_CACHE_KEY, JSON.stringify(obj))
         } catch (error) {
             console.warn('Failed to save search cache:', error)
         }
-    }, [isClient])
+    }, [])
 
     const addToSearchCache = useCallback((searchTerm: string, weatherData: WeatherData) => {
         const cache = getSearchCache()
@@ -312,7 +317,12 @@ export function useWeatherController() {
 
         const tryAutoLocation = async () => {
             try {
-                if (preferences?.auto_location === false) {
+                // Check auth preferences first, then fallback to local storage
+                const localPrefs = userCacheService.getPreferences()
+                const shouldAutoLocate = preferences?.auto_location ?? localPrefs?.settings.auto_location ?? true
+                console.log('[Debug] tryAutoLocation running. shouldAutoLocate:', shouldAutoLocate, 'preferences:', preferences, 'localPrefs:', localPrefs);
+
+                if (shouldAutoLocate === false) {
                     if (profile?.default_location) {
                         await handleSearch(profile.default_location)
                     }
@@ -371,6 +381,7 @@ export function useWeatherController() {
                 const cachedLocationData = localStorage.getItem(CACHE_KEY)
                 const cachedWeatherData = localStorage.getItem(WEATHER_KEY)
                 const cacheTimestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY)
+                console.log('[Debug] checkCacheAndLoad running. cachedLocationData:', cachedLocationData, 'cachedWeatherData:', !!cachedWeatherData, 'cacheTimestamp:', cacheTimestamp);
 
                 if (cachedLocationData && cachedWeatherData && cacheTimestamp) {
                     const cacheAge = Date.now() - parseInt(cacheTimestamp)
