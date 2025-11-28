@@ -1,24 +1,33 @@
 import * as Sentry from "@sentry/nextjs";
 
-Sentry.init({
-  dsn: process.env.SENTRY_DSN,
+const sentryDsn = process.env.SENTRY_DSN;
 
-  // Higher sample rate for testing
-  tracesSampleRate: 1.0,  // Changed from 0.1 to 1.0
-  
-  // Enable debug mode temporarily
-  debug: true,  // Changed from false to true
+if (sentryDsn && sentryDsn.includes('sentry.io')) {
+  Sentry.init({
+    dsn: sentryDsn,
 
-  environment: process.env.NODE_ENV || 'development',
-  
-  beforeSend(event, hint) {
-    console.log('Sentry server event captured:', event);
-    return event;
-  },
+    // Lower sample rate in production to reduce costs
+    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+    
+    // Only enable debug in development
+    debug: process.env.NODE_ENV === 'development',
 
-  // Note: if you want to override the automatic release value, do not set a
-  // `release` value here - use the environment variable `SENTRY_RELEASE`, so
-  // that it will also get attached to your source maps
-});
+    environment: process.env.NODE_ENV || 'development',
+    
+    beforeSend(event, hint) {
+      // Only log in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Sentry server event captured:', event);
+      }
+      return event;
+    },
 
-console.log('✅ Sentry server initialized');
+    // Note: if you want to override the automatic release value, do not set a
+    // `release` value here - use the environment variable `SENTRY_RELEASE`, so
+    // that it will also get attached to your source maps
+  });
+
+  console.log('✅ Sentry server initialized');
+} else {
+  console.warn('⚠️ Sentry server: DSN not configured, skipping initialization');
+}

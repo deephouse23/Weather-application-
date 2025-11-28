@@ -59,6 +59,7 @@ export class UserCacheService {
   private readonly PREFERENCES_KEY = 'user_preferences';
   private readonly WEATHER_CACHE_KEY = 'weather_cache';
   private readonly DEFAULT_WEATHER_CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+  private readonly FORECAST_CACHE_DURATION = 30 * 60 * 1000; // 30 minutes for forecast data
   private readonly DEFAULT_LOCATION_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
   private readonly MAX_CACHE_SIZE = 5 * 1024 * 1024; // 5MB limit
 
@@ -178,6 +179,7 @@ export class UserCacheService {
 
   /**
    * Cache weather data
+   * Uses longer cache duration for forecast data (daily/hourly) vs current conditions
    */
   cacheWeatherData(locationKey: string, weatherData: WeatherData, customDuration?: number): boolean {
     if (!this.isStorageAvailable()) return false;
@@ -186,7 +188,12 @@ export class UserCacheService {
     if (!preferences?.settings.cacheEnabled) return false;
 
     try {
-      const duration = customDuration || this.DEFAULT_WEATHER_CACHE_DURATION;
+      // Use longer cache for forecast data (has forecast array) vs current conditions
+      const hasForecastData = weatherData.forecast && weatherData.forecast.length > 0;
+      const defaultDuration = hasForecastData 
+        ? this.FORECAST_CACHE_DURATION 
+        : this.DEFAULT_WEATHER_CACHE_DURATION;
+      const duration = customDuration || defaultDuration;
       const cacheEntry: CachedWeatherData = {
         data: weatherData,
         timestamp: Date.now(),

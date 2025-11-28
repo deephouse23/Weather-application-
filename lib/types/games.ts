@@ -70,10 +70,12 @@ export interface DailyChallenge {
 }
 
 export interface ScoreSubmission {
-  game_slug: string;
-  player_name: string;
+  game_slug?: string;
+  player_name?: string;
   score: number;
+  level?: number;
   level_reached?: number;
+  timePlayed?: number;
   time_played_seconds?: number;
   metadata?: Record<string, any>;
 }

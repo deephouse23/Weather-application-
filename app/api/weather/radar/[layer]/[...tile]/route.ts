@@ -19,17 +19,15 @@ const LAYER_MAP: Record<string, string> = {
 
 export async function GET(
   request: Request,
-  context: any
+  { params }: { params: Promise<{ layer: string; tile: string[] }> }
 ) {
-  const { params } = context as { params: { layer: string; tile: string[] } }
+  const { layer, tile } = await params
   // Try both server-side and client-side env var names
   const apiKey = process.env.OPENWEATHER_API_KEY || process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY
   if (!apiKey) {
     console.error('[Radar Proxy] API key not found. Checked OPENWEATHER_API_KEY and NEXT_PUBLIC_OPENWEATHER_API_KEY')
     return new NextResponse('API key not configured', { status: 500 })
   }
-
-  const { layer, tile } = params
   
   // Early return for unsupported precipitation layer
   if (layer === 'precipitation_new') {
@@ -71,7 +69,6 @@ export async function GET(
     const response = await fetch(url, {
       headers: { 'User-Agent': '16-Bit-Weather/radar-proxy' },
       // Timeouts via AbortSignal timeout; keep short for "now" tiles
-      // @ts-ignore
       signal: AbortSignal.timeout(8000)
     })
 

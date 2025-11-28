@@ -1,8 +1,21 @@
 import { withSentryConfig } from "@sentry/nextjs";
 
+// Bundle analyzer (only enabled when ANALYZE=true)
+// Use dynamic import to avoid ES module issues
+let withBundleAnalyzer = (config) => config;
+if (process.env.ANALYZE === 'true') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const bundleAnalyzer = require('@next/bundle-analyzer');
+  withBundleAnalyzer = bundleAnalyzer.default({
+    enabled: true,
+  });
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
+    // Temporarily disabled until remaining ESLint errors are fixed
+    // TODO: Fix remaining any types and enable
     ignoreDuringBuilds: true,
   },
   typescript: {
@@ -42,6 +55,27 @@ const nextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin'
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://vercel.com https://va.vercel-scripts.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com data:",
+              "img-src 'self' data: https: blob:",
+              "connect-src 'self' https://api.openweathermap.org https://pollen.googleapis.com https://www.google.com https://*.supabase.co https://*.sentry.io https://vitals.vercel-insights.com",
+              "frame-src 'self'",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "frame-ancestors 'self'",
+              "upgrade-insecure-requests"
+            ].join('; ')
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()'
           },
         ],
       },
@@ -97,12 +131,12 @@ const nextConfig = {
   },
 }
 
-export default withSentryConfig(nextConfig, {
+export default withBundleAnalyzer(withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options
 
-  org: "16bitweather",
-  project: "javascript-nextjs",
+  org: process.env.SENTRY_ORG || "16bitweather",
+  project: process.env.SENTRY_PROJECT || "javascript-nextjs",
   
   // Auth token for uploading source maps
   authToken: process.env.SENTRY_AUTH_TOKEN,
@@ -124,4 +158,4 @@ export default withSentryConfig(nextConfig, {
   // https://docs.sentry.io/product/crons/
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/instrumentation/automatic-instrumentation/
   automaticVercelMonitors: true,
-});
+}));

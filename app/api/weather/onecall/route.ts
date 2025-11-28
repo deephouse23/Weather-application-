@@ -35,8 +35,13 @@ export async function GET(request: NextRequest) {
     url.searchParams.set('units', units)
     if (exclude) url.searchParams.set('exclude', exclude)
 
+    // Check if this is a forecast request (daily/hourly data)
+    // Forecast data changes less frequently, so we can cache longer
+    const isForecastRequest = !exclude.includes('daily') && !exclude.includes('hourly')
+    const cacheTime = isForecastRequest ? 1800 : 60 // 30 minutes for forecasts, 1 minute for current
+    
     const response = await fetch(url.toString(), {
-      next: { revalidate: 60 },
+      next: { revalidate: cacheTime },
       cache: 'no-store',
       headers: { 'User-Agent': '16-Bit-Weather/onecall' },
     })
@@ -60,7 +65,7 @@ export async function GET(request: NextRequest) {
     const data = await response.json()
     return NextResponse.json(data, {
       headers: {
-        'Cache-Control': 'public, max-age=60, s-maxage=60',
+        'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
       },
     })
   } catch (error) {

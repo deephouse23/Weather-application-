@@ -18,6 +18,7 @@ import NewsHero from '@/components/news/NewsHero';
 import NewsFilter from '@/components/news/NewsFilter';
 import NewsGrid from '@/components/news/NewsGrid';
 import type { NewsItem } from '@/components/NewsTicker/NewsTicker';
+import type { ExtendedNewsItem } from '@/lib/types/news';
 import type { NewsCategory } from '@/lib/types/news';
 
 export default function NewsPage() {
@@ -50,7 +51,7 @@ export default function NewsPage() {
 
       if (data.status === 'ok' && data.items) {
         // Convert timestamp strings to Date objects
-        const items = data.items.map((item: any) => ({
+        const items = data.items.map((item: NewsItem | ExtendedNewsItem) => ({
           ...item,
           timestamp: new Date(item.timestamp),
         }));

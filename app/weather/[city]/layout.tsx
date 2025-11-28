@@ -50,7 +50,15 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
   }
 
   // Structured data for WeatherForecast
-  const structuredData = {
+  const structuredData: {
+    "@context": string;
+    "@type": string;
+    name: string;
+    description: string;
+    url: string;
+    mainEntity: Record<string, unknown>;
+    isPartOf: Record<string, unknown>;
+  } = {
     "@context": "https://schema.org",
     "@type": "WebPage",
     "name": title,
@@ -102,7 +110,7 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
           "conditions": day.condition || 'Partly Cloudy'
         }
       })
-    } as any
+    } as Record<string, unknown>
   }
 
   return {

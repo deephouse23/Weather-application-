@@ -7,10 +7,9 @@ export const runtime = 'nodejs'
 // timestamp format: YYYYMMDD-HHMM (e.g., 20251011-2050)
 export async function GET(
   request: NextRequest,
-  context: any
+  { params }: { params: Promise<{ timestamp: string; z: string; x: string; y: string }> }
 ) {
-  const { params } = context as { params: { timestamp: string; z: string; x: string; y: string } }
-  const { timestamp, z, x, y } = params
+  const { timestamp, z, x, y } = await params
 
   if (!timestamp || !z || !x || !y) {
     return new NextResponse('Missing required parameters', { status: 400 })
@@ -31,7 +30,6 @@ export async function GET(
       headers: {
         'User-Agent': '16-Bit-Weather/iowa-nexrad-tiles',
       },
-      // @ts-ignore - AbortSignal.timeout is supported in Node 18+
       signal: AbortSignal.timeout(10000),
     })
 

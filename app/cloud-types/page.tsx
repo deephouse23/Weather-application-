@@ -542,7 +542,7 @@ export default function CloudTypesPage() {
                   <div className={`mt-3 p-2 border ${themeClasses.borderColor} bg-opacity-50`}
                        style={{ backgroundColor: themeClasses.shadowColor + '10' }}>
                     <p className={`${themeClasses.text} font-mono text-xs italic`}>
-                      "{cloud.description16bit}"
+                      &ldquo;{cloud.description16bit}&rdquo;
                     </p>
                   </div>
 

@@ -1,6 +1,18 @@
 import * as Sentry from '@sentry/nextjs';
 
+import { validateEnv } from './lib/env-validation';
+
 export async function register() {
+  // Validate environment variables at startup
+  try {
+    validateEnv();
+  } catch (error) {
+    console.error('Environment validation failed:', error);
+    // Don't throw in development to allow for easier local setup
+    if (process.env.NODE_ENV === 'production') {
+      throw error;
+    }
+  }
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     console.log('🔧 Loading Sentry server config...');
     await import('./sentry.server.config');
@@ -11,11 +23,8 @@ export async function register() {
     await import('./sentry.edge.config');
   }
 
-  // Load client config for browser
-  if (process.env.NEXT_RUNTIME === 'browser') {
-    console.log('🔧 Loading Sentry client config...');
-    await import('./sentry.client.config');
-  }
+  // Client config is handled by instrumentation-client.ts (automatically loaded by Next.js)
+  // No need to manually import sentry.client.config.ts (deprecated)
 }
 
 // Export onRequestError hook for Sentry to capture errors from nested React Server Components
