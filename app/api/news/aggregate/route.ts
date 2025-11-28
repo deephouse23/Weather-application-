@@ -66,7 +66,8 @@ export async function GET(request: NextRequest) {
     // Parse categories
     if (categoriesParam) {
       const cats = categoriesParam.split(',').filter(Boolean);
-      options.categories = cats as NewsCategory[];
+      // Type assertion needed because AggregatedNewsOptions uses a subset of NewsCategory
+      options.categories = cats as ('breaking' | 'weather' | 'local' | 'general')[];
     }
 
     // Parse priority
@@ -77,7 +78,8 @@ export async function GET(request: NextRequest) {
     // Parse sources
     if (sourcesParam) {
       const srcs = sourcesParam.split(',').filter(Boolean);
-      options.sources = srcs as NewsSource[];
+      // Type assertion needed because AggregatedNewsOptions uses a subset of NewsSource
+      options.sources = srcs as ('noaa' | 'nasa' | 'reddit' | 'newsapi' | 'gfs')[];
     }
 
     // Aggregate news from all sources
