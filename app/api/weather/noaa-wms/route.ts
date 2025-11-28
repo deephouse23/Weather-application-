@@ -31,7 +31,6 @@ export async function GET(request: NextRequest) {
       headers: {
         'User-Agent': '16-Bit-Weather/noaa-wms-proxy',
       },
-      // @ts-expect-error - AbortSignal.timeout is supported in Node 18+
       signal: AbortSignal.timeout(10000), // 10 second timeout for WMS requests
     })
 

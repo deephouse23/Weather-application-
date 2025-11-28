@@ -69,7 +69,6 @@ export async function GET(
     const response = await fetch(url, {
       headers: { 'User-Agent': '16-Bit-Weather/radar-proxy' },
       // Timeouts via AbortSignal timeout; keep short for "now" tiles
-      // @ts-expect-error - AbortSignal.timeout is supported in Node 18+
       signal: AbortSignal.timeout(8000)
     })
 
