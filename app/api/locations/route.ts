@@ -181,7 +181,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Transform the data to match expected format
-    const transformedData = (data || []).map((location: any) => ({
+    const transformedData = (data || []).map((location: Record<string, unknown>) => ({
       ...location,
       location_name: location.city_name || location.location_name,
       custom_name: location.nickname || location.custom_name,

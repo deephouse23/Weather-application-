@@ -2,6 +2,7 @@
 
 import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
+import Link from "next/link";
 
 export const runtime = 'nodejs';
 
@@ -29,9 +30,9 @@ export default function GlobalError({
             >
               Try again
             </button>
-            <a href="/" className="text-blue-400 hover:underline px-4 py-2 border border-blue-400 rounded">
+            <Link href="/" className="text-blue-400 hover:underline px-4 py-2 border border-blue-400 rounded">
               Go home
-            </a>
+            </Link>
           </div>
         </div>
       </body>

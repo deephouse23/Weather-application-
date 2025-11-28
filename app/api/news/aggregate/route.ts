@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { aggregateNews, getFeaturedStory, AggregatedNewsOptions } from '@/lib/services/newsAggregator';
+import type { NewsCategory, NewsPriority, NewsSource } from '@/lib/types/news';
 
 // Cache configuration
 const CACHE_DURATION = 5 * 60; // 5 minutes in seconds
@@ -65,18 +66,18 @@ export async function GET(request: NextRequest) {
     // Parse categories
     if (categoriesParam) {
       const cats = categoriesParam.split(',').filter(Boolean);
-      options.categories = cats as any;
+      options.categories = cats as NewsCategory[];
     }
 
     // Parse priority
     if (priorityParam && priorityParam !== 'all') {
-      options.priority = priorityParam as any;
+      options.priority = priorityParam as NewsPriority;
     }
 
     // Parse sources
     if (sourcesParam) {
       const srcs = sourcesParam.split(',').filter(Boolean);
-      options.sources = srcs as any;
+      options.sources = srcs as NewsSource[];
     }
 
     // Aggregate news from all sources

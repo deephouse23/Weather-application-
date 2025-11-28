@@ -16,7 +16,7 @@ import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import PageWrapper from '@/components/page-wrapper';
 import GameCard from '@/components/games/GameCard';
 import { Search, Filter, Gamepad2, Trophy, Users, Zap } from 'lucide-react';
-import type { Game, GameCategory } from '@/lib/types/games';
+import type { Game, GameCategory, GameDifficulty } from '@/lib/types/games';
 import { fetchGames } from '@/lib/services/gamesService';
 
 export default function GamesPage() {
@@ -211,7 +211,7 @@ export default function GamesPage() {
               {['all', 'easy', 'medium', 'hard'].map((diff) => (
                 <button
                   key={diff}
-                  onClick={() => setSelectedDifficulty(diff as any)}
+                  onClick={() => setSelectedDifficulty(diff as GameDifficulty | 'all')}
                   className={cn(
                     'px-3 py-1 border-2 text-xs font-mono font-bold uppercase transition-all',
                     selectedDifficulty === diff

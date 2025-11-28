@@ -102,7 +102,7 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
           "conditions": day.condition || 'Partly Cloudy'
         }
       })
-    } as any
+    } as Record<string, unknown>
   }
 
   return {

@@ -15,7 +15,7 @@ import PageWrapper from '@/components/page-wrapper';
 import Leaderboard from '@/components/games/Leaderboard';
 import ScoreSubmitModal from '@/components/games/ScoreSubmitModal';
 import { ArrowLeft, Maximize2, Minimize2, Play } from 'lucide-react';
-import type { Game } from '@/lib/types/games';
+import type { Game, ScoreSubmission } from '@/lib/types/games';
 import { fetchGames, incrementPlayCount } from '@/lib/services/gamesService';
 import { useAuth } from '@/lib/auth';
 
@@ -34,7 +34,7 @@ export default function GameDetailPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const [showScoreModal, setShowScoreModal] = useState(false);
-  const [gameScore, setGameScore] = useState<any>(null);
+  const [gameScore, setGameScore] = useState<ScoreSubmission | null>(null);
 
   const { user } = useAuth();
 
@@ -72,7 +72,7 @@ export default function GameDetailPage() {
     return () => window.removeEventListener('message', handleMessage);
   }, [user]);
 
-  const handleAuthenticatedScoreSubmit = async (scoreData: any) => {
+  const handleAuthenticatedScoreSubmit = async (scoreData: ScoreSubmission) => {
     if (!game || !user) {
       console.error('[Game Detail] Cannot submit - game or user missing:', { game: !!game, user: !!user });
       return;
