@@ -65,6 +65,7 @@ const nextConfig = {
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: https: blob:",
               "connect-src 'self' https://api.openweathermap.org https://pollen.googleapis.com https://www.google.com https://*.supabase.co https://*.sentry.io https://vitals.vercel-insights.com",
+              "worker-src 'self' blob:",
               "frame-src 'self'",
               "object-src 'none'",
               "base-uri 'self'",

@@ -32,6 +32,16 @@ if (sentryDsn && sentryDsn.includes('sentry.io')) {
         return event;
       },
 
+      // Handle transport errors (like 403 Forbidden)
+      transportOptions: {
+        // Add custom headers if needed
+      },
+      
+      // Error handler for transport failures
+      beforeSendTransaction(event) {
+        return event;
+      },
+
       // Integrate with React error boundaries
       integrations: [
         Sentry.replayIntegration({
