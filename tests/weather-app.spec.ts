@@ -154,17 +154,10 @@ test.describe('Weather Data Display', () => {
     // Wait for weather data to load
     await expect(page.getByTestId('temperature-value')).toBeVisible({ timeout: 15000 });
 
-    // Look for forecast elements - could be forecast cards, daily forecast, etc.
-    const forecastElements = page.locator('[class*="forecast"], [data-testid*="forecast"]');
-    const forecastCount = await forecastElements.count();
-
-    // Should have at least some forecast-related content
-    if (forecastCount > 0) {
-      await expect(forecastElements.first()).toBeVisible({ timeout: 10000 });
-    } else {
-      // Alternative: check for forecast text in body
-      await expect(page.locator('body')).toContainText(/forecast|monday|tuesday|wednesday|thursday|friday|saturday|sunday/i, { timeout: 10000 });
-    }
+    // Look for forecast elements - generalized for both old and new layouts
+    // The shadcn refactor uses Cards with "FORECAST" in the title
+    const forecastHeader = page.locator('h2, h3, div').filter({ hasText: /FORECAST/i }).first();
+    await expect(forecastHeader).toBeVisible({ timeout: 10000 });
   });
 
   test('displays environmental data', async ({ page }) => {
@@ -172,11 +165,8 @@ test.describe('Weather Data Display', () => {
     await expect(page.getByTestId('temperature-value')).toBeVisible({ timeout: 15000 });
 
     // Look for environmental data indicators (humidity, UV, AQI, etc.)
-    const environmentalData = page.locator('body').filter({ hasText: /(humidity|UV|AQI|air quality|pollen|wind|pressure)/i });
-    await expect(environmentalData.first()).toBeVisible({ timeout: 10000 });
-
-    // Verify at least one environmental metric is displayed
-    const hasEnvironmentalData = await page.locator('body').textContent();
-    expect(hasEnvironmentalData).toMatch(/(humidity|UV|AQI|air quality|pollen|wind|pressure)/i);
+    // Using getByText is more reliable than body filtering
+    await expect(page.getByText(/humidity/i).first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/UV Index/i).first()).toBeVisible({ timeout: 10000 });
   });
 });

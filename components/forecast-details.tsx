@@ -1,25 +1,13 @@
-"use client"
-
-/**
- * 16-Bit Weather Platform - BETA v0.3.2
- * 
- * Copyright (C) 2025 16-Bit Weather
- * Licensed under Fair Source License, Version 0.9
- * 
- * Use Limitation: 5 users
- * See LICENSE file for full terms
- * 
- * BETA SOFTWARE NOTICE:
- * This software is in active development. Features may change.
- * Report issues: https://github.com/deephouse23/Weather-application-/issues
- */
-
-
-import { useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
-import { ChevronDown, ChevronUp, Droplets, Wind, Eye, Gauge, Sunrise, Sunset, Cloud, Info } from "lucide-react"
-import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
-import { WeatherData } from "@/lib/types"
+import { Droplets, Wind, Eye, Gauge, Sunrise, Sunset, Info } from "lucide-react"
+import { ThemeType } from "@/lib/theme-config"
 
 interface ForecastDay {
   day: string;
@@ -32,7 +20,7 @@ interface ForecastDay {
 
 interface ForecastDetailsProps {
   forecast: ForecastDay[];
-  theme?: ThemeType;
+  theme?: ThemeType; // Kept for api compatibility
   selectedDay: number | null;
   currentWeatherData?: {
     humidity: number;
@@ -44,88 +32,58 @@ interface ForecastDetailsProps {
   };
 }
 
-// Information tooltip component
-function InfoTooltip({ text, theme }: { text: string; theme: ThemeType }) {
-  const [isVisible, setIsVisible] = useState(false);
-  const themeClasses = getComponentStyles(theme, 'card');
-
-  return (
-    <div className="relative inline-flex">
-      <Info 
-        className="w-3 h-3 ml-1 cursor-help opacity-60 hover:opacity-100 transition-opacity" 
-        onMouseEnter={() => setIsVisible(true)}
-        onMouseLeave={() => setIsVisible(false)}
-      />
-      {isVisible && (
-        <div className={`absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs bg-gray-900 text-white border-2 border-gray-600 rounded-md shadow-xl max-w-48 text-center backdrop-blur-sm`}
-             style={{ backgroundColor: 'rgba(17, 24, 39, 0.95)' }}>
-          <div className="whitespace-normal leading-relaxed font-medium">
-            {text}
-          </div>
-          {/* Arrow pointing down */}
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-600"></div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default function ForecastDetails({ 
-  forecast, 
-  theme = 'dark', 
+export default function ForecastDetails({
+  forecast,
   selectedDay,
-  currentWeatherData 
+  currentWeatherData
 }: ForecastDetailsProps) {
-  const themeClasses = getComponentStyles(theme, 'card');
-  
   // Don't render anything if no day is selected
   if (selectedDay === null) {
     return null;
   }
 
   return (
-    <div className={`${themeClasses.background} p-3 sm:p-4 lg:p-6 rounded-none border-2 sm:border-4 ${themeClasses.borderColor} pixel-shadow`}>
-      <h2 className={`text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4 ${themeClasses.accentText} uppercase tracking-wider text-center pixel-glow`}>
-        DETAILED FORECAST
-      </h2>
-      
-      {/* Expanded Details Section */}
-      <div className={`${themeClasses.cardBg} border ${themeClasses.borderColor} p-4`}>
+    <Card className="p-3 sm:p-4 lg:p-6 border-2 shadow-xl rounded-none sm:rounded-none animate-slide-in">
+      <CardHeader className="p-0 mb-3 sm:mb-4">
+        <CardTitle className="text-center text-base sm:text-lg lg:text-xl font-bold uppercase tracking-wider text-primary glow">
+          DETAILED FORECAST
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="p-0">
+        <div className="bg-muted/50 p-4 rounded-lg border border-border">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className={`text-lg font-bold ${themeClasses.accentText} pixel-glow`}>
+              <h3 className="text-lg font-bold text-primary pixel-glow">
                 {forecast[selectedDay].day}
               </h3>
-              <p className={`text-sm ${themeClasses.text} capitalize`}>
+              <p className="text-sm text-foreground capitalize">
                 {forecast[selectedDay].description}
               </p>
             </div>
             <div className="text-right">
-              <div className={`text-xl font-bold ${themeClasses.accentText} pixel-glow`}>
+              <div className="text-xl font-bold text-primary pixel-glow">
                 {Math.round(forecast[selectedDay].highTemp)}° / {Math.round(forecast[selectedDay].lowTemp)}°
               </div>
             </div>
           </div>
 
-          <DetailedWeatherInfo 
+          <DetailedWeatherInfo
             selectedDay={selectedDay}
             forecastDay={forecast[selectedDay]}
-            theme={theme} 
-            themeClasses={themeClasses}
             currentWeatherData={currentWeatherData}
           />
         </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
-function DetailedWeatherInfo({ 
-  selectedDay, 
+function DetailedWeatherInfo({
+  selectedDay,
   forecastDay,
-  theme, 
-  themeClasses, 
-  currentWeatherData 
-}: { 
+  currentWeatherData
+}: {
   selectedDay: number;
   forecastDay: ForecastDay & {
     details?: {
@@ -139,16 +97,6 @@ function DetailedWeatherInfo({
       visibility?: number;
     };
   };
-  theme: ThemeType; 
-  themeClasses: {
-    background: string;
-    cardBg: string;
-    borderColor: string;
-    accentText: string;
-    text: string;
-    secondary: string;
-    hoverBg: string;
-  }; 
   currentWeatherData?: {
     humidity: number;
     wind: { speed: number; direction?: string };
@@ -156,12 +104,12 @@ function DetailedWeatherInfo({
     uvIndex: number;
     sunrise: string;
     sunset: string;
-  }; 
+  };
 }) {
   // Use forecast day details first, fallback to current weather for today
   const isToday = selectedDay === 0;
   const dayDetails = forecastDay?.details;
-  
+
   const weatherMetrics = [
     {
       icon: <Droplets className="w-4 h-4" />,
@@ -171,31 +119,31 @@ function DetailedWeatherInfo({
     {
       icon: <Droplets className="w-4 h-4" />,
       label: "Humidity",
-      value: dayDetails?.humidity !== undefined ? `${dayDetails.humidity}%` : 
-             (isToday && currentWeatherData?.humidity ? `${currentWeatherData.humidity}%` : "N/A"),
+      value: dayDetails?.humidity !== undefined ? `${dayDetails.humidity}%` :
+        (isToday && currentWeatherData?.humidity ? `${currentWeatherData.humidity}%` : "N/A"),
       tooltip: "Relative humidity measures the amount of moisture in the air as a percentage of the maximum moisture the air can hold at the current temperature."
     },
     {
       icon: <Wind className="w-4 h-4" />,
       label: "Wind",
-      value: dayDetails?.windSpeed !== undefined ? 
-        `${dayDetails.windSpeed} mph ${dayDetails.windDirection || ''}` : 
-        (isToday && currentWeatherData?.wind ? 
-          `${Math.round(currentWeatherData.wind.speed)} mph ${currentWeatherData.wind.direction || ''}` : 
+      value: dayDetails?.windSpeed !== undefined ?
+        `${dayDetails.windSpeed} mph ${dayDetails.windDirection || ''}` :
+        (isToday && currentWeatherData?.wind ?
+          `${Math.round(currentWeatherData.wind.speed)} mph ${currentWeatherData.wind.direction || ''}` :
           "N/A")
     },
     {
       icon: <Gauge className="w-4 h-4" />,
       label: "Pressure",
-      value: dayDetails?.pressure || 
-             (isToday && currentWeatherData?.pressure ? currentWeatherData.pressure : "N/A"),
+      value: dayDetails?.pressure ||
+        (isToday && currentWeatherData?.pressure ? currentWeatherData.pressure : "N/A"),
       tooltip: "Barometric pressure measures the weight of the atmosphere pressing down on Earth's surface. It's measured in inches of mercury (inHg) or hectopascals (hPa)."
     },
     {
       icon: <Eye className="w-4 h-4" />,
       label: "UV Index",
-      value: dayDetails?.uvIndex !== undefined ? dayDetails.uvIndex.toString() : 
-             (isToday && currentWeatherData?.uvIndex !== undefined ? currentWeatherData.uvIndex.toString() : "N/A")
+      value: dayDetails?.uvIndex !== undefined ? dayDetails.uvIndex.toString() :
+        (isToday && currentWeatherData?.uvIndex !== undefined ? currentWeatherData.uvIndex.toString() : "N/A")
     }
   ];
 
@@ -209,7 +157,7 @@ function DetailedWeatherInfo({
       },
       {
         icon: <Sunset className="w-4 h-4" />,
-        label: "Sunset", 
+        label: "Sunset",
         value: currentWeatherData.sunset || "N/A"
       }
     );
@@ -219,15 +167,26 @@ function DetailedWeatherInfo({
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
       {weatherMetrics.map((metric, index) => (
         <div key={index} className="flex items-center space-x-2">
-          <div className={`${themeClasses.accentText} flex-shrink-0`}>
+          <div className="text-primary flex-shrink-0">
             {metric.icon}
           </div>
           <div className="min-w-0 flex-1">
-            <div className={`text-xs ${themeClasses.secondary} opacity-70 flex items-center`}>
+            <div className="text-xs text-muted-foreground flex items-center gap-1">
               {metric.label}
-              {(metric as {tooltip?: string}).tooltip && <InfoTooltip text={(metric as {tooltip?: string}).tooltip!} theme={theme} />}
+              {(metric as { tooltip?: string }).tooltip && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-3 h-3 cursor-help opacity-60 hover:opacity-100 transition-opacity" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs text-xs">
+                      <p>{(metric as { tooltip?: string }).tooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
-            <div className={`text-sm font-medium ${themeClasses.text} truncate`}>
+            <div className="text-sm font-medium text-foreground truncate">
               {metric.value}
             </div>
           </div>

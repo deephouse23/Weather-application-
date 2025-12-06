@@ -1,22 +1,7 @@
-"use client"
-
-/**
- * 16-Bit Weather Platform - BETA v0.3.2
- * 
- * Copyright (C) 2025 16-Bit Weather
- * Licensed under Fair Source License, Version 0.9
- * 
- * Use Limitation: 5 users
- * See LICENSE file for full terms
- * 
- * BETA SOFTWARE NOTICE:
- * This software is in active development. Features may change.
- * Report issues: https://github.com/deephouse23/Weather-application-/issues
- */
-
-
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { ThemeType } from "@/lib/theme-config"
+// removed ThemeType import as manual mapping is gone, but we might accept the prop for compat
+import type { ThemeType } from "@/lib/theme-config"
 import ModernWeatherIcon from "./modern-weather-icon"
 
 interface ForecastDay {
@@ -25,248 +10,61 @@ interface ForecastDay {
   lowTemp: number;
   condition: string;
   description: string;
-  country?: string; // Add country code for unit determination
+  country?: string;
 }
 
 interface ForecastProps {
   forecast: ForecastDay[];
-  theme?: ThemeType;
+  theme?: ThemeType; // Kept for prop output compatibility
   onDayClick?: (index: number) => void;
   selectedDay?: number | null;
 }
 
-export default function Forecast({ forecast, theme = 'dark', onDayClick, selectedDay }: ForecastProps) {
-  // Validate theme prop
-  const validThemes: ThemeType[] = ['dark', 'miami', 'tron', 'atari2600', 'monochromeGreen', '8bitClassic', '16bitSnes']
-  const validTheme = validThemes.includes(theme) ? theme : 'dark'
-  
-  // Enhanced theme-based color classes for three themes
-  const getThemeClasses = (theme: ThemeType) => {
-    switch (theme) {
-      case 'dark':
-        return {
-          cardBg: 'bg-[#16213e]/90 backdrop-blur-md',
-          itemBg: 'bg-[#1a1a2e]/80',
-          itemHover: 'hover:bg-[#1f2347]',
-          borderColor: 'border-[#00d4ff]',
-          itemBorder: 'border-[#4ecdc4]',
-          headerText: 'text-[#00d4ff]',
-          primaryText: 'text-[#4ecdc4]',
-          temperatureText: 'text-[#ffe66d]',
-          lowTempText: 'text-[#4ecdc4]',
-          glow: '',
-          specialBorder: '',
-          cardStyle: {
-            boxShadow: undefined,
-            textShadow: undefined
-          },
-          itemStyle: {
-            background: undefined,
-            boxShadow: undefined,
-            borderColor: undefined
-          }
-        }
-      case 'miami':
-        return {
-          cardBg: 'bg-gradient-to-br from-[#4a0e4e]/90 via-[#2d1b69]/90 to-[#1a0033]/90 backdrop-blur-md',
-          itemBg: 'bg-gradient-to-br from-[#2d1b69] to-[#4a0e4e]',
-          itemHover: 'hover:bg-gradient-to-br hover:from-[#4a0e4e] hover:to-[#6a1b9a]',
-          borderColor: 'border-[#ff1493]',
-          itemBorder: 'border-[#ff1493]',
-          headerText: 'text-[#ff007f]',
-          primaryText: 'text-[#00ffff]',
-          temperatureText: 'text-[#ff1493]',
-          lowTempText: 'text-[#00ffff]',
-          glow: 'drop-shadow-[0_0_8px_#ff007f]',
-          specialBorder: 'shadow-[0_0_15px_#ff1493]',
-          cardStyle: {
-            boxShadow: '0 0 30px #ff1493, 0 0 60px rgba(255, 20, 147, 0.3), inset 0 0 20px rgba(138, 43, 226, 0.2)',
-            textShadow: '0 0 15px #ff007f, 0 0 30px #ff007f'
-          },
-          itemStyle: {
-            background: 'linear-gradient(135deg, #2d1b69, #4a0e4e)',
-            boxShadow: '0 0 20px #ff1493, inset 0 0 15px rgba(255, 20, 147, 0.1)',
-            borderColor: '#ff1493'
-          }
-        }
-      case 'tron':
-        return {
-          cardBg: 'bg-[#000000]/90 backdrop-blur-md',
-          itemBg: 'bg-[#000000]',
-          itemHover: 'hover:bg-[#001111]',
-          borderColor: 'border-[#00FFFF]',
-          itemBorder: 'border-[#00FFFF]',
-          headerText: 'text-[#00FFFF]',
-          primaryText: 'text-[#FFFFFF]',
-          temperatureText: 'text-[#00FFFF]',
-          lowTempText: 'text-[#88CCFF]',
-          glow: 'drop-shadow-[0_0_15px_#00FFFF]',
-          specialBorder: 'shadow-[0_0_20px_#00FFFF]',
-          cardStyle: {
-            boxShadow: '0 0 30px #00FFFF, 0 0 60px rgba(0, 255, 255, 0.3), inset 0 0 20px rgba(0, 255, 255, 0.1)',
-            textShadow: '0 0 15px #00FFFF, 0 0 30px #00FFFF'
-          },
-          itemStyle: {
-            background: 'linear-gradient(135deg, #000000, #001111)',
-            boxShadow: '0 0 25px #00FFFF, inset 0 0 20px rgba(0, 255, 255, 0.1)',
-            borderColor: '#00FFFF'
-          }
-        }
-      case 'atari2600':
-        return {
-          cardBg: 'bg-[#000000]/90 backdrop-blur-md',
-          itemBg: 'bg-[#1a1a1a]',
-          itemHover: 'hover:bg-[#2d2d2d]',
-          borderColor: 'border-[#702800]',
-          itemBorder: 'border-[#702800]',
-          headerText: 'text-[#E0EC9C]',
-          primaryText: 'text-[#FFFFFF]',
-          temperatureText: 'text-[#E0EC9C]',
-          lowTempText: 'text-[#888888]',
-          glow: '',
-          specialBorder: '',
-          cardStyle: { boxShadow: undefined, textShadow: undefined },
-          itemStyle: { background: undefined, boxShadow: undefined, borderColor: undefined }
-        }
-      case 'monochromeGreen':
-        return {
-          cardBg: 'bg-[#0D0D0D]/90 backdrop-blur-md',
-          itemBg: 'bg-[#1a1a1a]',
-          itemHover: 'hover:bg-[#262626]',
-          borderColor: 'border-[#009900]',
-          itemBorder: 'border-[#009900]',
-          headerText: 'text-[#33FF33]',
-          primaryText: 'text-[#33FF33]',
-          temperatureText: 'text-[#33FF33]',
-          lowTempText: 'text-[#66FF66]',
-          glow: '',
-          specialBorder: '',
-          cardStyle: { boxShadow: undefined, textShadow: undefined },
-          itemStyle: { background: undefined, boxShadow: undefined, borderColor: undefined }
-        }
-      case '8bitClassic':
-        return {
-          cardBg: 'bg-[#D3D3D3]/90 backdrop-blur-md',
-          itemBg: 'bg-[#C0C0C0]',
-          itemHover: 'hover:bg-[#A9A9A9]',
-          borderColor: 'border-[#000000]',
-          itemBorder: 'border-[#000000]',
-          headerText: 'text-[#CC0000]',
-          primaryText: 'text-[#000000]',
-          temperatureText: 'text-[#CC0000]',
-          lowTempText: 'text-[#666666]',
-          glow: '',
-          specialBorder: '',
-          cardStyle: { boxShadow: undefined, textShadow: undefined },
-          itemStyle: { background: undefined, boxShadow: undefined, borderColor: undefined }
-        }
-      case '16bitSnes':
-        return {
-          cardBg: 'bg-[#B8B8D0]/90 backdrop-blur-md',
-          itemBg: 'bg-[#9E9EB8]',
-          itemHover: 'hover:bg-[#8484A0]',
-          borderColor: 'border-[#5B5B8B]',
-          itemBorder: 'border-[#5B5B8B]',
-          headerText: 'text-[#FFD700]',
-          primaryText: 'text-[#2C2C3E]',
-          temperatureText: 'text-[#FFD700]',
-          lowTempText: 'text-[#5B5B8B]',
-          glow: '',
-          specialBorder: '',
-          cardStyle: { boxShadow: undefined, textShadow: undefined },
-          itemStyle: { background: undefined, boxShadow: undefined, borderColor: undefined }
-        }
-      default:
-        // Default to dark theme if invalid theme is provided
-        return {
-          cardBg: 'bg-[#16213e]/90 backdrop-blur-md',
-          itemBg: 'bg-[#1a1a2e]/80',
-          itemHover: 'hover:bg-[#1f2347]',
-          borderColor: 'border-[#00d4ff]',
-          itemBorder: 'border-[#4ecdc4]',
-          headerText: 'text-[#00d4ff]',
-          primaryText: 'text-[#4ecdc4]',
-          temperatureText: 'text-[#ffe66d]',
-          lowTempText: 'text-[#4ecdc4]',
-          glow: '',
-          specialBorder: '',
-          cardStyle: {
-            boxShadow: undefined,
-            textShadow: undefined
-          },
-          itemStyle: {
-            background: undefined,
-            boxShadow: undefined,
-            borderColor: undefined
-          }
-        }
-    }
-  }
-
-  const themeClasses = getThemeClasses(validTheme as ThemeType)
-  
+export default function Forecast({ forecast, onDayClick, selectedDay }: ForecastProps) {
   // Determine number of days to show (max 7, or length if less)
-  // If we have 7 days, we show them all. If 5, show 5.
-  // But the slice was limiting it to 5. We remove the slice or make it larger.
-  // We'll show up to 7 days if available.
   const daysToShow = forecast.length >= 7 ? 7 : Math.min(forecast.length, 5);
   const displayForecast = forecast.slice(0, daysToShow);
-  
+
   const title = displayForecast.length > 5 ? "7-DAY FORECAST" : "5-DAY FORECAST";
 
   // Dynamic grid columns based on number of days
-  const gridColsClass = displayForecast.length > 5 
-    ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7" // For 7 days: 2 on small, 3 on med, 4 on lg (2 rows), 7 on xl
-    : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"; // For 5 days: standard 5 cols
+  const gridColsClass = displayForecast.length > 5
+    ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7"
+    : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5";
 
   return (
-    <div className={`${themeClasses.cardBg} p-3 sm:p-4 lg:p-6 card-rounded-md border-2 shadow-theme-card weather-card-enter ${themeClasses.borderColor} ${themeClasses.specialBorder}`}
-         style={{ ...themeClasses.cardStyle, animationDelay: '300ms' }}>
-      <h2 className={`text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4 ${themeClasses.headerText} uppercase tracking-wider ${themeClasses.glow} text-center`}
-          style={{ textShadow: themeClasses.cardStyle.textShadow }}>{title}</h2>
-      {/* Mobile responsive grid - dynamic columns */}
-      <div className={`grid ${gridColsClass} gap-2 sm:gap-3 lg:gap-4`}>
-        {displayForecast.map((day, index) => (
-          <ForecastCard
-            key={index}
-            day={day}
-            index={index}
-            themeClasses={themeClasses}
-            theme={validTheme as ThemeType}
-            onDayClick={onDayClick}
-            isSelected={selectedDay === index}
-          />
-        ))}
-      </div>
-    </div>
+    <Card className="p-3 sm:p-4 lg:p-6 border-2 shadow-md hover:shadow-lg transition-all duration-300 animate-slide-in">
+      <CardHeader className="p-0 mb-3 sm:mb-4">
+        <CardTitle className="text-center text-base sm:text-lg lg:text-xl font-bold uppercase tracking-wider text-primary glow">
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className={cn("grid gap-2 sm:gap-3 lg:gap-4", gridColsClass)}>
+          {displayForecast.map((day, index) => (
+            <ForecastCard
+              key={index}
+              day={day}
+              index={index}
+              onDayClick={onDayClick}
+              isSelected={selectedDay === index}
+            />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
-function ForecastCard({ day, index, themeClasses, theme, onDayClick, isSelected }: { 
-  day: ForecastDay; 
+function ForecastCard({ day, index, onDayClick, isSelected }: {
+  day: ForecastDay;
   index: number;
-  themeClasses: {
-    cardBg: string;
-    itemBg: string;
-    itemHover: string;
-    borderColor: string;
-    itemBorder: string;
-    headerText: string;
-    primaryText: string;
-    temperatureText: string;
-    lowTempText: string;
-    glow: string;
-    specialBorder: string;
-    cardStyle: Record<string, string | undefined>;
-    itemStyle: Record<string, string | undefined>;
-  }; 
-  theme: ThemeType;
   onDayClick?: (index: number) => void;
   isSelected?: boolean;
 }) {
   const isUSALocation = day.country === 'US' || day.country === 'USA';
   const tempUnit = isUSALocation ? '°F' : '°C';
-  
+
   // Generate date in M.DD.YY format
   const today = new Date();
   const targetDate = new Date(today);
@@ -283,68 +81,54 @@ function ForecastCard({ day, index, themeClasses, theme, onDayClick, isSelected 
   };
 
   return (
-    <div
+    <Card
       className={cn(
-        "p-2 sm:p-3 border rounded-xl text-center transition-all duration-300",
-        "min-h-[120px] sm:min-h-[140px] lg:min-h-[160px] flex flex-col justify-between",
-        "backdrop-blur-sm hover:backdrop-blur-md",
-        themeClasses.itemBg,
-        themeClasses.itemBorder,
-        themeClasses.specialBorder,
-        onDayClick && 'cursor-pointer hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl',
-        themeClasses.itemHover,
-        isSelected && `ring-2 ring-opacity-80 scale-105`,
-        isSelected && (theme === 'dark' ? 'ring-[#00d4ff] shadow-[0_0_15px_rgba(0,212,255,0.3)]' : theme === 'miami' ? 'ring-[#ff1493] shadow-[0_0_15px_rgba(255,20,147,0.3)]' : 'ring-[#00FFFF] shadow-[0_0_15px_rgba(0,255,255,0.3)]')
+        "cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-lg hover:border-primary/50",
+        "flex flex-col justify-between min-h-[120px] sm:min-h-[140px] lg:min-h-[160px]",
+        "backdrop-blur-sm bg-card/80",
+        isSelected && "ring-2 ring-primary ring-opacity-80 scale-105 shadow-[0_0_15px_rgba(var(--primary),0.3)]"
       )}
-      style={themeClasses.itemStyle}
       onClick={handleClick}
     >
-      {/* Day of week - Mobile responsive */}
-      <div className={`text-xs sm:text-sm font-bold ${themeClasses.primaryText} mb-1 sm:mb-2 uppercase tracking-wider ${themeClasses.glow} break-words`}>
-        <span className="sm:hidden">{day.day.substring(0, 3)}</span>
-        <span className="hidden sm:inline">{day.day}</span>
-        <div className={`text-xs ${themeClasses.primaryText} opacity-70 mt-1`}>
-          {formattedDate}
+      <CardContent className="p-2 sm:p-3 flex flex-col items-center justify-between h-full">
+        {/* Day - Mobile responsive */}
+        <div className="text-xs sm:text-sm font-bold text-primary mb-1 uppercase tracking-wider glow text-center">
+          <span className="sm:hidden">{day.day.substring(0, 3)}</span>
+          <span className="hidden sm:inline">{day.day}</span>
+          <div className="text-[10px] text-muted-foreground mt-1">
+            {formattedDate}
+          </div>
         </div>
-      </div>
-      
-      {/* Weather icon - Mobile responsive */}
-      <div className="flex justify-center mb-2 sm:mb-3 flex-grow items-center">
-        <ModernWeatherIcon
-          condition={day.condition}
-          size={48}
-          className="hover:scale-110 transition-transform"
-        />
-      </div>
-      
-      {/* Temperature display - Mobile optimized */}
-      <div className="space-y-1">
-        <div className={`text-sm sm:text-base lg:text-lg font-bold ${themeClasses.temperatureText} pixel-glow ${themeClasses.glow}`}
-             style={theme !== 'dark' ? {
-               textShadow: theme === 'tron' ? '0 0 10px #00FFFF, 0 0 20px #00FFFF' : '0 0 10px #ff1493, 0 0 20px #ff1493'
-             } : {}}>
-          {Math.round(day.highTemp)}{tempUnit}
+
+        {/* Icon */}
+        <div className="flex justify-center my-2">
+          <ModernWeatherIcon
+            condition={day.condition}
+            size={40}
+            className="hover:scale-110 transition-transform drop-shadow"
+          />
         </div>
-        <div className={`text-xs sm:text-sm ${themeClasses.lowTempText} opacity-80 font-medium ${themeClasses.glow}`}>
-          {Math.round(day.lowTemp)}{tempUnit}
+
+        {/* Temp */}
+        <div className="space-y-1 text-center">
+          <div className="text-sm sm:text-base lg:text-lg font-bold text-foreground pixel-glow">
+            {Math.round(day.highTemp)}{tempUnit}
+          </div>
+          <div className="text-xs sm:text-sm text-muted-foreground font-medium">
+            {Math.round(day.lowTemp)}{tempUnit}
+          </div>
         </div>
-      </div>
-      
-      {/* Weather description - Mobile responsive with better overflow handling */}
-      <div className={`text-xs ${themeClasses.primaryText} capitalize mt-1 sm:mt-2 ${themeClasses.glow} break-words hyphens-auto leading-tight`} 
-           title={day.description}
-           style={{ 
-             fontSize: "clamp(10px, 2vw, 12px)",
-             lineHeight: "1.2"
-           }}>
-        {/* Show abbreviated description on small screens */}
-        <span className="sm:hidden">
-          {day.description.length > 12 ? `${day.description.substring(0, 10)}...` : day.description}
-        </span>
-        <span className="hidden sm:inline">
-          {day.description.length > 20 ? `${day.description.substring(0, 18)}...` : day.description}
-        </span>
-      </div>
-    </div>
+
+        {/* Description - Mobile responsive */}
+        <div className="text-[10px] text-primary/80 capitalize mt-2 text-center w-full truncate leading-tight">
+          <span className="sm:hidden">
+            {day.description.length > 12 ? `${day.description.substring(0, 10)}...` : day.description}
+          </span>
+          <span className="hidden sm:inline">
+            {day.description.length > 20 ? `${day.description.substring(0, 18)}...` : day.description}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
   );
 } 

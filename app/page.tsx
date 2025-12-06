@@ -19,6 +19,9 @@ import React, { useState, Suspense } from "react"
 import Link from 'next/link'
 import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card" // (already in main block, just ensuring imports are present)
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
 import PageWrapper from "@/components/page-wrapper"
@@ -188,80 +191,99 @@ function WeatherApp() {
 
                 {/* Current Weather using Cards with staggered animations */}
                 <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
-                  <div className={cn("p-0 card-rounded-md border-2 shadow-theme-card weather-card-enter", themeClasses.cardBg, themeClasses.borderColor)} style={{ animationDelay: '0ms' }}>
-                    <div className="p-4 text-center">
-                      <h2 className={cn("text-xl font-semibold mb-2", themeClasses.headerText)}>Temperature</h2>
+                  <Card className="weather-card-enter border-2 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '0ms' }}>
+                    <CardHeader className="pb-2 text-center">
+                      <CardTitle className={cn("text-xl mb-0", themeClasses.headerText)}>Temperature</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center pt-2">
                       <p data-testid="temperature-value" className={cn("text-3xl font-bold", themeClasses.text)}>
                         {weather?.temperature || 'N/A'}{weather?.unit || '°F'}
                       </p>
-                    </div>
-                  </div>
-                  <div className={cn("p-0 card-rounded-md border-2 shadow-theme-card weather-card-enter", themeClasses.cardBg, themeClasses.borderColor)} style={{ animationDelay: '50ms' }}>
-                    <div className="p-4 text-center">
-                      <h2 className={cn("text-xl font-semibold mb-2", themeClasses.headerText)}>Conditions</h2>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="weather-card-enter border-2 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '50ms' }}>
+                    <CardHeader className="pb-2 text-center">
+                      <CardTitle className={cn("text-xl mb-0", themeClasses.headerText)}>Conditions</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center pt-2">
                       <p className={cn("text-lg", themeClasses.text)}>{weather?.condition || 'Unknown'}</p>
                       <p className={cn("text-sm", themeClasses.secondaryText)}>{weather?.description || 'No description available'}</p>
                       {weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
-                        <button
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => setShowHourlyForecast(!showHourlyForecast)}
-                          className={cn("mt-3 px-3 py-1.5 border card-rounded-sm font-mono text-xs font-bold transition-all hover:scale-105", themeClasses.borderColor, themeClasses.text, themeClasses.hoverBg)}
+                          className={cn("mt-3 font-mono text-xs font-bold transition-all hover:scale-105", themeClasses.borderColor, themeClasses.text)}
                         >
                           {showHourlyForecast ? '║ Hide Hourly' : '║ Hourly'}
-                        </button>
+                        </Button>
                       )}
-                    </div>
-                  </div>
-                  <div className={cn("p-0 card-rounded-md border-2 shadow-theme-card weather-card-enter", themeClasses.cardBg, themeClasses.borderColor)} style={{ animationDelay: '100ms' }}>
-                    <div className="p-4 text-center">
-                      <h2 className={cn("text-xl font-semibold mb-2", themeClasses.headerText)}>Wind</h2>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="weather-card-enter border-2 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '100ms' }}>
+                    <CardHeader className="pb-2 text-center">
+                      <CardTitle className={cn("text-xl mb-0", themeClasses.headerText)}>Wind</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center pt-2">
                       <p className={cn("text-lg", themeClasses.text)}>
                         {weather?.wind?.direction ? `${weather.wind.direction} ` : ''}
                         {weather?.wind?.speed || 'N/A'} mph
                         {weather?.wind?.gust ? ` (gusts ${weather.wind.gust} mph)` : ''}
                       </p>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                 </ResponsiveGrid>
 
                 {/* Sun Times, UV Index, Moon Phase with staggered animations */}
                 <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
                   {/* Sun Times Box */}
-                  <div className={cn("p-4 card-rounded-md text-center border-2 shadow-theme-card weather-card-enter", themeClasses.cardBg, themeClasses.borderColor)}
-                    style={{ animationDelay: '150ms' }}>
-                    <h2 className={cn("text-xl font-semibold mb-2", themeClasses.headerText)}>Sun Times</h2>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-center gap-2">
-                        <span className="text-yellow-400">☀️</span>
-                        <p className={themeClasses.text}>Sunrise: {weather?.sunrise || 'N/A'}</p>
+                  <Card className="weather-card-enter border-2 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '150ms' }}>
+                    <CardHeader className="pb-2 text-center">
+                      <CardTitle className={cn("text-xl mb-0", themeClasses.headerText)}>Sun Times</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center pt-2">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="text-yellow-400">☀️</span>
+                          <p className={themeClasses.text}>Sunrise: {weather?.sunrise || 'N/A'}</p>
+                        </div>
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="text-orange-400">🌅</span>
+                          <p className={themeClasses.text}>Sunset: {weather?.sunset || 'N/A'}</p>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-center gap-2">
-                        <span className="text-orange-400">🌅</span>
-                        <p className={themeClasses.text}>Sunset: {weather?.sunset || 'N/A'}</p>
-                      </div>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
 
                   {/* UV Index Box */}
-                  <div className={cn("p-4 card-rounded-md text-center border-2 shadow-theme-card weather-card-enter", themeClasses.cardBg, themeClasses.borderColor)}
-                    style={{ animationDelay: '200ms' }}>
-                    <h2 className={cn("text-xl font-semibold mb-2", themeClasses.headerText)}>UV Index</h2>
-                    <p className={cn("text-lg font-bold", themeClasses.text)}>{weather?.uvIndex || 'N/A'}</p>
-                  </div>
+                  <Card className="weather-card-enter border-2 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '200ms' }}>
+                    <CardHeader className="pb-2 text-center">
+                      <CardTitle className={cn("text-xl mb-0", themeClasses.headerText)}>UV Index</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center pt-2">
+                      <p className={cn("text-lg font-bold", themeClasses.text)}>{weather?.uvIndex || 'N/A'}</p>
+                    </CardContent>
+                  </Card>
 
                   {/* Moon Phase Box */}
-                  <div className={cn("p-4 card-rounded-md text-center border-2 shadow-theme-card weather-card-enter", themeClasses.cardBg, themeClasses.borderColor)}
-                    style={{ animationDelay: '250ms' }}>
-                    <h2 className={cn("text-xl font-semibold mb-2", themeClasses.headerText)}>Moon Phase</h2>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-center gap-2">
-                        <span className="text-2xl">{getMoonPhaseIcon(weather?.moonPhase?.phase || 'new')}</span>
-                        <p className={cn("text-lg font-semibold", themeClasses.text)}>{weather?.moonPhase?.phase || 'Unknown'}</p>
+                  <Card className="weather-card-enter border-2 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '250ms' }}>
+                    <CardHeader className="pb-2 text-center">
+                      <CardTitle className={cn("text-xl mb-0", themeClasses.headerText)}>Moon Phase</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center pt-2">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="text-2xl">{getMoonPhaseIcon(weather?.moonPhase?.phase || 'new')}</span>
+                          <p className={cn("text-lg font-semibold", themeClasses.text)}>{weather?.moonPhase?.phase || 'Unknown'}</p>
+                        </div>
+                        <p className={cn("text-sm font-medium", themeClasses.secondaryText)}>
+                          {weather?.moonPhase?.illumination || 0}% illuminated
+                        </p>
                       </div>
-                      <p className={cn("text-sm font-medium", themeClasses.secondaryText)}>
-                        {weather?.moonPhase?.illumination || 0}% illuminated
-                      </p>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                 </ResponsiveGrid>
 
                 {/* AQI and Pollen Count - Using Lazy Loaded Shared Components */}
