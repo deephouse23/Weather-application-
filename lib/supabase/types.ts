@@ -98,7 +98,7 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          theme: 'dark' | 'miami' | 'tron'
+          theme: string
           temperature_unit: 'celsius' | 'fahrenheit'
           wind_unit: 'mph' | 'kmh' | 'ms'
           pressure_unit: 'hpa' | 'inhg' | 'mmhg'
@@ -115,7 +115,7 @@ export interface Database {
         Insert: {
           id?: string
           user_id: string
-          theme?: 'dark' | 'miami' | 'tron'
+          theme?: string
           temperature_unit?: 'celsius' | 'fahrenheit'
           wind_unit?: 'mph' | 'kmh' | 'ms'
           pressure_unit?: 'hpa' | 'inhg' | 'mmhg'
@@ -132,7 +132,7 @@ export interface Database {
         Update: {
           id?: string
           user_id?: string
-          theme?: 'dark' | 'miami' | 'tron'
+          theme?: string
           temperature_unit?: 'celsius' | 'fahrenheit'
           wind_unit?: 'mph' | 'kmh' | 'ms'
           pressure_unit?: 'hpa' | 'inhg' | 'mmhg'
