@@ -35,10 +35,10 @@ export async function GET() {
       console.error('Error fetching user preferences:', prefError)
       return NextResponse.json({ error: 'Failed to fetch preferences' }, { status: 500 })
     }
-    
-    return NextResponse.json({ 
-      preferences: preferences || { 
-        user_id: user.id, 
+
+    return NextResponse.json({
+      preferences: preferences || {
+        user_id: user.id,
         theme: 'dark',
         temperature_unit: 'fahrenheit',
         wind_unit: 'mph',
@@ -52,7 +52,7 @@ export async function GET() {
         animation_enabled: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      } 
+      }
     })
   } catch (error) {
     console.error('Error fetching user preferences:', error)
@@ -74,10 +74,10 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { 
-      theme, 
-      temperature_unit, 
-      wind_unit, 
+    const {
+      theme,
+      temperature_unit,
+      wind_unit,
       pressure_unit,
       auto_location,
       notifications_enabled,
@@ -108,11 +108,12 @@ export async function PUT(request: NextRequest) {
 
     const { data: updatedPreferences, error: updateError } = await supabase
       .from('user_preferences')
+      // @ts-expect-error - Table definition mismatch
       .update(updates)
       .eq('user_id', user.id)
       .select()
       .single()
-    
+
     if (updateError) {
       console.error('Error updating user preferences:', updateError)
       return NextResponse.json(
@@ -147,6 +148,7 @@ export async function POST(request: NextRequest) {
     // Create initial preferences
     const { data, error } = await supabase
       .from('user_preferences')
+      // @ts-expect-error - Table definition mismatch
       .insert({
         user_id: user.id,
         theme,

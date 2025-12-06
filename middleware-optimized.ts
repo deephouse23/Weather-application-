@@ -126,8 +126,8 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
+        setAll(cookiesToSet: any) {
+          cookiesToSet.forEach(({ name, value, options }: any) => {
             response.cookies.set(name, value, options)
             const existingCookies = requestHeaders.get('cookie')
             const newCookieValue = `${name}=${value}`

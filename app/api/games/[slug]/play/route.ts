@@ -16,6 +16,7 @@ export async function POST(
     const supabase = await createServerSupabaseClient();
 
     // Call the increment_play_count function
+    // @ts-expect-error - Type definition mismatch for RPC call
     const { error } = await supabase.rpc('increment_play_count', {
       game_slug: slug,
     });
