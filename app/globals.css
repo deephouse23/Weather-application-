@@ -668,6 +668,41 @@ input:focus,
 }
 
 @layer base {
+  :root {
+    /* Shadcn UI Variable Mappings to 16-Bit Theme */
+    --background: var(--bg);
+    --foreground: var(--text);
+
+    --card: var(--bg-elev);
+    --card-foreground: var(--text);
+
+    --popover: var(--bg-elev);
+    --popover-foreground: var(--text);
+
+    --primary: var(--primary);
+    --primary-foreground: var(--bg);
+
+    --secondary: var(--bg-elev);
+    --secondary-foreground: var(--accent);
+
+    --muted: var(--bg-elev);
+    --muted-foreground: var(--text-muted);
+
+    --accent: var(--accent);
+    --accent-foreground: var(--bg);
+
+    --destructive: var(--danger);
+    --destructive-foreground: var(--text);
+
+    --border: var(--border);
+    --input: var(--border);
+    --ring: var(--primary);
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
 
   /* Dark theme - 16-bit terminal aesthetic */
   :root[data-theme="dark"] {

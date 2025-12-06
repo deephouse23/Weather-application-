@@ -1,17 +1,3 @@
-/**
- * 16-Bit Weather Platform - BETA v0.3.2
- * 
- * Copyright (C) 2025 16-Bit Weather
- * Licensed under Fair Source License, Version 0.9
- * 
- * Use Limitation: 5 users
- * See LICENSE file for full terms
- * 
- * BETA SOFTWARE NOTICE:
- * This software is in active development. Features may change.
- * Report issues: https://github.com/deephouse23/Weather-application-/issues
- */
-
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -23,7 +9,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "card-rounded-md border border-border bg-card text-card-foreground shadow-theme-card",
+      "rounded-lg border bg-card text-card-foreground shadow-sm",
       className
     )}
     {...props}
@@ -44,10 +30,10 @@ const CardHeader = React.forwardRef<
 CardHeader.displayName = "CardHeader"
 
 const CardTitle = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLHeadingElement>
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <h3
+  <div
     ref={ref}
     className={cn(
       "text-2xl font-semibold leading-none tracking-tight",
@@ -59,10 +45,10 @@ const CardTitle = React.forwardRef<
 CardTitle.displayName = "CardTitle"
 
 const CardDescription = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <p
+  <div
     ref={ref}
     className={cn("text-sm text-muted-foreground", className)}
     {...props}
