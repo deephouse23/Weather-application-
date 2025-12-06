@@ -12,11 +12,14 @@ import { newsService } from './newsService'; // Existing NOAA + NewsAPI service
 import { fetchAllNASAWeatherNews } from './nasaService';
 import { fetchAllRedditWeatherNews } from './redditService';
 import { fetchAllGFSModelNews } from './gfsModelService';
+import { getEnabledFeeds, getFeedsByCategory } from '@/lib/config/rssFeedConfig';
+import { createRSSFeedService } from './rssFeedService';
+import type { NewsCategory } from '@/lib/types/news';
 
 export interface AggregatedNewsOptions {
-  categories?: ('breaking' | 'weather' | 'local' | 'general')[];
+  categories?: NewsCategory[];
   priority?: 'high' | 'medium' | 'low' | 'all';
-  sources?: ('noaa' | 'nasa' | 'reddit' | 'newsapi' | 'gfs')[];
+  sources?: ('noaa' | 'nasa' | 'reddit' | 'newsapi' | 'gfs' | 'rss')[];
   maxItems?: number;
   maxAge?: number; // Maximum age in hours
 }
@@ -36,9 +39,25 @@ export interface AggregatedNewsResult {
   cacheHit: boolean;
 }
 
-// In-memory cache
-const cache = new Map<string, { data: AggregatedNewsResult; timestamp: number }>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+// In-memory cache with tiered durations
+const cache = new Map<string, { data: AggregatedNewsResult; timestamp: number; duration: number }>();
+
+/**
+ * Get cache duration based on categories
+ * Tiered caching: alerts (5min), breaking (10min), general (30min), space (1hr)
+ */
+function getCacheDuration(categories: NewsCategory[]): number {
+  if (categories.includes('alerts') || categories.includes('breaking')) {
+    return 5 * 60 * 1000; // 5 minutes for alerts/breaking
+  }
+  if (categories.includes('weather') || categories.includes('severe')) {
+    return 10 * 60 * 1000; // 10 minutes for weather
+  }
+  if (categories.includes('space') || categories.includes('astronomy') || categories.includes('space-weather')) {
+    return 60 * 60 * 1000; // 1 hour for space/science
+  }
+  return 30 * 60 * 1000; // 30 minutes default
+}
 
 /**
  * Main aggregator function - fetches from all sources
@@ -49,14 +68,15 @@ export async function aggregateNews(
   const {
     categories = ['weather'],
     priority = 'all',
-    sources = ['noaa', 'nasa', 'reddit', 'newsapi', 'gfs'], // Removed 'fox' - RSS feeds return 404
+    sources = ['noaa', 'nasa', 'reddit', 'newsapi', 'gfs', 'rss'],
     maxItems = 30,
     maxAge = 72, // 72 hours default
   } = options;
 
-  // Check cache first
+  // Check cache first with tiered duration
   const cacheKey = JSON.stringify({ categories, priority, sources, maxItems, maxAge });
-  const cached = getFromCache(cacheKey);
+  const cacheDuration = getCacheDuration(categories);
+  const cached = getFromCache(cacheKey, cacheDuration);
   if (cached) {
     return { ...cached, cacheHit: true };
   }
@@ -69,15 +89,13 @@ export async function aggregateNews(
 
   if (sources.includes('noaa')) {
     fetchPromises.push(
-      fetchWithStats('NOAA', () => newsService.fetchNews(categories, maxItems))
+      fetchWithStats('NOAA', () => newsService.fetchNews(categories as any, maxItems))
     );
   }
 
   if (sources.includes('nasa')) {
     fetchPromises.push(fetchWithStats('NASA', () => fetchAllNASAWeatherNews(maxItems)));
   }
-
-  
 
   if (sources.includes('reddit')) {
     fetchPromises.push(
@@ -94,6 +112,24 @@ export async function aggregateNews(
   if (sources.includes('newsapi')) {
     // NewsAPI is already included in newsService.fetchNews
     // We could add a separate direct NewsAPI fetch here if needed
+  }
+
+  // Fetch from RSS feeds
+  if (sources.includes('rss')) {
+    const rssFeeds = getEnabledFeeds();
+    
+    // Filter feeds by requested categories
+    const relevantFeeds = rssFeeds.filter((feed) =>
+      feed.category.some((cat) => categories.includes(cat))
+    );
+
+    // Create RSS feed services and fetch
+    for (const feedConfig of relevantFeeds) {
+      const rssService = createRSSFeedService(feedConfig);
+      fetchPromises.push(
+        fetchWithStats(feedConfig.name, () => rssService.fetch())
+      );
+    }
   }
 
   // Wait for all fetches
@@ -130,8 +166,8 @@ export async function aggregateNews(
     allNews = filterByPriority(allNews, priority);
   }
 
-  // Deduplicate across sources
-  const deduplicatedNews = deduplicateNews(allNews);
+  // Deduplicate across sources with improved algorithm
+  const deduplicatedNews = deduplicateNewsImproved(allNews);
 
   // Sort by priority and timestamp
   const sortedNews = sortNews(deduplicatedNews);
@@ -147,8 +183,8 @@ export async function aggregateNews(
     cacheHit: false,
   };
 
-  // Cache the result
-  saveToCache(cacheKey, aggregatedResult);
+  // Cache the result with tiered duration
+  saveToCache(cacheKey, aggregatedResult, cacheDuration);
 
   return aggregatedResult;
 }
@@ -170,57 +206,156 @@ async function fetchWithStats(
 }
 
 /**
- * Deduplicate news items across sources using fuzzy title matching
- * Separates alerts from articles to prevent keyword overlap issues
+ * Improved deduplication with URL matching, content hash, and time-based grouping
  */
-function deduplicateNews(news: NewsItem[]): NewsItem[] {
+function deduplicateNewsImproved(news: NewsItem[]): NewsItem[] {
   // Separate alerts from articles
   const alerts = news.filter((item) => item.category === 'alerts');
   const articles = news.filter((item) => item.category !== 'alerts');
 
-  // Deduplicate each group separately
-  const deduplicatedAlerts = deduplicateGroup(alerts);
-  const deduplicatedArticles = deduplicateGroup(articles);
+  // Deduplicate each group separately with improved algorithm
+  const deduplicatedAlerts = deduplicateGroupImproved(alerts);
+  const deduplicatedArticles = deduplicateGroupImproved(articles);
 
   // Combine and return
   return [...deduplicatedAlerts, ...deduplicatedArticles];
 }
 
 /**
- * Deduplicate a group of news items
+ * Deduplicate news items across sources using fuzzy title matching
+ * Separates alerts from articles to prevent keyword overlap issues
+ * @deprecated Use deduplicateNewsImproved instead
  */
-function deduplicateGroup(news: NewsItem[]): NewsItem[] {
+function deduplicateNews(news: NewsItem[]): NewsItem[] {
+  return deduplicateNewsImproved(news);
+}
+
+/**
+ * Improved deduplication group with URL matching, content hash, and source priority
+ */
+function deduplicateGroupImproved(news: NewsItem[]): NewsItem[] {
   const seen = new Map<string, NewsItem>();
+  const urlMap = new Map<string, NewsItem>(); // URL-based exact matching
   const titleKeys = new Set<string>();
+  const contentHashes = new Map<string, NewsItem>(); // Content hash for near-duplicates
+
+  // Source priority: NOAA > NASA > Others
+  const sourcePriority: Record<string, number> = {
+    'NOAA': 10,
+    'National Weather Service': 10,
+    'NOAA NHC': 10,
+    'NOAA GFS': 10,
+    'NOAA SWPC': 10,
+    'NASA': 8,
+    'NASA Earth Observatory': 8,
+    'NASA JPL': 8,
+    'ESA': 6,
+    'Space.com': 5,
+    'SpaceNews.com': 5,
+    'Reddit': 4,
+  };
+
+  function getSourcePriority(source: string): number {
+    return sourcePriority[source] || 3;
+  }
 
   news.forEach((item) => {
-    // Create a normalized key from title
-    const titleKey = normalizeTitle(item.title);
+    // Step 1: URL-based exact matching (highest priority)
+    const normalizedUrl = normalizeUrl(item.url);
+    if (normalizedUrl && urlMap.has(normalizedUrl)) {
+      const existing = urlMap.get(normalizedUrl)!;
+      // Keep the one with higher source priority
+      if (getSourcePriority(item.source) > getSourcePriority(existing.source)) {
+        urlMap.set(normalizedUrl, item);
+        seen.set(item.id, item);
+      }
+      return; // Skip duplicate URL
+    }
 
-    // Check for exact match first
+    // Step 2: Content hash matching (for near-duplicates)
+    const contentHash = getContentHash(item);
+    if (contentHash && contentHashes.has(contentHash)) {
+      const existing = contentHashes.get(contentHash)!;
+      // Keep the one with higher source priority or more recent
+      if (
+        getSourcePriority(item.source) > getSourcePriority(existing.source) ||
+        (getSourcePriority(item.source) === getSourcePriority(existing.source) &&
+          item.timestamp > existing.timestamp)
+      ) {
+        contentHashes.set(contentHash, item);
+        seen.set(item.id, item);
+      }
+      return; // Skip duplicate content
+    }
+
+    // Step 3: Title-based fuzzy matching
+    const titleKey = normalizeTitle(item.title);
+    
+    // Check for exact title match
     if (titleKeys.has(titleKey)) {
-      return; // Skip duplicate
+      return; // Skip exact duplicate
     }
 
     // Check for fuzzy duplicates (similar titles)
     let isDuplicate = false;
+    let duplicateItem: NewsItem | null = null;
+    
     for (const existingKey of titleKeys) {
       if (isSimilarTitle(titleKey, existingKey)) {
-        isDuplicate = true;
-        break;
+        // Find the item with this title key
+        const existing = Array.from(seen.values()).find(
+          (n) => normalizeTitle(n.title) === existingKey
+        );
+        if (existing) {
+          duplicateItem = existing;
+          isDuplicate = true;
+          break;
+        }
       }
     }
 
-    if (isDuplicate) {
-      return; // Skip similar title
+    if (isDuplicate && duplicateItem) {
+      // Time-based grouping: same story from different sources within 2 hours
+      const timeDiff = Math.abs(
+        item.timestamp.getTime() - duplicateItem.timestamp.getTime()
+      );
+      const twoHours = 2 * 60 * 60 * 1000;
+
+      if (timeDiff < twoHours) {
+        // Keep the one with higher source priority
+        if (getSourcePriority(item.source) > getSourcePriority(duplicateItem.source)) {
+          // Replace the duplicate
+          seen.delete(duplicateItem.id);
+          titleKeys.delete(normalizeTitle(duplicateItem.title));
+          if (normalizedUrl) urlMap.delete(normalizedUrl);
+          if (contentHash) contentHashes.delete(contentHash);
+          
+          // Add new item
+          titleKeys.add(titleKey);
+          seen.set(item.id, item);
+          if (normalizedUrl) urlMap.set(normalizedUrl, item);
+          if (contentHash) contentHashes.set(contentHash, item);
+        }
+      }
+      return; // Skip duplicate
     }
 
-    // Add to set
+    // Add new item
     titleKeys.add(titleKey);
     seen.set(item.id, item);
+    if (normalizedUrl) urlMap.set(normalizedUrl, item);
+    if (contentHash) contentHashes.set(contentHash, item);
   });
 
   return Array.from(seen.values());
+}
+
+/**
+ * Deduplicate a group of news items
+ * @deprecated Use deduplicateGroupImproved instead
+ */
+function deduplicateGroup(news: NewsItem[]): NewsItem[] {
+  return deduplicateGroupImproved(news);
 }
 
 /**
@@ -233,6 +368,38 @@ function normalizeTitle(title: string): string {
     .replace(/\s+/g, ' ') // Normalize spaces
     .trim()
     .substring(0, 60); // First 60 chars
+}
+
+/**
+ * Normalize URL for comparison (remove query params, fragments, trailing slashes)
+ */
+function normalizeUrl(url: string): string | null {
+  try {
+    const urlObj = new URL(url);
+    // Remove query params and fragments for comparison
+    return `${urlObj.protocol}//${urlObj.hostname}${urlObj.pathname}`.replace(/\/$/, '');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Generate content hash for near-duplicate detection
+ * Uses title + description (first 200 chars)
+ */
+function getContentHash(item: NewsItem): string | null {
+  const content = `${item.title} ${item.description || ''}`.substring(0, 200);
+  if (!content.trim()) return null;
+  
+  // Simple hash function (for production, consider using crypto.createHash)
+  let hash = 0;
+  for (let i = 0; i < content.length; i++) {
+    const char = content.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  
+  return Math.abs(hash).toString(36);
 }
 
 /**
@@ -302,16 +469,18 @@ function sortNews(news: NewsItem[]): NewsItem[] {
 }
 
 /**
- * Get from cache
+ * Get from cache with tiered duration
  */
-function getFromCache(key: string): AggregatedNewsResult | null {
+function getFromCache(key: string, duration: number): AggregatedNewsResult | null {
   const cached = cache.get(key);
 
   if (!cached) {
     return null;
   }
 
-  const isExpired = Date.now() - cached.timestamp > CACHE_DURATION;
+  // Use the duration stored with the cache entry
+  const cacheDuration = cached.duration || duration;
+  const isExpired = Date.now() - cached.timestamp > cacheDuration;
 
   if (isExpired) {
     cache.delete(key);
@@ -322,12 +491,13 @@ function getFromCache(key: string): AggregatedNewsResult | null {
 }
 
 /**
- * Save to cache
+ * Save to cache with tiered duration
  */
-function saveToCache(key: string, data: AggregatedNewsResult): void {
+function saveToCache(key: string, data: AggregatedNewsResult, duration: number): void {
   cache.set(key, {
     data,
     timestamp: Date.now(),
+    duration,
   });
 
   // Limit cache size (keep only 50 entries)
@@ -374,7 +544,7 @@ export async function fetchBreakingWeather(maxItems: number = 10): Promise<NewsI
  * Fetch news by specific category
  */
 export async function fetchNewsByCategory(
-  category: 'breaking' | 'weather' | 'local' | 'general',
+  category: NewsCategory,
   maxItems: number = 20
 ): Promise<NewsItem[]> {
   const result = await aggregateNews({
