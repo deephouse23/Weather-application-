@@ -97,11 +97,12 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   // Fetch preferences from API
   const fetchUserPreferences = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      // Explicit cast to avoid 'never' inference on build
+      const { data } = await supabase
         .from('user_preferences')
         .select('theme')
         .eq('user_id', userId)
-        .single()
+        .single() as { data: { theme: string } | null, error: any }
 
       if (data && data.theme && THEME_LIST.includes(data.theme as Theme)) {
         setThemeState(data.theme as Theme)
