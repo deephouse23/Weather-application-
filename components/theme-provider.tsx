@@ -11,6 +11,94 @@
  * 
  * BETA SOFTWARE NOTICE:
  * This software is in active development. Features may change.
+ * Report issues: https://github.com/deephouse23/Weather-application-/issues
+ */
+
+import React, { createContext, useContext, useEffect, useState } from 'react'
+import { safeStorage } from '@/lib/safe-storage'
+import { ThemeType, THEME_LIST, FREE_THEMES, getThemeDefinition } from '@/lib/theme-config'
+import { supabase } from '@/lib/supabase/client'
+import { AuthChangeEvent, Session } from '@supabase/supabase-js'
+
+export type Theme = ThemeType
+
+interface ThemeContextType {
+  theme: Theme
+  setTheme: (theme: Theme) => void
+  toggleTheme: () => void
+  availableThemes: Theme[]
+  isAuthenticated: boolean
+}
+
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
+
+export function useTheme() {
+  const context = useContext(ThemeContext)
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider')
+  }
+  return context
+}
+
+interface ThemeProviderProps {
+  children: React.ReactNode
+}
+
+export function ThemeProvider({ children }: ThemeProviderProps) {
+  const [theme, setThemeState] = useState<Theme>('dark')
+  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<any>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  const availableThemes: Theme[] = isAuthenticated ? THEME_LIST : FREE_THEMES
+
+  // Initialize auth listener
+  useEffect(() => {
+    setMounted(true)
+
+    // Check active session
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        setUser(session.user)
+        setIsAuthenticated(true)
+        // Fetch user preferences
+        fetchUserPreferences(session.user.id)
+      } else {
+        setUser(null)
+        setIsAuthenticated(false)
+      }
+      setLoading(false)
+    }
+
+    checkUser()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
+      if (session?.user) {
+        setUser(session.user)
+        setIsAuthenticated(true)
+        fetchUserPreferences(session.user.id)
+      } else {
+        setUser(null)
+        setIsAuthenticated(false)
+        // Revert to free theme if current is premium
+        if (!FREE_THEMES.includes(theme as any)) {
+          setTheme('dark')
+        }
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [])
+
+  // Fetch preferences from API
+  const fetchUserPreferences = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_preferences')
         .select('theme')
         .eq('user_id', userId)
         .single()
@@ -148,4 +236,4 @@
       {children}
     </ThemeContext.Provider>
   )
-} 
+}
