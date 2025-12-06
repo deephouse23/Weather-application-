@@ -94,7 +94,7 @@ export class LocationService {
   private currentPosition: LocationData | null = null;
   private lastRequestTime: number = 0;
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-  
+
   static getInstance(): LocationService {
     if (!LocationService.instance) {
       LocationService.instance = new LocationService();
@@ -106,7 +106,7 @@ export class LocationService {
    * Check if geolocation is supported by the browser
    */
   isGeolocationSupported(): boolean {
-    return 'geolocation' in navigator;
+    return !!navigator.geolocation;
   }
 
   /**
@@ -164,8 +164,8 @@ export class LocationService {
     };
 
     // Return cached position if available and not expired
-    if (defaultOptions.useCache && this.currentPosition && 
-        Date.now() - this.lastRequestTime < this.CACHE_DURATION) {
+    if (defaultOptions.useCache && this.currentPosition &&
+      Date.now() - this.lastRequestTime < this.CACHE_DURATION) {
       console.log('Returning cached location:', this.currentPosition);
       return this.currentPosition;
     }
@@ -176,7 +176,7 @@ export class LocationService {
 
     try {
       console.log('Requesting geolocation with options:', defaultOptions);
-      
+
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(
           resolve,
@@ -219,7 +219,7 @@ export class LocationService {
    */
   async getLocationByIP(): Promise<LocationData> {
     console.log('Attempting IP-based location detection...');
-    
+
     try {
       // Try multiple IP geolocation services
       const services = [
@@ -232,7 +232,7 @@ export class LocationService {
         try {
           console.log(`Trying IP service: ${serviceUrl}`);
           const response = await fetch(serviceUrl);
-          
+
           if (!response.ok) {
             console.warn(`IP service failed: ${serviceUrl} - ${response.status}`);
             continue;
@@ -243,7 +243,7 @@ export class LocationService {
 
           // Parse response based on service format
           const locationData = this.parseIPLocationResponse(data, serviceUrl);
-          
+
           if (locationData) {
             console.log('IP-based location detected:', locationData);
             return {
@@ -395,12 +395,12 @@ export class LocationService {
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         console.log('Geolocation failed, trying fallback:', errorMessage);
-        
+
         // Type guard for LocationError
         const isLocationError = (err: unknown): err is LocationError => {
           return typeof err === 'object' && err !== null && 'code' in err;
         };
-        
+
         // If user denied permission, don't try IP fallback
         if (isLocationError(error) && error.code === 'PERMISSION_DENIED') {
           throw error;
@@ -446,21 +446,21 @@ export class LocationService {
           'Location access denied',
           'Please allow location access in your browser settings or enter your location manually'
         );
-      
+
       case error.POSITION_UNAVAILABLE:
         return this.createLocationError(
           'POSITION_UNAVAILABLE',
           'Location information unavailable',
           'Please check your device location settings or enter your location manually'
         );
-      
+
       case error.TIMEOUT:
         return this.createLocationError(
           'TIMEOUT',
           'Location request timed out',
           'Please try again or enter your location manually'
         );
-      
+
       default:
         return this.createLocationError(
           'POSITION_UNAVAILABLE',

@@ -5,7 +5,7 @@ import { Database } from './types'
 // Create a server-side supabase client
 export const createServerSupabaseClient = async () => {
   const cookieStore = await cookies()
-  
+
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -14,9 +14,9 @@ export const createServerSupabaseClient = async () => {
         getAll() {
           return cookieStore.getAll()
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: any) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
+            cookiesToSet.forEach(({ name, value, options }: any) =>
               cookieStore.set(name, value, options)
             )
           } catch {
@@ -33,12 +33,12 @@ export const createServerSupabaseClient = async () => {
 export const getServerUser = async () => {
   const supabase = await createServerSupabaseClient()
   const { data: { user }, error } = await supabase.auth.getUser()
-  
+
   if (error) {
     console.error('Error getting server user:', error)
     return null
   }
-  
+
   return user
 }
 
@@ -46,11 +46,11 @@ export const getServerUser = async () => {
 export const getServerSession = async () => {
   const supabase = await createServerSupabaseClient()
   const { data: { session }, error } = await supabase.auth.getSession()
-  
+
   if (error) {
     console.error('Error getting server session:', error)
     return null
   }
-  
+
   return session
 }

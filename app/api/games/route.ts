@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
     // Insert new game
     const { data, error } = await supabase
       .from('games')
+      // @ts-expect-error - Table definition mismatch
       .insert({
         slug,
         title,

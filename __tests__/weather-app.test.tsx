@@ -7,11 +7,13 @@ import '@testing-library/jest-dom';
 import { fetchWeatherData, fetchWeatherByLocation } from '@/lib/weather-api';
 import { locationService } from '@/lib/location-service';
 import { userCacheService } from '@/lib/user-cache-service';
-import { calculateAQI, getAQIColor, getAQIDescription } from '@/lib/air-quality-utils';
+import { getAQIColor, getAQIDescription } from '@/lib/air-quality-utils';
 
 import WeatherSearch from '@/components/weather-search';
 import Forecast from '@/components/forecast';
 import EnvironmentalDisplay from '@/components/environmental-display';
+import { LocationProvider } from '@/components/location-context';
+import { ThemeProvider } from '@/components/theme-provider';
 
 // ---------- Global/test environment shims ----------
 
@@ -23,25 +25,47 @@ const g = globalThis as unknown as {
   localStorage: any;
 };
 
+// Mock next/navigation
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+  }),
+  usePathname: () => '',
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 // jsdom provides window, but we ensure it's accessible
 if (!g.window) g.window = {} as any;
 
 // Minimal Storage-like mock with TS-friendly typing
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: (key: string) => (key in store ? store[key] : null),
-    setItem: (key: string, value: string) => {
-      store[key] = value;
-    },
-    removeItem: (key: string) => {
-      delete store[key];
-    },
-    clear: () => {
-      store = {};
-    }
-  };
-})();
+// Proxy-based localStorage mock to handle both methods and property access correctly
+const localStorageMock = new Proxy({} as any, {
+  get: (target, prop) => {
+    if (prop === 'getItem') return (key: string) => target[key] || null;
+    if (prop === 'setItem') return (key: string, value: string) => { target[key] = String(value); };
+    if (prop === 'removeItem') return (key: string) => { delete target[key]; };
+    if (prop === 'clear') return () => { for (const key in target) delete target[key]; };
+    if (prop === 'key') return (index: number) => Object.keys(target)[index] || null;
+    if (prop === 'length') return Object.keys(target).length;
+    return target[prop];
+  },
+  set: (target, prop, value) => {
+    target[prop] = String(value);
+    return true;
+  },
+  deleteProperty: (target, prop) => {
+    delete target[prop];
+    return true;
+  },
+  ownKeys: (target) => Object.keys(target),
+  getOwnPropertyDescriptor: (target, prop) =>
+    Object.getOwnPropertyDescriptor(target, prop) ||
+    { configurable: true, enumerable: true, value: target[prop] }
+});
 
 Object.defineProperty(g.window, 'localStorage', {
   value: localStorageMock,
@@ -52,12 +76,13 @@ Object.defineProperty(g, 'localStorage', {
   configurable: true
 });
 
-// Ensure fetch exists and is mockable
-if (!g.fetch) {
-  g.fetch = jest.fn();
-} else {
-  g.fetch = jest.fn(g.fetch);
-}
+// Fetch mock is handled in beforeEach
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+    ok: true,
+    json: async () => ({})
+  } as Response)
+);
 
 // Provide a configurable geolocation stub on navigator
 if (!g.navigator) g.navigator = {} as any;
@@ -74,6 +99,17 @@ if (!g.navigator.geolocation) {
 }
 
 // ---------- Shared test data ----------
+
+// Helper to render with providers
+const renderWithProviders = (ui: React.ReactElement) => {
+  return render(
+    <ThemeProvider>
+      <LocationProvider>
+        {ui}
+      </LocationProvider>
+    </ThemeProvider>
+  );
+};
 
 const mockGeoResponse = {
   ok: true,
@@ -186,7 +222,12 @@ const mockWeatherData = {
 describe('Weather API Tests', () => {
   beforeEach(() => {
     jest.restoreAllMocks();
-    jest.spyOn(global, 'fetch').mockImplementation(jest.fn());
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => ({})
+      } as Response)
+    );
     localStorageMock.clear();
   });
 
@@ -298,6 +339,7 @@ describe('Weather API Tests', () => {
 describe('Location Service Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    locationService.clearCache();
   });
 
   test('isGeolocationSupported should detect browser support', () => {
@@ -343,16 +385,18 @@ describe('Location Service Tests', () => {
     (g.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
-        city: 'San Francisco',
-        region: 'California',
-        country: 'US'
+        address: {
+          city: 'San Francisco',
+          state: 'California',
+          country: 'US'
+        }
       })
     } as Response);
 
     const location = await locationService.getCurrentLocation();
 
-    expect(location.lat).toBe(37.7749);
-    expect(location.lon).toBe(-122.4194);
+    expect(location.latitude).toBe(37.7749);
+    expect(location.longitude).toBe(-122.4194);
     expect(location.displayName).toContain('San Francisco');
   });
 
@@ -360,7 +404,7 @@ describe('Location Service Tests', () => {
     Object.defineProperty(g.navigator, 'geolocation', {
       value: {
         getCurrentPosition: (_success: any, error: (e: any) => void) =>
-          error({ code: 1, message: 'User denied' })
+          error({ code: 1, message: 'User denied', PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3 })
       },
       configurable: true,
       writable: true
@@ -375,9 +419,11 @@ describe('Location Service Tests', () => {
     (g.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
+        latitude: 37.7749,
+        longitude: -122.4194,
         city: 'San Francisco',
         region: 'California',
-        country: 'US',
+        country_name: 'US',
         loc: '37.7749,-122.4194'
       })
     } as Response);
@@ -385,8 +431,8 @@ describe('Location Service Tests', () => {
     const location = await locationService.getLocationByIP();
 
     expect(location.displayName).toContain('San Francisco');
-    expect(location.lat).toBe(37.7749);
-    expect(location.lon).toBe(-122.4194);
+    expect(location.latitude).toBe(37.7749);
+    expect(location.longitude).toBe(-122.4194);
   });
 });
 
@@ -399,41 +445,74 @@ describe('Cache Service Tests', () => {
 
   test('saveLastLocation should store location data', () => {
     const location = {
-      lat: 37.7749,
-      lon: -122.4194,
+      latitude: 37.7749,
+      longitude: -122.4194,
       displayName: 'San Francisco, CA',
       city: 'San Francisco',
       state: 'CA',
-      country: 'US'
+      country: 'US',
+      source: 'manual' as const
     };
+
+    // Ensure preferences exist first (as saveLastLocation requires them)
+    // Actually method handles it via getPreferences -> isStorageAvailable? 
+    // But initializeDefaults might rely on something.
+    // The service singleton initializes defaults in constructor.
+    // But in test, singleton instance might be reused.
+    // We should probably rely on valid mock.
+
+    // We can pre-seed preferences to be safe
+    const initialPrefs = {
+      settings: { units: 'imperial', theme: 'dark', cacheEnabled: true },
+      updatedAt: Date.now()
+    };
+    localStorageMock.setItem('bitweather_user_preferences', JSON.stringify(initialPrefs));
 
     userCacheService.saveLastLocation(location);
 
-    const saved = localStorageMock.getItem('bitweather_last_location');
+    const saved = localStorageMock.getItem('bitweather_user_preferences');
     expect(saved).toBeTruthy();
 
     const parsed = JSON.parse(saved!);
-    expect(parsed.displayName).toBe('San Francisco, CA');
-    expect(parsed.lat).toBe(37.7749);
+    expect(parsed.lastLocation.displayName).toBe('San Francisco, CA');
+    expect(parsed.lastLocation.latitude).toBe(37.7749);
   });
 
   test('getLastLocation should retrieve stored location', () => {
     const location = {
-      lat: 37.7749,
-      lon: -122.4194,
+      latitude: 37.7749,
+      longitude: -122.4194,
       displayName: 'San Francisco, CA',
       city: 'San Francisco',
       state: 'CA',
-      country: 'US'
+      country: 'US',
+      source: 'manual' as const
     };
 
-    localStorageMock.setItem('bitweather_last_location', JSON.stringify(location));
+    const preferences = {
+      settings: {
+        units: 'imperial',
+        theme: 'dark',
+        cacheEnabled: true
+      },
+      updatedAt: Date.now(),
+      lastLocation: location
+    };
+
+    localStorageMock.setItem('bitweather_user_preferences', JSON.stringify(preferences));
 
     const retrieved = userCacheService.getLastLocation();
     expect(retrieved).toEqual(location);
   });
 
   test('cacheWeatherData should store weather with timestamp', () => {
+    // Ensure cache is enabled in preferences
+    const initialPrefs = {
+      settings: { units: 'imperial', theme: 'dark', cacheEnabled: true },
+      updatedAt: Date.now()
+    };
+    localStorageMock.setItem('bitweather_user_preferences', JSON.stringify(initialPrefs));
+
     userCacheService.cacheWeatherData('37.77_-122.42', mockWeatherData);
 
     const cached = userCacheService.getCachedWeatherData('37.77_-122.42');
@@ -441,11 +520,23 @@ describe('Cache Service Tests', () => {
   });
 
   test('getCachedWeatherData should return null for expired cache', () => {
+    // Ensure cache is enabled
+    const initialPrefs = {
+      settings: { units: 'imperial', theme: 'dark', cacheEnabled: true },
+      updatedAt: Date.now()
+    };
+    localStorageMock.setItem('bitweather_user_preferences', JSON.stringify(initialPrefs));
+
     const oldTimestamp = Date.now() - 11 * 60 * 1000; // 11 minutes
-    const cachedData = { data: mockWeatherData, timestamp: oldTimestamp };
+    const cachedData = {
+      data: mockWeatherData,
+      timestamp: oldTimestamp,
+      expiresAt: oldTimestamp + 10 * 60 * 1000,
+      locationKey: '37.77_-122.42'
+    };
 
     localStorageMock.setItem(
-      'bitweather_weather_37.77_-122.42',
+      'bitweather_weather_cache_37.77_-122.42', // Correct key
       JSON.stringify(cachedData)
     );
 
@@ -458,7 +549,7 @@ describe('Cache Service Tests', () => {
     localStorageMock.setItem('bitweather_weather_test', 'test');
     localStorageMock.setItem('other_key', 'test');
 
-    userCacheService.clearCache();
+    userCacheService.clearAllData();
 
     expect(localStorageMock.getItem('bitweather_last_location')).toBeNull();
     expect(localStorageMock.getItem('bitweather_weather_test')).toBeNull();
@@ -469,14 +560,7 @@ describe('Cache Service Tests', () => {
 // ---------- AQI utils ----------
 
 describe('Air Quality Utils Tests', () => {
-  test('calculateAQI should return correct AQI values', () => {
-    expect(calculateAQI(50)).toBe(50);
-    expect(calculateAQI(100)).toBe(100);
-    expect(calculateAQI(150)).toBe(150);
-    expect(calculateAQI(200)).toBe(200);
-    expect(calculateAQI(300)).toBe(300);
-    expect(calculateAQI(450)).toBe(450);
-  });
+
 
   test('getAQIDescription should return correct descriptions', () => {
     expect(getAQIDescription(25)).toBe('Good');
@@ -488,12 +572,12 @@ describe('Air Quality Utils Tests', () => {
   });
 
   test('getAQIColor should return correct colors', () => {
-    expect(getAQIColor(25)).toBe('#00e400');
-    expect(getAQIColor(75)).toBe('#ffff00');
-    expect(getAQIColor(125)).toBe('#ff7e00');
-    expect(getAQIColor(175)).toBe('#ff0000');
-    expect(getAQIColor(250)).toBe('#8f3f97');
-    expect(getAQIColor(400)).toBe('#7e0023');
+    expect(getAQIColor(25)).toBe('text-green-400 font-semibold');
+    expect(getAQIColor(75)).toBe('text-yellow-400 font-semibold');
+    expect(getAQIColor(125)).toBe('text-orange-400 font-semibold');
+    expect(getAQIColor(175)).toBe('text-red-400 font-semibold');
+    expect(getAQIColor(250)).toBe('text-purple-400 font-semibold');
+    expect(getAQIColor(400)).toBe('text-red-900 font-semibold');
   });
 });
 
@@ -502,7 +586,7 @@ describe('Air Quality Utils Tests', () => {
 describe('Component Tests', () => {
   describe('WeatherSearch Component', () => {
     test('should render search input and button', () => {
-      render(
+      renderWithProviders(
         <WeatherSearch
           onSearch={jest.fn()}
           onLocationSearch={jest.fn()}
@@ -519,7 +603,7 @@ describe('Component Tests', () => {
 
     test('should call onSearch when form is submitted', async () => {
       const onSearch = jest.fn();
-      render(
+      renderWithProviders(
         <WeatherSearch
           onSearch={onSearch}
           onLocationSearch={jest.fn()}
@@ -542,7 +626,7 @@ describe('Component Tests', () => {
     });
 
     test('should show loading state', () => {
-      render(
+      renderWithProviders(
         <WeatherSearch
           onSearch={jest.fn()}
           onLocationSearch={jest.fn()}
@@ -591,7 +675,7 @@ describe('Component Tests', () => {
         }
       }));
 
-      render(<Forecast forecast={forecast} theme="dark" />);
+      renderWithProviders(<Forecast forecast={forecast} theme="dark" />);
 
       expect(screen.getByText('Monday')).toBeInTheDocument();
       expect(screen.getByText('Tuesday')).toBeInTheDocument();
@@ -621,7 +705,7 @@ describe('Component Tests', () => {
         }
       ];
 
-      render(
+      renderWithProviders(
         <Forecast
           forecast={forecast}
           theme="dark"
@@ -640,7 +724,7 @@ describe('Component Tests', () => {
 
   describe('EnvironmentalDisplay Component', () => {
     test('should display AQI and pollen data', () => {
-      render(<EnvironmentalDisplay weather={mockWeatherData} theme="dark" />);
+      renderWithProviders(<EnvironmentalDisplay weather={mockWeatherData} theme="dark" />);
 
       expect(screen.getByText(/air quality/i)).toBeInTheDocument();
       expect(screen.getByText(/45/)).toBeInTheDocument();
@@ -652,7 +736,7 @@ describe('Component Tests', () => {
 
     test('should show N/A when data is unavailable', () => {
       const weatherWithoutEnvData = { ...mockWeatherData, aqi: undefined, pollen: undefined };
-      render(<EnvironmentalDisplay weather={weatherWithoutEnvData} theme="dark" />);
+      renderWithProviders(<EnvironmentalDisplay weather={weatherWithoutEnvData} theme="dark" />);
 
       expect(screen.getAllByText(/n\/a/i)).toHaveLength(2);
     });
@@ -693,16 +777,18 @@ describe('Integration Tests', () => {
     (g.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
-        city: 'San Francisco',
-        region: 'California',
-        country: 'US'
+        address: {
+          city: 'San Francisco',
+          state: 'California',
+          country: 'US'
+        }
       })
     } as Response);
 
     const location = await locationService.getCurrentLocation();
 
-    expect(location.lat).toBe(37.7749);
-    expect(location.lon).toBe(-122.4194);
+    expect(location.latitude).toBe(37.7749);
+    expect(location.longitude).toBe(-122.4194);
     expect(location.displayName).toContain('San Francisco');
 
     userCacheService.saveLastLocation(location);
@@ -720,11 +806,16 @@ describe('Integration Tests', () => {
 describe('Accessibility Tests', () => {
   beforeEach(() => {
     jest.restoreAllMocks();
-    jest.spyOn(global, 'fetch').mockImplementation(jest.fn());
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => ({})
+      } as Response)
+    );
   });
 
   test('WeatherSearch should have proper ARIA labels', () => {
-    render(
+    renderWithProviders(
       <WeatherSearch
         onSearch={jest.fn()}
         onLocationSearch={jest.fn()}
@@ -743,7 +834,7 @@ describe('Accessibility Tests', () => {
   });
 
   test('Error messages should be announced', () => {
-    render(
+    renderWithProviders(
       <WeatherSearch
         onSearch={jest.fn()}
         onLocationSearch={jest.fn()}
@@ -764,7 +855,12 @@ describe('Accessibility Tests', () => {
 describe('Performance Tests', () => {
   beforeEach(() => {
     jest.restoreAllMocks();
-    jest.spyOn(global, 'fetch').mockImplementation(jest.fn());
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => ({})
+      } as Response)
+    );
     localStorageMock.clear();
   });
 

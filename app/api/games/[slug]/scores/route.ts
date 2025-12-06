@@ -46,7 +46,7 @@ export async function GET(
     const { data, error } = await supabase
       .from(viewName)
       .select('*')
-      .eq('game_id', game.id)
+      .eq('game_id', (game as any).id)
       .range(offset, offset + limit - 1);
 
     if (error) {
@@ -125,7 +125,7 @@ export async function POST(
       const { count, error: countError } = await supabase
         .from('game_scores')
         .select('*', { count: 'exact', head: true })
-        .eq('game_id', game.id)
+        .eq('game_id', (game as any).id)
         .eq('ip_address', ip_address)
         .gte('created_at', today.toISOString());
 
@@ -141,8 +141,9 @@ export async function POST(
       // Insert score with IP address for guests
       const { data, error } = await supabase
         .from('game_scores')
+        // @ts-expect-error - Table definition mismatch
         .insert({
-          game_id: game.id,
+          game_id: (game as any).id,
           user_id: null,
           player_name: player_name.substring(0, 20), // Limit name length
           score,
@@ -168,8 +169,9 @@ export async function POST(
       // Authenticated user
       const { data, error } = await supabase
         .from('game_scores')
+        // @ts-expect-error - Table definition mismatch
         .insert({
-          game_id: game.id,
+          game_id: (game as any).id,
           user_id,
           player_name: player_name.substring(0, 20),
           score,
