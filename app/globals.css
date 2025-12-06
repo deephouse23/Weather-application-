@@ -1,8 +1,6 @@
+@import "tailwindcss";
+@config "../tailwind.config.ts";
 @import url('https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&family=Fira+Code:wght@300;400;500;600;700&display=swap');
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 /* Dark theme semantic tokens */
 :root[data-theme="dark"] {
