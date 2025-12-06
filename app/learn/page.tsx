@@ -25,43 +25,43 @@ export default function LearnPage() {
     {
       href: '/cloud-types',
       icon: Cloud,
-      title: 'Cloud Types',
-      description: 'Learn to identify cumulus, stratus, cirrus, and more. Master cloud classification like a meteorologist.',
+      title: 'Cloud Atlas',
+      description: 'Master 10 distinct cloud formations with Latin etymology, altitude classifications, and 16-bit visualizations.',
       itemCount: 10
     },
     {
       href: '/weather-systems',
       icon: Zap,
       title: 'Weather Systems',
-      description: 'Understand fronts, pressure systems, and atmospheric phenomena. Discover how weather patterns form.',
-      itemCount: 12
+      description: 'Analyze the atmospheric dynamics of 16 major storm types, complete with historical case studies and threat levels.',
+      itemCount: 16
     },
     {
       href: '/extremes',
       icon: Thermometer,
       title: 'Global Extremes',
-      description: 'Explore record temperatures and extreme weather events from around the world. Real-time data.',
+      description: 'Live monitoring of the hottest and coldest places on Earth. Track real-time temperature champions.',
       itemCount: undefined
     },
     {
       href: '/fun-facts',
       icon: BookOpen,
       title: '16-Bit Takes',
-      description: 'Weather trivia, fun facts, and fascinating meteorological oddities. Perfect for weather enthusiasts.',
-      itemCount: 25
+      description: 'The science behind the strange. From Ball Lightning to Thundersnow, explore meteorology\'s rarest phenomena.',
+      itemCount: 12
     },
     {
       href: '/map',
       icon: Satellite,
       title: 'Radar & Models',
-      description: 'Interactive NEXRAD radar and GFS weather models. Watch storms in real-time and track systems.',
+      description: 'Professional-grade NEXRAD radar and GFS forecasting models, rendered in high-fidelity 16-bit style.',
       itemCount: undefined
     },
     {
       href: '/games',
       icon: Gamepad2,
-      title: 'Weather Games',
-      description: 'Test your knowledge with interactive weather games and quizzes. Learn while having fun.',
+      title: 'Weather Arcade',
+      description: 'Test your meteorological mettle with retro-style quizzes and challenges. High scores needed.',
       itemCount: 3
     }
   ];

@@ -36,6 +36,7 @@ type CloudData = {
   formation: string;
   density: string;
   funFact: string;
+  etymology: string;
   rarity: 'common' | 'uncommon' | 'rare' | 'legendary';
   emoji: string;
   appearance: string;
@@ -45,9 +46,302 @@ type CloudData = {
   lifespan?: string;
 };
 
+// ... inside CloudTypesPage ...
+
+// Comprehensive cloud database
+const cloudDatabase: CloudData[] = [
+  // HIGH CLOUDS
+  {
+    id: 1,
+    name: "CIRRUS",
+    abbreviation: "Ci",
+    category: "high",
+    altitudeRange: "20,000-40,000 ft",
+    temperature: "-40°F to -80°F",
+    dropletSize: "10-100 μm (ice)",
+    formationTime: "30 min - 2 hrs",
+    windSpeed: "100+ mph (jet streams)",
+    pressureRange: "300-500 mb",
+    weatherPrediction: "Fair weather, change in 8-10 hrs",
+    description16bit: "Wispy ice crystals painting the digital sky",
+    formation: "Ice crystals in jet stream winds",
+    density: "0.01-0.1 g/m³",
+    funFact: "Can form 'Virga' - precipitation that evaporates before reaching the ground. Often indicates a change in weather.",
+    etymology: "Latin for 'curl of hair' or 'fringe'",
+    rarity: "common",
+    emoji: "🌤️",
+    appearance: "Thin, wispy, hair-like streaks"
+  },
+  {
+    id: 2,
+    name: "CIRROSTRATUS",
+    abbreviation: "Cs",
+    category: "high",
+    altitudeRange: "20,000-40,000 ft",
+    temperature: "-40°F to -80°F",
+    dropletSize: "20-200 μm (ice)",
+    formationTime: "2-6 hours",
+    windSpeed: "50-150 mph",
+    pressureRange: "300-500 mb",
+    thickness: "1,000-6,000 ft",
+    weatherPrediction: "Rain or snow within 24 hours",
+    description16bit: "Translucent ice veil across the pixel horizon",
+    formation: "Widespread lifting ahead of weather fronts",
+    density: "0.1-0.3 g/m³",
+    funFact: "Responsible for 'sun dogs' and 22° halos. The only cloud type that creates a halo around the sun/moon.",
+    etymology: "Latin: 'cirrus' (curl) + 'stratus' (layer)",
+    rarity: "common",
+    emoji: "☁️",
+    appearance: "Thin, sheet-like veil covering entire sky"
+  },
+  {
+    id: 3,
+    name: "CIRROCUMULUS",
+    abbreviation: "Cc",
+    category: "high",
+    altitudeRange: "20,000-40,000 ft",
+    temperature: "-40°F to -80°F",
+    dropletSize: "5-50 μm (ice)",
+    formationTime: "1-3 hours",
+    windSpeed: "40-100 mph",
+    pressureRange: "300-500 mb",
+    weatherPrediction: "Fair but cold; in tropics = hurricane approaching",
+    description16bit: "Pixelated ice puffs in digital formation",
+    formation: "Shallow convection at high altitude with wind shear",
+    density: "0.01-0.05 g/m³",
+    funFact: "Forms the 'Mackerel Sky'. Unlike Altocumulus, these clouds cast no shadow on the ground.",
+    etymology: "Latin: 'cirrus' (curl) + 'cumulus' (heap)",
+    rarity: "common",
+    emoji: "🌥️",
+    appearance: "Small white patches in rows, 'mackerel sky'"
+  },
+  // MID-LEVEL CLOUDS
+  {
+    id: 4,
+    name: "ALTOCUMULUS",
+    abbreviation: "Ac",
+    category: "mid",
+    altitudeRange: "6,500-20,000 ft",
+    temperature: "32°F to -20°F",
+    dropletSize: "5-30 μm (water + ice)",
+    formationTime: "1-4 hours",
+    windSpeed: "20-60 mph",
+    pressureRange: "500-850 mb",
+    thickness: "500-3,000 ft",
+    weatherPrediction: "Possible afternoon thunderstorms",
+    description16bit: "Mid-level pixel clusters in the digital atmosphere",
+    formation: "Convective rolls in mid-atmosphere, orographic lifting",
+    density: "0.1-0.5 g/m³",
+    funFact: "If seen in the morning, thunderstorms are likely by late afternoon. Often confused with Cirrocumulus but creates shadows.",
+    etymology: "Latin: 'altus' (high) + 'cumulus' (heap)",
+    rarity: "common",
+    emoji: "⛅",
+    appearance: "Gray/white patches or layers, larger than cirrocumulus"
+  },
+  {
+    id: 5,
+    name: "ALTOSTRATUS",
+    abbreviation: "As",
+    category: "mid",
+    altitudeRange: "6,500-20,000 ft",
+    temperature: "32°F to -20°F",
+    dropletSize: "5-40 μm (mixed)",
+    formationTime: "3-8 hours",
+    windSpeed: "15-50 mph",
+    pressureRange: "500-850 mb",
+    thickness: "2,000-10,000 ft",
+    weatherPrediction: "Continuous rain or snow approaching",
+    description16bit: "Gray digital filter across the cyber sky",
+    formation: "Warm air overriding cooler air masses",
+    density: "0.2-0.8 g/m³",
+    funFact: "Creates a 'watery sun' or 'frosted glass' look. Unlike Nimbostratus, it usually doesn't produce heavy rain.",
+    etymology: "Latin: 'altus' (high) + 'stratus' (layer)",
+    rarity: "common",
+    emoji: "🌫️",
+    appearance: "Gray/blue sheet, sun visible but dimmed"
+  },
+  {
+    id: 6,
+    name: "NIMBOSTRATUS",
+    abbreviation: "Ns",
+    category: "mid",
+    altitudeRange: "2,000-18,000 ft",
+    temperature: "50°F to -10°F",
+    dropletSize: "5-50 μm (water)",
+    formationTime: "6-12 hours",
+    windSpeed: "10-40 mph",
+    pressureRange: "600-950 mb",
+    thickness: "3,000-15,000 ft",
+    precipitation: "0.1-2 inches per hour",
+    weatherPrediction: "Steady rain or snow",
+    description16bit: "Heavy gray data cloud blocking all light",
+    formation: "Widespread gentle lifting of moist air",
+    density: "0.3-1.0 g/m³",
+    funFact: "The quintessential 'rain cloud'. Dark enough to require streetlights during the day.",
+    etymology: "Latin: 'nimbus' (rain storm) + 'stratus' (layer)",
+    rarity: "common",
+    emoji: "🌧️",
+    appearance: "Dark, thick, uniform gray layer"
+  },
+  // LOW CLOUDS
+  {
+    id: 7,
+    name: "CUMULUS",
+    abbreviation: "Cu",
+    category: "low",
+    altitudeRange: "1,000-6,500 ft",
+    temperature: "70°F to 32°F",
+    dropletSize: "5-25 μm (water)",
+    formationTime: "30 min - 2 hrs",
+    windSpeed: "5-25 mph",
+    pressureRange: "850-1013 mb",
+    lifespan: "10-30 minutes",
+    weatherPrediction: "Fair weather",
+    description16bit: "Fluffy white pixels floating in digital space",
+    formation: "Daytime heating causing convection",
+    density: "0.3-0.8 g/m³",
+    funFact: "Can grow into thunderheads (Cumulonimbus). The flat base indicates the condensation level.",
+    etymology: "Latin for 'heap' or 'pile'",
+    rarity: "common",
+    emoji: "☁️",
+    appearance: "Puffy, cotton-like, flat bases, rounded tops"
+  },
+  {
+    id: 8,
+    name: "STRATOCUMULUS",
+    abbreviation: "Sc",
+    category: "low",
+    altitudeRange: "1,000-6,500 ft",
+    temperature: "70°F to 32°F",
+    dropletSize: "8-35 μm",
+    formationTime: "2-6 hours",
+    windSpeed: "10-30 mph",
+    pressureRange: "850-1013 mb",
+    weatherPrediction: "Generally fair, light precipitation possible",
+    description16bit: "Chunky pixel formations in the lower registry",
+    formation: "Shallow convection mixing with stable air",
+    density: "0.2-0.7 g/m³",
+    funFact: "The most common cloud type on Earth. Often looks like a honeycomb or rolls.",
+    etymology: "Latin: 'stratus' (layer) + 'cumulus' (heap)",
+    rarity: "common",
+    emoji: "🌫️",
+    appearance: "Low, lumpy gray/white patches or layers"
+  },
+  {
+    id: 9,
+    name: "STRATUS",
+    abbreviation: "St",
+    category: "low",
+    altitudeRange: "0-6,500 ft",
+    temperature: "70°F to 32°F",
+    dropletSize: "5-20 μm (small)",
+    formationTime: "2-12 hours",
+    windSpeed: "5-20 mph",
+    pressureRange: "900-1013 mb",
+    thickness: "500-2,000 ft",
+    weatherPrediction: "Drizzle or mist possible",
+    description16bit: "Uniform gray screen saver across the sky",
+    formation: "Fog lifting from ground or gentle cooling",
+    density: "0.1-0.5 g/m³",
+    funFact: "Essentially fog that isn't touching the ground. Can reduce visibility to zero on mountains.",
+    etymology: "Latin for 'layer' or 'blanket'",
+    rarity: "common",
+    emoji: "🌫️",
+    appearance: "Gray layer, often covering entire sky"
+  },
+  // VERTICAL DEVELOPMENT
+  {
+    id: 10,
+    name: "CUMULONIMBUS",
+    abbreviation: "Cb",
+    category: "vertical",
+    altitudeRange: "1,000-60,000+ ft",
+    temperature: "80°F to -80°F",
+    dropletSize: "10-100+ μm",
+    formationTime: "30 min - 3 hrs",
+    windSpeed: "Up to 180 mph updrafts",
+    pressureRange: "200-1013 mb",
+    energy: "Equivalent to 400,000 car engines",
+    weatherPrediction: "Thunderstorms, heavy rain, hail, tornadoes",
+    description16bit: "Massive storm tower reaching max altitude limit",
+    formation: "Strong vertical convection",
+    density: "0.5-3.0 g/m³",
+    funFact: "The only cloud that can produce hail, thunder, and lightning. Tops can flatten into an 'anvil'.",
+    etymology: "Latin: 'cumulus' (heap) + 'nimbus' (rain storm)",
+    rarity: "uncommon",
+    emoji: "⛈️",
+    appearance: "Towering cloud with anvil top, dark base"
+  },
+  // RARE CLOUDS
+  {
+    id: 11,
+    name: "MAMMATUS",
+    abbreviation: "Ma",
+    category: "rare",
+    altitudeRange: "6,000-25,000 ft",
+    temperature: "-10°F to 60°F",
+    dropletSize: "20-100 μm",
+    formationTime: "10-15 min per lobe",
+    windSpeed: "15-40 mph downdrafts",
+    pressureRange: "Variable",
+    lifespan: "10 min per lobe, hours total",
+    weatherPrediction: "Severe weather nearby",
+    description16bit: "Inverted pixel pouches defying gravity",
+    formation: "Cold air sinking in downdrafts",
+    density: "0.3-1.5 g/m³",
+    funFact: "Often appear after the worst of a thunderstorm has passed. Indicative of extreme turbulence.",
+    etymology: "Latin: 'mamma' (udder/breast)",
+    rarity: "legendary",
+    emoji: "🫧",
+    appearance: "Pouch-like bulges hanging downward"
+  },
+  {
+    id: 12,
+    name: "LENTICULAR",
+    abbreviation: "Le",
+    category: "rare",
+    altitudeRange: "6,500-40,000 ft",
+    temperature: "Variable",
+    dropletSize: "5-50 μm",
+    formationTime: "1-3 hours",
+    windSpeed: "40-100+ mph",
+    pressureRange: "±50 mb oscillations",
+    weatherPrediction: "Turbulent winds near mountains",
+    description16bit: "Flying saucer sprites over mountain ranges",
+    formation: "Air flowing over mountains creates standing waves",
+    density: "0.2-0.8 g/m³",
+    funFact: "Formed by standing waves. Glider pilots love them for the 'wave lift' they provide.",
+    etymology: "Latin: 'lenticularis' (lens-shaped)",
+    rarity: "rare",
+    emoji: "🛸",
+    appearance: "Lens or saucer-shaped, smooth"
+  },
+  {
+    id: 13,
+    name: "ASPERITAS",
+    abbreviation: "As",
+    category: "rare",
+    altitudeRange: "6,000-20,000 ft",
+    temperature: "Variable",
+    dropletSize: "10-40 μm",
+    formationTime: "30 min - 2 hrs",
+    windSpeed: "Complex wind shear",
+    pressureRange: "Variable",
+    weatherPrediction: "Usually harmless despite ominous look",
+    description16bit: "Chaotic wave patterns in the sky matrix",
+    formation: "Still mysterious - possibly mammatus + wind shear",
+    density: "0.3-1.2 g/m³",
+    funFact: "First new cloud type added to the International Cloud Atlas in over 60 years (2017).",
+    etymology: "Latin: 'asperitas' (roughness)",
+    rarity: "legendary",
+    emoji: "🌊",
+    appearance: "Dramatic wave-like undulations on cloud bottom"
+  }
+]
+
 export default function CloudTypesPage() {
-  const [currentTheme, setCurrentTheme] = useState<ThemeType>(APP_CONSTANTS.THEMES.DARK)
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'high' | 'mid' | 'low' | 'vertical' | 'rare'>('all')
+  const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark')
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [expandedCloudId, setExpandedCloudId] = useState<number | null>(null)
   const [achievementUnlocked, setAchievementUnlocked] = useState<string>('')
 
@@ -55,15 +349,15 @@ export default function CloudTypesPage() {
   useEffect(() => {
     const storedTheme = themeUtils.getStoredTheme()
     setCurrentTheme(storedTheme)
-    
+
     // Listen for theme changes
     const handleStorageChange = () => {
       const newTheme = themeUtils.getStoredTheme()
       setCurrentTheme(newTheme)
     }
-    
+
     window.addEventListener('storage', handleStorageChange)
-    
+
     // Poll for theme changes
     const interval = setInterval(() => {
       const newTheme = themeUtils.getStoredTheme()
@@ -71,7 +365,7 @@ export default function CloudTypesPage() {
         setCurrentTheme(newTheme)
       }
     }, 100)
-    
+
     return () => {
       window.removeEventListener('storage', handleStorageChange)
       clearInterval(interval)
@@ -80,287 +374,10 @@ export default function CloudTypesPage() {
 
   const themeClasses = themeUtils.getThemeClasses(currentTheme)
 
-  // Comprehensive cloud database
-  const cloudDatabase: CloudData[] = [
-    // HIGH CLOUDS
-    {
-      id: 1,
-      name: "CIRRUS",
-      abbreviation: "Ci",
-      category: "high",
-      altitudeRange: "20,000-40,000 ft",
-      temperature: "-40°F to -80°F",
-      dropletSize: "10-100 μm (ice)",
-      formationTime: "30 min - 2 hrs",
-      windSpeed: "100+ mph (jet streams)",
-      pressureRange: "300-500 mb",
-      weatherPrediction: "Fair weather, change in 8-10 hrs",
-      description16bit: "Wispy ice crystals painting the digital sky",
-      formation: "Ice crystals in jet stream winds",
-      density: "0.01-0.1 g/m³",
-      funFact: "Called 'mare's tails' by sailors, can stretch 400+ miles",
-      rarity: "common",
-      emoji: "🌤️",
-      appearance: "Thin, wispy, hair-like streaks"
-    },
-    {
-      id: 2,
-      name: "CIRROSTRATUS",
-      abbreviation: "Cs",
-      category: "high",
-      altitudeRange: "20,000-40,000 ft",
-      temperature: "-40°F to -80°F",
-      dropletSize: "20-200 μm (ice)",
-      formationTime: "2-6 hours",
-      windSpeed: "50-150 mph",
-      pressureRange: "300-500 mb",
-      thickness: "1,000-6,000 ft",
-      weatherPrediction: "Rain or snow within 24 hours",
-      description16bit: "Translucent ice veil across the pixel horizon",
-      formation: "Widespread lifting ahead of weather fronts",
-      density: "0.1-0.3 g/m³",
-      funFact: "Creates halos around sun/moon, covers entire sky like bedsheet",
-      rarity: "common",
-      emoji: "☁️",
-      appearance: "Thin, sheet-like veil covering entire sky"
-    },
-    {
-      id: 3,
-      name: "CIRROCUMULUS",
-      abbreviation: "Cc",
-      category: "high",
-      altitudeRange: "20,000-40,000 ft",
-      temperature: "-40°F to -80°F",
-      dropletSize: "5-50 μm (ice)",
-      formationTime: "1-3 hours",
-      windSpeed: "40-100 mph",
-      pressureRange: "300-500 mb",
-      weatherPrediction: "Fair but cold; in tropics = hurricane approaching",
-      description16bit: "Pixelated ice puffs in digital formation",
-      formation: "Shallow convection at high altitude with wind shear",
-      density: "0.01-0.05 g/m³",
-      funFact: "'Mackerel scales' - looks like fish scales, shortest-lived high cloud",
-      rarity: "common",
-      emoji: "🌥️",
-      appearance: "Small white patches in rows, 'mackerel sky'"
-    },
-    // MID-LEVEL CLOUDS
-    {
-      id: 4,
-      name: "ALTOCUMULUS",
-      abbreviation: "Ac",
-      category: "mid",
-      altitudeRange: "6,500-20,000 ft",
-      temperature: "32°F to -20°F",
-      dropletSize: "5-30 μm (water + ice)",
-      formationTime: "1-4 hours",
-      windSpeed: "20-60 mph",
-      pressureRange: "500-850 mb",
-      thickness: "500-3,000 ft",
-      weatherPrediction: "Possible afternoon thunderstorms",
-      description16bit: "Mid-level pixel clusters in the digital atmosphere",
-      formation: "Convective rolls in mid-atmosphere, orographic lifting",
-      density: "0.1-0.5 g/m³",
-      funFact: "If seen in morning, thunderstorms likely by afternoon",
-      rarity: "common",
-      emoji: "⛅",
-      appearance: "Gray/white patches or layers, larger than cirrocumulus"
-    },
-    {
-      id: 5,
-      name: "ALTOSTRATUS",
-      abbreviation: "As",
-      category: "mid",
-      altitudeRange: "6,500-20,000 ft",
-      temperature: "32°F to -20°F",
-      dropletSize: "5-40 μm (mixed)",
-      formationTime: "3-8 hours",
-      windSpeed: "15-50 mph",
-      pressureRange: "500-850 mb",
-      thickness: "2,000-10,000 ft",
-      weatherPrediction: "Continuous rain or snow approaching",
-      description16bit: "Gray digital filter across the cyber sky",
-      formation: "Warm air overriding cooler air masses",
-      density: "0.2-0.8 g/m³",
-      funFact: "Sun appears like it's behind frosted glass",
-      rarity: "common",
-      emoji: "🌫️",
-      appearance: "Gray/blue sheet, sun visible but dimmed"
-    },
-    {
-      id: 6,
-      name: "NIMBOSTRATUS",
-      abbreviation: "Ns",
-      category: "mid",
-      altitudeRange: "2,000-18,000 ft",
-      temperature: "50°F to -10°F",
-      dropletSize: "5-50 μm (water)",
-      formationTime: "6-12 hours",
-      windSpeed: "10-40 mph",
-      pressureRange: "600-950 mb",
-      thickness: "3,000-15,000 ft",
-      precipitation: "0.1-2 inches per hour",
-      weatherPrediction: "Steady rain or snow",
-      description16bit: "Heavy gray data cloud blocking all light",
-      formation: "Widespread gentle lifting of moist air",
-      density: "0.3-1.0 g/m³",
-      funFact: "Can produce continuous precipitation for hours",
-      rarity: "common",
-      emoji: "🌧️",
-      appearance: "Dark, thick, uniform gray layer"
-    },
-    // LOW CLOUDS
-    {
-      id: 7,
-      name: "CUMULUS",
-      abbreviation: "Cu",
-      category: "low",
-      altitudeRange: "1,000-6,500 ft",
-      temperature: "70°F to 32°F",
-      dropletSize: "5-25 μm (water)",
-      formationTime: "30 min - 2 hrs",
-      windSpeed: "5-25 mph",
-      pressureRange: "850-1013 mb",
-      lifespan: "10-30 minutes",
-      weatherPrediction: "Fair weather",
-      description16bit: "Fluffy white pixels floating in digital space",
-      formation: "Daytime heating causing convection",
-      density: "0.3-0.8 g/m³",
-      funFact: "'Fair weather clouds' - appear morning, disappear evening",
-      rarity: "common",
-      emoji: "☁️",
-      appearance: "Puffy, cotton-like, flat bases, rounded tops"
-    },
-    {
-      id: 8,
-      name: "STRATOCUMULUS",
-      abbreviation: "Sc",
-      category: "low",
-      altitudeRange: "1,000-6,500 ft",
-      temperature: "70°F to 32°F",
-      dropletSize: "8-35 μm",
-      formationTime: "2-6 hours",
-      windSpeed: "10-30 mph",
-      pressureRange: "850-1013 mb",
-      weatherPrediction: "Generally fair, light precipitation possible",
-      description16bit: "Chunky pixel formations in the lower registry",
-      formation: "Shallow convection mixing with stable air",
-      density: "0.2-0.7 g/m³",
-      funFact: "Most common cloud type worldwide",
-      rarity: "common",
-      emoji: "🌫️",
-      appearance: "Low, lumpy gray/white patches or layers"
-    },
-    {
-      id: 9,
-      name: "STRATUS",
-      abbreviation: "St",
-      category: "low",
-      altitudeRange: "0-6,500 ft",
-      temperature: "70°F to 32°F",
-      dropletSize: "5-20 μm (small)",
-      formationTime: "2-12 hours",
-      windSpeed: "5-20 mph",
-      pressureRange: "900-1013 mb",
-      thickness: "500-2,000 ft",
-      weatherPrediction: "Drizzle or mist possible",
-      description16bit: "Uniform gray screen saver across the sky",
-      formation: "Fog lifting from ground or gentle cooling",
-      density: "0.1-0.5 g/m³",
-      funFact: "Can make the world look black and white",
-      rarity: "common",
-      emoji: "🌫️",
-      appearance: "Gray layer, often covering entire sky"
-    },
-    // VERTICAL DEVELOPMENT
-    {
-      id: 10,
-      name: "CUMULONIMBUS",
-      abbreviation: "Cb",
-      category: "vertical",
-      altitudeRange: "1,000-60,000+ ft",
-      temperature: "80°F to -80°F",
-      dropletSize: "10-100+ μm",
-      formationTime: "30 min - 3 hrs",
-      windSpeed: "Up to 180 mph updrafts",
-      pressureRange: "200-1013 mb",
-      energy: "Equivalent to 400,000 car engines",
-      weatherPrediction: "Thunderstorms, heavy rain, hail, tornadoes",
-      description16bit: "Massive storm tower reaching max altitude limit",
-      formation: "Strong vertical convection",
-      density: "0.5-3.0 g/m³",
-      funFact: "'King of Clouds' - can reach 60,000+ feet, weighs 500,000 tons",
-      rarity: "uncommon",
-      emoji: "⛈️",
-      appearance: "Towering cloud with anvil top, dark base"
-    },
-    // RARE CLOUDS
-    {
-      id: 11,
-      name: "MAMMATUS",
-      abbreviation: "Ma",
-      category: "rare",
-      altitudeRange: "6,000-25,000 ft",
-      temperature: "-10°F to 60°F",
-      dropletSize: "20-100 μm",
-      formationTime: "10-15 min per lobe",
-      windSpeed: "15-40 mph downdrafts",
-      pressureRange: "Variable",
-      lifespan: "10 min per lobe, hours total",
-      weatherPrediction: "Severe weather nearby",
-      description16bit: "Inverted pixel pouches defying gravity",
-      formation: "Cold air sinking in downdrafts",
-      density: "0.3-1.5 g/m³",
-      funFact: "Named from Latin 'mamma' (breast/udder). Seen after 1 in 1000 storms",
-      rarity: "legendary",
-      emoji: "🫧",
-      appearance: "Pouch-like bulges hanging downward"
-    },
-    {
-      id: 12,
-      name: "LENTICULAR",
-      abbreviation: "Le",
-      category: "rare",
-      altitudeRange: "6,500-40,000 ft",
-      temperature: "Variable",
-      dropletSize: "5-50 μm",
-      formationTime: "1-3 hours",
-      windSpeed: "40-100+ mph",
-      pressureRange: "±50 mb oscillations",
-      weatherPrediction: "Turbulent winds near mountains",
-      description16bit: "Flying saucer sprites over mountain ranges",
-      formation: "Air flowing over mountains creates standing waves",
-      density: "0.2-0.8 g/m³",
-      funFact: "Often mistaken for UFOs. Only near mountains with specific winds",
-      rarity: "rare",
-      emoji: "🛸",
-      appearance: "Lens or saucer-shaped, smooth"
-    },
-    {
-      id: 13,
-      name: "ASPERITAS",
-      abbreviation: "As",
-      category: "rare",
-      altitudeRange: "6,000-20,000 ft",
-      temperature: "Variable",
-      dropletSize: "10-40 μm",
-      formationTime: "30 min - 2 hrs",
-      windSpeed: "Complex wind shear",
-      pressureRange: "Variable",
-      weatherPrediction: "Usually harmless despite ominous look",
-      description16bit: "Chaotic wave patterns in the sky matrix",
-      formation: "Still mysterious - possibly mammatus + wind shear",
-      density: "0.3-1.2 g/m³",
-      funFact: "Newest cloud type (2017) - first new type since 1951. <0.01% of clouds",
-      rarity: "legendary",
-      emoji: "🌊",
-      appearance: "Dramatic wave-like undulations on cloud bottom"
-    }
-  ]
 
   // Filter clouds by category
-  const filteredClouds = selectedCategory === 'all' 
-    ? cloudDatabase 
+  const filteredClouds = selectedCategory === 'all'
+    ? cloudDatabase
     : cloudDatabase.filter(cloud => cloud.category === selectedCategory)
 
   // Achievement system
@@ -383,7 +400,7 @@ export default function CloudTypesPage() {
   const handleCloudToggle = (cloudId: number) => {
     // Toggle expansion: if same cloud, collapse it, otherwise expand new one
     setExpandedCloudId(expandedCloudId === cloudId ? null : cloudId)
-    
+
     // Trigger achievements
     if (expandedCloudId !== cloudId) {
       checkAchievements(cloudId)
@@ -419,7 +436,7 @@ export default function CloudTypesPage() {
         {/* Achievement Notification */}
         {achievementUnlocked && (
           <div className={`fixed top-4 right-4 z-50 ${themeClasses.cardBg} p-4 border-2 ${themeClasses.borderColor} ${themeClasses.glow}`}
-               style={{ boxShadow: `0 0 20px ${themeClasses.shadowColor}` }}>
+            style={{ boxShadow: `0 0 20px ${themeClasses.shadowColor}` }}>
             <div className={`${themeClasses.headerText} font-mono text-sm font-bold`}>
               {achievementUnlocked}
             </div>
@@ -434,10 +451,10 @@ export default function CloudTypesPage() {
           <p className={`text-lg ${themeClasses.secondaryText} font-mono mb-6`}>
             Comprehensive meteorological database • 13 cloud types loaded
           </p>
-          
+
           {/* Stats Display */}
           <div className={`${themeClasses.cardBg} p-4 border-2 ${themeClasses.borderColor} inline-block`}
-               style={{ boxShadow: `0 0 10px ${themeClasses.shadowColor}` }}>
+            style={{ boxShadow: `0 0 10px ${themeClasses.shadowColor}` }}>
             <div className="grid grid-cols-5 gap-4 text-xs font-mono">
               <div className="text-center">
                 <div className={themeClasses.headerText}>HIGH</div>
@@ -480,11 +497,11 @@ export default function CloudTypesPage() {
               {category.toUpperCase()}
               {category !== 'all' && (
                 <span className="ml-1 opacity-75">
-                  [{category === 'high' ? categoryStats.high : 
-                    category === 'mid' ? categoryStats.mid : 
-                    category === 'low' ? categoryStats.low : 
-                    category === 'vertical' ? categoryStats.vertical : 
-                    categoryStats.rare}]
+                  [{category === 'high' ? categoryStats.high :
+                    category === 'mid' ? categoryStats.mid :
+                      category === 'low' ? categoryStats.low :
+                        category === 'vertical' ? categoryStats.vertical :
+                          categoryStats.rare}]
                 </span>
               )}
             </button>
@@ -500,7 +517,7 @@ export default function CloudTypesPage() {
                 <div
                   onClick={() => handleCloudToggle(cloud.id)}
                   className={`${themeClasses.cardBg} p-6 border-2 ${themeClasses.borderColor} text-center cursor-pointer transition-all duration-300 hover:scale-105`}
-                  style={{ 
+                  style={{
                     boxShadow: `0 0 15px ${themeClasses.shadowColor}`,
                     borderColor: expandedCloudId === cloud.id ? themeClasses.shadowColor : themeClasses.borderColor,
                     transform: expandedCloudId === cloud.id ? 'scale(1.02)' : 'scale(1)'
@@ -510,14 +527,14 @@ export default function CloudTypesPage() {
                   <div className="flex justify-between items-start mb-4">
                     <div className="text-5xl">{cloud.emoji}</div>
                     <div className={`text-xs font-mono px-2 py-1 border rounded`}
-                         style={{ 
-                           borderColor: getRarityColor(cloud.rarity),
-                           color: getRarityColor(cloud.rarity)
-                         }}>
+                      style={{
+                        borderColor: getRarityColor(cloud.rarity),
+                        color: getRarityColor(cloud.rarity)
+                      }}>
                       {cloud.category.toUpperCase()}
                     </div>
                   </div>
-                  
+
                   {/* Cloud Name & Abbreviation */}
                   <h2 className={`text-xl font-bold mb-1 font-mono uppercase tracking-wider ${themeClasses.headerText}`}>
                     {cloud.name}
@@ -525,7 +542,7 @@ export default function CloudTypesPage() {
                   <div className={`text-sm ${themeClasses.secondaryText} font-mono mb-3`}>
                     ({cloud.abbreviation}) • {cloud.rarity.toUpperCase()}
                   </div>
-                  
+
                   {/* Altitude & Formation Time */}
                   <div className="space-y-2 text-xs font-mono">
                     <div className="flex justify-between">
@@ -540,7 +557,7 @@ export default function CloudTypesPage() {
 
                   {/* 16-bit Description */}
                   <div className={`mt-3 p-2 border ${themeClasses.borderColor} bg-opacity-50`}
-                       style={{ backgroundColor: themeClasses.shadowColor + '10' }}>
+                    style={{ backgroundColor: themeClasses.shadowColor + '10' }}>
                     <p className={`${themeClasses.text} font-mono text-xs italic`}>
                       &ldquo;{cloud.description16bit}&rdquo;
                     </p>
@@ -556,9 +573,9 @@ export default function CloudTypesPage() {
               {/* Expanded Details - Appears DIRECTLY BELOW this specific card */}
               {expandedCloudId === cloud.id && (
                 <div className="col-span-full mt-6">
-                  <div 
+                  <div
                     className={`${themeClasses.cardBg} p-8 border-2 transition-all duration-500 ease-in-out overflow-hidden w-full`}
-                    style={{ 
+                    style={{
                       borderColor: themeClasses.shadowColor,
                       boxShadow: `0 0 25px ${themeClasses.shadowColor}`,
                       animation: 'slideDown 0.3s ease-out'
@@ -592,7 +609,7 @@ export default function CloudTypesPage() {
                       {/* Technical Specifications */}
                       <div>
                         <h4 className={`text-lg font-bold mb-4 font-mono ${themeClasses.headerText} border-b-2 pb-2`}
-                            style={{ borderColor: themeClasses.shadowColor }}>
+                          style={{ borderColor: themeClasses.shadowColor }}>
                           📊 TECHNICAL SPECIFICATIONS
                         </h4>
                         <div className="space-y-3 text-sm font-mono">
@@ -632,75 +649,65 @@ export default function CloudTypesPage() {
                           )}
                           {cloud.energy && (
                             <div className="flex justify-between">
-                              <span className={themeClasses.secondaryText}>Energy Output:</span>
+                              <span className={themeClasses.secondaryText}>Convective Energy:</span>
                               <span className={themeClasses.warningText}>{cloud.energy}</span>
                             </div>
                           )}
-                          {cloud.lifespan && (
-                            <div className="flex justify-between">
-                              <span className={themeClasses.secondaryText}>Lifespan:</span>
-                              <span className={themeClasses.text}>{cloud.lifespan}</span>
+                          {cloud.etymology && (
+                            <div className="pt-2 border-t border-dashed border-gray-500/50 mt-2">
+                              <span className={themeClasses.secondaryText}>Etymology: </span>
+                              <span className="italic opacity-80">{cloud.etymology}</span>
                             </div>
                           )}
                         </div>
-                      </div>
-
-                      {/* Formation & Appearance */}
-                      <div>
-                        <h4 className={`text-lg font-bold mb-4 font-mono ${themeClasses.headerText} border-b-2 pb-2`}
-                            style={{ borderColor: themeClasses.shadowColor }}>
-                          🌤️ FORMATION & APPEARANCE
-                        </h4>
-                        <div className="space-y-4 text-sm font-mono">
-                          <div>
-                            <div className={`${themeClasses.accentText} mb-2 font-bold`}>Visual Appearance:</div>
-                            <div className={themeClasses.text}>{cloud.appearance}</div>
-                          </div>
-                          <div>
-                            <div className={`${themeClasses.accentText} mb-2 font-bold`}>Formation Process:</div>
-                            <div className={themeClasses.text}>{cloud.formation}</div>
-                          </div>
-                          <div>
-                            <div className={`${themeClasses.accentText} mb-2 font-bold`}>16-Bit Description:</div>
-                            <div className={`${themeClasses.text} italic p-2 border rounded`}
-                                 style={{ borderColor: themeClasses.shadowColor + '50', backgroundColor: themeClasses.shadowColor + '10' }}>
-                              &quot;{cloud.description16bit}&quot;
-                            </div>
+                        <div>
+                          <div className={`${themeClasses.accentText} mb-2 font-bold`}>Visual Appearance:</div>
+                          <div className={themeClasses.text}>{cloud.appearance}</div>
+                        </div>
+                        <div>
+                          <div className={`${themeClasses.accentText} mb-2 font-bold`}>Formation Process:</div>
+                          <div className={themeClasses.text}>{cloud.formation}</div>
+                        </div>
+                        <div>
+                          <div className={`${themeClasses.accentText} mb-2 font-bold`}>16-Bit Description:</div>
+                          <div className={`${themeClasses.text} italic p-2 border rounded`}
+                            style={{ borderColor: themeClasses.shadowColor + '50', backgroundColor: themeClasses.shadowColor + '10' }}>
+                            &quot;{cloud.description16bit}&quot;
                           </div>
                         </div>
                       </div>
+                    </div>
 
-                      {/* Weather Impact & Facts */}
-                      <div>
-                        <h4 className={`text-lg font-bold mb-4 font-mono ${themeClasses.headerText} border-b-2 pb-2`}
-                            style={{ borderColor: themeClasses.shadowColor }}>
-                          ⚡ WEATHER IMPACT & DATA
-                        </h4>
-                        <div className="space-y-4 text-sm font-mono">
-                          <div>
-                            <div className={`${themeClasses.accentText} mb-2 font-bold`}>Weather Prediction:</div>
-                            <div className={`${themeClasses.successText} p-2 border rounded font-bold`}
-                                 style={{ borderColor: themeClasses.successText + '50', backgroundColor: themeClasses.successText + '10' }}>
-                              {cloud.weatherPrediction}
-                            </div>
+                    {/* Weather Impact & Facts */}
+                    <div>
+                      <h4 className={`text-lg font-bold mb-4 font-mono ${themeClasses.headerText} border-b-2 pb-2`}
+                        style={{ borderColor: themeClasses.shadowColor }}>
+                        ⚡ WEATHER IMPACT & DATA
+                      </h4>
+                      <div className="space-y-4 text-sm font-mono">
+                        <div>
+                          <div className={`${themeClasses.accentText} mb-2 font-bold`}>Weather Prediction:</div>
+                          <div className={`${themeClasses.successText} p-2 border rounded font-bold`}
+                            style={{ borderColor: themeClasses.successText + '50', backgroundColor: themeClasses.successText + '10' }}>
+                            {cloud.weatherPrediction}
                           </div>
-                          <div>
-                            <div className={`${themeClasses.accentText} mb-2 font-bold`}>Rarity Classification:</div>
-                            <div className={`${getRarityColor(cloud.rarity)} font-bold uppercase`}>
-                              {cloud.rarity} ({cloud.category.toUpperCase()} LEVEL)
-                            </div>
-                          </div>
-                          <div>
-                            <div className={`${themeClasses.accentText} mb-2 font-bold`}>Meteorological Fact:</div>
-                            <div className={themeClasses.text}>{cloud.funFact}</div>
-                          </div>
-                          {cloud.precipitation && (
-                            <div>
-                              <div className={`${themeClasses.accentText} mb-2 font-bold`}>Precipitation Rate:</div>
-                              <div className={themeClasses.warningText}>{cloud.precipitation}</div>
-                            </div>
-                          )}
                         </div>
+                        <div>
+                          <div className={`${themeClasses.accentText} mb-2 font-bold`}>Rarity Classification:</div>
+                          <div className={`${getRarityColor(cloud.rarity)} font-bold uppercase`}>
+                            {cloud.rarity} ({cloud.category.toUpperCase()} LEVEL)
+                          </div>
+                        </div>
+                        <div>
+                          <div className={`${themeClasses.accentText} mb-2 font-bold`}>Meteorological Fact:</div>
+                          <div className={themeClasses.text}>{cloud.funFact}</div>
+                        </div>
+                        {cloud.precipitation && (
+                          <div>
+                            <div className={`${themeClasses.accentText} mb-2 font-bold`}>Precipitation Rate:</div>
+                            <div className={themeClasses.warningText}>{cloud.precipitation}</div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -709,7 +716,7 @@ export default function CloudTypesPage() {
                       <button
                         onClick={() => setExpandedCloudId(null)}
                         className={`px-6 py-2 border-2 ${themeClasses.borderColor} ${themeClasses.text} font-mono text-sm font-bold uppercase tracking-wider hover:bg-opacity-80 transition-all duration-200`}
-                        style={{ 
+                        style={{
                           borderColor: themeClasses.shadowColor,
                           backgroundColor: themeClasses.cardBg,
                           boxShadow: `0 0 10px ${themeClasses.shadowColor}33`
@@ -728,7 +735,7 @@ export default function CloudTypesPage() {
         {/* Educational Section */}
         <div className="mt-16 max-w-6xl mx-auto">
           <div className={`${themeClasses.cardBg} p-8 border-4 ${themeClasses.borderColor}`}
-               style={{ boxShadow: `0 0 20px ${themeClasses.shadowColor}` }}>
+            style={{ boxShadow: `0 0 20px ${themeClasses.shadowColor}` }}>
             <h3 className={`text-2xl font-bold mb-6 font-mono uppercase tracking-wider ${themeClasses.headerText} text-center`}>
               🎮 CLOUD FORMATION DATABASE
             </h3>
@@ -770,7 +777,7 @@ export default function CloudTypesPage() {
         {/* Achievement System */}
         <div className="mt-8 max-w-4xl mx-auto">
           <div className={`${themeClasses.cardBg} p-6 border-2 ${themeClasses.borderColor} text-center`}
-               style={{ boxShadow: `0 0 15px ${themeClasses.shadowColor}` }}>
+            style={{ boxShadow: `0 0 15px ${themeClasses.shadowColor}` }}>
             <h4 className={`text-lg font-bold mb-4 font-mono uppercase ${themeClasses.headerText}`}>
               🏆 CLOUD SPOTTER ACHIEVEMENTS
             </h4>
