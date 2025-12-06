@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * 16-Bit Weather Platform - BETA v0.3.2
+ * 16-Bit Weather Platform - BETA v0.3.3
  * 
  * Copyright (C) 2025 16-Bit Weather
  * Licensed under Fair Source License, Version 0.9
@@ -22,6 +22,8 @@ import { Menu, X, Gamepad2, Info, Home, Newspaper, Thermometer, Map, GraduationC
 import { useTheme } from "@/components/theme-provider"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
 import AuthButton from "@/components/auth/auth-button"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 interface NavigationProps {
   weatherLocation?: string;
@@ -49,9 +51,9 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
     // Examples: "Dublin, CA, US" → "Dublin, CA"
     //          "San Ramon, California, US" → "San Ramon, CA"
     //          "New York, NY, US" → "New York, NY"
-    
+
     const parts = location.split(', ');
-    
+
     // Comprehensive state name to abbreviation mapping
     const stateAbbreviations: { [key: string]: string } = {
       // Full state names to abbreviations
@@ -89,7 +91,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
       'Tucson': 'AZ', 'Mesa': 'AZ', 'Kansas City': 'MO', 'Virginia Beach': 'VA',
       'Omaha': 'NE', 'Colorado Springs': 'CO', 'Raleigh': 'NC', 'Miami Beach': 'FL'
     };
-    
+
     if (parts.length >= 3) {
       // Format: "City, State, Country" -> "City, StateAbbrev"
       const city = parts[0];
@@ -100,7 +102,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
       // Format: "City, Country" -> need to determine state
       const city = parts[0];
       const country = parts[1];
-      
+
       if (country === 'US') {
         const state = cityStateMap[city] || 'US'; // Fallback to country if city not found
         return state === 'US' ? city : `${city}, ${state}`;
@@ -127,127 +129,124 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
 
   return (
     <>
-      <nav className={`w-full border-b-4 pixel-border relative z-50 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
-      
-      {/* Desktop Navigation */}
-      <div className="hidden md:flex items-center justify-between px-6 py-4">
-        {/* Logo/Brand with Weather Data - TOP LEFT */}
-        <div className="flex items-center space-x-3">
-          <div className={`w-8 h-8 border-2 flex items-center justify-center animate-pulse ${themeClasses.accentBg} ${themeClasses.borderColor}`}>
-            <span className="text-black font-bold text-sm">16</span>
-          </div>
-          <h1 className={`text-lg font-bold uppercase tracking-wider font-mono ${themeClasses.text} ${themeClasses.glow}`} style={{ 
-            fontFamily: "monospace",
-            fontSize: "clamp(14px, 2vw, 18px)"
-          }}>
-            BIT WEATHER{weatherLocation && weatherTemperature ? (
-              <>
-                <span className={`font-extrabold text-xl ml-2 ${themeClasses.accentText}`} style={{ 
-                  fontSize: "clamp(16px, 2.5vw, 22px)",
-                  textShadow: "0 0 8px currentColor"
-                }}>
-                  {formatHeaderLocation(weatherLocation)} {Math.round(weatherTemperature)}°{weatherUnit === '°F' ? 'F' : 'C'}
+      <nav className={cn(
+        "w-full sticky top-0 z-50 border-b backdrop-blur-md shadow-sm transition-all duration-300",
+        "bg-background/80 border-border"
+      )}>
+
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center justify-between px-6 py-3 max-w-7xl mx-auto">
+          {/* Logo/Brand with Weather Data - TOP LEFT */}
+          <div className="flex items-center space-x-3">
+            <div className={cn(
+              "w-8 h-8 rounded-lg flex items-center justify-center shadow-lg transition-transform hover:rotate-12",
+              "bg-primary text-primary-foreground"
+            )}>
+              <span className="font-bold text-sm">16</span>
+            </div>
+            <h1 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
+              <span className="font-mono">BIT WEATHER</span>
+              {weatherLocation && weatherTemperature ? (
+                <span className="text-sm font-normal text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full border border-border">
+                  {formatHeaderLocation(weatherLocation)} <span className="text-foreground font-bold">{Math.round(weatherTemperature)}°{weatherUnit === '°F' ? 'F' : 'C'}</span>
                 </span>
-              </>
-            ) : ''}
-          </h1>
-        </div>
-
-        {/* Main Navigation Links - TOP CENTER */}
-        <div className="flex items-center space-x-4">
-          {mainNavItems.map((item) => {
-            const Icon = item.icon
-            const isActive = pathname === item.href
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center justify-center space-x-2 px-3 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 min-w-[80px] ${
-                  isActive
-                    ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black ${themeClasses.glow}`
-                    : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`
-                }`}
-              >
-                <Icon className="w-3 h-3" />
-                <span className="whitespace-nowrap">{item.label}</span>
-              </Link>
-            )
-          })}
-        </div>
-
-        {/* Auth Button - TOP RIGHT */}
-        <div className="flex items-center space-x-2">
-          <AuthButton />
-        </div>
-      </div>
-
-      {/* Mobile Navigation */}
-      <div className="md:hidden flex items-center justify-between px-4 py-3">
-        {/* Mobile Logo with Weather Data */}
-        <div className="flex items-center space-x-2 flex-1 min-w-0">
-          <div className={`w-6 h-6 border-2 flex items-center justify-center ${themeClasses.accentBg} ${themeClasses.borderColor}`}>
-            <span className="text-black font-bold text-xs">16</span>
+              ) : ''}
+            </h1>
           </div>
-          <h1 className={`text-xs font-bold uppercase tracking-wider font-mono ${themeClasses.text}`} style={{ 
-            fontFamily: "monospace",
-            fontSize: "clamp(10px, 2.5vw, 12px)"
-          }}>
-            BIT WEATHER{weatherLocation && weatherTemperature ? (
-              <>
-                <span className={`font-extrabold ml-1 ${themeClasses.accentText}`} style={{ 
-                  fontSize: "clamp(11px, 3vw, 14px)",
-                  textShadow: "0 0 4px currentColor"
-                }}>
-                  {formatHeaderLocation(weatherLocation)} {Math.round(weatherTemperature)}°{weatherUnit === '°F' ? 'F' : 'C'}
-                </span>
-              </>
-            ) : ''}
-          </h1>
-        </div>
 
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className={`p-2 border-2 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text}`}
-        >
-          {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-        </button>
-      </div>
-
-      {/* Mobile Menu Dropdown */}
-      {isMobileMenuOpen && (
-        <div className={`md:hidden absolute top-full left-0 right-0 border-4 border-t-0 z-50 ${themeClasses.background} ${themeClasses.borderColor}`}>
-          <div className="p-4 space-y-2">
-            {/* All main nav items */}
+          {/* Main Navigation Links - TOP CENTER */}
+          <div className="flex items-center space-x-1">
             {mainNavItems.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
 
               return (
-                <Link
+                <Button
                   key={item.href}
-                  href={item.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center space-x-3 p-3 border-2 text-sm font-mono font-bold uppercase tracking-wider w-full h-[48px] ${
-                    isActive
-                      ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black`
-                      : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text}`
-                  }`}
+                  variant={isActive ? "secondary" : "ghost"}
+                  size="sm"
+                  asChild
+                  className={cn(
+                    "font-medium transition-all duration-200",
+                    isActive && "font-bold shadow-sm"
+                  )}
                 >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </Link>
+                  <Link href={item.href} className="flex items-center gap-2">
+                    <Icon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                  </Link>
+                </Button>
               )
             })}
+          </div>
 
-            {/* Mobile Auth */}
-            <div className="flex items-center space-x-2 pt-4 border-t-2 border-current mt-4">
-              <AuthButton />
-            </div>
+          {/* Auth Button - TOP RIGHT */}
+          <div className="flex items-center space-x-2">
+            <AuthButton />
           </div>
         </div>
-      )}
+
+        {/* Mobile Navigation */}
+        <div className="md:hidden flex items-center justify-between px-4 py-3">
+          {/* Mobile Logo with Weather Data */}
+          <div className="flex items-center space-x-2 flex-1 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-sm">
+              <span className="font-bold text-xs">16</span>
+            </div>
+            <h1 className="text-sm font-bold tracking-tight text-foreground truncate flex flex-col leading-tight">
+              <span>BIT WEATHER</span>
+              {weatherLocation && weatherTemperature && (
+                <span className="text-xs font-normal text-muted-foreground">
+                  {Math.round(weatherTemperature)}°{weatherUnit === '°F' ? 'F' : 'C'} in {formatHeaderLocation(weatherLocation).split(',')[0]}
+                </span>
+              )}
+            </h1>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="ml-2"
+          >
+            {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          </Button>
+        </div>
+
+        {/* Mobile Menu Dropdown */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden absolute top-full left-0 right-0 border-b bg-background/95 backdrop-blur-lg shadow-xl animate-in slide-in-from-top-2">
+            <div className="p-4 space-y-2">
+              {/* All main nav items */}
+              {mainNavItems.map((item) => {
+                const Icon = item.icon
+                const isActive = pathname === item.href
+
+                return (
+                  <Button
+                    key={item.href}
+                    variant={isActive ? "secondary" : "ghost"}
+                    size="lg"
+                    asChild
+                    className="w-full justify-start"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Link href={item.href}>
+                      <Icon className="w-5 h-5 mr-3" />
+                      {item.label}
+                    </Link>
+                  </Button>
+                )
+              })}
+
+              {/* Mobile Auth */}
+              <div className="flex items-center justify-start pt-4 border-t mt-4">
+                <AuthButton />
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
     </>
   )

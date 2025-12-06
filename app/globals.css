@@ -698,7 +698,7 @@ input:focus,
     --input: var(--border);
     --ring: var(--primary);
 
-    --radius: 0.5rem;
+    --radius: 1rem;
   }
 }
 
