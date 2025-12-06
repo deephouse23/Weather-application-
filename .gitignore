@@ -1,10 +1,31 @@
-﻿# dependencies
+﻿# Archive
+_archive/
+docs/archive/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+*.swp
+*.swo
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+/logs/
+
+# Build
+dist/
+.next/
+build/
+coverage/
+
+# dependencies
 /node_modules
 node_modules/
-
-# next.js
-/.next/
-.next/
 
 # environment variables
 .env.local
@@ -43,10 +64,6 @@ playwright-report/
 test-results/
 results/
 
-# Documentation archives
-docs/archive/
-.claude/
-
 # Sentry setup guide with potential secrets
 SENTRY_SETUP_GUIDE.md
 
@@ -63,11 +80,5 @@ SENTRY_SETUP_GUIDE.md
 
 # Keep feature screenshots and documentation images (commit these)
 !.github/images/features/
+!.github/images/demo/
 !docs/screenshots/
-
-# Archive screenshots (optional - can commit for reference or ignore)
-# Uncomment to ignore archive screenshots:
-# archive/screenshots/
-
-# Logs
-/logs/
