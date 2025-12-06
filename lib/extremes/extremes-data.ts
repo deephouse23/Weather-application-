@@ -38,6 +38,64 @@ export const HOT_LOCATIONS = [
   { name: 'Ghadames', country: 'Libya', lat: 30.1337, lon: 9.4951, emoji: '🌵' }
 ];
 
+// Enhanced descriptions for extreme locations
+export const LOCATION_DETAILS: { [key: string]: { description: string; climateType: string; bestTime: string; travelTip: string } } = {
+  'Death Valley': {
+    description: 'A desert valley in Eastern California, it is the lowest point in North America and holds the record for the highest reliably recorded air temperature on Earth.',
+    climateType: 'Subtropical, hot desert climate',
+    bestTime: 'November to March',
+    travelTip: 'Bring gallons of water and avoid hiking after 10 AM in summer.'
+  },
+  'Kuwait City': {
+    description: 'The capital of Kuwait, known for its modern architecture and intense summer heat, frequently exceeding 50°C.',
+    climateType: 'Hot desert climate',
+    bestTime: 'November to April',
+    travelTip: 'Visit indoor attractions like the Avenues Mall during peak heat hours.'
+  },
+  'Vostok Station': {
+    description: 'A Russian research station in inland Princess Elizabeth Land, Antarctica. It is the coldest place on Earth.',
+    climateType: 'Ice cap climate',
+    bestTime: 'December to January (Summer)',
+    travelTip: 'Only accessible by specialized expeditions with polar gear.'
+  },
+  'Oymyakon': {
+    description: 'A rural locality in the Sakha Republic, Russia, located along the Indigirka River. It is the coldest permanently inhabited settlement on Earth.',
+    climateType: 'Extreme subarctic climate',
+    bestTime: 'June to August',
+    travelTip: 'Don\'t turn off your car engine; the oil might freeze instantly.'
+  },
+  'Phoenix': {
+    description: 'The capital of Arizona, known for its year-round sun and sweltering summer temperatures.',
+    climateType: 'Hot desert climate',
+    bestTime: 'November to April',
+    travelTip: 'Hydrate constantly and embrace the siesta lifestyle.'
+  },
+  'Yakutsk': {
+    description: 'The capital city of the Sakha Republic, Russia, located about 450 kilometers south of the Arctic Circle.',
+    climateType: 'Subarctic climate',
+    bestTime: 'July (Temperatures can reach 30°C)',
+    travelTip: 'Visit the Mammoth Museum and the Permafrost Kingdom.'
+  },
+  'Dubai': {
+    description: 'A city and emirate in the United Arab Emirates known for luxury shopping, ultramodern architecture, and lively nightlife.',
+    climateType: 'Hot desert climate',
+    bestTime: 'November to March',
+    travelTip: 'Book a desert safari for sunset, when temperatures are milder.'
+  },
+  'Alice Springs': {
+    description: 'A remote town in Australia\'s Northern Territory, a gateway to exploring the Red Centre.',
+    climateType: 'Hot desert climate',
+    bestTime: 'April to September',
+    travelTip: 'Visit Uluru at sunrise for spectacular colors and cooler temps.'
+  },
+  'Danakil Depression': {
+    description: 'One of the hottest, driest, and lowest places on Earth, featuring colorful hydrothermal pools.',
+    climateType: 'Hot desert climate',
+    bestTime: 'November to February',
+    travelTip: 'A professional guide and armed escort are mandatory for safety.'
+  }
+};
+
 export const COLD_LOCATIONS = [
   // Polar and extremely cold regions
   { name: 'Vostok Station', country: 'Antarctica', lat: -78.4645, lon: 106.8339, emoji: '🧊' },
@@ -102,6 +160,10 @@ export interface LocationTemperature {
   humidity: number;
   windSpeed: number;
   fact?: string;
+  description?: string;
+  climateType?: string;
+  bestTime?: string;
+  travelTip?: string;
   historicalAvg?: { summer: number; winter: number };
   lastUpdated: number;
 }
@@ -131,14 +193,14 @@ async function fetchLocationTemperature(
     const response = await fetch(
       `https://api.openweathermap.org/data/2.5/weather?lat=${location.lat}&lon=${location.lon}&units=imperial&appid=${apiKey}`
     );
-    
+
     if (!response.ok) {
       console.error(`Failed to fetch ${location.name}:`, response.status);
       return null;
     }
-    
+
     const data = await response.json();
-    
+
     return {
       name: location.name,
       country: location.country,
@@ -146,11 +208,15 @@ async function fetchLocationTemperature(
       lon: location.lon,
       emoji: location.emoji,
       temp: Math.round(data.main.temp),
-      tempC: Math.round((data.main.temp - 32) * 5/9),
+      tempC: Math.round((data.main.temp - 32) * 5 / 9),
       condition: data.weather[0].main,
       humidity: data.main.humidity,
       windSpeed: Math.round(data.wind.speed),
       fact: LOCATION_FACTS[location.name],
+      description: LOCATION_DETAILS[location.name]?.description || 'A location known for extreme weather conditions.',
+      climateType: LOCATION_DETAILS[location.name]?.climateType || 'Extreme Climate',
+      bestTime: LOCATION_DETAILS[location.name]?.bestTime || 'Consult local guides',
+      travelTip: LOCATION_DETAILS[location.name]?.travelTip || 'Pack appropriate gear for extreme conditions.',
       historicalAvg: HISTORICAL_AVERAGES[location.name],
       lastUpdated: Date.now()
     };
@@ -172,16 +238,16 @@ export async function fetchExtremeTemperatures(
   const hotPromises = HOT_LOCATIONS.map(loc => fetchLocationTemperature(loc, apiKey));
   const hotResults = await Promise.all(hotPromises);
   const validHotResults = hotResults.filter(r => r !== null) as LocationTemperature[];
-  
+
   // Fetch all cold locations
   const coldPromises = COLD_LOCATIONS.map(loc => fetchLocationTemperature(loc, apiKey));
   const coldResults = await Promise.all(coldPromises);
   const validColdResults = coldResults.filter(r => r !== null) as LocationTemperature[];
-  
+
   // Sort by temperature
   validHotResults.sort((a, b) => b.temp - a.temp);
   validColdResults.sort((a, b) => a.temp - b.temp);
-  
+
   // Get user location temperature if provided
   let userLocation;
   if (userLat !== undefined && userLon !== undefined) {
@@ -189,21 +255,21 @@ export async function fetchExtremeTemperatures(
       const response = await fetch(
         `https://api.openweathermap.org/data/2.5/weather?lat=${userLat}&lon=${userLon}&units=imperial&appid=${apiKey}`
       );
-      
+
       if (response.ok) {
         const data = await response.json();
         const userTemp = Math.round(data.main.temp);
-        
+
         // Calculate global rank
         const allTemps = [...validHotResults, ...validColdResults]
           .map(l => l.temp)
           .sort((a, b) => b - a);
-        
+
         const globalRank = allTemps.findIndex(t => t <= userTemp) + 1;
-        
+
         userLocation = {
           temp: userTemp,
-          tempC: Math.round((userTemp - 32) * 5/9),
+          tempC: Math.round((userTemp - 32) * 5 / 9),
           globalRank,
           totalLocations: allTemps.length
         };
@@ -212,7 +278,7 @@ export async function fetchExtremeTemperatures(
       console.error('Error fetching user location:', error);
     }
   }
-  
+
   return {
     hottest: validHotResults[0],
     coldest: validColdResults[0],
@@ -231,19 +297,19 @@ const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
 export function getCachedExtremes(): ExtremesData | null {
   if (typeof window === 'undefined') return null;
-  
+
   try {
     const cached = localStorage.getItem(CACHE_KEY);
     if (!cached) return null;
-    
+
     const data = JSON.parse(cached);
     const age = Date.now() - data.lastUpdated;
-    
+
     if (age > CACHE_DURATION) {
       localStorage.removeItem(CACHE_KEY);
       return null;
     }
-    
+
     return data;
   } catch (error) {
     console.error('Error reading cache:', error);
@@ -253,7 +319,7 @@ export function getCachedExtremes(): ExtremesData | null {
 
 export function setCachedExtremes(data: ExtremesData): void {
   if (typeof window === 'undefined') return;
-  
+
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(data));
   } catch (error) {
