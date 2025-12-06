@@ -14,6 +14,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { THEME_LIST } from '@/lib/theme-config'
 
 // GET /api/user/preferences - Fetch user preferences
 export async function GET() {
@@ -88,8 +89,9 @@ export async function PUT(request: NextRequest) {
       animation_enabled
     } = body
 
+
     // Validate theme if provided
-    if (theme && !['dark', 'miami', 'tron'].includes(theme)) {
+    if (theme && !THEME_LIST.includes(theme)) {
       return NextResponse.json({ error: 'Invalid theme' }, { status: 400 })
     }
 
