@@ -1,81 +1,44 @@
-# 16-Bit Weather Platform
+# 16bitweather.co
 
-[![License: Fair Source](https://img.shields.io/badge/License-Fair%20Source%200.9-yellow)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v0.6.0-blue)](https://github.com/deephouse23/Weather-application-/releases)
-[![React](https://img.shields.io/badge/React-19+-61dafb)](https://reactjs.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
+A retro 16-bit weather education platform combining accurate meteorological data with nostalgic gaming aesthetics.
 
-A professional weather application that combines modern meteorological data with retro terminal aesthetics. Built with Next.js 15, React 19, and TypeScript, featuring comprehensive weather monitoring and user authentication.
+## About
 
-- Current atmospheric conditions with detailed descriptions
-- Wind speed, direction, and gust measurements
-- Humidity levels and visibility range tracking
-- Atmospheric pressure readings
-- UV index monitoring with safety recommendations
-- Air quality measurements and health advisories
-- Pollen count tracking for allergy management
-- Daily sunrise and sunset calculations
-- Moon phase tracking with illumination percentages
+16bitweather.co is a unique weather application that transforms standard environmental data into an immersive retro experience. Built with modern web technologies but designed with a strict 16-bit pixel art philosophy, it serves as both a functional weather tool and an educational hub for meteorology enthusiasts.
 
-### Interactive Forecasting
-- 5-day weather forecast with expandable detailed views
-- Daily temperature ranges with precise future predictions
-- Comprehensive weather metrics for extended periods
-- Date-specific weather data with M.DD.YY formatting
-- Precipitation probability calculations
-- Weather pattern analysis and predictions
-- Touch-optimized interface for mobile devices
+## Features
 
-### Location Services
-- City name search functionality
-- State and country-specific location queries
-- ZIP and postal code location resolution
-- GPS coordinate input support
-- Automatic geolocation detection
-- Location memory and recall functionality
-- Global weather data coverage
+- **Real-Time Weather**: Accurate current conditions, forecasts, and environmental metrics.
+- **Learn Hub**: Comprehensive educational resources on cloud types, weather systems, and extreme phenomena.
+- **Interactive Maps**: Retro-styled radar and forecast models.
+- **Global Extremes**: Live tracking of the hottest and coldest places on Earth.
+- **Custom Themes**: Multiple 16-bit inspired themes (Standard, Tron, Miami, etc.).
+- **Weather Arcade**: Interactive educational games.
 
-### User Experience
-- Three distinct visual themes (Dark, Miami, Tron)
-- Responsive design across all device types
-- Progressive web app capabilities
-- Keyboard navigation support
-- Intelligent API request management
-- Comprehensive error handling and recovery
+## Recent Updates (December 2025)
 
-## Technology Stack
+- **UI Overhaul**: Migrated to shadcn/ui components for cleaner, consistent, and accessible interfaces while maintaining the retro aesthetic.
+- **Content Enrichment**: Significantly expanded the "Learn" section with scientific depth, etymologies, and historical context for all weather topics.
+- **Performance**: Optimized load times and interaction responsiveness.
+- **Security**: Implemented GitHub Actions for automated security scanning.
+- **Clean Codebase**: Removed stale testing artifacts and archived legacy planning documentation for a leaner repository.
 
-### Framework
-- React 19 with modern features and performance improvements
-- Next.js 15 with App Router architecture
-- TypeScript for type-safe development
-- Tailwind CSS for responsive styling
+## Tech Stack
 
-### APIs and Data Sources
-- OpenWeatherMap API for comprehensive weather data
-- Geolocation API for automatic location detection
-- UV Index API for radiation monitoring
-- Air Quality API for pollution tracking
-- Pollen Data API for allergen information
-
-### Authentication and Database
-- Supabase for user authentication and data management
-- PostgreSQL database for user preferences and saved locations
-- Row-level security for data protection
-
-### Development and Deployment
-- Progressive Web App capabilities
-- Vercel hosting platform
-- GitHub Actions for continuous integration
-- Modern tooling with hot module replacement
+- **Framework**: Next.js 15 (React 19)
+- **Styling**: Tailwind CSS v4, shadcn/ui
+- **Language**: TypeScript
+- **State/Data**: Supabase, OpenWeatherMap API
+- **Testing**: Playwright
+- **Deployment**: Vercel
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+ and npm
-- OpenWeatherMap API key (free tier available)
-- Supabase account for authentication features
-- Modern web browser with JavaScript support
+
+- Node.js 18+
+- npm or pnpm
+- Valid API keys for OpenWeatherMap and Supabase
 
 ### Installation
 
@@ -90,195 +53,32 @@ A professional weather application that combines modern meteorological data with
    npm install
    ```
 
-3. Configure environment variables:
-   ```bash
-   # Create .env.local file
-   cp .env.example .env.local
-   ```
-   
-   Add the following variables:
-   ```env
-   NEXT_PUBLIC_OPENWEATHER_API_KEY=your_api_key
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_key
-   NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY=your_pollen_key (optional)
-   NEXT_PUBLIC_GOOGLE_AIR_QUALITY_API_KEY=your_air_quality_key (optional)
-   ```
+3. Set up environment variables:
+   Create a `.env.local` file in the root directory and add the required keys (see `env.example`).
 
-4. Start the development server:
+4. Run the development server:
    ```bash
    npm run dev
    ```
 
-5. Open http://localhost:3000 in your browser
-
-### Production Deployment
-
-```bash
-npm run build
-npm start
-```
-
-## Usage
-
-### Basic Weather Lookup
-1. Enter location in the search bar (city, ZIP code, or coordinates)
-2. Press Enter or click the search button
-3. View comprehensive weather data instantly
-4. Data updates automatically for real-time accuracy
-
-### Advanced Features
-1. Switch between visual themes using the theme selector
-2. Use geolocation for automatic location detection
-3. Create an account to save favorite locations
-4. Access detailed 5-day forecasts with expandable views
-
-### User Account Features
-1. Sign up or log in using the authentication system
-2. Save multiple locations to your dashboard
-3. Customize theme preferences
-4. Access personalized weather history
-
-### Navigation
-- Full keyboard accessibility support
-- Mouse hover interactions for additional details
-- Touch-optimized interface for mobile devices
-
-## Configuration
+   Open http://localhost:3000 in your browser.
 
 ### Environment Variables
 
-**Required:**
-```env
-NEXT_PUBLIC_OPENWEATHER_API_KEY=your_api_key
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_key
-```
+Required variables include:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `OPENWEATHER_API_KEY`
+- `NEXT_PUBLIC_BASE_URL`
 
-**Optional:**
-```env
-NEXT_PUBLIC_GOOGLE_POLLEN_API_KEY=your_pollen_key
-NEXT_PUBLIC_GOOGLE_AIR_QUALITY_API_KEY=your_air_quality_key
-SENTRY_DSN=your_sentry_dsn (error monitoring)
-```
+## Scripts
 
-### API Key Setup
-- **OpenWeatherMap**: Free API key from [openweathermap.org/api](https://openweathermap.org/api)
-- **Supabase**: Database and authentication from [supabase.com](https://supabase.com)
-- **Google APIs**: Enhanced data from [Google Cloud Console](https://console.cloud.google.com)
-
-### Theme Configuration
-The application supports three built-in themes:
-- **Dark**: Professional dark interface
-- **Miami**: Retro neon styling
-- **Tron**: Sci-fi inspired design
-
-Themes can be customized in the global CSS configuration files.
-
-## Progressive Web App Features
-
-- Install as native application on mobile and desktop
-- Offline functionality with cached weather data
-- Service worker caching for improved performance
-- Native app-like experience across all devices
-- Fast loading with optimized resource management
-
-## Limitations and Roadmap
-
-### Current Limitations
-- UV Index data may show cached values during nighttime
-- Pollen data availability varies by geographic region
-- Offline functionality requires initial data caching
-- Some visual elements optimized for screens above 320px width
-
-### Planned Improvements
-- Severe weather notification system
-- Historical weather data analysis
-- Interactive weather mapping
-- Enhanced multi-location comparison tools
-- Weather trend visualization
-
-## Contributing
-
-### Development Workflow
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/new-feature`
-3. Make your changes and test thoroughly
-4. Commit with clear messages: `git commit -m 'Add new feature'`
-5. Push to your fork: `git push origin feature/new-feature`
-6. Submit a pull request
-
-### Guidelines
-- Follow existing code style and conventions
-- Include tests for new functionality
-- Update documentation for user-facing changes
-- Use GitHub issues for bug reports with detailed descriptions
-- Ensure all builds pass before submitting PRs
+- `npm run dev`: Start development server
+- `npm run build`: Build for production
+- `npm run start`: Start production server
+- `npm test`: Run Jest unit tests (legacy)
+- `npx playwright test`: Run end-to-end tests
 
 ## License
 
-This project is licensed under the Fair Source License, Version 0.9. See the [LICENSE](LICENSE) file for complete terms.
-
-### License Summary
-- Use limitation: 5 users maximum
-- Change date: January 2029
-- After change date: MIT License
-- Commercial use permitted within user limits
-
-## Support
-
-- **Bug Reports**: [GitHub Issues](https://github.com/deephouse23/Weather-application-/issues)
-- **Feature Requests**: [GitHub Discussions](https://github.com/deephouse23/Weather-application-/discussions)
-- **Documentation**: This README provides comprehensive setup and usage information
-- **Live Application**: [16bitweather.co](https://www.16bitweather.co/)
-
-## Acknowledgments
-
-- OpenWeatherMap for comprehensive weather data API
-- Supabase for authentication and database services
-- React and Next.js communities for framework support
-- Contributors and beta testers for feedback and improvements
-
----
-
-## Version History
-
-### v0.6.0 - Games, News Aggregation & Learning Hub (Latest)
-- Games arcade with 6 retro weather-themed games
-- Multi-source news aggregation (FOX Weather, NASA, Reddit, GFS models, NHC)
-- Educational Learn Hub with cloud types, weather systems, and fun facts
-- 48-hour hourly forecast with modern weather icons
-- Enhanced documentation structure and organization
-- See [releases/v0.6.0.md](./releases/v0.6.0.md) for complete changelog
-
-### v0.5.0 - User Authentication and Dashboard
-- Complete Supabase authentication system integration
-- User dashboard with saved locations management
-- Theme preference persistence across sessions
-- Enhanced security with row-level database policies
-- Improved error handling and user feedback
-- Mobile-optimized authentication flows
-
-### v0.4.5 - Interactive Weather Radar
-- Animated weather radar map with timeline controls
-- Real-time precipitation tracking and forecasting
-- Enhanced mobile interface with touch controls
-- Performance optimizations for radar data loading
-
-### v0.3.0 - Architecture Modernization
-- Migration to Next.js 15 and React 19
-- Complete TypeScript implementation
-- App Router architecture adoption
-- Enhanced SEO and performance optimization
-- Progressive Web App capabilities
-
-### v0.2.x Series - Core Features
-- Enhanced location services and geolocation
-- Multi-theme system (Dark, Miami, Tron)
-- Comprehensive weather data integration
-- Mobile responsiveness improvements
-- Security enhancements and code optimization
-
----
-
-**Production Status**: Version 0.6.0 represents a stable release with games arcade, multi-source news aggregation, educational content, comprehensive user authentication, and production-ready deployment capabilities.
+Licensed under the Fair Source License, Version 0.9.
