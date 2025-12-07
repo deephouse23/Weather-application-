@@ -16,8 +16,9 @@
 
 
 import React, { Component, ErrorInfo, ReactNode } from "react"
-import { AlertTriangle, RefreshCw } from "lucide-react"
+import { AlertTriangle, RefreshCw, Home } from "lucide-react"
 import { cn } from "@/lib/utils"
+import Link from "next/link"
 
 interface Props {
   children?: ReactNode
@@ -44,7 +45,34 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo)
+    // Log to console in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('ErrorBoundary caught an error:', error, errorInfo)
+    }
+
+    // Log to Sentry in production
+    if (process.env.NODE_ENV === 'production') {
+      try {
+        // Dynamic import to avoid issues if Sentry isn't configured
+        import('@sentry/nextjs').then((Sentry) => {
+          Sentry.captureException(error, {
+            contexts: {
+              react: {
+                componentStack: errorInfo.componentStack,
+              },
+            },
+            tags: {
+              errorBoundary: this.props.componentName || 'unknown',
+            },
+          })
+        }).catch(() => {
+          // Sentry not available, silently fail
+        })
+      } catch (sentryError) {
+        // Sentry not configured, continue without logging
+      }
+    }
+
     this.setState({
       error,
       errorInfo
@@ -106,17 +134,31 @@ export class ErrorBoundary extends Component<Props, State> {
             )}
           </div>
 
-          <button
-            onClick={this.handleRetry}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded font-medium",
-              "transition-colors duration-200 text-sm uppercase tracking-wider",
-              themeClasses.button
-            )}
-          >
-            <RefreshCw className="w-4 h-4" />
-            Retry
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={this.handleRetry}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded font-medium",
+                "transition-colors duration-200 text-sm uppercase tracking-wider",
+                themeClasses.button
+              )}
+            >
+              <RefreshCw className="w-4 h-4" />
+              Try Again
+            </button>
+            <Link
+              href="/"
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded font-medium",
+                "transition-colors duration-200 text-sm uppercase tracking-wider",
+                "border-2 border-weather-border hover:bg-weather-bg-elev",
+                themeClasses.text
+              )}
+            >
+              <Home className="w-4 h-4" />
+              Go Home
+            </Link>
+          </div>
         </div>
       )
     }
