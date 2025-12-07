@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupStableApp, setupMockAuth, stubSupabaseProfile, stubProfileUpdate, navigateToProfile, fillProfileForm, saveProfile } from './utils';
+import { setupStableApp, setupMockAuth, stubSupabaseProfile, stubProfileUpdate, navigateToProfile, fillProfileForm, saveProfile } from '../fixtures/utils';
 
 test.describe('Profile Settings', () => {
   test.beforeEach(async ({ page }) => {

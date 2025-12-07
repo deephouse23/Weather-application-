@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupStableApp } from './utils';
+import { setupStableApp } from '../fixtures/utils';
 
 test.describe('News Page Links', () => {
   test.beforeEach(async ({ page }) => {

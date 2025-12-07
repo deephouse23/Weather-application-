@@ -25,6 +25,7 @@ import { LocationProvider } from "@/components/location-context"
 import { AuthProvider } from "@/lib/auth"
 import { Toaster } from "@/components/ui/toaster"
 import AuthDebug from "@/components/auth/auth-debug"
+import ErrorBoundaryWrapper from "@/components/error-boundary-wrapper"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -138,17 +139,19 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://www.google.com" />
       </head>
       <body className={`${inter.className} min-h-screen`} style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
-        <AuthProvider>
-          <AppThemeProvider>
-            <LocationProvider>
-              <div className="theme-enforced min-h-screen" style={{ backgroundColor: 'inherit', color: 'inherit' }}>
-                {children}
-              </div>
-              <Toaster />
-              <AuthDebug />
-            </LocationProvider>
-          </AppThemeProvider>
-        </AuthProvider>
+        <ErrorBoundaryWrapper>
+          <AuthProvider>
+            <AppThemeProvider>
+              <LocationProvider>
+                <div className="theme-enforced min-h-screen" style={{ backgroundColor: 'inherit', color: 'inherit' }}>
+                  {children}
+                </div>
+                <Toaster />
+                <AuthDebug />
+              </LocationProvider>
+            </AppThemeProvider>
+          </AuthProvider>
+        </ErrorBoundaryWrapper>
         <Analytics />
         <SpeedInsights />
       </body>

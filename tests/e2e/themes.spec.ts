@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupStableApp, setupMockAuth, stubSupabaseProfile, setTheme, getCurrentTheme, navigateToProfile, navigateToMapPage, waitForRadarToLoad, checkRadarVisibility } from './utils';
+import { setupStableApp, setupMockAuth, stubSupabaseProfile, setTheme, getCurrentTheme, navigateToProfile, navigateToMapPage, waitForRadarToLoad, checkRadarVisibility } from '../fixtures/utils';
 
 test.describe('Theme System', () => {
   test.beforeEach(async ({ page }) => {
