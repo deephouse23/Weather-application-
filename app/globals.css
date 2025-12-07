@@ -749,7 +749,7 @@ input:focus,
     --chart-3: 142 71% 45%;
     --chart-4: 38 92% 50%;
     --chart-5: 0 72% 61%;
-    --radius: 0;
+    --radius: 1rem;
   }
 
   /* Miami Vice theme */
@@ -797,7 +797,7 @@ input:focus,
     --chart-3: 142 71% 45%;
     --chart-4: 38 92% 50%;
     --chart-5: 0 72% 61%;
-    --radius: 0;
+    --radius: 1rem;
   }
 
   /* TRON theme */
@@ -845,7 +845,7 @@ input:focus,
     --chart-3: 122 39% 49%;
     --chart-4: 36 100% 50%;
     --chart-5: 4 90% 58%;
-    --radius: 0;
+    --radius: 1rem;
   }
 
   /* Default fallback (dark theme) */

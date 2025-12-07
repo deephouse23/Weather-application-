@@ -318,7 +318,7 @@ function WeatherApp() {
                           selectedDay={selectedDay}
                         />
                       ) : weather ? (
-                        <div className="bg-gray-800 p-4 rounded-none border-2 border-blue-500 text-center">
+                        <div className="bg-gray-800 p-4 rounded-lg border-2 border-blue-500 text-center">
                           <p className="text-white font-mono">
                             No forecast data available
                           </p>
