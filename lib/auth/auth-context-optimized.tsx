@@ -248,9 +248,8 @@ export function AuthProviderOptimized({ children }: AuthProviderProps) {
   const handleSignOut = useCallback(async () => {
     try {
       setLoading(true)
-      await supabase.auth.signOut()
 
-      // Clear state and cache immediately
+      // 1. Clear client-side state immediately to give instant feedback
       authCache.clear()
       authStateRef.current = { user: null, session: null }
       setUser(null)
@@ -258,19 +257,37 @@ export function AuthProviderOptimized({ children }: AuthProviderProps) {
       setProfile(null)
       setPreferences(null)
 
-      // Redirect to home page after sign out
+      // 2. Call server-side sign out route to clear cookies
+      // We use fetch instead of router.push to ensure it completes before navigation
+      const response = await fetch('/auth/signout', {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        throw new Error('Sign out failed on server')
+      }
+
+      // 3. Force router refresh to update server components (like headers)
+      // This is critical for Next.js App Router
       if (typeof window !== 'undefined') {
         window.location.href = '/'
       }
     } catch (error) {
       console.error('Error signing out:', error)
-      // Still try to clear local state even if sign out fails
+      // Fallback: try client-side sign out if server route fails
+      await supabase.auth.signOut()
+
+      // Still clear local state
       authCache.clear()
       authStateRef.current = { user: null, session: null }
       setUser(null)
       setSession(null)
       setProfile(null)
       setPreferences(null)
+
+      if (typeof window !== 'undefined') {
+        window.location.href = '/'
+      }
     } finally {
       setLoading(false)
     }
@@ -332,7 +349,7 @@ export function AuthProviderOptimized({ children }: AuthProviderProps) {
       try {
         // Check if Supabase is configured before setting up listener
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-          return { unsubscribe: () => {} }
+          return { unsubscribe: () => { } }
         }
 
         const {
@@ -346,7 +363,7 @@ export function AuthProviderOptimized({ children }: AuthProviderProps) {
         return subscription
       } catch (error) {
         console.error('Error setting up auth listener:', error)
-        return { unsubscribe: () => {} }
+        return { unsubscribe: () => { } }
       }
     }
 
