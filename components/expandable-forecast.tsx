@@ -91,14 +91,14 @@ function InfoTooltip({ text, theme }: { text: string; theme: ThemeType }) {
 
   return (
     <div className="relative inline-flex">
-      <Info 
-        className="w-3 h-3 ml-1 cursor-help opacity-60 hover:opacity-100 transition-opacity" 
+      <Info
+        className="w-3 h-3 ml-1 cursor-help opacity-60 hover:opacity-100 transition-opacity"
         onMouseEnter={() => setIsVisible(true)}
         onMouseLeave={() => setIsVisible(false)}
       />
       {isVisible && (
         <div className={`absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs bg-gray-900 text-white border-2 border-gray-600 rounded-md shadow-xl max-w-48 text-center backdrop-blur-sm`}
-             style={{ backgroundColor: 'rgba(17, 24, 39, 0.95)' }}>
+          style={{ backgroundColor: 'rgba(17, 24, 39, 0.95)' }}>
           <div className="whitespace-normal leading-relaxed font-medium">
             {text}
           </div>
@@ -110,10 +110,10 @@ function InfoTooltip({ text, theme }: { text: string; theme: ThemeType }) {
   );
 }
 
-export default function ExpandableForecast({ 
-  forecast, 
-  theme = 'dark', 
-  currentWeatherData 
+export default function ExpandableForecast({
+  forecast,
+  theme = 'dark',
+  currentWeatherData
 }: ExpandableForecastProps) {
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
   const themeClasses = getComponentStyles(theme, 'card');
@@ -123,11 +123,11 @@ export default function ExpandableForecast({
   };
 
   return (
-    <div className={`${themeClasses.background} p-3 sm:p-4 lg:p-6 rounded-none border-2 sm:border-4 ${themeClasses.borderColor} pixel-shadow`}>
+    <div className={`${themeClasses.background} p-3 sm:p-4 lg:p-6 rounded-lg border-2 sm:border-4 ${themeClasses.borderColor} pixel-shadow`}>
       <h2 className={`text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4 ${themeClasses.accentText} uppercase tracking-wider text-center pixel-glow`}>
         5-DAY DETAILED FORECAST
       </h2>
-      
+
       <div className="space-y-2 sm:space-y-3">
         {forecast.slice(0, 5).map((day, index) => (
           <ExpandableForecastCard
@@ -146,14 +146,14 @@ export default function ExpandableForecast({
   );
 }
 
-function ExpandableForecastCard({ 
-  day, 
-  index, 
-  isExpanded, 
-  onToggle, 
-  theme, 
+function ExpandableForecastCard({
+  day,
+  index,
+  isExpanded,
+  onToggle,
+  theme,
   themeClasses,
-  currentWeatherData 
+  currentWeatherData
 }: {
   day: DetailedForecastDay;
   index: number;
@@ -197,7 +197,7 @@ function ExpandableForecastCard({
               </div>
             )}
           </div>
-          
+
           <div className="flex items-center space-x-2">
             <WeatherIcon condition={day.condition} size="medium" theme={theme} />
             <div className={`text-sm ${themeClasses.text} capitalize hidden sm:block`}>
@@ -232,22 +232,21 @@ function ExpandableForecastCard({
       </button>
 
       {/* Expandable Content */}
-      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-        isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-      }`}>
+      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+        }`}>
         <div className={`p-3 sm:p-4 border-t ${themeClasses.borderColor} border-opacity-30`}>
-          <DetailedWeatherInfo 
-            details={details} 
-            theme={theme} 
+          <DetailedWeatherInfo
+            details={details}
+            theme={theme}
             themeClasses={themeClasses}
             tempUnit={tempUnit}
           />
-          
+
           {/* Hourly Forecast if available */}
           {day.hourlyForecast && day.hourlyForecast.length > 0 && (
-            <HourlyForecast 
-              hourlyData={day.hourlyForecast} 
-              theme={theme} 
+            <HourlyForecast
+              hourlyData={day.hourlyForecast}
+              theme={theme}
               themeClasses={themeClasses}
               tempUnit={tempUnit}
             />
@@ -274,8 +273,8 @@ function DetailedWeatherInfo({ details, theme, themeClasses, tempUnit }: {
     {
       icon: <Wind className="w-4 h-4" />,
       label: "Wind",
-      value: details.windSpeed ? 
-        `${Math.round(details.windSpeed)} mph ${details.windDirection || ''}` : 
+      value: details.windSpeed ?
+        `${Math.round(details.windSpeed)} mph ${details.windDirection || ''}` :
         "N/A"
     },
     {
@@ -300,7 +299,7 @@ function DetailedWeatherInfo({ details, theme, themeClasses, tempUnit }: {
       },
       {
         icon: <Sunset className="w-4 h-4" />,
-        label: "Sunset", 
+        label: "Sunset",
         value: details.sunset || "N/A"
       }
     );
@@ -316,7 +315,7 @@ function DetailedWeatherInfo({ details, theme, themeClasses, tempUnit }: {
           <div className="min-w-0 flex-1">
             <div className={`text-xs ${themeClasses.secondary} opacity-70 flex items-center`}>
               {metric.label}
-              {(metric as {tooltip?: string}).tooltip && <InfoTooltip text={(metric as {tooltip?: string}).tooltip!} theme={theme} />}
+              {(metric as { tooltip?: string }).tooltip && <InfoTooltip text={(metric as { tooltip?: string }).tooltip!} theme={theme} />}
             </div>
             <div className={`text-sm font-medium ${themeClasses.text} truncate`}>
               {metric.value}

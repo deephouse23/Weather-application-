@@ -43,7 +43,7 @@ export default function ForecastDetails({
   }
 
   return (
-    <Card className="p-3 sm:p-4 lg:p-6 border-2 shadow-xl rounded-none sm:rounded-none animate-slide-in">
+    <Card className="p-3 sm:p-4 lg:p-6 border-2 shadow-xl animate-slide-in">
       <CardHeader className="p-0 mb-3 sm:mb-4">
         <CardTitle className="text-center text-base sm:text-lg lg:text-xl font-bold uppercase tracking-wider text-primary glow">
           DETAILED FORECAST
