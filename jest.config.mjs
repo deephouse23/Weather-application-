@@ -8,7 +8,7 @@ const customJestConfig = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
     '\\.(css|scss|sass)$': 'identity-obj-proxy',
-    '\\.(png|jpg|jpeg|gif|webp|svg)$': '<rootDir>/test/__mocks__/fileMock.js'
+    '\\.(png|jpg|jpeg|gif|webp|svg)$': '<rootDir>/tests/__mocks__/fileMock.js'
   },
   testMatch: ['<rootDir>/__tests__/**/*.(test|spec).[tj]s?(x)']
 };

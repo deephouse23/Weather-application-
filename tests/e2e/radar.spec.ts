@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupStableApp, navigateToMapPage, waitForRadarToLoad, checkRadarVisibility, setTheme } from './utils';
+import { setupStableApp, navigateToMapPage, waitForRadarToLoad, checkRadarVisibility, setTheme } from '../fixtures/utils';
 
 test.describe('Radar Map', () => {
   test.beforeEach(async ({ page }) => {

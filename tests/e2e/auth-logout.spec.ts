@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupStableApp, setupMockAuth, stubSupabaseProfile } from './utils';
+import { setupStableApp, setupMockAuth, stubSupabaseProfile } from '../fixtures/utils';
 
 test.describe('Authentication - Sign Out', () => {
     test.beforeEach(async ({ page }) => {

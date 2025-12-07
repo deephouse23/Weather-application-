@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupStableApp, stubNewsApi } from './utils';
+import { setupStableApp, stubNewsApi } from '../fixtures/utils';
 
 test.describe('NEWS Navigation - Basic', () => {
   test.beforeEach(async ({ page }) => {
