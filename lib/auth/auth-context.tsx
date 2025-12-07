@@ -40,7 +40,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [preferences, setPreferences] = useState<UserPreferences | null>(null)
   const [loading, setLoading] = useState(true)
   const [isInitialized, setIsInitialized] = useState(false)
-  
+
   // Use refs to prevent race conditions and track loading states
   const isLoadingProfile = useRef(false)
   const isLoadingPreferences = useRef(false)
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (isLoadingProfile.current) {
       return
     }
-    
+
     isLoadingProfile.current = true
     try {
       const profileData = await getProfile(userId)
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (isLoadingPreferences.current) {
       return
     }
-    
+
     isLoadingPreferences.current = true
     try {
       const preferencesData = await fetchUserPreferences()
@@ -112,13 +112,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Handle authentication state changes
   const handleAuthState = useCallback(async (event: AuthChangeEvent, session: Session | null) => {
     console.log('[AuthProvider] Auth state change', { event, hasSession: !!session, userId: session?.user?.id ?? null })
-    
+
     // Update refs immediately to prevent race conditions
     authStateRef.current = {
       user: session?.user ?? null,
       session: session
     }
-    
+
     // Update state
     setSession(session)
     setUser(session?.user ?? null)
@@ -144,33 +144,59 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsInitialized(true)
     }
     setLoading(false)
-  }, [isInitialized, fetchProfile, fetchPreferences])
+  }, [])
 
   // Sign out function
   const handleSignOut = useCallback(async () => {
     try {
       setLoading(true)
-      await supabase.auth.signOut()
-      
-      // Clear state immediately
+
+      // 1. Clear local state immediately
       authStateRef.current = { user: null, session: null }
       setUser(null)
       setSession(null)
       setProfile(null)
       setPreferences(null)
-      
-      // Redirect to home page after sign out
+
+      // 2. Clear client-side session (localStorage) - Aggressive Cleanup
+      // Manually remove all Supabase-related items from localStorage to ensure clean state
+      if (typeof window !== 'undefined') {
+        Object.keys(window.localStorage).forEach(key => {
+          if (key.startsWith('sb-') || key.includes('supabase')) {
+            window.localStorage.removeItem(key)
+          }
+        })
+      }
+
+      await supabase.auth.signOut()
+
+      // 3. Call server-side sign out route to clear cookies
+      const response = await fetch('/auth/signout', {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        throw new Error('Sign out failed on server')
+      }
+
+      // 4. Force router refresh to update server components
       if (typeof window !== 'undefined') {
         window.location.href = '/'
       }
     } catch (error) {
       console.error('Error signing out:', error)
-      // Still try to clear local state even if sign out fails
+      // Fallback: try client-side sign out if server route fails
+      await supabase.auth.signOut()
+
       authStateRef.current = { user: null, session: null }
       setUser(null)
       setSession(null)
       setProfile(null)
       setPreferences(null)
+
+      if (typeof window !== 'undefined') {
+        window.location.href = '/'
+      }
     } finally {
       setLoading(false)
     }
@@ -195,7 +221,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Get initial session
         const { data: { session }, error } = await supabase.auth.getSession()
         console.log('[AuthProvider] Initial session fetch', { hasSession: !!session, error: error?.message })
-        
+
         if (error) {
           console.error('Error getting initial session:', error)
           if (isMounted) {
@@ -222,7 +248,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         // Check if Supabase is configured before setting up listener
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-          return { unsubscribe: () => {} }
+          return { unsubscribe: () => { } }
         }
 
         const {
@@ -232,11 +258,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
             await handleAuthState(event, session)
           }
         })
-        
+
         return subscription
       } catch (error) {
         console.error('Error setting up auth listener:', error)
-        return { unsubscribe: () => {} }
+        return { unsubscribe: () => { } }
       }
     }
 
@@ -280,4 +306,3 @@ export function AuthProvider({ children }: AuthProviderProps) {
     </AuthContext.Provider>
   )
 }
-
