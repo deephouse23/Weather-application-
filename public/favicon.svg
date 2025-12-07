@@ -1,43 +1,53 @@
 <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" style="image-rendering: pixelated;">
-  <!-- 16-bit pixelated style weather icon -->
+  <!-- 16-bit retro weather terminal favicon -->
   <defs>
     <style>
       .pixel { shape-rendering: crispEdges; }
     </style>
   </defs>
   
-  <!-- Background -->
+  <!-- Dark terminal background -->
   <rect width="32" height="32" fill="#0a0a1a"/>
   
-  <!-- Sun rays (16-bit style) -->
-  <rect class="pixel" x="4" y="4" width="2" height="2" fill="#ffff00"/>
-  <rect class="pixel" x="26" y="4" width="2" height="2" fill="#ffff00"/>
-  <rect class="pixel" x="4" y="26" width="2" height="2" fill="#ffff00"/>
-  <rect class="pixel" x="26" y="26" width="2" height="2" fill="#ffff00"/>
-  <rect class="pixel" x="2" y="15" width="2" height="2" fill="#ffff00"/>
-  <rect class="pixel" x="28" y="15" width="2" height="2" fill="#ffff00"/>
-  <rect class="pixel" x="15" y="2" width="2" height="2" fill="#ffff00"/>
-  <rect class="pixel" x="15" y="28" width="2" height="2" fill="#ffff00"/>
+  <!-- Terminal frame border (retro green - solid pixels for better visibility) -->
+  <rect class="pixel" x="1" y="1" width="30" height="2" fill="#00ff41"/>
+  <rect class="pixel" x="1" y="29" width="30" height="2" fill="#00ff41"/>
+  <rect class="pixel" x="1" y="3" width="2" height="26" fill="#00ff41"/>
+  <rect class="pixel" x="29" y="3" width="2" height="26" fill="#00ff41"/>
   
-  <!-- Sun center -->
-  <rect class="pixel" x="12" y="8" width="8" height="2" fill="#ffff00"/>
-  <rect class="pixel" x="10" y="10" width="12" height="2" fill="#ffff00"/>
-  <rect class="pixel" x="10" y="12" width="12" height="2" fill="#ffff00"/>
-  <rect class="pixel" x="12" y="14" width="8" height="2" fill="#ffff00"/>
+  <!-- Terminal screen -->
+  <rect class="pixel" x="4" y="4" width="24" height="24" fill="#001a0a"/>
   
-  <!-- Cloud (16-bit chunky style) -->
-  <rect class="pixel" x="8" y="18" width="16" height="2" fill="#00d4ff"/>
-  <rect class="pixel" x="6" y="20" width="20" height="2" fill="#00d4ff"/>
-  <rect class="pixel" x="6" y="22" width="20" height="2" fill="#00d4ff"/>
-  <rect class="pixel" x="8" y="24" width="16" height="2" fill="#00d4ff"/>
+  <!-- Weather icon: Cloud with lightning bolt -->
+  <!-- Cloud base (more visible) -->
+  <rect class="pixel" x="7" y="17" width="18" height="3" fill="#4a90e2"/>
+  <rect class="pixel" x="6" y="20" width="20" height="3" fill="#4a90e2"/>
+  <rect class="pixel" x="8" y="23" width="16" height="2" fill="#4a90e2"/>
   
-  <!-- Cloud highlights for 3D effect -->
-  <rect class="pixel" x="8" y="18" width="14" height="1" fill="#4df0ff"/>
-  <rect class="pixel" x="6" y="20" width="18" height="1" fill="#4df0ff"/>
+  <!-- Cloud highlight -->
+  <rect class="pixel" x="7" y="17" width="16" height="1" fill="#6bb3ff"/>
+  <rect class="pixel" x="6" y="20" width="18" height="1" fill="#6bb3ff"/>
   
-  <!-- Retro border pixels -->
-  <rect class="pixel" x="0" y="0" width="2" height="2" fill="#ff1493"/>
-  <rect class="pixel" x="30" y="0" width="2" height="2" fill="#ff1493"/>
-  <rect class="pixel" x="0" y="30" width="2" height="2" fill="#ff1493"/>
-  <rect class="pixel" x="30" y="30" width="2" height="2" fill="#ff1493"/>
-</svg> 
+  <!-- Lightning bolt (bright yellow for visibility) -->
+  <rect class="pixel" x="14" y="9" width="2" height="5" fill="#ffd700"/>
+  <rect class="pixel" x="16" y="11" width="2" height="4" fill="#ffd700"/>
+  <rect class="pixel" x="15" y="13" width="2" height="3" fill="#ffd700"/>
+  <rect class="pixel" x="17" y="14" width="2" height="3" fill="#ffd700"/>
+  
+  <!-- Terminal cursor (bright green) -->
+  <rect class="pixel" x="23" y="25" width="3" height="2" fill="#00ff41"/>
+  
+  <!-- Terminal text lines (weather data) -->
+  <rect class="pixel" x="6" y="6" width="10" height="2" fill="#00ff41" opacity="0.7"/>
+  <rect class="pixel" x="6" y="9" width="8" height="2" fill="#00ff41" opacity="0.5"/>
+  
+  <!-- Corner accent pixels (retro style) -->
+  <rect class="pixel" x="0" y="0" width="3" height="3" fill="#00ff41"/>
+  <rect class="pixel" x="29" y="0" width="3" height="3" fill="#00ff41"/>
+  <rect class="pixel" x="0" y="29" width="3" height="3" fill="#00ff41"/>
+  <rect class="pixel" x="29" y="29" width="3" height="3" fill="#00ff41"/>
+  
+  <!-- Scanline effect (subtle) -->
+  <rect class="pixel" x="4" y="13" width="24" height="1" fill="#00ff41" opacity="0.15"/>
+  <rect class="pixel" x="4" y="21" width="24" height="1" fill="#00ff41" opacity="0.15"/>
+</svg>
