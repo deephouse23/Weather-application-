@@ -25,7 +25,7 @@ import { LocationProvider } from "@/components/location-context"
 import { AuthProvider } from "@/lib/auth"
 import { Toaster } from "@/components/ui/toaster"
 import AuthDebug from "@/components/auth/auth-debug"
-import ErrorBoundaryWrapper from "@/components/error-boundary-wrapper"
+import ErrorBoundaryWrapper from "@/components/error-boundary"
 
 const inter = Inter({ subsets: ["latin"] })
 

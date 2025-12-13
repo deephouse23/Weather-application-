@@ -190,7 +190,7 @@ export async function setupStableApp(page: Page, opts: StubOptions = {}): Promis
   await page.context().addCookies([{
     name: 'playwright-test-mode',
     value: 'true',
-    url: 'http://localhost:3000',  // URL includes domain and path, don't set path separately
+    url: 'http://127.0.0.1:3000',  // URL includes domain and path, don't set path separately
     httpOnly: false,
     secure: false,
     sameSite: 'Lax',
@@ -333,7 +333,7 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
 
     // Set cookies with all possible names Supabase might use
     // NOTE: Using URL instead of domain+path for localhost to ensure proper cookie propagation
-    const baseUrl = 'http://localhost:3000';
+    const baseUrl = 'http://127.0.0.1:3000';
     const cookiesToSet = [
       // TEST MODE COOKIE: Bypass middleware auth checks
       {

@@ -9,10 +9,22 @@
    ═══════════════════════════════════════════════════════════ */
 
 /* Reset all colors to inherit theme */
-* {
+/* Exclude images, canvas, and radar containers from color inheritance */
+*:not(img):not(canvas):not(video):not(svg) {
   /* Remove any inline color styles */
   color: inherit !important;
   border-color: inherit !important;
+}
+
+/* Explicitly exclude radar containers and their children from color inheritance */
+[data-radar-container],
+[data-radar-container] *,
+[class*="map"],
+[class*="Map"],
+[class*="radar"],
+[class*="Radar"] {
+  color: unset !important;
+  border-color: unset !important;
 }
 
 /* Force backgrounds on all elements */
@@ -30,14 +42,15 @@ html, body, #__next, #root, .app, main {
 }
 
 /* Card components must use elevated background */
-[class*="card"]:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]),
-[class*="Card"]:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]),
-.pixel-border:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]),
-.border-2:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]),
-.border-4:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]),
-.p-4:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]),
-.p-6:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]),
-.p-8:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]) {
+/* Exclude shadcn/ui components which have their own styling */
+[class*="card"]:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]):not([class*="bg-card"]):not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):not([class*="bg-background"]):not([class*="bg-accent"]):not([data-radix-]):not([role="dialog"]):not([role="alertdialog"]):not([role="menu"]),
+[class*="Card"]:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]):not([class*="bg-card"]):not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):not([class*="bg-background"]):not([class*="bg-accent"]):not([data-radix-]):not([role="dialog"]):not([role="alertdialog"]):not([role="menu"]),
+.pixel-border:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]):not([class*="bg-card"]):not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):not([class*="bg-background"]):not([class*="bg-accent"]):not([data-radix-]),
+.border-2:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]):not([class*="bg-card"]):not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):not([class*="bg-background"]):not([class*="bg-accent"]):not([data-radix-]),
+.border-4:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]):not([class*="bg-card"]):not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):not([class*="bg-background"]):not([class*="bg-accent"]):not([data-radix-]),
+.p-4:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]):not([class*="bg-card"]):not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):not([class*="bg-background"]):not([class*="bg-accent"]):not([data-radix-]),
+.p-6:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]):not([class*="bg-card"]):not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):not([class*="bg-background"]):not([class*="bg-accent"]):not([data-radix-]),
+.p-8:not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([data-radar-container]):not([class*="bg-card"]):not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):not([class*="bg-background"]):not([class*="bg-accent"]):not([data-radix-]) {
   background-color: var(--bg-elev) !important;
   border-color: var(--border) !important;
 }
@@ -71,14 +84,18 @@ a:not([role="button"]),
 }
 
 /* Buttons must be themed */
-button, [role="button"],
-.btn, [class*="button"] {
+/* Exclude shadcn/ui buttons which have their own styling */
+button:not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):not([class*="bg-accent"]):not([class*="bg-card"]):not([data-radix-]),
+[role="button"]:not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):not([class*="bg-accent"]):not([class*="bg-card"]):not([data-radix-]),
+.btn:not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):not([class*="bg-accent"]):not([class*="bg-card"]):not([data-radix-]),
+[class*="button"]:not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):not([class*="bg-accent"]):not([class*="bg-card"]):not([data-radix-]) {
   background-color: var(--bg-elev) !important;
   color: var(--text) !important;
   border: 2px solid var(--primary) !important;
 }
 
-button:hover, [role="button"]:hover {
+button:not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):not([class*="bg-accent"]):not([class*="bg-card"]):not([data-radix-]):hover,
+[role="button"]:not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):not([class*="bg-accent"]):not([class*="bg-card"]):not([data-radix-]):hover {
   background-color: var(--primary) !important;
   color: var(--bg) !important;
 }
@@ -95,7 +112,8 @@ input, textarea, select {
    ═══════════════════════════════════════════════════════════ */
 
 /* MIAMI VICE - Force neon colors everywhere */
-:root[data-theme="miami"] * {
+/* Exclude radar containers and shadcn/ui components */
+:root[data-theme="miami"] *:not([data-radar-container]):not([data-radar-container] *):not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([class*="bg-card"]):not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):not([class*="bg-background"]):not([data-radix-]):not([role="dialog"]):not([role="alertdialog"]):not([role="menu"]):not([role="menuitem"]):not([role="tooltip"]) {
   text-shadow: 0 0 5px currentColor !important;
 }
 
@@ -107,7 +125,8 @@ input, textarea, select {
 }
 
 /* TRON - Force cyber grid aesthetic */
-:root[data-theme="tron"] * {
+/* Exclude radar containers and shadcn/ui components */
+:root[data-theme="tron"] *:not([data-radar-container]):not([data-radar-container] *):not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([class*="bg-card"]):not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):not([class*="bg-background"]):not([data-radix-]):not([role="dialog"]):not([role="alertdialog"]):not([role="menu"]):not([role="menuitem"]):not([role="tooltip"]) {
   text-shadow: 0 0 8px currentColor !important;
 }
 
@@ -119,7 +138,7 @@ input, textarea, select {
   position: relative !important;
 }
 
-:root[data-theme="tron"] [class*="card"]::before {
+:root[data-theme="tron"] [class*="card"]:not([data-radar-container]):not([class*="map"]):not([class*="Map"]):not([class*="radar"]):not([class*="Radar"]):not([class*="bg-card"])::before {
   content: '';
   position: absolute;
   inset: -2px;
@@ -149,6 +168,85 @@ input, textarea, select {
 [class*="map"] *, [class*="Map"] *, [class*="radar"] *, [class*="Radar"] *,
 [data-radar-container] * {
   background-color: inherit !important;
+  color: inherit !important;
+  border-color: inherit !important;
+  image-rendering: auto !important;
+  font-family: inherit !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* Exclude shadcn/ui components from theme enforcement font rules */
+[class*="bg-card"],
+[class*="bg-primary"],
+[class*="bg-secondary"],
+[class*="bg-destructive"],
+[class*="bg-background"],
+[class*="bg-accent"],
+[class*="text-card-foreground"],
+[class*="text-primary-foreground"],
+[class*="text-secondary-foreground"],
+[class*="text-destructive-foreground"],
+[class*="text-muted-foreground"],
+[data-radix-portal],
+[data-radix-popper-content-wrapper],
+[role="dialog"],
+[role="alertdialog"],
+[role="menu"],
+[role="menuitem"],
+[role="tooltip"],
+[role="combobox"],
+[role="listbox"],
+button[class*="bg-primary"],
+button[class*="bg-secondary"],
+button[class*="bg-destructive"],
+button[class*="bg-accent"],
+[data-sonner-toast],
+[data-sonner-toast] *,
+[data-radix-] {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  /* Ensure shadcn/ui components are visible */
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: revert !important;
+  backdrop-filter: none !important;
+}
+
+/* Ensure children of shadcn/ui components inherit system fonts */
+[class*="bg-card"] *,
+[class*="bg-primary"] *,
+[class*="bg-secondary"] *,
+[class*="bg-destructive"] *,
+[class*="bg-background"] *,
+[class*="bg-accent"] *,
+[data-radix-portal] *,
+[data-radix-popper-content-wrapper] *,
+[role="dialog"] *,
+[role="alertdialog"] *,
+[role="menu"] *,
+[role="menuitem"] *,
+[role="tooltip"] *,
+[data-sonner-toast] * {
+  font-family: inherit !important;
+}
+
+/* Specifically protect images and canvas inside radar containers */
+[data-radar-container] img,
+[data-radar-container] canvas,
+[class*="map"] img,
+[class*="Map"] img,
+[class*="radar"] img,
+[class*="Radar"] img,
+[class*="map"] canvas,
+[class*="Map"] canvas,
+[class*="radar"] canvas,
+[class*="Radar"] canvas {
+  image-rendering: auto !important;
+  color: unset !important;
+  border-color: unset !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
 }
 
 /* Weather display components */
