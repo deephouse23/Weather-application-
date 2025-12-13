@@ -15,7 +15,7 @@
  */
 
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Search, Loader2, MapPin, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -51,6 +51,22 @@ export default function WeatherSearch({
   const { theme } = useTheme()
   const [searchTerm, setSearchTerm] = useState(locationInput || "")
   const [showAutocomplete, setShowAutocomplete] = useState(false)
+  const isTypingRef = useRef(false)
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Sync context -> local state without fighting user input.
+  // If locationInput changes externally (navigation, other components), reflect it in the input
+  // unless the user is actively typing in the field.
+  useEffect(() => {
+    const active = document.activeElement
+    const isInputFocused =
+      active instanceof HTMLInputElement &&
+      active.getAttribute("data-testid") === "location-search-input"
+
+    if (!isInputFocused && !isTypingRef.current && locationInput !== searchTerm) {
+      setSearchTerm(locationInput || "")
+    }
+  }, [locationInput, searchTerm])
 
   // Semantic dark theme classes using CSS variables
   const themeClasses = {
@@ -106,6 +122,12 @@ export default function WeatherSearch({
   }
 
   const handleInputChange = (value: string) => {
+    isTypingRef.current = true
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+    typingTimeoutRef.current = setTimeout(() => {
+      isTypingRef.current = false
+    }, 300)
+
     // Update local state immediately for responsive UI
     setSearchTerm(value)
 
