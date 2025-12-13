@@ -28,7 +28,8 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000',
+    // Use 127.0.0.1 to avoid localhost HTTPS/HSTS oddities (notably in WebKit).
+    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://127.0.0.1:3000',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -89,7 +90,7 @@ export default defineConfig({
       command: process.env.CI
         ? 'npx cross-env PLAYWRIGHT_TEST_MODE=true NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE=true npm run start'
         : 'npx cross-env PLAYWRIGHT_TEST_MODE=true NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE=true npm run dev',
-      url: 'http://localhost:3000',
+      url: 'http://127.0.0.1:3000',
       reuseExistingServer: !process.env.CI,
       timeout: 120 * 1000,
     },

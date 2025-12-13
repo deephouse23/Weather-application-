@@ -199,6 +199,9 @@ function WeatherApp() {
                       <p data-testid="temperature-value" className={cn("text-3xl font-bold", themeClasses.text)}>
                         {weather?.temperature || 'N/A'}{weather?.unit || '°F'}
                       </p>
+                      <p className={cn("mt-2 text-sm", themeClasses.secondaryText)}>
+                        Humidity: {weather?.humidity ?? 'N/A'}%
+                      </p>
                     </CardContent>
                   </Card>
 

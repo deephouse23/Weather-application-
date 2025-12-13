@@ -47,20 +47,10 @@ export default function WeatherSearch({
   hideLocationButton = false,
   isAutoDetecting = false
 }: WeatherSearchProps) {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [showAutocomplete, setShowAutocomplete] = useState(false)
   const { locationInput, setLocationInput, clearLocationState } = useLocationContext()
   const { theme } = useTheme()
-
-  // Sync with location context - prevent unnecessary loops and preserve user input
-  useEffect(() => {
-    // Only sync from context to local state if:
-    // 1. The context value is different from local state
-    // 2. The user isn't currently typing (to avoid interfering with active input)
-    if (locationInput !== searchTerm && document.activeElement?.tagName !== 'INPUT') {
-      setSearchTerm(locationInput)
-    }
-  }, [locationInput, searchTerm])
+  const [searchTerm, setSearchTerm] = useState(locationInput || "")
+  const [showAutocomplete, setShowAutocomplete] = useState(false)
 
   // Semantic dark theme classes using CSS variables
   const themeClasses = {
