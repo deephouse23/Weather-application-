@@ -75,22 +75,6 @@ export default function MapPage() {
         }
       }
 
-      // PRIORITY 2: Try to get cached weather data from the last location
-      const lastLocation = userCacheService.getLastLocation()
-      console.log('[MapPage] Last location from cache service:', lastLocation)
-
-      if (lastLocation) {
-        const locationKey = userCacheService.getLocationKey(lastLocation)
-        const cached = userCacheService.getCachedWeatherData(locationKey)
-
-        if (cached) {
-          console.log('[MapPage] Found cached data from last location:', cached.location)
-          setWeatherData(cached)
-          setIsLoading(false)
-          return
-        }
-      }
-
       console.log('[MapPage] No weather data found')
       setIsLoading(false)
     }
