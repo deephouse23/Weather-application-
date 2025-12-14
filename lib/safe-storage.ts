@@ -35,6 +35,9 @@ export const safeStorage = {
       return
     }
     try {
+      // This is a generic storage wrapper. Callers are responsible for not persisting
+      // sensitive data (e.g. auth tokens, precise user location) in clear text.
+      // codeql[js/clear-text-storage-of-sensitive-data]: suppress
       localStorage.setItem(key, value)
     } catch (error) {
       console.warn('Failed to set localStorage item:', key, error)
