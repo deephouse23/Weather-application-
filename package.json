@@ -63,7 +63,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^30.2.0",
-    "@next/bundle-analyzer": "^16.0.5",
+    "@next/bundle-analyzer": "^16.0.10",
     "@playwright/test": "^1.40.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.0.0",
