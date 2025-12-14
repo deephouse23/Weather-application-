@@ -350,8 +350,10 @@ export function useWeatherController() {
                 }
 
                 const lastLocation = userCacheService.getLastLocation()
-                if (lastLocation) {
-                    await handleLocationDetected(lastLocation)
+                if (lastLocation?.displayName) {
+                    // Stored last location excludes coordinates for privacy;
+                    // fall back to normal search by display name.
+                    await handleSearch(lastLocation.displayName, false, true)
                     setAutoLocationAttempted(true)
                     return
                 }

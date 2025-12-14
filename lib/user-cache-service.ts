@@ -27,8 +27,17 @@ import { WeatherData } from './types';
 import { LocationData } from './location-service';
 import { safeStorage } from './safe-storage';
 
+/**
+ * StoredLastLocation intentionally excludes precise coordinates.
+ * Latitude/longitude is considered sensitive (location privacy) and should not be
+ * persisted in clear text client-side storage.
+ */
+export interface StoredLastLocation {
+  displayName: string;
+}
+
 export interface UserPreferences {
-  lastLocation?: LocationData;
+  lastLocation?: StoredLastLocation;
   settings: {
     units: 'metric' | 'imperial';
     theme: 'dark' | 'miami' | 'tron';
@@ -164,14 +173,17 @@ export class UserCacheService {
     const preferences = this.getPreferences();
     if (!preferences) return false;
 
-    preferences.lastLocation = location;
+    // Store only non-sensitive location identifier (no precise coordinates).
+    preferences.lastLocation = {
+      displayName: location.displayName,
+    };
     return this.savePreferences(preferences);
   }
 
   /**
    * Get last location
    */
-  getLastLocation(): LocationData | null {
+  getLastLocation(): StoredLastLocation | null {
     const preferences = this.getPreferences();
     return preferences?.lastLocation || null;
   }
@@ -487,9 +499,19 @@ export class UserCacheService {
     };
 
     // Safely merge with defaults to handle missing properties
+    const sanitizeLastLocation = (value: unknown): StoredLastLocation | undefined => {
+      if (!value || typeof value !== 'object') return undefined;
+      const v = value as { displayName?: unknown };
+      if (typeof v.displayName === 'string' && v.displayName.trim().length > 0) {
+        return { displayName: v.displayName };
+      }
+      return undefined;
+    };
+
     const validatedPreferences: UserPreferences = {
       ...defaultPreferences,
-      lastLocation: preferences.lastLocation || defaultPreferences.lastLocation,
+      // Drop any legacy cached location objects that contained latitude/longitude.
+      lastLocation: sanitizeLastLocation(preferences.lastLocation) || defaultPreferences.lastLocation,
       updatedAt: typeof preferences.updatedAt === 'number' ? preferences.updatedAt : defaultPreferences.updatedAt,
       settings: {
         ...defaultPreferences.settings,
