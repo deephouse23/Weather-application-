@@ -608,15 +608,18 @@ export class UserCacheService {
    * Get location key for caching
    */
   getLocationKey(location: LocationData): string {
-    return `${location.latitude.toFixed(4)}_${location.longitude.toFixed(4)}`;
+    // Do NOT persist precise coordinates (privacy / code scanning).
+    // Use a stable, non-sensitive key derived from displayName.
+    return this.sanitizeKey(location.displayName);
   }
 
   /**
    * Get location key from coordinate string
    */
   getLocationKeyFromCoords(coords: string): string {
-    const [lat, lon] = coords.split(',').map(parseFloat);
-    return `${lat.toFixed(4)}_${lon.toFixed(4)}`;
+    // Coords are sensitive; do not derive persistent storage keys from them.
+    // Keep deterministic behavior without leaking coordinates by hashing-like sanitization.
+    return this.sanitizeKey(coords);
   }
 }
 

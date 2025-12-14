@@ -201,7 +201,7 @@ export function useWeatherController() {
             setLoading(true)
             setError('')
 
-            const coords = userCacheService.getLocationKey(location).replace('_', ',')
+            const coords = `${location.latitude},${location.longitude}`
             const unitSystem: 'metric' | 'imperial' = preferences?.temperature_unit === 'celsius' ? 'metric' : 'imperial'
             const weatherData = await fetchWeatherByLocation(coords, unitSystem, location.displayName)
 
