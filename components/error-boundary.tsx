@@ -199,3 +199,16 @@ export function SafeRender({
     return <>{fallback}</>
   }
 }
+
+// Default export wrapper component for layout.tsx
+export default function ErrorBoundaryWrapper({ 
+  children 
+}: { 
+  children: ReactNode 
+}) {
+  return (
+    <ErrorBoundary componentName="Root Layout">
+      {children}
+    </ErrorBoundary>
+  )
+}

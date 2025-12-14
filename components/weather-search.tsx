@@ -15,7 +15,7 @@
  */
 
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Search, Loader2, MapPin, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -47,18 +47,24 @@ export default function WeatherSearch({
   hideLocationButton = false,
   isAutoDetecting = false
 }: WeatherSearchProps) {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [showAutocomplete, setShowAutocomplete] = useState(false)
   const { locationInput, setLocationInput, clearLocationState } = useLocationContext()
   const { theme } = useTheme()
+  const [searchTerm, setSearchTerm] = useState(locationInput || "")
+  const [showAutocomplete, setShowAutocomplete] = useState(false)
+  const isTypingRef = useRef(false)
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Sync with location context - prevent unnecessary loops and preserve user input
+  // Sync context -> local state without fighting user input.
+  // If locationInput changes externally (navigation, other components), reflect it in the input
+  // unless the user is actively typing in the field.
   useEffect(() => {
-    // Only sync from context to local state if:
-    // 1. The context value is different from local state
-    // 2. The user isn't currently typing (to avoid interfering with active input)
-    if (locationInput !== searchTerm && document.activeElement?.tagName !== 'INPUT') {
-      setSearchTerm(locationInput)
+    const active = document.activeElement
+    const isInputFocused =
+      active instanceof HTMLInputElement &&
+      active.getAttribute("data-testid") === "location-search-input"
+
+    if (!isInputFocused && !isTypingRef.current && locationInput !== searchTerm) {
+      setSearchTerm(locationInput || "")
     }
   }, [locationInput, searchTerm])
 
@@ -116,6 +122,12 @@ export default function WeatherSearch({
   }
 
   const handleInputChange = (value: string) => {
+    isTypingRef.current = true
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+    typingTimeoutRef.current = setTimeout(() => {
+      isTypingRef.current = false
+    }, 300)
+
     // Update local state immediately for responsive UI
     setSearchTerm(value)
 

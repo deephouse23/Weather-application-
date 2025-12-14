@@ -201,7 +201,7 @@ export function useWeatherController() {
             setLoading(true)
             setError('')
 
-            const coords = userCacheService.getLocationKey(location).replace('_', ',')
+            const coords = `${location.latitude},${location.longitude}`
             const unitSystem: 'metric' | 'imperial' = preferences?.temperature_unit === 'celsius' ? 'metric' : 'imperial'
             const weatherData = await fetchWeatherByLocation(coords, unitSystem, location.displayName)
 
@@ -315,11 +315,24 @@ export function useWeatherController() {
     useEffect(() => {
         if (!isClient || autoLocationAttempted || authLoading) return
 
+        // Playwright E2E runs should be deterministic: skip auto-location entirely and
+        // allow the seeded localStorage cache (or explicit searches) to drive state.
+        if (process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true') {
+            setAutoLocationAttempted(true)
+            return
+        }
+
         const tryAutoLocation = async () => {
             try {
                 // Check auth preferences first, then fallback to local storage
                 const localPrefs = userCacheService.getPreferences()
-                const shouldAutoLocate = preferences?.auto_location ?? localPrefs?.settings.auto_location ?? true
+                const localAutoLocate =
+                    (localPrefs as any)?.settings?.auto_location ??
+                    (localPrefs as any)?.settings?.autoLocation ??
+                    (localPrefs as any)?.auto_location ??
+                    (localPrefs as any)?.autoLocation
+
+                const shouldAutoLocate = preferences?.auto_location ?? localAutoLocate ?? true
                 console.log('[Debug] tryAutoLocation running. shouldAutoLocate:', shouldAutoLocate, 'preferences:', preferences, 'localPrefs:', localPrefs);
 
                 if (shouldAutoLocate === false) {
@@ -337,8 +350,10 @@ export function useWeatherController() {
                 }
 
                 const lastLocation = userCacheService.getLastLocation()
-                if (lastLocation) {
-                    await handleLocationDetected(lastLocation)
+                if (lastLocation?.displayName) {
+                    // Stored last location excludes coordinates for privacy;
+                    // fall back to normal search by display name.
+                    await handleSearch(lastLocation.displayName, false, true)
                     setAutoLocationAttempted(true)
                     return
                 }

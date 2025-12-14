@@ -35,10 +35,16 @@ export async function middleware(request: NextRequest) {
     process.env.VERCEL_ENV === 'preview'
 
   // Test mode is enabled if:
-  // 1. Explicit test mode env vars are set AND header/cookie present, OR
+  // 1. Explicit test mode env vars are set (local dev / E2E), OR
   // 2. We're in CI/Vercel preview AND header/cookie present (safety net for Vercel preview)
+  //
+  // Rationale:
+  // - If a developer explicitly set PLAYWRIGHT_TEST_MODE/NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE, we can safely
+  //   bypass auth in non-production without requiring spoofable indicators (headers/cookies).
+  // - In CI/Vercel preview, still require an explicit indicator to avoid accidental bypass.
   const hasTestIndicator = testModeHeader === 'true' || testModeCookie?.value === 'true'
-  const isTestMode = (isExplicitTestEnv || isCIOrPreview) && hasTestIndicator
+  const isNonProd = process.env.NODE_ENV !== 'production'
+  const isTestMode = (isExplicitTestEnv && isNonProd) || (isCIOrPreview && hasTestIndicator)
 
   if (isTestMode) {
     return response

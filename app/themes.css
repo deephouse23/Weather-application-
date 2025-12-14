@@ -202,8 +202,8 @@ body.theme-dracula {
   text-shadow: 0 0 10px rgba(255, 121, 198, 0.6);
 }
 
-.theme-dracula [class*="card"],
-.theme-dracula [class*="Card"] {
+.theme-dracula [class*="card"]:not([class*="bg-card"]):not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):not([class*="bg-background"]):not([class*="bg-accent"]):not([data-radix-]):not([role="dialog"]):not([role="alertdialog"]):not([role="menu"]),
+.theme-dracula [class*="Card"]:not([class*="bg-card"]):not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):not([class*="bg-background"]):not([class*="bg-accent"]):not([data-radix-]):not([role="dialog"]):not([role="alertdialog"]):not([role="menu"]) {
   background: rgba(68, 71, 90, 0.8) !important;
   border: 2px solid #ff79c6 !important;
   box-shadow: 
@@ -219,11 +219,32 @@ body.theme-dracula {
   font-weight: bold;
 }
 
-.theme-dracula button {
+.theme-dracula button:not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):not([class*="bg-accent"]):not([class*="bg-card"]):not([data-radix-]) {
   background: rgba(68, 71, 90, 0.9) !important;
   border: 2px solid #bd93f9 !important;
   color: #f8f8f2 !important;
   box-shadow: 0 0 15px rgba(189, 147, 249, 0.5);
+}
+
+/* Ensure shadcn/ui components are visible in Dracula theme */
+.theme-dracula [class*="bg-card"],
+.theme-dracula [class*="bg-primary"],
+.theme-dracula [class*="bg-secondary"],
+.theme-dracula [class*="bg-destructive"],
+.theme-dracula [class*="bg-background"],
+.theme-dracula [class*="bg-accent"],
+.theme-dracula [data-radix-],
+.theme-dracula [role="dialog"],
+.theme-dracula [role="alertdialog"],
+.theme-dracula [role="menu"],
+.theme-dracula [role="menuitem"],
+.theme-dracula [role="tooltip"] {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: revert !important;
+  backdrop-filter: none !important;
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
 }
 
 
@@ -446,6 +467,27 @@ body.theme-matrix::after {
 .theme-matrix [class*="Radar"],
 .theme-matrix [data-radar-container] {
   backdrop-filter: none !important;
+}
+
+/* Ensure radar images and canvas are not affected by theme overlays */
+[data-radar-container] img,
+[data-radar-container] canvas,
+[class*="map"] img,
+[class*="Map"] img,
+[class*="radar"] img,
+[class*="Radar"] img,
+[class*="map"] canvas,
+[class*="Map"] canvas,
+[class*="radar"] canvas,
+[class*="Radar"] canvas {
+  image-rendering: auto !important;
+  mix-blend-mode: normal !important;
+  filter: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  position: relative !important;
+  z-index: 1 !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
