@@ -35,7 +35,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@sentry/nextjs": "^10.8.0",
     "@supabase/ssr": "^0.8.0",
-    "@supabase/supabase-js": "^2.87.0",
+    "@supabase/supabase-js": "^2.87.3",
     "@tailwindcss/postcss": "^4.1.17",
     "@testing-library/dom": "^10.4.1",
     "@types/leaflet": "^1.9.20",
