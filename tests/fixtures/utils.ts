@@ -190,7 +190,7 @@ export async function setupStableApp(page: Page, opts: StubOptions = {}): Promis
   await page.context().addCookies([{
     name: 'playwright-test-mode',
     value: 'true',
-    url: 'http://localhost:3000',  // URL includes domain and path, don't set path separately
+    url: 'http://127.0.0.1:3000',  // URL includes domain and path, don't set path separately
     httpOnly: false,
     secure: false,
     sameSite: 'Lax',
@@ -307,114 +307,20 @@ export async function setupMockAuth(page: Page, userId: string = 'test-user-id')
     });
   });
 
-  // Set auth cookies for middleware - these must match Supabase SSR cookie format
-  // Supabase SSR uses specific cookie names based on the project URL
-  // The middleware reads cookies from request.cookies.getAll(), so we need to set them before navigation
-  try {
-    const domain = 'localhost';
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-    // Extract project ref from URL (e.g., https://abc123.supabase.co -> abc123)
-    const urlMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/);
-    const projectRef = urlMatch ? urlMatch[1] : 'placeholder';
-
-    // Supabase SSR cookie format: sb-{project-ref}-auth-token
-    const authTokenCookieName = `sb-${projectRef}-auth-token`;
-
-    // Create session cookie value (Supabase SSR format)
-    // This is the exact format Supabase SSR expects
-    const sessionCookieValue = JSON.stringify({
-      access_token: mockSession.access_token,
-      refresh_token: mockSession.refresh_token,
-      expires_at: mockSession.expires_at,
-      expires_in: mockSession.expires_in,
-      token_type: mockSession.token_type,
-      user: mockSession.user,
-    });
-
-    // Set cookies with all possible names Supabase might use
-    // NOTE: Using URL instead of domain+path for localhost to ensure proper cookie propagation
-    const baseUrl = 'http://localhost:3000';
-    const cookiesToSet = [
-      // TEST MODE COOKIE: Bypass middleware auth checks
-      {
-        name: 'playwright-test-mode',
-        value: 'true',
-        url: baseUrl,  // URL includes domain and path, don't set path separately
-        httpOnly: false,
-        secure: false,
-        sameSite: 'Lax' as const,
-      },
-      {
-        name: authTokenCookieName,
-        value: sessionCookieValue,
-        url: baseUrl,
-        httpOnly: false, // Must be accessible to JavaScript for SSR
-        secure: false, // Localhost doesn't need secure
-        sameSite: 'Lax' as const,
-      },
-      // Fallback cookie names
-      {
-        name: `sb-${domain}-auth-token`,
-        value: sessionCookieValue,
-        url: baseUrl,
-        httpOnly: false,
-        secure: false,
-        sameSite: 'Lax' as const,
-      },
-      {
-        name: 'sb-access-token',
-        value: mockSession.access_token,
-        url: baseUrl,
-      },
-      {
-        name: 'sb-refresh-token',
-        value: mockSession.refresh_token,
-        url: baseUrl,
-      },
-      // Add generic supabase-auth-token for good measure
-      {
-        name: 'supabase-auth-token',
-        value: sessionCookieValue,
-        url: baseUrl,
-        httpOnly: false,
-        secure: false,
-        sameSite: 'Lax' as const,
-      }
-    ];
-
-    await page.context().addCookies(cookiesToSet);
-  } catch (e) {
-    // If cookies can't be set, continue - route mocking should handle it
-    // But this might cause middleware failures
-    console.warn('Could not set auth cookies:', e);
-  }
-
-  // Mock localStorage for client-side Supabase client
-  await page.addInitScript((data) => {
-    const session = {
-      access_token: data.access_token,
-      refresh_token: data.refresh_token,
-      expires_at: data.expires_at,
-      expires_in: data.expires_in,
-      token_type: data.token_type,
-      user: data.user,
-    };
-
-    // Store in multiple possible Supabase localStorage keys
-    const possibleKeys = [
-      'sb-auth-token',
-      'supabase.auth.token',
-      `sb-${window.location.hostname}-auth-token`,
-    ];
-
-    possibleKeys.forEach(key => {
-      try {
-        window.localStorage.setItem(key, JSON.stringify(session));
-      } catch (e) {
-        // Ignore errors
-      }
-    });
-  }, mockSession);
+  // IMPORTANT:
+  // Avoid persisting access/refresh tokens in clear text in tests (cookies/localStorage),
+  // as code scanning flags this. Playwright test mode bypasses middleware via this cookie,
+  // and auth behavior is mocked via route intercepts above.
+  await page.context().addCookies([
+    {
+      name: 'playwright-test-mode',
+      value: 'true',
+      url: 'http://127.0.0.1:3000',
+      httpOnly: false,
+      secure: false,
+      sameSite: 'Lax' as const,
+    },
+  ]);
 
   // Wait a bit to ensure init scripts and cookies are ready
   await page.waitForTimeout(200);

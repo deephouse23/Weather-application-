@@ -63,11 +63,19 @@ export function validateEnv(): void {
     return;
   }
 
+  const isPlaywright =
+    process.env.PLAYWRIGHT_TEST_MODE === 'true' ||
+    process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true';
+
   const missingRequired: string[] = [];
   const missingOptional: string[] = [];
 
   // Check required variables
   for (const [key, config] of Object.entries(envConfig.required)) {
+    // In Playwright E2E runs we stub API calls, so allow missing API keys.
+    if (isPlaywright && key === 'NEXT_PUBLIC_OPENWEATHER_API_KEY') {
+      continue;
+    }
     if (!process.env[key]) {
       missingRequired.push(key);
       console.error(`❌ Missing required environment variable: ${config.name}`);
@@ -84,8 +92,8 @@ export function validateEnv(): void {
     }
   }
 
-  // Throw error if required vars are missing (but not in test environment)
-  if (missingRequired.length > 0 && process.env.NODE_ENV !== 'test') {
+  // Throw error if required vars are missing (but not in test / Playwright environment)
+  if (missingRequired.length > 0 && process.env.NODE_ENV !== 'test' && !isPlaywright) {
     throw new Error(
       `Missing required environment variables: ${missingRequired.join(', ')}\n` +
       'Please check your .env.local file or environment configuration.'

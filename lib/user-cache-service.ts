@@ -27,8 +27,17 @@ import { WeatherData } from './types';
 import { LocationData } from './location-service';
 import { safeStorage } from './safe-storage';
 
+/**
+ * StoredLastLocation intentionally excludes precise coordinates.
+ * Latitude/longitude is considered sensitive (location privacy) and should not be
+ * persisted in clear text client-side storage.
+ */
+export interface StoredLastLocation {
+  displayName: string;
+}
+
 export interface UserPreferences {
-  lastLocation?: LocationData;
+  lastLocation?: StoredLastLocation;
   settings: {
     units: 'metric' | 'imperial';
     theme: 'dark' | 'miami' | 'tron';
@@ -164,14 +173,17 @@ export class UserCacheService {
     const preferences = this.getPreferences();
     if (!preferences) return false;
 
-    preferences.lastLocation = location;
+    // Store only non-sensitive location identifier (no precise coordinates).
+    preferences.lastLocation = {
+      displayName: location.displayName,
+    };
     return this.savePreferences(preferences);
   }
 
   /**
    * Get last location
    */
-  getLastLocation(): LocationData | null {
+  getLastLocation(): StoredLastLocation | null {
     const preferences = this.getPreferences();
     return preferences?.lastLocation || null;
   }
@@ -188,6 +200,10 @@ export class UserCacheService {
     if (!preferences?.settings.cacheEnabled) return false;
 
     try {
+      // Do not persist precise coordinates (lat/lon) in localStorage.
+      // WeatherData includes optional coordinates; strip them before caching.
+      const { coordinates, ...sanitizedWeather } = (weatherData as any) ?? {};
+
       // Use longer cache for forecast data (has forecast array) vs current conditions
       const hasForecastData = weatherData.forecast && weatherData.forecast.length > 0;
       const defaultDuration = hasForecastData 
@@ -195,7 +211,7 @@ export class UserCacheService {
         : this.DEFAULT_WEATHER_CACHE_DURATION;
       const duration = customDuration || defaultDuration;
       const cacheEntry: CachedWeatherData = {
-        data: weatherData,
+        data: sanitizedWeather as WeatherData,
         timestamp: Date.now(),
         expiresAt: Date.now() + duration,
         locationKey
@@ -487,9 +503,19 @@ export class UserCacheService {
     };
 
     // Safely merge with defaults to handle missing properties
+    const sanitizeLastLocation = (value: unknown): StoredLastLocation | undefined => {
+      if (!value || typeof value !== 'object') return undefined;
+      const v = value as { displayName?: unknown };
+      if (typeof v.displayName === 'string' && v.displayName.trim().length > 0) {
+        return { displayName: v.displayName };
+      }
+      return undefined;
+    };
+
     const validatedPreferences: UserPreferences = {
       ...defaultPreferences,
-      lastLocation: preferences.lastLocation || defaultPreferences.lastLocation,
+      // Drop any legacy cached location objects that contained latitude/longitude.
+      lastLocation: sanitizeLastLocation(preferences.lastLocation) || defaultPreferences.lastLocation,
       updatedAt: typeof preferences.updatedAt === 'number' ? preferences.updatedAt : defaultPreferences.updatedAt,
       settings: {
         ...defaultPreferences.settings,
@@ -586,15 +612,18 @@ export class UserCacheService {
    * Get location key for caching
    */
   getLocationKey(location: LocationData): string {
-    return `${location.latitude.toFixed(4)}_${location.longitude.toFixed(4)}`;
+    // Do NOT persist precise coordinates (privacy / code scanning).
+    // Use a stable, non-sensitive key derived from displayName.
+    return this.sanitizeKey(location.displayName);
   }
 
   /**
    * Get location key from coordinate string
    */
   getLocationKeyFromCoords(coords: string): string {
-    const [lat, lon] = coords.split(',').map(parseFloat);
-    return `${lat.toFixed(4)}_${lon.toFixed(4)}`;
+    // Coords are sensitive; do not derive persistent storage keys from them.
+    // Keep deterministic behavior without leaking coordinates by hashing-like sanitization.
+    return this.sanitizeKey(coords);
   }
 }
 

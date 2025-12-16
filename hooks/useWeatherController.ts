@@ -124,7 +124,10 @@ export function useWeatherController() {
 
     const saveWeatherToCache = useCallback((weatherData: WeatherData) => {
         try {
-            safeStorage.setItem(WEATHER_KEY, JSON.stringify(weatherData))
+            // Do not persist precise coordinates (lat/lon) in localStorage.
+            // WeatherData includes optional coordinates; strip them before caching.
+            const { coordinates, ...rest } = weatherData as any
+            safeStorage.setItem(WEATHER_KEY, JSON.stringify(rest))
             safeStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString())
         } catch (error) {
             console.warn('Failed to save weather data to cache:', error)
@@ -166,7 +169,8 @@ export function useWeatherController() {
     const addToSearchCache = useCallback((searchTerm: string, weatherData: WeatherData) => {
         const cache = getSearchCache()
         cache.set(searchTerm.toLowerCase().trim(), {
-            data: weatherData,
+            // Avoid persisting coordinates in the search cache too.
+            data: ({ ...(weatherData as any), coordinates: undefined } as WeatherData),
             timestamp: Date.now()
         })
         saveSearchCache(cache)
@@ -201,7 +205,39 @@ export function useWeatherController() {
             setLoading(true)
             setError('')
 
-            const coords = userCacheService.getLocationKey(location).replace('_', ',')
+            // Guard: some call sites can pass a "location" without coordinates
+            // (e.g. privacy-stripped cached lastLocation). Avoid "undefined,undefined".
+            const hasCoords =
+                typeof (location as any).latitude === 'number' &&
+                Number.isFinite((location as any).latitude) &&
+                typeof (location as any).longitude === 'number' &&
+                Number.isFinite((location as any).longitude)
+
+            if (!hasCoords) {
+                const fallbackQuery = location.displayName?.trim()
+                if (!fallbackQuery) {
+                    throw new Error('Location missing coordinates and displayName')
+                }
+
+                // Fall back to the normal search flow (geocoding -> weather) using display name,
+                // but do it inline to avoid referencing handleSearch before it's declared.
+                const fallbackUnitSystem: 'metric' | 'imperial' =
+                    preferences?.temperature_unit === 'celsius' ? 'metric' : 'imperial'
+                const fallbackWeather = await fetchWeatherData(fallbackQuery, fallbackUnitSystem)
+
+                if (fallbackWeather) {
+                    setWeather(fallbackWeather)
+                    setLocationInput(fallbackQuery)
+                    setCurrentLocation(fallbackQuery)
+                    setHasSearched(true)
+                    userCacheService.cacheWeatherData(locationKey, fallbackWeather)
+                    saveLocationToCache(fallbackQuery)
+                    saveWeatherToCache(fallbackWeather)
+                }
+                return
+            }
+
+            const coords = `${location.latitude},${location.longitude}`
             const unitSystem: 'metric' | 'imperial' = preferences?.temperature_unit === 'celsius' ? 'metric' : 'imperial'
             const weatherData = await fetchWeatherByLocation(coords, unitSystem, location.displayName)
 
@@ -315,11 +351,24 @@ export function useWeatherController() {
     useEffect(() => {
         if (!isClient || autoLocationAttempted || authLoading) return
 
+        // Playwright E2E runs should be deterministic: skip auto-location entirely and
+        // allow the seeded localStorage cache (or explicit searches) to drive state.
+        if (process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true') {
+            setAutoLocationAttempted(true)
+            return
+        }
+
         const tryAutoLocation = async () => {
             try {
                 // Check auth preferences first, then fallback to local storage
                 const localPrefs = userCacheService.getPreferences()
-                const shouldAutoLocate = preferences?.auto_location ?? localPrefs?.settings.auto_location ?? true
+                const localAutoLocate =
+                    (localPrefs as any)?.settings?.auto_location ??
+                    (localPrefs as any)?.settings?.autoLocation ??
+                    (localPrefs as any)?.auto_location ??
+                    (localPrefs as any)?.autoLocation
+
+                const shouldAutoLocate = preferences?.auto_location ?? localAutoLocate ?? true
                 console.log('[Debug] tryAutoLocation running. shouldAutoLocate:', shouldAutoLocate, 'preferences:', preferences, 'localPrefs:', localPrefs);
 
                 if (shouldAutoLocate === false) {
@@ -337,8 +386,10 @@ export function useWeatherController() {
                 }
 
                 const lastLocation = userCacheService.getLastLocation()
-                if (lastLocation) {
-                    await handleLocationDetected(lastLocation)
+                if (lastLocation?.displayName) {
+                    // Stored last location excludes coordinates for privacy;
+                    // fall back to normal search by display name.
+                    await handleSearch(lastLocation.displayName, false, true)
                     setAutoLocationAttempted(true)
                     return
                 }

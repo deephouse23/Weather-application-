@@ -36,6 +36,7 @@ const nextConfig = {
   
   // Add headers for better caching and security
   async headers() {
+    const isProd = process.env.NODE_ENV === 'production'
     return [
       {
         source: '/:path*',
@@ -70,7 +71,9 @@ const nextConfig = {
               "base-uri 'self'",
               "form-action 'self'",
               "frame-ancestors 'self'",
-              "upgrade-insecure-requests"
+              // Only enable upgrade-insecure-requests in production; it breaks local http dev
+              // by upgrading same-origin asset requests (notably in WebKit).
+              ...(isProd ? ["upgrade-insecure-requests"] : [])
             ].join('; ')
           },
           {
