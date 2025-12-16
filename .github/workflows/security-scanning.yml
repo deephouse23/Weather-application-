@@ -41,7 +41,7 @@ jobs:
       uses: github/codeql-action/analyze@v3
       with:
         # Keep category stable across branches so code scanning can compare against main
-        category: /language:javascript
+        category: /language:javascript-typescript
 
   dependency-review:
     name: Dependency Review
