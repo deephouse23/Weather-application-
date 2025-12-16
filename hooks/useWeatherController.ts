@@ -205,6 +205,38 @@ export function useWeatherController() {
             setLoading(true)
             setError('')
 
+            // Guard: some call sites can pass a "location" without coordinates
+            // (e.g. privacy-stripped cached lastLocation). Avoid "undefined,undefined".
+            const hasCoords =
+                typeof (location as any).latitude === 'number' &&
+                Number.isFinite((location as any).latitude) &&
+                typeof (location as any).longitude === 'number' &&
+                Number.isFinite((location as any).longitude)
+
+            if (!hasCoords) {
+                const fallbackQuery = location.displayName?.trim()
+                if (!fallbackQuery) {
+                    throw new Error('Location missing coordinates and displayName')
+                }
+
+                // Fall back to the normal search flow (geocoding -> weather) using display name,
+                // but do it inline to avoid referencing handleSearch before it's declared.
+                const fallbackUnitSystem: 'metric' | 'imperial' =
+                    preferences?.temperature_unit === 'celsius' ? 'metric' : 'imperial'
+                const fallbackWeather = await fetchWeatherData(fallbackQuery, fallbackUnitSystem)
+
+                if (fallbackWeather) {
+                    setWeather(fallbackWeather)
+                    setLocationInput(fallbackQuery)
+                    setCurrentLocation(fallbackQuery)
+                    setHasSearched(true)
+                    userCacheService.cacheWeatherData(locationKey, fallbackWeather)
+                    saveLocationToCache(fallbackQuery)
+                    saveWeatherToCache(fallbackWeather)
+                }
+                return
+            }
+
             const coords = `${location.latitude},${location.longitude}`
             const unitSystem: 'metric' | 'imperial' = preferences?.temperature_unit === 'celsius' ? 'metric' : 'imperial'
             const weatherData = await fetchWeatherByLocation(coords, unitSystem, location.displayName)
