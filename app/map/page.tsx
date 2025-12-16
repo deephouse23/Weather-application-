@@ -86,7 +86,11 @@ export default function MapPage() {
   const handleShare = async () => {
     if (!weatherData) return
 
-    const shareUrl = `${window.location.origin}/map?lat=${weatherData.coordinates?.lat}&lon=${weatherData.coordinates?.lon}`
+    // Coordinates may be intentionally omitted from cached weather data (privacy / CodeQL).
+    // Only include them in the share URL if present.
+    const shareUrl = weatherData.coordinates
+      ? `${window.location.origin}/map?lat=${weatherData.coordinates.lat}&lon=${weatherData.coordinates.lon}`
+      : `${window.location.origin}/map`
     
     try {
       if (navigator.share) {
@@ -129,7 +133,7 @@ export default function MapPage() {
     )
   }
 
-  if (!weatherData || !weatherData.coordinates) {
+  if (!weatherData) {
     return (
       <div className="h-[calc(100vh-4rem)] w-full">
         <div className="p-3 bg-gray-900 border-b border-gray-700 flex items-center gap-3">
@@ -195,8 +199,8 @@ export default function MapPage() {
       {/* Map Container */}
       <div className="flex-1">
         <WeatherMap
-          latitude={weatherData.coordinates.lat}
-          longitude={weatherData.coordinates.lon}
+          latitude={weatherData.coordinates?.lat ?? 0}
+          longitude={weatherData.coordinates?.lon ?? 0}
           locationName={weatherData.location}
           theme={theme || 'dark'}
         />

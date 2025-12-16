@@ -124,7 +124,10 @@ export function useWeatherController() {
 
     const saveWeatherToCache = useCallback((weatherData: WeatherData) => {
         try {
-            safeStorage.setItem(WEATHER_KEY, JSON.stringify(weatherData))
+            // Do not persist precise coordinates (lat/lon) in localStorage.
+            // WeatherData includes optional coordinates; strip them before caching.
+            const { coordinates, ...rest } = weatherData as any
+            safeStorage.setItem(WEATHER_KEY, JSON.stringify(rest))
             safeStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString())
         } catch (error) {
             console.warn('Failed to save weather data to cache:', error)
@@ -166,7 +169,8 @@ export function useWeatherController() {
     const addToSearchCache = useCallback((searchTerm: string, weatherData: WeatherData) => {
         const cache = getSearchCache()
         cache.set(searchTerm.toLowerCase().trim(), {
-            data: weatherData,
+            // Avoid persisting coordinates in the search cache too.
+            data: ({ ...(weatherData as any), coordinates: undefined } as WeatherData),
             timestamp: Date.now()
         })
         saveSearchCache(cache)

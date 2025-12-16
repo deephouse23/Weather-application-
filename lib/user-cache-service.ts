@@ -200,6 +200,10 @@ export class UserCacheService {
     if (!preferences?.settings.cacheEnabled) return false;
 
     try {
+      // Do not persist precise coordinates (lat/lon) in localStorage.
+      // WeatherData includes optional coordinates; strip them before caching.
+      const { coordinates, ...sanitizedWeather } = (weatherData as any) ?? {};
+
       // Use longer cache for forecast data (has forecast array) vs current conditions
       const hasForecastData = weatherData.forecast && weatherData.forecast.length > 0;
       const defaultDuration = hasForecastData 
@@ -207,7 +211,7 @@ export class UserCacheService {
         : this.DEFAULT_WEATHER_CACHE_DURATION;
       const duration = customDuration || defaultDuration;
       const cacheEntry: CachedWeatherData = {
-        data: weatherData,
+        data: sanitizedWeather as WeatherData,
         timestamp: Date.now(),
         expiresAt: Date.now() + duration,
         locationKey
