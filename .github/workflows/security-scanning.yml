@@ -40,7 +40,8 @@ jobs:
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:
-        category: "/language:${{matrix.language}}"
+        # Keep category stable across branches so code scanning can compare against main
+        category: /language:javascript
 
   dependency-review:
     name: Dependency Review
