@@ -166,6 +166,12 @@ export default function MapPage() {
     )
   }
 
+  // Check if we have valid coordinates for the radar
+  const hasValidCoordinates = weatherData?.coordinates?.lat && 
+    weatherData?.coordinates?.lon && 
+    weatherData.coordinates.lat !== 0 && 
+    weatherData.coordinates.lon !== 0
+
   if (!weatherData) {
     return (
       <div className="h-[calc(100vh-4rem)] w-full">
@@ -191,6 +197,47 @@ export default function MapPage() {
             >
               <Home className="w-4 h-4" />
               Return to Home & Search
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show message if we have weather data but missing coordinates
+  if (!hasValidCoordinates) {
+    return (
+      <div className="h-[calc(100vh-4rem)] w-full">
+        <div className="p-3 bg-gray-900 border-b border-gray-700 flex items-center gap-3">
+          <Link href="/" className="inline-flex items-center gap-2 text-xs font-mono px-3 py-1.5 border-2 border-gray-600 hover:bg-gray-700 transition-colors rounded" aria-label="Return to Home">
+            <Home className="w-3 h-3" />
+            HOME
+          </Link>
+          <div className="text-gray-500 text-xs font-mono">
+            <MapIcon className="w-3 h-3 inline mr-1" />
+            RADAR MAP
+          </div>
+          {weatherData.location && (
+            <div className="text-yellow-400 text-xs font-mono">
+              {weatherData.location}
+            </div>
+          )}
+        </div>
+        <div className="h-full flex items-center justify-center bg-gray-900">
+          <div className="text-white text-center max-w-md px-4">
+            <div className="text-xl mb-4 font-mono text-yellow-400">COORDINATES UNAVAILABLE</div>
+            <div className="text-sm text-gray-400 mb-4">
+              Unable to load radar data for <span className="text-cyan-400">{weatherData.location}</span>.
+            </div>
+            <div className="text-sm text-gray-500 mb-6">
+              Location coordinates are required for radar display. Please search for the location again.
+            </div>
+            <Link 
+              href="/" 
+              className="inline-flex items-center gap-2 text-sm font-mono px-4 py-2 border-2 border-cyan-500 text-cyan-400 hover:bg-cyan-500 hover:text-black transition-colors rounded"
+            >
+              <Home className="w-4 h-4" />
+              Search Location
             </Link>
           </div>
         </div>
@@ -232,8 +279,8 @@ export default function MapPage() {
       {/* Map Container */}
       <div className="flex-1">
         <WeatherMap
-          latitude={weatherData.coordinates?.lat ?? 0}
-          longitude={weatherData.coordinates?.lon ?? 0}
+          latitude={weatherData.coordinates!.lat}
+          longitude={weatherData.coordinates!.lon}
           locationName={weatherData.location}
           theme={theme || 'dark'}
         />

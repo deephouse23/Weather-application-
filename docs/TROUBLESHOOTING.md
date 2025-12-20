@@ -91,6 +91,44 @@
 
 ---
 
+### 2b. OAuth Login Redirects to Production (Local Development)
+
+**Symptoms:**
+- Click "Continue with Google" or "Continue with GitHub" on localhost
+- After authenticating, redirected to production site instead of localhost
+- Login works on production but not in local development
+
+**Root Cause:**
+The Supabase dashboard only has production URLs in the allowed redirect URLs list.
+
+**Solution:**
+
+1. **Add localhost callback URL to Supabase:**
+   - Go to [Supabase Dashboard](https://supabase.com/dashboard)
+   - Select your project
+   - Navigate to **Authentication** → **URL Configuration**
+   - In "Redirect URLs" section, add:
+     ```
+     http://localhost:3000/auth/callback
+     ```
+   - Click **Save**
+
+2. **Verify Site URL configuration:**
+   - In the same URL Configuration page
+   - Ensure "Site URL" is set to your production URL
+   - The redirect URLs list should include both:
+     - `https://www.16bitweather.co/auth/callback` (production)
+     - `http://localhost:3000/auth/callback` (development)
+
+3. **Test the fix:**
+   - Return to `http://localhost:3000/auth/login`
+   - Click "Continue with Google"
+   - After authentication, you should return to `localhost:3000`
+
+**Note:** The app code already uses `window.location.origin` for the callback URL, which automatically adapts to the current environment. The issue is purely in the Supabase dashboard configuration.
+
+---
+
 ### 3. Location Detection Fails
 
 **Symptoms:**
