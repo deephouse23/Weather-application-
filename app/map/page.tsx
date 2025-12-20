@@ -18,6 +18,7 @@ import { useLocationContext } from '@/components/location-context'
 import { userCacheService } from '@/lib/user-cache-service'
 import { WeatherData } from '@/lib/types'
 import { useTheme } from '@/components/theme-provider'
+import { fetchWeatherData } from '@/lib/weather-api'
 
 const WeatherMap = dynamic(() => import('@/components/weather-map'), {
   ssr: false,
@@ -39,7 +40,7 @@ export default function MapPage() {
   const [shareSuccess, setShareSuccess] = useState(false)
 
   useEffect(() => {
-    const loadWeatherData = () => {
+    const loadWeatherData = async () => {
       setIsLoading(true)
 
       console.log('[MapPage] Loading weather data - currentLocation:', currentLocation)
@@ -64,6 +65,24 @@ export default function MapPage() {
               const parsed = JSON.parse(stored)
               if (parsed.data) {
                 console.log('[MapPage] Found cached data for current location:', parsed.data.location)
+                
+                // PR #168 strips coordinates from cached data for privacy.
+                // If coordinates are missing, fetch fresh data to get them for the radar.
+                if (!parsed.data.coordinates?.lat || !parsed.data.coordinates?.lon) {
+                  console.log('[MapPage] Cached data missing coordinates, fetching fresh data for radar...')
+                  try {
+                    const freshData = await fetchWeatherData(parsed.data.location || currentLocation, 'imperial')
+                    if (freshData?.coordinates?.lat && freshData?.coordinates?.lon) {
+                      console.log('[MapPage] Fresh coordinates obtained:', freshData.coordinates)
+                      setWeatherData(freshData)
+                      setIsLoading(false)
+                      return
+                    }
+                  } catch (fetchError) {
+                    console.warn('[MapPage] Failed to fetch fresh coordinates:', fetchError)
+                  }
+                }
+                
                 setWeatherData(parsed.data)
                 setIsLoading(false)
                 return
@@ -72,6 +91,20 @@ export default function MapPage() {
           } catch (e) {
             // Continue searching
           }
+        }
+        
+        // No cached data found but we have a location name - fetch fresh data
+        console.log('[MapPage] No cached data found, fetching fresh data for:', currentLocation)
+        try {
+          const freshData = await fetchWeatherData(currentLocation, 'imperial')
+          if (freshData) {
+            console.log('[MapPage] Fresh data obtained with coordinates:', freshData.coordinates)
+            setWeatherData(freshData)
+            setIsLoading(false)
+            return
+          }
+        } catch (fetchError) {
+          console.warn('[MapPage] Failed to fetch weather data:', fetchError)
         }
       }
 
