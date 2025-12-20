@@ -46,7 +46,7 @@ export default function AuthButton() {
     return (
       <Link
         href="/auth/login"
-        className={cn("min-w-[80px]", buttonVariants({ variant: "outline", size: "sm" }))}
+        className={cn("min-w-[80px]", buttonVariants({ variant: "default", size: "sm" }))}
       >
         <LogIn className="w-3 h-3 mr-1" />
         LOGIN
@@ -86,13 +86,14 @@ export default function AuthButton() {
             Profile
           </Link>
 
-          <button
+          <Button
+            variant="ghost"
             onClick={signOut}
-            className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors w-full text-left rounded-b-md"
+            className="flex items-center justify-start gap-2 px-3 py-2 text-sm w-full rounded-none rounded-b-md h-auto font-normal hover:bg-accent hover:text-accent-foreground"
           >
             <LogOut className="w-4 h-4" />
             Sign Out
-          </button>
+          </Button>
         </div>
       )}
     </div>
