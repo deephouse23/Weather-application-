@@ -438,6 +438,29 @@ export function useWeatherController() {
                     const cacheAge = Date.now() - parseInt(cacheTimestamp)
                     if (cacheAge < 10 * 60 * 1000) {
                         const weather = JSON.parse(cachedWeatherData)
+
+                        // Check if we have coordinates (required for radar)
+                        // Cached data might have them stripped for privacy
+                        const hasCoordinates = weather.coordinates?.lat && weather.coordinates?.lon
+
+                        if (!hasCoordinates && weather?.forecast) {
+                            console.log('[Debug] Cached weather missing coordinates, fetching fresh data...');
+                            const unitSystem: 'metric' | 'imperial' = preferences?.temperature_unit === 'celsius' ? 'metric' : 'imperial'
+                            try {
+                                const freshData = await fetchWeatherData(cachedLocationData, unitSystem)
+                                if (freshData) {
+                                    setWeather(freshData)
+                                    setLocationInput(cachedLocationData)
+                                    setHasSearched(true)
+                                    // We don't overwrite the cache here to preserve the "stripped" privacy version in local storage
+                                    // but we update the in-memory state with the full data including coordinates
+                                    return
+                                }
+                            } catch (e) {
+                                console.warn('Failed to refresh data with coordinates', e)
+                            }
+                        }
+
                         if (weather?.forecast && weather.forecast.length > 0) {
                             setWeather(weather)
                             setLocationInput(cachedLocationData)
