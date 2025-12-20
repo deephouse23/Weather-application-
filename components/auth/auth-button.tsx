@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { LogIn, LogOut, User, ChevronDown, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 export default function AuthButton() {
   const { user, profile, loading, isInitialized, signOut } = useAuth()
@@ -43,12 +44,13 @@ export default function AuthButton() {
 
   if (!user) {
     return (
-      <Button variant="outline" size="sm" asChild className="min-w-[80px]">
-        <Link href="/auth/login">
-          <LogIn className="w-3 h-3 mr-1" />
-          LOGIN
-        </Link>
-      </Button>
+      <Link
+        href="/auth/login"
+        className={cn("min-w-[80px]", buttonVariants({ variant: "outline", size: "sm" }))}
+      >
+        <LogIn className="w-3 h-3 mr-1" />
+        LOGIN
+      </Link>
     )
   }
 
@@ -75,7 +77,7 @@ export default function AuthButton() {
             <LayoutDashboard className="w-4 h-4" />
             Dashboard
           </Link>
-          
+
           <Link
             href="/profile"
             className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
@@ -83,7 +85,7 @@ export default function AuthButton() {
             <User className="w-4 h-4" />
             Profile
           </Link>
-          
+
           <button
             onClick={signOut}
             className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors w-full text-left rounded-b-md"
