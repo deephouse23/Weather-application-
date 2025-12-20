@@ -169,8 +169,7 @@ export function useWeatherController() {
     const addToSearchCache = useCallback((searchTerm: string, weatherData: WeatherData) => {
         const cache = getSearchCache()
         cache.set(searchTerm.toLowerCase().trim(), {
-            // Avoid persisting coordinates in the search cache too.
-            data: ({ ...(weatherData as any), coordinates: undefined } as WeatherData),
+            data: weatherData,
             timestamp: Date.now()
         })
         saveSearchCache(cache)
