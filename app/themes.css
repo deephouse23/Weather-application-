@@ -430,14 +430,33 @@
 
   /* ═══════════════════════════════════════════════════════════
      RADAR/MAP CONTAINER EXCLUSIONS
-     Ensure radar containers are above scanlines
+     Ensure radar containers are above scanlines and theme overlays.
+     Uses !important to guarantee visibility regardless of theme.
      ═══════════════════════════════════════════════════════════ */
 
   [data-radar-container] {
-    position: relative;
-    z-index: 10000;
-    backdrop-filter: none;
-    isolation: isolate;
+    position: relative !important;
+    z-index: 10000 !important;
+    backdrop-filter: none !important;
+    isolation: isolate !important;
+  }
+
+  /* Protect radar images and canvas from theme filters/effects */
+  [data-radar-container] img,
+  [data-radar-container] canvas,
+  [data-radar-container] .ol-layer {
+    image-rendering: auto !important;
+    mix-blend-mode: normal !important;
+    filter: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  /* Ensure map containers also get protection */
+  .ol-viewport,
+  .ol-overlaycontainer-stopevent {
+    z-index: 10000 !important;
+    position: relative !important;
   }
 
   /* ═══════════════════════════════════════════════════════════
