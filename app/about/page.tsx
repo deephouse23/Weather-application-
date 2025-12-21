@@ -5,7 +5,9 @@ import Navigation from '@/components/navigation'
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-[#09090b] text-white selection:bg-[#00d4ff] selection:text-black overflow-x-hidden">
-      <Navigation />
+      <div className="relative z-50">
+        <Navigation />
+      </div>
 
       {/* Grid Background Effect */}
       <div className="fixed inset-0 z-0 pointer-events-none opacity-20"
