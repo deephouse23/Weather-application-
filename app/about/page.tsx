@@ -1,9 +1,12 @@
 import { Github, Twitter, Terminal, Gamepad2, Cpu, Zap, CloudLightning } from 'lucide-react'
 import Link from 'next/link'
+import Navigation from '@/components/navigation'
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-[#09090b] text-white selection:bg-[#00d4ff] selection:text-black overflow-x-hidden">
+      <Navigation />
+
       {/* Grid Background Effect */}
       <div className="fixed inset-0 z-0 pointer-events-none opacity-20"
         style={{
@@ -111,7 +114,7 @@ export default function AboutPage() {
               <div className="relative z-10">
                 <div className="w-24 h-24 mx-auto bg-[#00d4ff] rounded-full mb-6 flex items-center justify-center p-1 cursor-pointer hover:scale-110 transition-transform">
                   <img
-                    src="https://api.dicebear.com/9.x/avataaars/svg?seed=Felix"
+                    src="https://api.dicebear.com/9.x/avataaars/svg?seed=Felix&top=shortHairSides&accessories=prescription02"
                     alt="Player 1"
                     className="w-full h-full rounded-full bg-black"
                   />
