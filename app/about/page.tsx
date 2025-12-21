@@ -134,6 +134,14 @@ export default function AboutPage() {
                     <span className="text-xs font-mono text-gray-500 group-hover:text-[#fff]">GITHUB</span>
                   </a>
 
+                  <a href="https://x.com/Justin_Elrod" target="_blank" rel="noopener noreferrer"
+                    className="group flex flex-col items-center space-y-2">
+                    <div className="w-12 h-12 bg-[#111] border border-[#333] flex items-center justify-center group-hover:border-[#fff] group-hover:bg-[#fff] group-hover:text-black transition-all duration-300">
+                      <Twitter className="w-6 h-6" />
+                    </div>
+                    <span className="text-xs font-mono text-gray-500 group-hover:text-[#fff]">X</span>
+                  </a>
+
                   <Link href="/dashboard" className="group flex flex-col items-center space-y-2">
                     <div className="w-12 h-12 bg-[#111] border border-[#333] flex items-center justify-center group-hover:border-[#00d4ff] group-hover:bg-[#00d4ff] group-hover:text-black transition-all duration-300">
                       <Terminal className="w-6 h-6" />
