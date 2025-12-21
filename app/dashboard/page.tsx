@@ -11,6 +11,7 @@ import Link from 'next/link'
 import LocationCard from '@/components/dashboard/location-card'
 import AddLocationModal from '@/components/dashboard/add-location-modal'
 import ThemeSelectorGrid from '@/components/dashboard/theme-selector-grid'
+import { Button } from '@/components/ui/button'
 
 export default function DashboardPage() {
   return (
@@ -25,7 +26,7 @@ function DashboardContent() {
   const { locations, loading, refetch } = useSavedLocations()
   const { theme } = useTheme()
   const themeClasses = getComponentStyles(theme as ThemeType, 'dashboard')
-  
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -54,66 +55,68 @@ function DashboardContent() {
   return (
     <div className={`min-h-screen ${themeClasses.background}`}>
       <Navigation />
-      
+
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-12">
           <h1 className={`text-3xl font-bold uppercase tracking-wider font-mono mb-4 ${themeClasses.text} ${themeClasses.glow}`} style={{
             fontFamily: "monospace",
             fontSize: "clamp(24px, 5vw, 40px)"
           }}>
             Weather Dashboard
           </h1>
-          <p className={`text-lg font-mono ${themeClasses.secondary || themeClasses.text} mb-6`}>
-            Welcome back, {profile?.username || profile?.full_name || 'User'}! 
+          <p className={`text-lg font-mono ${themeClasses.secondary || themeClasses.text} mb-8 max-w-2xl mx-auto`}>
+            Welcome back, {profile?.username || profile?.full_name || 'User'}!
             {locations.length > 0 && ` You have ${locations.length} saved location${locations.length === 1 ? '' : 's'}.`}
           </p>
-          
-          {/* Action Buttons */}
-          <div className="flex items-center justify-center space-x-4">
-            <button
-              onClick={() => setIsAddModalOpen(true)}
-              className={`flex items-center space-x-2 px-4 py-2 border-2 text-sm font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 ${themeClasses.accentBg} ${themeClasses.borderColor} text-black ${themeClasses.glow}`}
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Location</span>
-            </button>
 
-            <button
+          {/* Action Buttons */}
+          <div className="flex items-center justify-center gap-4">
+            <Button
+              onClick={() => setIsAddModalOpen(true)}
+              className={`font-mono font-bold uppercase tracking-wider ${themeClasses.accentBg} text-black hover:opacity-90 transition-all active:scale-95`}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Location
+            </Button>
+
+            <Button
+              variant="outline"
+              size="icon"
               onClick={refetch}
               disabled={loading}
-              className={`p-2 border-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`}
+              className={`${themeClasses.borderColor} ${themeClasses.text} hover:bg-white/10`}
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Saved Locations */}
         {locations.length === 0 ? (
-          <div className={`text-center py-16 mb-8 p-6 border-4 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
-            <MapPin className={`w-16 h-16 mx-auto mb-4 ${themeClasses.text} opacity-50`} />
+          <div className={`text-center py-20 mb-12 p-8 border-4 border-dashed ${themeClasses.borderColor} rounded-lg bg-black/20`}>
+            <MapPin className={`w-16 h-16 mx-auto mb-6 ${themeClasses.text} opacity-50`} />
             <h3 className={`text-xl font-bold uppercase tracking-wider font-mono mb-4 ${themeClasses.text}`}>
               No Saved Locations
             </h3>
-            <p className={`text-sm font-mono mb-6 ${themeClasses.text} opacity-75`}>
-              Start by adding your favorite weather locations to track
+            <p className={`text-sm font-mono mb-8 ${themeClasses.text} opacity-75 max-w-sm mx-auto`}>
+              Start by adding your favorite weather locations to track temperature, humidity, and more.
             </p>
-            <button
+            <Button
               onClick={() => setIsAddModalOpen(true)}
-              className={`flex items-center space-x-2 px-4 py-2 border-2 text-sm font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 mx-auto ${themeClasses.accentBg} ${themeClasses.borderColor} text-black ${themeClasses.glow}`}
+              className={`font-mono font-bold uppercase tracking-wider ${themeClasses.accentBg} text-black`}
             >
-              <Plus className="w-4 h-4" />
-              <span>Add Your First Location</span>
-            </button>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Your First Location
+            </Button>
           </div>
         ) : (
-          <div className="space-y-6 mb-8">
+          <div className="space-y-12 mb-12">
             {/* Favorite Locations Section */}
             {favoriteLocations.length > 0 && (
-              <div>
-                <div className={`flex items-center justify-center mb-4 p-3 border-2 ${themeClasses.background} ${themeClasses.borderColor}`}>
-                  <Star className={`w-5 h-5 mr-2 ${themeClasses.text}`} />
+              <div className="space-y-6">
+                <div className={`flex items-center gap-2 pb-2 border-b-2 ${themeClasses.borderColor}`}>
+                  <Star className={`w-5 h-5 ${themeClasses.text}`} />
                   <h2 className={`text-lg font-bold uppercase tracking-wider font-mono ${themeClasses.text}`}>
                     Favorite Locations ({favoriteLocations.length})
                   </h2>
@@ -132,9 +135,9 @@ function DashboardContent() {
 
             {/* All Locations Section */}
             {otherLocations.length > 0 && (
-              <div>
-                <div className={`flex items-center justify-center mb-4 p-3 border-2 ${themeClasses.background} ${themeClasses.borderColor}`}>
-                  <MapPin className={`w-5 h-5 mr-2 ${themeClasses.text}`} />
+              <div className="space-y-6">
+                <div className={`flex items-center gap-2 pb-2 border-b-2 ${themeClasses.borderColor}`}>
+                  <MapPin className={`w-5 h-5 ${themeClasses.text}`} />
                   <h2 className={`text-lg font-bold uppercase tracking-wider font-mono ${themeClasses.text}`}>
                     {favoriteLocations.length > 0 ? 'Other Locations' : 'All Locations'} ({otherLocations.length})
                   </h2>
@@ -154,45 +157,43 @@ function DashboardContent() {
         )}
 
         {/* Theme Selector Section */}
-        <div className="mb-8">
-          <div className={`flex items-center justify-center mb-4 p-3 border-2 ${themeClasses.background} ${themeClasses.borderColor}`}>
-            <Settings className={`w-5 h-5 mr-2 ${themeClasses.text}`} />
+        <div className="mb-12">
+          <div className={`flex items-center gap-2 mb-6 pb-2 border-b-2 ${themeClasses.borderColor}`}>
+            <Settings className={`w-5 h-5 ${themeClasses.text}`} />
             <h2 className={`text-lg font-bold uppercase tracking-wider font-mono ${themeClasses.text}`}>
               Theme Settings
             </h2>
           </div>
-          <div className={`p-6 border-2 ${themeClasses.background} ${themeClasses.borderColor}`}>
+          <div className={`p-6 border-2 ${themeClasses.borderColor} bg-black/40 rounded-lg`}>
             <ThemeSelectorGrid />
           </div>
         </div>
 
         {/* Quick Actions */}
         {locations.length > 0 && (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto mb-12">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Link
-                href="/profile"
-                className={`flex items-center justify-center space-x-3 p-4 border-2 text-sm font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`}
-              >
-                <Settings className="w-4 h-4" />
-                <span>Manage Profile</span>
+              <Link href="/profile" className="contents">
+                <Button variant="outline" className={`h-auto py-4 font-mono font-bold uppercase tracking-wider ${themeClasses.borderColor} ${themeClasses.text} hover:bg-white/5`}>
+                  <Settings className="w-4 h-4 mr-2" />
+                  Manage Profile
+                </Button>
               </Link>
-              
-              <Link
-                href="/"
-                className={`flex items-center justify-center space-x-3 p-4 border-2 text-sm font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`}
-              >
-                <MapPin className="w-4 h-4" />
-                <span>Weather Search</span>
+
+              <Link href="/" className="contents">
+                <Button variant="outline" className={`h-auto py-4 font-mono font-bold uppercase tracking-wider ${themeClasses.borderColor} ${themeClasses.text} hover:bg-white/5`}>
+                  <MapPin className="w-4 h-4 mr-2" />
+                  Weather Search
+                </Button>
               </Link>
-              
-              <button
+
+              <Button
                 onClick={() => setIsAddModalOpen(true)}
-                className={`flex items-center justify-center space-x-3 p-4 border-2 text-sm font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 ${themeClasses.accentBg} ${themeClasses.borderColor} text-black`}
+                className={`h-auto py-4 font-mono font-bold uppercase tracking-wider ${themeClasses.accentBg} text-black border-2 border-transparent hover:border-white`}
               >
-                <Plus className="w-4 h-4" />
-                <span>Add Another Location</span>
-              </button>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Another Location
+              </Button>
             </div>
           </div>
         )}

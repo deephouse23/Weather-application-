@@ -81,7 +81,8 @@ test('navigation links work correctly', async ({ page }) => {
   if (await aboutLink.count() > 0) {
     await aboutLink.click();
     await expect(page).toHaveURL('/about');
-    await expect(page.locator('h1, h2').filter({ hasText: /About/i })).toBeVisible();
+    // About page was updated with "Retro Soul" heading
+    await expect(page.locator('h1, h2').filter({ hasText: /Retro Soul|About/i })).toBeVisible();
   }
 });
 

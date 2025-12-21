@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { MapPin, Star, Trash2, RefreshCw, Thermometer, Droplets, Wind, Eye, Sun } from 'lucide-react'
 import { SavedLocation } from '@/lib/supabase/types'
 import { toggleLocationFavorite, deleteSavedLocation } from '@/lib/supabase/database'
 import { getDashboardWeather, getWeatherIcon, getTemperatureColor } from '@/lib/dashboard-weather'
 import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
-import { WeatherData } from '@/lib/types'
 
 interface LocationCardProps {
   location: SavedLocation
@@ -105,7 +106,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
 
   const fetchDetailedWeather = async () => {
     setDetailedLoading(true)
-    
+
     try {
       // Fetch current weather
       const currentResponse = await fetch(
@@ -113,14 +114,14 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
       )
       if (!currentResponse.ok) throw new Error('Failed to fetch current weather')
       const currentData = await currentResponse.json()
-      
+
       // Fetch forecast
       const forecastResponse = await fetch(
         `/api/weather/forecast?lat=${location.latitude}&lon=${location.longitude}&units=imperial`
       )
       if (!forecastResponse.ok) throw new Error('Failed to fetch forecast')
       const forecastData = await forecastResponse.json()
-      
+
       // Fetch UV index
       let uvIndex = 0
       try {
@@ -134,7 +135,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
       } catch (err) {
         console.warn('UV index fetch failed:', err)
       }
-      
+
       // Fetch air quality
       let aqi = 0
       let aqiCategory = 'No Data'
@@ -150,7 +151,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
       } catch (err) {
         console.warn('Air quality fetch failed:', err)
       }
-      
+
       // Process forecast data
       const processedForecast = forecastData.list?.slice(0, 5).map((item: any, index: number) => {
         const date = new Date()
@@ -163,7 +164,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
           description: item.weather[0].description
         }
       }) || []
-      
+
       // Combine all data
       const fullWeatherData: DetailedWeatherData = {
         current: currentData,
@@ -181,7 +182,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
         },
         alerts: []
       }
-      
+
       setDetailedWeatherData(fullWeatherData)
     } catch (error) {
       console.error('Error fetching detailed weather:', error)
@@ -200,230 +201,236 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
   const citySlug = `${location.city.toLowerCase().replace(/\s+/g, '-')}-${location.state?.toLowerCase().replace(/\s+/g, '-') || location.country.toLowerCase()}`
 
   return (
-    <div className={`p-4 border-2 transition-all duration-200 hover:scale-[1.02] ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
-      {/* Location Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <button
-            onClick={toggleDetailedView}
-            className={`block text-left hover:underline transition-all duration-200 hover:scale-[1.02] ${themeClasses.text}`}
-          >
-            <h3 className="font-mono font-bold text-lg uppercase tracking-wider">
-              {location.custom_name || location.location_name}
-            </h3>
-            <p className={`text-sm font-mono ${themeClasses.mutedText}`}>
-              {location.city}, {location.state || location.country}
-            </p>
-            <p className={`text-xs font-mono ${themeClasses.mutedText} mt-1 opacity-75`}>
-              Click for detailed weather
-            </p>
-          </button>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={handleToggleFavorite}
-            disabled={actionLoading === 'favorite'}
-            className={`p-2 border-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 ${
-              location.is_favorite 
-                ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black`
-                : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`
-            }`}
-          >
-            <Star className={`w-4 h-4 ${location.is_favorite ? 'fill-current' : ''}`} />
-          </button>
-
-          <button
-            onClick={fetchWeather}
-            disabled={loading}
-            className={`p-2 border-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`}
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-
-          <button
-            onClick={handleDelete}
-            disabled={actionLoading === 'delete'}
-            className={`p-2 border-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 border-red-500 text-red-500 hover:bg-red-500 hover:text-white`}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Weather Data */}
-      {loading ? (
-        <div className="flex items-center justify-center py-6">
-          <div className={`animate-spin rounded-full h-6 w-6 border-b-2 ${themeClasses.borderColor}`}></div>
-        </div>
-      ) : weather ? (
-        <div className={`p-4 border-2 ${themeClasses.background} ${themeClasses.borderColor}`}>
-          {/* Current Weather */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-4">
-              <div className="text-3xl">
-                {getWeatherIcon(weather.icon)}
-              </div>
-              <div>
-                <p className={`text-3xl font-bold font-mono ${getTemperatureColor(weather.temperature)}`}>
-                  {weather.temperature}°F
-                </p>
-                <p className={`text-sm font-mono capitalize ${themeClasses.mutedText}`}>
-                  {weather.description}
-                </p>
-                <p className={`text-xs font-mono ${themeClasses.mutedText}`}>
-                  Feels like {weather.feelsLike}°F
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Weather Details Grid */}
-          <div className="grid grid-cols-2 gap-3 text-center">
-            <div className={`p-3 border ${themeClasses.borderColor}`}>
-              <Droplets className={`w-4 h-4 mx-auto mb-1 ${themeClasses.mutedText}`} />
-              <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>{weather.humidity}%</p>
-              <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Humidity</p>
-            </div>
-            
-            <div className={`p-3 border ${themeClasses.borderColor}`}>
-              <Wind className={`w-4 h-4 mx-auto mb-1 ${themeClasses.mutedText}`} />
-              <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>{Math.round(weather.windSpeed)} mph</p>
-              <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Wind Speed</p>
-            </div>
-            
-            <div className={`p-3 border ${themeClasses.borderColor}`}>
-              <Thermometer className={`w-4 h-4 mx-auto mb-1 ${themeClasses.mutedText}`} />
-              <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>{weather.pressure} hPa</p>
-              <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Pressure</p>
-            </div>
-            
-            <div className={`p-3 border ${themeClasses.borderColor}`}>
-              <MapPin className={`w-4 h-4 mx-auto mb-1 ${themeClasses.mutedText}`} />
-              <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>{weather.visibility} km</p>
-              <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Visibility</p>
-            </div>
-          </div>
-
-          {/* View Details Button */}
-          <div className="mt-3">
+    <Card className={`transition-all duration-200 hover:scale-[1.02] border-2 ${themeClasses.borderColor} ${themeClasses.glow} ${themeClasses.background}`}>
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
             <button
               onClick={toggleDetailedView}
-              className={`w-full px-3 py-2 border-2 text-sm font-mono uppercase tracking-wider transition-all duration-200 hover:scale-[1.02] ${themeClasses.accentBg} ${themeClasses.borderColor} text-black`}
+              className={`block text-left hover:underline transition-all duration-200 ${themeClasses.text}`}
             >
-              <Eye className="w-4 h-4 inline mr-2" />
-              {showDetailedWeather ? 'Hide Details' : 'View Full Weather'}
+              <CardTitle className="font-mono font-bold text-lg uppercase tracking-wider mb-1">
+                {location.custom_name || location.location_name}
+              </CardTitle>
+              <p className={`text-sm font-mono ${themeClasses.mutedText}`}>
+                {location.city}, {location.state || location.country}
+              </p>
+              <p className={`text-xs font-mono ${themeClasses.mutedText} mt-1 opacity-75`}>
+                Click for detailed weather
+              </p>
             </button>
           </div>
-        </div>
-      ) : (
-        <div className={`p-4 border-2 text-center ${themeClasses.borderColor}`}>
-          <p className={`text-sm font-mono ${themeClasses.mutedText}`}>
-            Weather data unavailable
-          </p>
-          <button
-            onClick={fetchWeather}
-            className={`mt-2 px-3 py-1 border text-xs font-mono uppercase ${themeClasses.borderColor} ${themeClasses.text} hover:${themeClasses.hoverBg}`}
-          >
-            Retry
-          </button>
-        </div>
-      )}
 
-      {/* Notes */}
-      {location.notes && (
-        <div className="mt-3">
-          <p className={`text-xs font-mono ${themeClasses.mutedText}`}>
-            <strong>Notes:</strong> {location.notes}
-          </p>
-        </div>
-      )}
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleToggleFavorite}
+              disabled={actionLoading === 'favorite'}
+              className={`h-8 w-8 ${location.is_favorite
+                  ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black border-2`
+                  : `${themeClasses.borderColor} ${themeClasses.text} hover:bg-white/10`
+                }`}
+            >
+              <Star className={`w-4 h-4 ${location.is_favorite ? 'fill-current' : ''}`} />
+            </Button>
 
-      {/* Detailed Weather - Inline Expansion */}
-      {showDetailedWeather && (
-        <div className={`mt-4 p-4 border-2 ${themeClasses.borderColor} ${themeClasses.background} animate-in slide-in-from-top-2 duration-300`}>
-          {detailedLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${themeClasses.borderColor}`}></div>
-            </div>
-          ) : detailedWeatherData ? (
-            <div className="space-y-4">
-              {/* 5-Day Forecast */}
-              <div>
-                <h4 className={`font-mono font-bold text-sm uppercase tracking-wider mb-3 ${themeClasses.text}`}>
-                  5-Day Forecast
-                </h4>
-                <div className="grid grid-cols-5 gap-2">
-                  {detailedWeatherData.forecast.map((day, index) => (
-                    <div 
-                      key={index}
-                      className={`p-3 border ${themeClasses.borderColor} ${themeClasses.background} text-center`}
-                    >
-                      <p className={`font-mono text-xs font-bold mb-1 ${themeClasses.text}`}>
-                        {day.day}
-                      </p>
-                      <p className={`font-mono text-sm mb-1 ${getTemperatureColor(day.highTemp)}`}>
-                        {day.highTemp}°
-                      </p>
-                      <p className={`font-mono text-xs ${themeClasses.mutedText}`}>
-                        {day.lowTemp}°
-                      </p>
-                      <p className={`font-mono text-xs mt-1 ${themeClasses.mutedText}`}>
-                        {day.condition}
-                      </p>
-                    </div>
-                  ))}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={fetchWeather}
+              disabled={loading}
+              className={`h-8 w-8 ${themeClasses.borderColor} ${themeClasses.text} hover:bg-white/10`}
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleDelete}
+              disabled={actionLoading === 'delete'}
+              className="h-8 w-8 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent>
+        {/* Weather Data */}
+        {loading ? (
+          <div className="flex items-center justify-center py-6">
+            <div className={`animate-spin rounded-full h-6 w-6 border-b-2 ${themeClasses.borderColor}`}></div>
+          </div>
+        ) : weather ? (
+          <div className={`p-4 border-2 rounded-md ${themeClasses.background} ${themeClasses.borderColor}`}>
+            {/* Current Weather */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-4">
+                <div className="text-3xl">
+                  {getWeatherIcon(weather.icon)}
                 </div>
-              </div>
-
-              {/* Environmental Data */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className={`p-3 border ${themeClasses.borderColor} text-center`}>
-                  <Sun className={`w-5 h-5 mx-auto mb-1 ${themeClasses.mutedText}`} />
-                  <p className={`font-mono text-sm font-bold ${themeClasses.text}`}>
-                    UV Index: {detailedWeatherData.uvIndex}
+                <div>
+                  <p className={`text-3xl font-bold font-mono ${getTemperatureColor(weather.temperature)}`}>
+                    {weather.temperature}°F
                   </p>
-                  <p className={`font-mono text-xs ${themeClasses.mutedText}`}>
-                    {detailedWeatherData.uvIndex < 3 ? 'Low' : 
-                     detailedWeatherData.uvIndex < 6 ? 'Moderate' :
-                     detailedWeatherData.uvIndex < 8 ? 'High' : 'Very High'}
+                  <p className={`text-sm font-mono capitalize ${themeClasses.mutedText}`}>
+                    {weather.description}
                   </p>
-                </div>
-                
-                <div className={`p-3 border ${themeClasses.borderColor} text-center`}>
-                  <Wind className={`w-5 h-5 mx-auto mb-1 ${themeClasses.mutedText}`} />
-                  <p className={`font-mono text-sm font-bold ${themeClasses.text}`}>
-                    AQI: {detailedWeatherData.airQuality.aqi}
-                  </p>
-                  <p className={`font-mono text-xs ${themeClasses.mutedText}`}>
-                    {detailedWeatherData.airQuality.category}
+                  <p className={`text-xs font-mono ${themeClasses.mutedText}`}>
+                    Feels like {weather.feelsLike}°F
                   </p>
                 </div>
               </div>
+            </div>
 
-              {/* Link to Full Weather Page */}
-              <Link
-                href={`/weather/${citySlug}`}
-                className={`block w-full px-3 py-2 border-2 text-center text-sm font-mono uppercase tracking-wider transition-all duration-200 hover:scale-[1.02] ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`}
-              >
-                <MapPin className="w-4 h-4 inline mr-2" />
-                View Full Weather Page
-              </Link>
+            {/* Weather Details Grid */}
+            <div className="grid grid-cols-2 gap-3 text-center">
+              <div className={`p-3 border ${themeClasses.borderColor} rounded-sm`}>
+                <Droplets className={`w-4 h-4 mx-auto mb-1 ${themeClasses.mutedText}`} />
+                <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>{weather.humidity}%</p>
+                <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Humidity</p>
+              </div>
+
+              <div className={`p-3 border ${themeClasses.borderColor} rounded-sm`}>
+                <Wind className={`w-4 h-4 mx-auto mb-1 ${themeClasses.mutedText}`} />
+                <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>{Math.round(weather.windSpeed)} mph</p>
+                <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Wind Speed</p>
+              </div>
+
+              <div className={`p-3 border ${themeClasses.borderColor} rounded-sm`}>
+                <Thermometer className={`w-4 h-4 mx-auto mb-1 ${themeClasses.mutedText}`} />
+                <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>{weather.pressure} hPa</p>
+                <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Pressure</p>
+              </div>
+
+              <div className={`p-3 border ${themeClasses.borderColor} rounded-sm`}>
+                <MapPin className={`w-4 h-4 mx-auto mb-1 ${themeClasses.mutedText}`} />
+                <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>{weather.visibility} km</p>
+                <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Visibility</p>
+              </div>
             </div>
-          ) : (
-            <div className={`text-center py-4 ${themeClasses.text}`}>
-              <p className="font-mono text-sm">Failed to load detailed weather</p>
-              <button
-                onClick={fetchDetailedWeather}
-                className={`mt-2 px-3 py-1 border text-xs font-mono uppercase ${themeClasses.borderColor} ${themeClasses.text} hover:${themeClasses.hoverBg}`}
+
+            {/* View Details Button */}
+            <div className="mt-4">
+              <Button
+                onClick={toggleDetailedView}
+                className={`w-full font-mono uppercase tracking-wider ${themeClasses.accentBg} text-black hover:opacity-90`}
               >
-                Retry
-              </button>
+                <Eye className="w-4 h-4 inline mr-2" />
+                {showDetailedWeather ? 'Hide Details' : 'View Full Weather'}
+              </Button>
             </div>
-          )}
-        </div>
-      )}
-    </div>
+          </div>
+        ) : (
+          <div className={`p-4 border-2 text-center ${themeClasses.borderColor} rounded-md`}>
+            <p className={`text-sm font-mono ${themeClasses.mutedText}`}>
+              Weather data unavailable
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchWeather}
+              className={`mt-2 font-mono uppercase ${themeClasses.borderColor} ${themeClasses.text} hover:bg-white/10`}
+            >
+              Retry
+            </Button>
+          </div>
+        )}
+
+        {/* Notes */}
+        {location.notes && (
+          <div className="mt-4 p-3 border border-dashed border-white/20 rounded-sm">
+            <p className={`text-xs font-mono ${themeClasses.mutedText}`}>
+              <strong>Notes:</strong> {location.notes}
+            </p>
+          </div>
+        )}
+
+        {/* Detailed Weather - Inline Expansion */}
+        {showDetailedWeather && (
+          <div className={`mt-4 p-4 border-2 rounded-md ${themeClasses.borderColor} ${themeClasses.background} animate-in slide-in-from-top-2 duration-300`}>
+            {detailedLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${themeClasses.borderColor}`}></div>
+              </div>
+            ) : detailedWeatherData ? (
+              <div className="space-y-4">
+                {/* 5-Day Forecast */}
+                <div>
+                  <h4 className={`font-mono font-bold text-sm uppercase tracking-wider mb-3 ${themeClasses.text}`}>
+                    5-Day Forecast
+                  </h4>
+                  <div className="grid grid-cols-5 gap-2">
+                    {detailedWeatherData.forecast.map((day, index) => (
+                      <div
+                        key={index}
+                        className={`p-2 border ${themeClasses.borderColor} ${themeClasses.background} text-center rounded-sm`}
+                      >
+                        <p className={`font-mono text-xs font-bold mb-1 ${themeClasses.text}`}>
+                          {day.day}
+                        </p>
+                        <p className={`font-mono text-sm mb-1 ${getTemperatureColor(day.highTemp)}`}>
+                          {day.highTemp}°
+                        </p>
+                        <p className={`font-mono text-xs ${themeClasses.mutedText}`}>
+                          {day.lowTemp}°
+                        </p>
+                        <p className={`font-mono text-[10px] mt-1 ${themeClasses.mutedText} truncate`}>
+                          {day.condition}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Environmental Data */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className={`p-3 border ${themeClasses.borderColor} text-center rounded-sm`}>
+                    <Sun className={`w-5 h-5 mx-auto mb-1 ${themeClasses.mutedText}`} />
+                    <p className={`font-mono text-sm font-bold ${themeClasses.text}`}>
+                      UV Index: {detailedWeatherData.uvIndex}
+                    </p>
+                    <p className={`font-mono text-xs ${themeClasses.mutedText}`}>
+                      {detailedWeatherData.uvIndex < 3 ? 'Low' :
+                        detailedWeatherData.uvIndex < 6 ? 'Moderate' :
+                          detailedWeatherData.uvIndex < 8 ? 'High' : 'Very High'}
+                    </p>
+                  </div>
+
+                  <div className={`p-3 border ${themeClasses.borderColor} text-center rounded-sm`}>
+                    <Wind className={`w-5 h-5 mx-auto mb-1 ${themeClasses.mutedText}`} />
+                    <p className={`font-mono text-sm font-bold ${themeClasses.text}`}>
+                      AQI: {detailedWeatherData.airQuality.aqi}
+                    </p>
+                    <p className={`font-mono text-xs ${themeClasses.mutedText}`}>
+                      {detailedWeatherData.airQuality.category}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Link to Full Weather Page */}
+                <Link href={`/weather/${citySlug}`} className="block w-full">
+                  <Button variant="outline" className={`w-full font-mono uppercase tracking-wider ${themeClasses.borderColor} ${themeClasses.text} hover:bg-white/10`}>
+                    <MapPin className="w-4 h-4 inline mr-2" />
+                    View Full Weather Page
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className={`text-center py-4 ${themeClasses.text}`}>
+                <p className="font-mono text-sm">Failed to load detailed weather</p>
+                <Button variant="ghost" onClick={fetchDetailedWeather} className="mt-2 h-auto py-1 px-3 text-xs">
+                  Retry
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
