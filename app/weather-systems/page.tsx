@@ -18,6 +18,8 @@
 import React, { useState, useEffect } from "react"
 import PageWrapper from "@/components/page-wrapper"
 import { ThemeType, themeUtils, APP_CONSTANTS } from "@/lib/utils"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 
 // Theme types to match main app
 type WeatherSystemData = {
@@ -482,12 +484,13 @@ export default function WeatherSystemsPage() {
         <div className="mb-8">
           <div className="flex flex-wrap justify-center gap-2 mb-6">
             {(['all', 'pressure', 'frontal', 'large-scale', 'specialized'] as const).map((category) => (
-              <button
+              <Button
                 key={category}
+                variant={selectedCategory === category ? "default" : "outline"}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 border-2 font-mono text-sm font-bold uppercase tracking-wider transition-all duration-200 ${selectedCategory === category
-                  ? `${themeClasses.borderColor} ${themeClasses.cardBg} ${themeClasses.headerText}`
-                  : `border-gray-500 bg-transparent ${themeClasses.secondaryText} hover:${themeClasses.borderColor} hover:${themeClasses.text}`
+                className={`font-mono text-sm font-bold uppercase tracking-wider ${selectedCategory === category
+                  ? `${themeClasses.headerText}`
+                  : `${themeClasses.secondaryText}`
                   }`}
                 style={selectedCategory === category ? {
                   borderColor: themeClasses.shadowColor,
@@ -496,7 +499,7 @@ export default function WeatherSystemsPage() {
               >
                 {category === 'all' ? 'ALL SYSTEMS' : category.toUpperCase().replace('-', ' ')}
                 {category !== 'all' && ` (${categoryStats[category]})`}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -507,9 +510,9 @@ export default function WeatherSystemsPage() {
             {filteredSystems.map((system) => (
               <React.Fragment key={system.id}>
                 {/* System Card */}
-                <div
+                <Card
                   onClick={() => handleSystemToggle(system.id)}
-                  className={`${themeClasses.cardBg} p-6 border-2 cursor-pointer transition-all duration-300 hover:scale-105 ${expandedSystemId === system.id ? themeClasses.borderColor : 'border-gray-600'
+                  className={`cursor-pointer transition-all duration-300 hover:scale-105 ${expandedSystemId === system.id ? themeClasses.borderColor : 'border-gray-600'
                     }`}
                   style={{
                     borderColor: expandedSystemId === system.id ? themeClasses.shadowColor : '#666',
@@ -518,20 +521,20 @@ export default function WeatherSystemsPage() {
                       : '0 4px 6px rgba(0, 0, 0, 0.3)'
                   }}
                 >
-                  <div className="text-center mb-4">
+                  <CardHeader className="text-center pb-2">
                     <div className="text-4xl mb-2">{system.emoji}</div>
-                    <h3 className={`text-lg font-bold font-mono uppercase tracking-wider ${themeClasses.headerText} mb-1`}>
+                    <CardTitle className={`text-lg font-bold font-mono uppercase tracking-wider ${themeClasses.headerText}`}>
                       {system.name}
-                    </h3>
-                    <div className={`text-xs font-mono ${themeClasses.secondaryText} mb-2`}>
+                    </CardTitle>
+                    <CardDescription className={`text-xs font-mono ${themeClasses.secondaryText}`}>
                       {system.classification}
-                    </div>
+                    </CardDescription>
                     <div className={`text-xs font-mono font-bold uppercase ${getRarityColor(system.rarity)}`}>
                       {system.rarity.replace('-', ' ')}
                     </div>
-                  </div>
+                  </CardHeader>
 
-                  <div className="space-y-3 text-sm font-mono">
+                  <CardContent className="space-y-3 text-sm font-mono">
                     <div className="flex justify-between">
                       <span className={themeClasses.secondaryText}>Wind Speed:</span>
                       <span className={themeClasses.text}>{system.windSpeed}</span>
@@ -548,14 +551,13 @@ export default function WeatherSystemsPage() {
                         {system.formationProcess.slice(0, 80)}...
                       </div>
                     </div>
-                  </div>
-
-                  <div className="mt-4 text-center">
-                    <span className={`text-xs font-mono ${themeClasses.secondaryText}`}>
-                      {expandedSystemId === system.id ? '▼ CLICK TO CLOSE' : '▶ CLICK FOR FULL ANALYSIS'}
-                    </span>
-                  </div>
-                </div>
+                    <div className="mt-4 text-center">
+                      <span className={`text-xs font-mono ${themeClasses.secondaryText}`}>
+                        {expandedSystemId === system.id ? '▼ CLICK TO CLOSE' : '▶ CLICK FOR FULL ANALYSIS'}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
 
                 {/* Expanded Details - Appears DIRECTLY BELOW this specific card */}
                 {expandedSystemId === system.id && (
@@ -700,17 +702,17 @@ export default function WeatherSystemsPage() {
 
                       {/* Close Button */}
                       <div className="mt-8 text-center">
-                        <button
+                        <Button
+                          variant="outline"
                           onClick={() => setExpandedSystemId(null)}
-                          className={`px-6 py-2 border-2 ${themeClasses.borderColor} ${themeClasses.text} font-mono text-sm font-bold uppercase tracking-wider hover:bg-opacity-80 transition-all duration-200`}
+                          className={`${themeClasses.text} font-mono text-sm font-bold uppercase tracking-wider`}
                           style={{
                             borderColor: themeClasses.shadowColor,
-                            backgroundColor: themeClasses.cardBg,
                             boxShadow: `0 0 10px ${themeClasses.shadowColor}33`
                           }}
                         >
-                          ✕ CLOSE TECHNICAL ANALYSIS
-                        </button>
+                          CLOSE TECHNICAL ANALYSIS
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -721,72 +723,81 @@ export default function WeatherSystemsPage() {
         </div>
         {/* Educational Section */}
         <div className="mt-16 max-w-6xl mx-auto">
-          <div className={`${themeClasses.cardBg} p-8 border-4 ${themeClasses.borderColor}`}
-            style={{ boxShadow: `0 0 20px ${themeClasses.shadowColor}` }}>
-            <h3 className={`text-2xl font-bold mb-6 font-mono uppercase tracking-wider ${themeClasses.headerText} text-center`}>
-              🎮 WEATHER SYSTEMS CLASSIFICATION DATABASE
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-sm font-mono">
+          <Card
+            className="border-4"
+            style={{ boxShadow: `0 0 20px ${themeClasses.shadowColor}` }}
+          >
+            <CardHeader>
+              <CardTitle className={`text-2xl font-bold font-mono uppercase tracking-wider ${themeClasses.headerText} text-center`}>
+                WEATHER SYSTEMS CLASSIFICATION DATABASE
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-sm font-mono">
               <div>
-                <h4 className={`${themeClasses.accentText} mb-3 font-bold`}>► PRESSURE SYSTEMS:</h4>
+                <h4 className={`${themeClasses.accentText} mb-3 font-bold`}>PRESSURE SYSTEMS:</h4>
                 <ul className={`${themeClasses.text} space-y-2`}>
-                  <li>• Cyclones: 950-1010 mb</li>
-                  <li>• Anticyclones: 1020-1050 mb</li>
-                  <li>• Depressions: Mature lows</li>
-                  <li>• Blocking Highs: Stationary</li>
+                  <li>Cyclones: 950-1010 mb</li>
+                  <li>Anticyclones: 1020-1050 mb</li>
+                  <li>Depressions: Mature lows</li>
+                  <li>Blocking Highs: Stationary</li>
                 </ul>
               </div>
               <div>
-                <h4 className={`${themeClasses.accentText} mb-3 font-bold`}>► FRONTAL SYSTEMS:</h4>
+                <h4 className={`${themeClasses.accentText} mb-3 font-bold`}>FRONTAL SYSTEMS:</h4>
                 <ul className={`${themeClasses.text} space-y-2`}>
-                  <li>• Warm: Gradual advance</li>
-                  <li>• Cold: Rapid undercut</li>
-                  <li>• Occluded: Front merger</li>
-                  <li>• Stationary: Boundary hold</li>
+                  <li>Warm: Gradual advance</li>
+                  <li>Cold: Rapid undercut</li>
+                  <li>Occluded: Front merger</li>
+                  <li>Stationary: Boundary hold</li>
                 </ul>
               </div>
               <div>
-                <h4 className={`${themeClasses.accentText} mb-3 font-bold`}>► LARGE-SCALE:</h4>
+                <h4 className={`${themeClasses.accentText} mb-3 font-bold`}>LARGE-SCALE:</h4>
                 <ul className={`${themeClasses.text} space-y-2`}>
-                  <li>• Atmospheric Rivers: Moisture transport</li>
-                  <li>• Jet Streams: High-altitude winds</li>
-                  <li>• Monsoons: Seasonal reversal</li>
-                  <li>• Polar Vortex: Arctic circulation</li>
+                  <li>Atmospheric Rivers: Moisture transport</li>
+                  <li>Jet Streams: High-altitude winds</li>
+                  <li>Monsoons: Seasonal reversal</li>
+                  <li>Polar Vortex: Arctic circulation</li>
                 </ul>
               </div>
               <div>
-                <h4 className={`${themeClasses.accentText} mb-3 font-bold`}>► SPECIALIZED:</h4>
+                <h4 className={`${themeClasses.accentText} mb-3 font-bold`}>SPECIALIZED:</h4>
                 <ul className={`${themeClasses.text} space-y-2`}>
-                  <li>• Mid-Latitude Cyclones: Extra-tropical</li>
-                  <li>• Tropical Cyclones: Hurricane systems</li>
-                  <li>• Squall Lines: Linear storms</li>
-                  <li>• Mesoscale Complexes: Storm clusters</li>
+                  <li>Mid-Latitude Cyclones: Extra-tropical</li>
+                  <li>Tropical Cyclones: Hurricane systems</li>
+                  <li>Squall Lines: Linear storms</li>
+                  <li>Mesoscale Complexes: Storm clusters</li>
                 </ul>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Achievement System */}
         <div className="mt-8 max-w-4xl mx-auto">
-          <div className={`${themeClasses.cardBg} p-6 border-2 ${themeClasses.borderColor} text-center`}
-            style={{ boxShadow: `0 0 15px ${themeClasses.shadowColor}` }}>
-            <h4 className={`text-lg font-bold mb-4 font-mono uppercase ${themeClasses.headerText}`}>
-              🏆 METEOROLOGIST ACHIEVEMENTS
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
-              <div className={themeClasses.text}>🌀 Storm Tracker: Identify 5 pressure systems</div>
-              <div className={themeClasses.text}>❄️ Front Hunter: Master frontal boundaries</div>
-              <div className={themeClasses.text}>🌍 Global Observer: Discover large-scale systems</div>
-              <div className={themeClasses.text}>⚡ Elite Meteorologist: BOSS LEVEL unlocked</div>
-              <div className={themeClasses.text}>🎯 System Specialist: All categories explored</div>
-              <div className={themeClasses.text}>👑 Weather Master: Complete database analyzed</div>
-            </div>
-            <div className={`mt-4 ${themeClasses.secondaryText} text-xs`}>
-              Click on weather systems to unlock achievements and explore the atmospheric physics!
-            </div>
-
-          </div>
+          <Card
+            className="text-center"
+            style={{ boxShadow: `0 0 15px ${themeClasses.shadowColor}` }}
+          >
+            <CardHeader>
+              <CardTitle className={`text-lg font-bold font-mono uppercase ${themeClasses.headerText}`}>
+                METEOROLOGIST ACHIEVEMENTS
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+                <div className={themeClasses.text}>Storm Tracker: Identify 5 pressure systems</div>
+                <div className={themeClasses.text}>Front Hunter: Master frontal boundaries</div>
+                <div className={themeClasses.text}>Global Observer: Discover large-scale systems</div>
+                <div className={themeClasses.text}>Elite Meteorologist: BOSS LEVEL unlocked</div>
+                <div className={themeClasses.text}>System Specialist: All categories explored</div>
+                <div className={themeClasses.text}>Weather Master: Complete database analyzed</div>
+              </div>
+              <div className={`mt-4 ${themeClasses.secondaryText} text-xs`}>
+                Click on weather systems to unlock achievements and explore the atmospheric physics!
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </PageWrapper>
