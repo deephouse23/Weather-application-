@@ -44,13 +44,12 @@ export default function AuthButton() {
 
   if (!user) {
     return (
-      <Link
-        href="/auth/login"
-        className={cn("min-w-[80px] font-bold bg-cyan-500 hover:bg-cyan-400 text-black border-none", buttonVariants({ variant: "default", size: "sm" }))}
-      >
-        <LogIn className="w-3 h-3 mr-1" />
-        LOGIN
-      </Link>
+      <Button asChild variant="default" className="min-w-[80px] font-bold shadow-md">
+        <Link href="/auth/login">
+          <LogIn className="w-3 h-3 mr-1" />
+          LOGIN
+        </Link>
+      </Button>
     )
   }
 

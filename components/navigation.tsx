@@ -137,15 +137,10 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center justify-between px-6 py-3 max-w-7xl mx-auto">
           {/* Logo/Brand with Weather Data - TOP LEFT */}
+          {/* Logo/Brand with Weather Data - TOP LEFT */}
           <div className="flex items-center space-x-3">
-            <div className={cn(
-              "w-8 h-8 rounded-lg flex items-center justify-center shadow-lg transition-transform hover:rotate-12",
-              "bg-blue-600 text-white"
-            )}>
-              <span className="font-bold text-sm">16</span>
-            </div>
-            <h1 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
-              <span className="font-mono">BIT WEATHER</span>
+            <h1 className="text-xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
+              <span className="font-mono">16-BIT WEATHER</span>
               {weatherLocation && weatherTemperature ? (
                 <span className="text-sm font-normal text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full border border-border">
                   {formatHeaderLocation(weatherLocation)} <span className="text-foreground font-bold">{Math.round(weatherTemperature)}°{weatherUnit === '°F' ? 'F' : 'C'}</span>
@@ -190,11 +185,8 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
         <div className="md:hidden flex items-center justify-between px-4 py-3">
           {/* Mobile Logo with Weather Data */}
           <div className="flex items-center space-x-2 flex-1 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm">
-              <span className="font-bold text-xs">16</span>
-            </div>
-            <h1 className="text-sm font-bold tracking-tight text-foreground truncate flex flex-col leading-tight">
-              <span>BIT WEATHER</span>
+            <h1 className="text-lg font-extrabold tracking-tight text-foreground truncate flex flex-col leading-tight">
+              <span className="font-mono">16-BIT WEATHER</span>
               {weatherLocation && weatherTemperature && (
                 <span className="text-xs font-normal text-muted-foreground">
                   {Math.round(weatherTemperature)}°{weatherUnit === '°F' ? 'F' : 'C'} in {formatHeaderLocation(weatherLocation).split(',')[0]}
