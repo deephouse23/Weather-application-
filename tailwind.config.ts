@@ -107,12 +107,18 @@ const config: Config = {
 				'slide-in': 'slideIn 0.5s ease-out forwards'
 			},
 			fontFamily: {
-				pixel: [
-					'Courier New"',
-					'Monaco"',
-					'Lucida Console"',
-					'monospace'
-				]
+				sans: ['Inconsolata', 'monospace'],
+				mono: ['Inconsolata', 'monospace'],
+				display: ['VT323', 'monospace'],
+			},
+			fontWeight: {
+				light: '300',
+				normal: '400',
+				medium: '500',
+				semibold: '600',
+				bold: '700',
+				extrabold: '800',
+				black: '800',
 			},
 			fontSize: {
 				'responsive-sm': 'clamp(0.75rem, 2vw, 0.875rem)',

@@ -35,7 +35,7 @@ export default function Forecast({ forecast, onDayClick, selectedDay }: Forecast
   return (
     <Card className="p-3 sm:p-4 lg:p-6 border-2 shadow-md hover:shadow-lg transition-all duration-300 animate-slide-in">
       <CardHeader className="p-0 mb-3 sm:mb-4">
-        <CardTitle className="text-center text-base sm:text-lg lg:text-xl font-bold uppercase tracking-wider text-primary glow">
+        <CardTitle className="text-center text-base sm:text-lg lg:text-xl font-extrabold uppercase tracking-wider text-primary glow">
           {title}
         </CardTitle>
       </CardHeader>

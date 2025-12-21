@@ -139,8 +139,7 @@ function WeatherApp() {
             <div className="text-center mt-8 mb-8 px-2 sm:px-0">
               <div className="w-full max-w-xl mx-auto">
                 <div className="p-2 sm:p-3 border-2 shadow-lg bg-weather-bg-elev border-weather-primary shadow-weather-primary/20">
-                  <p className="text-sm font-mono font-bold uppercase tracking-wider text-white" style={{
-                    fontFamily: "monospace",
+                  <p className="text-sm font-bold uppercase tracking-wider text-white" style={{
                     fontSize: "clamp(10px, 2.4vw, 14px)"
                   }}>
                     ══ PRESS START TO INITIALIZE WEATHER DATA ══
@@ -181,8 +180,7 @@ function WeatherApp() {
               <div className="space-y-4 sm:space-y-6">
                 {/* Location Title */}
                 <div className="text-center mb-4">
-                  <h1 className={cn("text-2xl sm:text-3xl font-bold uppercase tracking-wider", themeClasses.headerText, themeClasses.glow)} style={{
-                    fontFamily: "monospace",
+                  <h1 className={cn("text-2xl sm:text-3xl font-extrabold tracking-wider", themeClasses.headerText, themeClasses.glow)} style={{
                     fontSize: "clamp(20px, 4vw, 32px)"
                   }}>
                     {weather.location} WEATHER
