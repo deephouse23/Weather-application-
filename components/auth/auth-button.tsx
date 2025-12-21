@@ -44,7 +44,7 @@ export default function AuthButton() {
 
   if (!user) {
     return (
-      <Button asChild variant="default" className="min-w-[80px] font-bold shadow-md">
+      <Button asChild className="min-w-[80px] font-bold shadow-md bg-emerald-600 hover:bg-emerald-500 text-white border-2 border-white/20">
         <Link href="/auth/login">
           <LogIn className="w-3 h-3 mr-1" />
           LOGIN
