@@ -16,8 +16,12 @@
 
 import { useState, useEffect, useRef } from "react"
 import PageWrapper from "@/components/page-wrapper"
-import { Loader2, TrendingUp, TrendingDown, MapPin, RefreshCw } from "lucide-react"
+import { TrendingUp, TrendingDown, MapPin, RefreshCw, Thermometer } from "lucide-react"
 import { ExtremesData, LocationTemperature } from "@/lib/extremes/extremes-data"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // Client-side cache management
 const CACHE_KEY = '16bit-weather-extremes-cache';
@@ -163,8 +167,8 @@ export default function ExtremesPage() {
           {/* Mercury fill - using theme colors */}
           <div
             className={`absolute bottom-0 left-0 right-0 rounded-b-full transition-all duration-1000 ${isHot
-                ? 'bg-gradient-to-t from-weather-danger via-weather-warn to-weather-warn'
-                : 'bg-gradient-to-t from-weather-primary via-weather-primary to-cyan-300'
+              ? 'bg-gradient-to-t from-weather-danger via-weather-warn to-weather-warn'
+              : 'bg-gradient-to-t from-weather-primary via-weather-primary to-cyan-300'
               }`}
             style={{ height: `${Math.max(5, Math.min(95, percentage))}%` }}
           />
@@ -184,12 +188,14 @@ export default function ExtremesPage() {
   if (loading && !data) {
     return (
       <PageWrapper>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center text-weather-primary">
-            <Loader2 className="w-16 h-16 animate-spin mx-auto mb-4" />
-            <div className="text-xl font-mono uppercase tracking-wider">
-              Scanning Global Temperatures...
-            </div>
+        <div className="min-h-screen p-4 sm:p-6 lg:p-8 space-y-8">
+          <div className="text-center mb-8 space-y-4">
+            <Skeleton className="h-12 w-3/4 max-w-lg mx-auto" />
+            <Skeleton className="h-4 w-1/2 max-w-md mx-auto" />
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            <Skeleton className="h-[500px] w-full" />
+            <Skeleton className="h-[500px] w-full" />
           </div>
         </div>
       </PageWrapper>
@@ -201,18 +207,17 @@ export default function ExtremesPage() {
     return (
       <PageWrapper>
         <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center text-weather-danger">
+          <div className="text-center text-destructive">
             <div className="text-xl font-mono uppercase tracking-wider mb-4">
               ERROR: {error}
             </div>
-            <button
+            <Button
               onClick={() => fetchData(true)}
-              className="px-6 py-3 border-2 border-weather-danger text-weather-danger 
-                       hover:bg-weather-danger hover:text-weather-bg transition-all duration-200 
-                       font-mono uppercase tracking-wider"
+              variant="destructive"
+              className="font-mono uppercase tracking-wider"
             >
               RETRY
-            </button>
+            </Button>
           </div>
         </div>
       </PageWrapper>
@@ -240,228 +245,233 @@ export default function ExtremesPage() {
         {/* Main Extremes Display */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Hottest Place */}
-          <div
+          <Card
+            className="border-2 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
             onClick={() => data.hottest && handleLocationClick(data.hottest)}
-            className="bg-weather-bg-elev p-6 rounded-lg border-2 border-weather-border pixel-border cursor-pointer transition-transform hover:scale-[1.02] hover:shadow-lg"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-mono font-bold text-weather-warn">
-                🔥 HOTTEST ON EARTH
-              </h2>
-              <TrendingUp className="text-weather-warn" />
-            </div>
-
-            {data.hottest && (
-              <>
-                <div className="mb-4">
-                  <ThermometerViz temp={data.hottest.temp} />
-                </div>
-
-                <div className="text-3xl font-mono font-bold mb-2 text-weather-warn text-center">
-                  {data.hottest.temp}°F / {data.hottest.tempC}°C
-                </div>
-
-                <div className="text-lg font-mono mb-2 text-weather-text text-center">
-                  {data.hottest.emoji} {data.hottest.name}, {data.hottest.country}
-                </div>
-
-                <div className="text-sm text-weather-muted mb-2">
-                  Condition: {data.hottest.condition}
-                </div>
-
-                <div className="text-sm text-weather-muted mb-2">
-                  Humidity: {data.hottest.humidity}% | Wind: {data.hottest.windSpeed} mph
-                </div>
-
-                {data.hottest.fact && (
-                  <div className="text-xs text-weather-muted italic mt-3 p-2 border border-weather-border rounded bg-weather-bg/50">
-                    💡 {data.hottest.fact}
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xl font-mono font-bold text-orange-500 flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                HOTTEST ON EARTH
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {data.hottest && (
+                <>
+                  <div className="mb-6 mt-2">
+                    <ThermometerViz temp={data.hottest.temp} />
                   </div>
-                )}
 
-                {data.hottest.historicalAvg && (
-                  <div className="text-xs text-weather-muted mt-2">
-                    Typical: Summer {data.hottest.historicalAvg.summer}°F | Winter {data.hottest.historicalAvg.winter}°F
+                  <div className="text-4xl font-mono font-bold mb-4 text-orange-500 text-center">
+                    {data.hottest.temp}°F <span className="text-2xl text-muted-foreground">/ {data.hottest.tempC}°C</span>
                   </div>
-                )}
-              </>
-            )}
-          </div>
+
+                  <div className="text-xl font-mono mb-4 text-center font-bold">
+                    {data.hottest.emoji} {data.hottest.name}, {data.hottest.country}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground mb-4">
+                    <div className="bg-muted/50 p-2 rounded text-center">
+                      <div className="font-bold">Condition</div>
+                      {data.hottest.condition}
+                    </div>
+                    <div className="bg-muted/50 p-2 rounded text-center">
+                      <div className="font-bold">Wind/Hum</div>
+                      {data.hottest.windSpeed}mph / {data.hottest.humidity}%
+                    </div>
+                  </div>
+
+                  {data.hottest.fact && (
+                    <div className="text-xs text-muted-foreground italic mt-3 p-3 border rounded bg-muted/30">
+                      💡 {data.hottest.fact}
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Coldest Place */}
-          <div
+          <Card
+            className="border-2 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
             onClick={() => data.coldest && handleLocationClick(data.coldest)}
-            className="bg-weather-bg-elev p-6 rounded-lg border-2 border-weather-border pixel-border cursor-pointer transition-transform hover:scale-[1.02] hover:shadow-lg"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-mono font-bold text-weather-primary">
-                🧊 COLDEST ON EARTH
-              </h2>
-              <TrendingDown className="text-weather-primary" />
-            </div>
-
-            {data.coldest && (
-              <>
-                <div className="mb-4">
-                  <ThermometerViz temp={data.coldest.temp} />
-                </div>
-
-                <div className="text-3xl font-mono font-bold mb-2 text-weather-primary text-center">
-                  {data.coldest.temp}°F / {data.coldest.tempC}°C
-                </div>
-
-                <div className="text-lg font-mono mb-2 text-weather-text text-center">
-                  {data.coldest.emoji} {data.coldest.name}, {data.coldest.country}
-                </div>
-
-                <div className="text-sm text-weather-muted mb-2">
-                  Condition: {data.coldest.condition}
-                </div>
-
-                <div className="text-sm text-weather-muted mb-2">
-                  Humidity: {data.coldest.humidity}% | Wind: {data.coldest.windSpeed} mph
-                </div>
-
-                {data.coldest.fact && (
-                  <div className="text-xs text-weather-muted italic mt-3 p-2 border border-weather-border rounded bg-weather-bg/50">
-                    💡 {data.coldest.fact}
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xl font-mono font-bold text-blue-500 flex items-center gap-2">
+                <TrendingDown className="h-5 w-5" />
+                COLDEST ON EARTH
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {data.coldest && (
+                <>
+                  <div className="mb-6 mt-2">
+                    <ThermometerViz temp={data.coldest.temp} />
                   </div>
-                )}
 
-                {data.coldest.historicalAvg && (
-                  <div className="text-xs text-weather-muted mt-2">
-                    Typical: Summer {data.coldest.historicalAvg.summer}°F | Winter {data.coldest.historicalAvg.winter}°F
+                  <div className="text-4xl font-mono font-bold mb-4 text-blue-500 text-center">
+                    {data.coldest.temp}°F <span className="text-2xl text-muted-foreground">/ {data.coldest.tempC}°C</span>
                   </div>
-                )}
-              </>
-            )}
-          </div>
+
+                  <div className="text-xl font-mono mb-4 text-center font-bold">
+                    {data.coldest.emoji} {data.coldest.name}, {data.coldest.country}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground mb-4">
+                    <div className="bg-muted/50 p-2 rounded text-center">
+                      <div className="font-bold">Condition</div>
+                      {data.coldest.condition}
+                    </div>
+                    <div className="bg-muted/50 p-2 rounded text-center">
+                      <div className="font-bold">Wind/Hum</div>
+                      {data.coldest.windSpeed}mph / {data.coldest.humidity}%
+                    </div>
+                  </div>
+
+                  {data.coldest.fact && (
+                    <div className="text-xs text-muted-foreground italic mt-3 p-3 border rounded bg-muted/30">
+                      💡 {data.coldest.fact}
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* Temperature Leaderboards */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Top 5 Hottest */}
-          <div className="bg-weather-bg-elev p-6 rounded-lg border-2 border-weather-border pixel-border">
-            <h3 className="text-lg font-mono font-bold mb-4 text-weather-warn">
-              🏆 TOP 5 HOTTEST
-            </h3>
-            <div className="space-y-2">
-              {data.topHot.map((loc, index) => (
-                <div
-                  key={index}
-                  onClick={() => handleLocationClick(loc)}
-                  className="flex items-center justify-between p-2 border border-weather-border rounded bg-weather-bg/50 cursor-pointer hover:bg-weather-warn/10 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-weather-warn">
-                      #{index + 1}
-                    </span>
-                    <span className="text-weather-text">
-                      {loc.emoji} {loc.name}
+          <Card className="border-2">
+            <CardHeader>
+              <CardTitle className="text-lg font-mono font-bold text-orange-500">
+                🏆 TOP 5 HOTTEST
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {data.topHot.map((loc, index) => (
+                  <div
+                    key={index}
+                    onClick={() => handleLocationClick(loc)}
+                    className="flex items-center justify-between p-3 border rounded hover:bg-muted cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Badge variant="secondary" className="font-mono">#{index + 1}</Badge>
+                      <span className="font-medium">
+                        {loc.emoji} {loc.name}
+                      </span>
+                    </div>
+                    <span className="font-mono font-bold text-orange-500">
+                      {loc.temp}°F
                     </span>
                   </div>
-                  <span className="font-mono font-bold text-weather-warn">
-                    {loc.temp}°F
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Top 5 Coldest */}
-          <div className="bg-weather-bg-elev p-6 rounded-lg border-2 border-weather-border pixel-border">
-            <h3 className="text-lg font-mono font-bold mb-4 text-weather-primary">
-              🏆 TOP 5 COLDEST
-            </h3>
-            <div className="space-y-2">
-              {data.topCold.map((loc, index) => (
-                <div
-                  key={index}
-                  onClick={() => handleLocationClick(loc)}
-                  className="flex items-center justify-between p-2 border border-weather-border rounded bg-weather-bg/50 cursor-pointer hover:bg-weather-primary/10 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-weather-primary">
-                      #{index + 1}
-                    </span>
-                    <span className="text-weather-text">
-                      {loc.emoji} {loc.name}
+          <Card className="border-2">
+            <CardHeader>
+              <CardTitle className="text-lg font-mono font-bold text-blue-500">
+                🏆 TOP 5 COLDEST
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {data.topCold.map((loc, index) => (
+                  <div
+                    key={index}
+                    onClick={() => handleLocationClick(loc)}
+                    className="flex items-center justify-between p-3 border rounded hover:bg-muted cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Badge variant="secondary" className="font-mono">#{index + 1}</Badge>
+                      <span className="font-medium">
+                        {loc.emoji} {loc.name}
+                      </span>
+                    </div>
+                    <span className="font-mono font-bold text-blue-500">
+                      {loc.temp}°F
                     </span>
                   </div>
-                  <span className="font-mono font-bold text-weather-primary">
-                    {loc.temp}°F
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* User Location Ranking */}
         {data.userLocation && (
-          <div className="bg-weather-bg-elev p-6 rounded-lg border-2 border-weather-border pixel-border mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-mono font-bold text-weather-text">
-                <MapPin className="inline mr-2 text-weather-primary" />
+          <Card className="border-2 mb-8">
+            <CardHeader>
+              <CardTitle className="text-lg font-mono font-bold flex items-center">
+                <MapPin className="inline mr-2 text-primary" />
                 YOUR LOCATION RANKING
-              </h3>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-mono font-bold mb-2 text-weather-primary">
-                {data.userLocation.temp}°F / {data.userLocation.tempC}°C
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center">
+                <div className="text-3xl font-mono font-bold mb-2 text-primary">
+                  {data.userLocation.temp}°F / {data.userLocation.tempC}°C
+                </div>
+                <div className="text-lg text-muted-foreground">
+                  Global Rank: #{data.userLocation.globalRank} of {data.userLocation.totalLocations}
+                </div>
+                <div className="text-sm text-muted-foreground mt-2 italic">
+                  {data.userLocation.globalRank && data.userLocation.globalRank <= 5 && "🔥 You're in one of the hottest places!"}
+                  {data.userLocation.globalRank && data.userLocation.globalRank > data.userLocation.totalLocations - 5 && "🧊 You're in one of the coldest places!"}
+                  {data.userLocation.globalRank &&
+                    data.userLocation.globalRank > 5 &&
+                    data.userLocation.globalRank <= data.userLocation.totalLocations - 5 &&
+                    "😎 You're in the comfortable middle!"}
+                </div>
               </div>
-              <div className="text-lg text-weather-text">
-                Global Rank: #{data.userLocation.globalRank} of {data.userLocation.totalLocations}
-              </div>
-              <div className="text-sm text-weather-muted mt-2">
-                {data.userLocation.globalRank && data.userLocation.globalRank <= 5 && "🔥 You're in one of the hottest places!"}
-                {data.userLocation.globalRank && data.userLocation.globalRank > data.userLocation.totalLocations - 5 && "🧊 You're in one of the coldest places!"}
-                {data.userLocation.globalRank &&
-                  data.userLocation.globalRank > 5 &&
-                  data.userLocation.globalRank <= data.userLocation.totalLocations - 5 &&
-                  "😎 You're in the comfortable middle!"}
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Temperature Difference */}
         {data.hottest && data.coldest && (
-          <div className="bg-weather-bg-elev p-6 rounded-lg border-2 border-weather-border pixel-border text-center">
-            <h3 className="text-lg font-mono font-bold mb-4 text-weather-text">
-              🌡️ GLOBAL TEMPERATURE SPREAD
-            </h3>
-            <div className="text-3xl font-mono font-bold text-weather-primary glow">
-              {Math.abs(data.hottest.temp - data.coldest.temp)}°F
-            </div>
-            <div className="text-sm text-weather-muted mt-2">
-              Difference between hottest and coldest places on Earth right now
-            </div>
-          </div>
+          <Card className="border-2 text-center bg-muted/20">
+            <CardHeader>
+              <CardTitle className="text-lg font-mono font-bold text-muted-foreground">
+                🌡️ GLOBAL TEMPERATURE SPREAD
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-5xl font-mono font-bold text-foreground">
+                {Math.abs(data.hottest.temp - data.coldest.temp)}°F
+              </div>
+              <div className="text-sm text-muted-foreground mt-2">
+                Difference between hottest and coldest places on Earth right now
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Controls */}
         <div className="flex justify-center gap-4 mt-8">
-          <button
+          <Button
             onClick={() => fetchData(true)}
             disabled={loading}
-            className="px-6 py-3 border-2 border-weather-primary text-weather-primary 
-                       hover:bg-weather-primary hover:text-weather-bg transition-all duration-200 
-                       font-mono uppercase tracking-wider disabled:opacity-50 
-                       disabled:cursor-not-allowed flex items-center gap-2 pixel-border"
+            variant="outline"
+            size="lg"
+            className="font-mono uppercase tracking-wider flex items-center gap-2 border-2"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             REFRESH
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={() => setAutoRefresh(!autoRefresh)}
-            className="px-6 py-3 border-2 border-weather-primary text-weather-primary 
-                       hover:bg-weather-primary hover:text-weather-bg transition-all duration-200 
-                       font-mono uppercase tracking-wider pixel-border"
+            variant={autoRefresh ? "default" : "outline"}
+            size="lg"
+            className="font-mono uppercase tracking-wider border-2"
           >
             AUTO-REFRESH: {autoRefresh ? 'ON' : 'OFF'}
-          </button>
+          </Button>
         </div>
 
         {/* ASCII Art Footer */}
@@ -483,22 +493,23 @@ export default function ExtremesPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6">
-                <div className="flex justify-between items-start mb-6 border-b-2 border-weather-border pb-4">
+                <div className="flex justify-between items-start mb-6 border-b pb-4">
                   <div>
-                    <h2 className="text-2xl font-mono font-bold text-weather-primary flex items-center gap-3">
+                    <h2 className="text-2xl font-mono font-bold text-primary flex items-center gap-3">
                       <span className="text-4xl">{selectedLocation.emoji}</span>
                       {selectedLocation.name}
                     </h2>
-                    <div className="text-weather-muted font-mono uppercase tracking-wider mt-1">
+                    <div className="text-muted-foreground font-mono uppercase tracking-wider mt-1">
                       {selectedLocation.country} • {Math.round(selectedLocation.lat * 10) / 10}°N, {Math.round(selectedLocation.lon * 10) / 10}°E
                     </div>
                   </div>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setSelectedLocation(null)}
-                    className="text-weather-muted hover:text-weather-text p-2 hover:bg-weather-bg rounded transition-colors"
                   >
                     ✕
-                  </button>
+                  </Button>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8">
@@ -579,13 +590,14 @@ export default function ExtremesPage() {
                   </div>
                 </div>
 
-                <div className="mt-8 pt-6 border-t-2 border-weather-border text-center">
-                  <button
+                <div className="mt-8 pt-6 border-t text-center">
+                  <Button
                     onClick={() => setSelectedLocation(null)}
-                    className="px-8 py-3 bg-weather-primary text-weather-bg font-bold font-mono uppercase tracking-wider rounded hover:opacity-90 transition-opacity"
+                    size="lg"
+                    className="font-mono uppercase tracking-wider"
                   >
                     Close Intel
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
