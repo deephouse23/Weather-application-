@@ -19,6 +19,7 @@ import { useState, useEffect } from "react"
 import PageWrapper from "@/components/page-wrapper"
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { ThemeType, themeUtils, APP_CONSTANTS } from "@/lib/utils"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
 // Theme types to match main app
 type WeatherPhenomena = {
@@ -311,14 +312,13 @@ export default function FunFactsPage() {
           {weatherPhenomena.map((phenomenon) => {
             const isExpanded = expandedCards.has(phenomenon.id)
             return (
-              <div
+              <Card
                 key={phenomenon.id}
-                className={`${themeClasses.cardBg} border-4 ${themeClasses.borderColor} transition-all duration-300 ${themeClasses.hoverBg} cursor-pointer h-fit`}
+                className={`border-4 transition-all duration-300 cursor-pointer h-fit`}
                 style={{ boxShadow: `0 0 15px ${themeClasses.shadowColor}33` }}
                 onClick={() => toggleCard(phenomenon.id)}
               >
-                {/* Card Header */}
-                <div className="p-4 border-b-2 border-current">
+                <CardHeader className="pb-2">
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-3xl">{phenomenon.emoji}</div>
                     <div
@@ -333,23 +333,23 @@ export default function FunFactsPage() {
                     </div>
                   </div>
 
-                  <h3 className={`font-mono font-bold text-lg uppercase tracking-wider mb-2 ${themeClasses.headerText}`}>
+                  <CardTitle className={`font-mono font-bold text-lg uppercase tracking-wider ${themeClasses.headerText}`}>
                     {phenomenon.name}
-                  </h3>
+                  </CardTitle>
 
                   <div className="flex items-center justify-between">
-                    <span className={`text-sm font-mono ${themeClasses.secondaryText}`}>
+                    <CardDescription className={`text-sm font-mono ${themeClasses.secondaryText}`}>
                       {phenomenon.category}
-                    </span>
+                    </CardDescription>
                     {isExpanded ?
                       <ChevronUp className="w-4 h-4 text-current" /> :
                       <ChevronDown className="w-4 h-4 text-current" />
                     }
                   </div>
-                </div>
+                </CardHeader>
 
                 {/* Card Body */}
-                <div className="p-4">
+                <CardContent>
                   <p className={`${themeClasses.text} font-mono text-sm mb-4`}>
                     {phenomenon.description}
                   </p>
@@ -407,8 +407,8 @@ export default function FunFactsPage() {
                       </div>
                     </div>
                   )}
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             )
           })}
         </div>
