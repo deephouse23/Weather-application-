@@ -29,12 +29,12 @@ interface GeocodingResponse {
 const tryGeocoding = async (queries: string[], apiKey: string, limit: string): Promise<GeocodingResponse[]> => {
   for (const query of queries) {
     const geocodingUrl = `${GEO_URL}/direct?q=${encodeURIComponent(query)}&limit=${limit}&appid=${apiKey}`
-    
+
     const response = await fetch(geocodingUrl)
-    
+
     if (response.ok) {
       const data = await response.json()
-      
+
       if (data && data.length > 0) {
         console.log(`✓ Geocoding success with fallback query: "${query}"`)
         return data
@@ -42,7 +42,7 @@ const tryGeocoding = async (queries: string[], apiKey: string, limit: string): P
     }
     // Try next fallback query if this one failed
   }
-  
+
   return []
 }
 
@@ -64,19 +64,19 @@ const US_STATE_MAPPING: Record<string, string> = {
 // Generate fallback queries for US locations
 const generateFallbackQueries = (originalQuery: string): string[] => {
   const queries = [originalQuery]
-  
+
   // Parse comma-separated input
   if (originalQuery.includes(',')) {
     const parts = originalQuery.split(',').map(p => p.trim())
-    
+
     if (parts.length === 2) {
       const [city, stateOrCountry] = parts
       const stateAbbrev = stateOrCountry.toUpperCase()
-      
+
       // If it's a US state abbreviation, try multiple formats
       if (US_STATE_MAPPING[stateAbbrev]) {
         const fullStateName = US_STATE_MAPPING[stateAbbrev]
-        
+
         // Try with full state name + US
         queries.push(`${city},${fullStateName},US`)
         // Try with just city + US
@@ -94,7 +94,7 @@ const generateFallbackQueries = (originalQuery: string): string[] => {
     // Single word query, try as-is
     // No additional fallbacks needed for simple city names
   }
-  
+
   return queries
 }
 
@@ -114,12 +114,39 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'API key not configured' }, { status: 500 })
     }
 
+    // Check if query looks like a US ZIP code (5 digits)
+    const isZipCode = /^\d{5}$/.test(query.trim())
+
+    if (isZipCode) {
+      // Use ZIP code geocoding endpoint
+      const zipUrl = `${GEO_URL}/zip?zip=${query},US&appid=${apiKey}`
+      const response = await fetch(zipUrl)
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data && data.lat && data.lon) {
+          // Transform to match the direct geocoding response format
+          const result: GeocodingResponse[] = [{
+            name: data.name,
+            lat: data.lat,
+            lon: data.lon,
+            country: data.country || 'US',
+            state: undefined // ZIP endpoint doesn't return state
+          }]
+          return NextResponse.json(result)
+        }
+      }
+
+      // If ZIP lookup failed, try regular geocoding as fallback
+      console.log(`ZIP code lookup failed for ${query}, trying city name fallback`)
+    }
+
     // Generate fallback queries
     const queries = generateFallbackQueries(query)
-    
+
     // Try each query in sequence until one works
     const geocodingData = await tryGeocoding(queries, apiKey, limit)
-    
+
     if (!geocodingData || geocodingData.length === 0) {
       console.log(`Geocoding failed for all queries: ${queries.join(', ')}`)
       return NextResponse.json(
@@ -127,7 +154,7 @@ export async function GET(request: NextRequest) {
         { status: 404 }
       )
     }
-    
+
     return NextResponse.json(geocodingData)
 
   } catch (error) {
