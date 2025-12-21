@@ -56,13 +56,13 @@ export default function AuthButton() {
   return (
     <div className="relative auth-dropdown-container">
       <Button
-        variant="default"
+        variant="outline"
         size="sm"
         onClick={handleButtonClick}
-        className="min-w-[80px]"
+        className="min-w-[80px] border-2 border-primary/20 hover:bg-accent hover:text-accent-foreground"
       >
         <User className="w-3 h-3 mr-1" />
-        <span className="whitespace-nowrap">{profile?.username || user?.email?.split('@')[0] || 'USER'}</span>
+        <span className="whitespace-nowrap max-w-[100px] truncate">{profile?.username || user?.email?.split('@')[0] || 'USER'}</span>
         <ChevronDown className={`w-3 h-3 ml-1 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
       </Button>
 
