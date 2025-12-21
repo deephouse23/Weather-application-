@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&family=Fira+Code:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;500;600;700;800&family=VT323&display=swap');
 @import "tailwindcss";
 @config "../tailwind.config.ts";
 
@@ -8,6 +8,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 @layer base {
+
   /* Default/Dark theme */
   :root {
     --background: 220 41% 7%;
@@ -35,6 +36,15 @@
     --chart-4: 38 92% 50%;
     --chart-5: 0 72% 61%;
     --radius: 1rem;
+
+    --font-sans: 'Inconsolata', monospace;
+    --font-display: 'VT323', monospace;
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-black: 800;
 
     /* Legacy 16-bit variables mapped to HSL values for backward compatibility */
     --bg: hsl(220 41% 7%);
@@ -415,7 +425,8 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-sans, system-ui, sans-serif);
+    font-family: 'Inconsolata', monospace;
+    font-weight: 400;
   }
 }
 
@@ -465,6 +476,7 @@ body {
    ═══════════════════════════════════════════════════════════ */
 
 @layer components {
+
   /* Weather-specific card styling (use .weather-card class) */
   .weather-card {
     background-color: var(--bg-elev);
@@ -482,8 +494,8 @@ body {
 
   /* Pixel font for retro text */
   .pixel-font {
-    font-family: "Courier New", "Monaco", "Lucida Console", monospace;
-    letter-spacing: 1px;
+    font-family: 'Inconsolata', monospace;
+    letter-spacing: 0.5px;
   }
 
   /* Retro glow effects */
@@ -528,9 +540,12 @@ body {
    ═══════════════════════════════════════════════════════════ */
 
 @keyframes pulseGlow {
-  0%, 100% {
+
+  0%,
+  100% {
     text-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
   }
+
   50% {
     text-shadow: 0 0 12px currentColor, 0 0 24px currentColor, 0 0 36px currentColor;
   }
@@ -541,6 +556,7 @@ body {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -552,6 +568,7 @@ body {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -653,11 +670,25 @@ body {
     animation: fadeInUp 0.4s ease-out forwards;
   }
 
-  .weather-card-stagger-1 { animation-delay: 50ms; }
-  .weather-card-stagger-2 { animation-delay: 100ms; }
-  .weather-card-stagger-3 { animation-delay: 150ms; }
-  .weather-card-stagger-4 { animation-delay: 200ms; }
-  .weather-card-stagger-5 { animation-delay: 250ms; }
+  .weather-card-stagger-1 {
+    animation-delay: 50ms;
+  }
+
+  .weather-card-stagger-2 {
+    animation-delay: 100ms;
+  }
+
+  .weather-card-stagger-3 {
+    animation-delay: 150ms;
+  }
+
+  .weather-card-stagger-4 {
+    animation-delay: 200ms;
+  }
+
+  .weather-card-stagger-5 {
+    animation-delay: 250ms;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -677,7 +708,7 @@ button {
     line-height: 1.4;
   }
 
-  .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  .space-y-6> :not([hidden])~ :not([hidden]) {
     margin-top: 1rem;
   }
 
@@ -706,6 +737,7 @@ button {
 }
 
 @media (max-width: 768px) {
+
   nav a,
   nav button {
     min-height: 48px;
@@ -727,6 +759,7 @@ input:focus-visible,
 
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

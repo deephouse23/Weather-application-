@@ -140,7 +140,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
           {/* Logo/Brand with Weather Data - TOP LEFT */}
           <div className="flex items-center space-x-3">
             <h1 className="text-xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
-              <span className="font-mono">16-BIT WEATHER</span>
+              <span className="font-extrabold tracking-wider">16-BIT WEATHER</span>
               {weatherLocation && weatherTemperature ? (
                 <span className="text-sm font-normal text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full border border-border">
                   {formatHeaderLocation(weatherLocation)} <span className="text-foreground font-bold">{Math.round(weatherTemperature)}°{weatherUnit === '°F' ? 'F' : 'C'}</span>
@@ -162,7 +162,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
                   size="sm"
                   asChild
                   className={cn(
-                    "font-medium transition-all duration-200",
+                    "font-semibold transition-all duration-200",
                     isActive && "font-bold shadow-sm"
                   )}
                 >
@@ -186,7 +186,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
           {/* Mobile Logo with Weather Data */}
           <div className="flex items-center space-x-2 flex-1 min-w-0">
             <h1 className="text-lg font-extrabold tracking-tight text-foreground truncate flex flex-col leading-tight">
-              <span className="font-mono">16-BIT WEATHER</span>
+              <span className="font-extrabold tracking-wider">16-BIT WEATHER</span>
               {weatherLocation && weatherTemperature && (
                 <span className="text-xs font-normal text-muted-foreground">
                   {Math.round(weatherTemperature)}°{weatherUnit === '°F' ? 'F' : 'C'} in {formatHeaderLocation(weatherLocation).split(',')[0]}
