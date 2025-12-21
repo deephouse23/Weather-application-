@@ -263,7 +263,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
             return
           }
         } else {
+          const startTime = performance.now()
           const result = await supabase.auth.getSession()
+          const duration = performance.now() - startTime
+          console.log(`[AuthProvider] getSession completed in ${duration.toFixed(0)}ms`)
           session = result.data.session
           error = result.error
         }
@@ -323,7 +326,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setLoading(false)
         setIsInitialized(true)
       }
-    }, 3000) // 3 second timeout
+    }, 8000) // 8 second timeout for production environments
 
     // Initialize
     initializeAuth()
