@@ -190,24 +190,85 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     // Get definition from config
     const def = getThemeDefinition(theme)
 
-    // Set standard variables
+    // Helper to convert Hex to HSL string (H S% L%) for Tailwind/Shadcn compatibility
+    const hexToHsl = (hex: string): string => {
+      // Remove hash if present
+      hex = hex.replace(/^#/, '');
+
+      // Parse RGB
+      let r = parseInt(hex.substring(0, 2), 16);
+      let g = parseInt(hex.substring(2, 4), 16);
+      let b = parseInt(hex.substring(4, 6), 16);
+
+      // Convert to fractions
+      r /= 255;
+      g /= 255;
+      b /= 255;
+
+      // Find greatest/smallest channel values
+      const cmin = Math.min(r, g, b),
+        cmax = Math.max(r, g, b),
+        delta = cmax - cmin;
+
+      let h = 0, s = 0, l = 0;
+
+      // Calculate hue
+      if (delta === 0) h = 0;
+      else if (cmax === r) h = ((g - b) / delta) % 6;
+      else if (cmax === g) h = (b - r) / delta + 2;
+      else h = (r - g) / delta + 4;
+
+      h = Math.round(h * 60);
+      if (h < 0) h += 360;
+
+      // Calculate lightness
+      l = (cmax + cmin) / 2;
+
+      // Calculate saturation
+      s = delta === 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+
+      s = +(s * 100).toFixed(1);
+      l = +(l * 100).toFixed(1);
+
+      return `${h} ${s}% ${l}%`;
+    }
+
+    // Set standard variables (Legacy)
     root.style.setProperty('--bg', def.colors.background)
-    root.style.setProperty('--bg-elev', def.colors.backgroundSecondary) // Mapping secondary to elev
+    root.style.setProperty('--bg-elev', def.colors.backgroundSecondary)
     root.style.setProperty('--border', def.colors.border)
     root.style.setProperty('--text', def.colors.text)
     root.style.setProperty('--text-muted', def.colors.textSecondary)
-    root.style.setProperty('--primary', def.colors.primary)
-    root.style.setProperty('--accent', def.colors.accent)
+    root.style.setProperty('--weather-primary', def.colors.primary)
+    root.style.setProperty('--weather-accent', def.colors.accent)
     root.style.setProperty('--ok', def.colors.highlight || def.colors.primary)
     root.style.setProperty('--warn', def.colors.accent)
-    root.style.setProperty('--danger', 'red') // Fallback or from config if added
+    root.style.setProperty('--danger', 'red')
+
+    // Set Shadcn HSL Variables
+    root.style.setProperty('--background', hexToHsl(def.colors.background))
+    root.style.setProperty('--foreground', hexToHsl(def.colors.text))
+    root.style.setProperty('--card', hexToHsl(def.colors.backgroundSecondary))
+    root.style.setProperty('--card-foreground', hexToHsl(def.colors.text))
+    root.style.setProperty('--popover', hexToHsl(def.colors.backgroundSecondary))
+    root.style.setProperty('--popover-foreground', hexToHsl(def.colors.text))
+    root.style.setProperty('--primary', hexToHsl(def.colors.primary))
+    root.style.setProperty('--primary-foreground', hexToHsl(def.colors.background))
+    root.style.setProperty('--secondary', hexToHsl(def.colors.accent))
+    root.style.setProperty('--secondary-foreground', hexToHsl(def.colors.background))
+    root.style.setProperty('--muted', hexToHsl(def.colors.backgroundTertiary))
+    root.style.setProperty('--muted-foreground', hexToHsl(def.colors.textSecondary))
+    root.style.setProperty('--accent', hexToHsl(def.colors.accent))
+    root.style.setProperty('--accent-foreground', hexToHsl(def.colors.background))
+    // Use legacy destructive logic or fallback
+    root.style.setProperty('--destructive', '0 84% 60%')
+    root.style.setProperty('--destructive-foreground', '210 40% 98%')
+    root.style.setProperty('--border', hexToHsl(def.colors.border))
+    root.style.setProperty('--input', hexToHsl(def.colors.backgroundSecondary))
+    root.style.setProperty('--ring', hexToHsl(def.colors.primary))
 
     // Font injection if present
     if (def.font) {
-      // We assume the font family string includes fallback, e.g. '"Press Start 2P", monospace'
-      // We might need to import the font in CSS or head, but here we just set the stack
-      // root.style.setProperty('--font-primary', def.font) 
-      // Ensuring it applies to body
       body.style.fontFamily = def.font
     } else {
       body.style.removeProperty('font-family')
