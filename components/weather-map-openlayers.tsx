@@ -120,9 +120,20 @@ const WeatherMapOpenLayers = ({
 
     mapInstanceRef.current = map
 
+    // Fix for production: force map to recalculate size after container renders
+    setTimeout(() => {
+      map.updateSize()
+      console.log('📐 [v4] Map size updated')
+    }, 100)
+
+    // Also update on window resize
+    const handleResize = () => map.updateSize()
+    window.addEventListener('resize', handleResize)
+
     console.log('✅ [v4] OpenLayers map initialized')
 
     return () => {
+      window.removeEventListener('resize', handleResize)
       map.setTarget(undefined)
       mapInstanceRef.current = null
     }
@@ -414,11 +425,11 @@ const WeatherMapOpenLayers = ({
       className={`relative w-full rounded-lg overflow-visible ${themeStyles.container}`}
       style={{ height: 'calc(100vh - 220px)', minHeight: '350px' }}
     >
-      {/* Map Container - with OpenLayers overrides */}
+      {/* Map Container - explicit dimensions for production */}
       <div 
         ref={mapRef} 
         className="absolute inset-0 bg-gray-900 rounded-lg overflow-hidden"
-        style={{ zIndex: 1 }}
+        style={{ zIndex: 1, width: '100%', height: '100%', minHeight: '350px' }}
       />
 
       {/* Loading Indicator */}
