@@ -79,7 +79,7 @@ async function fetchFeed(source: FeedSource): Promise<RSSItem[]> {
     }
 
     const text = await response.text();
-    
+
     // Parse based on format
     if (source.format === 'atom') {
       return parseAtomFeed(text, source);
@@ -97,10 +97,10 @@ async function fetchFeed(source: FeedSource): Promise<RSSItem[]> {
  */
 function parseRSSFeed(xml: string, source: FeedSource): RSSItem[] {
   const items: RSSItem[] = [];
-  
+
   // Extract items using regex (more reliable than DOMParser in Node)
   const itemMatches = xml.match(/<item[^>]*>[\s\S]*?<\/item>/gi) || [];
-  
+
   for (let i = 0; i < Math.min(itemMatches.length, 20); i++) {
     const itemXml = itemMatches[i];
     try {
@@ -109,7 +109,7 @@ function parseRSSFeed(xml: string, source: FeedSource): RSSItem[] {
       const description = extractTag(itemXml, 'description') || extractTag(itemXml, 'content:encoded');
       const pubDate = extractTag(itemXml, 'pubDate') || extractTag(itemXml, 'dc:date');
       const author = extractTag(itemXml, 'author') || extractTag(itemXml, 'dc:creator');
-      
+
       // Extract image from enclosure or media:content
       let imageUrl = extractAttribute(itemXml, 'enclosure', 'url');
       if (!imageUrl) {
@@ -151,10 +151,10 @@ function parseRSSFeed(xml: string, source: FeedSource): RSSItem[] {
  */
 function parseAtomFeed(xml: string, source: FeedSource): RSSItem[] {
   const items: RSSItem[] = [];
-  
+
   // Extract entries
   const entryMatches = xml.match(/<entry[^>]*>[\s\S]*?<\/entry>/gi) || [];
-  
+
   for (let i = 0; i < Math.min(entryMatches.length, 20); i++) {
     const entryXml = entryMatches[i];
     try {
@@ -163,20 +163,20 @@ function parseAtomFeed(xml: string, source: FeedSource): RSSItem[] {
       const summary = extractTag(entryXml, 'summary') || extractTag(entryXml, 'content');
       const updated = extractTag(entryXml, 'updated') || extractTag(entryXml, 'published');
       const author = extractTag(entryXml, 'name'); // Inside <author>
-      
+
       // For USGS earthquake feeds, extract magnitude from title
       let magnitude: number | undefined;
       let depth: number | undefined;
       let location: string | undefined;
-      
+
       if (source.category === 'earthquakes' && title) {
         // Title format: "M 5.2 - 10 km NE of City, Country"
         const magMatch = title.match(/^M\s*([\d.]+)/);
         if (magMatch) magnitude = parseFloat(magMatch[1]);
-        
+
         const locMatch = title.match(/- (.+)$/);
         if (locMatch) location = locMatch[1];
-        
+
         // Try to get depth from summary/description
         const depthMatch = summary?.match(/Depth[:\s]*([\d.]+)\s*km/i);
         if (depthMatch) depth = parseFloat(depthMatch[1]);
@@ -229,7 +229,7 @@ function extractTag(xml: string, tagName: string): string | null {
   const cdataRegex = new RegExp(`<${tagName}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tagName}>`, 'i');
   const cdataMatch = xml.match(cdataRegex);
   if (cdataMatch) return cdataMatch[1].trim();
-  
+
   // Handle regular content
   const regex = new RegExp(`<${tagName}[^>]*>([\\s\\S]*?)<\\/${tagName}>`, 'i');
   const match = xml.match(regex);
@@ -266,7 +266,7 @@ function cleanHtml(html: string): string {
  */
 function deduplicateItems(items: RSSItem[]): RSSItem[] {
   const seen = new Map<string, RSSItem>();
-  
+
   for (const item of items) {
     // Create a normalized key from title
     const key = item.title
@@ -275,7 +275,7 @@ function deduplicateItems(items: RSSItem[]): RSSItem[] {
       .replace(/\s+/g, ' ')
       .trim()
       .slice(0, 50);
-    
+
     // Keep the higher priority or newer item
     const existing = seen.get(key);
     if (!existing) {
@@ -292,7 +292,7 @@ function deduplicateItems(items: RSSItem[]): RSSItem[] {
       }
     }
   }
-  
+
   return Array.from(seen.values());
 }
 
@@ -305,27 +305,27 @@ export async function aggregateFeeds(options: {
   maxAge?: number; // hours
 } = {}): Promise<AggregatedResult> {
   const { categories, maxItems = 50, maxAge = 72 } = options;
-  
+
   // Check cache
   const cacheKey = JSON.stringify({ categories, maxItems, maxAge });
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     return cached.data;
   }
-  
+
   // Filter feeds by category if specified
   const feeds = categories
     ? FEED_SOURCES.filter(f => f.enabled && categories.includes(f.category))
     : FEED_SOURCES.filter(f => f.enabled);
-  
+
   // Fetch all feeds in parallel
   const results = await Promise.allSettled(feeds.map(fetchFeed));
-  
+
   // Collect items and errors
   let allItems: RSSItem[] = [];
   const errors: string[] = [];
   const bySource: Record<string, number> = {};
-  
+
   results.forEach((result, index) => {
     const feed = feeds[index];
     if (result.status === 'fulfilled') {
@@ -336,14 +336,14 @@ export async function aggregateFeeds(options: {
       bySource[feed.name] = 0;
     }
   });
-  
+
   // Filter by age
   const cutoff = Date.now() - maxAge * 60 * 60 * 1000;
   allItems = allItems.filter(item => item.timestamp.getTime() >= cutoff);
-  
+
   // Deduplicate
   allItems = deduplicateItems(allItems);
-  
+
   // Sort by priority then timestamp
   allItems.sort((a, b) => {
     const priorityOrder = { high: 0, medium: 1, low: 2 };
@@ -351,10 +351,10 @@ export async function aggregateFeeds(options: {
     if (pDiff !== 0) return pDiff;
     return b.timestamp.getTime() - a.timestamp.getTime();
   });
-  
+
   // Limit items
   allItems = allItems.slice(0, maxItems);
-  
+
   // Calculate stats by category
   const byCategory: Record<FeedCategory, number> = {
     earthquakes: 0,
@@ -368,7 +368,7 @@ export async function aggregateFeeds(options: {
   allItems.forEach(item => {
     byCategory[item.category]++;
   });
-  
+
   const result: AggregatedResult = {
     items: allItems,
     stats: {
@@ -379,26 +379,30 @@ export async function aggregateFeeds(options: {
     },
     lastUpdated: new Date(),
   };
-  
+
   // Cache result
   cache.set(cacheKey, { data: result, timestamp: Date.now() });
-  
+
   return result;
 }
 
 /**
  * Get featured item (highest priority, most recent)
+ * Excludes hurricanes category from featured since tropical season is limited
  */
 export async function getFeaturedItem(): Promise<RSSItem | null> {
   const result = await aggregateFeeds({ maxItems: 20, maxAge: 24 });
-  
-  // Prefer high priority items
-  const highPriority = result.items.filter(i => i.priority === 'high');
+
+  // Filter out hurricanes category from featured consideration
+  const nonTropical = result.items.filter(i => i.category !== 'hurricanes');
+
+  // Prefer high priority items (excluding tropical)
+  const highPriority = nonTropical.filter(i => i.priority === 'high');
   if (highPriority.length > 0) {
     return highPriority[0];
   }
-  
-  return result.items[0] || null;
+
+  return nonTropical[0] || result.items[0] || null;
 }
 
 /**
