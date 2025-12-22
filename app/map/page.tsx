@@ -283,7 +283,7 @@ export default function MapPage() {
       </div>
 
       {/* Map Container */}
-      <div className="flex-1">
+      <div className="flex-1 overflow-visible pb-4">
         <WeatherMap
           latitude={weatherData.coordinates!.lat}
           longitude={weatherData.coordinates!.lon}
