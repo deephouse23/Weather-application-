@@ -26,6 +26,7 @@ interface AuthContextType {
   profile: Profile | null
   preferences: UserPreferences | null
   loading: boolean
+  profileLoading: boolean
   isInitialized: boolean
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -89,6 +90,7 @@ export function AuthProviderOptimized({ children }: AuthProviderProps) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [preferences, setPreferences] = useState<UserPreferences | null>(null)
   const [loading, setLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
 
   // Request deduplication flags
@@ -212,36 +214,44 @@ export function AuthProviderOptimized({ children }: AuthProviderProps) {
     setSession(session)
     setUser(session?.user ?? null)
 
+    // CRITICAL FIX: Mark auth as initialized IMMEDIATELY after session is confirmed
+    // This prevents the timeout from firing while we wait for slow profile/preferences fetches
+    if (!isInitialized) {
+      setIsInitialized(true)
+      setLoading(false)
+      console.log('[AuthProviderOptimized] Auth initialized', { hasSession: !!session })
+    }
+
     if (session?.user) {
-      // User signed in - fetch additional data in parallel
+      // User signed in - fetch additional data in the background (non-blocking)
+      setProfileLoading(true)
       authPerfMonitor.start('fetchUserData')
-      try {
-        // Parallel fetch for better performance
-        await Promise.all([
-          fetchProfile(session.user.id),
-          fetchPreferences()
-        ])
-      } catch (error) {
+      Promise.all([
+        fetchProfile(session.user.id),
+        fetchPreferences()
+      ]).then(() => {
+        authPerfMonitor.end('fetchUserData')
+        authPerfMonitor.log('fetchUserData')
+        authPerfMonitor.end('handleAuthState')
+        authPerfMonitor.logSummary()
+        authPerfMonitor.clear()
+      }).catch(error => {
         console.error('Error loading user data:', error)
-      }
-      authPerfMonitor.end('fetchUserData')
-      authPerfMonitor.log('fetchUserData')
+        authPerfMonitor.end('fetchUserData')
+        authPerfMonitor.end('handleAuthState')
+        authPerfMonitor.clear()
+      }).finally(() => {
+        setProfileLoading(false)
+      })
     } else {
       // User signed out - clear data and cache immediately
       authCache.clear()
       setProfile(null)
       setPreferences(null)
+      authPerfMonitor.end('handleAuthState')
+      authPerfMonitor.logSummary()
+      authPerfMonitor.clear()
     }
-
-    // Mark as no longer loading only after everything is done
-    if (!isInitialized) {
-      setIsInitialized(true)
-    }
-    setLoading(false)
-
-    authPerfMonitor.end('handleAuthState')
-    authPerfMonitor.logSummary()
-    authPerfMonitor.clear()
   }, [isInitialized, fetchProfile, fetchPreferences])
 
   // Sign out function
@@ -395,6 +405,7 @@ export function AuthProviderOptimized({ children }: AuthProviderProps) {
     profile,
     preferences,
     loading,
+    profileLoading,
     isInitialized,
     signOut: handleSignOut,
     refreshProfile,

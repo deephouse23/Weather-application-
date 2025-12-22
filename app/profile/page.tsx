@@ -26,7 +26,7 @@ export default function ProfilePage() {
 
 function ProfileContent() {
   const router = useRouter()
-  const { user, profile, preferences, refreshProfile, refreshPreferences } = useAuth()
+  const { user, profile, preferences, profileLoading, refreshProfile, refreshPreferences } = useAuth()
   const { theme } = useTheme()
   const themeClasses = getComponentStyles(theme as ThemeType, 'auth')
 
@@ -177,6 +177,14 @@ function ProfileContent() {
                   : 'border-red-500 bg-red-950/30 text-red-400'
                 }`}>
                 {message}
+              </div>
+            )}
+
+            {/* Profile Loading Indicator */}
+            {profileLoading && (
+              <div className="flex items-center justify-center p-4 border-2 border-cyan-500/50 bg-cyan-950/20 rounded-md">
+                <Loader2 className="w-4 h-4 animate-spin text-cyan-400 mr-2" />
+                <span className="text-sm font-mono text-cyan-400">Loading profile data...</span>
               </div>
             )}
 

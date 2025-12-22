@@ -13,6 +13,7 @@ interface AuthContextType {
   profile: Profile | null
   preferences: UserPreferences | null
   loading: boolean
+  profileLoading: boolean
   isInitialized: boolean
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -39,6 +40,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [preferences, setPreferences] = useState<UserPreferences | null>(null)
   const [loading, setLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
 
   // Use refs to prevent race conditions and track loading states
@@ -124,29 +126,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setSession(session)
     setUser(session?.user ?? null)
 
+    // CRITICAL FIX: Mark auth as initialized IMMEDIATELY after session is confirmed
+    // This prevents the timeout from firing while we wait for slow profile/preferences fetches
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true
+      setIsInitialized(true)
+      setLoading(false)
+      console.log('[AuthProvider] Auth initialized', { hasSession: !!session })
+    }
+
     if (session?.user) {
-      // User signed in - fetch additional data
-      try {
-        await Promise.all([
-          fetchProfile(session.user.id),
-          fetchPreferences()
-        ])
-      } catch (error) {
+      // User signed in - fetch additional data in the background (non-blocking)
+      // Profile and preferences load asynchronously after auth is confirmed
+      setProfileLoading(true)
+      Promise.all([
+        fetchProfile(session.user.id),
+        fetchPreferences()
+      ]).catch(error => {
         console.error('Error loading user data:', error)
-      }
+      }).finally(() => {
+        setProfileLoading(false)
+      })
     } else {
       // User signed out - clear data immediately
       setProfile(null)
       setPreferences(null)
     }
-
-    // Mark as no longer loading only after everything is done
-    if (!isInitialized) {
-      setIsInitialized(true)
-    }
-    hasInitializedRef.current = true // Update ref for timeout closure
-    setLoading(false)
-  }, [])
+  }, [fetchProfile, fetchPreferences])
 
   // Sign out function
   const handleSignOut = useCallback(async () => {
@@ -349,6 +355,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     profile,
     preferences,
     loading,
+    profileLoading,
     isInitialized,
     signOut: handleSignOut,
     refreshProfile,
