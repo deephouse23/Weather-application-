@@ -360,7 +360,8 @@ function WeatherApp() {
                       VIEW FULL MAP →
                     </Link>
                   </div>
-                  <div className="h-96 rounded-lg overflow-hidden">
+                  {/* Container with overflow-visible to allow controls to render properly */}
+                  <div className="h-[450px] rounded-lg overflow-visible">
                     <LazyWeatherMap
                       latitude={weather?.coordinates?.lat}
                       longitude={weather?.coordinates?.lon}

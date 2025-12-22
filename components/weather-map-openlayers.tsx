@@ -1,6 +1,7 @@
 'use client'
-// Build: v4 - Fixed WMS-T implementation with single layer + updateParams()
-// Key fix: Using n0q-t.cgi endpoint which actually supports TIME parameter
+// Build: v5 - Animation controls moved to top, fixed visibility issues, smoother playback
+// Changes: absolute positioning instead of fixed, loading indicator only when paused,
+// increased transition time for smoother frame changes
 
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { Play, Pause, SkipBack, SkipForward, Layers, ChevronDown, Loader2 } from 'lucide-react'
@@ -228,21 +229,33 @@ const WeatherMapOpenLayers = ({
         // TIME will be set via updateParams()
       },
       serverType: 'mapserver',
-      transition: 200, // Smooth cross-fade between frames
+      transition: 300, // Smooth cross-fade between frames (increased for smoother playback)
       crossOrigin: 'anonymous',
     })
 
-    // Track loading state
+    // Track loading state - use a counter to handle concurrent tile loads
+    let loadingTileCount = 0
+    
     radarSource.on('tileloadstart', () => {
-      setIsLoading(true)
+      loadingTileCount++
+      // Only show loading indicator when not playing (to avoid button flicker)
+      if (!isPlaying && loadingTileCount === 1) {
+        setIsLoading(true)
+      }
     })
 
     radarSource.on('tileloadend', () => {
-      setIsLoading(false)
+      loadingTileCount = Math.max(0, loadingTileCount - 1)
+      if (loadingTileCount === 0) {
+        setIsLoading(false)
+      }
     })
 
     radarSource.on('tileloaderror', () => {
-      setIsLoading(false)
+      loadingTileCount = Math.max(0, loadingTileCount - 1)
+      if (loadingTileCount === 0) {
+        setIsLoading(false)
+      }
       console.warn('⚠️ [v4] Tile load error')
     })
 
@@ -305,10 +318,10 @@ const WeatherMapOpenLayers = ({
   useEffect(() => {
     if (!isPlaying || timestamps.length === 0) return
 
-    const baseInterval = 600 // ms per frame at 1x speed
+    const baseInterval = 700 // ms per frame at 1x speed (allows tiles to load smoothly)
     const interval = baseInterval / speed
 
-    console.log(`▶️ [v4] Animation started - interval: ${interval}ms, speed: ${speed}x`)
+    console.log(`▶️ [v5] Animation started - interval: ${interval}ms, speed: ${speed}x`)
 
     const handle = window.setInterval(() => {
       setFrameIndex((idx) => (idx + 1) % timestamps.length)
@@ -422,8 +435,8 @@ const WeatherMapOpenLayers = ({
   return (
     <div 
       data-radar-container
-      className={`relative w-full rounded-lg overflow-visible ${themeStyles.container}`}
-      style={{ height: 'calc(100vh - 220px)', minHeight: '350px' }}
+      className={`relative w-full h-full rounded-lg overflow-visible ${themeStyles.container}`}
+      style={{ minHeight: '350px' }}
     >
       {/* Map Container - explicit dimensions for production */}
       <div 
@@ -432,9 +445,9 @@ const WeatherMapOpenLayers = ({
         style={{ zIndex: 1, width: '100%', height: '100%', minHeight: '350px' }}
       />
 
-      {/* Loading Indicator */}
-      {isLoading && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[2000]">
+      {/* Loading Indicator - Only show when not playing to avoid visual disruption */}
+      {isLoading && !isPlaying && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[2001]">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-600/90 text-white border-2 border-yellow-400 rounded-md font-mono text-xs">
             <Loader2 className="w-4 h-4 animate-spin" />
             LOADING RADAR...
@@ -497,39 +510,14 @@ const WeatherMapOpenLayers = ({
         )}
       </div>
 
-      {/* Animation Controls - Fixed positioning to escape any stacking context issues */}
+      {/* Animation Controls - Positioned at TOP of map for better visibility */}
       {isUSLocation && activeLayers.precipitation && timestamps.length > 0 && (
         <div 
-          className="fixed bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-          style={{ zIndex: 99999 }}
+          className="absolute top-16 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-auto"
+          style={{ zIndex: 2000 }}
         >
-          {/* Timeline */}
-          <div className="w-[600px] max-w-[95vw] px-4 py-2 bg-gray-900 border-2 border-cyan-500 rounded-md shadow-2xl">
-            <input
-              type="range"
-              min="0"
-              max={timestamps.length - 1}
-              value={frameIndex}
-              onChange={(e) => {
-                setIsPlaying(false)
-                setFrameIndex(parseInt(e.target.value))
-              }}
-              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-              style={{
-                background: `linear-gradient(to right, #06b6d4 0%, #06b6d4 ${(frameIndex / (timestamps.length - 1)) * 100}%, #374151 ${(frameIndex / (timestamps.length - 1)) * 100}%, #374151 100%)`
-              }}
-            />
-            <div className="mt-1 flex justify-between items-center font-mono text-xs text-white">
-              <span className="text-gray-400">Frame {frameIndex + 1} / {timestamps.length}</span>
-              <span className={isLiveFrame ? 'text-red-400 font-bold animate-pulse' : 'text-cyan-400'}>
-                {relativeTime}
-              </span>
-              <span className="text-gray-400 text-[10px]">{humanTime}</span>
-            </div>
-          </div>
-
-          {/* Controls */}
-          <div className="flex items-center gap-2 bg-gray-900 px-3 py-2 rounded-md border-2 border-gray-600 shadow-xl" style={{ pointerEvents: 'auto' }}>
+          {/* Compact Controls Bar */}
+          <div className="flex items-center gap-2 bg-gray-900/95 px-3 py-2 rounded-md border-2 border-cyan-500 shadow-2xl backdrop-blur-sm">
             <button
               onClick={handleSkipToStart}
               className="px-2 py-1.5 bg-gray-700 border-2 border-gray-500 rounded text-white hover:bg-gray-600 transition-colors"
@@ -540,7 +528,7 @@ const WeatherMapOpenLayers = ({
 
             <button
               onClick={handlePlayPause}
-              className={`px-4 py-1.5 border-2 rounded text-white font-mono text-xs font-bold transition-colors ${
+              className={`px-4 py-1.5 border-2 rounded text-white font-mono text-xs font-bold transition-colors min-w-[90px] ${
                 isPlaying 
                   ? 'bg-yellow-600 border-yellow-400 hover:bg-yellow-500' 
                   : 'bg-cyan-600 border-cyan-400 hover:bg-cyan-500'
@@ -561,7 +549,8 @@ const WeatherMapOpenLayers = ({
               <SkipForward className="w-4 h-4" />
             </button>
 
-            <div className="flex gap-1 ml-2">
+            {/* Speed Controls */}
+            <div className="flex gap-1 ml-1 border-l-2 border-gray-600 pl-2">
               {[0.5, 1, 2].map((s) => (
                 <button
                   key={s}
@@ -575,6 +564,36 @@ const WeatherMapOpenLayers = ({
                   {s}x
                 </button>
               ))}
+            </div>
+
+            {/* Time Display */}
+            <div className="ml-2 border-l-2 border-gray-600 pl-2 text-center min-w-[80px]">
+              <span className={`font-mono text-xs font-bold ${isLiveFrame ? 'text-red-400 animate-pulse' : 'text-cyan-400'}`}>
+                {relativeTime}
+              </span>
+            </div>
+          </div>
+
+          {/* Timeline Slider */}
+          <div className="w-[500px] max-w-[90vw] px-3 py-1.5 bg-gray-900/95 border-2 border-gray-600 rounded-md shadow-xl backdrop-blur-sm">
+            <input
+              type="range"
+              min="0"
+              max={timestamps.length - 1}
+              value={frameIndex}
+              onChange={(e) => {
+                setIsPlaying(false)
+                setFrameIndex(parseInt(e.target.value))
+              }}
+              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+              style={{
+                background: `linear-gradient(to right, #06b6d4 0%, #06b6d4 ${(frameIndex / (timestamps.length - 1)) * 100}%, #374151 ${(frameIndex / (timestamps.length - 1)) * 100}%, #374151 100%)`
+              }}
+            />
+            <div className="mt-1 flex justify-between items-center font-mono text-[10px] text-gray-400">
+              <span>4h ago</span>
+              <span>Frame {frameIndex + 1}/{timestamps.length}</span>
+              <span>Now</span>
             </div>
           </div>
         </div>
