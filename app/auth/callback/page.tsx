@@ -19,10 +19,10 @@ function AuthCallbackContent() {
 
   const handleRedirect = useCallback((destination: string, delay = 1000) => {
     setTimeout(() => {
-      router.replace(destination)
-      router.refresh() // Force refresh to update auth state
+      // Use window.location for more reliable redirect after auth state changes
+      window.location.href = destination
     }, delay)
-  }, [router])
+  }, [])
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -93,9 +93,8 @@ function AuthCallbackContent() {
       <div className={`text-center p-8 border-4 max-w-md w-full ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
         {/* 16-Bit Weather Logo */}
         <div className="flex justify-center mb-6">
-          <div className={`w-24 h-24 flex items-center justify-center ${
-            isError ? 'opacity-50' : isSuccess ? 'opacity-100' : 'animate-pulse'
-          }`}>
+          <div className={`w-24 h-24 flex items-center justify-center ${isError ? 'opacity-50' : isSuccess ? 'opacity-100' : 'animate-pulse'
+            }`}>
             <Image
               src="/logo-16bit-weather.svg"
               alt="16-Bit Weather"
@@ -110,13 +109,12 @@ function AuthCallbackContent() {
 
         <h1 className={`text-xl font-bold uppercase tracking-wider font-mono mb-4 ${themeClasses.text}`}>
           {isError ? 'Authentication Failed' :
-           isSuccess ? 'Welcome to 16-Bit Weather!' :
-           'Verifying Account...'}
+            isSuccess ? 'Welcome to 16-Bit Weather!' :
+              'Verifying Account...'}
         </h1>
 
-        <p className={`text-sm font-mono mb-4 ${
-          isError ? 'text-red-400' : themeClasses.secondary || themeClasses.text
-        }`}>
+        <p className={`text-sm font-mono mb-4 ${isError ? 'text-red-400' : themeClasses.secondary || themeClasses.text
+          }`}>
           {status}
         </p>
 
@@ -128,9 +126,8 @@ function AuthCallbackContent() {
 
         {!isError && (
           <div className="mt-4 flex items-center justify-center gap-2">
-            <div className={`inline-block animate-spin rounded-full h-6 w-6 border-2 border-t-transparent ${
-              isSuccess ? 'border-green-500' : themeClasses.borderColor
-            }`}></div>
+            <div className={`inline-block animate-spin rounded-full h-6 w-6 border-2 border-t-transparent ${isSuccess ? 'border-green-500' : themeClasses.borderColor
+              }`}></div>
             {isSuccess && (
               <span className="text-green-500 font-mono text-sm">✓</span>
             )}
@@ -139,8 +136,8 @@ function AuthCallbackContent() {
 
         <div className={`text-xs font-mono mt-6 opacity-70 ${themeClasses.text}`}>
           {loading ? 'Initializing your session...' :
-           isInitialized && user ? '✓ Session authenticated' :
-           'Connecting to server...'}
+            isInitialized && user ? '✓ Session authenticated' :
+              'Connecting to server...'}
         </div>
       </div>
     </div>
