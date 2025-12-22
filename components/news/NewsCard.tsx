@@ -8,8 +8,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
-import { ExternalLink, Clock, User } from 'lucide-react';
+import { ExternalLink, Clock, MapPin, Activity } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -17,10 +16,10 @@ import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import CategoryBadge from './CategoryBadge';
 import PriorityIndicator from './PriorityIndicator';
-import type { NewsItem } from '@/components/NewsTicker/NewsTicker';
+import type { RSSItem } from '@/lib/services/rss/rssAggregator';
 
 interface NewsCardProps {
-  item: NewsItem;
+  item: RSSItem;
   variant?: 'default' | 'compact' | 'featured';
   className?: string;
 }
@@ -29,10 +28,9 @@ export default function NewsCard({ item, variant = 'default', className }: NewsC
   const { theme } = useTheme();
   const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
   const [imageError, setImageError] = useState(false);
-  const [showFullDescription, setShowFullDescription] = useState(false);
 
   // Calculate time ago
-  const timeAgo = getTimeAgo(item.timestamp);
+  const timeAgo = getTimeAgo(new Date(item.timestamp));
 
   // Truncate title and description
   const maxTitleLength = variant === 'compact' ? 60 : 80;
@@ -71,14 +69,14 @@ export default function NewsCard({ item, variant = 'default', className }: NewsC
       >
         <CardContent className="p-4">
           <div className="flex gap-3">
-            {/* Image thumbnail */}
+            {/* Image thumbnail or category icon */}
             {item.imageUrl && !imageError ? (
               <div className="relative w-16 h-16 flex-shrink-0 overflow-hidden border-2 rounded">
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={item.imageUrl}
                   alt={item.title}
-                  fill
-                  className="object-cover"
+                  className="w-full h-full object-cover"
                   onError={() => setImageError(true)}
                 />
               </div>
@@ -89,15 +87,27 @@ export default function NewsCard({ item, variant = 'default', className }: NewsC
                   themeClasses.borderColor
                 )}
               >
-                <CategoryBadge category={item.category as any} />
+                <CategoryBadge category={item.category} />
               </div>
             )}
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <PriorityIndicator priority={item.priority} size="sm" />
-                <CategoryBadge category={item.category as any} />
+                <CategoryBadge category={item.category} />
+                {/* Magnitude badge for earthquakes */}
+                {item.magnitude && (
+                  <span className={cn(
+                    'inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold border-2 rounded font-mono',
+                    item.magnitude >= 6 ? 'bg-red-600 text-white border-red-800' :
+                    item.magnitude >= 5 ? 'bg-orange-500 text-white border-orange-700' :
+                    'bg-yellow-500 text-black border-yellow-700'
+                  )}>
+                    <Activity className="w-3 h-3" />
+                    M{item.magnitude.toFixed(1)}
+                  </span>
+                )}
               </div>
               <h3
                 className={cn(
@@ -107,7 +117,9 @@ export default function NewsCard({ item, variant = 'default', className }: NewsC
               >
                 {truncatedTitle}
               </h3>
-              <p className={cn('text-xs mt-1', themeClasses.text)}>{item.source} • {timeAgo}</p>
+              <p className={cn('text-xs mt-1', themeClasses.text)}>
+                {item.source} • {timeAgo}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -128,11 +140,11 @@ export default function NewsCard({ item, variant = 'default', className }: NewsC
       {/* Image */}
       {item.imageUrl && !imageError && (
         <div className="relative w-full h-48 overflow-hidden">
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={item.imageUrl}
             alt={item.title}
-            fill
-            className="object-cover transition-transform group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform group-hover:scale-105"
             onError={() => setImageError(true)}
           />
           <div className="absolute top-2 right-2 flex gap-2">
@@ -144,8 +156,20 @@ export default function NewsCard({ item, variant = 'default', className }: NewsC
       {/* Header */}
       <CardHeader className="flex-1">
         <div className="flex gap-2 mb-2 flex-wrap">
-          <CategoryBadge category={item.category as any} />
+          <CategoryBadge category={item.category} />
           {!item.imageUrl && <PriorityIndicator priority={item.priority} showLabel size="sm" />}
+          {/* Magnitude badge for earthquakes */}
+          {item.magnitude && (
+            <span className={cn(
+              'inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold border-2 rounded font-mono',
+              item.magnitude >= 6 ? 'bg-red-600 text-white border-red-800' :
+              item.magnitude >= 5 ? 'bg-orange-500 text-white border-orange-700' :
+              'bg-yellow-500 text-black border-yellow-700'
+            )}>
+              <Activity className="w-3 h-3" />
+              M{item.magnitude.toFixed(1)}
+            </span>
+          )}
         </div>
         <CardTitle
           className={cn(
@@ -165,24 +189,29 @@ export default function NewsCard({ item, variant = 'default', className }: NewsC
       )}
 
       {/* Footer */}
-      <CardFooter className="flex justify-between items-center border-t-2 pt-4">
-        <div className="flex flex-col gap-1">
+      <CardFooter className="flex justify-between items-center border-t-2 pt-4 gap-2">
+        <div className="flex flex-col gap-1 min-w-0 flex-1">
           <div className={cn('text-xs flex items-center gap-1', themeClasses.text)}>
-            <Clock className="w-3 h-3" />
-            <span>{timeAgo}</span>
+            <Clock className="w-3 h-3 flex-shrink-0" />
+            <span className="truncate">{timeAgo}</span>
           </div>
-          <div className={cn('text-xs flex items-center gap-1', themeClasses.text)}>
-            <User className="w-3 h-3" />
-            <span>{item.source}</span>
+          {item.location && (
+            <div className={cn('text-xs flex items-center gap-1', themeClasses.text)}>
+              <MapPin className="w-3 h-3 flex-shrink-0" />
+              <span className="truncate">{item.location}</span>
+            </div>
+          )}
+          <div className={cn('text-xs truncate', themeClasses.text)}>
+            {item.source}
           </div>
         </div>
         <Button
           variant="outline"
           size="sm"
-          className={cn('font-mono font-bold text-xs border-2', themeClasses.accentText)}
+          className={cn('font-mono font-bold text-xs border-2 flex-shrink-0', themeClasses.accentText)}
           onClick={() => window.open(item.url, '_blank', 'noopener,noreferrer')}
         >
-          READ MORE <ExternalLink className="w-3 h-3 ml-1" />
+          READ <ExternalLink className="w-3 h-3 ml-1" />
         </Button>
       </CardFooter>
     </Card>

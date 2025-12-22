@@ -1,10 +1,10 @@
 /**
- * 16-Bit Weather Platform - News Page (Redesigned)
+ * 16-Bit Weather Platform - News Page (RSS Aggregator)
  *
  * Copyright (C) 2025 16-Bit Weather
  * Licensed under Fair Source License, Version 0.9
  *
- * Dynamic multi-source weather news aggregation with retro aesthetics
+ * Multi-source RSS news aggregation: Earthquakes, Volcanoes, Space, Climate, Severe Weather
  */
 
 'use client';
@@ -17,31 +17,32 @@ import PageWrapper from '@/components/page-wrapper';
 import NewsHero from '@/components/news/NewsHero';
 import NewsFilter from '@/components/news/NewsFilter';
 import NewsGrid from '@/components/news/NewsGrid';
-import type { NewsItem } from '@/components/NewsTicker/NewsTicker';
-import type { ExtendedNewsItem } from '@/lib/types/news';
-import type { NewsCategory } from '@/lib/types/news';
+import type { RSSItem } from '@/lib/services/rss/rssAggregator';
+import type { FeedCategory } from '@/lib/services/rss/feedSources';
+
+type FilterCategory = FeedCategory | 'all';
 
 export default function NewsPage() {
   const { theme } = useTheme();
   const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
 
   // State
-  const [news, setNews] = useState<NewsItem[]>([]);
-  const [featuredStory, setFeaturedStory] = useState<NewsItem | null>(null);
-  const [filteredNews, setFilteredNews] = useState<NewsItem[]>([]);
+  const [news, setNews] = useState<RSSItem[]>([]);
+  const [featuredStory, setFeaturedStory] = useState<RSSItem | null>(null);
+  const [filteredNews, setFilteredNews] = useState<RSSItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentCategory, setCurrentCategory] = useState<NewsCategory | 'all'>('all');
+  const [currentCategory, setCurrentCategory] = useState<FilterCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [stats, setStats] = useState<{ byCategory: Record<string, number> } | null>(null);
 
-  // Fetch news from aggregator API
+  // Fetch news from RSS API
   const fetchNews = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      // Fetch aggregated news
-      const response = await fetch('/api/news/aggregate?maxItems=50');
+      const response = await fetch('/api/news/rss?maxItems=60&maxAge=72');
 
       if (!response.ok) {
         throw new Error('Failed to fetch news');
@@ -51,12 +52,13 @@ export default function NewsPage() {
 
       if (data.status === 'ok' && data.items) {
         // Convert timestamp strings to Date objects
-        const items = data.items.map((item: NewsItem | ExtendedNewsItem) => ({
+        const items = data.items.map((item: RSSItem) => ({
           ...item,
           timestamp: new Date(item.timestamp),
         }));
         setNews(items);
         setFilteredNews(items);
+        setStats(data.stats);
       } else {
         throw new Error(data.message || 'No news available');
       }
@@ -73,7 +75,7 @@ export default function NewsPage() {
   // Fetch featured story
   const fetchFeaturedStory = useCallback(async () => {
     try {
-      const response = await fetch('/api/news/aggregate?featured=true');
+      const response = await fetch('/api/news/rss?featured=true');
 
       if (!response.ok) {
         return;
@@ -82,7 +84,6 @@ export default function NewsPage() {
       const data = await response.json();
 
       if (data.status === 'ok' && data.featured) {
-        // Convert timestamp string to Date object
         setFeaturedStory({
           ...data.featured,
           timestamp: new Date(data.featured.timestamp),
@@ -115,7 +116,8 @@ export default function NewsPage() {
         (item) =>
           item.title.toLowerCase().includes(query) ||
           item.description?.toLowerCase().includes(query) ||
-          item.source.toLowerCase().includes(query)
+          item.source.toLowerCase().includes(query) ||
+          item.location?.toLowerCase().includes(query)
       );
     }
 
@@ -132,7 +134,6 @@ export default function NewsPage() {
   const getEmptyType = (): 'no-alerts' | 'no-results' | 'error' | 'no-news' => {
     if (error) return 'error';
     if (searchQuery || currentCategory !== 'all') return 'no-results';
-    if (currentCategory !== 'all' && (currentCategory === 'breaking' || currentCategory === 'severe' || currentCategory === 'alerts')) return 'no-alerts';
     return 'no-news';
   };
 
@@ -147,10 +148,10 @@ export default function NewsPage() {
               themeClasses.accentText
             )}
           >
-            16-BIT WEATHER NEWS
+            EARTH & SPACE NEWS
           </h1>
           <p className={cn('text-sm sm:text-base font-mono', themeClasses.text)}>
-            Real-time weather news from NASA, NOAA, FOX Weather, Reddit, and more
+            Real-time feeds from USGS, NASA, NOAA, NWS, and scientific sources
           </p>
         </div>
 
@@ -169,7 +170,7 @@ export default function NewsPage() {
         {featuredStory && !isLoading && currentCategory === 'all' && !searchQuery && (
           <div className="mb-8">
             <h2 className={cn('text-xl font-bold font-mono mb-4', themeClasses.headerText)}>
-              🔥 FEATURED STORY
+              TOP STORY
             </h2>
             <NewsHero item={featuredStory} />
           </div>
@@ -179,7 +180,7 @@ export default function NewsPage() {
         <div>
           {currentCategory !== 'all' || searchQuery ? (
             <h2 className={cn('text-xl font-bold font-mono mb-4', themeClasses.headerText)}>
-              {filteredNews.length} ARTICLE{filteredNews.length !== 1 ? 'S' : ''} FOUND
+              {filteredNews.length} RESULT{filteredNews.length !== 1 ? 'S' : ''} FOUND
             </h2>
           ) : (
             <h2 className={cn('text-xl font-bold font-mono mb-4', themeClasses.headerText)}>
@@ -197,15 +198,23 @@ export default function NewsPage() {
         </div>
 
         {/* Stats Footer */}
-        {!isLoading && filteredNews.length > 0 && (
+        {!isLoading && news.length > 0 && (
           <div className={cn('mt-8 pt-6 border-t-2 text-center', themeClasses.borderColor)}>
             <p className={cn('text-xs font-mono', themeClasses.text)}>
-              Displaying {filteredNews.length} of {news.length} articles
+              Showing {filteredNews.length} of {news.length} articles
               {currentCategory !== 'all' && ` in ${currentCategory.toUpperCase()}`}
               {searchQuery && ` matching "${searchQuery}"`}
             </p>
-            <p className={cn('text-xs font-mono mt-2', themeClasses.text)}>
-              Sources: NOAA • NASA • FOX Weather • Reddit • NewsAPI
+            {stats && (
+              <p className={cn('text-xs font-mono mt-2', themeClasses.text)}>
+                {Object.entries(stats.byCategory)
+                  .filter(([, count]) => count > 0)
+                  .map(([cat, count]) => `${cat}: ${count}`)
+                  .join(' • ')}
+              </p>
+            )}
+            <p className={cn('text-xs font-mono mt-2 opacity-70', themeClasses.text)}>
+              Sources: USGS • NASA • NOAA • NWS • NHC • SPC • ScienceDaily
             </p>
           </div>
         )}

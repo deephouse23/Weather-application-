@@ -9,17 +9,17 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/components/theme-provider';
+import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import NewsCard from './NewsCard';
-import ModelCard from './ModelCard';
-import NewsEmpty from './NewsEmpty';
 import NewsSkeleton from './NewsSkeleton';
-import type { NewsItem } from '@/components/NewsTicker/NewsTicker';
+import NewsEmpty from './NewsEmpty';
+import type { RSSItem } from '@/lib/services/rss/rssAggregator';
 
 interface NewsGridProps {
-  items: NewsItem[];
+  items: RSSItem[];
   isLoading?: boolean;
   error?: string | null;
-  variant?: 'default' | 'compact';
   emptyType?: 'no-alerts' | 'no-results' | 'error' | 'no-news';
   onRetry?: () => void;
   className?: string;
@@ -29,14 +29,22 @@ export default function NewsGrid({
   items,
   isLoading = false,
   error = null,
-  variant = 'default',
   emptyType = 'no-news',
   onRetry,
   className,
 }: NewsGridProps) {
+  const { theme } = useTheme();
+  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+
   // Loading state
-  if (isLoading && items.length === 0) {
-    return <NewsSkeleton count={6} variant={variant === 'compact' ? 'compact' : 'card'} />;
+  if (isLoading) {
+    return (
+      <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4', className)}>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <NewsSkeleton key={i} />
+        ))}
+      </div>
+    );
   }
 
   // Error state
@@ -46,37 +54,15 @@ export default function NewsGrid({
 
   // Empty state
   if (items.length === 0) {
-    return <NewsEmpty type={emptyType} />;
+    return <NewsEmpty type={emptyType} onRetry={onRetry} />;
   }
 
-  // Helper to check if item is a model graphic
-  const isModelGraphic = (item: NewsItem) => {
-    return item.source === 'NOAA GFS' || item.source === 'NOAA NHC';
-  };
-
-  // Compact variant
-  if (variant === 'compact') {
-    return (
-      <div className={cn('space-y-3', className)}>
-        {items.map((item) => {
-          if (isModelGraphic(item)) {
-            return <ModelCard key={item.id} item={item} variant="default" />;
-          }
-          return <NewsCard key={item.id} item={item} variant="compact" />;
-        })}
-      </div>
-    );
-  }
-
-  // Default grid layout
+  // Render news grid
   return (
     <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4', className)}>
-      {items.map((item) => {
-        if (isModelGraphic(item)) {
-          return <ModelCard key={item.id} item={item} variant="default" />;
-        }
-        return <NewsCard key={item.id} item={item} variant="default" />;
-      })}
+      {items.map((item) => (
+        <NewsCard key={item.id} item={item} />
+      ))}
     </div>
   );
 }
