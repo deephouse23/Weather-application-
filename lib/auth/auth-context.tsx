@@ -44,6 +44,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Use refs to prevent race conditions and track loading states
   const isLoadingProfile = useRef(false)
   const isLoadingPreferences = useRef(false)
+  const hasInitializedRef = useRef(false) // Track if auth has initialized (for timeout closure)
   const authStateRef = useRef<{ user: User | null; session: Session | null }>({
     user: null,
     session: null
@@ -143,6 +144,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (!isInitialized) {
       setIsInitialized(true)
     }
+    hasInitializedRef.current = true // Update ref for timeout closure
     setLoading(false)
   }, [])
 
@@ -320,9 +322,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const subscription = setupAuthListener()
 
     // Initialize with timeout to prevent infinite loading
+    // Use ref check to avoid closure capturing stale loading state
     const timeoutId = setTimeout(() => {
-      if (isMounted && loading) {
+      if (isMounted && !hasInitializedRef.current) {
         console.warn('Auth initialization timeout - proceeding without auth')
+        hasInitializedRef.current = true
         setLoading(false)
         setIsInitialized(true)
       }
