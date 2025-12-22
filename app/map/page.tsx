@@ -282,8 +282,8 @@ export default function MapPage() {
         </button>
       </div>
 
-      {/* Map Container - explicit height for production */}
-      <div className="flex-1 overflow-visible" style={{ minHeight: '400px' }}>
+      {/* Map Container - explicit height for full-screen map page */}
+      <div className="flex-1 overflow-visible" style={{ height: 'calc(100vh - 120px)', minHeight: '400px' }}>
         <WeatherMap
           latitude={weatherData.coordinates!.lat}
           longitude={weatherData.coordinates!.lon}
