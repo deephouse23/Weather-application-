@@ -8,25 +8,70 @@
 'use client';
 
 import React from 'react';
-import { Cloud, AlertTriangle, Globe, Users, Thermometer, Wind, Bell } from 'lucide-react';
+import { 
+  Cloud, 
+  AlertTriangle, 
+  Globe, 
+  Users, 
+  Thermometer, 
+  Wind, 
+  Bell,
+  Activity,
+  Mountain,
+  Sun,
+  FlaskConical,
+  CloudLightning
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { NewsCategory } from '@/lib/types/news';
 import { useTheme } from '@/components/theme-provider';
 
+// Combined category type supporting both old and new categories
+type CategoryType = 
+  | 'alerts' | 'breaking' | 'weather' | 'severe' | 'local' 
+  | 'climate' | 'tropical' | 'community' | 'general'
+  | 'earthquakes' | 'volcanoes' | 'space' | 'science' | 'hurricanes';
+
 interface CategoryBadgeProps {
-  category: NewsCategory;
+  category: CategoryType;
   className?: string;
 }
 
 const categoryConfig: Record<
-  NewsCategory,
+  CategoryType,
   {
     label: string;
     icon: React.ComponentType<{ className?: string }>;
     colorClass: string;
   }
 > = {
+  // New RSS categories
+  earthquakes: {
+    label: 'QUAKE',
+    icon: Activity,
+    colorClass: 'bg-orange-600 text-white border-orange-800',
+  },
+  volcanoes: {
+    label: 'VOLCANO',
+    icon: Mountain,
+    colorClass: 'bg-red-700 text-white border-red-900',
+  },
+  space: {
+    label: 'SPACE',
+    icon: Sun,
+    colorClass: 'bg-purple-600 text-white border-purple-800',
+  },
+  science: {
+    label: 'SCIENCE',
+    icon: FlaskConical,
+    colorClass: 'bg-green-600 text-white border-green-800',
+  },
+  hurricanes: {
+    label: 'TROPICAL',
+    icon: Wind,
+    colorClass: 'bg-cyan-600 text-white border-cyan-800',
+  },
+  // Legacy categories
   alerts: {
     label: 'ALERTS',
     icon: Bell,
@@ -44,8 +89,8 @@ const categoryConfig: Record<
   },
   severe: {
     label: 'SEVERE',
-    icon: AlertTriangle,
-    colorClass: 'bg-orange-600 text-white border-orange-800',
+    icon: CloudLightning,
+    colorClass: 'bg-yellow-500 text-black border-yellow-700',
   },
   local: {
     label: 'LOCAL',
@@ -55,7 +100,7 @@ const categoryConfig: Record<
   climate: {
     label: 'CLIMATE',
     icon: Thermometer,
-    colorClass: 'bg-indigo-600 text-white border-indigo-800',
+    colorClass: 'bg-blue-500 text-white border-blue-700',
   },
   tropical: {
     label: 'TROPICAL',
@@ -82,7 +127,7 @@ export default function CategoryBadge({ category, className }: CategoryBadgeProp
   // Adjust colors for Miami theme
   const themeColorClass =
     theme === 'miami'
-      ? category === 'breaking' || category === 'severe' || category === 'alerts'
+      ? category === 'breaking' || category === 'severe' || category === 'alerts' || category === 'earthquakes' || category === 'volcanoes'
         ? 'bg-pink-600 text-white border-pink-800'
         : 'bg-purple-600 text-white border-purple-800'
       : theme === 'tron'

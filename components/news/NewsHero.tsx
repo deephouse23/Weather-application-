@@ -8,8 +8,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
-import { ExternalLink, Clock, User, TrendingUp } from 'lucide-react';
+import { ExternalLink, Clock, MapPin, Activity } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -17,11 +16,10 @@ import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import CategoryBadge from './CategoryBadge';
 import PriorityIndicator from './PriorityIndicator';
-import ModelCard from './ModelCard';
-import type { NewsItem } from '@/components/NewsTicker/NewsTicker';
+import type { RSSItem } from '@/lib/services/rss/rssAggregator';
 
 interface NewsHeroProps {
-  item: NewsItem;
+  item: RSSItem;
   className?: string;
 }
 
@@ -30,119 +28,115 @@ export default function NewsHero({ item, className }: NewsHeroProps) {
   const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
   const [imageError, setImageError] = useState(false);
 
-  const timeAgo = getTimeAgo(item.timestamp);
-
-  // Check if this is a model graphic - if so, use ModelCard instead
-  const isModelGraphic = item.source === 'NOAA GFS' || item.source === 'NOAA NHC';
-
-  if (isModelGraphic) {
-    return <ModelCard item={item} variant="featured" className={className} />;
-  }
-
-  // Priority border
-  const priorityBorderClass =
-    item.priority === 'high'
-      ? 'border-red-500'
-      : item.priority === 'medium'
-      ? 'border-yellow-500'
-      : themeClasses.borderColor;
+  // Calculate time ago
+  const timeAgo = getTimeAgo(new Date(item.timestamp));
 
   return (
     <Card
       className={cn(
-        'border-2 overflow-hidden',
-        priorityBorderClass,
+        'border-4 overflow-hidden group cursor-pointer transition-all hover:shadow-xl',
+        item.priority === 'high' ? 'border-red-500' : themeClasses.borderColor,
         themeClasses.background,
         className
       )}
+      onClick={() => window.open(item.url, '_blank', 'noopener,noreferrer')}
     >
-      <div className="flex flex-col md:flex-row">
-        {/* Image Section */}
+      <div className="flex flex-col lg:flex-row">
+        {/* Image */}
         {item.imageUrl && !imageError ? (
-          <div className="relative w-full md:w-1/2 h-64 md:h-80">
-            <Image
+          <div className="relative w-full lg:w-1/2 h-64 lg:h-80 overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src={item.imageUrl}
               alt={item.title}
-              fill
-              className="object-cover"
-              priority
+              className="w-full h-full object-cover transition-transform group-hover:scale-105"
               onError={() => setImageError(true)}
             />
-            {/* Overlay badges */}
-            <div className="absolute top-4 left-4 flex flex-col gap-2">
-              <div className={cn('px-3 py-1.5 rounded font-mono font-bold text-xs flex items-center gap-2 bg-black/70 text-white')}>
-                <TrendingUp className="w-4 h-4" />
-                FEATURED STORY
-              </div>
+            <div className="absolute top-4 left-4 flex gap-2 flex-wrap">
               <PriorityIndicator priority={item.priority} showLabel size="md" />
             </div>
           </div>
         ) : (
-          // Fallback if no image
           <div
             className={cn(
-              'w-full md:w-1/2 h-64 md:h-80 flex flex-col items-center justify-center gap-4 border-r-2',
+              'w-full lg:w-1/2 h-64 lg:h-80 flex items-center justify-center border-b-2 lg:border-b-0 lg:border-r-2',
               themeClasses.borderColor,
-              themeClasses.accentBg
+              themeClasses.background
             )}
           >
-            <div className={cn('px-4 py-2 rounded font-mono font-bold text-sm')}>
-              <TrendingUp className="w-8 h-8 mb-2" />
-              FEATURED STORY
+            <div className="text-center p-8">
+              <CategoryBadge category={item.category} className="text-lg px-4 py-2" />
+              {item.magnitude && (
+                <div className="mt-4">
+                  <span className={cn(
+                    'inline-flex items-center gap-2 px-4 py-2 text-2xl font-bold border-4 rounded font-mono',
+                    item.magnitude >= 6 ? 'bg-red-600 text-white border-red-800' :
+                    item.magnitude >= 5 ? 'bg-orange-500 text-white border-orange-700' :
+                    'bg-yellow-500 text-black border-yellow-700'
+                  )}>
+                    <Activity className="w-6 h-6" />
+                    M{item.magnitude.toFixed(1)}
+                  </span>
+                </div>
+              )}
             </div>
-            <CategoryBadge category={item.category as any} />
-            <PriorityIndicator priority={item.priority} showLabel size="lg" />
           </div>
         )}
 
-        {/* Content Section */}
-        <CardContent className="flex-1 p-6 md:p-8 flex flex-col justify-between">
-          {/* Header */}
-          <div className="flex-1">
-            <div className="flex gap-2 mb-4 flex-wrap">
-              <CategoryBadge category={item.category as any} />
-              {(!item.imageUrl || imageError) && (
-                <PriorityIndicator priority={item.priority} showLabel size="sm" />
+        {/* Content */}
+        <CardContent className="flex-1 p-6 lg:p-8 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-4 flex-wrap">
+              <CategoryBadge category={item.category} />
+              {item.magnitude && (
+                <span className={cn(
+                  'inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold border-2 rounded font-mono',
+                  item.magnitude >= 6 ? 'bg-red-600 text-white border-red-800' :
+                  item.magnitude >= 5 ? 'bg-orange-500 text-white border-orange-700' :
+                  'bg-yellow-500 text-black border-yellow-700'
+                )}>
+                  <Activity className="w-3 h-3" />
+                  M{item.magnitude.toFixed(1)}
+                </span>
               )}
             </div>
-
             <h2
               className={cn(
-                'text-2xl sm:text-3xl md:text-4xl font-extrabold font-mono mb-4 leading-tight',
+                'text-xl sm:text-2xl lg:text-3xl font-bold font-mono mb-4 group-hover:underline',
                 themeClasses.headerText
               )}
             >
               {item.title}
             </h2>
-
             {item.description && (
-              <p className={cn('text-base sm:text-lg mb-6 line-clamp-4', themeClasses.text)}>
+              <p className={cn('text-sm sm:text-base lg:text-lg mb-4', themeClasses.text)}>
                 {item.description}
               </p>
             )}
           </div>
 
-          {/* Footer */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t-2">
-            <div className="flex flex-col gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-4 pt-4 border-t-2 border-dashed">
+            <div className="flex flex-col gap-1">
               <div className={cn('text-sm flex items-center gap-2', themeClasses.text)}>
                 <Clock className="w-4 h-4" />
-                <span className="font-mono">{timeAgo}</span>
+                <span>{timeAgo}</span>
+                <span>•</span>
+                <span>{item.source}</span>
               </div>
-              <div className={cn('text-sm flex items-center gap-2', themeClasses.text)}>
-                <User className="w-4 h-4" />
-                <span className="font-mono">{item.source}</span>
-              </div>
-            </div>
-
-            <Button
-              size="lg"
-              className={cn(
-                'font-mono font-bold text-sm border-2',
-                themeClasses.accentBg,
-                'hover:scale-105 transition-transform'
+              {item.location && (
+                <div className={cn('text-sm flex items-center gap-2', themeClasses.text)}>
+                  <MapPin className="w-4 h-4" />
+                  <span>{item.location}</span>
+                </div>
               )}
-              onClick={() => window.open(item.url, '_blank', 'noopener,noreferrer')}
+            </div>
+            <Button
+              variant="outline"
+              className={cn('font-mono font-bold border-2', themeClasses.accentText)}
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(item.url, '_blank', 'noopener,noreferrer');
+              }}
             >
               READ FULL STORY <ExternalLink className="w-4 h-4 ml-2" />
             </Button>
@@ -164,13 +158,9 @@ function getTimeAgo(date: Date): string {
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins} minutes ago`;
+  if (diffMins < 60) return `${diffMins} min ago`;
   if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
   if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
 
-  return date.toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
-  });
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }

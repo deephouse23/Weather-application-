@@ -8,33 +8,47 @@
 'use client';
 
 import React from 'react';
-import { Search, RefreshCw } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { 
+  Search, 
+  RefreshCw, 
+  Activity, 
+  Mountain, 
+  Sun, 
+  Thermometer, 
+  CloudLightning, 
+  FlaskConical, 
+  Wind,
+  LayoutGrid
+} from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
-import type { NewsCategory, NewsPriority } from '@/lib/types/news';
+import type { FeedCategory } from '@/lib/services/rss/feedSources';
+
+type FilterCategory = FeedCategory | 'all';
 
 interface NewsFilterProps {
-  onCategoryChange: (category: NewsCategory | 'all') => void;
+  onCategoryChange: (category: FilterCategory) => void;
   onSearchChange: (query: string) => void;
   onRefresh: () => void;
-  currentCategory?: NewsCategory | 'all';
+  currentCategory?: FilterCategory;
   searchQuery?: string;
   isLoading?: boolean;
   className?: string;
 }
 
-const categories: { id: NewsCategory | 'all'; label: string }[] = [
-  { id: 'all', label: 'ALL' },
-  { id: 'alerts', label: 'ALERTS' },
-  { id: 'breaking', label: 'BREAKING' },
-  { id: 'severe', label: 'SEVERE' },
-  { id: 'climate', label: 'CLIMATE' },
-  { id: 'local', label: 'LOCAL' },
-  { id: 'community', label: 'COMMUNITY' },
+const categories: { id: FilterCategory; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: 'all', label: 'ALL', icon: LayoutGrid },
+  { id: 'earthquakes', label: 'QUAKES', icon: Activity },
+  { id: 'volcanoes', label: 'VOLCANOES', icon: Mountain },
+  { id: 'space', label: 'SPACE', icon: Sun },
+  { id: 'climate', label: 'CLIMATE', icon: Thermometer },
+  { id: 'severe', label: 'SEVERE', icon: CloudLightning },
+  { id: 'hurricanes', label: 'TROPICAL', icon: Wind },
+  { id: 'science', label: 'SCIENCE', icon: FlaskConical },
 ];
 
 export default function NewsFilter({
@@ -68,7 +82,7 @@ export default function NewsFilter({
           <Search className={cn('absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4', themeClasses.text)} />
           <Input
             type="text"
-            placeholder="Search weather news..."
+            placeholder="Search news..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
             className={cn(
@@ -94,39 +108,43 @@ export default function NewsFilter({
       {/* Category Tabs */}
       <Tabs
         value={currentCategory}
-        onValueChange={(value) => onCategoryChange(value as NewsCategory | 'all')}
+        onValueChange={(value) => onCategoryChange(value as FilterCategory)}
         className="w-full"
       >
         <TabsList
           className={cn(
-            'w-full grid grid-cols-3 sm:grid-cols-7 gap-1 p-1 border-2 font-mono',
+            'w-full flex flex-wrap gap-1 p-1 border-2 font-mono h-auto',
             themeClasses.background,
             themeClasses.borderColor
           )}
         >
-          {categories.map((cat) => (
-            <TabsTrigger
-              key={cat.id}
-              value={cat.id}
-              className={cn(
-                'text-xs sm:text-sm font-bold uppercase tracking-wide border-2 data-[state=active]:border-current transition-all',
-                themeClasses.text,
-                themeClasses.borderColor
-              )}
-            >
-              {cat.label}
-            </TabsTrigger>
-          ))}
+          {categories.map((cat) => {
+            const Icon = cat.icon;
+            return (
+              <TabsTrigger
+                key={cat.id}
+                value={cat.id}
+                className={cn(
+                  'flex items-center gap-1 text-xs sm:text-sm font-bold uppercase tracking-wide border-2 data-[state=active]:border-current transition-all px-2 sm:px-3 py-1.5',
+                  themeClasses.text,
+                  themeClasses.borderColor
+                )}
+              >
+                <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">{cat.label}</span>
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
       </Tabs>
 
       {/* Active filters indicator */}
       {(searchQuery || currentCategory !== 'all') && (
-        <div className={cn('flex items-center gap-2 text-xs font-mono', themeClasses.text)}>
-          <span>Active filters:</span>
+        <div className={cn('flex items-center gap-2 text-xs font-mono flex-wrap', themeClasses.text)}>
+          <span>Filters:</span>
           {currentCategory !== 'all' && (
             <span className={cn('px-2 py-1 rounded border', themeClasses.accentText)}>
-              {currentCategory.toUpperCase()}
+              {categories.find(c => c.id === currentCategory)?.label || currentCategory.toUpperCase()}
             </span>
           )}
           {searchQuery && (
@@ -144,7 +162,7 @@ export default function NewsFilter({
             }}
             className="text-xs font-mono underline"
           >
-            Clear all
+            Clear
           </Button>
         </div>
       )}
