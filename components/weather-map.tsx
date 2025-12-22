@@ -21,11 +21,7 @@ const MapComponent = dynamic(() => import('./weather-map-openlayers'), {
 })
 
 const WeatherMap = (props: WeatherMapProps) => {
-  return (
-    <div className="w-full h-full">
-      <MapComponent {...props} />
-    </div>
-  )
+  return <MapComponent {...props} />
 }
 
 export default WeatherMap

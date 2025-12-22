@@ -348,7 +348,7 @@ function WeatherApp() {
                 })()}
 
                 {/* Weather Radar - Moved Below Forecast */}
-                <div className="mt-6">
+                <div className="mt-6 mb-24">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className={cn("text-xl font-semibold text-center flex-1", themeClasses.headerText, themeClasses.glow)}>
                       Weather Radar
@@ -360,8 +360,7 @@ function WeatherApp() {
                       VIEW FULL MAP →
                     </Link>
                   </div>
-                  {/* Container with overflow-visible to allow controls to render properly */}
-                  <div className="h-[450px] rounded-lg overflow-visible">
+                  <div className="rounded-lg">
                     <LazyWeatherMap
                       latitude={weather?.coordinates?.lat}
                       longitude={weather?.coordinates?.lon}

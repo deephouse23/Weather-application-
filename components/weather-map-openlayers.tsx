@@ -441,10 +441,10 @@ const WeatherMapOpenLayers = ({
   return (
     <div 
       data-radar-container
-      className={`relative w-full h-full rounded-lg overflow-visible ${themeStyles.container}`}
-      style={{ minHeight: '350px', height: '100%' }}
+      className={`relative w-full rounded-lg overflow-visible ${themeStyles.container}`}
+      style={{ height: 'calc(100vh - 200px)', minHeight: '400px' }}
     >
-      {/* Map Container - needs explicit height for OpenLayers to render */}
+      {/* Map Container */}
       <div 
         ref={mapRef} 
         className="absolute inset-0 bg-gray-900 rounded-lg overflow-hidden"
@@ -516,11 +516,11 @@ const WeatherMapOpenLayers = ({
         )}
       </div>
 
-      {/* Animation Controls - Positioned at TOP of map for better visibility */}
+      {/* Animation Controls - Fixed at bottom of viewport */}
       {isUSLocation && activeLayers.precipitation && timestamps.length > 0 && (
         <div 
-          className="absolute top-16 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-auto"
-          style={{ zIndex: 2000 }}
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+          style={{ zIndex: 9999 }}
         >
           {/* Compact Controls Bar */}
           <div className="flex items-center gap-2 bg-gray-900/95 px-3 py-2 rounded-md border-2 border-cyan-500 shadow-2xl backdrop-blur-sm">
