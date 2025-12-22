@@ -442,13 +442,12 @@ const WeatherMapOpenLayers = ({
     <div 
       data-radar-container
       className={`relative w-full rounded-lg overflow-visible ${themeStyles.container}`}
-      style={{ height: 'calc(100vh - 200px)', minHeight: '400px' }}
+      style={{ height: '500px' }}
     >
       {/* Map Container */}
       <div 
         ref={mapRef} 
-        className="absolute inset-0 bg-gray-900 rounded-lg overflow-hidden"
-        style={{ zIndex: 1 }}
+        className="w-full h-full bg-gray-900 rounded-lg overflow-hidden"
       />
 
       {/* Loading Indicator - Only show when not playing to avoid visual disruption */}

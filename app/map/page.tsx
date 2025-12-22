@@ -250,7 +250,7 @@ export default function MapPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex flex-col">
+    <div className="h-screen w-full flex flex-col">
       <Navigation />
 
       {/* Breadcrumb Header */}
@@ -282,8 +282,8 @@ export default function MapPage() {
         </button>
       </div>
 
-      {/* Map Container */}
-      <div className="flex-1 pb-24">
+      {/* Map Container - flex-1 takes remaining height */}
+      <div className="flex-1 min-h-0 pb-24">
         <WeatherMap
           latitude={weatherData.coordinates!.lat}
           longitude={weatherData.coordinates!.lon}
