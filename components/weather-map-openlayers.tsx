@@ -122,10 +122,16 @@ const WeatherMapOpenLayers = ({
     mapInstanceRef.current = map
 
     // Fix for production: force map to recalculate size after container renders
+    // Multiple updates to handle different rendering timing scenarios
     setTimeout(() => {
       map.updateSize()
-      console.log('📐 [v4] Map size updated')
+      console.log('📐 [v5] Map size updated (100ms)')
     }, 100)
+    
+    setTimeout(() => {
+      map.updateSize()
+      console.log('📐 [v5] Map size updated (500ms)')
+    }, 500)
 
     // Also update on window resize
     const handleResize = () => map.updateSize()
@@ -436,13 +442,13 @@ const WeatherMapOpenLayers = ({
     <div 
       data-radar-container
       className={`relative w-full h-full rounded-lg overflow-visible ${themeStyles.container}`}
-      style={{ minHeight: '350px' }}
+      style={{ minHeight: '350px', height: '100%' }}
     >
-      {/* Map Container - explicit dimensions for production */}
+      {/* Map Container - needs explicit height for OpenLayers to render */}
       <div 
         ref={mapRef} 
         className="absolute inset-0 bg-gray-900 rounded-lg overflow-hidden"
-        style={{ zIndex: 1, width: '100%', height: '100%', minHeight: '350px' }}
+        style={{ zIndex: 1 }}
       />
 
       {/* Loading Indicator - Only show when not playing to avoid visual disruption */}
