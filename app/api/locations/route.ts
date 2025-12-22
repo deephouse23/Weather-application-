@@ -27,38 +27,53 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create Supabase client with the user's token
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-    console.log('Creating Supabase client with auth header')
-
-    const supabase = createClient(supabaseUrl, supabaseKey, {
+    // Create auth client to verify user's token
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: {
           Authorization: authHeader
         }
+      },
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
       }
     })
 
-    console.log('Supabase client created')
-
-    // Verify the user is authenticated and matches the user_id
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Verify the user is authenticated
+    const { data: { user }, error: authError } = await authClient.auth.getUser()
 
     if (authError || !user) {
+      console.error('Auth error:', authError)
       return NextResponse.json(
         { error: 'Invalid authentication' },
         { status: 401 }
       )
     }
 
+    // Verify user_id matches the authenticated user
     if (user.id !== user_id) {
+      console.error('User ID mismatch:', { tokenUserId: user.id, payloadUserId: user_id })
       return NextResponse.json(
         { error: 'User ID mismatch' },
         { status: 403 }
       )
     }
+
+    console.log('User verified:', user.id)
+
+    // Create service role client for database operations (bypasses RLS)
+    // This is safe because we've already verified the user owns this request
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
 
     // Prepare location data matching the actual database schema
     const locationData = {
@@ -76,20 +91,20 @@ export async function POST(request: NextRequest) {
 
     // Check if location already exists for this user
     console.log('Checking for existing location...')
-    const { data: existingLocation, error: checkError } = await supabase
+    const { data: existingLocations, error: checkError } = await supabase
       .from('saved_locations')
-      .select('*')
+      .select('id')
       .eq('user_id', user_id)
       .eq('latitude', locationData.latitude)
       .eq('longitude', locationData.longitude)
-      .single()
+      .limit(1)
 
-    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
+    if (checkError) {
       console.error('Error checking existing location:', checkError)
     }
 
-    if (existingLocation) {
-      console.log('Location already exists:', existingLocation)
+    if (existingLocations && existingLocations.length > 0) {
+      console.log('Location already exists')
       return NextResponse.json(
         { error: 'This location is already saved', existing: true },
         { status: 409 }
@@ -98,6 +113,7 @@ export async function POST(request: NextRequest) {
 
     // Insert the location
     console.log('Attempting to save location:', locationData)
+    
     const { data, error } = await supabase
       .from('saved_locations')
       .insert(locationData)
@@ -106,9 +122,21 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Database insert error:', error)
-      console.error('Error details:', error.details, error.hint)
+      console.error('Error code:', error.code)
+      console.error('Error message:', error.message)
+      console.error('Error details:', error.details)
+      console.error('Error hint:', error.hint)
+      
+      // Check for specific RLS violation
+      if (error.code === '42501') {
+        return NextResponse.json(
+          { error: 'Permission denied - RLS policy violation', details: error.message },
+          { status: 403 }
+        )
+      }
+      
       return NextResponse.json(
-        { error: 'Failed to save location', details: error.message },
+        { error: 'Failed to save location', details: error.message, code: error.code },
         { status: 500 }
       )
     }
@@ -137,31 +165,43 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Create Supabase client with the user's token
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-    console.log('Creating Supabase client with auth header')
-
-    const supabase = createClient(supabaseUrl, supabaseKey, {
+    // Create auth client to verify user's token
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: {
           Authorization: authHeader
         }
+      },
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
       }
     })
 
-    console.log('Supabase client created')
-
     // Verify the user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await authClient.auth.getUser()
 
     if (authError || !user) {
+      console.error('Auth error:', authError)
       return NextResponse.json(
         { error: 'Invalid authentication' },
         { status: 401 }
       )
     }
+
+    console.log('User verified for GET:', user.id)
+
+    // Create service role client for database operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
 
     // Get user's saved locations
     const { data, error } = await supabase
