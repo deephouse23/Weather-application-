@@ -15,19 +15,19 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    
+
     // Parse query parameters
     const categoriesParam = searchParams.get('categories');
     const maxItems = parseInt(searchParams.get('maxItems') || '50', 10);
     const maxAge = parseInt(searchParams.get('maxAge') || '72', 10);
     const featured = searchParams.get('featured') === 'true';
-    
+
     // Parse categories
     let categories: FeedCategory[] | undefined;
     if (categoriesParam) {
       categories = categoriesParam.split(',').filter(Boolean) as FeedCategory[];
     }
-    
+
     // Return featured item if requested
     if (featured) {
       const featuredItem = await getFeaturedItem();
@@ -37,20 +37,24 @@ export async function GET(request: NextRequest) {
         categories: getCategoryConfig(),
       });
     }
-    
+
     // Aggregate feeds
     const result = await aggregateFeeds({
       categories,
       maxItems: Math.min(maxItems, 100), // Cap at 100
       maxAge: Math.min(maxAge, 168), // Cap at 1 week
     });
-    
+
     return NextResponse.json({
       status: 'ok',
       items: result.items,
       stats: result.stats,
       lastUpdated: result.lastUpdated.toISOString(),
       categories: getCategoryConfig(),
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=43200',
+      },
     });
   } catch (error) {
     console.error('RSS aggregation error:', error);

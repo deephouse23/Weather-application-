@@ -39,7 +39,7 @@ export interface AggregatedResult {
 
 // In-memory cache
 const cache = new Map<string, { data: AggregatedResult; timestamp: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours (2x daily refresh)
 
 /**
  * Simple hash function for generating unique IDs

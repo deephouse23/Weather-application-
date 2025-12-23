@@ -34,6 +34,11 @@ node_modules/
 .env.development
 .env.infisical
 
+# MCP configuration (contains secrets)
+.mcp.json
+.mcp.json.bak
+*.mcp.json
+
 # Supabase secrets (CRITICAL - never commit these)
 .env.supabase
 **/supabase-key*
