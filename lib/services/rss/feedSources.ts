@@ -5,7 +5,7 @@
  * Licensed under Fair Source License, Version 0.9
  */
 
-export type FeedCategory = 
+export type FeedCategory =
   | 'earthquakes'
   | 'volcanoes'
   | 'space'
@@ -35,7 +35,7 @@ export const FEED_SOURCES: FeedSource[] = [
     priority: 'high',
     enabled: true,
     format: 'atom',
-    refreshInterval: 5,
+    refreshInterval: 360, // 6 hours = 2x daily
   },
   {
     id: 'usgs-m45',
@@ -45,7 +45,7 @@ export const FEED_SOURCES: FeedSource[] = [
     priority: 'medium',
     enabled: true,
     format: 'atom',
-    refreshInterval: 10,
+    refreshInterval: 360, // 6 hours = 2x daily
   },
   {
     id: 'usgs-m25',
@@ -55,7 +55,7 @@ export const FEED_SOURCES: FeedSource[] = [
     priority: 'low',
     enabled: true,
     format: 'atom',
-    refreshInterval: 15,
+    refreshInterval: 360, // 6 hours = 2x daily
   },
 
   // Volcanoes
