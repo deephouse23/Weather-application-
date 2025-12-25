@@ -1,0 +1,818 @@
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;500;600;700;800&family=VT323&display=swap');
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+
+/* ═══════════════════════════════════════════════════════════
+   SHADCN/UI CSS VARIABLES - Single Source of Truth
+   All theme colors use HSL format for Tailwind compatibility
+   ═══════════════════════════════════════════════════════════ */
+
+@layer base {
+
+  /* Default/Dark theme */
+  :root {
+    --background: 220 41% 7%;
+    --foreground: 210 17% 82%;
+    --card: 217 33% 15%;
+    --card-foreground: 210 17% 82%;
+    --popover: 217 33% 15%;
+    --popover-foreground: 210 17% 82%;
+    --primary: 191 100% 50%;
+    --primary-foreground: 220 41% 7%;
+    --secondary: 264 85% 62%;
+    --secondary-foreground: 210 17% 82%;
+    --muted: 217 19% 27%;
+    --muted-foreground: 210 13% 50%;
+    --accent: 264 85% 62%;
+    --accent-foreground: 210 17% 82%;
+    --destructive: 0 72% 61%;
+    --destructive-foreground: 210 17% 82%;
+    --border: 217 19% 27%;
+    --input: 217 19% 27%;
+    --ring: 191 100% 50%;
+    --chart-1: 191 100% 50%;
+    --chart-2: 264 85% 62%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 0 72% 61%;
+    --radius: 1rem;
+
+    --font-sans: 'Inconsolata', monospace;
+    --font-display: 'VT323', monospace;
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-black: 800;
+
+    /* Legacy 16-bit variables mapped to HSL values for backward compatibility */
+    --bg: hsl(220 41% 7%);
+    --bg-elev: hsl(217 33% 15%);
+    --text: hsl(210 17% 82%);
+    --text-muted: hsl(210 13% 50%);
+    --weather-primary: hsl(191 100% 50%);
+    --weather-accent: hsl(264 85% 62%);
+    --ok: hsl(142 71% 45%);
+    --warn: hsl(38 92% 50%);
+    --danger: hsl(0 72% 61%);
+  }
+
+  /* Dark theme explicit */
+  :root[data-theme="dark"] {
+    --background: 220 41% 7%;
+    --foreground: 210 17% 82%;
+    --card: 217 33% 15%;
+    --card-foreground: 210 17% 82%;
+    --popover: 217 33% 15%;
+    --popover-foreground: 210 17% 82%;
+    --primary: 191 100% 50%;
+    --primary-foreground: 220 41% 7%;
+    --secondary: 264 85% 62%;
+    --secondary-foreground: 210 17% 82%;
+    --muted: 217 19% 27%;
+    --muted-foreground: 210 13% 50%;
+    --accent: 264 85% 62%;
+    --accent-foreground: 210 17% 82%;
+    --destructive: 0 72% 61%;
+    --destructive-foreground: 210 17% 82%;
+    --border: 217 19% 27%;
+    --input: 217 19% 27%;
+    --ring: 191 100% 50%;
+
+    --bg: hsl(220 41% 7%);
+    --bg-elev: hsl(217 33% 15%);
+    --text: hsl(210 17% 82%);
+    --text-muted: hsl(210 13% 50%);
+    --weather-primary: hsl(191 100% 50%);
+    --weather-accent: hsl(264 85% 62%);
+  }
+
+  /* Miami Vice theme */
+  :root[data-theme="miami"] {
+    --background: 256 62% 13%;
+    --foreground: 23 100% 73%;
+    --card: 300 68% 18%;
+    --card-foreground: 23 100% 73%;
+    --popover: 300 68% 18%;
+    --popover-foreground: 23 100% 73%;
+    --primary: 23 100% 73%;
+    --primary-foreground: 256 62% 13%;
+    --secondary: 328 73% 59%;
+    --secondary-foreground: 256 62% 13%;
+    --muted: 256 100% 10%;
+    --muted-foreground: 328 73% 59%;
+    --accent: 328 73% 59%;
+    --accent-foreground: 256 62% 13%;
+    --destructive: 0 72% 61%;
+    --destructive-foreground: 23 100% 73%;
+    --border: 23 100% 73%;
+    --input: 300 68% 18%;
+    --ring: 23 100% 73%;
+
+    --bg: hsl(256 62% 13%);
+    --bg-elev: hsl(300 68% 18%);
+    --text: hsl(23 100% 73%);
+    --text-muted: hsl(328 73% 59%);
+    --weather-primary: hsl(23 100% 73%);
+    --weather-accent: hsl(328 73% 59%);
+  }
+
+  /* TRON theme */
+  :root[data-theme="tron"] {
+    --background: 0 0% 0%;
+    --foreground: 180 100% 50%;
+    --card: 0 0% 4%;
+    --card-foreground: 180 100% 50%;
+    --popover: 0 0% 4%;
+    --popover-foreground: 180 100% 50%;
+    --primary: 180 100% 50%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 165 59% 62%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 180 100% 7%;
+    --muted-foreground: 189 100% 76%;
+    --accent: 165 59% 62%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 4 90% 58%;
+    --destructive-foreground: 180 100% 50%;
+    --border: 180 100% 50%;
+    --input: 180 100% 7%;
+    --ring: 180 100% 50%;
+
+    --bg: hsl(0 0% 0%);
+    --bg-elev: hsl(0 0% 4%);
+    --text: hsl(180 100% 50%);
+    --text-muted: hsl(189 100% 76%);
+    --weather-primary: hsl(180 100% 50%);
+    --weather-accent: hsl(165 59% 62%);
+  }
+
+  /* Atari 2600 theme */
+  :root[data-theme="atari2600"] {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 72 66% 76%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 10 100% 30%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 53%;
+    --accent: 10 100% 30%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 10 100% 30%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 20 100% 26%;
+    --input: 0 0% 10%;
+    --ring: 72 66% 76%;
+
+    --bg: hsl(0 0% 0%);
+    --bg-elev: hsl(0 0% 10%);
+    --text: hsl(0 0% 100%);
+    --text-muted: hsl(0 0% 53%);
+    --weather-primary: hsl(72 66% 76%);
+    --weather-accent: hsl(10 100% 30%);
+  }
+
+  /* Terminal Green / Monochrome Green theme */
+  :root[data-theme="monochromeGreen"] {
+    --background: 0 0% 5%;
+    --foreground: 120 100% 60%;
+    --card: 0 0% 10%;
+    --card-foreground: 120 100% 60%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 120 100% 60%;
+    --primary: 120 100% 60%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 120 100% 80%;
+    --secondary-foreground: 0 0% 5%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 120 100% 70%;
+    --accent: 120 100% 80%;
+    --accent-foreground: 0 0% 5%;
+    --destructive: 120 100% 60%;
+    --destructive-foreground: 0 0% 5%;
+    --border: 120 100% 30%;
+    --input: 0 0% 10%;
+    --ring: 120 100% 60%;
+
+    --bg: hsl(0 0% 5%);
+    --bg-elev: hsl(0 0% 10%);
+    --text: hsl(120 100% 60%);
+    --text-muted: hsl(120 100% 70%);
+    --weather-primary: hsl(120 100% 60%);
+    --weather-accent: hsl(120 100% 80%);
+  }
+
+  /* 8-Bit Classic theme */
+  :root[data-theme="8bitClassic"] {
+    --background: 0 0% 83%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 75%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 75%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 0 100% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 100% 40%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 75%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 210 100% 40%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 100% 40%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 0%;
+    --input: 0 0% 75%;
+    --ring: 0 100% 40%;
+
+    --bg: hsl(0 0% 83%);
+    --bg-elev: hsl(0 0% 75%);
+    --text: hsl(0 0% 0%);
+    --text-muted: hsl(0 0% 40%);
+    --weather-primary: hsl(0 100% 40%);
+    --weather-accent: hsl(210 100% 40%);
+  }
+
+  /* 16-Bit SNES theme */
+  :root[data-theme="16bitSnes"] {
+    --background: 240 18% 77%;
+    --foreground: 240 19% 22%;
+    --card: 240 13% 67%;
+    --card-foreground: 240 19% 22%;
+    --popover: 240 13% 67%;
+    --popover-foreground: 240 19% 22%;
+    --primary: 51 100% 50%;
+    --primary-foreground: 240 19% 22%;
+    --secondary: 240 20% 63%;
+    --secondary-foreground: 240 19% 22%;
+    --muted: 240 13% 67%;
+    --muted-foreground: 240 15% 49%;
+    --accent: 240 20% 63%;
+    --accent-foreground: 240 19% 22%;
+    --destructive: 4 90% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 21% 45%;
+    --input: 240 13% 67%;
+    --ring: 51 100% 50%;
+
+    --bg: hsl(240 18% 77%);
+    --bg-elev: hsl(240 13% 67%);
+    --text: hsl(240 19% 22%);
+    --text-muted: hsl(240 15% 49%);
+    --weather-primary: hsl(51 100% 50%);
+    --weather-accent: hsl(240 20% 63%);
+  }
+
+  /* Synthwave '84 theme */
+  :root[data-theme="synthwave84"] {
+    --background: 268 40% 15%;
+    --foreground: 0 0% 100%;
+    --card: 268 60% 25%;
+    --card-foreground: 0 0% 100%;
+    --popover: 268 60% 25%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 319 100% 75%;
+    --primary-foreground: 268 40% 15%;
+    --secondary: 180 100% 50%;
+    --secondary-foreground: 268 40% 15%;
+    --muted: 268 60% 25%;
+    --muted-foreground: 319 50% 70%;
+    --accent: 180 100% 50%;
+    --accent-foreground: 268 40% 15%;
+    --destructive: 0 72% 61%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 319 100% 75%;
+    --input: 268 60% 25%;
+    --ring: 319 100% 75%;
+
+    --bg: hsl(268 40% 15%);
+    --bg-elev: hsl(268 60% 25%);
+    --text: hsl(0 0% 100%);
+    --text-muted: hsl(319 50% 70%);
+    --weather-primary: hsl(319 100% 75%);
+    --weather-accent: hsl(180 100% 50%);
+  }
+
+  /* Tokyo Night theme */
+  :root[data-theme="tokyoNight"] {
+    --background: 235 21% 13%;
+    --foreground: 226 64% 88%;
+    --card: 232 23% 18%;
+    --card-foreground: 226 64% 88%;
+    --popover: 232 23% 18%;
+    --popover-foreground: 226 64% 88%;
+    --primary: 199 89% 74%;
+    --primary-foreground: 235 21% 13%;
+    --secondary: 267 42% 67%;
+    --secondary-foreground: 235 21% 13%;
+    --muted: 232 23% 18%;
+    --muted-foreground: 267 42% 67%;
+    --accent: 267 42% 67%;
+    --accent-foreground: 235 21% 13%;
+    --destructive: 0 72% 61%;
+    --destructive-foreground: 226 64% 88%;
+    --border: 267 42% 67%;
+    --input: 232 23% 18%;
+    --ring: 199 89% 74%;
+
+    --bg: hsl(235 21% 13%);
+    --bg-elev: hsl(232 23% 18%);
+    --text: hsl(226 64% 88%);
+    --text-muted: hsl(267 42% 67%);
+    --weather-primary: hsl(199 89% 74%);
+    --weather-accent: hsl(267 42% 67%);
+  }
+
+  /* Dracula theme */
+  :root[data-theme="dracula"] {
+    --background: 231 15% 18%;
+    --foreground: 60 30% 96%;
+    --card: 232 14% 31%;
+    --card-foreground: 60 30% 96%;
+    --popover: 232 14% 31%;
+    --popover-foreground: 60 30% 96%;
+    --primary: 326 100% 74%;
+    --primary-foreground: 231 15% 18%;
+    --secondary: 265 89% 78%;
+    --secondary-foreground: 231 15% 18%;
+    --muted: 232 14% 31%;
+    --muted-foreground: 265 89% 78%;
+    --accent: 265 89% 78%;
+    --accent-foreground: 231 15% 18%;
+    --destructive: 0 72% 61%;
+    --destructive-foreground: 60 30% 96%;
+    --border: 326 100% 74%;
+    --input: 232 14% 31%;
+    --ring: 326 100% 74%;
+
+    --bg: hsl(231 15% 18%);
+    --bg-elev: hsl(232 14% 31%);
+    --text: hsl(60 30% 96%);
+    --text-muted: hsl(265 89% 78%);
+    --weather-primary: hsl(326 100% 74%);
+    --weather-accent: hsl(265 89% 78%);
+  }
+
+  /* Cyberpunk theme */
+  :root[data-theme="cyberpunk"] {
+    --background: 0 0% 5%;
+    --foreground: 56 100% 52%;
+    --card: 0 0% 8%;
+    --card-foreground: 56 100% 52%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 56 100% 52%;
+    --primary: 56 100% 52%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 180 100% 50%;
+    --secondary-foreground: 0 0% 5%;
+    --muted: 0 0% 8%;
+    --muted-foreground: 180 100% 50%;
+    --accent: 180 100% 50%;
+    --accent-foreground: 0 0% 5%;
+    --destructive: 348 100% 50%;
+    --destructive-foreground: 56 100% 52%;
+    --border: 180 100% 50%;
+    --input: 0 0% 8%;
+    --ring: 56 100% 52%;
+
+    --bg: hsl(0 0% 5%);
+    --bg-elev: hsl(0 0% 8%);
+    --text: hsl(56 100% 52%);
+    --text-muted: hsl(180 100% 50%);
+    --weather-primary: hsl(56 100% 52%);
+    --weather-accent: hsl(180 100% 50%);
+  }
+
+  /* Matrix theme */
+  :root[data-theme="matrix"] {
+    --background: 120 100% 3%;
+    --foreground: 120 100% 50%;
+    --card: 120 100% 5%;
+    --card-foreground: 120 100% 50%;
+    --popover: 120 100% 5%;
+    --popover-foreground: 120 100% 50%;
+    --primary: 120 100% 50%;
+    --primary-foreground: 120 100% 3%;
+    --secondary: 120 60% 35%;
+    --secondary-foreground: 120 100% 50%;
+    --muted: 120 100% 5%;
+    --muted-foreground: 120 60% 35%;
+    --accent: 120 60% 35%;
+    --accent-foreground: 120 100% 50%;
+    --destructive: 120 100% 50%;
+    --destructive-foreground: 120 100% 3%;
+    --border: 120 60% 35%;
+    --input: 120 100% 5%;
+    --ring: 120 100% 50%;
+
+    --bg: hsl(120 100% 3%);
+    --bg-elev: hsl(120 100% 5%);
+    --text: hsl(120 100% 50%);
+    --text-muted: hsl(120 60% 35%);
+    --weather-primary: hsl(120 100% 50%);
+    --weather-accent: hsl(120 60% 35%);
+  }
+
+  /* Base element styles */
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inconsolata', monospace;
+    font-weight: 400;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GLOBAL BASE STYLES (No !important needed)
+   ═══════════════════════════════════════════════════════════ */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-overflow-scrolling: touch;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Better scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--foreground) / 0.5);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   16-BIT WEATHER SPECIFIC COMPONENT STYLES
+   These use specific class names to avoid conflicts with shadcn/ui
+   ═══════════════════════════════════════════════════════════ */
+
+@layer components {
+
+  /* Weather-specific card styling (use .weather-card class) */
+  .weather-card {
+    background-color: var(--bg-elev);
+    border: 2px solid hsl(var(--border));
+    border-radius: var(--radius);
+  }
+
+  /* Pixel border effect for retro elements */
+  .pixel-border {
+    border-style: solid;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+
+  /* Pixel font for retro text */
+  .pixel-font {
+    font-family: 'Inconsolata', monospace;
+    letter-spacing: 0.5px;
+  }
+
+  /* Retro glow effects */
+  .pixel-glow {
+    text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
+  }
+
+  .glow {
+    text-shadow: 0 0 8px hsl(var(--primary)), 0 0 16px hsl(var(--primary)), 0 0 24px hsl(var(--primary));
+  }
+
+  .pixel-shadow {
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.8), 8px 8px 0 hsl(var(--primary) / 0.3);
+  }
+
+  /* Weather temperature styling */
+  .weather-temp {
+    color: hsl(var(--primary));
+    font-weight: bold;
+    text-shadow: 0 0 10px hsl(var(--primary) / 0.5);
+  }
+
+  /* Animation utility classes */
+  .animate-pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+    will-change: text-shadow;
+  }
+
+  .animate-slide-in {
+    animation: slideIn 0.5s ease-out forwards;
+    will-change: transform, opacity;
+  }
+
+  /* Hover effects */
+  .hover-scale:hover {
+    transform: scale(1.05);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   KEYFRAME ANIMATIONS
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes pulseGlow {
+
+  0%,
+  100% {
+    text-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+  }
+
+  50% {
+    text-shadow: 0 0 12px currentColor, 0 0 24px currentColor, 0 0 36px currentColor;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   UTILITY CLASSES
+   ═══════════════════════════════════════════════════════════ */
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Responsive font sizing utilities */
+  .text-responsive-sm {
+    font-size: clamp(0.75rem, 2vw, 0.875rem);
+  }
+
+  .text-responsive-base {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+  }
+
+  .text-responsive-lg {
+    font-size: clamp(1rem, 3vw, 1.25rem);
+  }
+
+  .text-responsive-xl {
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
+  }
+
+  .text-responsive-2xl {
+    font-size: clamp(1.5rem, 5vw, 2rem);
+  }
+
+  /* Responsive spacing utilities */
+  .space-responsive {
+    gap: clamp(0.5rem, 2vw, 1rem);
+  }
+
+  .padding-responsive {
+    padding: clamp(0.75rem, 3vw, 1.5rem);
+  }
+
+  .margin-responsive {
+    margin: clamp(0.5rem, 2vw, 1rem);
+  }
+
+  /* Touch-optimized components */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Container width utilities */
+  .container-responsive {
+    width: 100%;
+    max-width: min(100% - 2rem, 1200px);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Grid responsive patterns */
+  .grid-responsive-1-2 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(0.75rem, 2vw, 1.5rem);
+  }
+
+  @media (min-width: 641px) {
+    .grid-responsive-1-2 {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .grid-responsive-1-3 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(0.75rem, 2vw, 1.5rem);
+  }
+
+  @media (min-width: 641px) {
+    .grid-responsive-1-3 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1025px) {
+    .grid-responsive-1-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  /* Weather card animations */
+  .weather-card-enter {
+    animation: fadeInUp 0.4s ease-out forwards;
+  }
+
+  .weather-card-stagger-1 {
+    animation-delay: 50ms;
+  }
+
+  .weather-card-stagger-2 {
+    animation-delay: 100ms;
+  }
+
+  .weather-card-stagger-3 {
+    animation-delay: 150ms;
+  }
+
+  .weather-card-stagger-4 {
+    animation-delay: 200ms;
+  }
+
+  .weather-card-stagger-5 {
+    animation-delay: 250ms;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE STYLES
+   ═══════════════════════════════════════════════════════════ */
+
+/* Mobile touch improvements */
+button {
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+@media (max-width: 640px) {
+  body {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .space-y-6> :not([hidden])~ :not([hidden]) {
+    margin-top: 1rem;
+  }
+
+  .grid {
+    gap: 0.75rem;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  body {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+}
+
+@media (min-width: 1025px) {
+  body {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+}
+
+@media (max-width: 768px) {
+
+  nav a,
+  nav button {
+    min-height: 48px;
+    padding: 12px 16px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ACCESSIBILITY
+   ═══════════════════════════════════════════════════════════ */
+
+/* Improved focus states */
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Prevent text selection on interactive elements */
+.select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Better overflow handling */
+.break-words {
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RADAR/MAP EXCLUSIONS
+   These elements should not inherit theme text/border colors
+   ═══════════════════════════════════════════════════════════ */
+
+[data-radar-container],
+[data-radar-container] * {
+  /* Reset inherited styles for map elements */
+  image-rendering: auto;
+}
+
+[data-radar-container] img,
+[data-radar-container] canvas {
+  image-rendering: auto;
+  mix-blend-mode: normal;
+  filter: none;
+}
+
+/* Ensure OpenLayers doesn't capture pointer events for our controls */
+[data-radar-container] .ol-viewport {
+  z-index: 1 !important;
+}
+
+[data-radar-container] .ol-overlaycontainer,
+[data-radar-container] .ol-overlaycontainer-stopevent {
+  z-index: 2 !important;
+}
+
+/* Our controls should always be on top and interactive */
+[data-radar-container] > div:not([class*="ol-"]) {
+  position: relative;
+}

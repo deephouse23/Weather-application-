@@ -1,0 +1,60 @@
+Strategic implementation plan for a rich, layered, animated radar
+Phase 1 — Data and API foundation (One Call 3.0)
+Unify weather data on One Call 3.0:
+Add an internal /api/weather/onecall?lat&lon&units that calls 3.0 and returns current, minutely, hourly, daily, alerts.
+Replace 2.5 current/forecast usage with One Call 3.0 responses (keep your geocoding route unchanged).
+Cache responses (ISO minute buckets) server‑side for common coordinates to minimize quota.
+Quotas and errors:
+Respect 3.0 error codes: 400/401/404/429 with clear user messaging and backoff. See “API errors” section in docs for structure and meanings: One Call API 3.0.
+
+Phase 2 — Tile proxying and layers
+Proxy all map tile layers:
+Extend your /api/weather/radar proxy to accept a layer name and optional timestamp (e.g., /api/weather/radar/{layer}/{time}/{z}/{x}/{y}) and map to OpenWeather tile endpoints.
+Layers to expose first: precipitation_new, clouds_new, wind_new, pressure_new, temp_new.
+Add CDN‑friendly cache headers (e.g., s-maxage/stale-while-revalidate) per layer/time step.
+UI layer controls:
+Use shadcn DropdownMenu or Sheet to toggle layers and adjust per‑layer opacity (0.3–1.0).
+Default stack: base map → precipitation → clouds → wind (arrows/streamlines optional) → temperature.
+
+Phase 3 — Time‑lapse (past → now → future)
+Tile animation (recommended for fast path):
+Determine time steps supported by OpenWeather tiles (commonly 10‑min or hourly).
+Build a time index around “now” with N past frames and M future frames (e.g., past 1h in 6×10‑min steps; future 2–3h).
+Preload/buffer next/prev frames via hidden TileLayers so visible layer switches are instant; cross‑fade opacity for smoothness.
+Controls:
+Play/Pause button, FPS speed (0.5×, 1×, 2×), and a scrubber showing available frames.
+“Now” button snaps to current frame.
+Data‑driven animation (enhanced prediction using One Call 3.0):
+For near‑term “future” (up to +60 minutes), use the One Call 3.0 minutely precipitation to generate a canvas overlay that fills any gaps between tile steps.
+For +1–48h, step through hourly precipitation probability/intensity and render a coarse heatmap overlay to accompany tiles (optional but visually compelling).
+
+Phase 4 — UX polish and performance
+Preload strategy:
+Always keep at least ±2 frames buffered.
+Abort in‑flight tile fetches when the user scrubs.
+Visual smoothing:
+Ease opacity transitions between frames.
+Downsample frame rate if network is slow, with an on‑screen indicator (“reduced FPS”).
+Accessibility:
+Keyboard control for Play/Pause and scrubbing.
+Tooltips for layer toggles, speed, and frame time.
+
+Phase 5 — Security and ops
+Ensure all tile requests go through your server proxy (no public API key in client).
+Rate limiting:
+Server‑side caching and de‑dupe popular tiles; set lower TTLs for “now”, higher for past frames.
+Observability:
+Log tile error rates (401, 429) and autoscale caching/retries.
+Features you can add with One Call 3.0 (not yet installed in your flows)
+Minutely precipitation (next 60 minutes): drive “nowcast” overlays and near‑term animation.
+Alerts: Surface government weather alerts as an on‑map layer (badges or pins) and in the NEWS UI.
+Unified current + hourly + daily in one request: reduces drift between layers (temperature tile vs. current pane).
+
+
+Suggested scope sequence
+1) Switch the data backend to One Call 3.0 (current/minutely/hourly/daily/alerts) with caching.
+2) Proxy all OpenWeather map layers and add a layer picker with per‑layer opacity.
+3) Implement tile time‑lapse animation with prefetching and cross‑fade.
+4) Add minutely‑based nowcast overlay for +60m and hourly overlay for +48h as optional enhancement.
+5) Add alerts pins and a timeline cursor synced with the frame time.
+If you want, I can draft the routes and component contracts (no code changes yet) for the new /api/weather/onecall and the enhanced /api/weather/radar/{layer}/{time}/{z}/{x}/{y} and outline the Leaflet integration (TileLayer stack, buffering manager, and timeline controller).

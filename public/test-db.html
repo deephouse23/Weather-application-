@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Database Write Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Supabase Database Write Test</h1>
+    
+    <p>This page tests if we can write to the Supabase database.</p>
+    
+    <button onclick="testDatabaseWrite()">Test Database Write</button>
+    <button onclick="testLocationSave()">Test Location Save API</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        async function getAuthToken() {
+            // Check all localStorage keys for Supabase session
+            console.log('Looking for auth session in localStorage...');
+            const keys = Object.keys(localStorage);
+            console.log('Available keys:', keys);
+            
+            // Look for Supabase auth token keys
+            const authKeys = keys.filter(key => key.includes('auth-token') || key.includes('supabase'));
+            console.log('Auth-related keys:', authKeys);
+            
+            // Try different possible key formats
+            const possibleKeys = [
+                'sb-cckcvyccjntadoohjntr-auth-token',
+                'supabase.auth.token',
+                ...authKeys
+            ];
+            
+            for (const key of possibleKeys) {
+                const stored = localStorage.getItem(key);
+                if (stored) {
+                    try {
+                        const data = JSON.parse(stored);
+                        console.log(`Found session data in ${key}:`, data);
+                        
+                        // Check for access_token in various locations
+                        if (data.access_token) {
+                            return data.access_token;
+                        }
+                        if (data.session && data.session.access_token) {
+                            return data.session.access_token;
+                        }
+                        if (data.currentSession && data.currentSession.access_token) {
+                            return data.currentSession.access_token;
+                        }
+                    } catch (e) {
+                        console.log(`Failed to parse ${key}:`, e);
+                    }
+                }
+            }
+            
+            // Also check sessionStorage
+            console.log('Checking sessionStorage...');
+            for (const key of Object.keys(sessionStorage)) {
+                if (key.includes('supabase') || key.includes('auth')) {
+                    console.log('Found in sessionStorage:', key);
+                }
+            }
+            
+            throw new Error('No auth session found. Please make sure you are logged in.');
+        }
+        
+        async function testDatabaseWrite() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = 'Testing database write...\n';
+            
+            try {
+                const token = await getAuthToken();
+                resultsDiv.innerHTML += `✓ Got auth token\n`;
+                
+                const response = await fetch('/api/test-db-write', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML += `<span class="success">✓ Database write successful!</span>\n`;
+                    resultsDiv.innerHTML += JSON.stringify(data, null, 2);
+                } else {
+                    resultsDiv.innerHTML += `<span class="error">✗ Database write failed!</span>\n`;
+                    resultsDiv.innerHTML += JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                resultsDiv.innerHTML += `<span class="error">✗ Error: ${error.message}</span>\n`;
+            }
+        }
+        
+        async function testLocationSave() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = 'Testing location save API...\n';
+            
+            try {
+                const token = await getAuthToken();
+                resultsDiv.innerHTML += `✓ Got auth token\n`;
+                
+                // First get user info
+                const testData = {
+                    user_id: 'will-be-replaced',
+                    location_name: 'San Francisco, California',
+                    city: 'San Francisco',
+                    state: 'California',
+                    country: 'US',
+                    latitude: 37.7749,
+                    longitude: -122.4194,
+                    is_favorite: false,
+                    custom_name: 'Test SF',
+                    notes: 'Test from ' + new Date().toISOString()
+                };
+                
+                // We need to get the user ID first
+                // For now, let's just try the save
+                resultsDiv.innerHTML += `Sending test location data...\n`;
+                
+                const response = await fetch('/api/locations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML += `<span class="success">✓ Location save successful!</span>\n`;
+                    resultsDiv.innerHTML += JSON.stringify(data, null, 2);
+                } else {
+                    resultsDiv.innerHTML += `<span class="error">✗ Location save failed!</span>\n`;
+                    resultsDiv.innerHTML += `Status: ${response.status}\n`;
+                    resultsDiv.innerHTML += JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                resultsDiv.innerHTML += `<span class="error">✗ Error: ${error.message}</span>\n`;
+            }
+        }
+    </script>
+</body>
+</html>

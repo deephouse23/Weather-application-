@@ -1,0 +1,90 @@
+﻿# Archive
+_archive/debugging/
+docs/archive/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+*.swp
+*.swo
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+/logs/
+
+# Build
+dist/
+.next/
+build/
+coverage/
+
+# dependencies
+/node_modules
+node_modules/
+
+# environment variables
+.env.local
+.env
+.env.production
+.env.development
+.env.infisical
+
+# MCP configuration (contains secrets)
+.mcp.json
+.mcp.json.bak
+*.mcp.json
+
+# Supabase secrets (CRITICAL - never commit these)
+.env.supabase
+**/supabase-key*
+**/*supabase*.env
+*SERVICE_ROLE_KEY*
+*SUPABASE_SERVICE_ROLE*
+
+# Specific Supabase key patterns to prevent accidental commits
+*eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9*
+*service_role*
+*anon_key*
+*cckcvyccjntadoohjntr*
+
+# TEMPORARY DEBUG FILES - NEVER COMMIT THESE
+local-dev-config.ts
+lib/weather-api-debug.ts
+DEBUG-USAGE-EXAMPLE.md
+components/api-test.tsx
+
+# git filter-branch artifacts
+.git-rewrite/
+# Allow committing Vercel project link file while ignoring other Vercel artifacts
+.vercel/*
+!.vercel/project.json
+
+# Build artifacts
+tsconfig.tsbuildinfo
+playwright-report/
+test-results/
+results/
+
+# Sentry setup guide with potential secrets
+SENTRY_SETUP_GUIDE.md
+
+# Plan files may contain sensitive information
+*.plan.md
+
+# Screenshots and visual assets
+# Ignore temporary bug screenshots (don't commit to git)
+.github/images/bugs/*.png
+.github/images/bugs/*.jpg
+.github/images/bugs/*.jpeg
+.github/images/bugs/*.gif
+.github/images/temp/
+
+# Keep feature screenshots and documentation images (commit these)
+!.github/images/features/
+!.github/images/demo/
+!docs/screenshots/
