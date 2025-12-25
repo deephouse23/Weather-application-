@@ -299,3 +299,20 @@ export const PIXEL_EFFECTS = {
   font: 'pixel-font font-mono'
 } as const;
 
+/**
+ * Simple glow class helper - use this for adding theme-specific glow effects
+ * This is the preferred approach for new code instead of getComponentStyles
+ */
+export const getGlowClass = (theme: ThemeType): string => `glow-${theme}`;
+
+/**
+ * Get retro 16-bit effects for a theme
+ * Use this for custom 16-bit styling that shadcn doesn't provide
+ */
+export const getRetroEffects = (theme: ThemeType) => ({
+  glow: `glow-${theme}`,
+  pixelBorder: 'pixel-border',
+  pixelShadow: 'pixel-shadow',
+  scanlines: theme === 'matrix' || theme === 'synthwave84',
+});
+
