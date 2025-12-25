@@ -15,9 +15,10 @@
  */
 
 
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
+import { useTheme } from "next-themes"
 import PageWrapper from "@/components/page-wrapper"
-import { ThemeType, themeUtils, APP_CONSTANTS } from "@/lib/utils"
+import { ThemeType, getComponentStyles } from "@/lib/theme-utils"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
@@ -365,40 +366,13 @@ const weatherSystemsDatabase: WeatherSystemData[] = [
 ];
 
 export default function WeatherSystemsPage() {
-  const [currentTheme, setCurrentTheme] = useState<ThemeType>('dark')
+  const { theme } = useTheme()
+  const currentTheme = (theme || 'dark') as ThemeType
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [expandedSystemId, setExpandedSystemId] = useState<number | null>(null)
   const [achievementUnlocked, setAchievementUnlocked] = useState<string>('')
 
-
-  // Load and sync theme using centralized utilities
-  useEffect(() => {
-    const storedTheme = themeUtils.getStoredTheme()
-    setCurrentTheme(storedTheme)
-
-    // Listen for theme changes
-    const handleStorageChange = () => {
-      const newTheme = themeUtils.getStoredTheme()
-      setCurrentTheme(newTheme)
-    }
-
-    window.addEventListener('storage', handleStorageChange)
-
-    // Poll for theme changes
-    const interval = setInterval(() => {
-      const newTheme = themeUtils.getStoredTheme()
-      if (newTheme !== currentTheme) {
-        setCurrentTheme(newTheme)
-      }
-    }, 100)
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      clearInterval(interval)
-    }
-  }, [currentTheme])
-
-  const themeClasses = themeUtils.getThemeClasses(currentTheme)
+  const themeClasses = getComponentStyles(currentTheme, 'weather')
 
   // Filter systems by category
   const filteredSystems = selectedCategory === 'all'

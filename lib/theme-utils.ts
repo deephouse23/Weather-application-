@@ -38,6 +38,10 @@ export interface ThemeStyles {
   secondary: string;
   headerText?: string;
   secondaryText?: string;
+  // Legacy compatibility properties
+  warningText?: string;
+  successText?: string;
+  shadowColor?: string;
 }
 
 export interface ComponentVariants {
@@ -64,7 +68,7 @@ export const getThemeStyles = (theme: ThemeType): ThemeStyles => {
   // Default to 'dark' theme if invalid theme is provided
   const validTheme = (theme && THEME_DEFINITIONS[theme]) ? theme : 'dark';
   const colors = getThemeColors(validTheme);
-  
+
   return {
     background: `bg-[${colors.background}]`,
     text: `text-[${colors.text}]`,
@@ -76,7 +80,13 @@ export const getThemeStyles = (theme: ThemeType): ThemeStyles => {
     cardBg: `bg-[${colors.backgroundSecondary}]`,
     hoverBg: `hover:bg-[${colors.primary}] hover:text-[${colors.background}]`,
     glow: `glow-${validTheme}`,
-    secondary: `text-[${colors.textSecondary}]`
+    secondary: `text-[${colors.textSecondary}]`,
+    headerText: `text-[${colors.primary}]`,
+    secondaryText: `text-[${colors.textSecondary}]`,
+    // Legacy compatibility
+    warningText: `text-[${colors.accent}]`,
+    successText: `text-[${colors.primary}]`,
+    shadowColor: colors.primary
   };
 };
 
@@ -176,7 +186,7 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
  */
 export const getThemeGradients = (theme: ThemeType): { primary: string; accent: string; card: string } => {
   const colors = getThemeColors(theme);
-  
+
   switch (theme) {
     case 'dark':
       return {
