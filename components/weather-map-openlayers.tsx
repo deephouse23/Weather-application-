@@ -103,9 +103,13 @@ const WeatherMapOpenLayers = ({
 
     console.log('🗺️ [v4] Initializing OpenLayers map at:', centerLat, centerLon)
 
+
     // Create base layer (OpenStreetMap)
+    // crossOrigin is required for canvas renderer to draw tiles from external domains
     const baseLayer = new TileLayer({
-      source: new OSM(),
+      source: new OSM({
+        crossOrigin: 'anonymous',
+      }),
       opacity: 0.7,
     })
 
@@ -121,20 +125,39 @@ const WeatherMapOpenLayers = ({
 
     mapInstanceRef.current = map
 
-    // Fix for production: force map to recalculate size after container renders
-    setTimeout(() => {
-      map.updateSize()
-      console.log('📐 [v4] Map size updated')
-    }, 100)
+    // Fix for production: force map to recalculate size multiple times
+    // Sometimes the container size isn't ready immediately
+    const updateMapSize = () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.updateSize()
+        console.log('📐 [v4] Map size updated')
+      }
+    }
+
+    // Initial update
+    setTimeout(updateMapSize, 0)
+    setTimeout(updateMapSize, 100)
+    setTimeout(updateMapSize, 500)
+    setTimeout(updateMapSize, 1000)
+
+    // Use ResizeObserver for robust container size detection
+    const resizeObserver = new ResizeObserver(() => {
+      updateMapSize()
+    })
+
+    if (mapRef.current) {
+      resizeObserver.observe(mapRef.current)
+    }
 
     // Also update on window resize
-    const handleResize = () => map.updateSize()
+    const handleResize = () => updateMapSize()
     window.addEventListener('resize', handleResize)
 
     console.log('✅ [v4] OpenLayers map initialized')
 
     return () => {
       window.removeEventListener('resize', handleResize)
+      resizeObserver.disconnect()
       map.setTarget(undefined)
       mapInstanceRef.current = null
     }
@@ -528,8 +551,8 @@ const WeatherMapOpenLayers = ({
             <button
               onClick={handlePlayPause}
               className={`px-4 py-1.5 border-2 rounded text-white font-mono text-xs font-bold transition-colors min-w-[90px] ${isPlaying
-                  ? 'bg-yellow-600 border-yellow-400 hover:bg-yellow-500'
-                  : 'bg-cyan-600 border-cyan-400 hover:bg-cyan-500'
+                ? 'bg-yellow-600 border-yellow-400 hover:bg-yellow-500'
+                : 'bg-cyan-600 border-cyan-400 hover:bg-cyan-500'
                 }`}
             >
               {isPlaying ? (
@@ -554,8 +577,8 @@ const WeatherMapOpenLayers = ({
                   key={s}
                   onClick={() => setSpeed(s as 0.5 | 1 | 2)}
                   className={`px-2 py-1 border-2 rounded font-mono text-xs font-bold transition-colors ${speed === s
-                      ? 'bg-cyan-600 border-cyan-400 text-white'
-                      : 'bg-gray-700 border-gray-500 text-gray-300 hover:bg-gray-600'
+                    ? 'bg-cyan-600 border-cyan-400 text-white'
+                    : 'bg-gray-700 border-gray-500 text-gray-300 hover:bg-gray-600'
                     }`}
                 >
                   {s}x
