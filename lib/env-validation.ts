@@ -20,9 +20,9 @@ interface EnvConfig {
 
 const envConfig: EnvConfig = {
   required: {
-    NEXT_PUBLIC_OPENWEATHER_API_KEY: {
-      name: 'NEXT_PUBLIC_OPENWEATHER_API_KEY',
-      description: 'OpenWeatherMap API key (required for weather data)',
+    OPENWEATHER_API_KEY: {
+      name: 'OPENWEATHER_API_KEY',
+      description: 'OpenWeatherMap API key (required for weather data) - server-only for security',
     },
   },
   optional: {
@@ -73,7 +73,7 @@ export function validateEnv(): void {
   // Check required variables
   for (const [key, config] of Object.entries(envConfig.required)) {
     // In Playwright E2E runs we stub API calls, so allow missing API keys.
-    if (isPlaywright && key === 'NEXT_PUBLIC_OPENWEATHER_API_KEY') {
+    if (isPlaywright && key === 'OPENWEATHER_API_KEY') {
       continue;
     }
     if (!process.env[key]) {

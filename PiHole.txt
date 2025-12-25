@@ -1,0 +1,59 @@
+PiHole 
+Your Admin Webpage login password is YZ8vjLwi
+ http://10.0.0.71/admin
+Kubes Odie1510!
+
+es, that is exactly the right plan.
+
+Here is the "Order of Operations" so you don't get locked out during the process:
+
+Phase 1: The Reset & Login
+Perform the Reset: Hold that WPS button for 60 seconds until the lights change. Wait ~10 minutes for it to come back up.
+
+Connect to the "Sticker" WiFi: Your computer will not see "kubeds" anymore. You must connect to XFSETUP-27B1 using password direct9703elbow.
+
+Login: Open a browser, go to http://10.0.0.1, and use admin / password.
+
+Phase 2: Make Your Life Easier (WiFi Name)
+Before you mess with Pi-hole settings, put your old WiFi name back so all your house devices (TVs, phones, thermostats) reconnect automatically.
+
+In the 10.0.0.1 menu: Find Connection > Wi-Fi.
+
+Change the Name (SSID) back to kubeds.
+
+Change the Password back to your old password.
+
+Save.
+
+Your computer will disconnect. Reconnect to "kubeds" with your normal password.
+
+Phase 3: The Pi-hole Setup (The "DHCP Swap")
+Now that you are back on your normal network, we need to force the router to use Pi-hole. Since Comcast locks the DNS setting, you have to disable DHCP on the router and enable it on the Pi-hole.
+
+1. Prepare the Pi-hole:
+
+Go to http://<YOUR_PI_IP>/admin.
+
+Go to Settings > DHCP.
+
+Check "DHCP server enabled".
+
+Scroll down and Save.
+
+2. Disable Router DHCP:
+
+Go back to http://10.0.0.1.
+
+Go to Connection > Local IP Network.
+
+Uncheck "Enable DHCP Server" (IPv4).
+
+Save.
+
+3. Reboot the Router:
+
+Unplug the router power, wait 10 seconds, and plug it back in.
+
+When it comes back up, it will stop handing out IP addresses, and your Pi-hole will take over, forcing every device to block ads.
+
+Ready to start the reset?
