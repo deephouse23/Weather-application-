@@ -13,18 +13,29 @@ if (process.env.ANALYZE === 'true') {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    // Temporarily disabled until remaining ESLint errors are fixed
-    // TODO: Fix remaining any types and enable
-    ignoreDuringBuilds: true,
-  },
+  // Note: ESLint config moved to eslint.config.mjs (Next.js 16+)
+  // To ignore during builds, use: ESLINT_NO_DEV_ERRORS=true or run lint separately
   typescript: {
     ignoreBuildErrors: false,
   },
   images: {
-    domains: ['api.openweathermap.org', 'openweathermap.org'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'api.openweathermap.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'openweathermap.org',
+      },
+    ],
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60,
+  },
+  
+  // Fix turbopack root detection with multiple lockfiles
+  turbopack: {
+    root: process.cwd(),
   },
   
   // Compression for better performance
