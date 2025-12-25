@@ -26,14 +26,14 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60,
   },
-  
+
   // Compression for better performance
   compress: true,
-  
-  
+
+
   // Optimize for production
   productionBrowserSourceMaps: false,
-  
+
   // Add headers for better caching and security
   async headers() {
     const isProd = process.env.NODE_ENV === 'production'
@@ -65,7 +65,8 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: https: blob:",
-              "connect-src 'self' https://api.openweathermap.org https://pollen.googleapis.com https://www.google.com https://*.supabase.co https://*.sentry.io https://vitals.vercel-insights.com",
+              "connect-src 'self' https://api.openweathermap.org https://pollen.googleapis.com https://www.google.com https://*.supabase.co https://*.sentry.io https://vitals.vercel-insights.com https://mesonet.agron.iastate.edu https://tile.openstreetmap.org",
+              "worker-src 'self' blob:",
               "frame-src 'self'",
               "object-src 'none'",
               "base-uri 'self'",
@@ -114,7 +115,7 @@ const nextConfig = {
       },
     ]
   },
-  
+
   // Redirect old sitemap.xml to new dynamic sitemap
   async redirects() {
     return [
@@ -125,7 +126,7 @@ const nextConfig = {
       },
     ]
   },
-  
+
   // Experimental features for better performance
   experimental: {
     optimizeCss: false, // Disabled to fix critters module build error
@@ -140,7 +141,7 @@ export default withBundleAnalyzer(withSentryConfig(nextConfig, {
 
   org: process.env.SENTRY_ORG || "16bitweather",
   project: process.env.SENTRY_PROJECT || "javascript-nextjs",
-  
+
   // Auth token for uploading source maps
   authToken: process.env.SENTRY_AUTH_TOKEN,
 
