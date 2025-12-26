@@ -354,10 +354,10 @@ function WeatherApp() {
                       Weather Radar
                     </h2>
                     <Link
-                      href="/map"
+                      href="/radar"
                       className={cn("px-3 py-1.5 border-2 rounded-md font-mono text-xs font-bold transition-colors hover:scale-105", themeClasses.borderColor, themeClasses.text, themeClasses.hoverBg)}
                     >
-                      VIEW FULL MAP →
+                      VIEW FULL RADAR →
                     </Link>
                   </div>
                   {/* Container with overflow-visible to allow controls to render properly */}

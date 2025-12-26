@@ -464,8 +464,8 @@ const WeatherMapOpenLayers = ({
       {/* Map Container - explicit dimensions for production */}
       <div
         ref={mapRef}
-        className="absolute inset-0 bg-gray-900 rounded-lg overflow-hidden"
-        style={{ zIndex: 1, width: '100%', height: '100%', minHeight: '350px' }}
+        className="w-full bg-gray-900 rounded-lg overflow-hidden"
+        style={{ zIndex: 1, height: '100%', minHeight: '350px', position: 'relative' }}
       />
 
       {/* Loading Indicator - Only show when not playing to avoid visual disruption */}
