@@ -1,5 +1,5 @@
 /**
- * 16-Bit Weather Platform - BETA v0.3.31
+ * 16-Bit Weather Platform - v1.0.0
  * 
  * Copyright (C) 2025 16-Bit Weather
  * Licensed under Fair Source License, Version 0.9
@@ -25,6 +25,14 @@ import { AuthProvider } from "@/lib/auth"
 import { Toaster } from "@/components/ui/toaster"
 import AuthDebug from "@/components/auth/auth-debug"
 import ErrorBoundaryWrapper from "@/components/error-boundary"
+import * as Sentry from "@sentry/nextjs"
+import { SentryLogger } from "@/components/sentry-logger"
+
+// Server-side Sentry log test
+Sentry.logger.info("16-Bit Weather server layout loaded", {
+  timestamp: new Date().toISOString(),
+  environment: process.env.NODE_ENV,
+})
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -153,6 +161,7 @@ export default function RootLayout({
         </ErrorBoundaryWrapper>
         <Analytics />
         <SpeedInsights />
+        <SentryLogger />
       </body>
     </html>
   )
