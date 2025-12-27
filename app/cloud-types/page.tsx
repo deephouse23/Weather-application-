@@ -14,9 +14,10 @@
  * Report issues: https://github.com/deephouse23/Weather-application-/issues
  */
 
+
 import React, { useState } from "react"
+import { useTheme } from "next-themes"
 import PageWrapper from "@/components/page-wrapper"
-import { useTheme } from "@/components/theme-provider"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
 
 // Shadcn UI components
@@ -24,6 +25,7 @@ import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
 
 type CloudData = {
   id: number;
@@ -348,7 +350,8 @@ export default function CloudTypesPage() {
   const [expandedCloudId, setExpandedCloudId] = useState<number | null>(null)
   const [achievementUnlocked, setAchievementUnlocked] = useState<string>('')
 
-  const themeClasses = getComponentStyles(theme as ThemeType, 'card')
+  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'card')
+
 
   // Filter clouds by category
   const filteredClouds = selectedCategory === 'all'

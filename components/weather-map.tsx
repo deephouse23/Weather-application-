@@ -11,7 +11,7 @@ interface WeatherMapProps {
 }
 
 // Create a completely dynamic map component with no SSR
-const MapComponent = dynamic(() => import('./weather-map-openlayers'), { 
+const MapComponent = dynamic(() => import('./weather-map-openlayers'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full bg-gray-900 rounded-lg flex items-center justify-center">
@@ -21,7 +21,11 @@ const MapComponent = dynamic(() => import('./weather-map-openlayers'), {
 })
 
 const WeatherMap = (props: WeatherMapProps) => {
-  return <MapComponent {...props} />
+  return (
+    <div className="w-full h-full">
+      <MapComponent {...props} />
+    </div>
+  )
 }
 
 export default WeatherMap

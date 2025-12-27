@@ -6,6 +6,9 @@ if (sentryDsn && sentryDsn.includes('sentry.io')) {
   Sentry.init({
     dsn: sentryDsn,
 
+    // Enable Sentry Logs
+    enableLogs: true,
+
     // Lower sample rate in production to reduce costs
     tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
     

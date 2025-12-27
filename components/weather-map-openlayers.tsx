@@ -77,20 +77,20 @@ const WeatherMapOpenLayers = ({
   // Generate NEXRAD timestamps
   const timestamps = useMemo(() => {
     if (!isUSLocation) return []
-    
+
     const now = Date.now()
     const quantize = (ms: number) => Math.floor(ms / (NEXRAD_STEP_MINUTES * 60 * 1000)) * (NEXRAD_STEP_MINUTES * 60 * 1000)
     const base = quantize(now)
     const times: number[] = []
-    
+
     for (let i = NEXRAD_PAST_STEPS; i >= 0; i -= 1) {
       times.push(base - i * NEXRAD_STEP_MINUTES * 60 * 1000)
     }
-    
+
     console.log(`🕐 [v4] Generated ${times.length} NEXRAD timestamps`)
     console.log('  First:', new Date(times[0]).toISOString())
     console.log('  Last:', new Date(times[times.length - 1]).toISOString())
-    
+
     return times
   }, [isUSLocation])
 
@@ -103,9 +103,13 @@ const WeatherMapOpenLayers = ({
 
     console.log('🗺️ [v4] Initializing OpenLayers map at:', centerLat, centerLon)
 
+
     // Create base layer (OpenStreetMap)
+    // crossOrigin is required for canvas renderer to draw tiles from external domains
     const baseLayer = new TileLayer({
-      source: new OSM(),
+      source: new OSM({
+        crossOrigin: 'anonymous',
+      }),
       opacity: 0.7,
     })
 
@@ -121,20 +125,39 @@ const WeatherMapOpenLayers = ({
 
     mapInstanceRef.current = map
 
-    // Fix for production: force map to recalculate size after container renders
-    setTimeout(() => {
-      map.updateSize()
-      console.log('📐 [v4] Map size updated')
-    }, 100)
+    // Fix for production: force map to recalculate size multiple times
+    // Sometimes the container size isn't ready immediately
+    const updateMapSize = () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.updateSize()
+        console.log('📐 [v4] Map size updated')
+      }
+    }
+
+    // Initial update
+    setTimeout(updateMapSize, 0)
+    setTimeout(updateMapSize, 100)
+    setTimeout(updateMapSize, 500)
+    setTimeout(updateMapSize, 1000)
+
+    // Use ResizeObserver for robust container size detection
+    const resizeObserver = new ResizeObserver(() => {
+      updateMapSize()
+    })
+
+    if (mapRef.current) {
+      resizeObserver.observe(mapRef.current)
+    }
 
     // Also update on window resize
-    const handleResize = () => map.updateSize()
+    const handleResize = () => updateMapSize()
     window.addEventListener('resize', handleResize)
 
     console.log('✅ [v4] OpenLayers map initialized')
 
     return () => {
       window.removeEventListener('resize', handleResize)
+      resizeObserver.disconnect()
       map.setTarget(undefined)
       mapInstanceRef.current = null
     }
@@ -143,7 +166,7 @@ const WeatherMapOpenLayers = ({
   // Update map center when location changes
   useEffect(() => {
     if (!mapInstanceRef.current || !latitude || !longitude) return
-    
+
     console.log('📍 [v4] Updating map center to:', latitude, longitude)
     mapInstanceRef.current.getView().setCenter(fromLonLat([longitude, latitude]))
     mapInstanceRef.current.getView().setZoom(10)
@@ -156,7 +179,7 @@ const WeatherMapOpenLayers = ({
     const map = mapInstanceRef.current
 
     // Remove existing marker layer
-    const existingMarker = map.getLayers().getArray().find(layer => 
+    const existingMarker = map.getLayers().getArray().find(layer =>
       layer.get('name') === 'marker'
     )
     if (existingMarker) {
@@ -235,7 +258,7 @@ const WeatherMapOpenLayers = ({
 
     // Track loading state - use a counter to handle concurrent tile loads
     let loadingTileCount = 0
-    
+
     radarSource.on('tileloadstart', () => {
       loadingTileCount++
       // Only show loading indicator when not playing (to avoid button flicker)
@@ -306,11 +329,11 @@ const WeatherMapOpenLayers = ({
     if (!currentTimestamp) return
 
     const timeISO = new Date(currentTimestamp).toISOString()
-    
+
     // This is the correct way to animate WMS-T layers in OpenLayers
     // updateParams() triggers a re-fetch with the new TIME value
     radarSourceRef.current.updateParams({ 'TIME': timeISO })
-    
+
     console.log(`📡 [v4] Frame ${frameIndex + 1}/${timestamps.length} - TIME: ${timeISO}`)
   }, [frameIndex, timestamps])
 
@@ -397,7 +420,7 @@ const WeatherMapOpenLayers = ({
   }, [currentTime, humanTime])
 
   const themeStyles = useMemo(() => {
-    switch(theme) {
+    switch (theme) {
       case 'miami':
         return { container: 'border-4 border-pink-500 shadow-lg shadow-pink-500/50', badge: 'bg-pink-600/90 text-white border-pink-400' }
       case 'tron':
@@ -433,16 +456,16 @@ const WeatherMapOpenLayers = ({
   })
 
   return (
-    <div 
+    <div
       data-radar-container
-      className={`relative w-full h-full rounded-lg overflow-visible ${themeStyles.container}`}
-      style={{ minHeight: '350px' }}
+      className={`relative w-full rounded-lg overflow-visible ${themeStyles.container}`}
+      style={{ height: '100%', minHeight: '350px' }}
     >
       {/* Map Container - explicit dimensions for production */}
-      <div 
-        ref={mapRef} 
-        className="absolute inset-0 bg-gray-900 rounded-lg overflow-hidden"
-        style={{ zIndex: 1, width: '100%', height: '100%', minHeight: '350px' }}
+      <div
+        ref={mapRef}
+        className="w-full bg-gray-900 rounded-lg overflow-hidden"
+        style={{ zIndex: 1, height: '100%', minHeight: '350px', position: 'relative' }}
       />
 
       {/* Loading Indicator - Only show when not playing to avoid visual disruption */}
@@ -484,13 +507,12 @@ const WeatherMapOpenLayers = ({
             </div>
             <button
               onClick={() => setActiveLayers(prev => ({ ...prev, precipitation: !prev.precipitation }))}
-              className={`w-full px-3 py-2 text-left font-mono text-xs hover:bg-gray-700 transition-colors ${
-                activeLayers.precipitation ? 'bg-cyan-600/30 text-cyan-300' : 'text-gray-300'
-              }`}
+              className={`w-full px-3 py-2 text-left font-mono text-xs hover:bg-gray-700 transition-colors ${activeLayers.precipitation ? 'bg-cyan-600/30 text-cyan-300' : 'text-gray-300'
+                }`}
             >
               {activeLayers.precipitation ? '✓' : '○'} Precipitation {isUSLocation ? '(NEXRAD)' : ''}
             </button>
-            
+
             {/* Opacity slider */}
             {activeLayers.precipitation && (
               <div className="px-3 py-2 border-t border-gray-600">
@@ -512,7 +534,7 @@ const WeatherMapOpenLayers = ({
 
       {/* Animation Controls - Positioned at TOP of map for better visibility */}
       {isUSLocation && activeLayers.precipitation && timestamps.length > 0 && (
-        <div 
+        <div
           className="absolute top-16 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-auto"
           style={{ zIndex: 2000 }}
         >
@@ -528,11 +550,10 @@ const WeatherMapOpenLayers = ({
 
             <button
               onClick={handlePlayPause}
-              className={`px-4 py-1.5 border-2 rounded text-white font-mono text-xs font-bold transition-colors min-w-[90px] ${
-                isPlaying 
-                  ? 'bg-yellow-600 border-yellow-400 hover:bg-yellow-500' 
-                  : 'bg-cyan-600 border-cyan-400 hover:bg-cyan-500'
-              }`}
+              className={`px-4 py-1.5 border-2 rounded text-white font-mono text-xs font-bold transition-colors min-w-[90px] ${isPlaying
+                ? 'bg-yellow-600 border-yellow-400 hover:bg-yellow-500'
+                : 'bg-cyan-600 border-cyan-400 hover:bg-cyan-500'
+                }`}
             >
               {isPlaying ? (
                 <><Pause className="w-4 h-4 inline mr-1" /> PAUSE</>
@@ -555,11 +576,10 @@ const WeatherMapOpenLayers = ({
                 <button
                   key={s}
                   onClick={() => setSpeed(s as 0.5 | 1 | 2)}
-                  className={`px-2 py-1 border-2 rounded font-mono text-xs font-bold transition-colors ${
-                    speed === s
-                      ? 'bg-cyan-600 border-cyan-400 text-white'
-                      : 'bg-gray-700 border-gray-500 text-gray-300 hover:bg-gray-600'
-                  }`}
+                  className={`px-2 py-1 border-2 rounded font-mono text-xs font-bold transition-colors ${speed === s
+                    ? 'bg-cyan-600 border-cyan-400 text-white'
+                    : 'bg-gray-700 border-gray-500 text-gray-300 hover:bg-gray-600'
+                    }`}
                 >
                   {s}x
                 </button>

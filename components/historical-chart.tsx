@@ -29,7 +29,8 @@ import {
   ChartOptions
 } from 'chart.js'
 import { fetchHistoricalData, HistoricalWeatherResponse } from '@/lib/cache'
-import { ThemeType, themeUtils, APP_CONSTANTS } from '@/lib/utils'
+import { ThemeType, getComponentStyles } from '@/lib/theme-utils'
+import { THEME_DEFINITIONS } from '@/lib/theme-config'
 
 // Register ChartJS components
 ChartJS.register(
@@ -55,7 +56,10 @@ export default function HistoricalChart({ currentTheme, latitude, longitude, loc
   const [error, setError] = useState<string>("")
 
   // Use centralized theme classes
-  const themeClasses = themeUtils.getThemeClasses(currentTheme)
+  const themeClasses = getComponentStyles(currentTheme, 'weather')
+
+  // Get theme colors from definitions
+  const themeColors = THEME_DEFINITIONS[currentTheme]?.colors || THEME_DEFINITIONS.dark.colors
 
   // Fetch historical data for the last 30 years
   useEffect(() => {
@@ -90,7 +94,7 @@ export default function HistoricalChart({ currentTheme, latitude, longitude, loc
   if (error) {
     return (
       <div className={`p-4 ${themeClasses.cardBg} border ${themeClasses.borderColor} rounded-lg ${themeClasses.glow}`}>
-        <div className={`text-center ${themeClasses.errorText}`}>{error}</div>
+        <div className={`text-center ${themeClasses.warningText}`}>{error}</div>
       </div>
     )
   }
@@ -110,15 +114,15 @@ export default function HistoricalChart({ currentTheme, latitude, longitude, loc
       {
         label: 'High Temperature',
         data: maxTemps,
-        borderColor: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#ff1493' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#00FFFF' : '#00d4ff',
-        backgroundColor: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? 'rgba(255, 20, 147, 0.1)' : currentTheme === APP_CONSTANTS.THEMES.TRON ? 'rgba(0, 255, 255, 0.1)' : 'rgba(0, 212, 255, 0.1)',
+        borderColor: themeColors.primary,
+        backgroundColor: `${themeColors.primary}1A`,
         tension: 0.4
       },
       {
         label: 'Low Temperature',
         data: minTemps,
-        borderColor: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#00ffff' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#88CCFF' : '#4ecdc4',
-        backgroundColor: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? 'rgba(0, 255, 255, 0.1)' : currentTheme === APP_CONSTANTS.THEMES.TRON ? 'rgba(136, 204, 255, 0.1)' : 'rgba(78, 205, 196, 0.1)',
+        borderColor: themeColors.accent,
+        backgroundColor: `${themeColors.accent}1A`,
         tension: 0.4
       }
     ]
@@ -131,7 +135,7 @@ export default function HistoricalChart({ currentTheme, latitude, longitude, loc
       legend: {
         position: 'top' as const,
         labels: {
-          color: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#00ffff' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#FFFFFF' : '#e0e0e0',
+          color: themeColors.text,
           font: {
             family: 'monospace'
           }
@@ -140,17 +144,17 @@ export default function HistoricalChart({ currentTheme, latitude, longitude, loc
       title: {
         display: true,
         text: `30-Year Temperature History for ${locationName}`,
-        color: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#ff1493' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#00FFFF' : '#00d4ff',
+        color: themeColors.primary,
         font: {
           family: 'monospace',
           size: 16
         }
       },
       tooltip: {
-        backgroundColor: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#4a0e4e' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#000000' : '#16213e',
-        titleColor: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#00ffff' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#FFFFFF' : '#e0e0e0',
-        bodyColor: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#00ffff' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#FFFFFF' : '#e0e0e0',
-        borderColor: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#ff1493' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#00FFFF' : '#00d4ff',
+        backgroundColor: themeColors.backgroundSecondary,
+        titleColor: themeColors.text,
+        bodyColor: themeColors.text,
+        borderColor: themeColors.primary,
         borderWidth: 1,
         padding: 10,
         titleFont: {
@@ -164,10 +168,10 @@ export default function HistoricalChart({ currentTheme, latitude, longitude, loc
     scales: {
       x: {
         grid: {
-          color: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? 'rgba(255, 20, 147, 0.1)' : currentTheme === APP_CONSTANTS.THEMES.TRON ? 'rgba(0, 255, 255, 0.1)' : 'rgba(0, 212, 255, 0.1)'
+          color: `${themeColors.primary}1A`
         },
         ticks: {
-          color: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#00ffff' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#FFFFFF' : '#e0e0e0',
+          color: themeColors.text,
           font: {
             family: 'monospace'
           }
@@ -175,10 +179,10 @@ export default function HistoricalChart({ currentTheme, latitude, longitude, loc
       },
       y: {
         grid: {
-          color: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? 'rgba(255, 20, 147, 0.1)' : currentTheme === APP_CONSTANTS.THEMES.TRON ? 'rgba(0, 255, 255, 0.1)' : 'rgba(0, 212, 255, 0.1)'
+          color: `${themeColors.primary}1A`
         },
         ticks: {
-          color: currentTheme === APP_CONSTANTS.THEMES.MIAMI ? '#00ffff' : currentTheme === APP_CONSTANTS.THEMES.TRON ? '#FFFFFF' : '#e0e0e0',
+          color: themeColors.text,
           font: {
             family: 'monospace'
           }
@@ -194,4 +198,4 @@ export default function HistoricalChart({ currentTheme, latitude, longitude, loc
       </div>
     </div>
   )
-} 
+}

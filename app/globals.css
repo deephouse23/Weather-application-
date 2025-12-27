@@ -802,9 +802,11 @@ input:focus-visible,
   filter: none;
 }
 
-/* Ensure OpenLayers doesn't capture pointer events for our controls */
+/* Ensure OpenLayers viewport fills its container and doesn't clip content */
 [data-radar-container] .ol-viewport {
   z-index: 1 !important;
+  height: 100% !important;
+  width: 100% !important;
 }
 
 [data-radar-container] .ol-overlaycontainer,
@@ -813,6 +815,6 @@ input:focus-visible,
 }
 
 /* Our controls should always be on top and interactive */
-[data-radar-container] > div:not([class*="ol-"]) {
+[data-radar-container]>div:not([class*="ol-"]) {
   position: relative;
 }

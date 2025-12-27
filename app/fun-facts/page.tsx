@@ -15,10 +15,11 @@
  */
 
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import { useTheme } from "next-themes"
 import PageWrapper from "@/components/page-wrapper"
 import { ChevronDown, ChevronUp } from "lucide-react"
-import { ThemeType, themeUtils, APP_CONSTANTS } from "@/lib/utils"
+import { ThemeType, getComponentStyles } from "@/lib/theme-utils"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
 // Theme types to match main app
@@ -244,37 +245,11 @@ const weatherPhenomena: WeatherPhenomena[] = [
 ];
 
 export default function FunFactsPage() {
-  const [currentTheme, setCurrentTheme] = useState<ThemeType>(APP_CONSTANTS.THEMES.DARK)
+  const { theme } = useTheme()
+  const currentTheme = (theme || 'dark') as ThemeType
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
 
-  // Load and sync theme using centralized utilities
-  useEffect(() => {
-    const storedTheme = themeUtils.getStoredTheme()
-    setCurrentTheme(storedTheme)
-
-    // Listen for theme changes
-    const handleStorageChange = () => {
-      const newTheme = themeUtils.getStoredTheme()
-      setCurrentTheme(newTheme)
-    }
-
-    window.addEventListener('storage', handleStorageChange)
-
-    // Poll for theme changes
-    const interval = setInterval(() => {
-      const newTheme = themeUtils.getStoredTheme()
-      if (newTheme !== currentTheme) {
-        setCurrentTheme(newTheme)
-      }
-    }, 100)
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      clearInterval(interval)
-    }
-  }, [currentTheme])
-
-  const themeClasses = themeUtils.getThemeClasses(currentTheme)
+  const themeClasses = getComponentStyles(currentTheme, 'weather')
 
   const toggleCard = (id: string) => {
     const newExpanded = new Set(expandedCards)
