@@ -1,17 +1,13 @@
 "use client"
 
 /**
- * 16-Bit Weather Platform - BETA v0.3.2
+ * 16-Bit Weather Platform - v1.0.0
  * 
  * Copyright (C) 2025 16-Bit Weather
  * Licensed under Fair Source License, Version 0.9
  * 
  * Use Limitation: 5 users
  * See LICENSE file for full terms
- * 
- * BETA SOFTWARE NOTICE:
- * This software is in active development. Features may change.
- * Report issues: https://github.com/deephouse23/Weather-application-/issues
  */
 
 
@@ -32,7 +28,7 @@ import { useLocationContext } from '@/components/location-context'
 // Helper function to get moon phase icon
 const getMoonPhaseIcon = (phase: string): string => {
   const phaseLower = phase.toLowerCase();
-  
+
   if (phaseLower.includes('new')) return '●';
   if (phaseLower.includes('waxing crescent')) return '🌒';
   if (phaseLower.includes('first quarter')) return '🌓';
@@ -41,7 +37,7 @@ const getMoonPhaseIcon = (phase: string): string => {
   if (phaseLower.includes('waning gibbous')) return '🌖';
   if (phaseLower.includes('last quarter')) return '🌗';
   if (phaseLower.includes('waning crescent')) return '🌘';
-  
+
   // Fallback for any other phases
   return '🌑';
 };
@@ -67,13 +63,13 @@ export default function CityWeatherClient({ city, citySlug, isPredefinedCity = f
   const router = useRouter()
   const { theme } = useTheme()
   const { preferences } = useAuth()
-  const { 
-    setLocationInput, 
+  const {
+    setLocationInput,
     setCurrentLocation,
     clearLocationState,
     setShouldClearOnRouteChange
   } = useLocationContext()
-  
+
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>("")
@@ -93,14 +89,14 @@ export default function CityWeatherClient({ city, citySlug, isPredefinedCity = f
     try {
       setLoading(true)
       setError("")
-      
+
       console.log(`Loading weather for city: ${city.name}, ${city.state} (${city.searchTerm})`)
-      
+
       const unitSystem: 'metric' | 'imperial' = preferences?.temperature_unit === 'celsius' ? 'metric' : 'imperial'
       const weatherData = await fetchWeatherData(city.searchTerm, unitSystem)
       console.log(`Weather data loaded for ${city.name}:`, weatherData.location)
       setWeather(weatherData)
-      
+
       // Update location context with city data
       setLocationInput(city.searchTerm)
       setCurrentLocation(weatherData.location || city.searchTerm)
@@ -127,12 +123,12 @@ export default function CityWeatherClient({ city, citySlug, isPredefinedCity = f
   // Existing effect: load weather for this page's city (runs after reset above)
   useEffect(() => {
     setShouldClearOnRouteChange(false)
-    
+
     if (city) {
       // Load city-specific weather data first (city pages should show city data, not user location)
       loadCityWeather()
     }
-    
+
     // Cleanup: enable route change clearing when leaving city pages
     return () => {
       setShouldClearOnRouteChange(true)
@@ -172,7 +168,7 @@ export default function CityWeatherClient({ city, citySlug, isPredefinedCity = f
 
       const { latitude, longitude } = position.coords
       // API key is now handled by internal API routes
-      
+
       const { fetchWeatherByLocation } = await import('@/lib/weather-api')
       const unitSystem: 'metric' | 'imperial' = preferences?.temperature_unit === 'celsius' ? 'metric' : 'imperial'
       const weatherData = await fetchWeatherByLocation(`${latitude},${longitude}`, unitSystem)
@@ -197,7 +193,7 @@ export default function CityWeatherClient({ city, citySlug, isPredefinedCity = f
     >
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-weather-bg">
         <ResponsiveContainer maxWidth="xl" padding="md">
-          
+
           {/* City Header */}
           <div className="text-center mb-6">
             <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wider font-mono mb-2 text-weather-primary">
@@ -303,21 +299,21 @@ export default function CityWeatherClient({ city, citySlug, isPredefinedCity = f
               <LazyEnvironmentalDisplay weather={weather} theme={theme || 'dark'} />
 
               {/* Forecast Components - Lazy Loaded */}
-              <LazyForecast 
+              <LazyForecast
                 forecast={weather.forecast.map(day => ({
                   ...day,
                   country: weather.country
-                }))} 
+                }))}
                 theme={theme || 'dark'}
                 onDayClick={handleDayClick}
                 selectedDay={selectedDay}
               />
 
-              <LazyForecastDetails 
+              <LazyForecastDetails
                 forecast={weather.forecast.map(day => ({
                   ...day,
                   country: weather.country
-                }))} 
+                }))}
                 theme={theme || 'dark'}
                 selectedDay={selectedDay}
                 currentWeatherData={{
@@ -338,7 +334,7 @@ export default function CityWeatherClient({ city, citySlug, isPredefinedCity = f
               <h2 className="text-xl font-bold mb-4 uppercase tracking-wider font-mono text-weather-primary">
                 About {city.name} Weather
               </h2>
-              
+
               <div className="space-y-4 text-sm leading-relaxed font-mono">
                 <p>{city.content.intro}</p>
                 <p>{city.content.climate}</p>

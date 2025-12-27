@@ -2,33 +2,29 @@
 
 A retro 16-bit weather education platform combining accurate meteorological data with nostalgic gaming aesthetics.
 
+**Version 1.0.0** | [Live Site](https://www.16bitweather.co)
+
 ## About
 
-16bitweather.co is a unique weather application that transforms standard environmental data into an immersive retro experience. Built with modern web technologies but designed with a strict 16-bit pixel art philosophy, it serves as both a functional weather tool and an educational hub for meteorology enthusiasts.
+16bitweather.co is a weather application that transforms environmental data into an immersive retro experience. Built with modern web technologies but designed with a 16-bit pixel art philosophy, it serves as both a functional weather tool and an educational hub for meteorology enthusiasts.
 
 ## Features
 
-- **Real-Time Weather**: Accurate current conditions, forecasts, and environmental metrics.
-- **Learn Hub**: Comprehensive educational resources on cloud types, weather systems, and extreme phenomena.
-- **Interactive Maps**: Retro-styled radar and forecast models.
-- **Global Extremes**: Live tracking of the hottest and coldest places on Earth.
-- **Custom Themes**: Multiple 16-bit inspired themes (Standard, Tron, Miami, etc.).
-- **Weather Arcade**: Interactive educational games.
-
-## Recent Updates (December 2025)
-
-- **UI Overhaul**: Migrated to shadcn/ui components for cleaner, consistent, and accessible interfaces while maintaining the retro aesthetic.
-- **Content Enrichment**: Significantly expanded the "Learn" section with scientific depth, etymologies, and historical context for all weather topics.
-- **Performance**: Optimized load times and interaction responsiveness.
-- **Security**: Implemented GitHub Actions for automated security scanning.
-- **Clean Codebase**: Removed stale testing artifacts and archived legacy planning documentation for a leaner repository.
+- **Real-Time Weather**: Current conditions, forecasts, AQI, pollen counts, and environmental metrics
+- **Learn Hub**: Educational resources on cloud types, weather systems, and extreme phenomena
+- **Interactive Radar**: Weather radar with multiple overlay options
+- **Global Extremes**: Live tracking of the hottest and coldest places on Earth
+- **Custom Themes**: 12 themes including Dark, Tron, Miami, Tokyo Night, Dracula, and more
+- **Weather Arcade**: Interactive educational games with high score tracking
+- **User Accounts**: Save favorite locations and preferences
 
 ## Tech Stack
 
 - **Framework**: Next.js 15 (React 19)
 - **Styling**: Tailwind CSS v4, shadcn/ui
 - **Language**: TypeScript
-- **State/Data**: Supabase, OpenWeatherMap API
+- **Database**: Supabase
+- **APIs**: OpenWeatherMap
 - **Testing**: Playwright
 - **Deployment**: Vercel
 
@@ -38,7 +34,7 @@ A retro 16-bit weather education platform combining accurate meteorological data
 
 - Node.js 18+
 - npm or pnpm
-- Valid API keys for OpenWeatherMap and Supabase
+- API keys for OpenWeatherMap and Supabase
 
 ### Installation
 
@@ -54,7 +50,13 @@ A retro 16-bit weather education platform combining accurate meteorological data
    ```
 
 3. Set up environment variables:
-   Create a `.env.local` file in the root directory and add the required keys (see `env.example`).
+   Create a `.env.local` file in the root directory with:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   OPENWEATHER_API_KEY=your_openweather_key
+   NEXT_PUBLIC_BASE_URL=http://localhost:3000
+   ```
 
 4. Run the development server:
    ```bash
@@ -63,21 +65,22 @@ A retro 16-bit weather education platform combining accurate meteorological data
 
    Open http://localhost:3000 in your browser.
 
-### Environment Variables
-
-Required variables include:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `OPENWEATHER_API_KEY`
-- `NEXT_PUBLIC_BASE_URL`
-
 ## Scripts
 
-- `npm run dev`: Start development server
-- `npm run build`: Build for production
-- `npm run start`: Start production server
-- `npm test`: Run Jest unit tests (legacy)
-- `npx playwright test`: Run end-to-end tests
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npx playwright test` | Run end-to-end tests |
+
+## Documentation
+
+See the [docs](./docs) folder for detailed documentation:
+- [API Reference](./docs/API_REFERENCE.md)
+- [Architecture](./docs/ARCHITECTURE.md)
+- [Deployment](./docs/DEPLOYMENT.md)
+- [Testing Guide](./docs/TESTING_GUIDE.md)
 
 ## License
 

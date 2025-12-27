@@ -3,7 +3,7 @@
 import { ThemeSelectorEnhanced } from '../theme-selector-enhanced'
 
 /**
- * 16-Bit Weather Platform - BETA v0.5.0
+ * 16-Bit Weather Platform - v1.0.0
  * 
  * Copyright (C) 2025 16-Bit Weather
  * Licensed under Fair Source License, Version 0.9
