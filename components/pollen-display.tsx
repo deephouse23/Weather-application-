@@ -61,6 +61,16 @@ function PollenCategory({ categoryName, categoryData, theme, minimal }: PollenCa
         return 'text-[#000000]'
       case '16bitSnes':
         return 'text-[#2C2C3E]'
+      case 'synthwave84':
+        return 'text-[#ffffff]'
+      case 'tokyoNight':
+        return 'text-[#c0caf5]'
+      case 'dracula':
+        return 'text-[#f8f8f2]'
+      case 'cyberpunk':
+        return 'text-[#ffffff]'
+      case 'matrix':
+        return 'text-[#00ff41]'
       default:
         return 'text-[#e0e0e0]'
     }
@@ -108,9 +118,9 @@ export function PollenDisplay({ pollen, theme, className, minimal = false }: Pol
   // Theme-specific styles
   const getThemeStyles = () => {
     if (minimal) return {
-        container: '',
-        header: '',
-        shadow: 'none'
+      container: '',
+      header: '',
+      shadow: 'none'
     };
 
     switch (theme) {
@@ -156,6 +166,36 @@ export function PollenDisplay({ pollen, theme, className, minimal = false }: Pol
           header: 'text-[#FFD700]',
           shadow: '0 0 15px #5B5B8B33'
         }
+      case 'synthwave84':
+        return {
+          container: 'bg-[#1a0f2e] border-[#ff7edb]',
+          header: 'text-[#ff7edb]',
+          shadow: '0 0 15px #ff7edb33'
+        }
+      case 'tokyoNight':
+        return {
+          container: 'bg-[#16161e] border-[#9d7cd8]',
+          header: 'text-[#7dcfff]',
+          shadow: '0 0 15px #9d7cd833'
+        }
+      case 'dracula':
+        return {
+          container: 'bg-[#1e1f29] border-[#ff79c6]',
+          header: 'text-[#ff79c6]',
+          shadow: '0 0 15px #ff79c633'
+        }
+      case 'cyberpunk':
+        return {
+          container: 'bg-[#0d0d0d] border-[#00ffff]',
+          header: 'text-[#fcee0a]',
+          shadow: '0 0 15px #00ffff33'
+        }
+      case 'matrix':
+        return {
+          container: 'bg-[#000000] border-[#008f11]',
+          header: 'text-[#00ff41]',
+          shadow: '0 0 15px #008f1133'
+        }
       default:
         return {
           container: 'bg-[#0f0f0f] border-[#00d4ff]',
@@ -168,7 +208,7 @@ export function PollenDisplay({ pollen, theme, className, minimal = false }: Pol
   const styles = getThemeStyles()
 
   return (
-    <div 
+    <div
       className={cn(
         !minimal && "p-4 rounded-lg text-center border-2 shadow-lg",
         !minimal && styles.container,
@@ -180,25 +220,25 @@ export function PollenDisplay({ pollen, theme, className, minimal = false }: Pol
       <h2 className={cn("text-xl font-semibold mb-2", styles.header, minimal && "text-lg mb-2 text-center md:text-left")}>
         Pollen Count
       </h2>
-      
+
       {/* Pollen Categories Grid */}
       <div className={cn("grid gap-2", minimal ? "grid-cols-3 md:grid-cols-1 lg:grid-cols-3" : "grid-cols-3")}>
-        <PollenCategory 
-          categoryName="Tree" 
-          categoryData={pollen.tree} 
+        <PollenCategory
+          categoryName="Tree"
+          categoryData={pollen.tree}
           theme={theme}
-          minimal={minimal} 
-        />
-        <PollenCategory 
-          categoryName="Grass" 
-          categoryData={pollen.grass} 
-          theme={theme} 
           minimal={minimal}
         />
-        <PollenCategory 
-          categoryName="Weed" 
-          categoryData={pollen.weed} 
-          theme={theme} 
+        <PollenCategory
+          categoryName="Grass"
+          categoryData={pollen.grass}
+          theme={theme}
+          minimal={minimal}
+        />
+        <PollenCategory
+          categoryName="Weed"
+          categoryData={pollen.weed}
+          theme={theme}
           minimal={minimal}
         />
       </div>
