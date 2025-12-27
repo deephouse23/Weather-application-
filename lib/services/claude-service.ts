@@ -49,11 +49,19 @@ function buildSystemPrompt(currentDatetime: string, weatherContext?: WeatherCont
     let contextInfo = '';
     if (weatherContext?.location) {
         contextInfo = `
-The user is currently viewing weather for:
-- Location: ${weatherContext.location}
-- Temperature: ${weatherContext.temperature}°F
-- Conditions: ${weatherContext.condition}
-${weatherContext.forecast ? `- Forecast preview: ${weatherContext.forecast}` : ''}
+REAL-TIME WEATHER DATA (USE THIS IN YOUR RESPONSE):
+====================================================
+Location: ${weatherContext.location}
+Current Temperature: ${weatherContext.temperature}°F
+Current Conditions: ${weatherContext.condition}
+${weatherContext.forecast ? `Forecast: ${weatherContext.forecast}` : ''}
+====================================================
+CRITICAL: Base your recommendations on this ACTUAL current data!
+`;
+    } else {
+        contextInfo = `
+NOTE: No real-time weather data available. If the user asks about a specific location,
+your response should trigger loading the weather data for accurate recommendations.
 `;
     }
 

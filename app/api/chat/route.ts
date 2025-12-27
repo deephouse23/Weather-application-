@@ -2,7 +2,7 @@
  * 16-Bit Weather Platform - v1.0.0
  * 
  * AI Chat API Route
- * Handles chat requests with rate limiting and authentication
+ * Handles chat requests with rate limiting, authentication, and real-time weather data
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -37,6 +37,67 @@ async function getAuthenticatedUser(request: NextRequest) {
     return user;
 }
 
+// Extract location from user message using simple patterns
+function extractLocationFromMessage(message: string): string | null {
+    const lowerMessage = message.toLowerCase();
+
+    // Common patterns: "in [location]", "for [location]", "at [location]"
+    const patterns = [
+        /(?:weather|temperature|forecast|conditions?)\s+(?:in|for|at)\s+([a-zA-Z\s,]+?)(?:\?|$|today|tomorrow|this|next)/i,
+        /(?:in|for|at)\s+([a-zA-Z\s,]+?)(?:\s+(?:today|tomorrow|this|next|right now|currently)|\?|$)/i,
+        /(?:should i|do i need|will it|is it)\s+.*?\s+(?:in|for|at)\s+([a-zA-Z\s,]+?)(?:\?|$)/i,
+        /([A-Z][a-zA-Z\s]+,\s*[A-Z]{2})/,  // City, ST format
+        /([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\s+(?:weather|forecast)/i,
+    ];
+
+    for (const pattern of patterns) {
+        const match = message.match(pattern);
+        if (match && match[1]) {
+            const location = match[1].trim();
+            // Filter out common false positives
+            if (location.length > 2 && !['the', 'today', 'tomorrow', 'this', 'next'].includes(location.toLowerCase())) {
+                return location;
+            }
+        }
+    }
+
+    return null;
+}
+
+// Fetch real weather data for a location
+async function fetchWeatherForLocation(location: string): Promise<{
+    location: string;
+    temperature: number;
+    condition: string;
+    humidity?: number;
+    wind?: string;
+    forecast?: string;
+} | null> {
+    try {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const response = await fetch(`${baseUrl}/api/weather/current?location=${encodeURIComponent(location)}`);
+
+        if (!response.ok) {
+            console.log(`Weather API returned ${response.status} for ${location}`);
+            return null;
+        }
+
+        const data = await response.json();
+
+        return {
+            location: data.location || location,
+            temperature: Math.round(data.temperature || data.temp || 0),
+            condition: data.condition || data.description || 'Unknown',
+            humidity: data.humidity,
+            wind: data.wind?.speed ? `${data.wind.speed} mph` : undefined,
+            forecast: data.forecast?.[0]?.description
+        };
+    } catch (error) {
+        console.error('Error fetching weather:', error);
+        return null;
+    }
+}
+
 export async function POST(request: NextRequest) {
     try {
         // Check authentication
@@ -51,7 +112,7 @@ export async function POST(request: NextRequest) {
 
         // Parse request body
         const body = await request.json();
-        const { message, weatherContext } = body;
+        const { message, weatherContext: providedContext } = body;
 
         if (!message || typeof message !== 'string') {
             return NextResponse.json(
@@ -82,13 +143,26 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Try to extract location from message and fetch real weather data
+        let weatherContext = providedContext;
+        const extractedLocation = extractLocationFromMessage(message);
+
+        if (extractedLocation && !weatherContext?.location) {
+            console.log(`[Chat API] Extracted location: ${extractedLocation}, fetching weather...`);
+            const realWeather = await fetchWeatherForLocation(extractedLocation);
+            if (realWeather) {
+                console.log(`[Chat API] Got real weather:`, realWeather);
+                weatherContext = realWeather;
+            }
+        }
+
         // Save user message to history
         await saveMessage(user.id, {
             role: 'user',
             content: message
         });
 
-        // Get AI response
+        // Get AI response with real weather context
         const response = await getWeatherChatResponse(message, weatherContext);
 
         // Save assistant response to history
