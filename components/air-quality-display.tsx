@@ -49,7 +49,7 @@ export function AirQualityDisplay({ aqi, theme, className, minimal = false }: Ai
     switch (theme) {
       case 'dark':
         return {
-          container: 'bg-[#0f0f0f] border-[#00d4ff]',
+          container: 'bg-[#16213e] border-[#00d4ff]',
           header: 'text-[#00d4ff]',
           text: 'text-[#e0e0e0]',
           border: 'border-[#00d4ff66]',
@@ -57,7 +57,7 @@ export function AirQualityDisplay({ aqi, theme, className, minimal = false }: Ai
         }
       case 'miami':
         return {
-          container: 'bg-[#0a0025] border-[#ff1493]',
+          container: 'bg-[#2d1b69] border-[#ff1493]',
           header: 'text-[#ff1493]',
           text: 'text-[#00ffff]',
           border: 'border-[#ff149366]',
@@ -73,7 +73,7 @@ export function AirQualityDisplay({ aqi, theme, className, minimal = false }: Ai
         }
       case 'atari2600':
         return {
-          container: 'bg-[#000000] border-[#702800]',
+          container: 'bg-[#1a1a1a] border-[#702800]',
           header: 'text-[#E0EC9C]',
           text: 'text-[#FFFFFF]',
           border: 'border-[#70280066]',
@@ -81,7 +81,7 @@ export function AirQualityDisplay({ aqi, theme, className, minimal = false }: Ai
         }
       case 'monochromeGreen':
         return {
-          container: 'bg-[#0D0D0D] border-[#009900]',
+          container: 'bg-[#1a1a1a] border-[#009900]',
           header: 'text-[#33FF33]',
           text: 'text-[#33FF33]',
           border: 'border-[#00990066]',
@@ -105,7 +105,7 @@ export function AirQualityDisplay({ aqi, theme, className, minimal = false }: Ai
         }
       case 'synthwave84':
         return {
-          container: 'bg-[#1a0f2e] border-[#ff7edb]',
+          container: 'bg-[#2d1b69]/60 border-[#ff7edb]',
           header: 'text-[#ff7edb]',
           text: 'text-[#ffffff]',
           border: 'border-[#ff7edb66]',
@@ -113,7 +113,7 @@ export function AirQualityDisplay({ aqi, theme, className, minimal = false }: Ai
         }
       case 'tokyoNight':
         return {
-          container: 'bg-[#16161e] border-[#9d7cd8]',
+          container: 'bg-[#24283b] border-[#9d7cd8]',
           header: 'text-[#7dcfff]',
           text: 'text-[#c0caf5]',
           border: 'border-[#9d7cd866]',
@@ -121,7 +121,7 @@ export function AirQualityDisplay({ aqi, theme, className, minimal = false }: Ai
         }
       case 'dracula':
         return {
-          container: 'bg-[#1e1f29] border-[#ff79c6]',
+          container: 'bg-[#44475a]/80 border-[#ff79c6]',
           header: 'text-[#ff79c6]',
           text: 'text-[#f8f8f2]',
           border: 'border-[#ff79c666]',
@@ -129,7 +129,7 @@ export function AirQualityDisplay({ aqi, theme, className, minimal = false }: Ai
         }
       case 'cyberpunk':
         return {
-          container: 'bg-[#0d0d0d] border-[#00ffff]',
+          container: 'bg-[#141414]/90 border-[#00ffff]',
           header: 'text-[#fcee0a]',
           text: 'text-[#ffffff]',
           border: 'border-[#00ffff66]',
@@ -137,7 +137,7 @@ export function AirQualityDisplay({ aqi, theme, className, minimal = false }: Ai
         }
       case 'matrix':
         return {
-          container: 'bg-[#000000] border-[#008f11]',
+          container: 'bg-[#001400]/80 border-[#008f11]',
           header: 'text-[#00ff41]',
           text: 'text-[#00ff41]',
           border: 'border-[#008f1166]',
@@ -145,7 +145,7 @@ export function AirQualityDisplay({ aqi, theme, className, minimal = false }: Ai
         }
       default:
         return {
-          container: 'bg-[#0f0f0f] border-[#00d4ff]',
+          container: 'bg-[#16213e] border-[#00d4ff]',
           header: 'text-[#00d4ff]',
           text: 'text-[#e0e0e0]',
           border: 'border-[#00d4ff66]',

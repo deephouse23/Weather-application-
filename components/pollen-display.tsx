@@ -126,13 +126,13 @@ export function PollenDisplay({ pollen, theme, className, minimal = false }: Pol
     switch (theme) {
       case 'dark':
         return {
-          container: 'bg-[#0f0f0f] border-[#00d4ff]',
+          container: 'bg-[#16213e] border-[#00d4ff]',
           header: 'text-[#00d4ff]',
           shadow: '0 0 15px #00d4ff33'
         }
       case 'miami':
         return {
-          container: 'bg-[#0a0025] border-[#ff1493]',
+          container: 'bg-[#2d1b69] border-[#ff1493]',
           header: 'text-[#ff1493]',
           shadow: '0 0 15px #ff149333'
         }
@@ -144,13 +144,13 @@ export function PollenDisplay({ pollen, theme, className, minimal = false }: Pol
         }
       case 'atari2600':
         return {
-          container: 'bg-[#000000] border-[#702800]',
+          container: 'bg-[#1a1a1a] border-[#702800]',
           header: 'text-[#E0EC9C]',
           shadow: '0 0 15px #70280033'
         }
       case 'monochromeGreen':
         return {
-          container: 'bg-[#0D0D0D] border-[#009900]',
+          container: 'bg-[#1a1a1a] border-[#009900]',
           header: 'text-[#33FF33]',
           shadow: '0 0 15px #00990033'
         }
@@ -168,37 +168,37 @@ export function PollenDisplay({ pollen, theme, className, minimal = false }: Pol
         }
       case 'synthwave84':
         return {
-          container: 'bg-[#1a0f2e] border-[#ff7edb]',
+          container: 'bg-[#2d1b69]/60 border-[#ff7edb]',
           header: 'text-[#ff7edb]',
           shadow: '0 0 15px #ff7edb33'
         }
       case 'tokyoNight':
         return {
-          container: 'bg-[#16161e] border-[#9d7cd8]',
+          container: 'bg-[#24283b] border-[#9d7cd8]',
           header: 'text-[#7dcfff]',
           shadow: '0 0 15px #9d7cd833'
         }
       case 'dracula':
         return {
-          container: 'bg-[#1e1f29] border-[#ff79c6]',
+          container: 'bg-[#44475a]/80 border-[#ff79c6]',
           header: 'text-[#ff79c6]',
           shadow: '0 0 15px #ff79c633'
         }
       case 'cyberpunk':
         return {
-          container: 'bg-[#0d0d0d] border-[#00ffff]',
+          container: 'bg-[#141414]/90 border-[#00ffff]',
           header: 'text-[#fcee0a]',
           shadow: '0 0 15px #00ffff33'
         }
       case 'matrix':
         return {
-          container: 'bg-[#000000] border-[#008f11]',
+          container: 'bg-[#001400]/80 border-[#008f11]',
           header: 'text-[#00ff41]',
           shadow: '0 0 15px #008f1133'
         }
       default:
         return {
-          container: 'bg-[#0f0f0f] border-[#00d4ff]',
+          container: 'bg-[#16213e] border-[#00d4ff]',
           header: 'text-[#00d4ff]',
           shadow: '0 0 15px #00d4ff33'
         }
