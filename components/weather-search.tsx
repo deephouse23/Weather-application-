@@ -8,23 +8,21 @@
  * 
  * Use Limitation: 5 users
  * See LICENSE file for full terms
- * 
- * BETA SOFTWARE NOTICE:
- * This software is in active development. Features may change.
- * Report issues: https://github.com/deephouse23/Weather-application-/issues
  */
 
 
 import { useState, useEffect, useRef } from "react"
-import { Search, Loader2, MapPin, X } from "lucide-react"
+import { Search, Loader2, MapPin, X, Bot, Sparkles } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-// APP_CONSTANTS removed - no longer needed for themes
 import CityAutocomplete from "./city-autocomplete"
 import { type CityData } from "@/lib/city-database"
 import { useLocationContext } from "./location-context"
 import { useTheme } from "./theme-provider"
 import { Input } from "@/components/ui/input"
+import { useAIChat } from "@/hooks/useAIChat"
+import { AIResponsePanel } from "@/components/chat/ai-response-panel"
 
 interface WeatherSearchProps {
   onSearch: (location: string) => void;
@@ -47,12 +45,25 @@ export default function WeatherSearch({
   hideLocationButton = false,
   isAutoDetecting = false
 }: WeatherSearchProps) {
+  const router = useRouter()
   const { locationInput, setLocationInput, clearLocationState } = useLocationContext()
   const { theme } = useTheme()
   const [searchTerm, setSearchTerm] = useState(locationInput || "")
   const [showAutocomplete, setShowAutocomplete] = useState(false)
   const isTypingRef = useRef(false)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // AI Chat hook
+  const {
+    isAuthenticated,
+    isLoading: isAILoading,
+    response: aiResponse,
+    error: aiError,
+    rateLimit,
+    sendMessage,
+    clearResponse,
+    isSimpleSearch
+  } = useAIChat()
 
   // Sync context -> local state without fighting user input.
   // If locationInput changes externally (navigation, other components), reflect it in the input
@@ -91,15 +102,48 @@ export default function WeatherSearch({
     warningText: 'text-weather-warn'
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('[WeatherSearch] handleSubmit called', { searchTerm, isLoading, isDisabled });
-    if (searchTerm.trim() && !isLoading && !isDisabled) {
-      console.log('[WeatherSearch] Calling onSearch');
-      onSearch(searchTerm.trim())
-      setShowAutocomplete(false)
-    } else {
+    console.log('[WeatherSearch] handleSubmit called', { searchTerm, isLoading, isDisabled, isAuthenticated });
+
+    if (!searchTerm.trim() || isLoading || isDisabled || isAILoading) {
       console.log('[WeatherSearch] Search blocked');
+      return;
+    }
+
+    setShowAutocomplete(false)
+
+    // If user is authenticated, try AI processing
+    if (isAuthenticated) {
+      try {
+        const result = await sendMessage(searchTerm.trim());
+
+        if (result.isSimpleSearch) {
+          // Simple location search - bypass AI
+          console.log('[WeatherSearch] Simple search, calling onSearch');
+          onSearch(result.location || searchTerm.trim());
+        } else if (result.aiResponse) {
+          // AI processed the query
+          console.log('[WeatherSearch] AI response received', result.aiResponse);
+
+          // If AI suggests loading weather, do it automatically
+          if (result.aiResponse.action?.type === 'load_weather' && result.aiResponse.action.location) {
+            onSearch(result.aiResponse.action.location);
+          } else if (result.aiResponse.action?.type === 'navigate_radar' && result.aiResponse.action.location) {
+            // Navigate to radar with location
+            router.push(`/radar?location=${encodeURIComponent(result.aiResponse.action.location)}`);
+          }
+          // If action is 'none', the AI response panel will show the conversational response
+        }
+      } catch (err) {
+        console.error('[WeatherSearch] AI error, falling back to simple search:', err);
+        // Fallback to simple search on AI error
+        onSearch(searchTerm.trim());
+      }
+    } else {
+      // Not authenticated - do simple search
+      console.log('[WeatherSearch] Not authenticated, calling onSearch');
+      onSearch(searchTerm.trim());
     }
   }
 
@@ -170,16 +214,45 @@ export default function WeatherSearch({
   }
 
   // Determine if controls should be disabled
-  const controlsDisabled = isLoading || isDisabled
+  const controlsDisabled = isLoading || isDisabled || isAILoading
+
+  // Handle AI action clicks
+  const handleAIAction = (action: { type: string; location?: string }) => {
+    if (action.type === 'load_weather' && action.location) {
+      onSearch(action.location);
+    } else if (action.type === 'navigate_radar' && action.location) {
+      router.push(`/radar?location=${encodeURIComponent(action.location)}`);
+    }
+  }
 
   return (
     <div className="mb-4 sm:mb-6 w-full max-w-2xl mx-auto">
-      {/* Simple format hints - Mobile responsive */}
+      {/* Format hints with AI indicator for logged-in users */}
       <div className="mb-2 sm:mb-3 text-center px-2">
         <div className={`text-xs sm:text-sm ${themeClasses.secondaryText} uppercase tracking-wider break-words`}>
-          <span className="hidden sm:inline">► 90210 • NEW YORK, NY • LONDON, UK ◄</span>
-          <span className="sm:hidden">► ZIP • CITY, STATE • CITY, COUNTRY ◄</span>
+          {isAuthenticated ? (
+            <>
+              <span className="hidden sm:inline">
+                <Sparkles className="w-3 h-3 inline mr-1 text-weather-primary" />
+                ASK: "SHOULD I WEAR A COAT IN NYC?" OR SEARCH: 90210
+              </span>
+              <span className="sm:hidden">
+                <Sparkles className="w-3 h-3 inline mr-1 text-weather-primary" />
+                ASK OR SEARCH
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="hidden sm:inline">► 90210 • NEW YORK, NY • LONDON, UK ◄</span>
+              <span className="sm:hidden">► ZIP • CITY, STATE • CITY, COUNTRY ◄</span>
+            </>
+          )}
         </div>
+        {isAuthenticated && rateLimit && (
+          <div className="text-xs text-weather-muted mt-1">
+            AI: {rateLimit.remaining}/15 queries remaining
+          </div>
+        )}
       </div>
 
       {/* Search Form - Mobile optimized */}
@@ -192,7 +265,7 @@ export default function WeatherSearch({
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={handleInputKeyDown}
             onFocus={() => searchTerm.length >= 2 && setShowAutocomplete(true)}
-            placeholder={isDisabled ? "Rate limit reached..." : "ZIP, City+State, or City+Country..."}
+            placeholder={isDisabled ? "Rate limit reached..." : isAuthenticated ? "Ask about weather or search a location..." : "ZIP, City+State, or City+Country..."}
             disabled={controlsDisabled}
             aria-label="Search location"
             className={`w-full pr-10 sm:pr-12 ${themeClasses.cardBg} border-2 ${theme === 'miami' ? 'border-weather-accent' : themeClasses.borderColor} ${themeClasses.text} ${themeClasses.placeholderText} 
@@ -278,6 +351,19 @@ export default function WeatherSearch({
             </span>
           </Button>
         </div>
+      )}
+
+      {/* AI Response Panel - Shows AI responses for logged-in users */}
+      {isAuthenticated && (aiResponse || isAILoading) && (
+        <AIResponsePanel
+          message={aiResponse?.message || null}
+          action={aiResponse?.action}
+          isLoading={isAILoading}
+          onDismiss={clearResponse}
+          onActionClick={handleAIAction}
+          rateLimit={rateLimit ? { remaining: rateLimit.remaining, resetAt: rateLimit.resetAt } : undefined}
+          theme={theme}
+        />
       )}
 
       {/* Error Display - Mobile responsive */}
