@@ -64,6 +64,7 @@ function extractLocationFromMessage(message: string): string | null {
 }
 
 // Geocode a location using OpenWeatherMap
+// Prioritizes US locations since the app is US-focused
 async function geocodeLocation(location: string): Promise<{ lat: number; lon: number; name: string } | null> {
     const apiKey = process.env.OPENWEATHER_API_KEY;
     if (!apiKey) {
@@ -72,16 +73,22 @@ async function geocodeLocation(location: string): Promise<{ lat: number; lon: nu
     }
 
     try {
-        const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(location)}&limit=1&appid=${apiKey}`;
-        console.log(`[Chat API] Geocoding: ${location}`);
+        // Try with US suffix first for better US location matching
+        const locationWithUS = location.includes(',') ? location : `${location},US`;
+        const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(locationWithUS)}&limit=1&appid=${apiKey}`;
+        console.log(`[Chat API] Geocoding: ${locationWithUS}`);
 
-        const response = await fetch(url);
-        if (!response.ok) {
-            console.error(`[Chat API] Geocoding failed: ${response.status}`);
-            return null;
+        let response = await fetch(url);
+        let data = response.ok ? await response.json() : [];
+
+        // If no US results, try without country code
+        if (!data || data.length === 0) {
+            console.log(`[Chat API] No US results, trying generic: ${location}`);
+            const fallbackUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(location)}&limit=1&appid=${apiKey}`;
+            response = await fetch(fallbackUrl);
+            data = response.ok ? await response.json() : [];
         }
 
-        const data = await response.json();
         if (!data || data.length === 0) {
             console.log(`[Chat API] No geocoding results for: ${location}`);
             return null;
