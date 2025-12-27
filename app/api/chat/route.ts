@@ -39,29 +39,102 @@ async function getAuthenticatedUser(request: NextRequest) {
 
 // Extract location from user message using simple patterns
 function extractLocationFromMessage(message: string): string | null {
-    const lowerMessage = message.toLowerCase();
-
     // Common patterns: "in [location]", "for [location]", "at [location]"
     const patterns = [
-        /(?:weather|temperature|forecast|conditions?)\s+(?:in|for|at)\s+([a-zA-Z\s,]+?)(?:\?|$|today|tomorrow|this|next)/i,
-        /(?:in|for|at)\s+([a-zA-Z\s,]+?)(?:\s+(?:today|tomorrow|this|next|right now|currently)|\?|$)/i,
+        /(?:weather|temperature|forecast|conditions?|coat|umbrella|jacket)\s+(?:in|for|at)\s+([a-zA-Z\s,]+?)(?:\?|$|today|tomorrow|this|next)/i,
+        /(?:in|for|at)\s+([a-zA-Z][a-zA-Z\s,]+?)(?:\s+(?:today|tomorrow|this|next|right now|currently)|\?|$)/i,
         /(?:should i|do i need|will it|is it)\s+.*?\s+(?:in|for|at)\s+([a-zA-Z\s,]+?)(?:\?|$)/i,
-        /([A-Z][a-zA-Z\s]+,\s*[A-Z]{2})/,  // City, ST format
+        /([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*,\s*[A-Z]{2})/,  // City, ST format
         /([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\s+(?:weather|forecast)/i,
     ];
 
     for (const pattern of patterns) {
         const match = message.match(pattern);
         if (match && match[1]) {
-            const location = match[1].trim();
+            const location = match[1].trim().replace(/[.,?!]+$/, '');
             // Filter out common false positives
-            if (location.length > 2 && !['the', 'today', 'tomorrow', 'this', 'next'].includes(location.toLowerCase())) {
+            if (location.length > 2 &&
+                !['the', 'today', 'tomorrow', 'this', 'next', 'a', 'an'].includes(location.toLowerCase())) {
                 return location;
             }
         }
     }
 
     return null;
+}
+
+// Geocode a location using OpenWeatherMap
+async function geocodeLocation(location: string): Promise<{ lat: number; lon: number; name: string } | null> {
+    const apiKey = process.env.OPENWEATHER_API_KEY;
+    if (!apiKey) {
+        console.error('[Chat API] No OpenWeather API key');
+        return null;
+    }
+
+    try {
+        const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(location)}&limit=1&appid=${apiKey}`;
+        console.log(`[Chat API] Geocoding: ${location}`);
+
+        const response = await fetch(url);
+        if (!response.ok) {
+            console.error(`[Chat API] Geocoding failed: ${response.status}`);
+            return null;
+        }
+
+        const data = await response.json();
+        if (!data || data.length === 0) {
+            console.log(`[Chat API] No geocoding results for: ${location}`);
+            return null;
+        }
+
+        const result = {
+            lat: data[0].lat,
+            lon: data[0].lon,
+            name: data[0].state ? `${data[0].name}, ${data[0].state}` : data[0].name
+        };
+        console.log(`[Chat API] Geocoded to:`, result);
+        return result;
+    } catch (error) {
+        console.error('[Chat API] Geocoding error:', error);
+        return null;
+    }
+}
+
+// Fetch current weather from OpenWeatherMap
+async function fetchCurrentWeather(lat: number, lon: number): Promise<{
+    temperature: number;
+    condition: string;
+    humidity: number;
+    wind: string;
+    feelsLike: number;
+} | null> {
+    const apiKey = process.env.OPENWEATHER_API_KEY;
+    if (!apiKey) return null;
+
+    try {
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`;
+        console.log(`[Chat API] Fetching weather for: ${lat}, ${lon}`);
+
+        const response = await fetch(url);
+        if (!response.ok) {
+            console.error(`[Chat API] Weather fetch failed: ${response.status}`);
+            return null;
+        }
+
+        const data = await response.json();
+        const result = {
+            temperature: Math.round(data.main?.temp || 0),
+            condition: data.weather?.[0]?.description || 'unknown',
+            humidity: data.main?.humidity || 0,
+            wind: `${Math.round(data.wind?.speed || 0)} mph`,
+            feelsLike: Math.round(data.main?.feels_like || 0)
+        };
+        console.log(`[Chat API] Weather data:`, result);
+        return result;
+    } catch (error) {
+        console.error('[Chat API] Weather fetch error:', error);
+        return null;
+    }
 }
 
 // Fetch real weather data for a location
@@ -71,31 +144,24 @@ async function fetchWeatherForLocation(location: string): Promise<{
     condition: string;
     humidity?: number;
     wind?: string;
-    forecast?: string;
+    feelsLike?: number;
 } | null> {
-    try {
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-        const response = await fetch(`${baseUrl}/api/weather/current?location=${encodeURIComponent(location)}`);
+    // First geocode the location
+    const coords = await geocodeLocation(location);
+    if (!coords) return null;
 
-        if (!response.ok) {
-            console.log(`Weather API returned ${response.status} for ${location}`);
-            return null;
-        }
+    // Then fetch weather
+    const weather = await fetchCurrentWeather(coords.lat, coords.lon);
+    if (!weather) return null;
 
-        const data = await response.json();
-
-        return {
-            location: data.location || location,
-            temperature: Math.round(data.temperature || data.temp || 0),
-            condition: data.condition || data.description || 'Unknown',
-            humidity: data.humidity,
-            wind: data.wind?.speed ? `${data.wind.speed} mph` : undefined,
-            forecast: data.forecast?.[0]?.description
-        };
-    } catch (error) {
-        console.error('Error fetching weather:', error);
-        return null;
-    }
+    return {
+        location: coords.name,
+        temperature: weather.temperature,
+        condition: weather.condition,
+        humidity: weather.humidity,
+        wind: weather.wind,
+        feelsLike: weather.feelsLike
+    };
 }
 
 export async function POST(request: NextRequest) {
@@ -148,11 +214,13 @@ export async function POST(request: NextRequest) {
         const extractedLocation = extractLocationFromMessage(message);
 
         if (extractedLocation && !weatherContext?.location) {
-            console.log(`[Chat API] Extracted location: ${extractedLocation}, fetching weather...`);
+            console.log(`[Chat API] Extracted location: "${extractedLocation}", fetching weather...`);
             const realWeather = await fetchWeatherForLocation(extractedLocation);
             if (realWeather) {
-                console.log(`[Chat API] Got real weather:`, realWeather);
+                console.log(`[Chat API] Got real weather for ${realWeather.location}: ${realWeather.temperature}°F, ${realWeather.condition}`);
                 weatherContext = realWeather;
+            } else {
+                console.log(`[Chat API] Could not fetch weather for: ${extractedLocation}`);
             }
         }
 

@@ -23,6 +23,9 @@ export interface WeatherContext {
     temperature?: number;
     condition?: string;
     forecast?: string;
+    humidity?: number;
+    wind?: string;
+    feelsLike?: number;
 }
 
 // Intent detection - ONLY bypass AI for very clear simple searches
@@ -52,16 +55,18 @@ function buildSystemPrompt(currentDatetime: string, weatherContext?: WeatherCont
 REAL-TIME WEATHER DATA (USE THIS IN YOUR RESPONSE):
 ====================================================
 Location: ${weatherContext.location}
-Current Temperature: ${weatherContext.temperature}°F
-Current Conditions: ${weatherContext.condition}
+Temperature: ${weatherContext.temperature}°F${weatherContext.feelsLike ? ` (feels like ${weatherContext.feelsLike}°F)` : ''}
+Conditions: ${weatherContext.condition}
+${weatherContext.humidity ? `Humidity: ${weatherContext.humidity}%` : ''}
+${weatherContext.wind ? `Wind: ${weatherContext.wind}` : ''}
 ${weatherContext.forecast ? `Forecast: ${weatherContext.forecast}` : ''}
 ====================================================
-CRITICAL: Base your recommendations on this ACTUAL current data!
+CRITICAL: Use this REAL data in your response! Mention the actual temperature!
 `;
     } else {
         contextInfo = `
-NOTE: No real-time weather data available. If the user asks about a specific location,
-your response should trigger loading the weather data for accurate recommendations.
+NOTE: No real-time weather data fetched yet. If user mentions a location,
+set action type to "load_weather" so we can get accurate data.
 `;
     }
 
