@@ -1,29 +1,16 @@
 /**
- * 16-Bit Weather Platform - BETA v0.3.2
+ * 16-Bit Weather Platform - v1.0.0
  * 
  * Copyright (C) 2025 16-Bit Weather
  * Licensed under Fair Source License, Version 0.9
  * 
  * Use Limitation: 5 users
  * See LICENSE file for full terms
- * 
- * BETA SOFTWARE NOTICE:
- * This software is in active development. Features may change.
- * Report issues: https://github.com/deephouse23/Weather-application-/issues
  */
 
 /**
- * 16-Bit Weather Platform - BETA v0.3.2
- * 
- * Copyright (C) 2025 16-Bit Weather
- * Licensed under Fair Source License, Version 0.9
- * 
- * Use Limitation: 5 users
- * See LICENSE file for full terms
- * 
- * BETA SOFTWARE NOTICE:
- * This software is in active development. Features may change.
- * Report issues: https://github.com/deephouse23/Weather-application-/issues
+ * City Weather Page - Server Component
+ * Generates SEO-optimized pages for major US cities
  */
 
 import { Suspense } from 'react'
@@ -109,7 +96,7 @@ export default async function CityWeatherPage({ params }: PageParams) {
       patterns: 'Check current conditions and extended forecasts.'
     }
   }
-  
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
@@ -173,9 +160,9 @@ export default async function CityWeatherPage({ params }: PageParams) {
           </div>
         </div>
       }>
-        <CityWeatherClient 
-          city={cityInfo} 
-          citySlug={citySlug} 
+        <CityWeatherClient
+          city={cityInfo}
+          citySlug={citySlug}
           isPredefinedCity={!!city}
         />
       </Suspense>
@@ -196,7 +183,7 @@ function citySlugToSearchTerm(slug: string): string {
   if (parts.length > 1) {
     const state = parts[parts.length - 1].toUpperCase()
     const cityParts = parts.slice(0, -1)
-    const cityName = cityParts.map(word => 
+    const cityName = cityParts.map(word =>
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ')
     return `${cityName}, ${state}`
@@ -208,18 +195,20 @@ function citySlugToSearchTerm(slug: string): string {
 export const dynamic = 'force-dynamic'
 
 // City data for SEO and functionality
-const cityData: { [key: string]: { 
-  name: string
-  state: string
-  searchTerm: string
-  title: string
-  description: string
-  content: {
-    intro: string
-    climate: string
-    patterns: string
+const cityData: {
+  [key: string]: {
+    name: string
+    state: string
+    searchTerm: string
+    title: string
+    description: string
+    content: {
+      intro: string
+      climate: string
+      patterns: string
+    }
   }
-}} = {
+} = {
   'new-york-ny': {
     name: 'New York',
     state: 'NY',
