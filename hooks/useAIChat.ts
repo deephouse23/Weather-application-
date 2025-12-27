@@ -43,24 +43,20 @@ export function useAIChat() {
     const isAuthenticated = !!user && !!session;
 
     // Check if input is a simple location search (no AI needed)
+    // Be very permissive - only bypass AI for obvious simple searches
     const isSimpleSearch = useCallback((input: string): boolean => {
         const trimmed = input.trim();
 
-        // ZIP code
+        // ZIP code - definitely simple
         if (/^\d{5}(-\d{4})?$/.test(trimmed)) return true;
 
-        // Coordinates
+        // Coordinates - definitely simple
         if (/^-?\d+\.?\d*,\s*-?\d+\.?\d*$/.test(trimmed)) return true;
 
-        // Simple "City, State" pattern
-        if (/^[A-Za-z\s.-]+,\s*[A-Za-z]{2,3}$/.test(trimmed)) return true;
+        // Very short "City, ST" with 2-letter state code only
+        if (/^[A-Za-z]+,\s*[A-Za-z]{2}$/.test(trimmed) && trimmed.length < 25) return true;
 
-        // Simple city name (no question words)
-        if (/^[A-Za-z\s.-]+$/.test(trimmed) && trimmed.split(/\s+/).length <= 3) {
-            const conversationalPatterns = /\b(what|how|should|will|is|are|show|tell|can|could|would|do|does|the|in|for|today|tomorrow|weekend|week)\b/i;
-            if (!conversationalPatterns.test(trimmed)) return true;
-        }
-
+        // Everything else goes to AI
         return false;
     }, []);
 

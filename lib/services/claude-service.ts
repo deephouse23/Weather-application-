@@ -25,26 +25,22 @@ export interface WeatherContext {
     forecast?: string;
 }
 
-// Intent detection - determine if input needs AI or is a simple location search
+// Intent detection - ONLY bypass AI for very clear simple searches
+// Be more permissive to let AI handle more queries
 export function isSimpleLocationSearch(input: string): boolean {
     const trimmed = input.trim();
 
-    // ZIP code (US)
+    // ZIP code (US) - definitely a simple search
     if (/^\d{5}(-\d{4})?$/.test(trimmed)) return true;
 
-    // Coordinates
+    // Coordinates - definitely a simple search
     if (/^-?\d+\.?\d*,\s*-?\d+\.?\d*$/.test(trimmed)) return true;
 
-    // Simple "City, State" or "City, ST" pattern (e.g., "San Ramon, CA")
-    if (/^[A-Za-z\s.-]+,\s*[A-Za-z]{2,3}$/.test(trimmed)) return true;
+    // Very short "City, ST" pattern with only 2-letter state code
+    // e.g., "Denver, CO" but NOT "weather in Denver, CO"
+    if (/^[A-Za-z]+,\s*[A-Za-z]{2}$/.test(trimmed) && trimmed.length < 25) return true;
 
-    // Simple city name only (e.g., "Chicago")
-    if (/^[A-Za-z\s.-]+$/.test(trimmed) && trimmed.split(/\s+/).length <= 3) {
-        // Check if it contains conversational words
-        const conversationalPatterns = /\b(what|how|should|will|is|are|show|tell|can|could|would|do|does|the|in|for|today|tomorrow|weekend|week)\b/i;
-        if (!conversationalPatterns.test(trimmed)) return true;
-    }
-
+    // Everything else goes to AI - let it be smart about interpretation
     return false;
 }
 
@@ -53,55 +49,74 @@ function buildSystemPrompt(currentDatetime: string, weatherContext?: WeatherCont
     let contextInfo = '';
     if (weatherContext?.location) {
         contextInfo = `
-User's current weather data:
+The user is currently viewing weather for:
 - Location: ${weatherContext.location}
 - Temperature: ${weatherContext.temperature}°F
 - Conditions: ${weatherContext.condition}
-${weatherContext.forecast ? `- Forecast: ${weatherContext.forecast}` : ''}
+${weatherContext.forecast ? `- Forecast preview: ${weatherContext.forecast}` : ''}
 `;
     }
 
-    return `You are the weather assistant for 16-Bit Weather, a retro-styled weather education platform.
+    return `You are STORM, the friendly AI weather assistant for 16-Bit Weather - a retro-styled weather platform with a terminal aesthetic.
 
-Your job is to:
-1. Answer weather-related questions helpfully and concisely
-2. Extract location and time references from user queries
-3. Provide actionable advice based on weather conditions
-4. Help users understand weather phenomena
+PERSONALITY:
+- Warm, helpful, and enthusiastic about weather
+- Sprinkle in fun weather facts when relevant
+- Use retro/tech vibes occasionally (e.g., "SCANNING ATMOSPHERIC DATA..." or "WEATHER SYSTEMS NOMINAL")
+- Keep responses conversational but informative
+- Be encouraging about outdoor activities when weather permits
 
-IMPORTANT: Always respond with valid JSON in this exact format:
+CAPABILITIES:
+1. Answer ANY weather-related questions with detail and personality
+2. Provide clothing/activity recommendations based on conditions
+3. Explain weather phenomena in accessible terms
+4. Help users plan around weather (travel, events, outdoor activities)
+5. Share interesting weather trivia and facts
+6. Navigate to weather data or radar when helpful
+
+RESPONSE FORMAT - Always respond with valid JSON:
 {
-  "message": "Your conversational response here",
+  "message": "Your friendly, helpful response with personality",
   "action": {
     "type": "load_weather" | "navigate_radar" | "none",
-    "location": "City, State" (if applicable, use proper format),
-    "date": "YYYY-MM-DD" (if applicable)
+    "location": "City, State" (if user mentions a location),
+    "date": "YYYY-MM-DD" (if user mentions a specific date)
   }
 }
 
-Action types:
-- "load_weather": When user wants to see weather for a location
-- "navigate_radar": When user wants to see radar/map for a location
-- "none": For general questions, advice, or when no navigation is needed
+ACTION GUIDE:
+- "load_weather": Use when user asks about weather for a specific place
+- "navigate_radar": Use when user wants to see radar, storms, precipitation maps
+- "none": Use for general questions, advice, education, or when you're just chatting
 
-Current datetime: ${currentDatetime}
+CURRENT INFO:
+- Date/Time: ${currentDatetime}
 ${contextInfo}
 
-Be friendly, concise, and helpful. Match the retro terminal vibe when appropriate.`;
+Remember: You're not just a search tool - you're a knowledgeable weather companion! Be helpful, be fun, and make weather interesting.`;
 }
 
 // Parse Claude's response into structured format
 function parseClaudeResponse(content: string): ChatResponse {
     try {
-        // Try to parse as JSON directly
-        const parsed = JSON.parse(content);
+        // Try to extract JSON from the response (Claude might wrap it in markdown)
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            return {
+                message: parsed.message || content,
+                action: {
+                    type: parsed.action?.type || 'none',
+                    location: parsed.action?.location,
+                    date: parsed.action?.date
+                }
+            };
+        }
+
+        // No JSON found, treat as plain message
         return {
-            message: parsed.message || content,
-            action: {
-                type: parsed.action?.type || 'none',
-                location: parsed.action?.location,
-                date: parsed.action?.date
-            }
+            message: content,
+            action: { type: 'none' }
         };
     } catch {
         // If JSON parsing fails, treat as plain message
@@ -141,7 +156,7 @@ export async function getWeatherChatResponse(
 
     const response = await client.messages.create({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 500,
+        max_tokens: 1024,  // Increased for richer responses
         system: systemPrompt,
         messages: [
             {
