@@ -18,10 +18,10 @@
  */
 
 import { cn } from '@/lib/utils'
-import { 
-  getAQIColor, 
-  getAQIDescription, 
-  getAQIRecommendation, 
+import {
+  getAQIColor,
+  getAQIDescription,
+  getAQIRecommendation,
   getAQIIndicatorPosition,
   AQI_SCALE_LABELS,
   AQI_COLOR_SEGMENTS
@@ -38,12 +38,12 @@ interface AirQualityDisplayProps {
 export function AirQualityDisplay({ aqi, theme, className, minimal = false }: AirQualityDisplayProps) {
   // Theme-specific styles
   const getThemeStyles = () => {
-    if (minimal) return { 
-        container: '', 
-        header: '', 
-        text: 'text-white/80', 
-        border: 'border-white/20', 
-        shadow: 'none' 
+    if (minimal) return {
+      container: '',
+      header: '',
+      text: 'text-white/80',
+      border: 'border-white/20',
+      shadow: 'none'
     };
 
     switch (theme) {
@@ -103,6 +103,46 @@ export function AirQualityDisplay({ aqi, theme, className, minimal = false }: Ai
           border: 'border-[#5B5B8B66]',
           shadow: '0 0 15px #5B5B8B33'
         }
+      case 'synthwave84':
+        return {
+          container: 'bg-[#1a0f2e] border-[#ff7edb]',
+          header: 'text-[#ff7edb]',
+          text: 'text-[#ffffff]',
+          border: 'border-[#ff7edb66]',
+          shadow: '0 0 15px #ff7edb33'
+        }
+      case 'tokyoNight':
+        return {
+          container: 'bg-[#16161e] border-[#9d7cd8]',
+          header: 'text-[#7dcfff]',
+          text: 'text-[#c0caf5]',
+          border: 'border-[#9d7cd866]',
+          shadow: '0 0 15px #9d7cd833'
+        }
+      case 'dracula':
+        return {
+          container: 'bg-[#1e1f29] border-[#ff79c6]',
+          header: 'text-[#ff79c6]',
+          text: 'text-[#f8f8f2]',
+          border: 'border-[#ff79c666]',
+          shadow: '0 0 15px #ff79c633'
+        }
+      case 'cyberpunk':
+        return {
+          container: 'bg-[#0d0d0d] border-[#00ffff]',
+          header: 'text-[#fcee0a]',
+          text: 'text-[#ffffff]',
+          border: 'border-[#00ffff66]',
+          shadow: '0 0 15px #00ffff33'
+        }
+      case 'matrix':
+        return {
+          container: 'bg-[#000000] border-[#008f11]',
+          header: 'text-[#00ff41]',
+          text: 'text-[#00ff41]',
+          border: 'border-[#008f1166]',
+          shadow: '0 0 15px #008f1133'
+        }
       default:
         return {
           container: 'bg-[#0f0f0f] border-[#00d4ff]',
@@ -117,7 +157,7 @@ export function AirQualityDisplay({ aqi, theme, className, minimal = false }: Ai
   const styles = getThemeStyles()
 
   return (
-    <div 
+    <div
       className={cn(
         !minimal && "p-4 rounded-lg text-center border-2 shadow-lg",
         !minimal && styles.container,
@@ -129,56 +169,56 @@ export function AirQualityDisplay({ aqi, theme, className, minimal = false }: Ai
       <h2 className={cn("text-xl font-semibold mb-3", styles.header, minimal && "text-lg mb-2 text-center md:text-left")}>
         Air Quality
       </h2>
-      
+
       {/* AQI Value and Description */}
       <p className={cn("text-lg font-bold mb-3", getAQIColor(aqi), minimal && "text-base mb-2")}>
         {aqi} - {getAQIDescription(aqi)}
       </p>
-      
+
       {/* Horizontal AQI Color Bar */}
       <div className="mb-3">
         <div className="relative w-full h-4 rounded-full overflow-hidden border border-gray-400/50">
           {/* Color segments */}
           <div className="absolute inset-0 flex">
             {AQI_COLOR_SEGMENTS.map((segment, index) => (
-              <div 
+              <div
                 key={index}
-                className={cn("flex-1", segment.color)} 
+                className={cn("flex-1", segment.color)}
                 style={{ width: segment.width }}
                 title={segment.label}
               />
             ))}
           </div>
-          
+
           {/* Current reading indicator */}
-          <div 
+          <div
             className="absolute top-0 w-1 h-full bg-white border border-black transform -translate-x-0.5"
-            style={{ 
+            style={{
               left: `${getAQIIndicatorPosition(aqi)}%`,
               boxShadow: '0 0 4px rgba(0,0,0,0.8)'
             }}
           />
         </div>
-        
+
         {/* AQI Scale Labels */}
         {!minimal && (
-            <div className="flex justify-between text-xs text-gray-400 mt-1 px-1">
+          <div className="flex justify-between text-xs text-gray-400 mt-1 px-1">
             {AQI_SCALE_LABELS.map((label, index) => (
-                <span key={index}>{label}</span>
+              <span key={index}>{label}</span>
             ))}
-            </div>
+          </div>
         )}
       </div>
-      
+
       {/* Health Recommendation */}
       <p className={cn("text-sm font-medium mb-2", styles.text, minimal && "text-xs line-clamp-2")}>
         {getAQIRecommendation(aqi)}
       </p>
-      
+
       {/* EPA AQI Legend - Updated */}
       {!minimal && (
         <div className={cn("text-xs border-t pt-2", styles.text, styles.border)}>
-            <p className="font-medium">EPA Air Quality Index • Lower = Better</p>
+          <p className="font-medium">EPA Air Quality Index • Lower = Better</p>
         </div>
       )}
     </div>
