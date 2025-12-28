@@ -98,9 +98,18 @@ Temperature: ${weatherContext.temperature}°F${weatherContext.feelsLike ? ` (fee
 Conditions: ${weatherContext.condition}
 ${weatherContext.humidity ? `Humidity: ${weatherContext.humidity}%` : ''}
 ${weatherContext.wind ? `Wind: ${weatherContext.wind}` : ''}
-${weatherContext.forecast ? `Forecast: ${weatherContext.forecast}` : ''}
+${weatherContext.forecast ? `
+FORECAST DATA (up to 8 days):
+${weatherContext.forecast}
+` : ''}
 ====================================================
-CRITICAL: Use this REAL data in your response! Mention the actual temperature!
+CRITICAL INSTRUCTIONS:
+1. Use this REAL data in your response - mention actual temperatures and conditions!
+2. For questions about specific days (tomorrow, next 2 days, this week, etc.), ALWAYS reference the forecast data above.
+3. If the user asks "will it rain?" - check the forecast conditions for Rain, Drizzle, Showers, Thunderstorm, etc.
+4. If asked about a date BEYOND what's in the forecast (more than 8 days out), be honest and say something like:
+   "My forecast powers can only reach 8 days ahead - beyond that, even my weather sensors get hazy."
+5. Never give vague seasonal guesses when you have actual forecast data - USE IT!
 `;
     } else {
         contextInfo = `
@@ -110,10 +119,8 @@ IMPORTANT: Even without exact data, GIVE A DIRECT RECOMMENDATION based on:
 - Common sense for the activity they're asking about (sports = warmer, sitting = cooler)
 - Your knowledge of typical weather patterns for the mentioned location
 
-Example good response: "December in San Ramon? Yeah, you'll want a light jacket for pickleball - 
-mornings are typically in the 40s-50s. You'll warm up once you're moving but the start will be chilly."
-
-Example BAD response: "Let me check the weather data first..." (TOO PASSIVE - give advice!)
+If I could not fetch weather data for the location, be honest about it:
+"Hmm, my sensors couldn't lock onto that location. Try a city name or ZIP code."
 
 After giving your recommendation, set action type to "load_weather" to fetch real-time data.
 `;
