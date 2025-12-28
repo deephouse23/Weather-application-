@@ -144,8 +144,43 @@ async function fetchCurrentWeather(lat: number, lon: number): Promise<{
     }
 }
 
-// Fetch 5-day forecast from OpenWeatherMap
+// Fetch 8-day forecast from OpenWeatherMap One Call 3.0 API
 async function fetchForecast(lat: number, lon: number): Promise<string | null> {
+    const apiKey = process.env.OPENWEATHER_API_KEY;
+    if (!apiKey) return null;
+
+    try {
+        // Use One Call 3.0 API for 8-day forecast
+        const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=imperial&exclude=minutely,hourly,alerts&appid=${apiKey}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+            console.log(`[Chat API] One Call API failed: ${response.status}, falling back to 5-day`);
+            // Fallback to 5-day forecast if One Call fails
+            return await fetchForecast5Day(lat, lon);
+        }
+
+        const data = await response.json();
+
+        // Extract daily forecasts (up to 8 days)
+        const forecastLines: string[] = [];
+        for (const day of (data.daily || []).slice(0, 8)) {
+            const date = new Date(day.dt * 1000);
+            const dayKey = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            const high = Math.round(day.temp?.max || 0);
+            const low = Math.round(day.temp?.min || 0);
+            const condition = day.weather?.[0]?.main || 'Clear';
+            forecastLines.push(`${dayKey}: ${high}°F/${low}°F, ${condition}`);
+        }
+
+        return forecastLines.join(' | ');
+    } catch (error) {
+        console.error('[Chat API] Forecast fetch error:', error);
+        return null;
+    }
+}
+
+// Fallback 5-day forecast from free tier
+async function fetchForecast5Day(lat: number, lon: number): Promise<string | null> {
     const apiKey = process.env.OPENWEATHER_API_KEY;
     if (!apiKey) return null;
 
@@ -155,14 +190,11 @@ async function fetchForecast(lat: number, lon: number): Promise<string | null> {
         if (!response.ok) return null;
 
         const data = await response.json();
-
-        // Group forecast by day and get daily summaries
         const dailyForecasts: Map<string, { high: number; low: number; condition: string }> = new Map();
 
         for (const item of data.list || []) {
             const date = new Date(item.dt * 1000);
             const dayKey = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-
             const existing = dailyForecasts.get(dayKey);
             const temp = Math.round(item.main?.temp || 0);
             const condition = item.weather?.[0]?.main || 'Clear';
@@ -173,12 +205,11 @@ async function fetchForecast(lat: number, lon: number): Promise<string | null> {
                 dailyForecasts.set(dayKey, {
                     high: Math.max(existing.high, temp),
                     low: Math.min(existing.low, temp),
-                    condition: existing.condition // keep first condition of day
+                    condition: existing.condition
                 });
             }
         }
 
-        // Format as string for AI context (limit to 5 days)
         const forecastLines: string[] = [];
         let count = 0;
         for (const [day, forecast] of dailyForecasts) {
