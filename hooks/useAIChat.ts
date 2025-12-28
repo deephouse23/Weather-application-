@@ -10,6 +10,8 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
 
+export type AIPersonality = 'storm' | 'sass' | 'chill';
+
 export interface ChatAction {
     type: 'load_weather' | 'navigate_radar' | 'none';
     location?: string;
@@ -39,6 +41,7 @@ export function useAIChat() {
     const [response, setResponse] = useState<AIResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [rateLimit, setRateLimit] = useState<RateLimitInfo | null>(null);
+    const [personality, setPersonality] = useState<AIPersonality>('storm');
 
     const isAuthenticated = !!user && !!session;
 
@@ -87,7 +90,8 @@ export function useAIChat() {
                 },
                 body: JSON.stringify({
                     message,
-                    weatherContext
+                    weatherContext,
+                    personality
                 })
             });
 
@@ -176,6 +180,8 @@ export function useAIChat() {
         response,
         error,
         rateLimit,
+        personality,
+        setPersonality,
         sendMessage,
         clearResponse,
         fetchRateLimitStatus,

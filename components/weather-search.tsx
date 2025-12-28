@@ -60,6 +60,8 @@ export default function WeatherSearch({
     response: aiResponse,
     error: aiError,
     rateLimit,
+    personality,
+    setPersonality,
     sendMessage,
     clearResponse,
     isSimpleSearch
@@ -248,9 +250,55 @@ export default function WeatherSearch({
             </>
           )}
         </div>
-        {isAuthenticated && rateLimit && (
-          <div className="text-xs text-weather-muted mt-1">
-            AI: {rateLimit.remaining}/15 queries remaining
+        {isAuthenticated && (
+          <div className="flex items-center justify-center gap-2 mt-2">
+            {/* Personality Toggle */}
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={() => setPersonality('storm')}
+                className={cn(
+                  "px-2 py-0.5 text-xs font-mono uppercase rounded transition-colors",
+                  personality === 'storm'
+                    ? "bg-weather-primary text-weather-bg"
+                    : "text-weather-muted hover:text-weather-primary"
+                )}
+                title="Friendly & enthusiastic"
+              >
+                STORM
+              </button>
+              <button
+                type="button"
+                onClick={() => setPersonality('sass')}
+                className={cn(
+                  "px-2 py-0.5 text-xs font-mono uppercase rounded transition-colors",
+                  personality === 'sass'
+                    ? "bg-pink-500 text-white"
+                    : "text-weather-muted hover:text-pink-400"
+                )}
+                title="Sarcastic & brutally honest"
+              >
+                SASS
+              </button>
+              <button
+                type="button"
+                onClick={() => setPersonality('chill')}
+                className={cn(
+                  "px-2 py-0.5 text-xs font-mono uppercase rounded transition-colors",
+                  personality === 'chill'
+                    ? "bg-green-500 text-white"
+                    : "text-weather-muted hover:text-green-400"
+                )}
+                title="Laid-back & minimal"
+              >
+                CHILL
+              </button>
+            </div>
+            {rateLimit && (
+              <span className="text-xs text-weather-muted">
+                ({rateLimit.remaining}/15)
+              </span>
+            )}
           </div>
         )}
       </div>

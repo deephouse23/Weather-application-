@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getWeatherChatResponse, isSimpleLocationSearch } from '@/lib/services/claude-service';
+import { getWeatherChatResponse, isSimpleLocationSearch, type AIPersonality } from '@/lib/services/claude-service';
 import { checkRateLimit, getRateLimitStatus } from '@/lib/services/chat-rate-limiter';
 import { saveMessage, getRecentMessages } from '@/lib/services/chat-history-service';
 
@@ -185,7 +185,8 @@ export async function POST(request: NextRequest) {
 
         // Parse request body
         const body = await request.json();
-        const { message, weatherContext: providedContext } = body;
+        const { message, weatherContext: providedContext, personality = 'storm' } = body;
+        const aiPersonality: AIPersonality = ['storm', 'sass', 'chill'].includes(personality) ? personality : 'storm';
 
         if (!message || typeof message !== 'string') {
             return NextResponse.json(
@@ -237,8 +238,8 @@ export async function POST(request: NextRequest) {
             content: message
         });
 
-        // Get AI response with real weather context
-        const response = await getWeatherChatResponse(message, weatherContext);
+        // Get AI response with real weather context and personality
+        const response = await getWeatherChatResponse(message, weatherContext, aiPersonality);
 
         // Save assistant response to history
         await saveMessage(user.id, {
