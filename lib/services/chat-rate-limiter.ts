@@ -7,7 +7,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const RATE_LIMIT_QUERIES = 15;
+const RATE_LIMIT_QUERIES = 30;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour in milliseconds
 
 export interface RateLimitResult {

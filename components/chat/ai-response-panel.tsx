@@ -60,11 +60,6 @@ export function AIResponsePanel({
                     <span className="text-xs uppercase tracking-wider text-weather-primary font-mono">
                         AI Assistant
                     </span>
-                    {rateLimit && (
-                        <span className="text-xs text-weather-muted font-mono">
-                            ({rateLimit.remaining}/15)
-                        </span>
-                    )}
                 </div>
                 <div className="flex items-center gap-1">
                     <Button

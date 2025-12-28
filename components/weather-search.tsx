@@ -294,11 +294,6 @@ export default function WeatherSearch({
                 CHILL
               </button>
             </div>
-            {rateLimit && (
-              <span className="text-xs text-weather-muted">
-                ({rateLimit.remaining}/15)
-              </span>
-            )}
           </div>
         )}
       </div>
