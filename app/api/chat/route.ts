@@ -144,7 +144,56 @@ async function fetchCurrentWeather(lat: number, lon: number): Promise<{
     }
 }
 
-// Fetch real weather data for a location
+// Fetch 5-day forecast from OpenWeatherMap
+async function fetchForecast(lat: number, lon: number): Promise<string | null> {
+    const apiKey = process.env.OPENWEATHER_API_KEY;
+    if (!apiKey) return null;
+
+    try {
+        const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`;
+        const response = await fetch(url);
+        if (!response.ok) return null;
+
+        const data = await response.json();
+
+        // Group forecast by day and get daily summaries
+        const dailyForecasts: Map<string, { high: number; low: number; condition: string }> = new Map();
+
+        for (const item of data.list || []) {
+            const date = new Date(item.dt * 1000);
+            const dayKey = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+            const existing = dailyForecasts.get(dayKey);
+            const temp = Math.round(item.main?.temp || 0);
+            const condition = item.weather?.[0]?.main || 'Clear';
+
+            if (!existing) {
+                dailyForecasts.set(dayKey, { high: temp, low: temp, condition });
+            } else {
+                dailyForecasts.set(dayKey, {
+                    high: Math.max(existing.high, temp),
+                    low: Math.min(existing.low, temp),
+                    condition: existing.condition // keep first condition of day
+                });
+            }
+        }
+
+        // Format as string for AI context (limit to 5 days)
+        const forecastLines: string[] = [];
+        let count = 0;
+        for (const [day, forecast] of dailyForecasts) {
+            if (count >= 5) break;
+            forecastLines.push(`${day}: ${forecast.high}°F/${forecast.low}°F, ${forecast.condition}`);
+            count++;
+        }
+
+        return forecastLines.join(' | ');
+    } catch {
+        return null;
+    }
+}
+
+// Fetch real weather data for a location (current + forecast)
 async function fetchWeatherForLocation(location: string): Promise<{
     location: string;
     temperature: number;
@@ -152,13 +201,18 @@ async function fetchWeatherForLocation(location: string): Promise<{
     humidity?: number;
     wind?: string;
     feelsLike?: number;
+    forecast?: string;
 } | null> {
     // First geocode the location
     const coords = await geocodeLocation(location);
     if (!coords) return null;
 
-    // Then fetch weather
-    const weather = await fetchCurrentWeather(coords.lat, coords.lon);
+    // Fetch current weather and forecast in parallel
+    const [weather, forecast] = await Promise.all([
+        fetchCurrentWeather(coords.lat, coords.lon),
+        fetchForecast(coords.lat, coords.lon)
+    ]);
+
     if (!weather) return null;
 
     return {
@@ -167,7 +221,8 @@ async function fetchWeatherForLocation(location: string): Promise<{
         condition: weather.condition,
         humidity: weather.humidity,
         wind: weather.wind,
-        feelsLike: weather.feelsLike
+        feelsLike: weather.feelsLike,
+        forecast: forecast || undefined
     };
 }
 
