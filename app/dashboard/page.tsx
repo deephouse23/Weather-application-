@@ -5,12 +5,13 @@ import { ProtectedRoute, useAuth } from '@/lib/auth'
 import { useSavedLocations } from '@/lib/supabase/hooks'
 import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
-import { MapPin, Star, Plus, Settings, RefreshCw } from 'lucide-react'
+import { MapPin, Star, Plus, Settings, RefreshCw, Bot } from 'lucide-react'
 import Navigation from '@/components/navigation'
 import Link from 'next/link'
 import LocationCard from '@/components/dashboard/location-card'
 import AddLocationModal from '@/components/dashboard/add-location-modal'
 import ThemeSelectorGrid from '@/components/dashboard/theme-selector-grid'
+import AIPersonalitySelector from '@/components/dashboard/ai-personality-selector'
 import { Button } from '@/components/ui/button'
 
 export default function DashboardPage() {
@@ -155,6 +156,19 @@ function DashboardContent() {
             )}
           </div>
         )}
+
+        {/* AI Personality Section */}
+        <div className="mb-12">
+          <div className={`flex items-center gap-2 mb-6 pb-2 border-b-2 ${themeClasses.borderColor}`}>
+            <Bot className={`w-5 h-5 ${themeClasses.text}`} />
+            <h2 className={`text-lg font-bold uppercase tracking-wider font-mono ${themeClasses.text}`}>
+              AI Assistant Personality
+            </h2>
+          </div>
+          <div className={`p-6 border-2 ${themeClasses.borderColor} bg-black/40 rounded-lg`}>
+            <AIPersonalitySelector />
+          </div>
+        </div>
 
         {/* Theme Selector Section */}
         <div className="mb-12">

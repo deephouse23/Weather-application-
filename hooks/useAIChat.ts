@@ -7,10 +7,12 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 
 export type AIPersonality = 'storm' | 'sass' | 'chill';
+
+const AI_PERSONALITY_KEY = 'ai-personality-preference';
 
 export interface ChatAction {
     type: 'load_weather' | 'navigate_radar' | 'none';
@@ -41,9 +43,28 @@ export function useAIChat() {
     const [response, setResponse] = useState<AIResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [rateLimit, setRateLimit] = useState<RateLimitInfo | null>(null);
-    const [personality, setPersonality] = useState<AIPersonality>('storm');
+    const [personality, setPersonalityState] = useState<AIPersonality>('storm');
 
     const isAuthenticated = !!user && !!session;
+
+    // Load personality from localStorage on mount
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem(AI_PERSONALITY_KEY);
+            if (saved && ['storm', 'sass', 'chill'].includes(saved)) {
+                setPersonalityState(saved as AIPersonality);
+            }
+        }
+    }, []);
+
+    // Wrapper to persist personality changes
+    const setPersonality = useCallback((newPersonality: AIPersonality) => {
+        setPersonalityState(newPersonality);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(AI_PERSONALITY_KEY, newPersonality);
+        }
+    }, []);
+
 
     // Check if input is a simple location search (no AI needed)
     // Be very permissive - only bypass AI for obvious simple searches
