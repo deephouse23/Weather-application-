@@ -38,26 +38,33 @@ async function getAuthenticatedUser(request: NextRequest) {
 }
 
 // Extract location from user message using simple patterns
+// Note: Patterns are optimized to avoid ReDoS vulnerabilities
 function extractLocationFromMessage(message: string): string | null {
-    // Common patterns: "in [location]", "for [location]", "at [location]"
-    const patterns = [
-        /(?:weather|temperature|forecast|conditions?|coat|umbrella|jacket)\s+(?:in|for|at)\s+([a-zA-Z\s,]+?)(?:\?|$|today|tomorrow|this|next)/i,
-        /(?:in|for|at)\s+([a-zA-Z][a-zA-Z\s,]+?)(?:\s+(?:today|tomorrow|this|next|right now|currently)|\?|$)/i,
-        /(?:should i|do i need|will it|is it)\s+.*?\s+(?:in|for|at)\s+([a-zA-Z\s,]+?)(?:\?|$)/i,
-        /([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*,\s*[A-Z]{2})/,  // City, ST format
-        /([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\s+(?:weather|forecast)/i,
-    ];
+    // Limit input length to prevent DoS
+    const safeMessage = message.slice(0, 200);
 
-    for (const pattern of patterns) {
-        const match = message.match(pattern);
-        if (match && match[1]) {
-            const location = match[1].trim().replace(/[.,?!]+$/, '');
-            // Filter out common false positives
-            if (location.length > 2 &&
-                !['the', 'today', 'tomorrow', 'this', 'next', 'a', 'an'].includes(location.toLowerCase())) {
-                return location;
-            }
+    // Simple word-based extraction - avoid complex regex with nested quantifiers
+    const lowerMessage = safeMessage.toLowerCase();
+
+    // Pattern 1: "in/for/at [location]" - extract words after preposition
+    const prepMatch = safeMessage.match(/\b(?:in|for|at)\s+([A-Za-z][A-Za-z\s]{1,30}?)(?:\s*[?,!]|\s+(?:today|tomorrow|this|next|right|currently)|$)/i);
+    if (prepMatch?.[1]) {
+        const loc = prepMatch[1].trim();
+        if (loc.length > 2 && !['the', 'a', 'an'].includes(loc.toLowerCase())) {
+            return loc;
         }
+    }
+
+    // Pattern 2: "City, ST" format (e.g., "Denver, CO")
+    const cityStateMatch = safeMessage.match(/\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)?),\s*([A-Z]{2})\b/);
+    if (cityStateMatch) {
+        return `${cityStateMatch[1]}, ${cityStateMatch[2]}`;
+    }
+
+    // Pattern 3: "[Location] weather" format
+    const weatherMatch = safeMessage.match(/\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s+weather\b/i);
+    if (weatherMatch?.[1]) {
+        return weatherMatch[1];
     }
 
     return null;
