@@ -64,16 +64,18 @@ const PERSONALITIES: Record<AIPersonality, { name: string; traits: string }> = {
 
 // Intent detection - ONLY bypass AI for very clear simple searches
 export function isSimpleLocationSearch(input: string): boolean {
-    const trimmed = input.trim();
+    // Limit input length to prevent DoS
+    const trimmed = input.trim().slice(0, 50);
 
     // ZIP code (US)
     if (/^\d{5}(-\d{4})?$/.test(trimmed)) return true;
 
-    // Coordinates
-    if (/^-?\d+\.?\d*,\s*-?\d+\.?\d*$/.test(trimmed)) return true;
+    // Coordinates - use explicit bounds to avoid ReDoS
+    // Match: -90.123, 180.456 (lat, lon format)
+    if (/^-?\d{1,3}(\.\d{1,10})?,\s*-?\d{1,3}(\.\d{1,10})?$/.test(trimmed)) return true;
 
     // Very short "City, ST" with 2-letter state code
-    if (/^[A-Za-z]+,\s*[A-Za-z]{2}$/.test(trimmed) && trimmed.length < 25) return true;
+    if (/^[A-Za-z]{2,20},\s*[A-Za-z]{2}$/.test(trimmed)) return true;
 
     return false;
 }
