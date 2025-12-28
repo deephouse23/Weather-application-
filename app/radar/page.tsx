@@ -11,6 +11,7 @@
  */
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { Home, Map as MapIcon, Share2 } from 'lucide-react'
@@ -34,72 +35,31 @@ const WeatherMap = dynamic(() => import('@/components/weather-map'), {
 })
 
 export default function MapPage() {
+  const searchParams = useSearchParams()
+  const urlLocation = searchParams.get('location')
   const { currentLocation } = useLocationContext()
   const { theme } = useTheme()
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [shareSuccess, setShareSuccess] = useState(false)
 
+  // Priority: URL location > context location
+  const targetLocation = urlLocation || currentLocation
+
   useEffect(() => {
     const loadWeatherData = async () => {
       setIsLoading(true)
 
-      console.log('[MapPage] Loading weather data - currentLocation:', currentLocation)
+      console.log('[MapPage] Loading weather data - targetLocation:', targetLocation, 'urlLocation:', urlLocation)
 
-      // PRIORITY 1: Check if currentLocation is available in context
-      if (currentLocation) {
-        console.log('[MapPage] Current location from context:', currentLocation)
+      // If we have a target location (from URL or context), fetch weather data
+      if (targetLocation) {
+        console.log('[MapPage] Fetching weather for:', targetLocation)
 
-        // Try to find cached data by searching through all cache entries
-        const allKeys = typeof window !== 'undefined' ? Object.keys(localStorage) : []
-        const weatherCacheKeys = allKeys.filter(key =>
-          key.includes('bitweather_weather_cache') &&
-          !key.endsWith('_timestamp')
-        )
-
-        console.log('[MapPage] Searching for cached data in keys:', weatherCacheKeys.length)
-
-        for (const key of weatherCacheKeys) {
-          try {
-            const stored = localStorage.getItem(key)
-            if (stored) {
-              const parsed = JSON.parse(stored)
-              if (parsed.data) {
-                console.log('[MapPage] Found cached data for current location:', parsed.data.location)
-
-                // PR #168 strips coordinates from cached data for privacy.
-                // If coordinates are missing, fetch fresh data to get them for the radar.
-                if (!parsed.data.coordinates?.lat || !parsed.data.coordinates?.lon) {
-                  console.log('[MapPage] Cached data missing coordinates, fetching fresh data for radar...')
-                  try {
-                    const freshData = await fetchWeatherData(parsed.data.location || currentLocation, 'imperial')
-                    if (freshData?.coordinates?.lat && freshData?.coordinates?.lon) {
-                      console.log('[MapPage] Fresh coordinates obtained:', freshData.coordinates)
-                      setWeatherData(freshData)
-                      setIsLoading(false)
-                      return
-                    }
-                  } catch (fetchError) {
-                    console.warn('[MapPage] Failed to fetch fresh coordinates:', fetchError)
-                  }
-                }
-
-                setWeatherData(parsed.data)
-                setIsLoading(false)
-                return
-              }
-            }
-          } catch (e) {
-            // Continue searching
-          }
-        }
-
-        // No cached data found but we have a location name - fetch fresh data
-        console.log('[MapPage] No cached data found, fetching fresh data for:', currentLocation)
         try {
-          const freshData = await fetchWeatherData(currentLocation, 'imperial')
-          if (freshData) {
-            console.log('[MapPage] Fresh data obtained with coordinates:', freshData.coordinates)
+          const freshData = await fetchWeatherData(targetLocation, 'imperial')
+          if (freshData?.coordinates?.lat && freshData?.coordinates?.lon) {
+            console.log('[MapPage] Weather data obtained:', freshData.location, freshData.coordinates)
             setWeatherData(freshData)
             setIsLoading(false)
             return
@@ -114,7 +74,7 @@ export default function MapPage() {
     }
 
     loadWeatherData()
-  }, [currentLocation])
+  }, [targetLocation, urlLocation])
 
   // Share location handler
   const handleShare = async () => {
