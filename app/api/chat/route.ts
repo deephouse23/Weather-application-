@@ -219,18 +219,28 @@ export async function POST(request: NextRequest) {
 
         // Try to extract location from message and fetch real weather data
         let weatherContext = providedContext;
+        console.log(`[Chat API] Message received: "${message}"`);
+        console.log(`[Chat API] Provided context:`, providedContext);
+
         const extractedLocation = extractLocationFromMessage(message);
+        console.log(`[Chat API] Extracted location: "${extractedLocation}"`);
 
         if (extractedLocation && !weatherContext?.location) {
-            console.log(`[Chat API] Extracted location: "${extractedLocation}", fetching weather...`);
+            console.log(`[Chat API] Fetching weather for: "${extractedLocation}"...`);
             const realWeather = await fetchWeatherForLocation(extractedLocation);
             if (realWeather) {
-                console.log(`[Chat API] Got real weather for ${realWeather.location}: ${realWeather.temperature}°F, ${realWeather.condition}`);
+                console.log(`[Chat API] SUCCESS! Got weather: ${realWeather.temperature}°F, ${realWeather.condition} for ${realWeather.location}`);
                 weatherContext = realWeather;
             } else {
-                console.log(`[Chat API] Could not fetch weather for: ${extractedLocation}`);
+                console.log(`[Chat API] FAILED to fetch weather for: "${extractedLocation}"`);
             }
+        } else if (!extractedLocation) {
+            console.log(`[Chat API] No location extracted from message`);
+        } else {
+            console.log(`[Chat API] Already have weather context, skipping fetch`);
         }
+
+        console.log(`[Chat API] Final weather context:`, weatherContext);
 
         // Save user message to history
         await saveMessage(user.id, {
