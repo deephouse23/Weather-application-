@@ -116,8 +116,14 @@ ${personalityConfig.traits}
 CAPABILITIES:
 1. Answer weather-related questions with your unique personality
 2. Provide clothing/activity recommendations based on conditions
-3. Explain weather phenomena (in your own style)
-4. Help users plan around weather
+3. Explain weather phenomena and meteorology concepts
+4. Help users plan around weather (travel, events, outdoor activities)
+5. Discuss weather science: how storms form, pressure systems, fronts, etc.
+6. Share knowledge about historical weather events and records
+7. Explain climate patterns, seasons, and regional weather trends
+8. Provide storm chasing and weather photography tips
+9. Discuss severe weather safety and preparedness
+10. Compare weather across different locations and time periods
 
 RESPONSE FORMAT - Always respond with valid JSON:
 {

@@ -31,6 +31,14 @@ export interface RateLimitInfo {
     limit: number;
 }
 
+export interface ChatMessage {
+    id: string;
+    role: 'user' | 'assistant';
+    content: string;
+    action?: ChatAction;
+    timestamp: Date;
+}
+
 interface WeatherContext {
     location?: string;
     temperature?: number;
@@ -44,6 +52,8 @@ export function useAIChat() {
     const [error, setError] = useState<string | null>(null);
     const [rateLimit, setRateLimit] = useState<RateLimitInfo | null>(null);
     const [personality, setPersonalityState] = useState<AIPersonality>('storm');
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const [currentUserInput, setCurrentUserInput] = useState<string | null>(null);
 
     const isAuthenticated = !!user && !!session;
 
@@ -101,6 +111,7 @@ export function useAIChat() {
 
         setIsLoading(true);
         setError(null);
+        setCurrentUserInput(message); // Track current input for UI
 
         try {
             const res = await fetch('/api/chat', {
@@ -151,6 +162,25 @@ export function useAIChat() {
                     limit: 15
                 });
             }
+            // Add user message to history
+            const userMessage: ChatMessage = {
+                id: `user-${Date.now()}`,
+                role: 'user',
+                content: message,
+                timestamp: new Date()
+            };
+
+            // Add AI response to history
+            const aiMessage: ChatMessage = {
+                id: `ai-${Date.now()}`,
+                role: 'assistant',
+                content: data.message,
+                action: data.action,
+                timestamp: new Date()
+            };
+
+            setMessages(prev => [...prev, userMessage, aiMessage]);
+            setCurrentUserInput(null);
 
             return { isSimpleSearch: false, aiResponse };
 
@@ -160,13 +190,16 @@ export function useAIChat() {
             throw err;
         } finally {
             setIsLoading(false);
+            setCurrentUserInput(null);
         }
-    }, [isAuthenticated, session?.access_token, isSimpleSearch]);
+    }, [isAuthenticated, session?.access_token, isSimpleSearch, personality]);
 
-    // Clear current response
+    // Clear current response and history
     const clearResponse = useCallback(() => {
         setResponse(null);
         setError(null);
+        setMessages([]);
+        setCurrentUserInput(null);
     }, []);
 
     // Fetch rate limit status
@@ -206,6 +239,8 @@ export function useAIChat() {
         sendMessage,
         clearResponse,
         fetchRateLimitStatus,
-        isSimpleSearch
+        isSimpleSearch,
+        messages,
+        currentUserInput
     };
 }

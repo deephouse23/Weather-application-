@@ -50,6 +50,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const [user, setUser] = useState<any>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [hasLocalTheme, setHasLocalTheme] = useState(false) // Track if user set theme locally
 
   const availableThemes: Theme[] = isAuthenticated ? THEME_LIST : FREE_THEMES
 
@@ -94,9 +95,15 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     }
   }, [])
 
-  // Fetch preferences from API
-  const fetchUserPreferences = async (userId: string) => {
+  // Fetch preferences from API - only apply if no local theme set
+  const fetchUserPreferences = async (userId: string, forceApply = false) => {
     try {
+      // Skip if user has set a local theme (unless forced on initial load)
+      if (hasLocalTheme && !forceApply) {
+        console.log('[Theme] Skipping DB fetch - user has local theme preference')
+        return
+      }
+
       // Explicit cast to avoid 'never' inference on build
       const { data } = await supabase
         .from('user_preferences')
@@ -105,7 +112,14 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         .single() as { data: { theme: string } | null, error: any }
 
       if (data && data.theme && THEME_LIST.includes(data.theme as Theme)) {
-        setThemeState(data.theme as Theme)
+        // Only apply DB theme if no local preference exists
+        const localTheme = safeStorage.getItem('weather-edu-theme')
+        if (!localTheme || forceApply) {
+          console.log('[Theme] Applying DB theme:', data.theme)
+          setThemeState(data.theme as Theme)
+        } else {
+          console.log('[Theme] Keeping local theme:', localTheme, '(DB has:', data.theme, ')')
+        }
       }
     } catch (e) {
       console.error("Failed to fetch theme preferences", e)
@@ -135,7 +149,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       return
     }
 
+    console.log('[Theme] User setting theme to:', newTheme)
     setThemeState(newTheme)
+    setHasLocalTheme(true) // Mark that user has made a local choice
 
     // Persist to localStorage
     if (typeof window !== 'undefined') {
