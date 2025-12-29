@@ -426,6 +426,10 @@ export function useWeatherController() {
     useEffect(() => {
         if (!isClient || isAutoDetecting || !autoLocationAttempted) return
 
+        // CRITICAL: Don't restore cached location if user/AI has already initiated a search
+        // This prevents race conditions where cache restoration overrides intentional location changes
+        if (hasSearched) return
+
         const checkCacheAndLoad = async () => {
             try {
                 const cachedLocationData = localStorage.getItem(CACHE_KEY)
@@ -474,7 +478,7 @@ export function useWeatherController() {
         }
 
         checkCacheAndLoad()
-    }, [isClient, isAutoDetecting, autoLocationAttempted, setLocationInput])
+    }, [isClient, isAutoDetecting, autoLocationAttempted, hasSearched, preferences, setLocationInput])
 
     return {
         weather,
