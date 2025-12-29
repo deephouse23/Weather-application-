@@ -2,23 +2,18 @@
  * 16-Bit Weather Platform - v1.0.0
  * 
  * useAIChat Hook
- * Handles AI chat state and API communication
+ * Handles AI chat state with streaming support using fetch API
  */
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth';
+import { parseAIResponse, type ChatAction } from '@/lib/services/ai-config';
 
 export type AIPersonality = 'storm' | 'sass' | 'chill';
 
 const AI_PERSONALITY_KEY = 'ai-personality-preference';
-
-export interface ChatAction {
-    type: 'load_weather' | 'navigate_radar' | 'none';
-    location?: string;
-    date?: string;
-}
 
 export interface AIResponse {
     message: string;
@@ -47,13 +42,13 @@ interface WeatherContext {
 
 export function useAIChat() {
     const { user, session } = useAuth();
-    const [isLoading, setIsLoading] = useState(false);
-    const [response, setResponse] = useState<AIResponse | null>(null);
-    const [error, setError] = useState<string | null>(null);
-    const [rateLimit, setRateLimit] = useState<RateLimitInfo | null>(null);
     const [personality, setPersonalityState] = useState<AIPersonality>('storm');
+    const [rateLimit, setRateLimit] = useState<RateLimitInfo | null>(null);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
-    const [currentUserInput, setCurrentUserInput] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [lastAction, setLastAction] = useState<ChatAction | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     const isAuthenticated = !!user && !!session;
 
@@ -67,6 +62,15 @@ export function useAIChat() {
         }
     }, []);
 
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+        };
+    }, []);
+
     // Wrapper to persist personality changes
     const setPersonality = useCallback((newPersonality: AIPersonality) => {
         setPersonalityState(newPersonality);
@@ -75,9 +79,7 @@ export function useAIChat() {
         }
     }, []);
 
-
     // Check if input is a simple location search (no AI needed)
-    // Be very permissive - only bypass AI for obvious simple searches
     const isSimpleSearch = useCallback((input: string): boolean => {
         const trimmed = input.trim();
 
@@ -90,11 +92,18 @@ export function useAIChat() {
         // Very short "City, ST" with 2-letter state code only
         if (/^[A-Za-z]+,\s*[A-Za-z]{2}$/.test(trimmed) && trimmed.length < 25) return true;
 
-        // Everything else goes to AI
         return false;
     }, []);
 
-    // Send message to AI
+    // Get latest response
+    const response: AIResponse | null = messages.length > 0
+        ? (() => {
+            const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+            return lastAssistant ? parseAIResponse(lastAssistant.content) : null;
+        })()
+        : null;
+
+    // Send message to AI with streaming
     const sendMessage = useCallback(async (
         message: string,
         weatherContext?: WeatherContext
@@ -109,9 +118,23 @@ export function useAIChat() {
             return { isSimpleSearch: true, location: message.trim() };
         }
 
+        // Abort any existing request
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        abortControllerRef.current = new AbortController();
+
         setIsLoading(true);
         setError(null);
-        setCurrentUserInput(message); // Track current input for UI
+
+        // Add user message immediately
+        const userMessage: ChatMessage = {
+            id: `user-${Date.now()}`,
+            role: 'user',
+            content: message,
+            timestamp: new Date()
+        };
+        setMessages(prev => [...prev, userMessage]);
 
         try {
             const res = await fetch('/api/chat', {
@@ -124,82 +147,121 @@ export function useAIChat() {
                     message,
                     weatherContext,
                     personality
-                })
+                }),
+                signal: abortControllerRef.current.signal
             });
 
-            const data = await res.json();
+            // Extract rate limit info from headers
+            const remaining = res.headers.get('X-RateLimit-Remaining');
+            const resetAt = res.headers.get('X-RateLimit-Reset');
+            if (remaining && resetAt) {
+                setRateLimit({
+                    remaining: parseInt(remaining, 10),
+                    resetAt,
+                    limit: 30
+                });
+            }
 
             if (!res.ok) {
                 if (res.status === 429) {
-                    setError('Rate limit exceeded. Please wait before sending more messages.');
+                    const data = await res.json();
                     setRateLimit({
                         remaining: 0,
-                        resetAt: data.resetAt,
-                        limit: 15
+                        resetAt: data.resetAt || new Date().toISOString(),
+                        limit: 30
                     });
-                    throw new Error('Rate limit exceeded');
+                    throw new Error('Rate limit exceeded. Please wait before sending more messages.');
                 }
+                if (res.status === 401) {
+                    throw new Error('Authentication required for AI chat');
+                }
+                const data = await res.json();
                 throw new Error(data.error || 'Failed to get AI response');
             }
 
-            // Handle simple search response from API
-            if (data.isSimpleSearch) {
-                return { isSimpleSearch: true, location: data.location };
+            // Handle simple search response
+            const contentType = res.headers.get('content-type');
+            if (contentType?.includes('application/json')) {
+                const data = await res.json();
+                if (data.isSimpleSearch) {
+                    // Remove the user message we just added since it's a simple search
+                    setMessages(prev => prev.filter(m => m.id !== userMessage.id));
+                    setIsLoading(false);
+                    return { isSimpleSearch: true, location: data.location };
+                }
             }
 
-            // Handle AI response
-            const aiResponse: AIResponse = {
-                message: data.message,
-                action: data.action
-            };
-
-            setResponse(aiResponse);
-
-            if (data.rateLimit) {
-                setRateLimit({
-                    remaining: data.rateLimit.remaining,
-                    resetAt: data.rateLimit.resetAt,
-                    limit: 15
-                });
+            // Handle streaming response
+            const reader = res.body?.getReader();
+            if (!reader) {
+                throw new Error('No response body');
             }
-            // Add user message to history
-            const userMessage: ChatMessage = {
-                id: `user-${Date.now()}`,
-                role: 'user',
-                content: message,
-                timestamp: new Date()
-            };
 
-            // Add AI response to history
-            const aiMessage: ChatMessage = {
-                id: `ai-${Date.now()}`,
+            const decoder = new TextDecoder();
+            let fullText = '';
+            const assistantMessageId = `ai-${Date.now()}`;
+
+            // Add placeholder for assistant message
+            setMessages(prev => [...prev, {
+                id: assistantMessageId,
                 role: 'assistant',
-                content: data.message,
-                action: data.action,
+                content: '',
                 timestamp: new Date()
-            };
+            }]);
 
-            setMessages(prev => [...prev, userMessage, aiMessage]);
-            setCurrentUserInput(null);
+            // Read streaming response
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
 
-            return { isSimpleSearch: false, aiResponse };
+                const chunk = decoder.decode(value, { stream: true });
+                fullText += chunk;
+
+                // Update the assistant message with streamed content
+                setMessages(prev => prev.map(m =>
+                    m.id === assistantMessageId
+                        ? { ...m, content: fullText }
+                        : m
+                ));
+            }
+
+            // Parse final response for action
+            const parsed = parseAIResponse(fullText);
+            setLastAction(parsed.action);
+
+            // Update final message with action
+            setMessages(prev => prev.map(m =>
+                m.id === assistantMessageId
+                    ? { ...m, content: parsed.message, action: parsed.action }
+                    : m
+            ));
+
+            setIsLoading(false);
+            return { isSimpleSearch: false, aiResponse: parsed };
 
         } catch (err) {
+            if (err instanceof Error && err.name === 'AbortError') {
+                // Request was aborted, don't set error
+                setIsLoading(false);
+                return { isSimpleSearch: false };
+            }
+
             const errorMessage = err instanceof Error ? err.message : 'An error occurred';
             setError(errorMessage);
-            throw err;
-        } finally {
             setIsLoading(false);
-            setCurrentUserInput(null);
+
+            // Remove the user message if there was an error
+            setMessages(prev => prev.filter(m => m.id !== userMessage.id));
+
+            throw err;
         }
     }, [isAuthenticated, session?.access_token, isSimpleSearch, personality]);
 
-    // Clear current response and history
+    // Clear all messages
     const clearResponse = useCallback(() => {
-        setResponse(null);
-        setError(null);
         setMessages([]);
-        setCurrentUserInput(null);
+        setLastAction(null);
+        setError(null);
     }, []);
 
     // Fetch rate limit status
@@ -228,6 +290,9 @@ export function useAIChat() {
         }
     }, [isAuthenticated, session?.access_token]);
 
+    // Get current user input being streamed
+    const currentUserInput = isLoading ? messages.find(m => m.role === 'user')?.content : null;
+
     return {
         isAuthenticated,
         isLoading,
@@ -241,6 +306,7 @@ export function useAIChat() {
         fetchRateLimitStatus,
         isSimpleSearch,
         messages,
-        currentUserInput
+        currentUserInput,
+        lastAction
     };
 }

@@ -3,7 +3,8 @@
 import { Bot, Zap, Coffee, Sparkles } from 'lucide-react'
 import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
-import { useAIChat, type AIPersonality } from '@/hooks/useAIChat'
+import { useAIChat } from '@/hooks/useAIChat'
+import { type AIPersonality } from '@/lib/services/ai-config'
 import { cn } from '@/lib/utils'
 
 const personalities = [

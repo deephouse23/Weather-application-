@@ -2,15 +2,16 @@
  * 16-Bit Weather Platform - v1.0.0
  * 
  * AI Response Panel
- * Displays AI chat responses with scrollable message history
+ * Displays AI chat responses with streaming support and scrollable message history
  */
 
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { X, Bot, Loader2, MessageSquare, User } from 'lucide-react';
+import { X, Bot, Loader2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { parseAIResponse, type ChatAction } from '@/lib/services/ai-config';
 
 export interface AIResponseAction {
     type: 'load_weather' | 'navigate_radar' | 'none';
@@ -39,6 +40,7 @@ interface AIResponsePanelProps {
     theme?: string;
     messages?: ChatMessage[];
     userInput?: string;
+    isStreaming?: boolean;
 }
 
 export function AIResponsePanel({
@@ -50,41 +52,25 @@ export function AIResponsePanel({
     rateLimit,
     theme,
     messages = [],
-    userInput
+    userInput,
+    isStreaming = false
 }: AIResponsePanelProps) {
     const [isExpanded, setIsExpanded] = useState(true);
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    // Auto-scroll to bottom when new messages arrive
+    // Auto-scroll to bottom when new messages arrive or during streaming
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [messages, message, isLoading]);
+    }, [messages, message, isLoading, isStreaming]);
 
-    // Build display messages from history + current
+    // Build display messages from history
     const displayMessages: ChatMessage[] = [...messages];
 
-    // Add current user input if present and not already in messages
-    if (userInput && !messages.some(m => m.content === userInput && m.role === 'user')) {
-        displayMessages.push({
-            id: 'current-user',
-            role: 'user',
-            content: userInput,
-            timestamp: new Date()
-        });
-    }
-
-    // Add current AI response if present
-    if (message && !messages.some(m => m.content === message && m.role === 'assistant')) {
-        displayMessages.push({
-            id: 'current-ai',
-            role: 'assistant',
-            content: message,
-            action,
-            timestamp: new Date()
-        });
-    }
+    // For streaming, show the current partial response
+    const lastMessage = displayMessages[displayMessages.length - 1];
+    const isLastMessageStreaming = isStreaming && lastMessage?.role === 'assistant';
 
     if (displayMessages.length === 0 && !isLoading) return null;
 
@@ -104,6 +90,11 @@ export function AIResponsePanel({
                     <span className="text-xs uppercase tracking-wider text-weather-primary font-mono">
                         AI Assistant
                     </span>
+                    {isStreaming && (
+                        <span className="text-xs text-weather-accent font-mono animate-pulse">
+                            [STREAMING]
+                        </span>
+                    )}
                     {displayMessages.length > 0 && (
                         <span className="text-xs text-weather-muted font-mono">
                             ({displayMessages.length} messages)
@@ -111,6 +102,11 @@ export function AIResponsePanel({
                     )}
                 </div>
                 <div className="flex items-center gap-1">
+                    {rateLimit && (
+                        <span className="text-xs text-weather-muted font-mono mr-2">
+                            {rateLimit.remaining} left
+                        </span>
+                    )}
                     <Button
                         variant="ghost"
                         size="icon"
@@ -131,53 +127,74 @@ export function AIResponsePanel({
                     ref={scrollRef}
                     className="p-3 overflow-y-auto max-h-[340px] space-y-3 scroll-smooth"
                 >
-                    {displayMessages.map((msg) => (
-                        <div
-                            key={msg.id}
-                            className={cn(
-                                "flex gap-2",
-                                msg.role === 'user' ? "justify-end" : "justify-start"
-                            )}
-                        >
-                            {msg.role === 'assistant' && (
-                                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-weather-primary/20 flex items-center justify-center">
-                                    <Bot className="w-3 h-3 text-weather-primary" />
-                                </div>
-                            )}
+                    {displayMessages.map((msg, index) => {
+                        // Parse action from assistant messages
+                        const parsedContent = msg.role === 'assistant'
+                            ? parseAIResponse(msg.content)
+                            : { message: msg.content, action: msg.action };
+
+                        const displayContent = parsedContent.message;
+                        const msgAction = parsedContent.action || msg.action;
+                        const isCurrentlyStreaming = isLastMessageStreaming && index === displayMessages.length - 1;
+
+                        return (
                             <div
+                                key={msg.id}
                                 className={cn(
-                                    "max-w-[80%] px-3 py-2 rounded-lg font-mono text-sm",
-                                    msg.role === 'user'
-                                        ? "bg-weather-primary/20 text-weather-text"
-                                        : "bg-weather-bg text-weather-text border border-weather-border"
+                                    "flex gap-2",
+                                    msg.role === 'user' ? "justify-end" : "justify-start"
                                 )}
                             >
-                                <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                                {msg.role === 'assistant' && (
+                                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-weather-primary/20 flex items-center justify-center">
+                                        <Bot className="w-3 h-3 text-weather-primary" />
+                                    </div>
+                                )}
+                                <div
+                                    className={cn(
+                                        "max-w-[80%] px-3 py-2 rounded-lg font-mono text-sm",
+                                        msg.role === 'user'
+                                            ? "bg-weather-primary/20 text-weather-text"
+                                            : "bg-weather-bg text-weather-text border border-weather-border"
+                                    )}
+                                >
+                                    <p className="leading-relaxed whitespace-pre-wrap">
+                                        {displayContent}
+                                        {isCurrentlyStreaming && (
+                                            <span className="inline-block w-2 h-4 bg-weather-primary ml-1 animate-pulse" />
+                                        )}
+                                    </p>
 
-                                {/* Action button for AI messages */}
-                                {msg.role === 'assistant' && msg.action && msg.action.type !== 'none' && msg.action.location && onActionClick && (
-                                    <div className="mt-2 pt-2 border-t border-weather-border/50">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => onActionClick(msg.action!)}
-                                            className="text-xs uppercase tracking-wider font-mono border-weather-primary text-weather-primary hover:bg-weather-primary hover:text-weather-bg"
-                                        >
-                                            {msg.action.type === 'load_weather' ? 'Load Weather' : 'View Radar'} for {msg.action.location}
-                                        </Button>
+                                    {/* Action button for completed AI messages */}
+                                    {msg.role === 'assistant' &&
+                                        !isCurrentlyStreaming &&
+                                        msgAction &&
+                                        msgAction.type !== 'none' &&
+                                        msgAction.location &&
+                                        onActionClick && (
+                                            <div className="mt-2 pt-2 border-t border-weather-border/50">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => onActionClick(msgAction)}
+                                                    className="text-xs uppercase tracking-wider font-mono border-weather-primary text-weather-primary hover:bg-weather-primary hover:text-weather-bg"
+                                                >
+                                                    {msgAction.type === 'load_weather' ? 'Load Weather' : 'View Radar'} for {msgAction.location}
+                                                </Button>
+                                            </div>
+                                        )}
+                                </div>
+                                {msg.role === 'user' && (
+                                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-weather-accent/20 flex items-center justify-center">
+                                        <User className="w-3 h-3 text-weather-accent" />
                                     </div>
                                 )}
                             </div>
-                            {msg.role === 'user' && (
-                                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-weather-accent/20 flex items-center justify-center">
-                                    <User className="w-3 h-3 text-weather-accent" />
-                                </div>
-                            )}
-                        </div>
-                    ))}
+                        );
+                    })}
 
-                    {/* Loading indicator */}
-                    {isLoading && (
+                    {/* Loading indicator when waiting for response */}
+                    {isLoading && !isStreaming && (
                         <div className="flex gap-2 justify-start">
                             <div className="flex-shrink-0 w-6 h-6 rounded-full bg-weather-primary/20 flex items-center justify-center">
                                 <Bot className="w-3 h-3 text-weather-primary" />
@@ -203,7 +220,7 @@ interface ChatHistoryButtonProps {
     theme?: string;
 }
 
-export function ChatHistoryButton({ onClick, hasHistory, theme }: ChatHistoryButtonProps) {
+export function ChatHistoryButton({ onClick, hasHistory }: ChatHistoryButtonProps) {
     if (!hasHistory) return null;
 
     return (
@@ -213,9 +230,7 @@ export function ChatHistoryButton({ onClick, hasHistory, theme }: ChatHistoryBut
             onClick={onClick}
             className="text-xs uppercase tracking-wider font-mono text-weather-muted hover:text-weather-primary"
         >
-            <MessageSquare className="w-3 h-3 mr-1" />
             History
         </Button>
     );
 }
-
