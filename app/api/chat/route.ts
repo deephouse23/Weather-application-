@@ -47,33 +47,57 @@ async function getAuthenticatedUser(request: NextRequest) {
 // Extract location from user message using simple patterns
 function extractLocationFromMessage(message: string): string | null {
     const safeMessage = message.slice(0, 200);
-    const timeWords = ['today', 'tomorrow', 'this', 'next', 'right', 'currently', 'two', 'three', 'four', 'five', 'six', 'seven', 'few', 'couple'];
+    const timeWords = ['today', 'tomorrow', 'this', 'next', 'right', 'currently', 'two', 'three', 'four', 'five', 'six', 'seven', 'few', 'couple', 'thursday', 'friday', 'saturday', 'sunday', 'monday', 'tuesday', 'wednesday'];
+    const excludeWords = ['the', 'a', 'an', 'what', 'how', 'when', 'will', 'is', 'are', 'do', 'does', 'can', 'should', 'it', 'be', 'going', 'to', 'on', 'i'];
 
-    const prepMatch = safeMessage.match(/\b(?:in|for|at)\s+([A-Z][a-zA-Z.'-]+(?:\s+[A-Z][a-zA-Z.'-]+)*)/);
+    // Helper to capitalize location names
+    const capitalizeLocation = (loc: string): string => {
+        return loc.split(' ').map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        ).join(' ');
+    };
+
+    // Match "in/for/at [location]" - case insensitive
+    const prepMatch = safeMessage.match(/\b(?:in|for|at)\s+([a-zA-Z][a-zA-Z.'\- ]+?)(?:\s+(?:on|today|tomorrow|this|next|thursday|friday|saturday|sunday|monday|tuesday|wednesday)\b|[?.,]|$)/i);
     if (prepMatch?.[1]) {
         const loc = prepMatch[1].trim();
         const firstWord = loc.split(' ')[0].toLowerCase();
-        if (loc.length > 2 && !timeWords.includes(firstWord) && !['the', 'a', 'an'].includes(firstWord)) {
-            return loc;
+        if (loc.length > 2 && !timeWords.includes(firstWord) && !excludeWords.includes(firstWord)) {
+            return capitalizeLocation(loc);
         }
     }
 
-    const cityStateMatch = safeMessage.match(/\b([A-Z][a-zA-Z.'-]+(?:\s[A-Z][a-zA-Z.'-]+)*),\s*([A-Z]{2})\b/);
+    // Match "City, ST" pattern - case insensitive
+    const cityStateMatch = safeMessage.match(/\b([a-zA-Z][a-zA-Z.'\- ]+),\s*([a-zA-Z]{2})\b/i);
     if (cityStateMatch) {
-        return `${cityStateMatch[1]}, ${cityStateMatch[2]}`;
+        const city = capitalizeLocation(cityStateMatch[1].trim());
+        const state = cityStateMatch[2].toUpperCase();
+        return `${city}, ${state}`;
     }
 
-    const weatherMatch = safeMessage.match(/\b([A-Z][a-zA-Z.'-]+(?:\s[A-Z][a-zA-Z.'-]+)*)\s+weather\b/i);
+    // Match "[location] weather" - case insensitive
+    const weatherMatch = safeMessage.match(/\b([a-zA-Z][a-zA-Z.'\- ]+)\s+weather\b/i);
     if (weatherMatch?.[1]) {
-        return weatherMatch[1];
+        const loc = weatherMatch[1].trim();
+        const firstWord = loc.split(' ')[0].toLowerCase();
+        if (!excludeWords.includes(firstWord)) {
+            return capitalizeLocation(loc);
+        }
     }
 
-    const capitalizedWords = safeMessage.match(/\b([A-Z][a-zA-Z.'-]+(?:\s+[A-Z][a-zA-Z.'-]+){1,3})\b/);
-    if (capitalizedWords?.[1]) {
-        const loc = capitalizedWords[1];
-        const firstWord = loc.split(' ')[0].toLowerCase();
-        if (!timeWords.includes(firstWord) && !['the', 'a', 'an', 'what', 'how', 'when', 'will', 'is', 'are', 'do', 'does', 'can', 'should'].includes(firstWord)) {
-            return loc;
+    // Match multi-word location names (2-4 words starting with letter, case insensitive)
+    const multiWordMatch = safeMessage.match(/\b([a-zA-Z][a-zA-Z'\-]+(?:\s+[a-zA-Z][a-zA-Z'\-]+){1,3})\b/gi);
+    if (multiWordMatch) {
+        for (const match of multiWordMatch) {
+            const loc = match.trim();
+            const words = loc.toLowerCase().split(' ');
+            // Skip if any word is a time/exclude word
+            if (words.some(w => timeWords.includes(w) || excludeWords.includes(w))) {
+                continue;
+            }
+            // Skip if too short
+            if (loc.length < 5) continue;
+            return capitalizeLocation(loc);
         }
     }
 
