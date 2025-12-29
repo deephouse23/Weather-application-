@@ -290,8 +290,10 @@ export function useAIChat() {
         }
     }, [isAuthenticated, session?.access_token]);
 
-    // Get current user input being streamed
-    const currentUserInput = isLoading ? messages.find(m => m.role === 'user')?.content : null;
+    // Get current user input being streamed (most recent)
+    const currentUserInput = isLoading
+        ? [...messages].reverse().find(m => m.role === 'user')?.content
+        : null;
 
     return {
         isAuthenticated,

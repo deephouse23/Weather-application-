@@ -351,24 +351,30 @@ export async function POST(request: NextRequest) {
                 { role: 'user', content: message }
             ],
             maxOutputTokens: 1024,
-            // Add rate limit info as custom header in response
             onFinish: async ({ text }) => {
                 // Save assistant response to history
-                await saveMessage(user.id, {
-                    role: 'assistant',
-                    content: text
-                });
+                try {
+                    await saveMessage(user.id, {
+                        role: 'assistant',
+                        content: text
+                    });
+                } catch (saveError) {
+                    console.error('[Chat API] Failed to save assistant message:', {
+                        userId: user.id,
+                        role: 'assistant',
+                        error: saveError
+                    });
+                }
             }
         });
 
         // Return streaming response with rate limit headers
-        const response = result.toTextStreamResponse();
-
-        // Add rate limit headers
-        response.headers.set('X-RateLimit-Remaining', rateLimit.remaining.toString());
-        response.headers.set('X-RateLimit-Reset', rateLimit.resetAt.toISOString());
-
-        return response;
+        return result.toTextStreamResponse({
+            headers: {
+                'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+                'X-RateLimit-Reset': rateLimit.resetAt.toISOString()
+            }
+        });
 
     } catch (error) {
         console.error('Chat API error:', error);

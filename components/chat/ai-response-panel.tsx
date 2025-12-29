@@ -39,7 +39,6 @@ interface AIResponsePanelProps {
     };
     theme?: string;
     messages?: ChatMessage[];
-    userInput?: string;
     isStreaming?: boolean;
 }
 
@@ -50,9 +49,7 @@ export function AIResponsePanel({
     onDismiss,
     onActionClick,
     rateLimit,
-    theme,
     messages = [],
-    userInput,
     isStreaming = false
 }: AIResponsePanelProps) {
     const [isExpanded, setIsExpanded] = useState(true);
@@ -217,7 +214,6 @@ export function AIResponsePanel({
 interface ChatHistoryButtonProps {
     onClick: () => void;
     hasHistory: boolean;
-    theme?: string;
 }
 
 export function ChatHistoryButton({ onClick, hasHistory }: ChatHistoryButtonProps) {
