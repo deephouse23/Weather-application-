@@ -15,6 +15,46 @@ reviews:
   # "chill" = less nitpicky, focuses on real bugs not style preferences
   profile: chill
   
+  # Global review instructions for all files
+  instructions: |
+    ## Project: 16-Bit Weather (16bitweather.co)
+    
+    A retro weather application with authentic 16-bit terminal aesthetics.
+    
+    ### Tech Stack
+    - Next.js 15 (App Router) + React 19
+    - TypeScript (strict)
+    - Tailwind CSS v4 + shadcn/ui
+    - Supabase (auth + database)
+    - Sentry (error monitoring)
+    - Deployed on Vercel
+    
+    ### Theme System
+    12 visual themes: dark, miami, tron, synthwave84, tokyoNight, dracula,
+    cyberpunk, matrix, atari2600, monochromeGreen, 8bitClassic, 16bitSnes
+    
+    ### Known Issue Patterns (from Sentry)
+    1. HYDRATION ERRORS - Most common bug. SSR/client mismatch from:
+       - Reading localStorage during render
+       - Date/time formatting differences
+       - Conditional rendering based on window size
+    
+    2. INFINITE LOOPS - useEffect with bad dependencies causing:
+       - Maximum update depth exceeded
+       - setState inside render
+    
+    ### What NOT to Flag
+    - Retro styling (pixelated fonts, CRT effects, scanlines)
+    - Terminal-style UI patterns
+    - Files in /_archive (legacy, being removed)
+    
+    ### What TO Flag (Always)
+    - Any code that could cause hydration mismatch
+    - Missing error handling in API routes
+    - useEffect without proper dependencies
+    - Direct DOM manipulation in React components
+  
+  
   # false = CodeRabbit suggests changes but doesn't block merge
   request_changes_workflow: false
   
@@ -215,41 +255,3 @@ tone_instructions: |
   intentional aesthetic choices.
 
 early_access: false
-
-custom_instructions: |
-  ## Project: 16-Bit Weather (16bitweather.co)
-  
-  A retro weather application with authentic 16-bit terminal aesthetics.
-  
-  ### Tech Stack
-  - Next.js 15 (App Router) + React 19
-  - TypeScript (strict)
-  - Tailwind CSS v4 + shadcn/ui
-  - Supabase (auth + database)
-  - Sentry (error monitoring)
-  - Deployed on Vercel
-  
-  ### Theme System
-  12 visual themes: dark, miami, tron, synthwave84, tokyoNight, dracula,
-  cyberpunk, matrix, atari2600, monochromeGreen, 8bitClassic, 16bitSnes
-  
-  ### Known Issue Patterns (from Sentry)
-  1. HYDRATION ERRORS - Most common bug. SSR/client mismatch from:
-     - Reading localStorage during render
-     - Date/time formatting differences
-     - Conditional rendering based on window size
-  
-  2. INFINITE LOOPS - useEffect with bad dependencies causing:
-     - Maximum update depth exceeded
-     - setState inside render
-  
-  ### What NOT to Flag
-  - Retro styling (pixelated fonts, CRT effects, scanlines)
-  - Terminal-style UI patterns
-  - Files in /_archive (legacy, being removed)
-  
-  ### What TO Flag (Always)
-  - Any code that could cause hydration mismatch
-  - Missing error handling in API routes
-  - useEffect without proper dependencies
-  - Direct DOM manipulation in React components
