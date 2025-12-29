@@ -4,7 +4,6 @@ import { withSentryConfig } from "@sentry/nextjs";
 // Use dynamic import to avoid ES module issues
 let withBundleAnalyzer = (config) => config;
 if (process.env.ANALYZE === 'true') {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const bundleAnalyzer = require('@next/bundle-analyzer');
   withBundleAnalyzer = bundleAnalyzer.default({
     enabled: true,

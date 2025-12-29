@@ -10,23 +10,26 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, redirectTo = '/auth/login' }: ProtectedRouteProps) {
+  // Hooks must be called unconditionally at the top
+  const { user, loading } = useAuth()
+  const router = useRouter()
+
   // Playwright E2E runs: bypass client-side auth gating for determinism.
   // Middleware/test fixtures already cover auth behavior when needed.
   const isPlaywrightTestMode =
     process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true' ||
     process.env.PLAYWRIGHT_TEST_MODE === 'true'
+
+  useEffect(() => {
+    if (!isPlaywrightTestMode && !loading && !user) {
+      router.push(redirectTo)
+    }
+  }, [user, loading, router, redirectTo, isPlaywrightTestMode])
+
+  // Bypass auth for Playwright tests
   if (isPlaywrightTestMode) {
     return <>{children}</>
   }
-
-  const { user, loading } = useAuth()
-  const router = useRouter()
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push(redirectTo)
-    }
-  }, [user, loading, router, redirectTo])
 
   if (loading) {
     return (
