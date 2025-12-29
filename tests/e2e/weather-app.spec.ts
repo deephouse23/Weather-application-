@@ -92,7 +92,7 @@ test('rate limiting message appears after multiple searches', async ({ page }) =
 
   await page.evaluate(() => {
     const now = Date.now();
-    const requests = Array.from({ length: 11 }, (_, index) => now - index * 1000); // 11 requests to be sure
+    const requests = Array.from({ length: 61 }, (_, index) => now - index * 1000); // 61 requests to exceed limit of 60
     window.localStorage.setItem('weather-app-rate-limit', JSON.stringify({ requests, lastReset: now }));
 
     // Mock weather data to prevent auto-fetch
