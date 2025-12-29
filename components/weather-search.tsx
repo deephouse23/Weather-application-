@@ -12,7 +12,7 @@
 
 
 import { useState, useEffect, useRef } from "react"
-import { Search, Loader2, MapPin, X, Bot, Sparkles } from "lucide-react"
+import { Search, Loader2, MapPin, X, Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -53,7 +53,7 @@ export default function WeatherSearch({
   const isTypingRef = useRef(false)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // AI Chat hook
+  // AI Chat hook with streaming support
   const {
     isAuthenticated,
     isLoading: isAILoading,
@@ -62,12 +62,12 @@ export default function WeatherSearch({
     rateLimit,
     sendMessage,
     clearResponse,
-    isSimpleSearch
+    isSimpleSearch,
+    messages,
+    lastAction
   } = useAIChat()
 
   // Sync context -> local state without fighting user input.
-  // If locationInput changes externally (navigation, other components), reflect it in the input
-  // unless the user is actively typing in the field.
   useEffect(() => {
     const active = document.activeElement
     const isInputFocused =
@@ -78,6 +78,17 @@ export default function WeatherSearch({
       setSearchTerm(locationInput || "")
     }
   }, [locationInput, searchTerm])
+
+  // Handle AI action when it finishes
+  useEffect(() => {
+    if (lastAction && lastAction.type !== 'none' && lastAction.location) {
+      if (lastAction.type === 'load_weather') {
+        onSearch(lastAction.location);
+      } else if (lastAction.type === 'navigate_radar') {
+        router.push(`/radar?location=${encodeURIComponent(lastAction.location)}`);
+      }
+    }
+  }, [lastAction, onSearch, router]);
 
   // Semantic dark theme classes using CSS variables
   const themeClasses = {
@@ -122,19 +133,8 @@ export default function WeatherSearch({
           // Simple location search - bypass AI
           console.log('[WeatherSearch] Simple search, calling onSearch');
           onSearch(result.location || searchTerm.trim());
-        } else if (result.aiResponse) {
-          // AI processed the query
-          console.log('[WeatherSearch] AI response received', result.aiResponse);
-
-          // If AI suggests loading weather, do it automatically
-          if (result.aiResponse.action?.type === 'load_weather' && result.aiResponse.action.location) {
-            onSearch(result.aiResponse.action.location);
-          } else if (result.aiResponse.action?.type === 'navigate_radar' && result.aiResponse.action.location) {
-            // Navigate to radar with location
-            router.push(`/radar?location=${encodeURIComponent(result.aiResponse.action.location)}`);
-          }
-          // If action is 'none', the AI response panel will show the conversational response
         }
+        // For AI responses, the lastAction effect will handle navigation
       } catch (err) {
         console.error('[WeatherSearch] AI error, falling back to simple search:', err);
         // Fallback to simple search on AI error
@@ -153,13 +153,10 @@ export default function WeatherSearch({
     onSearch(city.searchTerm)
     setShowAutocomplete(false)
 
-    // Ensure the input remains focusable and editable after selection
-    // This helps maintain natural editing behavior
     setTimeout(() => {
       const input = document.querySelector('input[type="text"]') as HTMLInputElement;
       if (input) {
         input.focus();
-        // Position cursor at the end of the input
         input.setSelectionRange(input.value.length, input.value.length);
       }
     }, 0);
@@ -172,13 +169,8 @@ export default function WeatherSearch({
       isTypingRef.current = false
     }, 300)
 
-    // Update local state immediately for responsive UI
     setSearchTerm(value)
-
-    // Update context state (debounced behavior handled by context)
     setLocationInput(value)
-
-    // Show autocomplete when typing, hide when empty
     setShowAutocomplete(value.length >= 2)
   }
 
@@ -197,26 +189,20 @@ export default function WeatherSearch({
     }
   }
 
-  // Handle input key events to ensure natural editing behavior
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // For backspace, delete, and other editing keys, ensure they work naturally
-    // Don't interfere with these keys - let the browser handle them
     if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
-      // Let the browser handle these keys naturally
       return;
     }
 
-    // For Enter key, submit the form if we don't have autocomplete visible
     if (e.key === 'Enter' && !showAutocomplete) {
       e.preventDefault();
       handleSubmit(e as unknown as React.FormEvent);
     }
   }
 
-  // Determine if controls should be disabled
   const controlsDisabled = isLoading || isDisabled || isAILoading
 
-  // Handle AI action clicks
+  // Handle AI action clicks from the panel
   const handleAIAction = (action: { type: string; location?: string }) => {
     if (action.type === 'load_weather' && action.location) {
       onSearch(action.location);
@@ -306,7 +292,7 @@ export default function WeatherSearch({
                 themeClasses.glow
               )}
             >
-              {isLoading ? (
+              {isLoading || isAILoading ? (
                 <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
               ) : (
                 <Search className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -326,7 +312,7 @@ export default function WeatherSearch({
         </div>
       </form>
 
-      {/* Location Button - Mobile friendly - Hidden when auto-location is enabled */}
+      {/* Location Button - Mobile friendly */}
       {!hideLocationButton && onLocationSearch && (
         <div className="flex justify-center px-2 sm:px-0">
           <Button
@@ -348,29 +334,31 @@ export default function WeatherSearch({
         </div>
       )}
 
-      {/* AI Response Panel - Shows AI responses for logged-in users */}
-      {isAuthenticated && (aiResponse || isAILoading) && (
+      {/* AI Response Panel - Shows streaming AI responses */}
+      {isAuthenticated && (messages.length > 0 || isAILoading) && (
         <AIResponsePanel
           message={aiResponse?.message || null}
           action={aiResponse?.action}
           isLoading={isAILoading}
+          isStreaming={isAILoading && messages.length > 0}
           onDismiss={clearResponse}
           onActionClick={handleAIAction}
           rateLimit={rateLimit ? { remaining: rateLimit.remaining, resetAt: rateLimit.resetAt } : undefined}
           theme={theme}
+          messages={messages}
         />
       )}
 
       {/* Error Display - Mobile responsive */}
-      {(error || rateLimitError) && (
+      {(error || rateLimitError || aiError) && (
         <div className={`p-3 sm:p-4 mx-2 sm:mx-0 ${themeClasses.errorBg} border ${themeClasses.errorText} 
                       text-xs sm:text-sm text-center pixel-font ${theme === 'miami' ? 'border-weather-accent' : themeClasses.specialBorder}`}>
           <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
-            <span>⚠</span>
-            <span className="uppercase tracking-wider break-words">{error || rateLimitError}</span>
+            <span>!</span>
+            <span className="uppercase tracking-wider break-words">{error || rateLimitError || aiError}</span>
           </div>
 
-          {/* Interactive suggestions based on error type - Mobile optimized */}
+          {/* Interactive suggestions based on error type */}
           {error?.includes('not found') && (
             <div className="space-y-2">
               <div className={`text-xs ${themeClasses.secondaryText} normal-case`}>
@@ -388,7 +376,7 @@ export default function WeatherSearch({
                   )}
                   disabled={isDisabled}
                 >
-                  ► ZIP: 90210
+                  ZIP: 90210
                 </Button>
                 <Button
                   variant="link"
@@ -401,7 +389,7 @@ export default function WeatherSearch({
                   )}
                   disabled={isDisabled}
                 >
-                  ► City + State: New York, NY
+                  City + State: New York, NY
                 </Button>
                 <Button
                   variant="link"
@@ -414,7 +402,7 @@ export default function WeatherSearch({
                   )}
                   disabled={isDisabled}
                 >
-                  ► City + Country: London, UK
+                  City + Country: London, UK
                 </Button>
               </div>
             </div>

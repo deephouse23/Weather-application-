@@ -1,12 +1,9 @@
 /**
  * 16-Bit Weather Platform - v1.0.0
  * 
- * Claude AI Service for Weather Chat
- * Handles intent detection and AI responses for weather queries
- * Supports multiple AI personalities
+ * AI Configuration
+ * Personality definitions and system prompt builder for the AI chatbot
  */
-
-import Anthropic from '@anthropic-ai/sdk';
 
 export type AIPersonality = 'storm' | 'sass' | 'chill';
 
@@ -14,11 +11,6 @@ export interface ChatAction {
     type: 'load_weather' | 'navigate_radar' | 'none';
     location?: string;
     date?: string;
-}
-
-export interface ChatResponse {
-    message: string;
-    action: ChatAction;
 }
 
 export interface WeatherContext {
@@ -73,7 +65,6 @@ export function isSimpleLocationSearch(input: string): boolean {
     if (/^\d{5}(-\d{4})?$/.test(trimmed)) return true;
 
     // Coordinates - use explicit bounds to avoid ReDoS
-    // Match: -90.123, 180.456 (lat, lon format)
     if (/^-?\d{1,3}(\.\d{1,10})?,\s*-?\d{1,3}(\.\d{1,10})?$/.test(trimmed)) return true;
 
     // Very short "City, ST" with 2-letter state code
@@ -83,7 +74,7 @@ export function isSimpleLocationSearch(input: string): boolean {
 }
 
 // Build the system prompt for Claude with personality
-function buildSystemPrompt(
+export function buildSystemPrompt(
     currentDatetime: string,
     personality: AIPersonality = 'storm',
     weatherContext?: WeatherContext
@@ -128,21 +119,65 @@ After giving your recommendation, set action type to "load_weather" to fetch rea
 
     const personalityConfig = PERSONALITIES[personality];
 
-    return `You are ${personalityConfig.name}, an AI weather assistant for 16-Bit Weather - a retro-styled weather platform.
+    // Core expertise and knowledge base
+    const knowledgeBase = `
+CORE IDENTITY:
+You are a passionate meteorologist and weather expert on 16-Bit Weather, a retro-styled weather platform.
+You help users explore all aspects of weather - from checking today's forecast to diving deep into atmospheric science and historic weather events.
+
+YOUR EXPERTISE:
+
+1. CURRENT & FORECAST WEATHER
+   - Temperature, humidity, wind, precipitation, UV index, air quality
+   - Hourly, daily, and extended forecasts
+   - Practical questions: "Is it cold?" "Do I need an umbrella?" "Good day for a bike ride?"
+
+2. SEVERE WEATHER
+   - Hurricanes, tornadoes, blizzards, heat waves, floods, droughts
+   - Safety information and preparedness
+   - The difference between watches and warnings (potentially life-saving info)
+   - Storm tracking and real-time alerts
+
+3. HISTORICAL WEATHER
+   - Record-breaking events (hottest day, worst blizzard, deadliest hurricane)
+   - Climate patterns through decades and centuries
+   - Famous weather disasters and their impact
+   - Vivid historical storytelling with meteorological context
+
+4. METEOROLOGICAL SCIENCE
+   - How weather systems form and move
+   - Atmospheric physics, pressure systems, fronts
+   - Cloud types and formation, precipitation types
+   - Wind patterns, jet streams, Coriolis effect
+   - Climate vs weather distinction
+   - El Nino/La Nina and their global effects
+
+5. SEASONAL & REGIONAL PATTERNS
+   - Monsoons, microclimates, lake effect snow
+   - Why certain regions have specific weather characteristics
+   - Seasonal transitions and what drives them
+   - Urban heat islands, coastal effects, mountain weather
+
+YOUR CONVERSATIONAL STYLE:
+- Weather is fascinating - share that enthusiasm
+- Explain complex concepts simply, but go deeper when asked
+- Use analogies and real-world examples
+- Share surprising weather facts to spark curiosity
+- Always clarify location and timeframe when relevant
+- Context matters: "Is 50F cold?" depends on wind chill, humidity, and what you're used to
+
+EXAMPLE TOPICS YOU CAN DISCUSS:
+- "Tell me about the 1888 blizzard" - historical storytelling
+- "Why is it so humid today?" - dew point, air masses, geography
+- "How do tornadoes form?" - atmospheric science
+- "What's the difference between sleet and freezing rain?" - precipitation types
+- "Why does it always seem to rain on weekends?" - weather patterns and perception
+- "Best time to visit Hawaii weather-wise?" - regional climate advice
+`;
+
+    return `${knowledgeBase}
 
 ${personalityConfig.traits}
-
-CAPABILITIES:
-1. Answer weather-related questions with your unique personality
-2. Provide clothing/activity recommendations based on conditions
-3. Explain weather phenomena and meteorology concepts
-4. Help users plan around weather (travel, events, outdoor activities)
-5. Discuss weather science: how storms form, pressure systems, fronts, etc.
-6. Share knowledge about historical weather events and records
-7. Explain climate patterns, seasons, and regional weather trends
-8. Provide storm chasing and weather photography tips
-9. Discuss severe weather safety and preparedness
-10. Compare weather across different locations and time periods
 
 RESPONSE FORMAT - Always respond with valid JSON:
 {
@@ -157,17 +192,17 @@ RESPONSE FORMAT - Always respond with valid JSON:
 ACTION GUIDE:
 - "load_weather": When user asks about weather for a specific place
 - "navigate_radar": When user wants to see radar/storms/maps
-- "none": For general questions, advice, or just chatting
+- "none": For general questions, science explanations, history, or just chatting
 
 CURRENT INFO:
 - Date/Time: ${currentDatetime}
 ${contextInfo}
 
-Stay in character!`;
+Stay in character as ${personalityConfig.name}!`;
 }
 
-// Parse Claude's response into structured format
-function parseClaudeResponse(content: string): ChatResponse {
+// Parse AI response into structured format
+export function parseAIResponse(content: string): { message: string; action: ChatAction } {
     try {
         const jsonMatch = content.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
@@ -192,54 +227,6 @@ function parseClaudeResponse(content: string): ChatResponse {
             action: { type: 'none' }
         };
     }
-}
-
-// Main function to get AI response
-export async function getWeatherChatResponse(
-    userMessage: string,
-    weatherContext?: WeatherContext,
-    personality: AIPersonality = 'storm'
-): Promise<ChatResponse> {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-
-    if (!apiKey) {
-        throw new Error('ANTHROPIC_API_KEY is not configured');
-    }
-
-    const client = new Anthropic({
-        apiKey: apiKey
-    });
-
-    const currentDatetime = new Date().toLocaleString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        timeZoneName: 'short'
-    });
-
-    const systemPrompt = buildSystemPrompt(currentDatetime, personality, weatherContext);
-
-    const response = await client.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages: [
-            {
-                role: 'user',
-                content: userMessage
-            }
-        ]
-    });
-
-    const textContent = response.content.find(block => block.type === 'text');
-    if (!textContent || textContent.type !== 'text') {
-        throw new Error('No text response from Claude');
-    }
-
-    return parseClaudeResponse(textContent.text);
 }
 
 // Export personality list for UI

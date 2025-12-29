@@ -2,7 +2,7 @@
  * 16-Bit Weather Platform - v1.0.0
  * 
  * Chat Rate Limiter Service
- * Implements per-user rate limiting using Supabase (15 queries per hour)
+ * Implements per-user rate limiting using Supabase (30 queries per hour)
  */
 
 import { createClient } from '@supabase/supabase-js';
