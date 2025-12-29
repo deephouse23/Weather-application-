@@ -14,7 +14,7 @@ const WEATHER_KEY = 'bitweather_weather_data'
 const CACHE_TIMESTAMP_KEY = 'bitweather_cache_timestamp'
 const RATE_LIMIT_KEY = 'weather-app-rate-limit'
 const SEARCH_CACHE_KEY = 'weather-search-cache'
-const MAX_REQUESTS_PER_HOUR = 10
+const MAX_REQUESTS_PER_HOUR = 60  // Increased from 10 to prevent blocking legitimate usage
 const SEARCH_CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 export function useWeatherController() {
