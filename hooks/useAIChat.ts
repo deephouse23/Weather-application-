@@ -86,8 +86,8 @@ export function useAIChat() {
         // ZIP code - definitely simple
         if (/^\d{5}(-\d{4})?$/.test(trimmed)) return true;
 
-        // Coordinates - definitely simple
-        if (/^-?\d+\.?\d*,\s*-?\d+\.?\d*$/.test(trimmed)) return true;
+        // Coordinates - use bounded quantifiers to prevent ReDoS
+        if (/^-?\d{1,3}(\.\d{1,10})?,\s*-?\d{1,3}(\.\d{1,10})?$/.test(trimmed)) return true;
 
         // Very short "City, ST" with 2-letter state code only
         if (/^[A-Za-z]+,\s*[A-Za-z]{2}$/.test(trimmed) && trimmed.length < 25) return true;
@@ -179,15 +179,20 @@ export function useAIChat() {
                 throw new Error(data.error || 'Failed to get AI response');
             }
 
-            // Handle simple search response
+            // Handle simple search response - clone response to avoid consuming body
             const contentType = res.headers.get('content-type');
             if (contentType?.includes('application/json')) {
-                const data = await res.json();
+                const jsonRes = res.clone();
+                const data = await jsonRes.json();
                 if (data.isSimpleSearch) {
                     // Remove the user message we just added since it's a simple search
                     setMessages(prev => prev.filter(m => m.id !== userMessage.id));
                     setIsLoading(false);
                     return { isSimpleSearch: true, location: data.location };
+                }
+                // If not simple search but got JSON error, handle it
+                if (data.error) {
+                    throw new Error(data.error);
                 }
             }
 
