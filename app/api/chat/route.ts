@@ -43,32 +43,49 @@ function extractLocationFromMessage(message: string): string | null {
     // Limit input length to prevent DoS
     const safeMessage = message.slice(0, 200);
 
-    // Simple word-based extraction - avoid complex regex with nested quantifiers
-    const lowerMessage = safeMessage.toLowerCase();
+    // Time-related words to exclude from location names
+    const timeWords = ['today', 'tomorrow', 'this', 'next', 'right', 'currently', 'two', 'three', 'four', 'five', 'six', 'seven', 'few', 'couple'];
 
     // Pattern 1: "in/for/at [location]" - extract words after preposition
-    const prepMatch = safeMessage.match(/\b(?:in|for|at)\s+([A-Za-z][A-Za-z\s]{1,30}?)(?:\s*[?,!]|\s+(?:today|tomorrow|this|next|right|currently)|$)/i);
+    // Look for preposition followed by capitalized words (location names)
+    // Supports punctuated names like Winston-Salem, St. Louis, O'Fallon, Coeur d'Alene
+    const prepMatch = safeMessage.match(/\b(?:in|for|at)\s+([A-Z][a-zA-Z.'-]+(?:\s+[A-Z][a-zA-Z.'-]+)*)/);
     if (prepMatch?.[1]) {
         const loc = prepMatch[1].trim();
-        if (loc.length > 2 && !['the', 'a', 'an'].includes(loc.toLowerCase())) {
+        // Filter out if it's just time words
+        const firstWord = loc.split(' ')[0].toLowerCase();
+        if (loc.length > 2 && !timeWords.includes(firstWord) && !['the', 'a', 'an'].includes(firstWord)) {
             return loc;
         }
     }
 
-    // Pattern 2: "City, ST" format (e.g., "Denver, CO")
-    const cityStateMatch = safeMessage.match(/\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)?),\s*([A-Z]{2})\b/);
+    // Pattern 2: "City, ST" format (e.g., "Denver, CO", "St. Louis, MO", "Winston-Salem, NC")
+    const cityStateMatch = safeMessage.match(/\b([A-Z][a-zA-Z.'-]+(?:\s[A-Z][a-zA-Z.'-]+)*),\s*([A-Z]{2})\b/);
     if (cityStateMatch) {
         return `${cityStateMatch[1]}, ${cityStateMatch[2]}`;
     }
 
-    // Pattern 3: "[Location] weather" format
-    const weatherMatch = safeMessage.match(/\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s+weather\b/i);
+    // Pattern 3: "[Location] weather" format (handles McAllen, St. Louis, Winston-Salem)
+    const weatherMatch = safeMessage.match(/\b([A-Z][a-zA-Z.'-]+(?:\s[A-Z][a-zA-Z.'-]+)*)\s+weather\b/i);
     if (weatherMatch?.[1]) {
         return weatherMatch[1];
     }
 
+    // Pattern 4: Look for known location pattern - multiple capitalized words together
+    // This catches "South Lake Tahoe", "St. Louis", "Winston-Salem" even without "in" prefix
+    const capitalizedWords = safeMessage.match(/\b([A-Z][a-zA-Z.'-]+(?:\s+[A-Z][a-zA-Z.'-]+){1,3})\b/);
+    if (capitalizedWords?.[1]) {
+        const loc = capitalizedWords[1];
+        const firstWord = loc.split(' ')[0].toLowerCase();
+        // Exclude articles and common sentence-start words that aren't locations
+        if (!timeWords.includes(firstWord) && !['the', 'a', 'an', 'what', 'how', 'when', 'will', 'is', 'are', 'do', 'does', 'can', 'should'].includes(firstWord)) {
+            return loc;
+        }
+    }
+
     return null;
 }
+
 
 // Geocode a location using OpenWeatherMap
 // Prioritizes US locations since the app is US-focused
