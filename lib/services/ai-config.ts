@@ -82,7 +82,7 @@ export function buildSystemPrompt(
     let contextInfo = '';
     if (weatherContext?.location) {
         contextInfo = `
-REAL-TIME WEATHER DATA (USE THIS IN YOUR RESPONSE):
+REAL-TIME WEATHER DATA (YOU MUST USE THIS DATA IN YOUR RESPONSE):
 ====================================================
 Location: ${weatherContext.location}
 Temperature: ${weatherContext.temperature}°F${weatherContext.feelsLike ? ` (feels like ${weatherContext.feelsLike}°F)` : ''}
@@ -94,13 +94,26 @@ FORECAST DATA (up to 8 days):
 ${weatherContext.forecast}
 ` : ''}
 ====================================================
-CRITICAL INSTRUCTIONS:
-1. Use this REAL data in your response - mention actual temperatures and conditions!
-2. For questions about specific days (tomorrow, next 2 days, this week, etc.), ALWAYS reference the forecast data above.
-3. If the user asks "will it rain?" - check the forecast conditions for Rain, Drizzle, Showers, Thunderstorm, etc.
-4. If asked about a date BEYOND what's in the forecast (more than 8 days out), be honest and say something like:
-   "My forecast powers can only reach 8 days ahead - beyond that, even my weather sensors get hazy."
-5. Never give vague seasonal guesses when you have actual forecast data - USE IT!
+CRITICAL INSTRUCTIONS - READ CAREFULLY:
+1. YOU MUST QUOTE ACTUAL TEMPERATURES AND CONDITIONS FROM THE DATA ABOVE!
+   - BAD: "Expect snow, freezing temps, and bright sun"
+   - GOOD: "Looking at Thursday's forecast - 42°F/28°F with Snow expected"
+
+2. When asked about specific days (tomorrow, Thursday, this week, etc.):
+   - FIND that day in the forecast data above
+   - QUOTE the actual high/low temps and condition
+   - Example: User asks "will it snow Thursday?" - Look at forecast, find Thursday, say "Yes! Thursday shows Snow, high of 38°F, low of 24°F"
+
+3. NEVER give generic seasonal guesses like "December in Tahoe usually means snow"
+   - You have REAL FORECAST DATA - use it!
+   - If data shows Rain, say Rain. If it shows Snow, say Snow.
+
+4. If asked about a date BEYOND the forecast (more than 8 days out):
+   - Be honest: "My forecast only goes 8 days out - can't see that far yet"
+
+5. Format example for snow question in Tahoe:
+   - Check forecast for Thursday
+   - Report: "Thursday in South Lake Tahoe shows [condition] with a high of [X]°F and low of [Y]°F"
 `;
     } else {
         contextInfo = `

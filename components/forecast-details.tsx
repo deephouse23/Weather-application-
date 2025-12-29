@@ -164,17 +164,17 @@ function DetailedWeatherInfo({
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-      {weatherMetrics.map((metric, index) => (
-        <div key={index} className="flex items-center space-x-2">
-          <div className="text-primary flex-shrink-0">
-            {metric.icon}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="text-xs text-muted-foreground flex items-center gap-1">
-              {metric.label}
-              {(metric as { tooltip?: string }).tooltip && (
-                <TooltipProvider>
+    <TooltipProvider>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+        {weatherMetrics.map((metric, index) => (
+          <div key={index} className="flex items-center space-x-2">
+            <div className="text-primary flex-shrink-0">
+              {metric.icon}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs text-muted-foreground flex items-center gap-1">
+                {metric.label}
+                {(metric as { tooltip?: string }).tooltip && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Info className="w-3 h-3 cursor-help opacity-60 hover:opacity-100 transition-opacity" />
@@ -183,15 +183,15 @@ function DetailedWeatherInfo({
                       <p>{(metric as { tooltip?: string }).tooltip}</p>
                     </TooltipContent>
                   </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
-            <div className="text-sm font-medium text-foreground truncate">
-              {metric.value}
+                )}
+              </div>
+              <div className="text-sm font-medium text-foreground truncate">
+                {metric.value}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    </TooltipProvider>
   );
 }
