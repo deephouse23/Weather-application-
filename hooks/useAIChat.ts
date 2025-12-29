@@ -246,7 +246,10 @@ export function useAIChat() {
 
         } catch (err) {
             if (err instanceof Error && err.name === 'AbortError') {
-                // Request was aborted, don't set error
+                // Request was aborted - clean up both messages
+                setMessages(prev => prev.filter(m =>
+                    m.id !== userMessage.id && !m.id.startsWith('ai-')
+                ));
                 setIsLoading(false);
                 return { isSimpleSearch: false };
             }
@@ -255,8 +258,10 @@ export function useAIChat() {
             setError(errorMessage);
             setIsLoading(false);
 
-            // Remove the user message if there was an error
-            setMessages(prev => prev.filter(m => m.id !== userMessage.id));
+            // Remove both user message and any assistant placeholder on error
+            setMessages(prev => prev.filter(m =>
+                m.id !== userMessage.id && !m.id.startsWith('ai-')
+            ));
 
             throw err;
         }
