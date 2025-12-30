@@ -136,7 +136,7 @@ function WeatherApp() {
                 temperature: weather.temperature,
                 condition: weather.condition,
                 humidity: weather.humidity,
-                wind: weather.wind?.speed ? `${weather.wind.speed} mph ${weather.wind.direction || ''}`.trim() : undefined
+                wind: weather.wind?.speed !== undefined ? `${weather.wind.speed} mph ${weather.wind.direction || ''}`.trim() : undefined
               } : undefined}
             />
           </ErrorBoundary>

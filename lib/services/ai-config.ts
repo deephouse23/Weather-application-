@@ -252,13 +252,13 @@ export function extractMessageFromJSON(text: string): string {
 
     if (messageMatch) {
         const extracted = messageMatch[1] || '';
-        // Unescape JSON escape sequences
+        // Unescape JSON escape sequences - backslash MUST be first to avoid corruption
         return extracted
+            .replace(/\\\\/g, '\\')  // Process backslash first
             .replace(/\\n/g, '\n')
             .replace(/\\r/g, '\r')
             .replace(/\\t/g, '\t')
-            .replace(/\\"/g, '"')
-            .replace(/\\\\/g, '\\');
+            .replace(/\\"/g, '"');
     }
 
     // No message content yet - return empty to avoid showing JSON
@@ -272,17 +272,23 @@ export function parseAIResponse(content: string): { message: string; action: Cha
     if (content.trim().startsWith('{')) {
         try {
             const jsonMatch = content.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-                const parsed = JSON.parse(jsonMatch[0]);
+            if (!jsonMatch) {
+                // No closing brace found - extract message from partial JSON
+                const extracted = extractMessageFromJSON(content);
                 return {
-                    message: parsed.message || extractMessageFromJSON(content),
-                    action: {
-                        type: parsed.action?.type || 'none',
-                        location: parsed.action?.location,
-                        date: parsed.action?.date
-                    }
+                    message: extracted || '',
+                    action: { type: 'none' }
                 };
             }
+            const parsed = JSON.parse(jsonMatch[0]);
+            return {
+                message: parsed.message || extractMessageFromJSON(content),
+                action: {
+                    type: parsed.action?.type || 'none',
+                    location: parsed.action?.location,
+                    date: parsed.action?.date
+                }
+            };
         } catch {
             // JSON parsing failed (likely partial) - extract message directly
             const extracted = extractMessageFromJSON(content);
