@@ -252,13 +252,14 @@ export function extractMessageFromJSON(text: string): string {
 
     if (messageMatch) {
         const extracted = messageMatch[1] || '';
-        // Unescape JSON escape sequences - backslash MUST be first to avoid corruption
-        return extracted
-            .replace(/\\\\/g, '\\')  // Process backslash first
-            .replace(/\\n/g, '\n')
-            .replace(/\\r/g, '\r')
-            .replace(/\\t/g, '\t')
-            .replace(/\\"/g, '"');
+        // Use JSON.parse to properly unescape - handles all escape sequences correctly in one pass
+        // Wrap in quotes to make it valid JSON, then parse to get the unescaped string
+        try {
+            return JSON.parse(`"${extracted}"`);
+        } catch {
+            // If JSON.parse fails (malformed escapes), return the raw extracted text
+            return extracted;
+        }
     }
 
     // No message content yet - return empty to avoid showing JSON
