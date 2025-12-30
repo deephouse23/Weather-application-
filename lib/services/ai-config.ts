@@ -249,7 +249,7 @@ export function extractMessageFromJSON(text: string): string {
 
     // Try to extract the message field value from partial/complete JSON
     const messageMatch = text.match(/"message"\s*:\s*"((?:[^"\\]|\\.)*)(?:"|$)/);
-    
+
     if (messageMatch) {
         const extracted = messageMatch[1] || '';
         // Unescape JSON escape sequences
@@ -291,13 +291,6 @@ export function parseAIResponse(content: string): { message: string; action: Cha
                 action: { type: 'none' }
             };
         }
-        
-        // Has JSON structure but couldn't parse - try extraction
-        const extracted = extractMessageFromJSON(content);
-        return {
-            message: extracted || '',
-            action: { type: 'none' }
-        };
     }
 
     // Not JSON - return content as-is
