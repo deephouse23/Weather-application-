@@ -21,6 +21,11 @@ export interface WeatherContext {
     humidity?: number;
     wind?: string;
     feelsLike?: number;
+    // Snow and precipitation data (in inches)
+    snow1h?: number;
+    snow3h?: number;
+    rain1h?: number;
+    rain3h?: number;
 }
 
 // Personality definitions
@@ -81,6 +86,19 @@ export function buildSystemPrompt(
 ): string {
     let contextInfo = '';
     if (weatherContext?.location) {
+        // Build precipitation info string
+        let precipInfo = '';
+        if (weatherContext.snow1h || weatherContext.snow3h) {
+            const snowAmount = weatherContext.snow1h || weatherContext.snow3h;
+            const snowPeriod = weatherContext.snow1h ? '1 hour' : '3 hours';
+            precipInfo += `Current Snowfall: ${snowAmount}" in last ${snowPeriod}\n`;
+        }
+        if (weatherContext.rain1h || weatherContext.rain3h) {
+            const rainAmount = weatherContext.rain1h || weatherContext.rain3h;
+            const rainPeriod = weatherContext.rain1h ? '1 hour' : '3 hours';
+            precipInfo += `Current Rainfall: ${rainAmount}" in last ${rainPeriod}\n`;
+        }
+
         contextInfo = `
 REAL-TIME WEATHER DATA (YOU MUST USE THIS DATA IN YOUR RESPONSE):
 ====================================================
@@ -89,8 +107,8 @@ Temperature: ${weatherContext.temperature}°F${weatherContext.feelsLike ? ` (fee
 Conditions: ${weatherContext.condition}
 ${weatherContext.humidity ? `Humidity: ${weatherContext.humidity}%` : ''}
 ${weatherContext.wind ? `Wind: ${weatherContext.wind}` : ''}
-${weatherContext.forecast ? `
-FORECAST DATA (up to 8 days):
+${precipInfo}${weatherContext.forecast ? `
+FORECAST DATA (up to 8 days) - includes snow/rain totals when available:
 ${weatherContext.forecast}
 ` : ''}
 ====================================================
@@ -143,7 +161,9 @@ YOUR EXPERTISE:
 1. CURRENT & FORECAST WEATHER
    - Temperature, humidity, wind, precipitation, UV index, air quality
    - Hourly, daily, and extended forecasts
+   - SNOW CONDITIONS: Current snowfall rates, accumulation totals, snow forecasts
    - Practical questions: "Is it cold?" "Do I need an umbrella?" "Good day for a bike ride?"
+   - Ski/snow questions: "How much snow is expected?" "Is it snowing now?" "Road conditions?"
 
 2. SEVERE WEATHER
    - Hurricanes, tornadoes, blizzards, heat waves, floods, droughts
@@ -186,6 +206,9 @@ EXAMPLE TOPICS YOU CAN DISCUSS:
 - "What's the difference between sleet and freezing rain?" - precipitation types
 - "Why does it always seem to rain on weekends?" - weather patterns and perception
 - "Best time to visit Hawaii weather-wise?" - regional climate advice
+- "How much snow will Tahoe get this week?" - snow forecasts with totals
+- "Is it snowing in Denver right now?" - real-time snow conditions
+- "Will the roads be icy tomorrow?" - winter driving conditions
 `;
 
     return `${knowledgeBase}
@@ -214,32 +237,74 @@ ${contextInfo}
 Stay in character as ${personalityConfig.name}!`;
 }
 
+/**
+ * Extract message from partial or complete JSON response.
+ * Used during streaming to progressively show clean text without JSON syntax.
+ */
+export function extractMessageFromJSON(text: string): string {
+    // If it doesn't look like JSON, return as-is
+    if (!text.trim().startsWith('{')) {
+        return text;
+    }
+
+    // Try to extract the message field value from partial/complete JSON
+    const messageMatch = text.match(/"message"\s*:\s*"((?:[^"\\]|\\.)*)(?:"|$)/);
+    
+    if (messageMatch) {
+        const extracted = messageMatch[1] || '';
+        // Unescape JSON escape sequences
+        return extracted
+            .replace(/\\n/g, '\n')
+            .replace(/\\r/g, '\r')
+            .replace(/\\t/g, '\t')
+            .replace(/\\"/g, '"')
+            .replace(/\\\\/g, '\\');
+    }
+
+    // No message content yet - return empty to avoid showing JSON
+    return '';
+}
+
 // Parse AI response into structured format
 export function parseAIResponse(content: string): { message: string; action: ChatAction } {
-    try {
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-            const parsed = JSON.parse(jsonMatch[0]);
+    // First, try to extract message if content looks like JSON
+    // This handles both partial and complete JSON
+    if (content.trim().startsWith('{')) {
+        try {
+            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0]);
+                return {
+                    message: parsed.message || extractMessageFromJSON(content),
+                    action: {
+                        type: parsed.action?.type || 'none',
+                        location: parsed.action?.location,
+                        date: parsed.action?.date
+                    }
+                };
+            }
+        } catch {
+            // JSON parsing failed (likely partial) - extract message directly
+            const extracted = extractMessageFromJSON(content);
             return {
-                message: parsed.message || content,
-                action: {
-                    type: parsed.action?.type || 'none',
-                    location: parsed.action?.location,
-                    date: parsed.action?.date
-                }
+                message: extracted || '', // Return empty rather than raw JSON
+                action: { type: 'none' }
             };
         }
-
+        
+        // Has JSON structure but couldn't parse - try extraction
+        const extracted = extractMessageFromJSON(content);
         return {
-            message: content,
-            action: { type: 'none' }
-        };
-    } catch {
-        return {
-            message: content,
+            message: extracted || '',
             action: { type: 'none' }
         };
     }
+
+    // Not JSON - return content as-is
+    return {
+        message: content,
+        action: { type: 'none' }
+    };
 }
 
 // Export personality list for UI
