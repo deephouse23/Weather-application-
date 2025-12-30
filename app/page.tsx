@@ -131,8 +131,16 @@ function WeatherApp() {
               rateLimitError=""
               isDisabled={remainingSearches <= 0}
               hideLocationButton={true}
+              weatherContext={weather ? {
+                location: weather.location,
+                temperature: weather.temperature,
+                condition: weather.condition,
+                humidity: weather.humidity,
+                wind: weather.wind?.speed !== undefined ? `${weather.wind.speed} mph ${weather.wind.direction || ''}`.trim() : undefined
+              } : undefined}
             />
           </ErrorBoundary>
+
 
           {/* Welcome Message */}
           {!weather && !loading && !error && (

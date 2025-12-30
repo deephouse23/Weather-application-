@@ -24,6 +24,16 @@ import { Input } from "@/components/ui/input"
 import { useAIChat } from "@/hooks/useAIChat"
 import { AIResponsePanel } from "@/components/chat/ai-response-panel"
 
+interface WeatherContext {
+  location?: string;
+  temperature?: number;
+  condition?: string;
+  humidity?: number;
+  wind?: string;
+  feelsLike?: number;
+  forecast?: string;
+}
+
 interface WeatherSearchProps {
   onSearch: (location: string) => void;
   onLocationSearch?: () => void;
@@ -33,6 +43,7 @@ interface WeatherSearchProps {
   rateLimitError?: string;
   hideLocationButton?: boolean;
   isAutoDetecting?: boolean;
+  weatherContext?: WeatherContext;
 }
 
 export default function WeatherSearch({
@@ -43,7 +54,8 @@ export default function WeatherSearch({
   isDisabled = false,
   rateLimitError,
   hideLocationButton = false,
-  isAutoDetecting = false
+  isAutoDetecting = false,
+  weatherContext
 }: WeatherSearchProps) {
   const router = useRouter()
   const { locationInput, setLocationInput, clearLocationState } = useLocationContext()
@@ -127,7 +139,7 @@ export default function WeatherSearch({
     // If user is authenticated, try AI processing
     if (isAuthenticated) {
       try {
-        const result = await sendMessage(searchTerm.trim());
+        const result = await sendMessage(searchTerm.trim(), weatherContext);
 
         if (result.isSimpleSearch) {
           // Simple location search - bypass AI

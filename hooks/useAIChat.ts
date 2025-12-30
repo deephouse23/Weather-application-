@@ -9,7 +9,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth';
-import { parseAIResponse, type ChatAction } from '@/lib/services/ai-config';
+import { parseAIResponse, extractMessageFromJSON, type ChatAction } from '@/lib/services/ai-config';
 
 export type AIPersonality = 'storm' | 'sass' | 'chill';
 
@@ -38,7 +38,16 @@ interface WeatherContext {
     location?: string;
     temperature?: number;
     condition?: string;
+    humidity?: number;
+    wind?: string;
+    feelsLike?: number;
+    forecast?: string;
+    snow1h?: number;
+    snow3h?: number;
+    rain1h?: number;
+    rain3h?: number;
 }
+
 
 export function useAIChat() {
     const { user, session } = useAuth();
@@ -222,10 +231,14 @@ export function useAIChat() {
                 const chunk = decoder.decode(value, { stream: true });
                 fullText += chunk;
 
-                // Update the assistant message with streamed content
+                // Parse progressively to extract just the message content
+                // This prevents showing raw JSON during streaming
+                const displayText = extractMessageFromJSON(fullText);
+
+                // Update the assistant message with parsed content
                 setMessages(prev => prev.map(m =>
                     m.id === assistantMessageId
-                        ? { ...m, content: fullText }
+                        ? { ...m, content: displayText }
                         : m
                 ));
             }
@@ -234,7 +247,7 @@ export function useAIChat() {
             const parsed = parseAIResponse(fullText);
             setLastAction(parsed.action);
 
-            // Update final message with action
+            // Update final message with action (use parsed.message for clean display)
             setMessages(prev => prev.map(m =>
                 m.id === assistantMessageId
                     ? { ...m, content: parsed.message, action: parsed.action }
