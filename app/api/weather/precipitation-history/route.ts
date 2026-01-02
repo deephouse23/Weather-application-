@@ -82,8 +82,11 @@ async function fetchHistoricalPrecipitation(
   apiKey: string
 ): Promise<{ rain24h: number; snow24h: number }> {
   const now = Math.floor(Date.now() / 1000);
-  let totalRain = 0;
-  let totalSnow = 0;
+  let totalRainMm = 0;
+  let totalSnowMm = 0;
+  
+  // Track processed hours to prevent double-counting from overlapping API responses
+  const processedHours = new Set<number>();
   
   // Fetch data for the past 24 hours in 8-hour chunks (3 API calls)
   // One Call timemachine returns hourly data for the requested day
@@ -105,17 +108,21 @@ async function fetchHistoricalPrecipitation(
       
       const data = await response.json();
       
-      // Sum up hourly precipitation
+      // Sum up hourly precipitation (in mm, convert only at the end)
       if (data.data && Array.isArray(data.data)) {
         for (const hour of data.data) {
-          // Check if this hour is within the last 24 hours
-          if (hour.dt >= now - (24 * 60 * 60) && hour.dt <= now) {
-            if (hour.rain?.['1h']) {
-              totalRain += mmToInches(hour.rain['1h']);
-            }
-            if (hour.snow?.['1h']) {
-              totalSnow += mmToInches(hour.snow['1h']);
-            }
+          // Skip if already processed or outside 24h window
+          if (processedHours.has(hour.dt)) continue;
+          if (hour.dt < now - (24 * 60 * 60) || hour.dt > now) continue;
+          
+          processedHours.add(hour.dt);
+          
+          // Sum raw mm values to avoid accumulated rounding errors
+          if (hour.rain?.['1h']) {
+            totalRainMm += hour.rain['1h'];
+          }
+          if (hour.snow?.['1h']) {
+            totalSnowMm += hour.snow['1h'];
           }
         }
       }
@@ -124,9 +131,10 @@ async function fetchHistoricalPrecipitation(
     }
   }
   
+  // Convert mm to inches only after summing all values
   return {
-    rain24h: Math.round(totalRain * 100) / 100,
-    snow24h: Math.round(totalSnow * 100) / 100,
+    rain24h: Math.round((totalRainMm / 25.4) * 100) / 100,
+    snow24h: Math.round((totalSnowMm / 25.4) * 10) / 10,
   };
 }
 

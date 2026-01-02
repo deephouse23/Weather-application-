@@ -36,7 +36,8 @@ export function PrecipitationCard({ latitude, longitude, className }: Precipitat
   const isAuthenticated = !!user && !!session;
 
   useEffect(() => {
-    if (!isAuthenticated || !latitude || !longitude) {
+    // Use explicit undefined checks since 0 is a valid coordinate (equator/prime meridian)
+    if (!isAuthenticated || latitude === undefined || longitude === undefined) {
       setPrecipitation(null);
       return;
     }
@@ -103,8 +104,8 @@ export function PrecipitationCard({ latitude, longitude, className }: Precipitat
     );
   }
 
-  // Don't render if no coordinates
-  if (!latitude || !longitude) {
+  // Don't render if no coordinates (use explicit undefined check since 0 is valid)
+  if (latitude === undefined || longitude === undefined) {
     return null;
   }
 

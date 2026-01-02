@@ -316,14 +316,18 @@ async function fetch24hPrecipitation(lat: number, lon: number): Promise<{
     if (!apiKey) return null;
 
     const now = Math.floor(Date.now() / 1000);
-    let totalSnow = 0;
-    let totalRain = 0;
+    let totalSnowMm = 0;
+    let totalRainMm = 0;
+    
+    // Track processed hours to prevent double-counting from overlapping API responses
+    const processedHours = new Set<number>();
 
     // Fetch data for the past 24 hours using timemachine
-    // One Call 3.0 timemachine returns hourly data
+    // Use 3 calls (24h, 16h, 8h ago) to match precipitation-history endpoint
     const timestamps = [
         now - (24 * 60 * 60), // 24 hours ago
-        now - (12 * 60 * 60), // 12 hours ago
+        now - (16 * 60 * 60), // 16 hours ago
+        now - (8 * 60 * 60),  // 8 hours ago
     ];
 
     for (const dt of timestamps) {
@@ -337,13 +341,18 @@ async function fetch24hPrecipitation(lat: number, lon: number): Promise<{
 
             if (data.data && Array.isArray(data.data)) {
                 for (const hour of data.data) {
-                    if (hour.dt >= now - (24 * 60 * 60) && hour.dt <= now) {
-                        if (hour.snow?.['1h']) {
-                            totalSnow += hour.snow['1h'] / 25.4; // mm to inches
-                        }
-                        if (hour.rain?.['1h']) {
-                            totalRain += hour.rain['1h'] / 25.4; // mm to inches
-                        }
+                    // Skip if already processed or outside 24h window
+                    if (processedHours.has(hour.dt)) continue;
+                    if (hour.dt < now - (24 * 60 * 60) || hour.dt > now) continue;
+                    
+                    processedHours.add(hour.dt);
+                    
+                    // Sum raw mm values, convert only at the end
+                    if (hour.snow?.['1h']) {
+                        totalSnowMm += hour.snow['1h'];
+                    }
+                    if (hour.rain?.['1h']) {
+                        totalRainMm += hour.rain['1h'];
                     }
                 }
             }
@@ -352,9 +361,10 @@ async function fetch24hPrecipitation(lat: number, lon: number): Promise<{
         }
     }
 
+    // Convert mm to inches only after summing all values
     return {
-        snow24h: Math.round(totalSnow * 10) / 10,
-        rain24h: Math.round(totalRain * 100) / 100,
+        snow24h: Math.round((totalSnowMm / 25.4) * 10) / 10,
+        rain24h: Math.round((totalRainMm / 25.4) * 100) / 100,
     };
 }
 

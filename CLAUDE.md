@@ -84,7 +84,7 @@ Playwright auto-starts dev server unless `PLAYWRIGHT_TEST_BASE_URL` is set.
 ## Environment Variables
 
 Required in `.env.local`:
-```
+```bash
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 OPENWEATHER_API_KEY=
