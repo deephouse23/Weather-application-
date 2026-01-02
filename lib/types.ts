@@ -109,4 +109,22 @@ export interface HistoricalData {
   timezone: string;
   timezone_abbreviation: string;
   utc_offset_seconds: number;
+}
+
+// Precipitation data for authenticated users
+export interface PrecipitationData {
+  // Current precipitation rate (inches per hour)
+  currentRain: number;
+  currentSnow: number;
+  // 24-hour totals (inches)
+  rain24h: number;
+  snow24h: number;
+  // Timestamps
+  lastUpdated: string;
+  dataSource: 'onecall' | 'timemachine';
+}
+
+// Extended weather data with precipitation for authenticated users
+export interface AuthenticatedWeatherData extends WeatherData {
+  precipitation?: PrecipitationData;
 } 

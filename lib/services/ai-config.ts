@@ -26,6 +26,9 @@ export interface WeatherContext {
     snow3h?: number;
     rain1h?: number;
     rain3h?: number;
+    // 24h totals (authenticated users only)
+    snow24h?: number;
+    rain24h?: number;
 }
 
 // Personality definitions
@@ -88,6 +91,19 @@ export function buildSystemPrompt(
     if (weatherContext?.location) {
         // Build precipitation info string
         let precipInfo = '';
+        
+        // 24-hour totals (premium data for authenticated users)
+        if (weatherContext.snow24h !== undefined || weatherContext.rain24h !== undefined) {
+            precipInfo += '24-HOUR PRECIPITATION TOTALS:\n';
+            if (weatherContext.snow24h !== undefined) {
+                precipInfo += `  Snowfall (24h): ${weatherContext.snow24h.toFixed(1)}"\n`;
+            }
+            if (weatherContext.rain24h !== undefined) {
+                precipInfo += `  Rainfall (24h): ${weatherContext.rain24h.toFixed(2)}"\n`;
+            }
+        }
+        
+        // Current precipitation rates
         if (weatherContext.snow1h || weatherContext.snow3h) {
             const snowAmount = weatherContext.snow1h || weatherContext.snow3h;
             const snowPeriod = weatherContext.snow1h ? '1 hour' : '3 hours';

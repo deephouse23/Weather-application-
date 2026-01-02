@@ -42,7 +42,10 @@
       "Bash(mkdir:*)",
       "Bash(gh run view:*)",
       "Bash(gh pr diff:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "WebFetch(domain:github.com)",
+      "mcp__filesystem__directory_tree",
+      "mcp__filesystem__read_multiple_files"
     ],
     "deny": [],
     "ask": []
