@@ -307,15 +307,74 @@ async function fetchForecast5Day(lat: number, lon: number): Promise<string | nul
     }
 }
 
+// Fetch 24h precipitation history (for authenticated users)
+async function fetch24hPrecipitation(lat: number, lon: number): Promise<{
+    snow24h: number;
+    rain24h: number;
+} | null> {
+    const apiKey = process.env.OPENWEATHER_API_KEY;
+    if (!apiKey) return null;
+
+    const now = Math.floor(Date.now() / 1000);
+    let totalSnow = 0;
+    let totalRain = 0;
+
+    // Fetch data for the past 24 hours using timemachine
+    // One Call 3.0 timemachine returns hourly data
+    const timestamps = [
+        now - (24 * 60 * 60), // 24 hours ago
+        now - (12 * 60 * 60), // 12 hours ago
+    ];
+
+    for (const dt of timestamps) {
+        try {
+            const url = `https://api.openweathermap.org/data/3.0/onecall/timemachine?lat=${lat}&lon=${lon}&dt=${dt}&units=imperial&appid=${apiKey}`;
+            const response = await fetch(url);
+
+            if (!response.ok) continue;
+
+            const data = await response.json();
+
+            if (data.data && Array.isArray(data.data)) {
+                for (const hour of data.data) {
+                    if (hour.dt >= now - (24 * 60 * 60) && hour.dt <= now) {
+                        if (hour.snow?.['1h']) {
+                            totalSnow += hour.snow['1h'] / 25.4; // mm to inches
+                        }
+                        if (hour.rain?.['1h']) {
+                            totalRain += hour.rain['1h'] / 25.4; // mm to inches
+                        }
+                    }
+                }
+            }
+        } catch {
+            // Continue with partial data
+        }
+    }
+
+    return {
+        snow24h: Math.round(totalSnow * 10) / 10,
+        rain24h: Math.round(totalRain * 100) / 100,
+    };
+}
+
 // Fetch real weather data for a location
-async function fetchWeatherForLocation(location: string): Promise<WeatherContext | null> {
+async function fetchWeatherForLocation(location: string, isAuthenticated: boolean = false): Promise<WeatherContext | null> {
     const coords = await geocodeLocation(location);
     if (!coords) return null;
 
-    const [weather, forecast] = await Promise.all([
+    // Fetch current weather and forecast in parallel
+    const promises: [
+        Promise<Awaited<ReturnType<typeof fetchCurrentWeather>>>,
+        Promise<string | null>,
+        Promise<{ snow24h: number; rain24h: number } | null>
+    ] = [
         fetchCurrentWeather(coords.lat, coords.lon),
-        fetchForecast(coords.lat, coords.lon)
-    ]);
+        fetchForecast(coords.lat, coords.lon),
+        isAuthenticated ? fetch24hPrecipitation(coords.lat, coords.lon) : Promise.resolve(null)
+    ];
+
+    const [weather, forecast, precip24h] = await Promise.all(promises);
 
     if (!weather) return null;
 
@@ -331,7 +390,10 @@ async function fetchWeatherForLocation(location: string): Promise<WeatherContext
         snow1h: weather.snow1h,
         snow3h: weather.snow3h,
         rain1h: weather.rain1h,
-        rain3h: weather.rain3h
+        rain3h: weather.rain3h,
+        // 24h totals (authenticated users only)
+        snow24h: precip24h?.snow24h,
+        rain24h: precip24h?.rain24h,
     };
 }
 
@@ -402,7 +464,7 @@ export async function POST(request: NextRequest) {
 
             if (isDifferentLocation || providedContext?.temperature === undefined) {
                 console.log(`[Chat API] Fetching weather for extracted location: "${extractedLocation}"...`);
-                const realWeather = await fetchWeatherForLocation(extractedLocation);
+                const realWeather = await fetchWeatherForLocation(extractedLocation, true);
                 if (realWeather) {
                     console.log(`[Chat API] SUCCESS! Got weather: ${realWeather.temperature}°F, ${realWeather.condition} for ${realWeather.location}`);
                     weatherContext = realWeather;
@@ -415,7 +477,7 @@ export async function POST(request: NextRequest) {
         } else if (providedContext?.location && providedContext?.temperature === undefined) {
             // No location in message, but we have a location name without weather data - fetch it
             console.log(`[Chat API] Fetching weather for provided location: "${providedContext.location}"...`);
-            const realWeather = await fetchWeatherForLocation(providedContext.location);
+            const realWeather = await fetchWeatherForLocation(providedContext.location, true);
             if (realWeather) {
                 console.log(`[Chat API] SUCCESS! Got weather for context location: ${realWeather.temperature}°F`);
                 weatherContext = realWeather;

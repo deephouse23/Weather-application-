@@ -33,6 +33,7 @@ import LazyHourlyForecast from "@/components/lazy-hourly-forecast"
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/responsive-container"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { useLocationContext } from "@/components/location-context"
+import { PrecipitationCard } from "@/components/precipitation-card"
 import LazyWeatherMap from '@/components/lazy-weather-map'
 import { WeatherSkeleton } from '@/components/weather-skeleton'
 import { useWeatherController } from "@/hooks/useWeatherController"
@@ -294,6 +295,12 @@ function WeatherApp() {
                     </CardContent>
                   </Card>
                 </ResponsiveGrid>
+
+                {/* 24-Hour Precipitation Card - Premium feature for authenticated users */}
+                <PrecipitationCard
+                  latitude={weather?.coordinates?.lat}
+                  longitude={weather?.coordinates?.lon}
+                />
 
                 {/* AQI and Pollen Count - Using Lazy Loaded Shared Components */}
                 <LazyEnvironmentalDisplay weather={weather} theme={theme || 'dark'} />
