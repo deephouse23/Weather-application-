@@ -212,11 +212,13 @@ export async function GET(request: NextRequest) {
       dataAvailable: historical.dataAvailable,
     };
 
-    // Update cache
-    precipitationCache.set(cacheKey, {
-      data: precipitationData,
-      expires: Date.now() + CACHE_TTL_MS,
-    });
+    // Only cache successful responses - don't cache failures so retry works
+    if (historical.dataAvailable) {
+      precipitationCache.set(cacheKey, {
+        data: precipitationData,
+        expires: Date.now() + CACHE_TTL_MS,
+      });
+    }
 
     // Clean up old cache entries
     const now = Date.now();
