@@ -1,7 +1,7 @@
 'use client'
-// Build: v5 - Animation controls moved to top, fixed visibility issues, smoother playback
-// Changes: absolute positioning instead of fixed, loading indicator only when paused,
-// increased transition time for smoother frame changes
+// Build: v6 - Enhanced smoothness, dark base map, animated marker, radar legend
+// Phase 1: Smoother playback (500ms transition, 500ms interval), tile preloading, CSS easing
+// Phase 2: CartoDB Dark Matter base map, precipitation legend, pulse marker animation
 
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { Play, Pause, SkipBack, SkipForward, Layers, ChevronDown, Loader2 } from 'lucide-react'
@@ -14,7 +14,7 @@ import Map from 'ol/Map'
 import View from 'ol/View'
 import TileLayer from 'ol/layer/Tile'
 import TileWMS from 'ol/source/TileWMS'
-import OSM from 'ol/source/OSM'
+import XYZ from 'ol/source/XYZ'
 import { fromLonLat } from 'ol/proj'
 import Feature from 'ol/Feature'
 import Point from 'ol/geom/Point'
@@ -27,6 +27,23 @@ import { Style, Icon } from 'ol/style'
 // The n0q.cgi endpoint does NOT support TIME - must use n0q-t.cgi
 const NEXRAD_WMS_URL = 'https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0q-t.cgi'
 const NEXRAD_LAYER = 'nexrad-n0q-wmst'
+
+// Animation tuning constants
+const TILE_TRANSITION_MS = 500 // Smooth crossfade between frames
+const BASE_ANIMATION_INTERVAL_MS = 500 // Fluid playback speed
+const PRELOAD_FRAMES_AHEAD = 3 // Number of frames to preload during playback
+
+// CartoDB Dark Matter base map for better radar contrast
+const CARTO_DARK_MATTER_URL = 'https://{a-d}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+
+// NEXRAD precipitation intensity legend (dBZ values)
+const RADAR_LEGEND = [
+  { color: '#00ffc8', label: 'Light', dbz: '5-20' },
+  { color: '#00c800', label: 'Moderate', dbz: '20-35' },
+  { color: '#ffff00', label: 'Heavy', dbz: '35-50' },
+  { color: '#ff8c00', label: 'Very Heavy', dbz: '50-65' },
+  { color: '#ff0000', label: 'Extreme', dbz: '65+' },
+]
 
 interface WeatherMapProps {
   latitude?: number
@@ -62,7 +79,9 @@ const WeatherMapOpenLayers = ({
   const [frameIndex, setFrameIndex] = useState(0)
   const [speed, setSpeed] = useState<0.5 | 1 | 2>(1)
   const [isLoading, setIsLoading] = useState(false)
+  const [radarVisible, setRadarVisible] = useState(false) // For fade-in animation
   const timerRef = useRef<number | null>(null)
+  const preloadCacheRef = useRef<Set<string>>(new Set()) // Track preloaded frames
 
   // NEXRAD configuration
   const NEXRAD_STEP_MINUTES = 5
@@ -104,13 +123,15 @@ const WeatherMapOpenLayers = ({
     console.log('🗺️ [v4] Initializing OpenLayers map at:', centerLat, centerLon)
 
 
-    // Create base layer (OpenStreetMap)
-    // crossOrigin is required for canvas renderer to draw tiles from external domains
+    // Create base layer (CartoDB Dark Matter - better radar visibility)
+    // Dark base map provides excellent contrast for precipitation colors
     const baseLayer = new TileLayer({
-      source: new OSM({
+      source: new XYZ({
+        url: CARTO_DARK_MATTER_URL,
+        attributions: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
         crossOrigin: 'anonymous',
       }),
-      opacity: 0.7,
+      opacity: 0.9,
     })
 
     // Create map
@@ -191,21 +212,34 @@ const WeatherMapOpenLayers = ({
       geometry: new Point(fromLonLat([longitude, latitude])),
     })
 
-    // Create marker layer
+    // Create animated marker with pulse effect using CSS animation in SVG
+    const pulseMarkerSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+        <style>
+          @keyframes pulse {
+            0%, 100% { opacity: 0.4; r: 18; }
+            50% { opacity: 0; r: 24; }
+          }
+          .pulse-ring { animation: pulse 2s ease-out infinite; }
+        </style>
+        <!-- Pulse ring effect -->
+        <circle class="pulse-ring" cx="24" cy="20" r="18" fill="none" stroke="#00d4ff" stroke-width="2"/>
+        <circle class="pulse-ring" cx="24" cy="20" r="14" fill="none" stroke="#00d4ff" stroke-width="1" style="animation-delay: 0.5s"/>
+        <!-- Main marker pin -->
+        <path d="M33 20c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" fill="#00d4ff" stroke="#000" stroke-width="2"/>
+        <circle cx="24" cy="20" r="3" fill="#000"/>
+      </svg>
+    `
+    
     const markerLayer = new VectorLayer({
       source: new VectorSource({
         features: [markerFeature],
       }),
       style: new Style({
         image: new Icon({
-          src: 'data:image/svg+xml;utf8,' + encodeURIComponent(`
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="cyan" stroke="black" stroke-width="2">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-              <circle cx="12" cy="10" r="3" fill="black"></circle>
-            </svg>
-          `),
+          src: 'data:image/svg+xml;utf8,' + encodeURIComponent(pulseMarkerSvg),
           scale: 1,
-          anchor: [0.5, 1],
+          anchor: [0.5, 0.85],
         }),
       }),
       zIndex: 1000,
@@ -252,12 +286,13 @@ const WeatherMapOpenLayers = ({
         // TIME will be set via updateParams()
       },
       serverType: 'mapserver',
-      transition: 300, // Smooth cross-fade between frames (increased for smoother playback)
+      transition: TILE_TRANSITION_MS, // Smooth cross-fade between frames
       crossOrigin: 'anonymous',
     })
 
     // Track loading state - use a counter to handle concurrent tile loads
     let loadingTileCount = 0
+    let initialLoadComplete = false
 
     radarSource.on('tileloadstart', () => {
       loadingTileCount++
@@ -271,6 +306,11 @@ const WeatherMapOpenLayers = ({
       loadingTileCount = Math.max(0, loadingTileCount - 1)
       if (loadingTileCount === 0) {
         setIsLoading(false)
+        // Trigger fade-in on first complete load
+        if (!initialLoadComplete) {
+          initialLoadComplete = true
+          setRadarVisible(true)
+        }
       }
     })
 
@@ -279,7 +319,7 @@ const WeatherMapOpenLayers = ({
       if (loadingTileCount === 0) {
         setIsLoading(false)
       }
-      console.warn('⚠️ [v4] Tile load error')
+      console.warn('⚠️ [v6] Tile load error')
     })
 
     const radarLayer = new TileLayer({
@@ -337,17 +377,43 @@ const WeatherMapOpenLayers = ({
     console.log(`📡 [v4] Frame ${frameIndex + 1}/${timestamps.length} - TIME: ${timeISO}`)
   }, [frameIndex, timestamps])
 
-  // Animation playback
+  // Preload upcoming frames for smoother playback
+  const preloadFrame = useCallback((index: number) => {
+    if (!timestamps[index] || !radarSourceRef.current) return
+    
+    const timeISO = new Date(timestamps[index]).toISOString()
+    const cacheKey = `${timeISO}`
+    
+    if (preloadCacheRef.current.has(cacheKey)) return
+    preloadCacheRef.current.add(cacheKey)
+    
+    // Create a hidden image to preload the tile
+    const preloadUrl = `${NEXRAD_WMS_URL}?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=${NEXRAD_LAYER}&TIME=${encodeURIComponent(timeISO)}&FORMAT=image/png&TRANSPARENT=true&WIDTH=256&HEIGHT=256&SRS=EPSG:3857&BBOX=-10000000,4000000,-9000000,5000000`
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.src = preloadUrl
+  }, [timestamps])
+
+  // Animation playback with preloading
   useEffect(() => {
     if (!isPlaying || timestamps.length === 0) return
 
-    const baseInterval = 700 // ms per frame at 1x speed (allows tiles to load smoothly)
-    const interval = baseInterval / speed
+    const interval = BASE_ANIMATION_INTERVAL_MS / speed
 
-    console.log(`▶️ [v5] Animation started - interval: ${interval}ms, speed: ${speed}x`)
+    console.log(`▶️ [v6] Animation started - interval: ${interval}ms, speed: ${speed}x`)
 
     const handle = window.setInterval(() => {
-      setFrameIndex((idx) => (idx + 1) % timestamps.length)
+      setFrameIndex((idx) => {
+        const nextIdx = (idx + 1) % timestamps.length
+        
+        // Preload upcoming frames during playback
+        for (let i = 1; i <= PRELOAD_FRAMES_AHEAD; i++) {
+          const preloadIdx = (nextIdx + i) % timestamps.length
+          preloadFrame(preloadIdx)
+        }
+        
+        return nextIdx
+      })
     }, interval)
 
     timerRef.current = handle as unknown as number
@@ -356,10 +422,10 @@ const WeatherMapOpenLayers = ({
       if (timerRef.current) {
         window.clearInterval(timerRef.current)
         timerRef.current = null
-        console.log('⏸️ [v4] Animation stopped')
+        console.log('⏸️ [v6] Animation stopped')
       }
     }
-  }, [isPlaying, speed, timestamps.length])
+  }, [isPlaying, speed, timestamps.length, preloadFrame])
 
   // Keyboard controls
   useEffect(() => {
@@ -448,10 +514,11 @@ const WeatherMapOpenLayers = ({
   }, [timestamps.length])
 
   // Debug: log render conditions
-  console.log('🎨 [v4] Render conditions:', {
+  console.log('🎨 [v6] Render conditions:', {
     isUSLocation,
     precipitation: activeLayers.precipitation,
     timestampsLength: timestamps.length,
+    radarVisible,
     shouldShowControls: isUSLocation && activeLayers.precipitation && timestamps.length > 0
   })
 
@@ -468,14 +535,25 @@ const WeatherMapOpenLayers = ({
         style={{ zIndex: 1, height: '100%', minHeight: '350px', position: 'relative' }}
       />
 
-      {/* Loading Indicator - Only show when not playing to avoid visual disruption */}
+      {/* Loading Indicator - Skeleton placeholder with shimmer effect */}
       {isLoading && !isPlaying && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[2001]">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-600/90 text-white border-2 border-yellow-400 rounded-md font-mono text-xs">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            LOADING RADAR...
+        <div className="absolute inset-0 z-[1999] pointer-events-none">
+          {/* Semi-transparent overlay with shimmer */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent animate-shimmer" 
+               style={{ backgroundSize: '200% 100%' }} />
+          {/* Loading badge */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2">
+            <div className="flex items-center gap-2 px-4 py-2 bg-gray-900/95 text-cyan-400 border-2 border-cyan-500 rounded-md font-mono text-xs shadow-lg shadow-cyan-500/20 backdrop-blur-sm">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="animate-pulse">LOADING RADAR DATA</span>
+            </div>
           </div>
         </div>
+      )}
+      
+      {/* Radar fade-in overlay - hides content until first load */}
+      {!radarVisible && isUSLocation && activeLayers.precipitation && (
+        <div className="absolute inset-0 bg-gray-900 z-[1998] transition-opacity duration-500" />
       )}
 
       {/* Status Badge */}
@@ -594,26 +672,77 @@ const WeatherMapOpenLayers = ({
             </div>
           </div>
 
-          {/* Timeline Slider */}
-          <div className="w-[500px] max-w-[90vw] px-3 py-1.5 bg-gray-900/95 border-2 border-gray-600 rounded-md shadow-xl backdrop-blur-sm">
-            <input
-              type="range"
-              min="0"
-              max={timestamps.length - 1}
-              value={frameIndex}
-              onChange={(e) => {
-                setIsPlaying(false)
-                setFrameIndex(parseInt(e.target.value))
-              }}
-              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-              style={{
-                background: `linear-gradient(to right, #06b6d4 0%, #06b6d4 ${(frameIndex / (timestamps.length - 1)) * 100}%, #374151 ${(frameIndex / (timestamps.length - 1)) * 100}%, #374151 100%)`
-              }}
-            />
-            <div className="mt-1 flex justify-between items-center font-mono text-[10px] text-gray-400">
-              <span>4h ago</span>
-              <span>Frame {frameIndex + 1}/{timestamps.length}</span>
-              <span>Now</span>
+          {/* Timeline Slider with Enhanced Progress */}
+          <div className="w-[500px] max-w-[90vw] px-3 py-2 bg-gray-900/95 border-2 border-gray-600 rounded-md shadow-xl backdrop-blur-sm">
+            {/* Progress bar background */}
+            <div className="relative h-3 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
+              {/* Animated progress fill */}
+              <div 
+                className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-600 to-cyan-400 rounded-full transition-all duration-150 ease-out"
+                style={{ width: `${(frameIndex / (timestamps.length - 1)) * 100}%` }}
+              />
+              {/* Tick marks for time intervals */}
+              <div className="absolute inset-0 flex justify-between px-1">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <div key={i} className="w-px h-full bg-gray-600/50" />
+                ))}
+              </div>
+              {/* Slider input overlaid */}
+              <input
+                type="range"
+                min="0"
+                max={timestamps.length - 1}
+                value={frameIndex}
+                onChange={(e) => {
+                  setIsPlaying(false)
+                  setFrameIndex(parseInt(e.target.value))
+                }}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                style={{ 
+                  WebkitAppearance: 'none',
+                  appearance: 'none'
+                }}
+              />
+              {/* Custom thumb indicator */}
+              <div 
+                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-cyan-400 rounded-full shadow-lg shadow-cyan-400/50 pointer-events-none transition-all duration-150 ease-out"
+                style={{ left: `calc(${(frameIndex / (timestamps.length - 1)) * 100}% - 8px)` }}
+              />
+            </div>
+            {/* Time labels */}
+            <div className="mt-1.5 flex justify-between items-center font-mono text-[10px]">
+              <span className="text-gray-500">-4h</span>
+              <div className="flex items-center gap-1">
+                <span className="text-gray-400">Frame</span>
+                <span className="text-cyan-400 font-bold">{frameIndex + 1}</span>
+                <span className="text-gray-500">/ {timestamps.length}</span>
+              </div>
+              <span className={isLiveFrame ? 'text-red-400 font-bold animate-pulse' : 'text-gray-500'}>
+                {isLiveFrame ? 'LIVE' : 'NOW'}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Radar Precipitation Legend - Bottom Left */}
+      {isUSLocation && activeLayers.precipitation && radarVisible && (
+        <div className="absolute bottom-4 left-4 z-[2000]">
+          <div className="bg-gray-900/95 border-2 border-gray-600 rounded-md p-2 backdrop-blur-sm shadow-xl">
+            <div className="font-mono text-[10px] text-gray-400 mb-1.5 uppercase tracking-wide">
+              Precipitation Intensity
+            </div>
+            <div className="flex flex-col gap-0.5">
+              {RADAR_LEGEND.map((item) => (
+                <div key={item.dbz} className="flex items-center gap-2">
+                  <div 
+                    className="w-4 h-3 rounded-sm border border-gray-700" 
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <span className="font-mono text-[10px] text-gray-300">{item.label}</span>
+                  <span className="font-mono text-[9px] text-gray-500 ml-auto">{item.dbz} dBZ</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -624,7 +753,7 @@ const WeatherMapOpenLayers = ({
         <div className="absolute inset-0 flex items-center justify-center z-[2000] pointer-events-none">
           <div className="bg-gray-800/95 border-2 border-gray-600 rounded-lg p-6 max-w-md text-center">
             <div className="text-2xl font-mono font-bold text-white mb-2">
-              🌎 HIGH-RESOLUTION RADAR UNAVAILABLE
+              HIGH-RESOLUTION RADAR UNAVAILABLE
             </div>
             <div className="text-sm text-gray-300 mb-4">
               Animated radar is only available for US locations.
