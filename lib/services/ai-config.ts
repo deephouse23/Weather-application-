@@ -254,17 +254,45 @@ Stay in character as ${personalityConfig.name}!`;
 }
 
 /**
+ * Strip markdown code block wrapper if present.
+ * Handles ```json ... ``` or ``` ... ``` wrapping that AI sometimes returns.
+ */
+function stripCodeBlock(text: string): string {
+    const trimmed = text.trim();
+    // Match ```json or ``` at the start, and ``` at the end
+    const codeBlockMatch = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+    if (codeBlockMatch) {
+        return codeBlockMatch[1].trim();
+    }
+    return trimmed;
+}
+
+/**
  * Extract message from partial or complete JSON response.
  * Used during streaming to progressively show clean text without JSON syntax.
  */
 export function extractMessageFromJSON(text: string): string {
-    // If it doesn't look like JSON, return as-is
-    if (!text.trim().startsWith('{')) {
-        return text;
+    // Strip code block wrapper if present
+    const stripped = stripCodeBlock(text);
+    
+    // If it doesn't look like JSON, try to extract from original text
+    // (in case code block is incomplete during streaming)
+    if (!stripped.startsWith('{')) {
+        // Try to find message in raw text anyway
+        const messageMatch = text.match(/"message"\s*:\s*"((?:[^"\\]|\\.)*)(?:"|$)/);
+        if (messageMatch) {
+            const extracted = messageMatch[1] || '';
+            try {
+                return JSON.parse(`"${extracted}"`);
+            } catch {
+                return extracted;
+            }
+        }
+        return '';
     }
 
     // Try to extract the message field value from partial/complete JSON
-    const messageMatch = text.match(/"message"\s*:\s*"((?:[^"\\]|\\.)*)(?:"|$)/);
+    const messageMatch = stripped.match(/"message"\s*:\s*"((?:[^"\\]|\\.)*)(?:"|$)/);
 
     if (messageMatch) {
         const extracted = messageMatch[1] || '';
@@ -284,11 +312,14 @@ export function extractMessageFromJSON(text: string): string {
 
 // Parse AI response into structured format
 export function parseAIResponse(content: string): { message: string; action: ChatAction } {
+    // Strip code block wrapper if present (AI sometimes wraps JSON in ```json ... ```)
+    const stripped = stripCodeBlock(content);
+    
     // First, try to extract message if content looks like JSON
     // This handles both partial and complete JSON
-    if (content.trim().startsWith('{')) {
+    if (stripped.startsWith('{')) {
         try {
-            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            const jsonMatch = stripped.match(/\{[\s\S]*\}/);
             if (!jsonMatch) {
                 // No closing brace found - extract message from partial JSON
                 const extracted = extractMessageFromJSON(content);
@@ -316,7 +347,16 @@ export function parseAIResponse(content: string): { message: string; action: Cha
         }
     }
 
-    // Not JSON - return content as-is
+    // Not JSON - but might still contain a message field we can extract
+    const extracted = extractMessageFromJSON(content);
+    if (extracted) {
+        return {
+            message: extracted,
+            action: { type: 'none' }
+        };
+    }
+
+    // Not JSON at all - return content as-is
     return {
         message: content,
         action: { type: 'none' }
