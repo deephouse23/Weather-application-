@@ -51,7 +51,7 @@ export default function AuthDebug() {
             )}
           </div>
         )}
-        <div className="mt-2 pt-2 border-t border-gray-600 text-xs opacity-70">
+        <div className="mt-2 pt-2 border-t border-gray-600 text-xs opacity-70" suppressHydrationWarning>
           Last Updated: {new Date().toLocaleTimeString()}
         </div>
       </div>
