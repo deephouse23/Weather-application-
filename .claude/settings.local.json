@@ -45,7 +45,16 @@
       "Bash(npx tsc:*)",
       "WebFetch(domain:github.com)",
       "mcp__filesystem__directory_tree",
-      "mcp__filesystem__read_multiple_files"
+      "mcp__filesystem__read_multiple_files",
+      "Skill(vercel:logs)",
+      "Bash(vercel ls:*)",
+      "Bash(vercel link:*)",
+      "Bash(vercel projects:*)",
+      "Bash(vercel logs:*)",
+      "mcp__plugin_sentry_sentry__search_issues",
+      "mcp__plugin_sentry_sentry__find_organizations",
+      "mcp__plugin_sentry_sentry__get_issue_details",
+      "WebFetch(domain:openweathermap.org)"
     ],
     "deny": [],
     "ask": []

@@ -88,3 +88,4 @@ SENTRY_SETUP_GUIDE.md
 !.github/images/features/
 !.github/images/demo/
 !docs/screenshots/
+.vercel
