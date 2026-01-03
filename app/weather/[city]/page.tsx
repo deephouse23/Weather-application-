@@ -51,7 +51,7 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
       siteName: '16 Bit Weather',
       images: [
         {
-          url: '/og-image.png',
+          url: `/api/og?title=${encodeURIComponent(city.name + ', ' + city.state)}&subtitle=Weather+Forecast`,
           width: 1200,
           height: 630,
           alt: `${city.name} Weather - 16 Bit Weather Terminal`,
@@ -64,7 +64,7 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
       card: 'summary_large_image',
       title: pageTitle,
       description: description,
-      images: ['/og-image.png'],
+      images: [`/api/og?title=${encodeURIComponent(city.name + ', ' + city.state)}&subtitle=Weather+Forecast`],
     },
     alternates: {
       canonical: `https://www.16bitweather.co/weather/${citySlug}`,
