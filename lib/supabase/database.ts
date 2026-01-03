@@ -4,7 +4,7 @@ import { DbSavedLocation, dbToSavedLocation, savedLocationToDb } from './schema-
 
 // Placeholder values for development without Supabase
 const PLACEHOLDER_URL = 'https://placeholder.supabase.co'
-const PLACEHOLDER_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2MjMxNjM4MDAsImV4cCI6MTkzODczOTgwMH0.placeholder'
+const PLACEHOLDER_KEY = 'placeholder-service-key-not-a-real-secret'
 
 // Create a supabase client that works in both server and client contexts
 const getSupabaseClient = () => {
