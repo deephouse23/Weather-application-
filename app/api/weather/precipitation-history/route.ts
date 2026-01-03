@@ -111,6 +111,19 @@ async function fetchHistoricalPrecipitation(
       const data = await response.json();
       successfulApiCalls++;
 
+      // Debug: Log the API response structure
+      console.log(`[Precipitation] Timemachine response for dt=${dt}:`, {
+        hasData: !!data.data,
+        dataLength: data.data?.length || 0,
+        sampleHour: data.data?.[0] ? {
+          dt: data.data[0].dt,
+          hasRain: !!data.data[0].rain,
+          hasPrecipitation: !!data.data[0].precipitation,
+          rain: data.data[0].rain,
+          weather: data.data[0].weather?.[0]?.main,
+        } : null,
+      });
+
       // Sum up hourly precipitation (in mm, convert only at the end)
       if (data.data && Array.isArray(data.data)) {
         for (const hour of data.data) {
@@ -121,11 +134,24 @@ async function fetchHistoricalPrecipitation(
           processedHours.add(hour.dt);
 
           // Sum raw mm values to avoid accumulated rounding errors
-          if (hour.rain?.['1h']) {
-            totalRainMm += hour.rain['1h'];
+          // Handle multiple possible formats from OpenWeatherMap:
+          // - rain.1h (object with 1h key)
+          // - rain (direct number)
+          // - precipitation (alternative field)
+          const rainAmount =
+            (typeof hour.rain === 'object' && hour.rain?.['1h']) ? hour.rain['1h'] :
+            (typeof hour.rain === 'number') ? hour.rain :
+            (typeof hour.precipitation === 'number') ? hour.precipitation : 0;
+
+          const snowAmount =
+            (typeof hour.snow === 'object' && hour.snow?.['1h']) ? hour.snow['1h'] :
+            (typeof hour.snow === 'number') ? hour.snow : 0;
+
+          if (rainAmount > 0) {
+            totalRainMm += rainAmount;
           }
-          if (hour.snow?.['1h']) {
-            totalSnowMm += hour.snow['1h'];
+          if (snowAmount > 0) {
+            totalSnowMm += snowAmount;
           }
         }
       }
@@ -133,6 +159,16 @@ async function fetchHistoricalPrecipitation(
       console.error(`[Precipitation] Error fetching timemachine data:`, error);
     }
   }
+
+  // Debug: Log final totals
+  console.log(`[Precipitation] Final totals:`, {
+    successfulApiCalls,
+    processedHours: processedHours.size,
+    totalRainMm,
+    totalSnowMm,
+    rain24hInches: Math.round((totalRainMm / 25.4) * 100) / 100,
+    snow24hInches: Math.round((totalSnowMm / 25.4) * 10) / 10,
+  });
 
   // Convert mm to inches only after summing all values
   return {

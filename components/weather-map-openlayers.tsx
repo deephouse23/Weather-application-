@@ -553,9 +553,11 @@ const WeatherMapOpenLayers = ({
   return (
     <div
       data-radar-container
-      className={`relative w-full rounded-lg overflow-visible ${themeStyles.container}`}
+      className={`flex gap-2 w-full rounded-lg ${themeStyles.container}`}
       style={{ height: '100%', minHeight: '350px' }}
     >
+      {/* Main Map Area */}
+      <div className="relative flex-1 overflow-visible">
       {/* Map Container - explicit dimensions for production */}
       <div
         ref={mapRef}
@@ -763,29 +765,6 @@ const WeatherMapOpenLayers = ({
         </div>
       )}
 
-      {/* Radar Reflectivity Legend - Right Side, Vertically Centered */}
-      {isUSLocation && activeLayers.precipitation && radarVisible && (
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 z-[2000]">
-          <div className="bg-gray-900/95 border-2 border-gray-600 rounded-md p-2 backdrop-blur-sm shadow-xl">
-            <div className="font-mono text-[10px] text-gray-400 mb-1.5 uppercase tracking-wide">
-              Radar Reflectivity
-            </div>
-            <div className="flex flex-col gap-0.5">
-              {RADAR_LEGEND.map((item) => (
-                <div key={item.dbz} className="flex items-center gap-2">
-                  <div 
-                    className="w-4 h-3 rounded-sm border border-gray-700" 
-                    style={{ backgroundColor: item.color }}
-                  />
-                  <span className="font-mono text-[10px] text-gray-300">{item.label}</span>
-                  <span className="font-mono text-[9px] text-gray-500 ml-auto">{item.dbz} dBZ</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* No Radar Message for International */}
       {!isUSLocation && activeLayers.precipitation && (
         <div className="absolute inset-0 flex items-center justify-center z-[2000] pointer-events-none">
@@ -798,6 +777,29 @@ const WeatherMapOpenLayers = ({
             </div>
             <div className="text-xs text-gray-400">
               Current conditions and forecasts are still available above.
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
+
+      {/* Radar Reflectivity Legend - Right Side, Outside Map */}
+      {isUSLocation && activeLayers.precipitation && radarVisible && (
+        <div className="flex-shrink-0 self-center">
+          <div className="bg-gray-900/95 border-2 border-gray-600 rounded-md p-1.5 backdrop-blur-sm shadow-xl">
+            <div className="font-mono text-[8px] text-gray-400 mb-1 uppercase tracking-wide text-center">
+              dBZ
+            </div>
+            <div className="flex flex-col gap-0.5">
+              {RADAR_LEGEND.map((item) => (
+                <div key={item.dbz} className="flex items-center gap-1">
+                  <div
+                    className="w-3 h-2.5 rounded-sm border border-gray-700"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <span className="font-mono text-[8px] text-gray-300 whitespace-nowrap">{item.dbz}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
