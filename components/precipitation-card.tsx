@@ -190,7 +190,7 @@ export function PrecipitationCard({ latitude, longitude, className }: Precipitat
                   {precipitation.rain24h.toFixed(2)}"
                 </p>
                 <p className={cn("text-xs font-mono mt-1", themeClasses.secondaryText)}>
-                  Last 24 hours
+                  24h sample ({precipitation.hoursSampled || 8}h data)
                 </p>
               </div>
 
@@ -221,7 +221,7 @@ export function PrecipitationCard({ latitude, longitude, className }: Precipitat
                   {precipitation.snow24h.toFixed(1)}"
                 </p>
                 <p className={cn("text-xs font-mono mt-1", themeClasses.secondaryText)}>
-                  Last 24 hours
+                  24h sample ({precipitation.hoursSampled || 8}h data)
                 </p>
               </div>
 

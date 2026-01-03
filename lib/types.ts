@@ -116,7 +116,7 @@ export interface PrecipitationData {
   // Current precipitation rate (inches per hour)
   currentRain: number;
   currentSnow: number;
-  // 24-hour totals (inches)
+  // 24-hour totals (inches) - actual sampled values, NOT extrapolated
   rain24h: number;
   snow24h: number;
   // Timestamps
@@ -124,6 +124,8 @@ export interface PrecipitationData {
   dataSource: 'onecall' | 'timemachine';
   // Data availability - false if all API calls failed
   dataAvailable: boolean;
+  // Number of hours with actual data (max 8 from 3-hour sampling)
+  hoursSampled: number;
 }
 
 // Extended weather data with precipitation for authenticated users

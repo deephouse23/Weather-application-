@@ -21,6 +21,7 @@ interface PrecipitationResponse {
   lastUpdated: string;
   dataSource: 'onecall' | 'timemachine';
   dataAvailable: boolean; // true if API returned valid data, false if all calls failed
+  hoursSampled: number; // Number of hours with actual data (max 8 from our sampling)
 }
 
 // Get user from request
@@ -81,7 +82,7 @@ async function fetchHistoricalPrecipitation(
   lat: number,
   lon: number,
   apiKey: string
-): Promise<{ rain24h: number; snow24h: number; dataAvailable: boolean }> {
+): Promise<{ rain24h: number; snow24h: number; dataAvailable: boolean; hoursSampled: number }> {
   const now = Math.floor(Date.now() / 1000);
   let totalRainMm = 0;
   let totalSnowMm = 0;
@@ -91,8 +92,10 @@ async function fetchHistoricalPrecipitation(
   const processedHours = new Set<number>();
 
   // One Call 3.0 timemachine returns data in a `data` array (typically 1 entry per call)
-  // We sample every 3 hours to balance API usage with data accuracy
-  // The actual number of processed hours may vary, so we use dynamic extrapolation
+  // We sample every 3 hours to balance API usage with accuracy
+  // NOTE: We do NOT extrapolate - rain.1h is the ACTUAL amount that fell in that hour,
+  // not a rate. Extrapolating would over-report precipitation for sporadic rain events.
+  // The hoursSampled field tells the UI how many hours of actual data we have.
   const timestamps: number[] = [];
   for (let hoursAgo = 3; hoursAgo <= 24; hoursAgo += 3) {
     timestamps.push(now - (hoursAgo * 60 * 60));
@@ -161,31 +164,26 @@ async function fetchHistoricalPrecipitation(
     }
   }
 
-  // Extrapolate to 24 hours based on actual hours processed
-  // This handles cases where some API calls fail or return varying amounts of data
+  // Return actual sampled values - NO extrapolation
+  // rain.1h is the actual precipitation that fell in that hour, not a rate
   const hoursProcessed = processedHours.size;
-  const estimationFactor = hoursProcessed > 0 ? 24 / hoursProcessed : 1;
-  const estimatedRainMm = totalRainMm * estimationFactor;
-  const estimatedSnowMm = totalSnowMm * estimationFactor;
 
   // Debug: Log final totals
   console.log(`[Precipitation] Final totals:`, {
     successfulApiCalls,
     hoursProcessed,
-    estimationFactor: estimationFactor.toFixed(2),
-    sampledRainMm: totalRainMm,
-    sampledSnowMm: totalSnowMm,
-    estimatedRainMm,
-    estimatedSnowMm,
-    rain24hInches: Math.round((estimatedRainMm / 25.4) * 100) / 100,
-    snow24hInches: Math.round((estimatedSnowMm / 25.4) * 10) / 10,
+    totalRainMm,
+    totalSnowMm,
+    rain24hInches: Math.round((totalRainMm / 25.4) * 100) / 100,
+    snow24hInches: Math.round((totalSnowMm / 25.4) * 10) / 10,
   });
 
   // Convert mm to inches only after summing all values
   return {
-    rain24h: Math.round((estimatedRainMm / 25.4) * 100) / 100,
-    snow24h: Math.round((estimatedSnowMm / 25.4) * 10) / 10,
+    rain24h: Math.round((totalRainMm / 25.4) * 100) / 100,
+    snow24h: Math.round((totalSnowMm / 25.4) * 10) / 10,
     dataAvailable: successfulApiCalls > 0, // At least one API call succeeded
+    hoursSampled: hoursProcessed,
   };
 }
 
@@ -257,6 +255,7 @@ export async function GET(request: NextRequest) {
       lastUpdated: new Date().toISOString(),
       dataSource: 'timemachine',
       dataAvailable: historical.dataAvailable,
+      hoursSampled: historical.hoursSampled,
     };
 
     // Only cache successful responses - don't cache failures so retry works
