@@ -54,7 +54,8 @@
       "mcp__plugin_sentry_sentry__search_issues",
       "mcp__plugin_sentry_sentry__find_organizations",
       "mcp__plugin_sentry_sentry__get_issue_details",
-      "WebFetch(domain:openweathermap.org)"
+      "WebFetch(domain:openweathermap.org)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []

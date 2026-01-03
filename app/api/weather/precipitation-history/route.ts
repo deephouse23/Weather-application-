@@ -90,15 +90,14 @@ async function fetchHistoricalPrecipitation(
   // Track processed hours to prevent double-counting from overlapping API responses
   const processedHours = new Set<number>();
 
-  // One Call 3.0 timemachine returns data for ONE timestamp per call
-  // To get 24 hours of data, we need to make multiple calls
-  // We'll sample every 3 hours (8 calls) and multiply by 3 for estimation
-  // This balances API usage with data accuracy
+  // One Call 3.0 timemachine returns data in a `data` array (typically 1 entry per call)
+  // We sample every 3 hours to balance API usage with data accuracy
+  // The actual number of processed hours may vary, so we use dynamic extrapolation
   const timestamps: number[] = [];
   for (let hoursAgo = 3; hoursAgo <= 24; hoursAgo += 3) {
     timestamps.push(now - (hoursAgo * 60 * 60));
   }
-  // timestamps: [3h ago, 6h ago, 9h ago, 12h ago, 15h ago, 18h ago, 21h ago, 24h ago]
+  // Expected: 8 timestamps at [3h, 6h, 9h, 12h, 15h, 18h, 21h, 24h ago]
 
   for (const dt of timestamps) {
     try {
@@ -162,15 +161,18 @@ async function fetchHistoricalPrecipitation(
     }
   }
 
-  // Since we sample every 3 hours, multiply by 3 to estimate hourly totals
-  // This assumes precipitation rate was relatively constant within each 3-hour window
-  const estimatedRainMm = totalRainMm * 3;
-  const estimatedSnowMm = totalSnowMm * 3;
+  // Extrapolate to 24 hours based on actual hours processed
+  // This handles cases where some API calls fail or return varying amounts of data
+  const hoursProcessed = processedHours.size;
+  const estimationFactor = hoursProcessed > 0 ? 24 / hoursProcessed : 1;
+  const estimatedRainMm = totalRainMm * estimationFactor;
+  const estimatedSnowMm = totalSnowMm * estimationFactor;
 
   // Debug: Log final totals
   console.log(`[Precipitation] Final totals:`, {
     successfulApiCalls,
-    processedHours: processedHours.size,
+    hoursProcessed,
+    estimationFactor: estimationFactor.toFixed(2),
     sampledRainMm: totalRainMm,
     sampledSnowMm: totalSnowMm,
     estimatedRainMm,
