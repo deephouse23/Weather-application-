@@ -61,13 +61,6 @@ const jsonLd = {
     name: '16 Bit Weather',
     url: 'https://www.16bitweather.co',
   },
-  aggregateRating: {
-    '@type': 'AggregateRating',
-    ratingValue: '4.8',
-    ratingCount: '150',
-    bestRating: '5',
-    worstRating: '1',
-  },
   featureList: [
     'Real-time weather data',
     '5-day weather forecast',
