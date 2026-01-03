@@ -20,6 +20,7 @@ interface PrecipitationResponse {
   snow24h: number;
   lastUpdated: string;
   dataSource: 'onecall' | 'timemachine';
+  dataAvailable: boolean; // true if API returned valid data, false if all calls failed
 }
 
 // Get user from request
@@ -77,17 +78,18 @@ async function fetchCurrentWeather(lat: number, lon: number, apiKey: string): Pr
 
 // Fetch historical data using One Call 3.0 timemachine
 async function fetchHistoricalPrecipitation(
-  lat: number, 
-  lon: number, 
+  lat: number,
+  lon: number,
   apiKey: string
-): Promise<{ rain24h: number; snow24h: number }> {
+): Promise<{ rain24h: number; snow24h: number; dataAvailable: boolean }> {
   const now = Math.floor(Date.now() / 1000);
   let totalRainMm = 0;
   let totalSnowMm = 0;
-  
+  let successfulApiCalls = 0;
+
   // Track processed hours to prevent double-counting from overlapping API responses
   const processedHours = new Set<number>();
-  
+
   // Fetch data for the past 24 hours in 8-hour chunks (3 API calls)
   // One Call timemachine returns hourly data for the requested day
   const timestamps = [
@@ -95,28 +97,29 @@ async function fetchHistoricalPrecipitation(
     now - (16 * 60 * 60), // 16 hours ago
     now - (8 * 60 * 60),  // 8 hours ago
   ];
-  
+
   for (const dt of timestamps) {
     try {
       const url = `https://api.openweathermap.org/data/3.0/onecall/timemachine?lat=${lat}&lon=${lon}&dt=${dt}&units=imperial&appid=${apiKey}`;
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         console.warn(`[Precipitation] Timemachine call failed for dt=${dt}: ${response.status}`);
         continue;
       }
-      
+
       const data = await response.json();
-      
+      successfulApiCalls++;
+
       // Sum up hourly precipitation (in mm, convert only at the end)
       if (data.data && Array.isArray(data.data)) {
         for (const hour of data.data) {
           // Skip if already processed or outside 24h window
           if (processedHours.has(hour.dt)) continue;
           if (hour.dt < now - (24 * 60 * 60) || hour.dt > now) continue;
-          
+
           processedHours.add(hour.dt);
-          
+
           // Sum raw mm values to avoid accumulated rounding errors
           if (hour.rain?.['1h']) {
             totalRainMm += hour.rain['1h'];
@@ -130,11 +133,12 @@ async function fetchHistoricalPrecipitation(
       console.error(`[Precipitation] Error fetching timemachine data:`, error);
     }
   }
-  
+
   // Convert mm to inches only after summing all values
   return {
     rain24h: Math.round((totalRainMm / 25.4) * 100) / 100,
     snow24h: Math.round((totalSnowMm / 25.4) * 10) / 10,
+    dataAvailable: successfulApiCalls > 0, // At least one API call succeeded
   };
 }
 
@@ -205,13 +209,16 @@ export async function GET(request: NextRequest) {
       snow24h: historical.snow24h,
       lastUpdated: new Date().toISOString(),
       dataSource: 'timemachine',
+      dataAvailable: historical.dataAvailable,
     };
 
-    // Update cache
-    precipitationCache.set(cacheKey, {
-      data: precipitationData,
-      expires: Date.now() + CACHE_TTL_MS,
-    });
+    // Only cache successful responses - don't cache failures so retry works
+    if (historical.dataAvailable) {
+      precipitationCache.set(cacheKey, {
+        data: precipitationData,
+        expires: Date.now() + CACHE_TTL_MS,
+      });
+    }
 
     // Clean up old cache entries
     const now = Date.now();
