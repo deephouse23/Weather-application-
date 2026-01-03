@@ -37,7 +37,7 @@ const PRELOAD_FRAMES_AHEAD = 3 // Number of frames to preload during playback
 // Note: Removed {r} (Leaflet retina placeholder) - OpenLayers XYZ doesn't support it
 const CARTO_DARK_MATTER_URL = 'https://{a-d}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
 
-// NEXRAD precipitation intensity legend (dBZ values)
+// NEXRAD radar reflectivity legend (dBZ values) - industry standard scale
 const RADAR_LEGEND = [
   { color: '#00ffc8', label: 'Light', dbz: '5-20' },
   { color: '#00c800', label: 'Moderate', dbz: '20-35' },
@@ -763,12 +763,12 @@ const WeatherMapOpenLayers = ({
         </div>
       )}
 
-      {/* Radar Precipitation Legend - Bottom Left */}
+      {/* Radar Reflectivity Legend - Right Side, Vertically Centered */}
       {isUSLocation && activeLayers.precipitation && radarVisible && (
-        <div className="absolute bottom-4 left-4 z-[2000]">
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 z-[2000]">
           <div className="bg-gray-900/95 border-2 border-gray-600 rounded-md p-2 backdrop-blur-sm shadow-xl">
             <div className="font-mono text-[10px] text-gray-400 mb-1.5 uppercase tracking-wide">
-              Precipitation Intensity
+              Radar Reflectivity
             </div>
             <div className="flex flex-col gap-0.5">
               {RADAR_LEGEND.map((item) => (

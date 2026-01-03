@@ -7,8 +7,9 @@
  * Displays 24-hour rain and snow totals for authenticated users
  */
 
-import { useState, useEffect } from 'react';
-import { Droplets, Snowflake, Loader2, Lock } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Droplets, Snowflake, Loader2, Lock, RefreshCw, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -35,47 +36,47 @@ export function PrecipitationCard({ latitude, longitude, className }: Precipitat
 
   const isAuthenticated = !!user && !!session;
 
-  useEffect(() => {
+  const fetchPrecipitation = useCallback(async () => {
     // Use explicit undefined checks since 0 is a valid coordinate (equator/prime meridian)
     if (!isAuthenticated || latitude === undefined || longitude === undefined) {
       setPrecipitation(null);
       return;
     }
 
-    async function fetchPrecipitation() {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
-      try {
-        const response = await fetch(
-          `/api/weather/precipitation-history?lat=${latitude}&lon=${longitude}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${session?.access_token}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            setError('Authentication required');
-            return;
-          }
-          throw new Error('Failed to fetch precipitation data');
+    try {
+      const response = await fetch(
+        `/api/weather/precipitation-history?lat=${latitude}&lon=${longitude}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${session?.access_token}`,
+          },
         }
+      );
 
-        const data = await response.json();
-        setPrecipitation(data);
-      } catch (err) {
-        console.error('[PrecipitationCard] Error:', err);
-        setError('Unable to load precipitation data');
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        if (response.status === 401) {
+          setError('Authentication required');
+          return;
+        }
+        throw new Error('Failed to fetch precipitation data');
       }
-    }
 
-    fetchPrecipitation();
+      const data = await response.json();
+      setPrecipitation(data);
+    } catch (err) {
+      console.error('[PrecipitationCard] Error:', err);
+      setError('Unable to load precipitation data');
+    } finally {
+      setLoading(false);
+    }
   }, [isAuthenticated, latitude, longitude, session?.access_token]);
+
+  useEffect(() => {
+    fetchPrecipitation();
+  }, [fetchPrecipitation]);
 
   // Don't render if not authenticated
   if (!isAuthenticated) {
@@ -142,7 +143,37 @@ export function PrecipitationCard({ latitude, longitude, className }: Precipitat
             </span>
           </div>
         ) : error ? (
-          <p className="text-sm font-mono text-center text-red-400">{error}</p>
+          <div className="flex flex-col items-center gap-3 py-2">
+            <p className="text-sm font-mono text-center text-red-400">{error}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchPrecipitation()}
+              className="font-mono text-xs"
+            >
+              <RefreshCw className="w-3 h-3 mr-1" />
+              Retry
+            </Button>
+          </div>
+        ) : precipitation && !precipitation.dataAvailable ? (
+          <div className="flex flex-col items-center gap-3 py-2">
+            <div className="flex items-center gap-2 text-yellow-500">
+              <AlertCircle className="w-5 h-5" />
+              <p className="text-sm font-mono">Data temporarily unavailable</p>
+            </div>
+            <p className={cn("text-xs font-mono text-center", themeClasses.secondaryText)}>
+              Unable to fetch precipitation data from weather service
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchPrecipitation()}
+              className="font-mono text-xs"
+            >
+              <RefreshCw className="w-3 h-3 mr-1" />
+              Retry
+            </Button>
+          </div>
         ) : precipitation ? (
           <div className="grid grid-cols-2 gap-6">
             {/* Rainfall Section */}

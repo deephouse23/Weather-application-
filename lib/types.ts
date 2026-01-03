@@ -122,6 +122,8 @@ export interface PrecipitationData {
   // Timestamps
   lastUpdated: string;
   dataSource: 'onecall' | 'timemachine';
+  // Data availability - false if all API calls failed
+  dataAvailable: boolean;
 }
 
 // Extended weather data with precipitation for authenticated users
