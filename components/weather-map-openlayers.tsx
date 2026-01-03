@@ -34,7 +34,8 @@ const BASE_ANIMATION_INTERVAL_MS = 500 // Fluid playback speed
 const PRELOAD_FRAMES_AHEAD = 3 // Number of frames to preload during playback
 
 // CartoDB Dark Matter base map for better radar contrast
-const CARTO_DARK_MATTER_URL = 'https://{a-d}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+// Note: Removed {r} (Leaflet retina placeholder) - OpenLayers XYZ doesn't support it
+const CARTO_DARK_MATTER_URL = 'https://{a-d}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
 
 // NEXRAD precipitation intensity legend (dBZ values)
 const RADAR_LEGEND = [
