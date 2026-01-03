@@ -578,9 +578,11 @@ const WeatherMapOpenLayers = ({
         </div>
       )}
       
-      {/* Radar fade-in overlay - hides content until first load */}
-      {!radarVisible && isUSLocation && activeLayers.precipitation && (
-        <div className="absolute inset-0 bg-gray-900 z-[1998] transition-opacity duration-500" />
+      {/* Radar fade-in overlay - stays in DOM and animates opacity (fixes Bugbot transition issue) */}
+      {isUSLocation && activeLayers.precipitation && (
+        <div 
+          className={`absolute inset-0 bg-gray-900 z-[1998] transition-opacity duration-500 pointer-events-none ${radarVisible ? 'opacity-0' : 'opacity-100'}`}
+        />
       )}
 
       {/* Status Badge */}
@@ -700,10 +702,11 @@ const WeatherMapOpenLayers = ({
           </div>
 
           {/* Timeline Slider with Enhanced Progress */}
-          {/* Safe progress calculation to avoid division by zero (fixes CodeRabbit critical issue) */}
+          {/* Safe progress calculation: when only 1 frame, maxIndex=0 and progress=100% (fixes Bugbot mismatch) */}
           {(() => {
-            const maxIndex = Math.max(1, timestamps.length - 1)
-            const progress = timestamps.length > 1 ? (frameIndex / maxIndex) * 100 : 100
+            const maxIndex = timestamps.length - 1
+            // Progress: if only 1 frame (maxIndex=0), show 100%; otherwise calculate based on frameIndex
+            const progress = maxIndex > 0 ? (frameIndex / maxIndex) * 100 : 100
             return (
           <div className="w-[500px] max-w-[90vw] px-3 py-2 bg-gray-900/95 border-2 border-gray-600 rounded-md shadow-xl backdrop-blur-sm">
             {/* Progress bar background */}
@@ -719,12 +722,12 @@ const WeatherMapOpenLayers = ({
                   <div key={i} className="w-px h-full bg-gray-600/50" />
                 ))}
               </div>
-              {/* Slider input overlaid */}
+              {/* Slider input overlaid - clamp max to at least 0 */}
               <input
                 type="range"
                 min="0"
-                max={maxIndex}
-                value={frameIndex}
+                max={Math.max(0, maxIndex)}
+                value={Math.min(frameIndex, Math.max(0, maxIndex))}
                 onChange={(e) => {
                   setIsPlaying(false)
                   setFrameIndex(parseInt(e.target.value))
