@@ -71,6 +71,12 @@ export const CITY_DATA = {
     }
   },
   // Additional cities with basic data
+  'philadelphia-pa': { name: 'Philadelphia', state: 'PA', searchTerm: 'Philadelphia, PA', lat: 39.9526, lon: -75.1652 },
+  'san-antonio-tx': { name: 'San Antonio', state: 'TX', searchTerm: 'San Antonio, TX', lat: 29.4241, lon: -98.4936 },
+  'san-diego-ca': { name: 'San Diego', state: 'CA', searchTerm: 'San Diego, CA', lat: 32.7157, lon: -117.1611 },
+  'dallas-tx': { name: 'Dallas', state: 'TX', searchTerm: 'Dallas, TX', lat: 32.7767, lon: -96.7970 },
+  'austin-tx': { name: 'Austin', state: 'TX', searchTerm: 'Austin, TX', lat: 30.2672, lon: -97.7431 },
+  'salt-lake-city-ut': { name: 'Salt Lake City', state: 'UT', searchTerm: 'Salt Lake City, UT', lat: 40.7608, lon: -111.8910 },
   'san-jose-ca': { name: 'San Jose', state: 'CA', searchTerm: 'San Jose, CA', lat: 37.3382, lon: -121.8863 },
   'jacksonville-fl': { name: 'Jacksonville', state: 'FL', searchTerm: 'Jacksonville, FL', lat: 30.3322, lon: -81.6557 },
   'fort-worth-tx': { name: 'Fort Worth', state: 'TX', searchTerm: 'Fort Worth, TX', lat: 32.7555, lon: -97.3308 },

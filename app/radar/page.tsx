@@ -2,17 +2,17 @@
 
 /**
  * 16-Bit Weather Platform - v1.0.0
- * 
+ *
  * Copyright (C) 2025 16-Bit Weather
  * Licensed under Fair Source License, Version 0.9
- * 
+ *
  * Use Limitation: 5 users
  * See LICENSE file for full terms
  */
 
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import dynamic from 'next/dynamic'
+import dynamicImport from 'next/dynamic'
 import Link from 'next/link'
 import { Home, Map as MapIcon, Share2 } from 'lucide-react'
 import { useLocationContext } from '@/components/location-context'
@@ -22,7 +22,7 @@ import { useTheme } from '@/components/theme-provider'
 import { fetchWeatherData } from '@/lib/weather-api'
 import Navigation from '@/components/navigation'
 
-const WeatherMap = dynamic(() => import('@/components/weather-map'), {
+const WeatherMap = dynamicImport(() => import('@/components/weather-map'), {
   ssr: false,
   loading: () => (
     <div className="h-[calc(100vh-4rem)] w-full flex items-center justify-center bg-gray-900">
@@ -256,4 +256,3 @@ export default function MapPage() {
   )
 }
 
-export const runtime = 'edge'

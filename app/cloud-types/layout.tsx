@@ -43,10 +43,10 @@ const faqSchema = {
   mainEntity: [
     {
       '@type': 'Question',
-      name: 'What are the 10 main cloud types?',
+      name: 'What are the 13 cloud types?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'The 10 main cloud types classified by altitude are: High clouds (Cirrus, Cirrostratus, Cirrocumulus), Mid-level clouds (Altocumulus, Altostratus, Nimbostratus), Low clouds (Cumulus, Stratocumulus, Stratus), and vertical development clouds (Cumulonimbus).'
+        text: 'The 13 cloud types include 10 main classifications by altitude: High clouds (Cirrus, Cirrostratus, Cirrocumulus), Mid-level clouds (Altocumulus, Altostratus, Nimbostratus), Low clouds (Cumulus, Stratocumulus, Stratus), and vertical development clouds (Cumulonimbus). Plus 3 rare formations: Mammatus, Lenticular, and Noctilucent clouds.'
       }
     },
     {

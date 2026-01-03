@@ -46,7 +46,7 @@ import { TronGridBackground } from "@/components/ui/tron-grid-background"
 
 // Using ThemeType from theme-utils
 // Force rebuild for debug logs
-export default function HomeClient() {
+function WeatherApp() {
   const { theme } = useTheme()
   const themeClasses = getComponentStyles(theme as ThemeType, 'weather')
   const {
@@ -105,7 +105,7 @@ export default function HomeClient() {
   };
 
   // Helper function to format location display
-  const formatLocationDisplay = (location: string, country: string): string => {
+  const formatLocationDisplay = (location: string): string => {
     // Handle edge cases for long city names
     const maxLength = 30;
     if (location.length > maxLength) {
@@ -397,3 +397,6 @@ export default function HomeClient() {
     </PageWrapper>
   )
 }
+
+export default WeatherApp
+export { WeatherApp }
