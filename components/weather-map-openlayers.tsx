@@ -270,7 +270,10 @@ const WeatherMapOpenLayers = ({
       map.removeLayer(radarLayerRef.current)
     }
 
-    console.log('🎯 [v4] Creating SINGLE NEXRAD WMS-T layer')
+    // Reset fade-in state for new layer (fixes Cursor BugBot issue)
+    setRadarVisible(false)
+
+    console.log('🎯 [v6] Creating SINGLE NEXRAD WMS-T layer')
     console.log('  URL:', NEXRAD_WMS_URL)
     console.log('  Layer:', NEXRAD_LAYER)
 
@@ -377,9 +380,19 @@ const WeatherMapOpenLayers = ({
     console.log(`📡 [v4] Frame ${frameIndex + 1}/${timestamps.length} - TIME: ${timeISO}`)
   }, [frameIndex, timestamps])
 
+  // Clear preload cache when location changes (fixes CodeRabbit memory leak issue)
+  useEffect(() => {
+    preloadCacheRef.current.clear()
+  }, [latitude, longitude])
+
   // Preload upcoming frames for smoother playback
   const preloadFrame = useCallback((index: number) => {
-    if (!timestamps[index] || !radarSourceRef.current) return
+    if (!timestamps[index] || !radarSourceRef.current || !mapInstanceRef.current) return
+    
+    // Limit cache size to prevent memory bloat (fixes CodeRabbit issue)
+    if (preloadCacheRef.current.size > 100) {
+      preloadCacheRef.current.clear()
+    }
     
     const timeISO = new Date(timestamps[index]).toISOString()
     const cacheKey = `${timeISO}`
@@ -387,12 +400,26 @@ const WeatherMapOpenLayers = ({
     if (preloadCacheRef.current.has(cacheKey)) return
     preloadCacheRef.current.add(cacheKey)
     
+    // Get current map extent for more effective preloading
+    const view = mapInstanceRef.current.getView()
+    const size = mapInstanceRef.current.getSize()
+    let bbox = '-10000000,4000000,-9000000,5000000' // Default fallback
+    
+    if (size) {
+      try {
+        const extent = view.calculateExtent(size)
+        bbox = extent.join(',')
+      } catch {
+        // Use fallback bbox if extent calculation fails
+      }
+    }
+    
     // Create a hidden image to preload the tile
-    const preloadUrl = `${NEXRAD_WMS_URL}?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=${NEXRAD_LAYER}&TIME=${encodeURIComponent(timeISO)}&FORMAT=image/png&TRANSPARENT=true&WIDTH=256&HEIGHT=256&SRS=EPSG:3857&BBOX=-10000000,4000000,-9000000,5000000`
+    const preloadUrl = `${NEXRAD_WMS_URL}?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=${NEXRAD_LAYER}&TIME=${encodeURIComponent(timeISO)}&FORMAT=image/png&TRANSPARENT=true&WIDTH=256&HEIGHT=256&SRS=EPSG:3857&BBOX=${bbox}`
     const img = new Image()
     img.crossOrigin = 'anonymous'
     img.src = preloadUrl
-  }, [timestamps])
+  }, [timestamps, latitude, longitude])
 
   // Animation playback with preloading
   useEffect(() => {
@@ -673,13 +700,18 @@ const WeatherMapOpenLayers = ({
           </div>
 
           {/* Timeline Slider with Enhanced Progress */}
+          {/* Safe progress calculation to avoid division by zero (fixes CodeRabbit critical issue) */}
+          {(() => {
+            const maxIndex = Math.max(1, timestamps.length - 1)
+            const progress = timestamps.length > 1 ? (frameIndex / maxIndex) * 100 : 100
+            return (
           <div className="w-[500px] max-w-[90vw] px-3 py-2 bg-gray-900/95 border-2 border-gray-600 rounded-md shadow-xl backdrop-blur-sm">
             {/* Progress bar background */}
             <div className="relative h-3 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
               {/* Animated progress fill */}
               <div 
                 className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-600 to-cyan-400 rounded-full transition-all duration-150 ease-out"
-                style={{ width: `${(frameIndex / (timestamps.length - 1)) * 100}%` }}
+                style={{ width: `${progress}%` }}
               />
               {/* Tick marks for time intervals */}
               <div className="absolute inset-0 flex justify-between px-1">
@@ -691,7 +723,7 @@ const WeatherMapOpenLayers = ({
               <input
                 type="range"
                 min="0"
-                max={timestamps.length - 1}
+                max={maxIndex}
                 value={frameIndex}
                 onChange={(e) => {
                   setIsPlaying(false)
@@ -706,7 +738,7 @@ const WeatherMapOpenLayers = ({
               {/* Custom thumb indicator */}
               <div 
                 className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-cyan-400 rounded-full shadow-lg shadow-cyan-400/50 pointer-events-none transition-all duration-150 ease-out"
-                style={{ left: `calc(${(frameIndex / (timestamps.length - 1)) * 100}% - 8px)` }}
+                style={{ left: `calc(${progress}% - 8px)` }}
               />
             </div>
             {/* Time labels */}
@@ -722,6 +754,8 @@ const WeatherMapOpenLayers = ({
               </span>
             </div>
           </div>
+            )
+          })()}
         </div>
       )}
 

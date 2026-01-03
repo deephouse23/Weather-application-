@@ -1,10 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { Profile, ProfileUpdate, SavedLocation, SavedLocationInsert, SavedLocationUpdate, UserPreferences, UserPreferencesUpdate } from './types'
 import { DbSavedLocation, dbToSavedLocation, savedLocationToDb } from './schema-adapter'
-
-// Placeholder values for development without Supabase
-const PLACEHOLDER_URL = 'https://placeholder.supabase.co'
-const PLACEHOLDER_KEY = 'placeholder-service-key-not-a-real-secret'
+import { PLACEHOLDER_URL, PLACEHOLDER_SERVICE_KEY } from './constants'
 
 // Create a supabase client that works in both server and client contexts
 const getSupabaseClient = () => {
@@ -15,7 +12,7 @@ const getSupabaseClient = () => {
   } else {
     // Server-side: create a service role client with fallbacks
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || PLACEHOLDER_URL
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || PLACEHOLDER_KEY
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || PLACEHOLDER_SERVICE_KEY
     
     return createClient(
       supabaseUrl,

@@ -2,14 +2,10 @@
 
 import { createBrowserClient } from '@supabase/ssr'
 import { Database } from './types'
+import { PLACEHOLDER_URL, PLACEHOLDER_ANON_KEY } from './constants'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-
-// Use a valid placeholder URL that won't throw an error
-// This allows the app to run in development without Supabase configuration
-const PLACEHOLDER_URL = 'https://placeholder.supabase.co'
-const PLACEHOLDER_KEY = 'placeholder-anon-key-not-a-real-secret'
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('[Supabase] Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY. Using placeholder client.')
@@ -19,7 +15,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createBrowserClient<Database>(
   supabaseUrl || PLACEHOLDER_URL, 
-  supabaseAnonKey || PLACEHOLDER_KEY
+  supabaseAnonKey || PLACEHOLDER_ANON_KEY
 )
 
 export const getCurrentUser = async () => {

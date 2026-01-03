@@ -1,17 +1,14 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { Database } from './types'
-
-// Placeholder values for development without Supabase
-const PLACEHOLDER_URL = 'https://placeholder.supabase.co'
-const PLACEHOLDER_KEY = 'placeholder-anon-key-not-a-real-secret'
+import { PLACEHOLDER_URL, PLACEHOLDER_ANON_KEY } from './constants'
 
 // Create a server-side supabase client
 export const createServerSupabaseClient = async () => {
   const cookieStore = await cookies()
   
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || PLACEHOLDER_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || PLACEHOLDER_KEY
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || PLACEHOLDER_ANON_KEY
 
   return createServerClient<Database>(
     supabaseUrl,
