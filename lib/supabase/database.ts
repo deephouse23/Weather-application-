@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { Profile, ProfileUpdate, SavedLocation, SavedLocationInsert, SavedLocationUpdate, UserPreferences, UserPreferencesUpdate } from './types'
 import { DbSavedLocation, dbToSavedLocation, savedLocationToDb } from './schema-adapter'
+import { PLACEHOLDER_URL, PLACEHOLDER_SERVICE_KEY } from './constants'
 
 // Create a supabase client that works in both server and client contexts
 const getSupabaseClient = () => {
@@ -9,10 +10,13 @@ const getSupabaseClient = () => {
     const { supabase } = require('./client')
     return supabase
   } else {
-    // Server-side: create a service role client
+    // Server-side: create a service role client with fallbacks
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || PLACEHOLDER_URL
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || PLACEHOLDER_SERVICE_KEY
+    
     return createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      supabaseUrl,
+      serviceRoleKey,
       {
         auth: {
           autoRefreshToken: false,
