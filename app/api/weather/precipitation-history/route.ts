@@ -21,6 +21,7 @@ interface PrecipitationResponse {
   lastUpdated: string;
   dataSource: 'onecall' | 'timemachine';
   dataAvailable: boolean; // true if API returned valid data, false if all calls failed
+  hoursSampled: number; // Number of hours with actual data (max 8 from our sampling)
 }
 
 // Get user from request
@@ -81,7 +82,7 @@ async function fetchHistoricalPrecipitation(
   lat: number,
   lon: number,
   apiKey: string
-): Promise<{ rain24h: number; snow24h: number; dataAvailable: boolean }> {
+): Promise<{ rain24h: number; snow24h: number; dataAvailable: boolean; hoursSampled: number }> {
   const now = Math.floor(Date.now() / 1000);
   let totalRainMm = 0;
   let totalSnowMm = 0;
@@ -90,13 +91,16 @@ async function fetchHistoricalPrecipitation(
   // Track processed hours to prevent double-counting from overlapping API responses
   const processedHours = new Set<number>();
 
-  // Fetch data for the past 24 hours in 8-hour chunks (3 API calls)
-  // One Call timemachine returns hourly data for the requested day
-  const timestamps = [
-    now - (24 * 60 * 60), // 24 hours ago
-    now - (16 * 60 * 60), // 16 hours ago
-    now - (8 * 60 * 60),  // 8 hours ago
-  ];
+  // One Call 3.0 timemachine returns data in a `data` array (typically 1 entry per call)
+  // We sample every 3 hours to balance API usage with accuracy
+  // NOTE: We do NOT extrapolate - rain.1h is the ACTUAL amount that fell in that hour,
+  // not a rate. Extrapolating would over-report precipitation for sporadic rain events.
+  // The hoursSampled field tells the UI how many hours of actual data we have.
+  const timestamps: number[] = [];
+  for (let hoursAgo = 3; hoursAgo <= 24; hoursAgo += 3) {
+    timestamps.push(now - (hoursAgo * 60 * 60));
+  }
+  // Expected: 8 timestamps at [3h, 6h, 9h, 12h, 15h, 18h, 21h, 24h ago]
 
   for (const dt of timestamps) {
     try {
@@ -160,10 +164,14 @@ async function fetchHistoricalPrecipitation(
     }
   }
 
+  // Return actual sampled values - NO extrapolation
+  // rain.1h is the actual precipitation that fell in that hour, not a rate
+  const hoursProcessed = processedHours.size;
+
   // Debug: Log final totals
   console.log(`[Precipitation] Final totals:`, {
     successfulApiCalls,
-    processedHours: processedHours.size,
+    hoursProcessed,
     totalRainMm,
     totalSnowMm,
     rain24hInches: Math.round((totalRainMm / 25.4) * 100) / 100,
@@ -175,6 +183,7 @@ async function fetchHistoricalPrecipitation(
     rain24h: Math.round((totalRainMm / 25.4) * 100) / 100,
     snow24h: Math.round((totalSnowMm / 25.4) * 10) / 10,
     dataAvailable: successfulApiCalls > 0, // At least one API call succeeded
+    hoursSampled: hoursProcessed,
   };
 }
 
@@ -246,6 +255,7 @@ export async function GET(request: NextRequest) {
       lastUpdated: new Date().toISOString(),
       dataSource: 'timemachine',
       dataAvailable: historical.dataAvailable,
+      hoursSampled: historical.hoursSampled,
     };
 
     // Only cache successful responses - don't cache failures so retry works
