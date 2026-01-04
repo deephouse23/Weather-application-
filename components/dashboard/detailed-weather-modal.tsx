@@ -27,9 +27,6 @@ export default function DetailedWeatherModal({ location, isOpen, onClose }: Deta
     setError(null)
     
     try {
-      // Fetch weather data directly using coordinates via API routes
-      console.log('Fetching full weather for coordinates:', location.latitude, location.longitude)
-      
       // Fetch current weather
       const currentResponse = await fetch(
         `/api/weather/current?lat=${location.latitude}&lon=${location.longitude}&units=imperial`

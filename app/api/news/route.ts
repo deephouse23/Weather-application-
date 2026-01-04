@@ -80,8 +80,7 @@ export async function GET(request: NextRequest) {
     
     if (!rateLimit.allowed) {
       const retryAfter = Math.ceil((rateLimit.resetTime - Date.now()) / 1000);
-      console.log(`[NEWS API] Rate limit exceeded for ${clientId}. Retry after ${retryAfter}s`);
-      
+
       return NextResponse.json(
         { 
           status: 'error',
@@ -113,8 +112,6 @@ export async function GET(request: NextRequest) {
     const domains = searchParams.get('domains') || '';
     const language = searchParams.get('language') || 'en';
     const pageSize = searchParams.get('pageSize') || '10';
-
-    console.log(`[NEWS API] Request: endpoint=${endpoint}, category=${category}, q=${q?.substring(0, 50)}`);
 
     // Check if API key is configured
     if (!NEWS_API_KEY || NEWS_API_KEY === 'your_actual_news_api_key_here') {
@@ -163,8 +160,6 @@ export async function GET(request: NextRequest) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000); // 8 second timeout
 
-    console.log(`[NEWS API] Fetching from NewsAPI...`);
-    
     const response = await fetch(apiUrl, {
       headers: {
         'Accept': 'application/json',
@@ -175,9 +170,6 @@ export async function GET(request: NextRequest) {
     });
 
     clearTimeout(timeout);
-
-    const responseTime = Date.now() - startTime;
-    console.log(`[NEWS API] Response: status=${response.status}, time=${responseTime}ms`);
 
     if (!response.ok) {
       console.error(`[NEWS API] Error: ${response.status} ${response.statusText}`);
@@ -232,8 +224,7 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    
-    console.log(`[NEWS API] Success: ${data.articles?.length || 0} articles returned`);
+    const responseTime = Date.now() - startTime;
 
     // Success response with proper caching
     return NextResponse.json(data, {

@@ -25,8 +25,6 @@ export async function GET(request: NextRequest) {
       iowaUrl.searchParams.set(key, value)
     })
 
-    console.log(`[Iowa NEXRAD Proxy] Fetching: ${iowaUrl.toString().substring(0, 200)}...`)
-
     const response = await fetch(iowaUrl.toString(), {
       headers: {
         'User-Agent': '16-Bit-Weather/iowa-nexrad-proxy',

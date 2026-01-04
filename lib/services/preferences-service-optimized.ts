@@ -128,9 +128,6 @@ async function performFetch(silent: boolean = false): Promise<UserPreferences | 
     if (!response.ok) {
       // If preferences don't exist (404), create them
       if (response.status === 404 || response.status === 401) {
-        if (!silent) {
-          console.log('No preferences found, will use defaults')
-        }
         return null
       }
       console.error('Failed to fetch preferences:', response.statusText)

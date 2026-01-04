@@ -46,9 +46,6 @@ export default function GameDetailPage() {
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === 'GAME_SCORE_SUBMIT') {
-        console.log('[Game Detail] Score received from game:', event.data);
-        console.log('[Game Detail] User authenticated:', !!user);
-
         setGameScore({
           score: event.data.score,
           level: event.data.level,
@@ -58,10 +55,8 @@ export default function GameDetailPage() {
 
         // Show modal for guests or auto-submit for authenticated users
         if (!user) {
-          console.log('[Game Detail] Showing score submit modal for guest');
           setShowScoreModal(true);
         } else {
-          console.log('[Game Detail] Auto-submitting score for authenticated user');
           // Auto-submit for authenticated users
           handleAuthenticatedScoreSubmit(event.data);
         }
@@ -79,14 +74,6 @@ export default function GameDetailPage() {
     }
 
     try {
-      console.log('[Game Detail] Submitting score to API:', {
-        gameSlug: game.slug,
-        playerName: user.email || 'Player',
-        score: scoreData.score,
-        levelReached: scoreData.level,
-        timePlayed: scoreData.timePlayed
-      });
-
       const { submitScore } = await import('@/lib/services/gamesService');
       const result = await submitScore(game.slug, {
         game_slug: game.slug,
@@ -97,7 +84,6 @@ export default function GameDetailPage() {
         metadata: scoreData.metadata,
       });
 
-      console.log('[Game Detail] ✅ Score submitted successfully:', result);
       alert(`Score ${scoreData.score} submitted successfully!`);
 
       // Reload to update leaderboard
@@ -134,9 +120,7 @@ export default function GameDetailPage() {
 
       // Increment play count
       try {
-        console.log('[Game Detail] Incrementing play count for:', game.slug);
         await incrementPlayCount(game.slug);
-        console.log('[Game Detail] ✅ Play count incremented successfully');
 
         // Optimistically update local state
         setGame({ ...game, play_count: game.play_count + 1 });

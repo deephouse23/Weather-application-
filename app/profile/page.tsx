@@ -73,12 +73,9 @@ function ProfileContent() {
         default_location: defaultLocation?.trim() || null,
       }
 
-      console.log('Updating profile with:', updates)
       const updatedProfile = await updateProfile(user.id, updates)
 
       if (updatedProfile) {
-        console.log('Profile updated successfully:', updatedProfile)
-
         // Refresh profile to verify changes persisted
         await refreshProfile()
 

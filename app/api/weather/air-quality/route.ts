@@ -54,11 +54,6 @@ export async function GET(request: NextRequest) {
     const openWeatherApiKey = process.env.OPENWEATHER_API_KEY
     const googleApiKey = process.env.GOOGLE_AIR_QUALITY_API_KEY
     
-    console.log('=== AIR QUALITY API REQUEST ===');
-    console.log('Timestamp:', new Date().toISOString());
-    console.log('Google Air Quality API Key configured:', !!googleApiKey);
-    console.log('OpenWeather API Key configured:', !!openWeatherApiKey);
-    
     // Extract and validate parameters
     const searchParams = request.nextUrl.searchParams
     const lat = searchParams.get('lat')
@@ -94,9 +89,6 @@ export async function GET(request: NextRequest) {
     // PRIMARY: Try Google Air Quality API first
     if (googleApiKey && googleApiKey !== 'your_actual_google_air_quality_key_here') {
       try {
-        console.log('🔵 Attempting Google Air Quality API...');
-        console.log('Location:', { latitude, longitude });
-        
         // Google Air Quality API endpoint
         const googleUrl = 'https://airquality.googleapis.com/v1/currentConditions:lookup'
         
@@ -122,8 +114,6 @@ export async function GET(request: NextRequest) {
           ]
         }
         
-        console.log('Google API Request Body:', JSON.stringify(requestBody, null, 2));
-        
         // Make request with timeout
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 8000);
@@ -139,12 +129,9 @@ export async function GET(request: NextRequest) {
         })
         
         clearTimeout(timeout);
-        
-        console.log('Google API Response Status:', response.status);
-        
+
         if (response.ok) {
           const data: GoogleAQIResponse = await response.json()
-          console.log('✅ Google API Success - Raw Response:', JSON.stringify(data, null, 2));
           
           // Process Google's response
           let aqiValue = 0;
@@ -177,19 +164,9 @@ export async function GET(request: NextRequest) {
                 // Universal AQI: 100 = excellent, 0 = hazardous
                 // EPA AQI: 0 = good, 500 = hazardous
                 // Invert and scale
-                const universalValue = aqiValue;
-                aqiValue = Math.round((100 - universalValue) * 3); // Simple conversion
-                
-                console.log(`📊 Converted Universal AQI ${universalValue} to EPA scale: ${aqiValue}`);
+                aqiValue = Math.round((100 - aqiValue) * 3); // Simple conversion
                 category = getAQICategory(aqiValue);
               }
-              
-              console.log('🎯 Google AQI Final:', {
-                value: aqiValue,
-                category: category,
-                indexType: selectedIndex.code,
-                dominantPollutant: dominantPollutant
-              });
               
               // Return Google data with proper source marking
               return NextResponse.json({
@@ -237,8 +214,6 @@ export async function GET(request: NextRequest) {
           name: error instanceof Error ? error.name : 'Unknown'
         });
       }
-    } else {
-      console.log('⚠️ GOOGLE_AIR_QUALITY_API_KEY not configured or placeholder value');
     }
 
     // FALLBACK: OpenWeather Air Pollution API
@@ -255,8 +230,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    console.log('🟡 Falling back to OpenWeather Air Pollution API...');
-    
     const openWeatherUrl = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${latitude}&lon=${longitude}&appid=${openWeatherApiKey}`
     
     const response = await fetch(openWeatherUrl, {
@@ -277,8 +250,7 @@ export async function GET(request: NextRequest) {
     }
 
     const data: OpenWeatherAirPollutionResponse = await response.json()
-    console.log('OpenWeather Air Pollution Response:', data);
-    
+
     // Convert OpenWeather's 1-5 scale to EPA 0-500 scale
     const openWeatherAQI = data.list?.[0]?.main?.aqi || 1
     const components = data.list?.[0]?.components || {}
@@ -290,14 +262,6 @@ export async function GET(request: NextRequest) {
       const pm25Aqi = calculatePM25AQI(components.pm2_5 || 0);
       const pm10Aqi = calculatePM10AQI(components.pm10 || 0);
       epaAqi = Math.max(pm25Aqi, pm10Aqi);
-      
-      console.log('📊 OpenWeather AQI Calculation:', {
-        pm25: components.pm2_5,
-        pm25Aqi: pm25Aqi,
-        pm10: components.pm10,
-        pm10Aqi: pm10Aqi,
-        finalAqi: epaAqi
-      });
     } else {
       // Simple conversion from OpenWeather's 1-5 scale
       const conversionMap: { [key: number]: number } = {

@@ -39,8 +39,8 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
   let weatherData = null
   try {
     weatherData = await fetchWeatherData(searchTerm)
-  } catch (error) {
-    console.log('Failed to fetch weather data for metadata:', error)
+  } catch {
+    // Metadata fetch failed, using defaults
   }
 
   // Enhanced description with current weather if available

@@ -1,20 +1,23 @@
 /**
  * 16-Bit Weather Platform - v1.0.0
- * 
+ *
  * Copyright (C) 2025 16-Bit Weather
  * Licensed under Fair Source License, Version 0.9
- * 
+ *
  * Use Limitation: 5 users
  * See LICENSE file for full terms
- * 
+ *
  * BETA SOFTWARE NOTICE:
  * This software is in active development. Features may change.
  * Report issues: https://github.com/deephouse23/Weather-application-/issues
  */
 
+import * as Sentry from '@sentry/nextjs'
+
 /**
  * Error Handling Utilities
  * Centralized error handling for consistent error messages and logging
+ * Integrated with Sentry for production error tracking
  */
 
 export enum WeatherErrorType {
@@ -187,11 +190,79 @@ export async function handleAsyncWeatherOperation<T>(
   } catch (err) {
     const error = parseWeatherError(err)
     logWeatherError(error, context)
-    
+
     if (fallback !== undefined) {
       return { data: fallback, error }
     }
-    
+
     return { error }
   }
+}
+
+/**
+ * Capture error to Sentry with context
+ * Use this instead of console.error for production error tracking
+ */
+export function captureError(
+  error: unknown,
+  context: string,
+  extra?: Record<string, unknown>
+): void {
+  const errorObj = error instanceof Error ? error : new Error(String(error))
+
+  Sentry.captureException(errorObj, {
+    tags: { context },
+    extra: {
+      ...extra,
+      originalError: error instanceof Error ? undefined : error,
+    },
+  })
+}
+
+/**
+ * Capture a database error with structured context
+ */
+export function captureDbError(
+  operation: string,
+  error: { message?: string; code?: string; details?: string; hint?: string },
+  extra?: Record<string, unknown>
+): void {
+  Sentry.captureMessage(`Database error in ${operation}`, {
+    level: 'error',
+    tags: {
+      context: 'database',
+      operation,
+      errorCode: error.code || 'unknown',
+    },
+    extra: {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint,
+      ...extra,
+    },
+  })
+}
+
+/**
+ * Capture an API error with structured context
+ */
+export function captureApiError(
+  endpoint: string,
+  statusCode: number,
+  message: string,
+  extra?: Record<string, unknown>
+): void {
+  Sentry.captureMessage(`API error: ${endpoint}`, {
+    level: statusCode >= 500 ? 'error' : 'warning',
+    tags: {
+      context: 'api',
+      endpoint,
+      statusCode: String(statusCode),
+    },
+    extra: {
+      message,
+      ...extra,
+    },
+  })
 }
