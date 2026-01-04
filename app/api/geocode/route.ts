@@ -36,7 +36,6 @@ const tryGeocoding = async (queries: string[], apiKey: string, limit: string): P
       const data = await response.json()
 
       if (data && data.length > 0) {
-        console.log(`✓ Geocoding success with fallback query: "${query}"`)
         return data
       }
     }
@@ -137,8 +136,6 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // If ZIP lookup failed, try regular geocoding as fallback
-      console.log(`ZIP code lookup failed for ${query}, trying city name fallback`)
     }
 
     // Generate fallback queries
@@ -148,7 +145,6 @@ export async function GET(request: NextRequest) {
     const geocodingData = await tryGeocoding(queries, apiKey, limit)
 
     if (!geocodingData || geocodingData.length === 0) {
-      console.log(`Geocoding failed for all queries: ${queries.join(', ')}`)
       return NextResponse.json(
         { error: 'Location not found. Please try a different search term.' },
         { status: 404 }

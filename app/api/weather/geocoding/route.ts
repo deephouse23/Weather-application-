@@ -36,7 +36,6 @@ const tryGeocoding = async (queries: string[], apiKey: string, limit: string): P
       const data = await response.json()
       
       if (data && data.length > 0) {
-        console.log(`✓ Geocoding success with query: "${query}"`)
         return data
       }
     }

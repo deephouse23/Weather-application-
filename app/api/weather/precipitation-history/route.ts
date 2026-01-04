@@ -115,19 +115,6 @@ async function fetchHistoricalPrecipitation(
       const data = await response.json();
       successfulApiCalls++;
 
-      // Debug: Log the API response structure
-      console.log(`[Precipitation] Timemachine response for dt=${dt}:`, {
-        hasData: !!data.data,
-        dataLength: data.data?.length || 0,
-        sampleHour: data.data?.[0] ? {
-          dt: data.data[0].dt,
-          hasRain: !!data.data[0].rain,
-          hasPrecipitation: !!data.data[0].precipitation,
-          rain: data.data[0].rain,
-          weather: data.data[0].weather?.[0]?.main,
-        } : null,
-      });
-
       // Sum up hourly precipitation (in mm, convert only at the end)
       if (data.data && Array.isArray(data.data)) {
         for (const hour of data.data) {
@@ -167,16 +154,6 @@ async function fetchHistoricalPrecipitation(
   // Return actual sampled values - NO extrapolation
   // rain.1h is the actual precipitation that fell in that hour, not a rate
   const hoursProcessed = processedHours.size;
-
-  // Debug: Log final totals
-  console.log(`[Precipitation] Final totals:`, {
-    successfulApiCalls,
-    hoursProcessed,
-    totalRainMm,
-    totalSnowMm,
-    rain24hInches: Math.round((totalRainMm / 25.4) * 100) / 100,
-    snow24hInches: Math.round((totalSnowMm / 25.4) * 10) / 10,
-  });
 
   // Convert mm to inches only after summing all values
   return {

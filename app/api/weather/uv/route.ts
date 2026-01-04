@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
         })
       }
     } catch {
-      console.log('One Call API 3.0 not available, trying fallback')
+      // One Call API 3.0 not available, trying fallback
     }
 
     // Fallback to basic UV endpoint (daily maximum)
@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
         })
       }
     } catch {
-      console.log('UV fallback API also failed')
+      // UV fallback API also failed
     }
 
     // If both fail, return 0

@@ -50,16 +50,11 @@ export default function MapPage() {
     const loadWeatherData = async () => {
       setIsLoading(true)
 
-      console.log('[MapPage] Loading weather data - targetLocation:', targetLocation, 'urlLocation:', urlLocation)
-
       // If we have a target location (from URL or context), fetch weather data
       if (targetLocation) {
-        console.log('[MapPage] Fetching weather for:', targetLocation)
-
         try {
           const freshData = await fetchWeatherData(targetLocation, 'imperial')
           if (freshData?.coordinates?.lat && freshData?.coordinates?.lon) {
-            console.log('[MapPage] Weather data obtained:', freshData.location, freshData.coordinates)
             setWeatherData(freshData)
             setIsLoading(false)
             return
@@ -69,7 +64,6 @@ export default function MapPage() {
         }
       }
 
-      console.log('[MapPage] No weather data found')
       setIsLoading(false)
     }
 

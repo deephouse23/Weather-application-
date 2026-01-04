@@ -26,12 +26,8 @@ const NewsTickerItem: React.FC<NewsTickerItemProps> = ({ item, theme }) => {
     // Don't prevent default for valid URLs - let the link work normally
     if (!item.url || item.url === '#') {
       e.preventDefault();
-      console.log('News item clicked (no URL):', item);
       return;
     }
-    
-    // For valid URLs, let the browser handle the navigation normally
-    console.log('News item clicked:', item);
   };
 
   const formatTime = (date: Date) => {

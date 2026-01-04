@@ -368,7 +368,6 @@ export function useWeatherController() {
                     (localPrefs as any)?.autoLocation
 
                 const shouldAutoLocate = preferences?.auto_location ?? localAutoLocate ?? true
-                console.log('[Debug] tryAutoLocation running. shouldAutoLocate:', shouldAutoLocate, 'preferences:', preferences, 'localPrefs:', localPrefs);
 
                 if (shouldAutoLocate === false) {
                     if (profile?.default_location) {
@@ -435,7 +434,6 @@ export function useWeatherController() {
                 const cachedLocationData = localStorage.getItem(CACHE_KEY)
                 const cachedWeatherData = localStorage.getItem(WEATHER_KEY)
                 const cacheTimestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY)
-                console.log('[Debug] checkCacheAndLoad running. cachedLocationData:', cachedLocationData, 'cachedWeatherData:', !!cachedWeatherData, 'cacheTimestamp:', cacheTimestamp);
 
                 if (cachedLocationData && cachedWeatherData && cacheTimestamp) {
                     const cacheAge = Date.now() - parseInt(cacheTimestamp)
@@ -447,7 +445,6 @@ export function useWeatherController() {
                         const hasCoordinates = weather.coordinates?.lat && weather.coordinates?.lon
 
                         if (!hasCoordinates && weather?.forecast) {
-                            console.log('[Debug] Cached weather missing coordinates, fetching fresh data...');
                             const unitSystem: 'metric' | 'imperial' = preferences?.temperature_unit === 'celsius' ? 'metric' : 'imperial'
                             try {
                                 const freshData = await fetchWeatherData(cachedLocationData, unitSystem)

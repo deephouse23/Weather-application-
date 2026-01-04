@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { Profile, ProfileUpdate, SavedLocation, SavedLocationInsert, SavedLocationUpdate, UserPreferences, UserPreferencesUpdate } from './types'
 import { DbSavedLocation, dbToSavedLocation, savedLocationToDb } from './schema-adapter'
 import { PLACEHOLDER_URL, PLACEHOLDER_SERVICE_KEY } from './constants'
+import { captureDbError } from '../error-utils'
 
 // Create a supabase client that works in both server and client contexts
 const getSupabaseClient = () => {
@@ -48,7 +49,7 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
       .single()
     
     if (fallbackError) {
-      console.error('Error fetching profile (fallback):', fallbackError)
+      captureDbError('getProfile.fallback', fallbackError, { userId })
       return null
     }
     
@@ -63,7 +64,7 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
       timezone: 'UTC'
     }
   } else if (error) {
-    console.error('Error fetching profile:', error)
+    captureDbError('getProfile', error, { userId })
     return null
   }
 
@@ -96,15 +97,8 @@ export const updateProfile = async (userId: string, updates: ProfileUpdate): Pro
     .single()
 
   if (error) {
-    // Log detailed error information for debugging
-    console.error('Error updating profile:', {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code,
-      userId,
-      updates
-    })
+    // Capture detailed error information in Sentry
+    captureDbError('updateProfile', error, { userId, updates })
 
     // Check if error is due to missing columns
     if (error.message.includes('does not exist')) {
@@ -118,32 +112,26 @@ export const updateProfile = async (userId: string, updates: ProfileUpdate): Pro
         .single()
 
       if (fallbackError) {
-        console.error('Error updating profile (fallback):', {
-          message: fallbackError.message,
-          details: fallbackError.details,
-          hint: fallbackError.hint,
-          code: fallbackError.code
-        })
+        captureDbError('updateProfile.fallback', fallbackError, { userId })
         return null
       }
 
       // Validate that we got data back
       if (!fallbackData) {
-        console.error('Profile update succeeded but no data returned (fallback)')
+        captureDbError('updateProfile.fallback', { message: 'No data returned' }, { userId })
         return null
       }
 
       data = fallbackData
     } else {
-      // Other errors (RLS violations, constraints, etc.)
-      console.error('Profile update failed:', error.message)
+      // Other errors (RLS violations, constraints, etc.) - already captured above
       return null
     }
   }
 
   // Validate that we got data back
   if (!data) {
-    console.error('Profile update succeeded but no data returned')
+    captureDbError('updateProfile', { message: 'No data returned' }, { userId })
     return null
   }
 
@@ -161,7 +149,7 @@ export const getSavedLocations = async (userId: string): Promise<SavedLocation[]
     .order('created_at', { ascending: false })
 
   if (error) {
-    console.error('Error fetching saved locations:', error)
+    captureDbError('getSavedLocations', error, { userId })
     return []
   }
 
@@ -170,7 +158,7 @@ export const getSavedLocations = async (userId: string): Promise<SavedLocation[]
 
 export const saveLocation = async (locationData: SavedLocationInsert): Promise<SavedLocation | null> => {
   const supabase = getSupabaseClient()
-  
+
   const { data, error } = await supabase
     .from('saved_locations')
     .insert(locationData)
@@ -178,10 +166,7 @@ export const saveLocation = async (locationData: SavedLocationInsert): Promise<S
     .single()
 
   if (error) {
-    console.error('Error saving location to database:', error.message)
-    if (error.code) {
-      console.error('Database error code:', error.code)
-    }
+    captureDbError('saveLocation', error, { user_id: locationData.user_id })
     return null
   }
 
@@ -201,7 +186,7 @@ export const updateSavedLocation = async (
     .single()
 
   if (error) {
-    console.error('Error updating saved location:', error)
+    captureDbError('updateSavedLocation', error, { locationId })
     return null
   }
 
@@ -216,7 +201,7 @@ export const deleteSavedLocation = async (locationId: string): Promise<boolean> 
     .eq('id', locationId)
 
   if (error) {
-    console.error('Error deleting saved location:', error)
+    captureDbError('deleteSavedLocation', error, { locationId })
     return false
   }
 
@@ -231,7 +216,7 @@ export const toggleLocationFavorite = async (locationId: string, isFavorite: boo
     .eq('id', locationId)
 
   if (error) {
-    console.error('Error toggling location favorite:', error)
+    captureDbError('toggleLocationFavorite', error, { locationId, isFavorite })
     return false
   }
 
@@ -248,7 +233,7 @@ export const getUserPreferences = async (userId: string): Promise<UserPreference
     .single()
 
   if (error) {
-    console.error('Error fetching user preferences:', error)
+    captureDbError('getUserPreferences', error, { userId })
     return null
   }
 
@@ -256,7 +241,7 @@ export const getUserPreferences = async (userId: string): Promise<UserPreference
 }
 
 export const updateUserPreferences = async (
-  userId: string, 
+  userId: string,
   updates: UserPreferencesUpdate
 ): Promise<UserPreferences | null> => {
   const supabase = getSupabaseClient()
@@ -268,7 +253,7 @@ export const updateUserPreferences = async (
     .single()
 
   if (error) {
-    console.error('Error updating user preferences:', error)
+    captureDbError('updateUserPreferences', error, { userId, updates })
     return null
   }
 
@@ -287,7 +272,7 @@ export const getLocationsByUser = async (userId: string, limit: number = 10): Pr
     .limit(limit)
 
   if (error) {
-    console.error('Error fetching user locations:', error)
+    captureDbError('getLocationsByUser', error, { userId, limit })
     return []
   }
 
@@ -304,7 +289,7 @@ export const getFavoriteLocations = async (userId: string): Promise<SavedLocatio
     .order('updated_at', { ascending: false })
 
   if (error) {
-    console.error('Error fetching favorite locations:', error)
+    captureDbError('getFavoriteLocations', error, { userId })
     return []
   }
 
@@ -322,7 +307,7 @@ export const searchSavedLocations = async (userId: string, searchTerm: string): 
     .order('updated_at', { ascending: false })
 
   if (error) {
-    console.error('Error searching saved locations:', error)
+    captureDbError('searchSavedLocations', error, { userId, searchTerm })
     return []
   }
 

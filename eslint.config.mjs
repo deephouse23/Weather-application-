@@ -52,6 +52,22 @@ export default [
 
             // Allow <img> for external images
             '@next/next/no-img-element': 'warn',
+
+            // Prevent debug console.log statements in production code
+            // Allow console.warn and console.error for legitimate logging
+            'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
+        },
+    },
+    // Override for files where console.log is intentional
+    {
+        files: [
+            'instrumentation*.ts',
+            'sentry.*.config.ts',
+            'lib/performance/**/*.ts',
+            'tests/**/*.ts',
+        ],
+        rules: {
+            'no-console': 'off',
         },
     },
 ];

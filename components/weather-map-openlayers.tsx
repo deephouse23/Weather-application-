@@ -107,10 +107,6 @@ const WeatherMapOpenLayers = ({
       times.push(base - i * NEXRAD_STEP_MINUTES * 60 * 1000)
     }
 
-    console.log(`🕐 [v4] Generated ${times.length} NEXRAD timestamps`)
-    console.log('  First:', new Date(times[0]).toISOString())
-    console.log('  Last:', new Date(times[times.length - 1]).toISOString())
-
     return times
   }, [isUSLocation])
 
@@ -120,8 +116,6 @@ const WeatherMapOpenLayers = ({
 
     const centerLon = longitude || -98.5795
     const centerLat = latitude || 39.8283
-
-    console.log('🗺️ [v4] Initializing OpenLayers map at:', centerLat, centerLon)
 
 
     // Create base layer (CartoDB Dark Matter - better radar visibility)
@@ -152,7 +146,6 @@ const WeatherMapOpenLayers = ({
     const updateMapSize = () => {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.updateSize()
-        console.log('📐 [v4] Map size updated')
       }
     }
 
@@ -175,8 +168,6 @@ const WeatherMapOpenLayers = ({
     const handleResize = () => updateMapSize()
     window.addEventListener('resize', handleResize)
 
-    console.log('✅ [v4] OpenLayers map initialized')
-
     return () => {
       window.removeEventListener('resize', handleResize)
       resizeObserver.disconnect()
@@ -189,7 +180,6 @@ const WeatherMapOpenLayers = ({
   useEffect(() => {
     if (!mapInstanceRef.current || !latitude || !longitude) return
 
-    console.log('📍 [v4] Updating map center to:', latitude, longitude)
     mapInstanceRef.current.getView().setCenter(fromLonLat([longitude, latitude]))
     mapInstanceRef.current.getView().setZoom(10)
   }, [latitude, longitude])
@@ -248,8 +238,6 @@ const WeatherMapOpenLayers = ({
 
     markerLayer.set('name', 'marker')
     map.addLayer(markerLayer)
-
-    console.log('📌 [v4] Location marker added')
   }, [latitude, longitude])
 
   // Initialize SINGLE radar layer with WMS-T support
@@ -273,10 +261,6 @@ const WeatherMapOpenLayers = ({
 
     // Reset fade-in state for new layer (fixes Cursor BugBot issue)
     setRadarVisible(false)
-
-    console.log('🎯 [v6] Creating SINGLE NEXRAD WMS-T layer')
-    console.log('  URL:', NEXRAD_WMS_URL)
-    console.log('  Layer:', NEXRAD_LAYER)
 
     // Create WMS source with TIME support
     // Key insight: n0q-t.cgi supports the TIME parameter, n0q.cgi does NOT
@@ -344,10 +328,7 @@ const WeatherMapOpenLayers = ({
       const initialTime = new Date(timestamps[initialIndex]).toISOString()
       radarSource.updateParams({ 'TIME': initialTime })
       setFrameIndex(initialIndex)
-      console.log('📡 [v4] Initial radar time set to:', initialTime)
     }
-
-    console.log('✅ [v4] NEXRAD WMS-T layer created successfully')
 
     return () => {
       if (radarLayerRef.current && mapInstanceRef.current) {
@@ -377,8 +358,6 @@ const WeatherMapOpenLayers = ({
     // This is the correct way to animate WMS-T layers in OpenLayers
     // updateParams() triggers a re-fetch with the new TIME value
     radarSourceRef.current.updateParams({ 'TIME': timeISO })
-
-    console.log(`📡 [v4] Frame ${frameIndex + 1}/${timestamps.length} - TIME: ${timeISO}`)
   }, [frameIndex, timestamps])
 
   // Clear preload cache when location changes (fixes CodeRabbit memory leak issue)
@@ -428,8 +407,6 @@ const WeatherMapOpenLayers = ({
 
     const interval = BASE_ANIMATION_INTERVAL_MS / speed
 
-    console.log(`▶️ [v6] Animation started - interval: ${interval}ms, speed: ${speed}x`)
-
     const handle = window.setInterval(() => {
       setFrameIndex((idx) => {
         const nextIdx = (idx + 1) % timestamps.length
@@ -450,7 +427,6 @@ const WeatherMapOpenLayers = ({
       if (timerRef.current) {
         window.clearInterval(timerRef.current)
         timerRef.current = null
-        console.log('⏸️ [v6] Animation stopped')
       }
     }
   }, [isPlaying, speed, timestamps.length, preloadFrame])
@@ -540,15 +516,6 @@ const WeatherMapOpenLayers = ({
     setIsPlaying(false)
     setFrameIndex(timestamps.length - 1)
   }, [timestamps.length])
-
-  // Debug: log render conditions
-  console.log('🎨 [v6] Render conditions:', {
-    isUSLocation,
-    precipitation: activeLayers.precipitation,
-    timestampsLength: timestamps.length,
-    radarVisible,
-    shouldShowControls: isUSLocation && activeLayers.precipitation && timestamps.length > 0
-  })
 
   return (
     <div

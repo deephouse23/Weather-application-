@@ -100,7 +100,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     try {
       // Skip if user has set a local theme (unless forced on initial load)
       if (hasLocalTheme && !forceApply) {
-        console.log('[Theme] Skipping DB fetch - user has local theme preference')
         return
       }
 
@@ -115,10 +114,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         // Only apply DB theme if no local preference exists
         const localTheme = safeStorage.getItem('weather-edu-theme')
         if (!localTheme || forceApply) {
-          console.log('[Theme] Applying DB theme:', data.theme)
           setThemeState(data.theme as Theme)
-        } else {
-          console.log('[Theme] Keeping local theme:', localTheme, '(DB has:', data.theme, ')')
         }
       }
     } catch (e) {
@@ -149,7 +145,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       return
     }
 
-    console.log('[Theme] User setting theme to:', newTheme)
     setThemeState(newTheme)
     setHasLocalTheme(true) // Mark that user has made a local choice
 

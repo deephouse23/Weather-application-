@@ -146,7 +146,6 @@ export class UserCacheService {
       preferences.updatedAt = Date.now();
       const serialized = JSON.stringify(preferences);
       safeStorage.setItem(this.STORAGE_PREFIX + this.PREFERENCES_KEY, serialized);
-      console.log('Preferences saved successfully');
       return true;
     } catch (error) {
       console.error('Failed to save preferences:', error);
@@ -219,8 +218,6 @@ export class UserCacheService {
 
       const cacheKey = this.STORAGE_PREFIX + this.WEATHER_CACHE_KEY + '_' + this.sanitizeKey(locationKey);
       safeStorage.setItem(cacheKey, JSON.stringify(cacheEntry));
-
-      console.log(`Weather data cached for ${locationKey}, expires in ${Math.round(duration / 1000 / 60)} minutes`);
       return true;
     } catch (error) {
       console.warn('Failed to cache weather data:', error);
@@ -244,12 +241,10 @@ export class UserCacheService {
 
         // Check if cache is still valid
         if (Date.now() < cacheEntry.expiresAt) {
-          console.log(`Using cached weather data for ${locationKey}`);
           return cacheEntry.data;
         } else {
           // Remove expired cache
           safeStorage.removeItem(cacheKey);
-          console.log(`Cached weather data expired for ${locationKey}`);
         }
       }
     } catch (error) {
@@ -271,7 +266,6 @@ export class UserCacheService {
         // Clear specific location cache
         const cacheKey = this.STORAGE_PREFIX + this.WEATHER_CACHE_KEY + '_' + this.sanitizeKey(locationKey);
         safeStorage.removeItem(cacheKey);
-        console.log(`Weather cache cleared for ${locationKey}`);
       } else {
         // Clear all weather cache
         const keys = safeStorage.getAllKeys();
@@ -280,7 +274,6 @@ export class UserCacheService {
         );
 
         weatherCacheKeys.forEach(key => safeStorage.removeItem(key));
-        console.log(`All weather cache cleared (${weatherCacheKeys.length} entries)`);
       }
       return true;
     } catch (error) {
@@ -355,7 +348,6 @@ export class UserCacheService {
 
     try {
       const metrics = this.getCacheMetrics();
-      console.log('Cache metrics before cleanup:', metrics);
 
       // Remove expired entries
       if (metrics.expiredEntries > 0) {
@@ -366,8 +358,6 @@ export class UserCacheService {
       if (metrics.totalSize > this.MAX_CACHE_SIZE) {
         this.cleanupOldestEntries();
       }
-
-      console.log('Cache maintenance completed');
     } catch (error) {
       console.error('Cache maintenance failed:', error);
     }
@@ -400,8 +390,6 @@ export class UserCacheService {
         removedCount++;
       }
     });
-
-    console.log(`Removed ${removedCount} expired/corrupted cache entries`);
   }
 
   /**
@@ -449,8 +437,6 @@ export class UserCacheService {
       currentSize -= entry.size;
       removedCount++;
     }
-
-    console.log(`Removed ${removedCount} old cache entries to reduce size`);
   }
 
   /**
@@ -460,7 +446,6 @@ export class UserCacheService {
     try {
       const fullKey = this.STORAGE_PREFIX + key;
       safeStorage.removeItem(fullKey);
-      console.log(`Removed corrupted data: ${key}`);
     } catch (error) {
       console.error('Failed to remove corrupted data:', error);
     }
@@ -557,8 +542,6 @@ export class UserCacheService {
       const ourKeys = keys.filter(key => key.startsWith(this.STORAGE_PREFIX));
 
       ourKeys.forEach(key => safeStorage.removeItem(key));
-
-      console.log(`All user data cleared (${ourKeys.length} entries)`);
       this.initializeDefaults();
       return true;
     } catch (error) {

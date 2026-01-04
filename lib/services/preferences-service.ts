@@ -32,7 +32,6 @@ export const fetchUserPreferences = async (): Promise<UserPreferences | null> =>
     if (!response.ok) {
       // If preferences don't exist (404), create them
       if (response.status === 404 || response.status === 401) {
-        console.log('No preferences found, will use defaults')
         return null
       }
       console.error('Failed to fetch preferences:', response.statusText)

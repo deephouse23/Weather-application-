@@ -55,7 +55,16 @@
       "mcp__plugin_sentry_sentry__find_organizations",
       "mcp__plugin_sentry_sentry__get_issue_details",
       "WebFetch(domain:openweathermap.org)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(npm outdated:*)",
+      "Bash(npx license-checker:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm view:*)",
+      "Bash(dir node_modulesmeteocons /s)",
+      "Bash(npm uninstall:*)",
+      "mcp__filesystem__list_allowed_directories",
+      "mcp__filesystem__read_text_file",
+      "Bash(npm run lint)"
     ],
     "deny": [],
     "ask": []

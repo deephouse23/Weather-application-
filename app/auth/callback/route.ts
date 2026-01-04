@@ -57,8 +57,6 @@ export async function GET(request: NextRequest) {
         )
     }
 
-    console.log('[Auth Callback] Session created successfully, redirecting to:', next)
-
     // Successful authentication - redirect directly to the intended destination
     // This provides a seamless experience without showing intermediate pages
     return NextResponse.redirect(`${origin}${next}`, { status: 303 })

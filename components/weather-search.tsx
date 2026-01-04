@@ -127,10 +127,8 @@ export default function WeatherSearch({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('[WeatherSearch] handleSubmit called', { searchTerm, isLoading, isDisabled, isAuthenticated });
 
     if (!searchTerm.trim() || isLoading || isDisabled || isAILoading) {
-      console.log('[WeatherSearch] Search blocked');
       return;
     }
 
@@ -143,7 +141,6 @@ export default function WeatherSearch({
 
         if (result.isSimpleSearch) {
           // Simple location search - bypass AI
-          console.log('[WeatherSearch] Simple search, calling onSearch');
           onSearch(result.location || searchTerm.trim());
         }
         // For AI responses, the lastAction effect will handle navigation
@@ -154,7 +151,6 @@ export default function WeatherSearch({
       }
     } else {
       // Not authenticated - do simple search
-      console.log('[WeatherSearch] Not authenticated, calling onSearch');
       onSearch(searchTerm.trim());
     }
   }

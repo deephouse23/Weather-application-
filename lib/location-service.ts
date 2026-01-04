@@ -166,7 +166,6 @@ export class LocationService {
     // Return cached position if available and not expired
     if (defaultOptions.useCache && this.currentPosition &&
       Date.now() - this.lastRequestTime < this.CACHE_DURATION) {
-      console.log('Returning cached location:', this.currentPosition);
       return this.currentPosition;
     }
 
@@ -175,8 +174,6 @@ export class LocationService {
     }
 
     try {
-      console.log('Requesting geolocation with options:', defaultOptions);
-
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(
           resolve,
@@ -188,8 +185,6 @@ export class LocationService {
           }
         );
       });
-
-      console.log('Geolocation success:', position);
 
       // Get human-readable location name
       const locationData = await this.reverseGeocode(
@@ -218,8 +213,6 @@ export class LocationService {
    * Get location using IP-based detection as fallback
    */
   async getLocationByIP(): Promise<LocationData> {
-    console.log('Attempting IP-based location detection...');
-
     try {
       // Try multiple IP geolocation services
       const services = [
@@ -230,7 +223,6 @@ export class LocationService {
 
       for (const serviceUrl of services) {
         try {
-          console.log(`Trying IP service: ${serviceUrl}`);
           const response = await fetch(serviceUrl);
 
           if (!response.ok) {
@@ -239,13 +231,11 @@ export class LocationService {
           }
 
           const data: IPLocationResponse = await response.json();
-          console.log(`IP service response from ${serviceUrl}:`, data);
 
           // Parse response based on service format
           const locationData = this.parseIPLocationResponse(data, serviceUrl);
 
           if (locationData) {
-            console.log('IP-based location detected:', locationData);
             return {
               ...locationData,
               source: 'ip'
@@ -287,8 +277,6 @@ export class LocationService {
       }
 
       const data: NominatimResponse = await response.json();
-      console.log('Nominatim reverse geocoding response:', data);
-
       const address = data.address || {};
 
       // Prioritize city over town/village/hamlet for better accuracy
@@ -390,12 +378,8 @@ export class LocationService {
     // Try geolocation first
     if (!opts.skipGeolocation) {
       try {
-        console.log('Attempting geolocation detection...');
         return await this.getCurrentLocation();
       } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        console.log('Geolocation failed, trying fallback:', errorMessage);
-
         // Type guard for LocationError
         const isLocationError = (err: unknown): err is LocationError => {
           return typeof err === 'object' && err !== null && 'code' in err;
@@ -411,10 +395,9 @@ export class LocationService {
     // Try IP-based detection as fallback
     if (!opts.skipIPFallback) {
       try {
-        console.log('Attempting IP-based location detection...');
         return await this.getLocationByIP();
-      } catch (error) {
-        console.log('IP-based detection failed:', error);
+      } catch {
+        // IP detection failed, will throw final error below
       }
     }
 
@@ -432,7 +415,6 @@ export class LocationService {
   clearCache(): void {
     this.currentPosition = null;
     this.lastRequestTime = 0;
-    console.log('Location cache cleared');
   }
 
   /**

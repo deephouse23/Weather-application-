@@ -146,7 +146,7 @@ export async function GET(request: NextRequest) {
           }
         }
       } catch {
-        console.log('Google Pollen API failed, trying fallback')
+        // Google Pollen API failed, trying fallback
       }
     }
 

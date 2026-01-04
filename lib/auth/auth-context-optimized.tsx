@@ -198,11 +198,6 @@ export function AuthProviderOptimized({ children }: AuthProviderProps) {
   // Handle authentication state changes
   const handleAuthState = useCallback(async (event: AuthChangeEvent, session: Session | null) => {
     authPerfMonitor.start('handleAuthState')
-    console.log('[AuthProviderOptimized] Auth state change', {
-      event,
-      hasSession: !!session,
-      userId: session?.user?.id ?? null
-    })
 
     // Update refs immediately to prevent race conditions
     authStateRef.current = {
@@ -219,7 +214,6 @@ export function AuthProviderOptimized({ children }: AuthProviderProps) {
     if (!isInitialized) {
       setIsInitialized(true)
       setLoading(false)
-      console.log('[AuthProviderOptimized] Auth initialized', { hasSession: !!session })
     }
 
     if (session?.user) {
@@ -325,11 +319,6 @@ export function AuthProviderOptimized({ children }: AuthProviderProps) {
         const { data: { session }, error } = await supabase.auth.getSession()
         authPerfMonitor.end('getSession')
         authPerfMonitor.log('getSession')
-
-        console.log('[AuthProviderOptimized] Initial session fetch', {
-          hasSession: !!session,
-          error: error?.message
-        })
 
         if (error) {
           console.error('Error getting initial session:', error)

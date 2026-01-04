@@ -25,8 +25,6 @@ export async function GET(request: NextRequest) {
       noaaUrl.searchParams.set(key, value)
     })
 
-    console.log(`[NOAA WMS Proxy] Fetching: ${noaaUrl.toString().substring(0, 200)}...`)
-
     const response = await fetch(noaaUrl.toString(), {
       headers: {
         'User-Agent': '16-Bit-Weather/noaa-wms-proxy',

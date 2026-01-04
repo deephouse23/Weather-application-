@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { fetchWeatherData } from '@/lib/weather-api'
+import { captureError } from '@/lib/error-utils'
 
 type Props = {
   params: Promise<{ city: string }>
@@ -40,7 +41,7 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
   try {
     weatherData = await fetchWeatherData(searchTerm)
   } catch (error) {
-    console.log('Failed to fetch weather data for metadata:', error)
+    captureError(error, 'metadata-fetch', { city: searchTerm })
   }
 
   // Enhanced description with current weather if available

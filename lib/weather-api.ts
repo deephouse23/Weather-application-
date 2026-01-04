@@ -280,10 +280,8 @@ const shouldUseFahrenheit = (countryCode: string): boolean => isUSALocation(coun
 
 // Enhanced temperature formatting with proper unit handling
 const formatTemperature = (temp: number, countryCode: string): { value: number; unit: string; display: string } => {
-  console.log('Formatting temperature:', { temp, countryCode });
   const useF = shouldUseFahrenheit(countryCode);
-  console.log('Using Fahrenheit:', useF);
-  
+
   if (useF) {
     return {
       value: temp,
@@ -792,27 +790,17 @@ const formatPressureValue = (pressureHPa: number, unit: 'hPa' | 'inHg'): { value
 
 // Fetch UV Index using internal API endpoint
 const fetchUVIndex = async (lat: number, lon: number): Promise<number> => {
-  console.log('=== UV INDEX DEBUG ===');
-  console.log('Coordinates:', { lat, lon });
-  
   try {
     const response = await fetch(getApiUrl(`/api/weather/uv?lat=${lat}&lon=${lon}`));
-    
+
     if (!response.ok) {
-      console.error('UV Index API failed:', response.status);
       return 0;
     }
-    
+
     const data = await response.json();
-    console.log('UV Index API Response:', data);
-    
-    const uvIndex = data.uvi || 0;
-    console.log('Final UV Index:', uvIndex);
-    
-    return uvIndex;
-    
-  } catch (error) {
-    console.error('UV Index API error:', error);
+    return data.uvi || 0;
+
+  } catch {
     return 0;
   }
 };
@@ -832,78 +820,53 @@ const estimateCurrentUVFromDailyMax = (dailyMaxUV: number, hour: number): number
   
   // Use a simplified normal distribution approximation
   const uvMultiplier = Math.exp(-(distanceFromPeak * distanceFromPeak) / (2 * standardDeviation * standardDeviation));
-  
   const estimatedUV = dailyMaxUV * uvMultiplier;
-  console.log(`UV estimation: hour=${hour}, dailyMax=${dailyMaxUV}, multiplier=${uvMultiplier.toFixed(3)}, estimated=${estimatedUV.toFixed(2)}`);
-  
+
   return Math.max(0, estimatedUV);
 };
 
 // Fetch Pollen data using internal API endpoint
 const fetchPollenData = async (lat: number, lon: number): Promise<{ tree: Record<string, string>; grass: Record<string, string>; weed: Record<string, string> }> => {
-  console.log('=== POLLEN DATA DEBUG ===');
-  console.log('Coordinates:', { lat, lon });
-  
+  const noData = { tree: { 'Tree': 'No Data' }, grass: { 'Grass': 'No Data' }, weed: { 'Weed': 'No Data' } };
+
   try {
     const response = await fetch(getApiUrl(`/api/weather/pollen?lat=${lat}&lon=${lon}`));
-    
+
     if (!response.ok) {
-      console.error('Pollen API failed:', response.status);
-      return { tree: { 'Tree': 'No Data' }, grass: { 'Grass': 'No Data' }, weed: { 'Weed': 'No Data' } };
+      return noData;
     }
-    
+
     const data = await response.json();
-    console.log('Pollen API Response:', data);
-    
-    const pollenData = {
+    return {
       tree: data.tree || { 'Tree': 'No Data' },
       grass: data.grass || { 'Grass': 'No Data' },
       weed: data.weed || { 'Weed': 'No Data' }
     };
-    
-    console.log('Final pollen data:', pollenData);
-    return pollenData;
-    
-  } catch (error) {
-    console.error('Pollen API error:', error);
-    return { tree: { 'Tree': 'No Data' }, grass: { 'Grass': 'No Data' }, weed: { 'Weed': 'No Data' } };
+
+  } catch {
+    return noData;
   }
 };
 
 // Fetch Air Quality data using internal API endpoint
-const fetchAirQualityData = async (lat: number, lon: number, cityName?: string): Promise<{ aqi: number; category: string }> => {
-  console.log('=== AIR QUALITY DATA DEBUG ===');
-  console.log('City:', cityName || 'Unknown');
-  console.log('Coordinates:', { lat, lon });
-  
+const fetchAirQualityData = async (lat: number, lon: number, _cityName?: string): Promise<{ aqi: number; category: string }> => {
+  const noData = { aqi: 0, category: 'No Data' };
+
   try {
     const response = await fetch(getApiUrl(`/api/weather/air-quality?lat=${lat}&lon=${lon}`));
-    
+
     if (!response.ok) {
-      console.error('Air Quality API failed:', response.status);
-      return { aqi: 0, category: 'No Data' };
+      return noData;
     }
-    
+
     const data = await response.json();
-    console.log('Air Quality API Response:', data);
-    
-    // Log debug information if available
-    if (data.debug) {
-      console.log('AQI Debug Info:', data.debug);
-    }
-    
-    const airQualityData = {
+    return {
       aqi: data.aqi || 0,
       category: data.category || 'No Data'
     };
-    
-    console.log('Final air quality data:', airQualityData);
-    console.log('Data source:', data.source || 'unknown');
-    return airQualityData;
-    
-  } catch (error) {
-    console.error('Air Quality API error:', error);
-    return { aqi: 0, category: 'No Data' };
+
+  } catch {
+    return noData;
   }
 };
 
@@ -953,16 +916,12 @@ export const fetchWeatherData = async (
   locationInput: string,
   unitSystem: 'metric' | 'imperial' = 'imperial'
 ): Promise<WeatherData> => {
-  console.log('Fetching weather data for:', locationInput);
-  
   try {
     // Parse location input
     const locationQuery = parseLocationInput(locationInput);
-    console.log('Parsed location query:', locationQuery);
 
     // Geocode location
     const { lat, lon, displayName } = await geocodeLocation(locationQuery);
-    console.log('Geocoded location:', { lat, lon, displayName });
 
     // Playwright E2E tests stub the legacy endpoints (/current + /forecast + /uv + etc).
     // In test mode, prefer those endpoints to keep tests deterministic.
@@ -1031,16 +990,12 @@ export const fetchWeatherData = async (
       throw new Error(`One Call API call failed: ${oneCallResponse.status}`);
     }
     const oneCall = await oneCallResponse.json();
-    console.log('One Call response received. daily length:', Array.isArray(oneCall?.daily) ? oneCall.daily.length : 'missing', 'hourly length:', Array.isArray(oneCall?.hourly) ? oneCall.hourly.length : 'missing');
 
     // Process and validate data
     const countryCode = oneCall?.timezone?.includes('America') ? 'US' : (oneCall?.current?.sys?.country || 'US');
-    const useFahrenheit = shouldUseFahrenheit(countryCode);
-    console.log('Using Fahrenheit:', useFahrenheit);
 
     // Format temperature with proper unit handling
     const temp = formatTemperature(oneCall.current?.temp ?? 0, countryCode);
-    console.log('Formatted temperature:', temp);
 
     // Process forecast data: use One Call daily for 5-day view
     const baseDaily = Array.isArray(oneCall.daily)
@@ -1121,29 +1076,21 @@ export const fetchWeatherData = async (
     }
 
     const forecast = ensureFiveDays(baseDaily)
-    console.log('Forecast days after mapping:', forecast.length)
-    console.log('Processed forecast:', forecast);
 
     // Calculate moon phase
     const moonPhase = calculateMoonPhase();
-    console.log('Moon phase:', moonPhase);
 
-    // Fetch UV Index with debugging
-    console.log('=== FETCHING UV INDEX ===');
+    // Get UV Index from One Call response
     const uvIndex = Math.round(oneCall.current?.uvi ?? 0);
-    console.log('UV Index fetched:', uvIndex);
 
     // Fetch Pollen data
     const pollenData = await fetchPollenData(lat, lon);
-    console.log('Weather Data - Pollen:', pollenData);
 
     // Fetch Air Quality data
     const airQualityData = await fetchAirQualityData(lat, lon, displayName);
-    console.log('Weather Data - Air Quality:', airQualityData);
 
     // Process hourly forecast data (48 hours)
     const hourlyForecast = processHourlyForecast(oneCall.hourly || [], oneCall.timezone_offset || 0);
-    console.log('Processed hourly forecast:', hourlyForecast.length, 'hours');
 
     // Construct weather data object
     const weatherData: WeatherData = {
@@ -1172,7 +1119,6 @@ export const fetchWeatherData = async (
       hourlyForecast: hourlyForecast
     };
 
-    console.log('Final weather data:', weatherData);
     return weatherData;
 
   } catch (error) {
@@ -1275,16 +1221,12 @@ export const fetchWeatherByLocation = async (
       throw new Error(`One Call API call failed: ${oneCallResponse.status}`)
     }
     const oneCall = await oneCallResponse.json()
-    console.log('One Call response:', oneCall)
 
     // Process and validate data
     const countryCode = oneCall?.timezone?.includes('America') ? 'US' : (oneCall?.current?.sys?.country || 'US')
-    const useFahrenheit = shouldUseFahrenheit(countryCode)
-    console.log('Using Fahrenheit:', useFahrenheit)
 
     // Format temperature with proper unit handling
     const temp = formatTemperature(oneCall.current?.temp ?? 0, countryCode)
-    console.log('Formatted temperature:', temp)
 
     // Build 5-day forecast from One Call daily, with hourly fallback
     const baseDaily = Array.isArray(oneCall.daily)
@@ -1364,29 +1306,21 @@ export const fetchWeatherByLocation = async (
     }
 
     const forecast = ensureFiveDays(baseDaily)
-    console.log('Processed forecast:', forecast)
 
     // Calculate moon phase
     const moonPhase = calculateMoonPhase()
-    console.log('Moon phase:', moonPhase)
 
-    // Fetch UV Index with debugging
-    console.log('=== FETCHING UV INDEX ===');
+    // Get UV Index from One Call response
     const uvIndex = Math.round(oneCall.current?.uvi ?? 0)
-    console.log('UV Index fetched:', uvIndex);
 
     // Fetch Pollen data
-    console.log('=== FETCHING POLLEN DATA ===');
     const pollenData = await fetchPollenData(latitude, longitude);
-    console.log('Weather Data - Pollen:', pollenData);
 
     // Fetch Air Quality data
     const airQualityData = await fetchAirQualityData(latitude, longitude, `${oneCall?.timezone || 'Unknown'}`);
-    console.log('Weather Data - Air Quality:', airQualityData);
 
     // Process hourly forecast data (48 hours)
     const hourlyForecast = processHourlyForecast(oneCall.hourly || [], oneCall.timezone_offset || 0);
-    console.log('Processed hourly forecast:', hourlyForecast.length, 'hours');
 
     // Construct weather data object
     const weatherData: WeatherData = {
@@ -1415,10 +1349,10 @@ export const fetchWeatherByLocation = async (
       hourlyForecast: hourlyForecast
     }
 
-    console.log('Final weather data:', weatherData)
     return weatherData
 
   } catch (error) {
+    // Keep console.error for critical failures - these should be caught upstream
     console.error('Error fetching weather data:', error)
     throw error
   }

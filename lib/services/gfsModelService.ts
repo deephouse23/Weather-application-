@@ -110,7 +110,6 @@ export async function fetchNHCTropicalOutlook(): Promise<NewsItem[]> {
       priority: 'medium' as NewsPriority,
     });
 
-    console.log(`✓ Fetched ${items.length} NHC tropical outlook items`);
     return items;
   } catch (error) {
     console.error('Error fetching NHC tropical outlook:', error);
@@ -204,7 +203,6 @@ export async function fetchGFSModelGraphics(): Promise<NewsItem[]> {
       priority: 'medium' as NewsPriority,
     });
 
-    console.log(`✓ Fetched ${items.length} GFS model graphics for run ${modelRun}`);
     return items;
   } catch (error) {
     console.error('Error fetching GFS model graphics:', error);
@@ -224,7 +222,6 @@ export async function fetchActiveStorms(): Promise<NewsItem[]> {
     const response = await fetch('https://www.nhc.noaa.gov/index-at.xml');
 
     if (!response.ok) {
-      console.log('No active storms RSS available');
       return [];
     }
 
@@ -247,9 +244,6 @@ export async function fetchActiveStorms(): Promise<NewsItem[]> {
         priority: 'high' as NewsPriority,
       });
 
-      console.log('✓ Active tropical systems detected');
-    } else {
-      console.log('✓ No active tropical systems');
     }
 
     return items;
@@ -263,8 +257,6 @@ export async function fetchActiveStorms(): Promise<NewsItem[]> {
  * Fetch all GFS and tropical model data for news feed
  */
 export async function fetchAllGFSModelNews(): Promise<NewsItem[]> {
-  console.log('\n🌀 Fetching GFS & Tropical Model Data...');
-
   const [nhcOutlook, gfsGraphics, activeStorms] = await Promise.all([
     fetchNHCTropicalOutlook(),
     fetchGFSModelGraphics(),
@@ -272,8 +264,6 @@ export async function fetchAllGFSModelNews(): Promise<NewsItem[]> {
   ]);
 
   const allItems = [...activeStorms, ...nhcOutlook, ...gfsGraphics];
-
-  console.log(`✓ Total GFS/Tropical items: ${allItems.length}`);
 
   return allItems;
 }

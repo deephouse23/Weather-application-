@@ -90,11 +90,8 @@ export default function CityWeatherClient({ city, citySlug, isPredefinedCity = f
       setLoading(true)
       setError("")
 
-      console.log(`Loading weather for city: ${city.name}, ${city.state} (${city.searchTerm})`)
-
       const unitSystem: 'metric' | 'imperial' = preferences?.temperature_unit === 'celsius' ? 'metric' : 'imperial'
       const weatherData = await fetchWeatherData(city.searchTerm, unitSystem)
-      console.log(`Weather data loaded for ${city.name}:`, weatherData.location)
       setWeather(weatherData)
 
       // Update location context with city data

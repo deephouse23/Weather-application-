@@ -23,8 +23,6 @@ export async function GET(
   // Try historical timestamp first, fallback to current if not available
   const iowaUrl = `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-${timestamp}/${z}/${x}/${y}.png`
 
-  console.log(`[Iowa NEXRAD Tiles] Fetching: ${iowaUrl}`)
-
   try {
     const response = await fetch(iowaUrl, {
       headers: {

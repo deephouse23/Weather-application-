@@ -115,20 +115,17 @@ async function geocodeLocation(location: string): Promise<{ lat: number; lon: nu
     try {
         const locationWithUS = location.includes(',') ? location : `${location},US`;
         const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(locationWithUS)}&limit=1&appid=${apiKey}`;
-        console.log(`[Chat API] Geocoding: ${locationWithUS}`);
 
         let response = await fetch(url);
         let data = response.ok ? await response.json() : [];
 
         if (!data || data.length === 0) {
-            console.log(`[Chat API] No US results, trying generic: ${location}`);
             const fallbackUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(location)}&limit=1&appid=${apiKey}`;
             response = await fetch(fallbackUrl);
             data = response.ok ? await response.json() : [];
         }
 
         if (!data || data.length === 0) {
-            console.log(`[Chat API] No geocoding results for: ${location}`);
             return null;
         }
 
@@ -137,7 +134,6 @@ async function geocodeLocation(location: string): Promise<{ lat: number; lon: nu
             lon: data[0].lon,
             name: data[0].state ? `${data[0].name}, ${data[0].state}` : data[0].name
         };
-        console.log(`[Chat API] Geocoded to:`, result);
         return result;
     } catch (error) {
         console.error('[Chat API] Geocoding error:', error);
@@ -162,7 +158,6 @@ async function fetchCurrentWeather(lat: number, lon: number): Promise<{
 
     try {
         const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`;
-        console.log(`[Chat API] Fetching weather for: ${lat}, ${lon}`);
 
         const response = await fetch(url);
         if (!response.ok) {
@@ -184,7 +179,6 @@ async function fetchCurrentWeather(lat: number, lon: number): Promise<{
             rain1h: data.rain?.['1h'] ? Math.round(data.rain['1h'] / 25.4 * 100) / 100 : undefined,
             rain3h: data.rain?.['3h'] ? Math.round(data.rain['3h'] / 25.4 * 100) / 100 : undefined
         };
-        console.log(`[Chat API] Weather data:`, result);
         return result;
     } catch (error) {
         console.error('[Chat API] Weather fetch error:', error);
@@ -201,7 +195,6 @@ async function fetchForecast(lat: number, lon: number): Promise<string | null> {
         const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=imperial&exclude=minutely,hourly,alerts&appid=${apiKey}`;
         const response = await fetch(url);
         if (!response.ok) {
-            console.log(`[Chat API] One Call API failed: ${response.status}, falling back to 5-day`);
             return await fetchForecast5Day(lat, lon);
         }
 
@@ -455,11 +448,8 @@ export async function POST(request: NextRequest) {
 
         // Try to extract location from message and fetch real weather data
         let weatherContext = providedContext;
-        console.log(`[Chat API] Message received: "${message}"`);
-        console.log(`[Chat API] Provided context:`, providedContext);
 
         const extractedLocation = extractLocationFromMessage(message);
-        console.log(`[Chat API] Extracted location: "${extractedLocation}"`);
 
         // Priority logic for weather context:
         // 1. If user mentions a specific location, fetch fresh data for that location
@@ -473,32 +463,18 @@ export async function POST(request: NextRequest) {
                 !extractedLower.includes(providedLocationLower.split(',')[0]);
 
             if (isDifferentLocation || providedContext?.temperature === undefined) {
-                console.log(`[Chat API] Fetching weather for extracted location: "${extractedLocation}"...`);
                 const realWeather = await fetchWeatherForLocation(extractedLocation, true);
                 if (realWeather) {
-                    console.log(`[Chat API] SUCCESS! Got weather: ${realWeather.temperature}°F, ${realWeather.condition} for ${realWeather.location}`);
                     weatherContext = realWeather;
-                } else {
-                    console.log(`[Chat API] FAILED to fetch weather for: "${extractedLocation}"`);
                 }
-            } else {
-                console.log(`[Chat API] Using provided context - same location`);
             }
         } else if (providedContext?.location && providedContext?.temperature === undefined) {
             // No location in message, but we have a location name without weather data - fetch it
-            console.log(`[Chat API] Fetching weather for provided location: "${providedContext.location}"...`);
             const realWeather = await fetchWeatherForLocation(providedContext.location, true);
             if (realWeather) {
-                console.log(`[Chat API] SUCCESS! Got weather for context location: ${realWeather.temperature}°F`);
                 weatherContext = realWeather;
             }
-        } else if (providedContext?.temperature !== undefined) {
-            // We already have complete weather data from the client - use it
-            console.log(`[Chat API] Using provided weather context: ${providedContext.temperature}°F in ${providedContext.location}`);
         }
-
-
-        console.log(`[Chat API] Final weather context:`, weatherContext);
 
         // Save user message to history
         await saveMessage(user.id, {
