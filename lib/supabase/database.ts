@@ -166,7 +166,7 @@ export const saveLocation = async (locationData: SavedLocationInsert): Promise<S
     .single()
 
   if (error) {
-    captureDbError('saveLocation', error, { locationData })
+    captureDbError('saveLocation', error, { user_id: locationData.user_id })
     return null
   }
 
