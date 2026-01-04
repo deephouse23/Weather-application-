@@ -26,23 +26,37 @@ interface GeocodingResponse {
 }
 
 // Helper function to try multiple geocoding strategies
-const tryGeocoding = async (queries: string[], apiKey: string, limit: string): Promise<GeocodingResponse[]> => {
+// Returns { data, error } to distinguish between "not found" and "API error"
+const tryGeocoding = async (queries: string[], apiKey: string, limit: string): Promise<{ data: GeocodingResponse[], error?: { status: number, message: string } }> => {
+  let lastError: { status: number, message: string } | undefined
+
   for (const query of queries) {
     const geocodingUrl = `${GEO_URL}/direct?q=${encodeURIComponent(query)}&limit=${limit}&appid=${apiKey}`
-    
+
     const response = await fetch(geocodingUrl)
-    
+
     if (response.ok) {
       const data = await response.json()
-      
+
       if (data && data.length > 0) {
-        return data
+        return { data }
       }
+      // Empty result - try next query
+    } else {
+      // Track the error for potential propagation
+      // 401/403 errors indicate API key issues and should be reported
+      if (response.status === 401 || response.status === 403) {
+        console.error(`OpenWeatherMap API auth error: ${response.status} for query "${query}"`)
+        lastError = { status: response.status, message: 'OpenWeatherMap API authentication error' }
+        // Don't try more queries for auth errors - they'll all fail
+        break
+      }
+      // For other errors (429 rate limit, 500 server error), continue trying
+      lastError = { status: response.status, message: `OpenWeatherMap API error: ${response.status}` }
     }
-    // Try next fallback query if this one failed
   }
-  
-  return []
+
+  return { data: [], error: lastError }
 }
 
 // US State mapping for fallback queries
@@ -153,18 +167,26 @@ export async function GET(request: NextRequest) {
       
       // Generate fallback queries
       const queries = generateFallbackQueries(q!)
-      
+
       // Try each query in sequence until one works
-      const geocodingData = await tryGeocoding(queries, apiKey, limit)
-      
-      if (!geocodingData || geocodingData.length === 0) {
+      const result = await tryGeocoding(queries, apiKey, limit)
+
+      if (!result.data || result.data.length === 0) {
+        // If there was an API error (401/403/etc), propagate it
+        if (result.error) {
+          return NextResponse.json(
+            { error: result.error.message },
+            { status: result.error.status }
+          )
+        }
+        // Otherwise it's just not found
         return NextResponse.json(
           { error: 'Location not found' },
           { status: 404 }
         )
       }
-      
-      return NextResponse.json(geocodingData)
+
+      return NextResponse.json(result.data)
     }
 
   } catch (error) {

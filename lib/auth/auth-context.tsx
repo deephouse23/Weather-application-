@@ -252,7 +252,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
               expires_in: 3600,
               token_type: 'bearer',
               user: {
-                id: 'test-user-id',
+                id: '00000000-0000-0000-0000-000000000000',
                 email: 'test@example.com',
                 aud: 'authenticated',
                 role: 'authenticated',

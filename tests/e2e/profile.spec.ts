@@ -13,7 +13,7 @@ test.describe('Profile Settings', () => {
     
     // Mock profile data
     await stubSupabaseProfile(page, {
-      id: 'test-user-id',
+      id: '00000000-0000-0000-0000-000000000000',
       username: 'testuser',
       full_name: 'Test User',
       default_location: 'New York, NY',
