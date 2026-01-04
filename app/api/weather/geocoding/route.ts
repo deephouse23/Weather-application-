@@ -52,7 +52,9 @@ const tryGeocoding = async (queries: string[], apiKey: string, limit: string): P
         break
       }
       // For other errors (429 rate limit, 500 server error), continue trying
-      lastError = { status: response.status, message: `OpenWeatherMap API error: ${response.status}` }
+      // Capture response body for enhanced debugging
+      const errorBody = await response.text().catch(() => '')
+      lastError = { status: response.status, message: `OpenWeatherMap API error: ${response.status}${errorBody ? ` - ${errorBody.slice(0, 200)}` : ''}` }
     }
   }
 
