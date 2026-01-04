@@ -210,7 +210,7 @@ export async function expectHomeLoaded(page: Page): Promise<void> {
 //   AUTHENTICATION HELPERS
 //   ═══════════════════════════════════════════════════════════
 
-export async function setupMockAuth(page: Page, userId: string = 'test-user-id'): Promise<void> {
+export async function setupMockAuth(page: Page, userId: string = '00000000-0000-0000-0000-000000000000'): Promise<void> {
   // Create mock session data
   const mockSession = {
     access_token: 'mock-access-token',
@@ -365,7 +365,7 @@ export async function stubSupabaseProfile(page: Page, profile: any): Promise<voi
         contentType: 'application/json',
         body: JSON.stringify({
           preferences: {
-            user_id: profile.id || 'test-user-id',
+            user_id: profile.id || '00000000-0000-0000-0000-000000000000',
             auto_location: true,
             temperature_unit: 'fahrenheit',
             theme: 'dark'
@@ -380,7 +380,7 @@ export async function stubSupabaseProfile(page: Page, profile: any): Promise<voi
         contentType: 'application/json',
         body: JSON.stringify({
           preferences: {
-            user_id: profile.id || 'test-user-id',
+            user_id: profile.id || '00000000-0000-0000-0000-000000000000',
             auto_location: true,
             temperature_unit: 'fahrenheit',
             theme: 'dark'
@@ -403,7 +403,7 @@ export async function stubProfileUpdate(page: Page): Promise<void> {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify([{
-          id: 'test-user-id',
+          id: '00000000-0000-0000-0000-000000000000',
           ...body,
           updated_at: new Date().toISOString()
         }])
@@ -421,7 +421,7 @@ export async function stubProfileUpdate(page: Page): Promise<void> {
         contentType: 'application/json',
         body: JSON.stringify({
           preferences: {
-            user_id: 'test-user-id',
+            user_id: '00000000-0000-0000-0000-000000000000',
             ...body,
             updated_at: new Date().toISOString()
           }

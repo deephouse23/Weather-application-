@@ -9,7 +9,7 @@ test.describe('Theme System', () => {
   test('can change theme via profile page', async ({ page }) => {
     await setupMockAuth(page);
     await stubSupabaseProfile(page, {
-      id: 'test-user-id',
+      id: '00000000-0000-0000-0000-000000000000',
       username: 'testuser',
       email: 'test@example.com'
     });
