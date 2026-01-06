@@ -59,22 +59,24 @@ function mmToInches(mm: number): number {
   return Math.round((mm / 25.4) * 100) / 100;
 }
 
-// Fetch current weather with precipitation data
+// Fetch current weather with precipitation data and timezone offset
 async function fetchCurrentWeather(lat: number, lon: number, apiKey: string): Promise<{
   rain1h: number;
   snow1h: number;
+  timezoneOffset: number; // Offset from UTC in seconds
 } | null> {
   try {
     const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`;
     const response = await fetch(url);
-    
+
     if (!response.ok) return null;
-    
+
     const data = await response.json();
-    
+
     return {
       rain1h: data.rain?.['1h'] ? mmToInches(data.rain['1h']) : 0,
       snow1h: data.snow?.['1h'] ? mmToInches(data.snow['1h']) : 0,
+      timezoneOffset: data.timezone || 0, // Offset in seconds from UTC
     };
   } catch {
     return null;
@@ -119,7 +121,8 @@ async function fetchDaySummary(
 async function fetchDailyPrecipitation(
   lat: number,
   lon: number,
-  apiKey: string
+  apiKey: string,
+  timezoneOffset: number // Timezone offset in seconds from UTC
 ): Promise<{
   rain24h: number;
   snow24h: number;
@@ -130,12 +133,17 @@ async function fetchDailyPrecipitation(
   dataAvailable: boolean;
   dataQuality: 'full' | 'partial';
 }> {
-  const now = new Date();
+  // Calculate local time at the location using the timezone offset
+  // This ensures we fetch the correct calendar days for the location, not the server
+  const nowUtc = new Date();
+  const locationTimeMs = nowUtc.getTime() + (timezoneOffset * 1000);
+  const locationDate = new Date(locationTimeMs);
 
-  // Get today and yesterday in YYYY-MM-DD format (local timezone)
-  // Use toLocaleDateString with 'en-CA' locale which returns YYYY-MM-DD format
-  const today = now.toLocaleDateString('en-CA');
-  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toLocaleDateString('en-CA');
+  // Get today and yesterday in YYYY-MM-DD format for the LOCATION's timezone
+  // We use UTC methods on locationDate since we've already applied the offset
+  const today = locationDate.toISOString().split('T')[0];
+  const yesterdayDate = new Date(locationTimeMs - 24 * 60 * 60 * 1000);
+  const yesterday = yesterdayDate.toISOString().split('T')[0];
 
   // Fetch both days in parallel
   const [todayData, yesterdayData] = await Promise.all([
@@ -149,11 +157,12 @@ async function fetchDailyPrecipitation(
   const todaySnowInches = todayData.success ? Math.round((todayData.snow / 25.4) * 10) / 10 : 0;
   const yesterdaySnowInches = yesterdayData.success ? Math.round((yesterdayData.snow / 25.4) * 10) / 10 : 0;
 
-  // Calculate weighted 24-hour rolling total based on current hour
+  // Calculate weighted 24-hour rolling total based on current LOCAL hour at the location
   // At midnight (0h): 0% today, 100% yesterday
   // At noon (12h): 50% today, 50% yesterday
   // At 11pm (23h): ~96% today, ~4% yesterday
-  const currentHour = now.getHours();
+  // Use UTC hours since we've already applied the timezone offset to locationDate
+  const currentHour = locationDate.getUTCHours();
 
   // Handle partial data: only weight available data, don't treat failures as zero
   let rain24h: number;
@@ -248,11 +257,14 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Fetch current weather and daily precipitation totals
-    const [current, daily] = await Promise.all([
-      fetchCurrentWeather(latitude, longitude, apiKey),
-      fetchDailyPrecipitation(latitude, longitude, apiKey),
-    ]);
+    // First fetch current weather to get timezone offset for the location
+    const current = await fetchCurrentWeather(latitude, longitude, apiKey);
+
+    // Use location's timezone offset (default to 0/UTC if unavailable)
+    const timezoneOffset = current?.timezoneOffset || 0;
+
+    // Fetch daily precipitation totals using the location's timezone
+    const daily = await fetchDailyPrecipitation(latitude, longitude, apiKey, timezoneOffset);
 
     const precipitationData: PrecipitationResponse = {
       currentRain: current?.rain1h || 0,
