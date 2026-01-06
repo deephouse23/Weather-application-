@@ -122,6 +122,8 @@ export interface PrecipitationData {
   // Individual day totals (inches)
   todayRain: number;
   yesterdayRain: number;
+  todaySnow: number;
+  yesterdaySnow: number;
   // Timestamps
   lastUpdated: string;
   dataSource: 'day_summary' | 'timemachine';

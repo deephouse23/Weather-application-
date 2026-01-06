@@ -20,6 +20,8 @@ interface PrecipitationResponse {
   snow24h: number;
   todayRain: number; // Today's total so far
   yesterdayRain: number; // Yesterday's total
+  todaySnow: number; // Today's snow total
+  yesterdaySnow: number; // Yesterday's snow total
   lastUpdated: string;
   dataSource: 'day_summary' | 'timemachine';
   dataAvailable: boolean; // true if API returned valid data, false if all calls failed
@@ -87,7 +89,7 @@ async function fetchDaySummary(
   apiKey: string
 ): Promise<{ rain: number; snow: number; success: boolean }> {
   try {
-    const url = `https://api.openweathermap.org/data/3.0/onecall/day_summary?lat=${lat}&lon=${lon}&date=${date}&appid=${apiKey}`;
+    const url = `https://api.openweathermap.org/data/3.0/onecall/day_summary?lat=${lat}&lon=${lon}&date=${date}&units=metric&appid=${apiKey}`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -123,14 +125,17 @@ async function fetchDailyPrecipitation(
   snow24h: number;
   todayRain: number;
   yesterdayRain: number;
+  todaySnow: number;
+  yesterdaySnow: number;
   dataAvailable: boolean;
   dataQuality: 'full' | 'partial';
 }> {
   const now = new Date();
 
   // Get today and yesterday in YYYY-MM-DD format (local timezone)
-  const today = now.toISOString().split('T')[0];
-  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  // Use toLocaleDateString with 'en-CA' locale which returns YYYY-MM-DD format
+  const today = now.toLocaleDateString('en-CA');
+  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toLocaleDateString('en-CA');
 
   // Fetch both days in parallel
   const [todayData, yesterdayData] = await Promise.all([
@@ -138,28 +143,41 @@ async function fetchDailyPrecipitation(
     fetchDaySummary(lat, lon, yesterday, apiKey),
   ]);
 
+  // Convert mm to inches (only for successful API calls)
+  const todayRainInches = todayData.success ? Math.round((todayData.rain / 25.4) * 100) / 100 : 0;
+  const yesterdayRainInches = yesterdayData.success ? Math.round((yesterdayData.rain / 25.4) * 100) / 100 : 0;
+  const todaySnowInches = todayData.success ? Math.round((todayData.snow / 25.4) * 10) / 10 : 0;
+  const yesterdaySnowInches = yesterdayData.success ? Math.round((yesterdayData.snow / 25.4) * 10) / 10 : 0;
+
   // Calculate weighted 24-hour rolling total based on current hour
   // At midnight (0h): 0% today, 100% yesterday
   // At noon (12h): 50% today, 50% yesterday
   // At 11pm (23h): ~96% today, ~4% yesterday
   const currentHour = now.getHours();
-  const todayWeight = currentHour / 24;
-  const yesterdayWeight = 1 - todayWeight;
 
-  // Convert mm to inches
-  const todayRainInches = Math.round((todayData.rain / 25.4) * 100) / 100;
-  const yesterdayRainInches = Math.round((yesterdayData.rain / 25.4) * 100) / 100;
-  const todaySnowInches = Math.round((todayData.snow / 25.4) * 10) / 10;
-  const yesterdaySnowInches = Math.round((yesterdayData.snow / 25.4) * 10) / 10;
+  // Handle partial data: only weight available data, don't treat failures as zero
+  let rain24h: number;
+  let snow24h: number;
 
-  // Calculate weighted 24h totals
-  const rain24h = Math.round((
-    (todayRainInches * todayWeight) + (yesterdayRainInches * yesterdayWeight)
-  ) * 100) / 100;
-
-  const snow24h = Math.round((
-    (todaySnowInches * todayWeight) + (yesterdaySnowInches * yesterdayWeight)
-  ) * 10) / 10;
+  if (todayData.success && yesterdayData.success) {
+    // Both days available: use weighted average
+    const todayWeight = currentHour / 24;
+    const yesterdayWeight = 1 - todayWeight;
+    rain24h = Math.round(((todayRainInches * todayWeight) + (yesterdayRainInches * yesterdayWeight)) * 100) / 100;
+    snow24h = Math.round(((todaySnowInches * todayWeight) + (yesterdaySnowInches * yesterdayWeight)) * 10) / 10;
+  } else if (todayData.success) {
+    // Only today available: use today's data as-is
+    rain24h = todayRainInches;
+    snow24h = todaySnowInches;
+  } else if (yesterdayData.success) {
+    // Only yesterday available: use yesterday's data as-is
+    rain24h = yesterdayRainInches;
+    snow24h = yesterdaySnowInches;
+  } else {
+    // Neither available
+    rain24h = 0;
+    snow24h = 0;
+  }
 
   const dataAvailable = todayData.success || yesterdayData.success;
   const dataQuality = (todayData.success && yesterdayData.success) ? 'full' : 'partial';
@@ -169,6 +187,8 @@ async function fetchDailyPrecipitation(
     snow24h,
     todayRain: todayRainInches,
     yesterdayRain: yesterdayRainInches,
+    todaySnow: todaySnowInches,
+    yesterdaySnow: yesterdaySnowInches,
     dataAvailable,
     dataQuality,
   };
@@ -241,6 +261,8 @@ export async function GET(request: NextRequest) {
       snow24h: daily.snow24h,
       todayRain: daily.todayRain,
       yesterdayRain: daily.yesterdayRain,
+      todaySnow: daily.todaySnow,
+      yesterdaySnow: daily.yesterdaySnow,
       lastUpdated: new Date().toISOString(),
       dataSource: 'day_summary',
       dataAvailable: daily.dataAvailable,
