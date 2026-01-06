@@ -18,10 +18,14 @@ interface PrecipitationResponse {
   currentSnow: number;
   rain24h: number;
   snow24h: number;
+  todayRain: number; // Today's total so far
+  yesterdayRain: number; // Yesterday's total
+  todaySnow: number; // Today's snow total
+  yesterdaySnow: number; // Yesterday's snow total
   lastUpdated: string;
-  dataSource: 'onecall' | 'timemachine';
+  dataSource: 'day_summary' | 'timemachine';
   dataAvailable: boolean; // true if API returned valid data, false if all calls failed
-  hoursSampled: number; // Number of hours with actual data (max 8 from our sampling)
+  dataQuality: 'full' | 'partial'; // 'full' = both days available, 'partial' = only one day
 }
 
 // Get user from request
@@ -77,90 +81,116 @@ async function fetchCurrentWeather(lat: number, lon: number, apiKey: string): Pr
   }
 }
 
-// Fetch historical data using One Call 3.0 timemachine
-async function fetchHistoricalPrecipitation(
+// Fetch a single day's precipitation using One Call 3.0 Day Summary API
+async function fetchDaySummary(
+  lat: number,
+  lon: number,
+  date: string, // YYYY-MM-DD format
+  apiKey: string
+): Promise<{ rain: number; snow: number; success: boolean }> {
+  try {
+    const url = `https://api.openweathermap.org/data/3.0/onecall/day_summary?lat=${lat}&lon=${lon}&date=${date}&units=metric&appid=${apiKey}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      console.warn(`[Precipitation] Day summary call failed for ${date}: ${response.status}`);
+      return { rain: 0, snow: 0, success: false };
+    }
+
+    const data = await response.json();
+
+    // Day summary returns precipitation.total in mm
+    const rainMm = data.precipitation?.total || 0;
+    // Snow is not directly available in day_summary, but we can check temperature
+    // If max temp was below freezing, treat precipitation as snow
+    const maxTempC = data.temperature?.max;
+    const snowMm = (maxTempC !== undefined && maxTempC <= 0) ? rainMm : 0;
+    const actualRainMm = (maxTempC !== undefined && maxTempC <= 0) ? 0 : rainMm;
+
+    return { rain: actualRainMm, snow: snowMm, success: true };
+  } catch (error) {
+    console.error(`[Precipitation] Error fetching day summary for ${date}:`, error);
+    return { rain: 0, snow: 0, success: false };
+  }
+}
+
+// Fetch 24-hour precipitation using Daily Aggregation API
+// Uses weighted average of today and yesterday for rolling 24h total
+async function fetchDailyPrecipitation(
   lat: number,
   lon: number,
   apiKey: string
-): Promise<{ rain24h: number; snow24h: number; dataAvailable: boolean; hoursSampled: number }> {
-  const now = Math.floor(Date.now() / 1000);
-  let totalRainMm = 0;
-  let totalSnowMm = 0;
-  let successfulApiCalls = 0;
+): Promise<{
+  rain24h: number;
+  snow24h: number;
+  todayRain: number;
+  yesterdayRain: number;
+  todaySnow: number;
+  yesterdaySnow: number;
+  dataAvailable: boolean;
+  dataQuality: 'full' | 'partial';
+}> {
+  const now = new Date();
 
-  // Track processed hours to prevent double-counting from overlapping API responses
-  const processedHours = new Set<number>();
+  // Get today and yesterday in YYYY-MM-DD format (local timezone)
+  // Use toLocaleDateString with 'en-CA' locale which returns YYYY-MM-DD format
+  const today = now.toLocaleDateString('en-CA');
+  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toLocaleDateString('en-CA');
 
-  // One Call 3.0 timemachine returns data in a `data` array (typically 1 entry per call)
-  // We sample every 3 hours to balance API usage with accuracy
-  // NOTE: We do NOT extrapolate - rain.1h is the ACTUAL amount that fell in that hour,
-  // not a rate. Extrapolating would over-report precipitation for sporadic rain events.
-  // The hoursSampled field tells the UI how many hours of actual data we have.
-  const timestamps: number[] = [];
-  for (let hoursAgo = 3; hoursAgo <= 24; hoursAgo += 3) {
-    timestamps.push(now - (hoursAgo * 60 * 60));
-  }
-  // Expected: 8 timestamps at [3h, 6h, 9h, 12h, 15h, 18h, 21h, 24h ago]
+  // Fetch both days in parallel
+  const [todayData, yesterdayData] = await Promise.all([
+    fetchDaySummary(lat, lon, today, apiKey),
+    fetchDaySummary(lat, lon, yesterday, apiKey),
+  ]);
 
-  for (const dt of timestamps) {
-    try {
-      const url = `https://api.openweathermap.org/data/3.0/onecall/timemachine?lat=${lat}&lon=${lon}&dt=${dt}&units=imperial&appid=${apiKey}`;
-      const response = await fetch(url);
+  // Convert mm to inches (only for successful API calls)
+  const todayRainInches = todayData.success ? Math.round((todayData.rain / 25.4) * 100) / 100 : 0;
+  const yesterdayRainInches = yesterdayData.success ? Math.round((yesterdayData.rain / 25.4) * 100) / 100 : 0;
+  const todaySnowInches = todayData.success ? Math.round((todayData.snow / 25.4) * 10) / 10 : 0;
+  const yesterdaySnowInches = yesterdayData.success ? Math.round((yesterdayData.snow / 25.4) * 10) / 10 : 0;
 
-      if (!response.ok) {
-        console.warn(`[Precipitation] Timemachine call failed for dt=${dt}: ${response.status}`);
-        continue;
-      }
+  // Calculate weighted 24-hour rolling total based on current hour
+  // At midnight (0h): 0% today, 100% yesterday
+  // At noon (12h): 50% today, 50% yesterday
+  // At 11pm (23h): ~96% today, ~4% yesterday
+  const currentHour = now.getHours();
 
-      const data = await response.json();
-      successfulApiCalls++;
+  // Handle partial data: only weight available data, don't treat failures as zero
+  let rain24h: number;
+  let snow24h: number;
 
-      // Sum up hourly precipitation (in mm, convert only at the end)
-      if (data.data && Array.isArray(data.data)) {
-        for (const hour of data.data) {
-          // Skip if already processed or outside 24h window
-          if (processedHours.has(hour.dt)) continue;
-          if (hour.dt < now - (24 * 60 * 60) || hour.dt > now) continue;
-
-          processedHours.add(hour.dt);
-
-          // Sum raw mm values to avoid accumulated rounding errors
-          // Handle multiple possible formats from OpenWeatherMap:
-          // - rain.1h (object with 1h key)
-          // - rain (direct number)
-          // - precipitation (alternative field)
-          const rainAmount =
-            (typeof hour.rain === 'object' && hour.rain?.['1h']) ? hour.rain['1h'] :
-            (typeof hour.rain === 'number') ? hour.rain :
-            (typeof hour.precipitation === 'number') ? hour.precipitation : 0;
-
-          const snowAmount =
-            (typeof hour.snow === 'object' && hour.snow?.['1h']) ? hour.snow['1h'] :
-            (typeof hour.snow === 'number') ? hour.snow : 0;
-
-          if (rainAmount > 0) {
-            totalRainMm += rainAmount;
-          }
-          if (snowAmount > 0) {
-            totalSnowMm += snowAmount;
-          }
-        }
-      }
-    } catch (error) {
-      console.error(`[Precipitation] Error fetching timemachine data:`, error);
-    }
+  if (todayData.success && yesterdayData.success) {
+    // Both days available: use weighted average
+    const todayWeight = currentHour / 24;
+    const yesterdayWeight = 1 - todayWeight;
+    rain24h = Math.round(((todayRainInches * todayWeight) + (yesterdayRainInches * yesterdayWeight)) * 100) / 100;
+    snow24h = Math.round(((todaySnowInches * todayWeight) + (yesterdaySnowInches * yesterdayWeight)) * 10) / 10;
+  } else if (todayData.success) {
+    // Only today available: use today's data as-is
+    rain24h = todayRainInches;
+    snow24h = todaySnowInches;
+  } else if (yesterdayData.success) {
+    // Only yesterday available: use yesterday's data as-is
+    rain24h = yesterdayRainInches;
+    snow24h = yesterdaySnowInches;
+  } else {
+    // Neither available
+    rain24h = 0;
+    snow24h = 0;
   }
 
-  // Return actual sampled values - NO extrapolation
-  // rain.1h is the actual precipitation that fell in that hour, not a rate
-  const hoursProcessed = processedHours.size;
+  const dataAvailable = todayData.success || yesterdayData.success;
+  const dataQuality = (todayData.success && yesterdayData.success) ? 'full' : 'partial';
 
-  // Convert mm to inches only after summing all values
   return {
-    rain24h: Math.round((totalRainMm / 25.4) * 100) / 100,
-    snow24h: Math.round((totalSnowMm / 25.4) * 10) / 10,
-    dataAvailable: successfulApiCalls > 0, // At least one API call succeeded
-    hoursSampled: hoursProcessed,
+    rain24h,
+    snow24h,
+    todayRain: todayRainInches,
+    yesterdayRain: yesterdayRainInches,
+    todaySnow: todaySnowInches,
+    yesterdaySnow: yesterdaySnowInches,
+    dataAvailable,
+    dataQuality,
   };
 }
 
@@ -218,25 +248,29 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Fetch current and historical precipitation
-    const [current, historical] = await Promise.all([
+    // Fetch current weather and daily precipitation totals
+    const [current, daily] = await Promise.all([
       fetchCurrentWeather(latitude, longitude, apiKey),
-      fetchHistoricalPrecipitation(latitude, longitude, apiKey),
+      fetchDailyPrecipitation(latitude, longitude, apiKey),
     ]);
 
     const precipitationData: PrecipitationResponse = {
       currentRain: current?.rain1h || 0,
       currentSnow: current?.snow1h || 0,
-      rain24h: historical.rain24h,
-      snow24h: historical.snow24h,
+      rain24h: daily.rain24h,
+      snow24h: daily.snow24h,
+      todayRain: daily.todayRain,
+      yesterdayRain: daily.yesterdayRain,
+      todaySnow: daily.todaySnow,
+      yesterdaySnow: daily.yesterdaySnow,
       lastUpdated: new Date().toISOString(),
-      dataSource: 'timemachine',
-      dataAvailable: historical.dataAvailable,
-      hoursSampled: historical.hoursSampled,
+      dataSource: 'day_summary',
+      dataAvailable: daily.dataAvailable,
+      dataQuality: daily.dataQuality,
     };
 
     // Only cache successful responses - don't cache failures so retry works
-    if (historical.dataAvailable) {
+    if (daily.dataAvailable) {
       precipitationCache.set(cacheKey, {
         data: precipitationData,
         expires: Date.now() + CACHE_TTL_MS,
