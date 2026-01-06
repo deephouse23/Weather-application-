@@ -184,26 +184,29 @@ export function PrecipitationCard({ latitude, longitude, className }: Precipitat
                   Rainfall
                 </span>
               </div>
-              
+
               <div className="text-center">
                 <p className={cn("text-3xl font-bold font-mono", themeClasses.text)}>
                   {precipitation.rain24h.toFixed(2)}"
                 </p>
                 <p className={cn("text-xs font-mono mt-1", themeClasses.secondaryText)}>
-                  24h sample ({precipitation.hoursSampled || 8}h data)
+                  24-Hour Total
                 </p>
               </div>
 
               <div className="space-y-1">
-                <Progress 
-                  value={Math.min(precipitation.rain24h * 20, 100)} 
+                <Progress
+                  value={Math.min(precipitation.rain24h * 20, 100)}
                   className="h-2 bg-gray-700"
                 />
-                <p className={cn("text-xs font-mono", themeClasses.secondaryText)}>
-                  Current: {precipitation.currentRain > 0 
-                    ? `${precipitation.currentRain.toFixed(2)}"/hr` 
-                    : 'None'}
-                </p>
+                <div className={cn("text-xs font-mono space-y-0.5", themeClasses.secondaryText)}>
+                  <p>Today: {precipitation.todayRain?.toFixed(2) || '0.00'}" | Yesterday: {precipitation.yesterdayRain?.toFixed(2) || '0.00'}"</p>
+                  <p>
+                    Current: {precipitation.currentRain > 0
+                      ? `${precipitation.currentRain.toFixed(2)}"/hr`
+                      : 'None'}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -215,24 +218,24 @@ export function PrecipitationCard({ latitude, longitude, className }: Precipitat
                   Snowfall
                 </span>
               </div>
-              
+
               <div className="text-center">
                 <p className={cn("text-3xl font-bold font-mono", themeClasses.text)}>
                   {precipitation.snow24h.toFixed(1)}"
                 </p>
                 <p className={cn("text-xs font-mono mt-1", themeClasses.secondaryText)}>
-                  24h sample ({precipitation.hoursSampled || 8}h data)
+                  24-Hour Total
                 </p>
               </div>
 
               <div className="space-y-1">
-                <Progress 
-                  value={Math.min(precipitation.snow24h * 10, 100)} 
+                <Progress
+                  value={Math.min(precipitation.snow24h * 10, 100)}
                   className="h-2 bg-gray-700"
                 />
                 <p className={cn("text-xs font-mono", themeClasses.secondaryText)}>
-                  Current: {precipitation.currentSnow > 0 
-                    ? `${precipitation.currentSnow.toFixed(1)}"/hr` 
+                  Current: {precipitation.currentSnow > 0
+                    ? `${precipitation.currentSnow.toFixed(1)}"/hr`
                     : 'None'}
                 </p>
               </div>

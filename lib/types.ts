@@ -116,16 +116,19 @@ export interface PrecipitationData {
   // Current precipitation rate (inches per hour)
   currentRain: number;
   currentSnow: number;
-  // 24-hour totals (inches) - actual sampled values, NOT extrapolated
+  // 24-hour weighted totals (inches) - calculated from daily aggregates
   rain24h: number;
   snow24h: number;
+  // Individual day totals (inches)
+  todayRain: number;
+  yesterdayRain: number;
   // Timestamps
   lastUpdated: string;
-  dataSource: 'onecall' | 'timemachine';
+  dataSource: 'day_summary' | 'timemachine';
   // Data availability - false if all API calls failed
   dataAvailable: boolean;
-  // Number of hours with actual data (max 8 from 3-hour sampling)
-  hoursSampled: number;
+  // Data quality - 'full' if both days available, 'partial' if only one
+  dataQuality: 'full' | 'partial';
 }
 
 // Extended weather data with precipitation for authenticated users
