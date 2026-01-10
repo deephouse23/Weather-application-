@@ -97,7 +97,7 @@ export const createUserPreferences = async (
 }
 
 // Update theme preference specifically
-export const updateThemePreference = async (theme: 'dark' | 'miami' | 'tron'): Promise<boolean> => {
+export const updateThemePreference = async (theme: string): Promise<boolean> => {
   try {
     const updatedPrefs = await updateUserPreferencesAPI({ theme })
     return !!updatedPrefs

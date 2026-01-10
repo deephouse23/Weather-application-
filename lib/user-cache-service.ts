@@ -26,6 +26,7 @@
 import { WeatherData } from './types';
 import { LocationData } from './location-service';
 import { safeStorage } from './safe-storage';
+import { ThemeType } from './theme-config';
 
 /**
  * StoredLastLocation intentionally excludes precise coordinates.
@@ -40,7 +41,7 @@ export interface UserPreferences {
   lastLocation?: StoredLastLocation;
   settings: {
     units: 'metric' | 'imperial';
-    theme: 'dark' | 'miami' | 'tron';
+    theme: ThemeType;
     cacheEnabled: boolean;
     auto_location?: boolean;
   };
@@ -508,8 +509,8 @@ export class UserCacheService {
           units: preferences.settings.units === 'metric' || preferences.settings.units === 'imperial'
             ? preferences.settings.units
             : defaultPreferences.settings.units,
-          theme: preferences.settings.theme === 'dark' || preferences.settings.theme === 'miami' || preferences.settings.theme === 'tron'
-            ? preferences.settings.theme
+          theme: ['dark', 'miami', 'synthwave84', 'dracula', 'cyberpunk', 'matrix'].includes(preferences.settings.theme as string)
+            ? (preferences.settings.theme as ThemeType)
             : defaultPreferences.settings.theme,
           cacheEnabled: typeof preferences.settings.cacheEnabled === 'boolean'
             ? preferences.settings.cacheEnabled

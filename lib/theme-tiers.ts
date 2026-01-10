@@ -21,19 +21,6 @@ export interface ThemeConfig {
 export const THEME_CONFIGS: ThemeConfig[] = [
   // FREE TIER - Available to everyone
   {
-    id: 'default',
-    name: 'default',
-    displayName: 'Default',
-    description: 'Clean, professional light theme',
-    tier: 'free',
-    category: 'basic',
-    colors: {
-      primary: '#3b82f6',
-      background: '#ffffff',
-      accent: '#60a5fa'
-    }
-  },
-  {
     id: 'dark',
     name: 'dark',
     displayName: 'Dark Mode',
@@ -46,14 +33,12 @@ export const THEME_CONFIGS: ThemeConfig[] = [
       accent: '#4ecdc4'
     }
   },
-
-  // PREMIUM TIER - Requires registration
   {
     id: 'miami',
     name: 'miami',
     displayName: 'Miami Vice',
     description: 'Neon-soaked 80s cyberpunk vibes',
-    tier: 'premium',
+    tier: 'free',
     category: 'retro',
     colors: {
       primary: '#ff007f',
@@ -61,6 +46,8 @@ export const THEME_CONFIGS: ThemeConfig[] = [
       accent: '#ff1493'
     }
   },
+
+  // PREMIUM TIER - Requires registration
   {
     id: 'synthwave84',
     name: 'synthwave84',

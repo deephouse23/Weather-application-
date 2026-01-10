@@ -229,7 +229,7 @@ export function ThemeSelectorEnhanced() {
               <Timer className="w-5 h-5 text-orange-600" />
               <div>
                 <h3 className="font-semibold text-orange-800 dark:text-orange-200">
-                  Previewing {getThemeConfig(previewTheme!)?.displayName}
+                  Previewing {previewTheme ? getThemeConfig(previewTheme)?.displayName : ''}
                 </h3>
                 <p className="text-sm text-orange-600 dark:text-orange-300">
                   {timeRemaining} seconds remaining

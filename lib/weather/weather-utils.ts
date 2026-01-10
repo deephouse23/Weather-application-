@@ -168,7 +168,9 @@ export const getCompassDirection = (degrees: number): string => {
 export const getWindDirection = (degrees: number): string => {
   const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
                       'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
-  const index = Math.round(degrees / 22.5) % 16;
+  // Normalize degrees to 0-360 range to handle negative values
+  const normalizedDegrees = ((degrees % 360) + 360) % 360;
+  const index = Math.round(normalizedDegrees / 22.5) % 16;
   return directions[index];
 };
 
