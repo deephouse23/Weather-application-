@@ -28,6 +28,42 @@ export interface ParsedFeed {
   items: ParsedFeedItem[];
 }
 
+// ============================================================================
+// XML Parsing Types
+// ============================================================================
+
+/** Represents a text node or object with text content */
+type XMLTextNode = string | { '#text'?: string; '@_term'?: string; term?: string };
+
+/** Represents a link element in XML feeds */
+interface XMLLinkElement {
+  '@_rel'?: string;
+  '@_href'?: string;
+  '@_type'?: string;
+  href?: string;
+  type?: string;
+}
+
+/** Represents a media element in XML feeds */
+interface XMLMediaElement {
+  '@_url'?: string;
+  '@_medium'?: string;
+  url?: string;
+  medium?: string;
+}
+
+/** Generic parsed XML element that can contain various properties */
+interface XMLElement {
+  [key: string]: XMLTextNode | XMLElement | XMLElement[] | string | number | undefined;
+  '#text'?: string;
+  '@_url'?: string;
+  '@_href'?: string;
+  '@_type'?: string;
+  '@_rel'?: string;
+  '@_term'?: string;
+  '@_medium'?: string;
+}
+
 // Configure XML parser for RSS/ATOM feeds
 const parserOptions = {
   ignoreAttributes: false,
@@ -74,45 +110,47 @@ export async function parseRSSFeed(xmlString: string): Promise<ParsedFeed> {
 /**
  * Get text value from parsed XML object
  */
-function getTextValue(obj: any, path: string | string[]): string | undefined {
+function getTextValue(obj: XMLElement | null | undefined, path: string | string[]): string | undefined {
   if (!obj) return undefined;
-  
+
   const paths = Array.isArray(path) ? path : [path];
-  
+
   for (const p of paths) {
     const value = obj[p];
     if (value !== undefined && value !== null) {
       if (typeof value === 'string') {
         return value.trim() || undefined;
       }
-      if (typeof value === 'object' && value['#text']) {
+      if (typeof value === 'object' && !Array.isArray(value) && '#text' in value && typeof value['#text'] === 'string') {
         return value['#text'].trim() || undefined;
       }
     }
   }
-  
+
   return undefined;
 }
 
 /**
  * Get array value from parsed XML object (handles single item vs array)
  */
-function getArrayValue(obj: any, path: string): any[] {
-  const value = obj?.[path];
+function getArrayValue(obj: XMLElement | null | undefined, path: string): XMLElement[] {
+  if (!obj) return [];
+  const value = obj[path];
   if (!value) return [];
-  return Array.isArray(value) ? value : [value];
+  if (Array.isArray(value)) return value as XMLElement[];
+  return [value as XMLElement];
 }
 
 /**
  * Parse RSS 2.0 feed
  */
-function parseRSS2Feed(parsed: any): ParsedFeed {
-  const rss = parsed.rss;
+function parseRSS2Feed(parsed: Record<string, unknown>): ParsedFeed {
+  const rss = parsed.rss as XMLElement | undefined;
   if (!rss || !rss.channel) {
     throw new Error('Invalid RSS feed: No channel element found');
   }
 
-  const channel = rss.channel;
+  const channel = rss.channel as XMLElement;
   const feed: ParsedFeed = {
     title: getTextValue(channel, 'title') || 'Unknown Feed',
     description: getTextValue(channel, 'description'),
@@ -122,7 +160,7 @@ function parseRSS2Feed(parsed: any): ParsedFeed {
 
   const items = getArrayValue(channel, 'item');
 
-  items.forEach((item: any, index: number) => {
+  items.forEach((item: XMLElement, index: number) => {
     const title = getTextValue(item, 'title');
     const link = getTextValue(item, 'link');
     const pubDateStr = getTextValue(item, ['pubDate', 'pubdate', 'dc:date']);
@@ -152,8 +190,8 @@ function parseRSS2Feed(parsed: any): ParsedFeed {
 /**
  * Parse ATOM feed
  */
-function parseATOMFeed(parsed: any): ParsedFeed {
-  const feedElement = parsed.feed;
+function parseATOMFeed(parsed: Record<string, unknown>): ParsedFeed {
+  const feedElement = parsed.feed as XMLElement | undefined;
 
   if (!feedElement) {
     throw new Error('Invalid ATOM feed: No feed element found');
@@ -168,7 +206,7 @@ function parseATOMFeed(parsed: any): ParsedFeed {
 
   const entries = getArrayValue(feedElement, 'entry');
 
-  entries.forEach((entry: any, index: number) => {
+  entries.forEach((entry: XMLElement, index: number) => {
     const title = getTextValue(entry, 'title');
     const link = getAtomLink(entry);
     const publishedStr = getTextValue(entry, ['published', 'updated']);
@@ -198,62 +236,63 @@ function parseATOMFeed(parsed: any): ParsedFeed {
 /**
  * Get link from ATOM entry
  */
-function getAtomLink(element: any): string | undefined {
+function getAtomLink(element: XMLElement): string | undefined {
   const links = getArrayValue(element, 'link');
-  
+
   // Find alternate link first, then any link
-  const alternateLink = links.find((link: any) => 
-    (typeof link === 'object' && link['@_rel'] === 'alternate') || 
+  const alternateLink = links.find((link: XMLElement) =>
+    (typeof link === 'object' && link['@_rel'] === 'alternate') ||
     (typeof link === 'object' && !link['@_rel'])
   );
-  
+
   if (alternateLink) {
     if (typeof alternateLink === 'string') {
       return alternateLink;
     }
-    return alternateLink['@_href'] || alternateLink['href'];
+    return (alternateLink['@_href'] || alternateLink['href']) as string | undefined;
   }
-  
+
   // Fallback to first link
   const firstLink = links[0];
   if (firstLink) {
     if (typeof firstLink === 'string') {
       return firstLink;
     }
-    return firstLink['@_href'] || firstLink['href'];
+    return (firstLink['@_href'] || firstLink['href']) as string | undefined;
   }
-  
+
   return undefined;
 }
 
 /**
  * Extract image URL from RSS item
  */
-function extractImageFromRSS(item: any): string | undefined {
+function extractImageFromRSS(item: XMLElement): string | undefined {
   // 1. Media RSS (media:thumbnail or media:content)
   const mediaThumbnail = item['media:thumbnail'] || item.thumbnail;
   if (mediaThumbnail) {
     if (typeof mediaThumbnail === 'string') {
       return mediaThumbnail;
     }
-    return mediaThumbnail['@_url'] || mediaThumbnail.url;
+    const thumb = mediaThumbnail as XMLElement;
+    return (thumb['@_url'] || thumb.url) as string | undefined;
   }
 
   const mediaContent = item['media:content'] || item.content;
-  if (mediaContent) {
-    const content = typeof mediaContent === 'object' ? mediaContent : { '@_medium': mediaContent };
+  if (mediaContent && typeof mediaContent === 'object') {
+    const content = mediaContent as XMLElement;
     if (content['@_medium'] === 'image' || content.medium === 'image') {
-      return content['@_url'] || content.url;
+      return (content['@_url'] || content.url) as string | undefined;
     }
   }
 
   // 2. Enclosure (typically for podcasts but sometimes images)
   const enclosure = item.enclosure;
   if (enclosure) {
-    const enc = Array.isArray(enclosure) ? enclosure[0] : enclosure;
-    const type = enc['@_type'] || enc.type || '';
+    const enc = (Array.isArray(enclosure) ? enclosure[0] : enclosure) as XMLElement;
+    const type = (enc['@_type'] || enc.type || '') as string;
     if (type.startsWith('image/')) {
-      return enc['@_url'] || enc.url;
+      return (enc['@_url'] || enc.url) as string | undefined;
     }
   }
 
@@ -270,26 +309,27 @@ function extractImageFromRSS(item: any): string | undefined {
 /**
  * Extract image URL from ATOM entry
  */
-function extractImageFromAtom(entry: any): string | undefined {
+function extractImageFromAtom(entry: XMLElement): string | undefined {
   // 1. Media thumbnail
   const mediaThumbnail = entry['media:thumbnail'] || entry.thumbnail;
   if (mediaThumbnail) {
     if (typeof mediaThumbnail === 'string') {
       return mediaThumbnail;
     }
-    return mediaThumbnail['@_url'] || mediaThumbnail.url;
+    const thumb = mediaThumbnail as XMLElement;
+    return (thumb['@_url'] || thumb.url) as string | undefined;
   }
 
   // 2. Link with type="image"
   const links = getArrayValue(entry, 'link');
-  const imageLink = links.find((link: any) => {
+  const imageLink = links.find((link: XMLElement) => {
     if (typeof link === 'string') return false;
-    const type = link['@_type'] || link.type || '';
+    const type = (link['@_type'] || link.type || '') as string;
     return type.startsWith('image/');
   });
-  
+
   if (imageLink) {
-    return imageLink['@_href'] || imageLink.href;
+    return (imageLink['@_href'] || imageLink.href) as string | undefined;
   }
 
   // 3. Extract from content/summary HTML
@@ -305,11 +345,11 @@ function extractImageFromAtom(entry: any): string | undefined {
 /**
  * Extract categories from RSS item
  */
-function extractCategories(item: any): string[] {
+function extractCategories(item: XMLElement): string[] {
   const categories: string[] = [];
   const categoryElements = getArrayValue(item, 'category');
 
-  categoryElements.forEach((cat: any) => {
+  categoryElements.forEach((cat: XMLElement) => {
     const text = typeof cat === 'string' ? cat : (cat['#text'] || cat['@_term'] || cat.term);
     if (text && typeof text === 'string') {
       categories.push(text.trim());
@@ -322,11 +362,11 @@ function extractCategories(item: any): string[] {
 /**
  * Extract categories from ATOM entry
  */
-function extractCategoriesAtom(entry: any): string[] {
+function extractCategoriesAtom(entry: XMLElement): string[] {
   const categories: string[] = [];
   const categoryElements = getArrayValue(entry, 'category');
 
-  categoryElements.forEach((cat: any) => {
+  categoryElements.forEach((cat: XMLElement) => {
     const term = typeof cat === 'string' ? cat : (cat['@_term'] || cat.term);
     if (term && typeof term === 'string') {
       categories.push(term.trim());

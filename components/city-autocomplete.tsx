@@ -55,51 +55,6 @@ export default function CityAutocomplete({
           location: "text-[#ff69b4]",
           pageIndicator: "text-[#ff1493]"
         };
-      case 'tron':
-        return {
-          dropdown: "bg-black border-[#00FFFF] text-white",
-          item: "hover:bg-[#00FFFF] hover:text-black",
-          selectedItem: "bg-[#00FFFF] text-black",
-          cityName: "text-white",
-          location: "text-[#00FFFF]",
-          pageIndicator: "text-[#00FFFF]"
-        };
-      case 'atari2600':
-        return {
-          dropdown: "bg-[#000000] border-[#702800] text-[#FFFFFF]",
-          item: "hover:bg-[#702800] hover:text-[#E0EC9C]",
-          selectedItem: "bg-[#702800] text-[#E0EC9C]",
-          cityName: "text-[#FFFFFF]",
-          location: "text-[#E0EC9C]",
-          pageIndicator: "text-[#E0EC9C]"
-        };
-      case 'monochromeGreen':
-        return {
-          dropdown: "bg-[#0D0D0D] border-[#009900] text-[#33FF33]",
-          item: "hover:bg-[#009900] hover:text-[#0D0D0D]",
-          selectedItem: "bg-[#009900] text-[#0D0D0D]",
-          cityName: "text-[#33FF33]",
-          location: "text-[#66FF66]",
-          pageIndicator: "text-[#33FF33]"
-        };
-      case '8bitClassic':
-        return {
-          dropdown: "bg-[#D3D3D3] border-[#000000] text-[#000000]",
-          item: "hover:bg-[#000000] hover:text-[#D3D3D3]",
-          selectedItem: "bg-[#000000] text-[#D3D3D3]",
-          cityName: "text-[#000000]",
-          location: "text-[#CC0000]",
-          pageIndicator: "text-[#CC0000]"
-        };
-      case '16bitSnes':
-        return {
-          dropdown: "bg-[#B8B8D0] border-[#5B5B8B] text-[#2C2C3E]",
-          item: "hover:bg-[#5B5B8B] hover:text-[#B8B8D0]",
-          selectedItem: "bg-[#5B5B8B] text-[#B8B8D0]",
-          cityName: "text-[#2C2C3E]",
-          location: "text-[#FFD700]",
-          pageIndicator: "text-[#FFD700]"
-        };
       default: // dark
         return {
           dropdown: "bg-[#0f0f0f] border-[#00d4ff] text-[#e0e0e0]",

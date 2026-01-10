@@ -6,6 +6,7 @@
 
 import type {
   Game,
+  GameCategory,
   GameScore,
   LeaderboardEntry,
   ScoreSubmission,
@@ -135,6 +136,6 @@ export async function fetchFeaturedGames(): Promise<Game[]> {
 /**
  * Get games by category
  */
-export async function fetchGamesByCategory(category: string): Promise<Game[]> {
-  return fetchGames({ category: category as any });
+export async function fetchGamesByCategory(category: GameCategory): Promise<Game[]> {
+  return fetchGames({ category });
 }

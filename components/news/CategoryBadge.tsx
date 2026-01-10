@@ -130,8 +130,6 @@ export default function CategoryBadge({ category, className }: CategoryBadgeProp
       ? category === 'breaking' || category === 'severe' || category === 'alerts' || category === 'earthquakes' || category === 'volcanoes'
         ? 'bg-pink-600 text-white border-pink-800'
         : 'bg-purple-600 text-white border-purple-800'
-      : theme === 'tron'
-      ? 'bg-cyan-500 text-black border-cyan-700'
       : config.colorClass;
 
   return (

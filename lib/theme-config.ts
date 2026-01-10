@@ -4,7 +4,7 @@
  * Defines all available themes including premium themes for registered users
  */
 
-export type ThemeType = 'dark' | 'miami' | 'tron' | 'atari2600' | 'monochromeGreen' | '8bitClassic' | '16bitSnes' | 'synthwave84' | 'tokyoNight' | 'dracula' | 'cyberpunk' | 'matrix';
+export type ThemeType = 'dark' | 'miami' | 'synthwave84' | 'dracula' | 'cyberpunk' | 'matrix';
 
 export interface ThemeDefinition {
   name: string;
@@ -72,102 +72,7 @@ export const THEME_DEFINITIONS: Record<ThemeType, ThemeDefinition> = {
     },
     description: 'Retro 80s synthwave vibes'
   },
-  tron: {
-    name: 'tron',
-    displayName: 'TRON Legacy',
-    isPremium: false,
-    colors: {
-      background: '#000000',
-      backgroundSecondary: '#000000',
-      backgroundTertiary: '#0a0a0a',
-      primary: '#00FFFF',
-      text: '#FFFFFF',
-      textSecondary: '#88CCFF',
-      accent: '#00FFFF',
-      border: '#00FFFF'
-    },
-    description: 'Enter the Grid with this digital theme'
-  },
-
   // Premium themes - only for registered users
-  atari2600: {
-    name: 'atari2600',
-    displayName: 'Atari 2600',
-    isPremium: true,
-    colors: {
-      background: '#000000',
-      backgroundSecondary: '#1a1a1a',
-      backgroundTertiary: '#2d2d2d',
-      primary: '#E0EC9C',
-      text: '#FFFFFF',
-      textSecondary: '#888888',
-      accent: '#841800',
-      border: '#702800',
-      highlight: '#E0EC9C',
-      comments: '#888888'
-    },
-    font: '"VT323", "Press Start 2P", monospace',
-    description: 'Classic Atari 2600 console aesthetic'
-  },
-  monochromeGreen: {
-    name: 'monochromeGreen',
-    displayName: 'Terminal Green',
-    isPremium: true,
-    colors: {
-      background: '#0D0D0D',
-      backgroundSecondary: '#1a1a1a',
-      backgroundTertiary: '#262626',
-      primary: '#33FF33',
-      text: '#33FF33',
-      textSecondary: '#66FF66',
-      accent: '#99FF99',
-      border: '#009900',
-      highlight: '#009900',
-      comments: '#00FF00'
-    },
-    font: '"Fira Code", "Courier New", monospace',
-    description: 'Old-school terminal monochrome display'
-  },
-  '8bitClassic': {
-    name: '8bitClassic',
-    displayName: '8-Bit Classic',
-    isPremium: true,
-    colors: {
-      background: '#D3D3D3',
-      backgroundSecondary: '#C0C0C0',
-      backgroundTertiary: '#A9A9A9',
-      primary: '#CC0000',
-      text: '#000000',
-      textSecondary: '#666666',
-      accent: '#0066CC',
-      border: '#000000',
-      highlight: '#00AA00',
-      comments: '#666666'
-    },
-    font: '"Press Start 2P", "Courier New", monospace',
-    description: 'NES-inspired 8-bit gaming theme'
-  },
-  '16bitSnes': {
-    name: '16bitSnes',
-    displayName: '16-Bit SNES',
-    isPremium: true,
-    colors: {
-      background: '#B8B8D0',
-      backgroundSecondary: '#9E9EB8',
-      backgroundTertiary: '#8484A0',
-      primary: '#FFD700',
-      text: '#2C2C3E',
-      textSecondary: '#5B5B8B',
-      accent: '#8B8BB8',
-      border: '#5B5B8B',
-      highlight: '#FFD700',
-      comments: '#6B6B8C'
-    },
-    font: '"Courier New", "VT323", monospace',
-    description: 'Super Nintendo 16-bit era theme'
-  },
-
-  // New Premium Themes
   synthwave84: {
     name: 'synthwave84',
     displayName: 'Synthwave \'84 🌆',
@@ -196,36 +101,6 @@ export const THEME_DEFINITIONS: Record<ThemeType, ThemeDefinition> = {
       matrixRain: false,
       glitchEffect: false,
       bokeh: false
-    }
-  },
-  tokyoNight: {
-    name: 'tokyoNight',
-    displayName: 'Tokyo Night 🌃',
-    isPremium: true,
-    colors: {
-      background: '#16161e',
-      backgroundSecondary: '#24283b',
-      backgroundTertiary: '#2f3549',
-      primary: '#7dcfff',
-      text: '#c0caf5',
-      textSecondary: '#a9b1d6',
-      accent: '#ff9e64',
-      border: '#9d7cd8',
-      highlight: '#f7768e',
-      comments: '#565f89'
-    },
-    font: '"Fira Code", monospace',
-    description: 'Modern Japanese city at night with neon signs - perfect balance of style and readability',
-    effects: {
-      backgroundGradient: 'linear-gradient(180deg, #1a1b26 0%, #16161e 100%)',
-      cardGlow: '0 0 15px rgba(125, 207, 255, 0.3)',
-      textGlow: '0 0 5px rgba(125, 207, 255, 0.5)',
-      borderGlow: '0 0 10px rgba(157, 124, 216, 0.6)',
-      scanlines: false,
-      gridPattern: false,
-      matrixRain: false,
-      glitchEffect: false,
-      bokeh: true
     }
   },
   dracula: {

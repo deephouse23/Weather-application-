@@ -30,9 +30,7 @@ export class ThemeObserver {
 
     // Remove all theme classes from body
     const allThemes: ThemeType[] = [
-      'dark', 'miami', 'tron', 'atari2600', 'monochromeGreen',
-      '8bitClassic', '16bitSnes', 'synthwave84', 'tokyoNight',
-      'dracula', 'cyberpunk', 'matrix'
+      'dark', 'miami', 'synthwave84', 'dracula', 'cyberpunk', 'matrix'
     ];
 
     allThemes.forEach(t => {
@@ -116,9 +114,7 @@ export class ThemeObserver {
       document.querySelectorAll('[data-theme-target]').forEach(element => {
         // Remove old theme classes
         const allThemes: ThemeType[] = [
-          'dark', 'miami', 'tron', 'atari2600', 'monochromeGreen',
-          '8bitClassic', '16bitSnes', 'synthwave84', 'tokyoNight',
-          'dracula', 'cyberpunk', 'matrix'
+          'dark', 'miami', 'synthwave84', 'dracula', 'cyberpunk', 'matrix'
         ];
         allThemes.forEach(t => {
           element.classList.remove(`theme-${t}`);

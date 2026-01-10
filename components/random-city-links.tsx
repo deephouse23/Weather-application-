@@ -78,8 +78,7 @@ export default function RandomCityLinks({ theme = 'dark' }: RandomCityLinksProps
       <div className={cn(
         "mt-16 pt-8 border-t-2 text-center",
         theme === "dark" && "border-[#00d4ff]",
-        theme === "miami" && "border-[#ff1493]",
-        theme === "tron" && "border-[#00FFFF]"
+        theme === "miami" && "border-[#ff1493]"
       )}>
         <div className="animate-pulse text-weather-text">Loading cities...</div>
       </div>
@@ -90,15 +89,13 @@ export default function RandomCityLinks({ theme = 'dark' }: RandomCityLinksProps
     <div className={cn(
       "mt-16 pt-8 border-t-2 text-center",
       theme === "dark" && "border-[#00d4ff]",
-      theme === "miami" && "border-[#ff1493]",
-      theme === "tron" && "border-[#00FFFF]"
+      theme === "miami" && "border-[#ff1493]"
     )}>
       <div className="flex items-center justify-center gap-4 mb-4">
         <h2 className={cn(
           "text-lg font-bold uppercase tracking-wider font-mono",
           theme === "dark" && "text-[#00d4ff]",
-          theme === "miami" && "text-[#ff1493]",
-          theme === "tron" && "text-[#00FFFF]"
+          theme === "miami" && "text-[#ff1493]"
         )}>
           WEATHER BY CITY
         </h2>
@@ -107,8 +104,7 @@ export default function RandomCityLinks({ theme = 'dark' }: RandomCityLinksProps
           className={cn(
             "px-3 py-1 text-xs font-mono rounded border transition-all duration-200",
             theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] bg-[#00d4ff]/20 hover:bg-[#00d4ff]/40",
-            theme === "miami" && "border-[#ff1493] text-[#00ffff] bg-[#ff1493]/20 hover:bg-[#ff1493]/40",
-            theme === "tron" && "border-[#00FFFF] text-white bg-[#00FFFF]/20 hover:bg-[#00FFFF]/40"
+            theme === "miami" && "border-[#ff1493] text-[#00ffff] bg-[#ff1493]/20 hover:bg-[#ff1493]/40"
           )}
           title="Show different cities"
           aria-label="Shuffle cities"
@@ -116,7 +112,7 @@ export default function RandomCityLinks({ theme = 'dark' }: RandomCityLinksProps
           ↻ SHUFFLE
         </button>
       </div>
-      
+
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 max-w-4xl mx-auto">
         {displayedCities.map((city) => (
           <Link
@@ -125,8 +121,7 @@ export default function RandomCityLinks({ theme = 'dark' }: RandomCityLinksProps
             className={cn(
               "block px-3 py-2 text-sm font-mono rounded border transition-all duration-200",
               theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-              theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]",
-              theme === "tron" && "border-[#00FFFF] text-white hover:bg-[#00FFFF] hover:text-black"
+              theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]"
             )}
           >
             {city.name}

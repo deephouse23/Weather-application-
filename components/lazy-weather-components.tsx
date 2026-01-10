@@ -37,11 +37,10 @@ function WeatherComponentLoader({ theme }: { theme: ThemeType }) {
         "h-8 w-8 animate-spin",
         theme === "dark" && "text-blue-500",
         theme === "miami" && "text-pink-500",
-        theme === "tron" && "text-cyan-500",
-        theme === "atari2600" && "text-[#E0EC9C]",
-        theme === "monochromeGreen" && "text-[#33FF33]",
-        theme === "8bitClassic" && "text-[#CC0000]",
-        theme === "16bitSnes" && "text-[#FFD700]"
+        theme === "synthwave84" && "text-[#ff7edb]",
+        theme === "dracula" && "text-[#ff79c6]",
+        theme === "cyberpunk" && "text-[#00ffff]",
+        theme === "matrix" && "text-[#00ff41]"
       )} />
       <span className="ml-2 text-white text-sm">Loading weather data...</span>
     </div>

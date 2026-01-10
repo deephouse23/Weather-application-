@@ -1,148 +1,329 @@
 'use client'
 
 /**
- * 16-Bit Weather Platform - v1.0.0
- * 
- * Copyright (C) 2025 16-Bit Weather
- * Licensed under Fair Source License, Version 0.9
- * 
- * Use Limitation: 5 users
- * See LICENSE file for full terms
- * 
- * BETA SOFTWARE NOTICE:
- * This software is in active development. Features may change.
- * Report issues: https://github.com/deephouse23/Weather-application-/issues
+ * Enhanced Theme Selector with Freemium Strategy
+ * - Free themes for everyone
+ * - Premium themes with preview for non-registered users
+ * - Upgrade prompts and CTAs
  */
 
-import { Moon, Sun, Zap, Gamepad2, Terminal, Cpu, Ghost, CloudLightning, Code2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import { Crown, Lock, Play, Timer, Sparkles, Star } from 'lucide-react'
+import { useAuth } from '@/lib/auth'
 import { useTheme } from '@/components/theme-provider'
-import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
-import { THEME_DEFINITIONS, ThemeDefinition, isThemePremium } from '@/lib/theme-config'
+import { useThemePreview } from '@/lib/hooks/use-theme-preview'
+import { 
+  THEME_CONFIGS, 
+  getFreeThemes, 
+  getPremiumThemes, 
+  getThemeConfig,
+  type ThemeConfig 
+} from '@/lib/theme-tiers'
+import { cn } from '@/lib/utils'
 
-// Map icons to themes
-const THEME_ICONS: Record<string, any> = {
-  dark: Moon,
-  miami: Sun,
-  tron: Zap,
-  atari2600: Gamepad2,
-  monochromeGreen: Terminal,
-  '8bitClassic': Gamepad2,
-  '16bitSnes': Gamepad2,
-  synthwave84: Sun,
-  tokyoNight: Moon,
-  dracula: Ghost,
-  cyberpunk: Cpu,
-  matrix: Code2
+interface ThemeCardProps {
+  theme: ThemeConfig
+  isActive: boolean
+  isLocked: boolean
+  isPreviewActive?: boolean
+  timeRemaining?: number
+  onSelect: (themeId: string) => void
+  onUpgrade?: () => void
 }
 
-export default function ThemeSelector() {
-  const { theme, setTheme, availableThemes, isAuthenticated } = useTheme()
-  const themeClasses = getComponentStyles(theme as ThemeType, 'dashboard')
-
-  // Generate options from config
-  const themeOptions = Object.values(THEME_DEFINITIONS).map((def: ThemeDefinition) => {
-    // Determine preview colors based on theme definition
-    // We try to match the tailwind classes if possible, otherwise rely on dynamic styles which we might not have here yet.
-    // For now, we'll map a few known ones and default to a generic style for others or use inline styles if we were refactoring fully.
-    // Given the previous code used hardcoded utility classes, we'll try to map colors to closest utilities or use arbitrary values.
-
-    // Helper to get icon
-    const Icon = THEME_ICONS[def.name] || Moon
-
-    return {
-      id: def.name,
-      name: def.displayName,
-      description: def.description || '',
-      icon: Icon,
-      isPremium: def.isPremium,
-      // We will use inline styles for the preview to be accurate to the config
-      colors: def.colors
+function ThemeCard({ 
+  theme, 
+  isActive, 
+  isLocked, 
+  isPreviewActive = false,
+  timeRemaining = 0,
+  onSelect, 
+  onUpgrade 
+}: ThemeCardProps) {
+  const getCategoryIcon = () => {
+    switch (theme.category) {
+      case 'retro': return <Sparkles className="w-3 h-3" />
+      case 'seasonal': return <Star className="w-3 h-3" />
+      case 'special': return <Crown className="w-3 h-3" />
+      default: return null
     }
-  })
+  }
+
+  const getCategoryColor = () => {
+    switch (theme.category) {
+      case 'retro': return 'from-purple-500 to-pink-500'
+      case 'seasonal': return 'from-orange-500 to-red-500' 
+      case 'special': return 'from-yellow-500 to-amber-500'
+      default: return 'from-blue-500 to-cyan-500'
+    }
+  }
 
   return (
-    <div className={`p-6 border-2 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
-      <div className="flex justify-between items-center mb-4">
-        <h3 className={`text-lg font-mono font-bold uppercase tracking-wider ${themeClasses.text}`}>
-          Theme Settings
-        </h3>
-        {isAuthenticated && (
-          <span className="text-xs font-mono px-2 py-1 rounded bg-green-900 text-green-400 border border-green-700">
-            PREMIUM UNLOCKED
-          </span>
-        )}
-      </div>
+    <Card 
+      className={cn(
+        "relative overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 border-2",
+        isActive ? "ring-2 ring-primary ring-offset-2" : "",
+        isLocked ? "opacity-75" : "",
+        isPreviewActive ? "ring-2 ring-orange-500 ring-offset-2" : ""
+      )}
+      onClick={() => onSelect(theme.id)}
+    >
+      {/* Theme Preview Background */}
+      <div 
+        className="absolute inset-0 opacity-20"
+        style={{
+          background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.accent})`
+        }}
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {themeOptions.map((option) => {
-          const isActive = theme === option.id
-          const isLocked = option.isPremium && !isAuthenticated
-          const IconComponent = option.icon
+      <CardContent className="p-4 relative z-10">
+        {/* Header with badges */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            {getCategoryIcon()}
+            <h4 className="font-bold font-mono text-sm uppercase tracking-wider">
+              {theme.displayName}
+            </h4>
+          </div>
+          
+          <div className="flex gap-1">
+            {isPreviewActive && (
+              <Badge variant="secondary" className="text-xs px-1 py-0.5 bg-orange-100 text-orange-800">
+                <Timer className="w-3 h-3 mr-1" />
+                {timeRemaining}s
+              </Badge>
+            )}
+            
+            {theme.tier === 'premium' && (
+              <Badge 
+                variant="secondary" 
+                className={cn(
+                  "text-xs px-1 py-0.5 text-white",
+                  `bg-gradient-to-r ${getCategoryColor()}`
+                )}
+              >
+                {isLocked ? <Lock className="w-3 h-3" /> : <Crown className="w-3 h-3" />}
+              </Badge>
+            )}
+          </div>
+        </div>
 
-          return (
-            <button
-              key={option.id}
-              onClick={() => !isLocked && setTheme(option.id as ThemeType)}
-              disabled={isLocked}
-              className={`relative p-4 border-2 transition-all duration-200 text-left w-full group ${isActive
-                  ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black`
-                  : isLocked
-                    ? `opacity-60 cursor-not-allowed ${themeClasses.background} border-gray-700 text-gray-500`
-                    : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} hover:scale-[1.02] hover:bg-white/5`
-                }`}
+        {/* Color Preview */}
+        <div className="flex gap-1 mb-3 h-6">
+          <div 
+            className="flex-1 rounded-sm border"
+            style={{ backgroundColor: theme.colors.primary }}
+          />
+          <div 
+            className="flex-1 rounded-sm border"
+            style={{ backgroundColor: theme.colors.background }}
+          />
+          <div 
+            className="flex-1 rounded-sm border"
+            style={{ backgroundColor: theme.colors.accent }}
+          />
+        </div>
+
+        {/* Description */}
+        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+          {theme.description}
+        </p>
+
+        {/* Action Buttons */}
+        <div className="space-y-2">
+          {isActive && (
+            <Badge variant="default" className="w-full justify-center py-1">
+              ✓ Active
+            </Badge>
+          )}
+          
+          {!isActive && !isLocked && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full text-xs"
+              onClick={(e) => {
+                e.stopPropagation()
+                onSelect(theme.id)
+              }}
             >
-              {/* Active Indicator */}
-              {isActive && (
-                <div className="absolute top-2 right-2">
-                  <span className="px-2 py-1 bg-black text-white text-[10px] font-mono uppercase">ACTIVE</span>
-                </div>
-              )}
+              Apply Theme
+            </Button>
+          )}
+          
+          {!isActive && isLocked && (
+            <div className="space-y-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full text-xs"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onSelect(theme.id)
+                }}
+              >
+                <Play className="w-3 h-3 mr-1" />
+                Preview 30s
+              </Button>
+              
+              <Button 
+                size="sm" 
+                className="w-full text-xs bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onUpgrade?.()
+                }}
+              >
+                <Crown className="w-3 h-3 mr-1" />
+                Unlock Free
+              </Button>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
-              {/* Premium Indicator */}
-              {option.isPremium && !isActive && (
-                <div className="absolute top-2 right-2">
-                  {isLocked ? (
-                    <span className="px-2 py-1 bg-red-900/50 text-red-400 border border-red-800 text-[10px] font-mono uppercase">LOCKED</span>
-                  ) : (
-                    <span className="px-2 py-1 bg-yellow-900/50 text-yellow-400 border border-yellow-800 text-[10px] font-mono uppercase">PREMIUM</span>
-                  )}
-                </div>
-              )}
+export function ThemeSelectorEnhanced() {
+  const { user } = useAuth()
+  const { theme: currentTheme } = useTheme()
+  const { 
+    isPreviewActive, 
+    previewTheme, 
+    timeRemaining, 
+    startPreview, 
+    upgradeAccount,
+    canAccessTheme 
+  } = useThemePreview()
 
-              <div className="flex items-start space-x-3">
-                {/* Theme Preview Circle */}
-                <div
-                  className="w-10 h-10 rounded-full border-2 flex items-center justify-center shrink-0"
-                  style={{
-                    backgroundColor: option.colors.background,
-                    borderColor: option.colors.primary,
-                    color: option.colors.primary
-                  }}
-                >
-                  <IconComponent className="w-5 h-5" />
-                </div>
+  const freeThemes = getFreeThemes()
+  const premiumThemes = getPremiumThemes()
+  
+  const handleThemeSelect = (themeId: string) => {
+    startPreview(themeId)
+  }
 
-                {/* Theme Info */}
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-mono font-bold text-sm uppercase tracking-wider mb-0.5 truncate">
-                    {option.name}
-                  </h4>
-                  <p className={`text-xs font-mono line-clamp-2 ${isActive ? 'text-black/80' : 'text-gray-500'}`}>
-                    {option.description}
-                  </p>
-                </div>
-              </div>
-            </button>
-          )
-        })}
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-bold font-mono uppercase tracking-wider">
+          Choose Your Style
+        </h2>
+        <p className="text-muted-foreground">
+          {user 
+            ? "All themes unlocked for you! 🎉" 
+            : "Free themes available. Sign up to unlock premium themes!"
+          }
+        </p>
       </div>
 
-      {!isAuthenticated && (
-        <div className={`mt-6 p-4 border border-dashed ${themeClasses.borderColor} bg-black/20`}>
-          <p className={`text-sm font-mono text-center ${themeClasses.text}`}>
-            <span className="block mb-2 text-xl">🔒</span>
-            Login to unlock <span className="font-bold text-yellow-400">{themeOptions.filter(t => t.isPremium).length} Premium Themes</span> keeping your preferences synced across devices.
+      {/* Preview Status */}
+      {isPreviewActive && (
+        <div className="bg-gradient-to-r from-orange-100 to-pink-100 dark:from-orange-900/20 dark:to-pink-900/20 p-4 rounded-lg border-2 border-orange-200 dark:border-orange-700">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Timer className="w-5 h-5 text-orange-600" />
+              <div>
+                <h3 className="font-semibold text-orange-800 dark:text-orange-200">
+                  Previewing {getThemeConfig(previewTheme!)?.displayName}
+                </h3>
+                <p className="text-sm text-orange-600 dark:text-orange-300">
+                  {timeRemaining} seconds remaining
+                </p>
+              </div>
+            </div>
+            <Button 
+              size="sm"
+              onClick={upgradeAccount}
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+            >
+              <Crown className="w-4 h-4 mr-1" />
+              Keep This Theme
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Free Themes */}
+      <div>
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <span className="text-green-600">🆓</span>
+          Free Themes
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {freeThemes.map((theme) => (
+            <ThemeCard
+              key={theme.id}
+              theme={theme}
+              isActive={currentTheme === theme.id && !isPreviewActive}
+              isLocked={false}
+              onSelect={handleThemeSelect}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Premium Themes */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <span className="text-purple-600">👑</span>
+            Premium Themes
+            {!user && (
+              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                Preview Available
+              </Badge>
+            )}
+          </h3>
+          
+          {!user && (
+            <Button 
+              variant="outline"
+              size="sm" 
+              onClick={upgradeAccount}
+              className="text-xs"
+            >
+              <Crown className="w-3 h-3 mr-1" />
+              Sign Up Free
+            </Button>
+          )}
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {premiumThemes.map((theme) => (
+            <ThemeCard
+              key={theme.id}
+              theme={theme}
+              isActive={currentTheme === theme.id && !isPreviewActive}
+              isLocked={!canAccessTheme(theme.id)}
+              isPreviewActive={isPreviewActive && previewTheme === theme.id}
+              timeRemaining={timeRemaining}
+              onSelect={handleThemeSelect}
+              onUpgrade={upgradeAccount}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      {!user && (
+        <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 rounded-lg text-center">
+          <Crown className="w-12 h-12 mx-auto mb-4" />
+          <h3 className="text-xl font-bold mb-2">Unlock All Premium Themes</h3>
+          <p className="text-purple-100 mb-4">
+            Get instant access to all current and future themes with a free account
           </p>
+          <Button 
+            size="lg" 
+            onClick={upgradeAccount}
+            className="bg-white text-purple-600 hover:bg-gray-100"
+          >
+            Sign Up Free - No Credit Card Required
+          </Button>
         </div>
       )}
     </div>

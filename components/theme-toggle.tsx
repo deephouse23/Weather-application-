@@ -28,7 +28,7 @@ export function ThemeToggle() {
 
   const handleClick = () => {
     // Cycle through themes using the preview system
-    const themes = ['dark', 'miami', 'tron']
+    const themes = ['dark', 'miami', 'synthwave84', 'dracula', 'cyberpunk', 'matrix']
     const currentIndex = themes.indexOf(theme)
     const nextTheme = themes[(currentIndex + 1) % themes.length]
     startPreview(nextTheme)
@@ -38,7 +38,8 @@ export function ThemeToggle() {
     switch (theme) {
       case 'miami':
         return <Sun className="w-4 h-4" />
-      case 'tron':
+      case 'synthwave84':
+      case 'cyberpunk':
         return <Zap className="w-4 h-4" />
       default:
         return <Moon className="w-4 h-4" />

@@ -62,45 +62,6 @@ export const THEME_CONFIGS: ThemeConfig[] = [
     }
   },
   {
-    id: 'tron',
-    name: 'tron',
-    displayName: 'Tron Legacy',
-    description: 'Sleek sci-fi terminal aesthetic',
-    tier: 'premium',
-    category: 'retro',
-    colors: {
-      primary: '#00FFFF',
-      background: '#000000',
-      accent: '#88CCFF'
-    }
-  },
-  {
-    id: 'autumn',
-    name: 'autumn',
-    displayName: 'Autumn Leaves',
-    description: 'Warm fall colors and cozy vibes',
-    tier: 'premium',
-    category: 'seasonal',
-    colors: {
-      primary: '#d97706',
-      background: '#292524',
-      accent: '#f59e0b'
-    }
-  },
-  {
-    id: 'winter',
-    name: 'winter',
-    displayName: 'Winter Frost',
-    description: 'Cool blues and icy whites',
-    tier: 'premium',
-    category: 'seasonal',
-    colors: {
-      primary: '#3b82f6',
-      background: '#1e293b',
-      accent: '#60a5fa'
-    }
-  },
-  {
     id: 'synthwave84',
     name: 'synthwave84',
     displayName: 'Synthwave \'84 🌆',
@@ -111,19 +72,6 @@ export const THEME_CONFIGS: ThemeConfig[] = [
       primary: '#ff7edb',
       background: '#241b30',
       accent: '#00ffff'
-    }
-  },
-  {
-    id: 'tokyoNight',
-    name: 'tokyoNight',
-    displayName: 'Tokyo Night 🌃',
-    description: 'Modern Japanese city at night with neon signs - perfect balance of style and readability',
-    tier: 'premium',
-    category: 'special',
-    colors: {
-      primary: '#7dcfff',
-      background: '#1a1b26',
-      accent: '#ff9e64'
     }
   },
   {

@@ -16,16 +16,10 @@ export function ThemeWrapper({ children, className = '' }: ThemeWrapperProps) {
   const { theme } = useTheme()
   
   // Create theme-specific classes
-  const themeClasses = {
+  const themeClasses: Record<string, string> = {
     dark: 'theme-dark bg-[var(--bg)] text-[var(--text)]',
     miami: 'theme-miami bg-[var(--bg)] text-[var(--text)]',
-    tron: 'theme-tron bg-[var(--bg)] text-[var(--text)]',
-    atari2600: 'theme-atari2600 bg-[var(--bg)] text-[var(--text)]',
-    monochromeGreen: 'theme-monochromeGreen bg-[var(--bg)] text-[var(--text)]',
-    '8bitClassic': 'theme-8bitClassic bg-[var(--bg)] text-[var(--text)]',
-    '16bitSnes': 'theme-16bitSnes bg-[var(--bg)] text-[var(--text)]',
     synthwave84: 'theme-synthwave84 bg-[var(--bg)] text-[var(--text)]',
-    tokyoNight: 'theme-tokyoNight bg-[var(--bg)] text-[var(--text)]',
     dracula: 'theme-dracula bg-[var(--bg)] text-[var(--text)]',
     cyberpunk: 'theme-cyberpunk bg-[var(--bg)] text-[var(--text)]',
     matrix: 'theme-matrix bg-[var(--bg)] text-[var(--text)]'
@@ -61,9 +55,7 @@ export function ThemeCard({ children, className = '' }: ThemeWrapperProps) {
         backgroundColor: 'var(--bg-elev)',
         borderColor: 'var(--border)',
         color: 'var(--text)',
-        boxShadow: theme === 'tron' 
-          ? '0 0 20px var(--primary)' 
-          : theme === 'miami'
+        boxShadow: theme === 'miami' || theme === 'synthwave84'
           ? '0 0 15px var(--primary)'
           : '0 0 10px var(--primary)'
       }}

@@ -202,41 +202,6 @@ export const getThemeGradients = (theme: ThemeType): { primary: string; accent: 
         card: 'linear-gradient(135deg, #2d1b69 0%, #4a0e4e 100%)'
       };
 
-    case 'tron':
-      return {
-        primary: 'linear-gradient(135deg, #000000 0%, #0a0a0a 100%)',
-        accent: 'linear-gradient(90deg, #00FFFF 0%, #88CCFF 100%)',
-        card: 'linear-gradient(135deg, #000000 0%, #001111 100%)'
-      };
-
-    case 'atari2600':
-      return {
-        primary: `linear-gradient(135deg, ${colors.background} 0%, ${colors.backgroundTertiary} 100%)`,
-        accent: `linear-gradient(90deg, ${colors.highlight || colors.primary} 0%, ${colors.accent} 100%)`,
-        card: `linear-gradient(135deg, ${colors.backgroundSecondary} 0%, ${colors.backgroundTertiary} 100%)`
-      };
-
-    case 'monochromeGreen':
-      return {
-        primary: `linear-gradient(135deg, ${colors.background} 0%, ${colors.backgroundTertiary} 100%)`,
-        accent: `linear-gradient(90deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
-        card: `linear-gradient(135deg, ${colors.backgroundSecondary} 0%, ${colors.backgroundTertiary} 100%)`
-      };
-
-    case '8bitClassic':
-      return {
-        primary: `linear-gradient(135deg, ${colors.background} 0%, ${colors.backgroundSecondary} 100%)`,
-        accent: `linear-gradient(90deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
-        card: `linear-gradient(135deg, ${colors.backgroundSecondary} 0%, ${colors.backgroundTertiary} 100%)`
-      };
-
-    case '16bitSnes':
-      return {
-        primary: `linear-gradient(135deg, ${colors.background} 0%, ${colors.backgroundSecondary} 100%)`,
-        accent: `linear-gradient(90deg, ${colors.primary} 0%, ${colors.highlight || colors.accent} 100%)`,
-        card: `linear-gradient(135deg, ${colors.backgroundSecondary} 0%, ${colors.backgroundTertiary} 100%)`
-      };
-
     default:
       return getThemeGradients('dark');
   }

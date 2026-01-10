@@ -63,46 +63,6 @@ export function AirQualityDisplay({ aqi, theme, className, minimal = false }: Ai
           border: 'border-[#ff149366]',
           shadow: '0 0 15px #ff149333'
         }
-      case 'tron':
-        return {
-          container: 'bg-black border-[#00FFFF]',
-          header: 'text-[#00FFFF]',
-          text: 'text-white',
-          border: 'border-[#00FFFF66]',
-          shadow: '0 0 15px #00FFFF33'
-        }
-      case 'atari2600':
-        return {
-          container: 'bg-[#1a1a1a] border-[#702800]',
-          header: 'text-[#E0EC9C]',
-          text: 'text-[#FFFFFF]',
-          border: 'border-[#70280066]',
-          shadow: '0 0 15px #70280033'
-        }
-      case 'monochromeGreen':
-        return {
-          container: 'bg-[#1a1a1a] border-[#009900]',
-          header: 'text-[#33FF33]',
-          text: 'text-[#33FF33]',
-          border: 'border-[#00990066]',
-          shadow: '0 0 15px #00990033'
-        }
-      case '8bitClassic':
-        return {
-          container: 'bg-[#D3D3D3] border-[#000000]',
-          header: 'text-[#CC0000]',
-          text: 'text-[#000000]',
-          border: 'border-[#00000066]',
-          shadow: '0 0 15px #00000033'
-        }
-      case '16bitSnes':
-        return {
-          container: 'bg-[#B8B8D0] border-[#5B5B8B]',
-          header: 'text-[#FFD700]',
-          text: 'text-[#2C2C3E]',
-          border: 'border-[#5B5B8B66]',
-          shadow: '0 0 15px #5B5B8B33'
-        }
       case 'synthwave84':
         return {
           container: 'bg-[#2d1b69]/60 border-[#ff7edb]',
@@ -110,14 +70,6 @@ export function AirQualityDisplay({ aqi, theme, className, minimal = false }: Ai
           text: 'text-[#ffffff]',
           border: 'border-[#ff7edb66]',
           shadow: '0 0 15px #ff7edb33'
-        }
-      case 'tokyoNight':
-        return {
-          container: 'bg-[#24283b] border-[#9d7cd8]',
-          header: 'text-[#7dcfff]',
-          text: 'text-[#c0caf5]',
-          border: 'border-[#9d7cd866]',
-          shadow: '0 0 15px #9d7cd833'
         }
       case 'dracula':
         return {
