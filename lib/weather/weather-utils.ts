@@ -312,13 +312,20 @@ export const estimateCurrentUVFromDailyMax = (dailyMaxUV: number, hour: number):
 // ============================================================================
 
 /**
- * Calculate current moon phase
+ * Calculate moon phase for a given date
+ * @param currentDate - Optional date to calculate phase for (defaults to current time).
+ *                      Pass a stable timestamp from server to prevent hydration mismatches.
  */
-export const calculateMoonPhase = (): MoonPhaseInfo => {
+export const calculateMoonPhase = (currentDate?: Date | number): MoonPhaseInfo => {
   const knownNewMoon = new Date('2024-01-11T11:57:00Z');
   const synodicMonth = 29.530588853;
 
-  const now = new Date();
+  // Use provided date or current time
+  const now = currentDate instanceof Date
+    ? currentDate
+    : typeof currentDate === 'number'
+      ? new Date(currentDate)
+      : new Date();
   const daysSinceNewMoon = (now.getTime() - knownNewMoon.getTime()) / (1000 * 60 * 60 * 24);
   const lunarAge = daysSinceNewMoon % synodicMonth;
   const phaseAngle = (lunarAge / synodicMonth) * 360;
