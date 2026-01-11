@@ -24,7 +24,7 @@ import { cn } from '@/lib/utils'
 interface CollapsibleSectionProps {
   title: string
   children: React.ReactNode
-  theme: 'dark' | 'miami' | 'tron'
+  theme: string
   className?: string
 }
 
@@ -43,11 +43,6 @@ export function CollapsibleSection({ title, children, theme, className }: Collap
         return {
           button: 'bg-[#0a0025] border-[#ff1493] text-[#ff1493] hover:bg-[#1a0040]',
           content: 'bg-[#0a0025] border-[#ff1493] text-[#00ffff]'
-        }
-      case 'tron':
-        return {
-          button: 'bg-black border-[#00FFFF] text-[#00FFFF] hover:bg-[#001a1a]',
-          content: 'bg-black border-[#00FFFF] text-white'
         }
       default:
         return {

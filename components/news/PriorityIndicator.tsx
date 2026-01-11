@@ -74,8 +74,6 @@ export default function PriorityIndicator({
         : priority === 'medium'
         ? 'text-purple-500'
         : 'text-cyan-500'
-      : theme === 'tron'
-      ? 'text-cyan-400'
       : config.colorClass;
 
   const themeTextClass =
@@ -85,8 +83,6 @@ export default function PriorityIndicator({
         : priority === 'medium'
         ? 'text-purple-400'
         : 'text-cyan-400'
-      : theme === 'tron'
-      ? 'text-cyan-300'
       : config.textClass;
 
   return (

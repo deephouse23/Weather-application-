@@ -1,6 +1,6 @@
 'use client'
 
-import { ThemeSelectorEnhanced } from '../theme-selector-enhanced'
+import { ThemeSelectorEnhanced } from './theme-selector'
 
 /**
  * 16-Bit Weather Platform - v1.0.0

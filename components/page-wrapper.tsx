@@ -58,16 +58,6 @@ export default function PageWrapper({ children, weatherLocation, weatherTemperat
           hoverBg: 'hover:bg-[#ff1493] hover:text-[#2d1b69]',
           glow: 'glow-miami'
         }
-      case 'tron':
-        return {
-          background: 'bg-black',
-          textColor: 'text-white',
-          borderColor: 'border-[#00FFFF]',
-          accentColor: 'text-[#00FFFF]',
-          cardBg: 'bg-black',
-          hoverBg: 'hover:bg-[#00FFFF] hover:text-black',
-          glow: 'glow-tron'
-        }
       default:
         return {
           background: 'bg-[#0a0a1a]',

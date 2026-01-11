@@ -21,19 +21,6 @@ export interface ThemeConfig {
 export const THEME_CONFIGS: ThemeConfig[] = [
   // FREE TIER - Available to everyone
   {
-    id: 'default',
-    name: 'default',
-    displayName: 'Default',
-    description: 'Clean, professional light theme',
-    tier: 'free',
-    category: 'basic',
-    colors: {
-      primary: '#3b82f6',
-      background: '#ffffff',
-      accent: '#60a5fa'
-    }
-  },
-  {
     id: 'dark',
     name: 'dark',
     displayName: 'Dark Mode',
@@ -46,14 +33,12 @@ export const THEME_CONFIGS: ThemeConfig[] = [
       accent: '#4ecdc4'
     }
   },
-
-  // PREMIUM TIER - Requires registration
   {
     id: 'miami',
     name: 'miami',
     displayName: 'Miami Vice',
     description: 'Neon-soaked 80s cyberpunk vibes',
-    tier: 'premium',
+    tier: 'free',
     category: 'retro',
     colors: {
       primary: '#ff007f',
@@ -61,45 +46,8 @@ export const THEME_CONFIGS: ThemeConfig[] = [
       accent: '#ff1493'
     }
   },
-  {
-    id: 'tron',
-    name: 'tron',
-    displayName: 'Tron Legacy',
-    description: 'Sleek sci-fi terminal aesthetic',
-    tier: 'premium',
-    category: 'retro',
-    colors: {
-      primary: '#00FFFF',
-      background: '#000000',
-      accent: '#88CCFF'
-    }
-  },
-  {
-    id: 'autumn',
-    name: 'autumn',
-    displayName: 'Autumn Leaves',
-    description: 'Warm fall colors and cozy vibes',
-    tier: 'premium',
-    category: 'seasonal',
-    colors: {
-      primary: '#d97706',
-      background: '#292524',
-      accent: '#f59e0b'
-    }
-  },
-  {
-    id: 'winter',
-    name: 'winter',
-    displayName: 'Winter Frost',
-    description: 'Cool blues and icy whites',
-    tier: 'premium',
-    category: 'seasonal',
-    colors: {
-      primary: '#3b82f6',
-      background: '#1e293b',
-      accent: '#60a5fa'
-    }
-  },
+
+  // PREMIUM TIER - Requires registration
   {
     id: 'synthwave84',
     name: 'synthwave84',
@@ -111,19 +59,6 @@ export const THEME_CONFIGS: ThemeConfig[] = [
       primary: '#ff7edb',
       background: '#241b30',
       accent: '#00ffff'
-    }
-  },
-  {
-    id: 'tokyoNight',
-    name: 'tokyoNight',
-    displayName: 'Tokyo Night 🌃',
-    description: 'Modern Japanese city at night with neon signs - perfect balance of style and readability',
-    tier: 'premium',
-    category: 'special',
-    colors: {
-      primary: '#7dcfff',
-      background: '#1a1b26',
-      accent: '#ff9e64'
     }
   },
   {

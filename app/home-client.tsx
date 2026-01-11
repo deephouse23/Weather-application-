@@ -37,7 +37,6 @@ import { PrecipitationCard } from "@/components/precipitation-card"
 import LazyWeatherMap from '@/components/lazy-weather-map'
 import { WeatherSkeleton } from '@/components/weather-skeleton'
 import { useWeatherController } from "@/hooks/useWeatherController"
-import { TronGridBackground } from "@/components/ui/tron-grid-background"
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
 // The main weather API handles UV index estimation for free accounts
@@ -120,7 +119,6 @@ function WeatherApp() {
       weatherTemperature={weather?.temperature}
       weatherUnit={weather?.unit}
     >
-      <TronGridBackground theme={theme} />
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-weather-bg">
         <ResponsiveContainer maxWidth="xl" padding="md">
           <ErrorBoundary componentName="Weather Search">

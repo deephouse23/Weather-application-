@@ -6,6 +6,7 @@ import { SavedLocation } from '@/lib/supabase/types'
 import { WeatherData } from '@/lib/types'
 import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
+import { calculateMoonPhase, getWindDirection } from '@/lib/weather'
 
 interface DetailedWeatherModalProps {
   location: SavedLocation
@@ -84,23 +85,6 @@ export default function DetailedWeatherModal({ location, isOpen, onClose }: Deta
         }
       }) || []
       
-      // Calculate moon phase (simplified)
-      const calculateMoonPhase = () => {
-        const today = new Date()
-        const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000)
-        const moonCycle = 29.5
-        const phase = (dayOfYear % moonCycle) / moonCycle
-        
-        if (phase < 0.125) return { phase: 'New Moon', illumination: 0, emoji: '🌑', phaseAngle: 0 }
-        if (phase < 0.25) return { phase: 'Waxing Crescent', illumination: 0.25, emoji: '🌒', phaseAngle: 90 }
-        if (phase < 0.375) return { phase: 'First Quarter', illumination: 0.5, emoji: '🌓', phaseAngle: 90 }
-        if (phase < 0.5) return { phase: 'Waxing Gibbous', illumination: 0.75, emoji: '🌔', phaseAngle: 135 }
-        if (phase < 0.625) return { phase: 'Full Moon', illumination: 1, emoji: '🌕', phaseAngle: 180 }
-        if (phase < 0.75) return { phase: 'Waning Gibbous', illumination: 0.75, emoji: '🌖', phaseAngle: 225 }
-        if (phase < 0.875) return { phase: 'Last Quarter', illumination: 0.5, emoji: '🌗', phaseAngle: 270 }
-        return { phase: 'Waning Crescent', illumination: 0.25, emoji: '🌘', phaseAngle: 315 }
-      }
-      
       // Construct weather data
       const data: WeatherData = {
         location: location.location_name || `${location.city}, ${location.state || location.country}`,
@@ -112,7 +96,7 @@ export default function DetailedWeatherModal({ location, isOpen, onClose }: Deta
         humidity: currentData.main.humidity,
         wind: {
           speed: Math.round(currentData.wind.speed),
-          direction: currentData.wind.deg ? getCompassDirection(currentData.wind.deg) : undefined,
+          direction: currentData.wind.deg ? getWindDirection(currentData.wind.deg) : undefined,
           gust: currentData.wind.gust
         },
         pressure: `${currentData.main.pressure} hPa`,
@@ -149,11 +133,6 @@ export default function DetailedWeatherModal({ location, isOpen, onClose }: Deta
     } finally {
       setLoading(false)
     }
-  }
-  
-  const getCompassDirection = (degrees: number): string => {
-    const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
-    return directions[Math.round(degrees / 22.5) % 16]
   }
 
   useEffect(() => {
