@@ -308,11 +308,15 @@
             
             scores.forEach((scoreData, index) => {
                 const li = document.createElement('li');
-                li.innerHTML = `
-                    <span>#${index + 1}</span>
-                    <span>${scoreData.score} pts</span>
-                    <span>${scoreData.date}</span>
-                `;
+                const rankSpan = document.createElement('span');
+                rankSpan.textContent = `#${index + 1}`;
+                const scoreSpan = document.createElement('span');
+                scoreSpan.textContent = `${scoreData.score} pts`;
+                const dateSpan = document.createElement('span');
+                dateSpan.textContent = scoreData.date;
+                li.appendChild(rankSpan);
+                li.appendChild(scoreSpan);
+                li.appendChild(dateSpan);
                 scoreList.appendChild(li);
             });
         }

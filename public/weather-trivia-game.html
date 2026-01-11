@@ -653,12 +653,15 @@
         function displayHighScores() {
             const scores = getHighScores();
             const list = document.getElementById('highScoresList');
+            list.innerHTML = '';
             if (scores.length === 0) {
                 list.innerHTML = '<li>No scores yet</li>';
             } else {
-                list.innerHTML = scores.map(entry => 
-                    `<li>${entry.score} pts (${entry.difficulty}) - ${entry.date}</li>`
-                ).join('');
+                scores.forEach(entry => {
+                    const li = document.createElement('li');
+                    li.textContent = `${entry.score} pts (${entry.difficulty}) - ${entry.date}`;
+                    list.appendChild(li);
+                });
             }
         }
         
