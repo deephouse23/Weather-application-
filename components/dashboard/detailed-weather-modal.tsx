@@ -6,7 +6,7 @@ import { SavedLocation } from '@/lib/supabase/types'
 import { WeatherData } from '@/lib/types'
 import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
-import { calculateMoonPhase, getCompassDirection } from '@/lib/weather'
+import { calculateMoonPhase, getWindDirection } from '@/lib/weather'
 
 interface DetailedWeatherModalProps {
   location: SavedLocation
@@ -96,7 +96,7 @@ export default function DetailedWeatherModal({ location, isOpen, onClose }: Deta
         humidity: currentData.main.humidity,
         wind: {
           speed: Math.round(currentData.wind.speed),
-          direction: currentData.wind.deg ? getCompassDirection(currentData.wind.deg) : undefined,
+          direction: currentData.wind.deg ? getWindDirection(currentData.wind.deg) : undefined,
           gust: currentData.wind.gust
         },
         pressure: `${currentData.main.pressure} hPa`,
