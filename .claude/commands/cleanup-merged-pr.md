@@ -1,3 +1,7 @@
+---
+model: sonnet
+---
+
 # Cleanup After Merged PR
 
 Clean up local and remote branches after a PR has been merged to main.
@@ -11,22 +15,24 @@ When the user indicates their PR has been merged to main, perform these cleanup 
    git checkout main
    git pull origin main
    ```
+   - If there are uncommitted changes, stash them first: `git stash`
 
 2. **Delete the local feature branch**
-   - First, identify the current feature branch name
-   - If there are uncommitted changes, stash them: `git stash`
-   - Delete the local branch: `git branch -d <branch-name>`
+   - Identify the feature branch name from context or ask user
+   - Delete: `git branch -d <branch-name>`
 
 3. **Delete the remote feature branch**
+   - Use `--no-verify` to skip pre-push hooks (we're deleting, not pushing code)
    ```bash
-   git push origin --delete <branch-name>
+   git push origin --delete <branch-name> --no-verify
    ```
 
-4. **Clean up any temporary files**
-   - Remove `PLAN.md` if it exists
-   - Remove any `nul` or temp artifacts
+4. **Clean up temporary files**
+   ```bash
+   rm -f PLAN.md nul
+   ```
 
-5. **Drop stash if it was used**
+5. **Drop stash if used**
    ```bash
    git stash drop
    ```
@@ -34,7 +40,7 @@ When the user indicates their PR has been merged to main, perform these cleanup 
 6. **Verify clean state**
    ```bash
    git status
-   git branch -a
+   git branch -a | head -20
    ```
 
 ## Expected Output
@@ -42,12 +48,11 @@ When the user indicates their PR has been merged to main, perform these cleanup 
 Report to user:
 - Confirmation that local branch was deleted
 - Confirmation that remote branch was deleted
-- Current branch status (should be on main, clean working tree)
-- List of remaining branches for reference
+- Current state (should be on main with clean working tree)
 
 ## Usage
 
-User says something like:
+User triggers with:
+- `/cleanup-merged-pr`
 - "PR merged, clean up"
-- "The PR is merged to main, clean up local and remote"
-- "/cleanup-merged-pr"
+- "Clean up after merge"
