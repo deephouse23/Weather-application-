@@ -14,7 +14,11 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { THEME_LIST } from '@/lib/theme-config'
+import {
+  updatePreferencesSchema,
+  createPreferencesSchema,
+  formatValidationErrors,
+} from '@/lib/validations/preferences'
 
 // GET /api/user/preferences - Fetch user preferences
 export async function GET() {
@@ -75,38 +79,21 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const {
-      theme,
-      temperature_unit,
-      wind_unit,
-      pressure_unit,
-      auto_location,
-      notifications_enabled,
-      email_alerts,
-      severe_weather_alerts,
-      daily_forecast_email,
-      news_ticker_enabled,
-      animation_enabled
-    } = body
 
-
-    // Validate theme if provided
-    if (theme && !THEME_LIST.includes(theme)) {
-      return NextResponse.json({ error: 'Invalid theme' }, { status: 400 })
+    // Validate input with Zod schema
+    const parseResult = updatePreferencesSchema.safeParse(body)
+    if (!parseResult.success) {
+      return NextResponse.json(formatValidationErrors(parseResult.error), { status: 400 })
     }
 
+    // Build updates object with only defined fields
+    const validatedData = parseResult.data
     const updates: Record<string, string | boolean> = {}
-    if (theme !== undefined) updates.theme = theme
-    if (temperature_unit !== undefined) updates.temperature_unit = temperature_unit
-    if (wind_unit !== undefined) updates.wind_unit = wind_unit
-    if (pressure_unit !== undefined) updates.pressure_unit = pressure_unit
-    if (auto_location !== undefined) updates.auto_location = auto_location
-    if (notifications_enabled !== undefined) updates.notifications_enabled = notifications_enabled
-    if (email_alerts !== undefined) updates.email_alerts = email_alerts
-    if (severe_weather_alerts !== undefined) updates.severe_weather_alerts = severe_weather_alerts
-    if (daily_forecast_email !== undefined) updates.daily_forecast_email = daily_forecast_email
-    if (news_ticker_enabled !== undefined) updates.news_ticker_enabled = news_ticker_enabled
-    if (animation_enabled !== undefined) updates.animation_enabled = animation_enabled
+    for (const [key, value] of Object.entries(validatedData)) {
+      if (value !== undefined) {
+        updates[key] = value
+      }
+    }
 
     const { data: updatedPreferences, error: updateError } = await supabase
       .from('user_preferences')
@@ -145,7 +132,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { theme = 'dark', temperature_unit = 'fahrenheit' } = body
+
+    // Validate input with Zod schema (applies defaults)
+    const parseResult = createPreferencesSchema.safeParse(body)
+    if (!parseResult.success) {
+      return NextResponse.json(formatValidationErrors(parseResult.error), { status: 400 })
+    }
+
+    const { theme, temperature_unit } = parseResult.data
 
     // Create initial preferences
     const { data, error } = await supabase

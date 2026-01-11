@@ -3,11 +3,12 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { Database } from '@/lib/supabase/types'
+import { validateRedirectPath } from '@/lib/utils/redirect-validation'
 
 export async function GET(request: NextRequest) {
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get('code')
-    const next = searchParams.get('next') ?? '/dashboard'
+    const next = validateRedirectPath(searchParams.get('next'))
     const error = searchParams.get('error')
     const errorDescription = searchParams.get('error_description')
 

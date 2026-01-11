@@ -412,12 +412,20 @@
         function displayStats() {
             const stats = getStats();
             const scoreList = document.getElementById('scoreList');
-            scoreList.innerHTML = `
-                <li>Wins: ${stats.wins}</li>
-                <li>Losses: ${stats.losses}</li>
-                <li>Draws: ${stats.draws}</li>
-                <li>Win Rate: ${stats.wins + stats.losses > 0 ? Math.round(stats.wins / (stats.wins + stats.losses) * 100) : 0}%</li>
-            `;
+            scoreList.innerHTML = '';
+            const winsLi = document.createElement('li');
+            winsLi.textContent = `Wins: ${stats.wins}`;
+            const lossesLi = document.createElement('li');
+            lossesLi.textContent = `Losses: ${stats.losses}`;
+            const drawsLi = document.createElement('li');
+            drawsLi.textContent = `Draws: ${stats.draws}`;
+            const winRateLi = document.createElement('li');
+            const winRate = stats.wins + stats.losses > 0 ? Math.round(stats.wins / (stats.wins + stats.losses) * 100) : 0;
+            winRateLi.textContent = `Win Rate: ${winRate}%`;
+            scoreList.appendChild(winsLi);
+            scoreList.appendChild(lossesLi);
+            scoreList.appendChild(drawsLi);
+            scoreList.appendChild(winRateLi);
         }
 
         function gameOver(message, playerWon) {

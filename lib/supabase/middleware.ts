@@ -41,16 +41,19 @@ export async function middleware(request: NextRequest) {
     }
   )
 
+  // Use getUser() instead of getSession() for server-side verification
+  // getUser() makes an API call to verify the token, while getSession() just reads cookies
   const {
-    data: { session },
-  } = await supabase.auth.getSession()
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
 
   const protectedRoutes = ['/dashboard', '/profile', '/settings', '/saved-locations']
   const isProtectedRoute = protectedRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   )
 
-  if (isProtectedRoute && !session) {
+  if (isProtectedRoute && (!user || error)) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
   }
 
@@ -59,7 +62,7 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route)
   )
 
-  if (isAuthRoute && session) {
+  if (isAuthRoute && user && !error) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 

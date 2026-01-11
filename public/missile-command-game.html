@@ -477,7 +477,16 @@
         function displayHighScores() {
             const scores = getHighScores();
             const list = document.getElementById('highScoresList');
-            list.innerHTML = scores.map(score => `<li>${score}</li>`).join('') || '<li>No scores yet</li>';
+            list.innerHTML = '';
+            if (scores.length === 0) {
+                list.innerHTML = '<li>No scores yet</li>';
+            } else {
+                scores.forEach(score => {
+                    const li = document.createElement('li');
+                    li.textContent = score;
+                    list.appendChild(li);
+                });
+            }
         }
         
         // Game over
