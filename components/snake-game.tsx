@@ -74,8 +74,7 @@ const SnakeGame = () => {
     if (!ctx) return;
     
     // Game state
-    // eslint-disable-next-line prefer-const
-    let snake: SnakeSegment[] = [{x: 10, y: 10}];
+    const snake: SnakeSegment[] = [{x: 10, y: 10}];
     let food: SnakeSegment = { x: 15, y: 15 };
     let dx = 0;
     let dy = 0;
