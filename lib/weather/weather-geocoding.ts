@@ -35,6 +35,7 @@ export interface GeocodedLocation {
   lat: number;
   lon: number;
   displayName: string;
+  country?: string;
 }
 
 // ============================================================================
@@ -271,7 +272,8 @@ export const geocodeLocation = async (
     return {
       lat: data.lat,
       lon: data.lon,
-      displayName: `${data.name}, ${data.country}`
+      displayName: `${data.name}, ${data.country}`,
+      country: data.country
     };
   } else {
     // Use direct geocoding endpoint
@@ -315,7 +317,52 @@ export const geocodeLocation = async (
     return {
       lat: location.lat,
       lon: location.lon,
-      displayName
+      displayName,
+      country: location.country
     };
   }
+};
+
+/**
+ * Reverse geocode coordinates to location metadata
+ */
+export const reverseGeocodeLocation = async (
+  lat: number,
+  lon: number
+): Promise<GeocodedLocation> => {
+  const baseUrl = getApiUrl('/api/weather/geocoding');
+  const response = await fetch(
+    `${baseUrl}?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&limit=1`
+  );
+
+  if (!response.ok) {
+    let errorMessage = `Reverse geocoding API error: ${response.status}`;
+    try {
+      const errorData = await response.json();
+      if (errorData.error) {
+        errorMessage = errorData.error;
+      }
+    } catch {
+      // If response is not JSON, use default error message
+    }
+    throw new Error(errorMessage);
+  }
+
+  const data: GeocodingResponse[] = await response.json();
+
+  if (!data || data.length === 0) {
+    throw new Error('Reverse geocoding returned no results.');
+  }
+
+  const location = data[0];
+  const displayName = location.state
+    ? `${location.name}, ${location.state}, ${location.country}`
+    : `${location.name}, ${location.country}`;
+
+  return {
+    lat: location.lat,
+    lon: location.lon,
+    displayName,
+    country: location.country
+  };
 };
