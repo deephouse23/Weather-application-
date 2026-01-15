@@ -2,7 +2,7 @@
  * Unit tests for weather geocoding functions
  */
 
-import { parseLocationInput, type LocationQuery, geocodeLocation } from '@/lib/weather/weather-geocoding';
+import { parseLocationInput, type LocationQuery, geocodeLocation, reverseGeocodeLocation } from '@/lib/weather/weather-geocoding';
 
 const originalFetch = global.fetch;
 
@@ -102,6 +102,14 @@ describe('Geocoding', () => {
     it('should return country from city geocoding response', async () => {
       mockFetch([{ lat: 51.5, lon: -0.12, name: 'London', country: 'GB' }]);
       const result = await geocodeLocation({ query: 'London', type: 'city_only', city: 'London' });
+      expect(result.country).toBe('GB');
+    });
+  });
+
+  describe('reverseGeocodeLocation', () => {
+    it('should return country from reverse geocoding response', async () => {
+      mockFetch([{ lat: 51.5, lon: -0.12, name: 'London', country: 'GB' }]);
+      const result = await reverseGeocodeLocation(51.5, -0.12);
       expect(result.country).toBe('GB');
     });
   });

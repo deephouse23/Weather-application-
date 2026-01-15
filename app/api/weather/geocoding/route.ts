@@ -129,14 +129,44 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const q = searchParams.get('q') // Direct geocoding query (city, state, country)
     const zip = searchParams.get('zip') // ZIP code query
+    const lat = searchParams.get('lat') // Reverse geocoding latitude
+    const lon = searchParams.get('lon') // Reverse geocoding longitude
     const limit = searchParams.get('limit') || '1'
 
-    // Validate parameters - either q or zip must be provided
-    if (!q && !zip) {
+    // Validate parameters - either q, zip, or lat/lon must be provided
+    if (!q && !zip && !(lat && lon)) {
       return NextResponse.json(
-        { error: 'Missing required parameter: either q (location query) or zip (ZIP code)' },
+        { error: 'Missing required parameter: q (location query), zip (ZIP code), or lat/lon' },
         { status: 400 }
       )
+    }
+
+    if (lat && lon) {
+      const latNum = Number(lat)
+      const lonNum = Number(lon)
+
+      if (Number.isNaN(latNum) || Number.isNaN(lonNum)) {
+        return NextResponse.json(
+          { error: 'Latitude and longitude must be valid numbers' },
+          { status: 400 }
+        )
+      }
+
+      const reverseUrl = `${GEO_URL}/reverse?lat=${latNum}&lon=${lonNum}&limit=${limit}&appid=${apiKey}`
+      const response = await fetch(reverseUrl)
+
+      if (!response.ok) {
+        const errorData = await response.text()
+        console.error('OpenWeatherMap reverse geocoding API error:', response.status, errorData)
+
+        return NextResponse.json(
+          { error: 'Reverse geocoding failed' },
+          { status: response.status }
+        )
+      }
+
+      const reverseData = await response.json()
+      return NextResponse.json(reverseData)
     }
 
     if (zip) {

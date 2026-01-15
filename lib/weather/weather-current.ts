@@ -18,7 +18,7 @@ import {
   calculateMoonPhase,
   WindData
 } from './weather-utils';
-import { parseLocationInput, geocodeLocation } from './weather-geocoding';
+import { parseLocationInput, geocodeLocation, reverseGeocodeLocation } from './weather-geocoding';
 import {
   processDailyForecast,
   processHourlyForecast,
@@ -131,8 +131,21 @@ export const fetchWeatherByLocation = async (
     }
     const oneCall = await oneCallResponse.json();
 
-    const displayName = locationName || `${oneCall?.timezone || 'Selected Location'}`;
-    return buildWeatherDataFromOneCall(oneCall, displayName, latitude, longitude, unitSystem);
+    let countryCode: string | undefined;
+    let resolvedDisplayName = locationName;
+
+    try {
+      const reverseLocation = await reverseGeocodeLocation(latitude, longitude);
+      countryCode = reverseLocation.country;
+      if (!resolvedDisplayName) {
+        resolvedDisplayName = reverseLocation.displayName;
+      }
+    } catch (error) {
+      console.warn('Reverse geocoding failed for coordinates:', error);
+    }
+
+    const displayName = resolvedDisplayName || `${oneCall?.timezone || 'Selected Location'}`;
+    return buildWeatherDataFromOneCall(oneCall, displayName, latitude, longitude, unitSystem, countryCode);
   } catch (error) {
     console.error('Error fetching weather data:', error);
     throw error;
@@ -162,6 +175,39 @@ export async function fetchMinutelyNowcast(
 // ============================================================================
 // Helper Functions
 // ============================================================================
+
+const TIMEZONE_COUNTRY_OVERRIDES: Record<string, string> = {
+  'America/New_York': 'US',
+  'America/Chicago': 'US',
+  'America/Denver': 'US',
+  'America/Los_Angeles': 'US',
+  'America/Toronto': 'CA',
+  'America/Vancouver': 'CA',
+  'America/Mexico_City': 'MX',
+  'America/Sao_Paulo': 'BR',
+  'Europe/London': 'GB',
+  'Europe/Dublin': 'IE',
+  'Europe/Paris': 'FR',
+  'Europe/Berlin': 'DE',
+  'Europe/Madrid': 'ES',
+  'Europe/Rome': 'IT',
+  'Europe/Amsterdam': 'NL',
+  'Europe/Brussels': 'BE',
+  'Europe/Stockholm': 'SE',
+  'Europe/Oslo': 'NO',
+  'Europe/Helsinki': 'FI',
+  'Europe/Copenhagen': 'DK',
+  'Asia/Tokyo': 'JP',
+  'Asia/Shanghai': 'CN',
+  'Asia/Kolkata': 'IN',
+  'Australia/Sydney': 'AU',
+  'Australia/Melbourne': 'AU'
+};
+
+const deriveCountryFromTimezone = (timezone?: string): string | undefined => {
+  if (!timezone) return undefined;
+  return TIMEZONE_COUNTRY_OVERRIDES[timezone];
+};
 
 /**
  * Build WeatherData from One Call API response
@@ -217,7 +263,7 @@ async function buildWeatherDataFromOneCall(
   countryCode?: string
 ): Promise<WeatherData> {
   // Process and validate data
-  const resolvedCountryCode = countryCode || oneCall?.current?.sys?.country || 'US';
+  const resolvedCountryCode = countryCode || deriveCountryFromTimezone(oneCall?.timezone) || 'US';
 
   // Format temperature with proper unit handling
   const temp = formatTemperature(oneCall.current?.temp ?? 0, resolvedCountryCode, unitSystem);
