@@ -35,6 +35,7 @@ export interface GeocodedLocation {
   lat: number;
   lon: number;
   displayName: string;
+  country?: string;
 }
 
 // ============================================================================
@@ -271,7 +272,8 @@ export const geocodeLocation = async (
     return {
       lat: data.lat,
       lon: data.lon,
-      displayName: `${data.name}, ${data.country}`
+      displayName: `${data.name}, ${data.country}`,
+      country: data.country
     };
   } else {
     // Use direct geocoding endpoint
@@ -315,7 +317,8 @@ export const geocodeLocation = async (
     return {
       lat: location.lat,
       lon: location.lon,
-      displayName
+      displayName,
+      country: location.country
     };
   }
 };

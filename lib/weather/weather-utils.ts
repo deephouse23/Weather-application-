@@ -100,27 +100,31 @@ export const fahrenheitToCelsius = (fahrenheit: number): number =>
 /**
  * Enhanced temperature formatting with proper unit handling
  */
-export const formatTemperature = (temp: number, countryCode: string): {
+export const formatTemperature = (
+  temp: number,
+  countryCode: string,
+  unitSystem?: 'metric' | 'imperial'
+): {
   value: number;
   unit: string;
   display: string
 } => {
-  const useF = shouldUseFahrenheit(countryCode);
+  const resolvedUnitSystem = unitSystem ?? (shouldUseFahrenheit(countryCode) ? 'imperial' : 'metric');
 
-  if (useF) {
+  if (resolvedUnitSystem === 'imperial') {
     return {
       value: temp,
       unit: '°F',
       display: `${Math.round(temp)}°F`
     };
-  } else {
-    const tempC = fahrenheitToCelsius(temp);
-    return {
-      value: tempC,
-      unit: '°C',
-      display: `${tempC}°C`
-    };
   }
+
+  const tempC = unitSystem ? Math.round(temp) : fahrenheitToCelsius(temp);
+  return {
+    value: tempC,
+    unit: '°C',
+    display: `${tempC}°C`
+  };
 };
 
 /**

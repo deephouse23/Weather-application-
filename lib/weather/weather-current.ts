@@ -73,7 +73,7 @@ export const fetchWeatherData = async (
     const locationQuery = parseLocationInput(locationInput);
 
     // Geocode location
-    const { lat, lon, displayName } = await geocodeLocation(locationQuery);
+    const { lat, lon, displayName, country } = await geocodeLocation(locationQuery);
 
     // Playwright E2E tests stub the legacy endpoints
     const isPlaywrightTestMode = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true';
@@ -90,7 +90,7 @@ export const fetchWeatherData = async (
     }
     const oneCall = await oneCallResponse.json();
 
-    return buildWeatherDataFromOneCall(oneCall, displayName, lat, lon);
+    return buildWeatherDataFromOneCall(oneCall, displayName, lat, lon, unitSystem, country);
   } catch (error) {
     console.error('Error fetching weather data:', error);
     throw error;
@@ -132,7 +132,7 @@ export const fetchWeatherByLocation = async (
     const oneCall = await oneCallResponse.json();
 
     const displayName = locationName || `${oneCall?.timezone || 'Selected Location'}`;
-    return buildWeatherDataFromOneCall(oneCall, displayName, latitude, longitude);
+    return buildWeatherDataFromOneCall(oneCall, displayName, latitude, longitude, unitSystem);
   } catch (error) {
     console.error('Error fetching weather data:', error);
     throw error;
@@ -212,15 +212,15 @@ async function buildWeatherDataFromOneCall(
   },
   displayName: string,
   lat: number,
-  lon: number
+  lon: number,
+  unitSystem: 'metric' | 'imperial',
+  countryCode?: string
 ): Promise<WeatherData> {
   // Process and validate data
-  const countryCode = oneCall?.timezone?.includes('America')
-    ? 'US'
-    : (oneCall?.current?.sys?.country || 'US');
+  const resolvedCountryCode = countryCode || oneCall?.current?.sys?.country || 'US';
 
   // Format temperature with proper unit handling
-  const temp = formatTemperature(oneCall.current?.temp ?? 0, countryCode);
+  const temp = formatTemperature(oneCall.current?.temp ?? 0, resolvedCountryCode, unitSystem);
 
   // Process forecast data: use One Call daily for 5-day view
   const baseDaily = Array.isArray(oneCall.daily)
@@ -267,7 +267,7 @@ async function buildWeatherDataFromOneCall(
   // Construct weather data object
   const weatherData: WeatherData = {
     location: displayName,
-    country: countryCode,
+    country: resolvedCountryCode,
     temperature: temp.value,
     unit: temp.unit,
     condition: oneCall.current?.weather?.[0]?.main ?? 'Clear',
@@ -280,7 +280,7 @@ async function buildWeatherDataFromOneCall(
         : undefined,
       gust: oneCall.current?.wind_gust
     } as WindData,
-    pressure: formatPressureByRegion(oneCall.current?.pressure ?? 1013, countryCode),
+    pressure: formatPressureByRegion(oneCall.current?.pressure ?? 1013, resolvedCountryCode),
     sunrise: oneCall.current?.sunrise
       ? formatTime(oneCall.current.sunrise, oneCall.timezone_offset)
       : 'N/A',

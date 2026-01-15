@@ -68,6 +68,18 @@ describe('Temperature Conversions', () => {
       const result = formatTemperature(68, 'GB');
       expect(result.value).toBe(20);
     });
+
+    it('should honor metric unitSystem without conversion', () => {
+      const result = formatTemperature(20, 'GB', 'metric');
+      expect(result.value).toBe(20);
+      expect(result.unit).toBe('°C');
+    });
+
+    it('should honor imperial unitSystem even for non-US', () => {
+      const result = formatTemperature(72, 'GB', 'imperial');
+      expect(result.value).toBe(72);
+      expect(result.unit).toBe('°F');
+    });
   });
 });
 
