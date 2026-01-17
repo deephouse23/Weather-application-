@@ -506,6 +506,19 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        // If we have weather context but no coordinates, geocode the location for earthquake lookups
+        // This handles the case when client provides cached weather data without lat/lon
+        if (earthSciencesContext?.location && earthSciencesContext?.lat === undefined) {
+            const coords = await geocodeLocation(earthSciencesContext.location);
+            if (coords) {
+                earthSciencesContext = {
+                    ...earthSciencesContext,
+                    lat: coords.lat,
+                    lon: coords.lon,
+                };
+            }
+        }
+
         // Fetch earthquake data if we have coordinates (in parallel with saving message)
         // This runs for all queries where we have a location - earthquake data adds context
         const earthquakePromise = (earthSciencesContext?.lat !== undefined && earthSciencesContext?.lon !== undefined)
