@@ -31,12 +31,16 @@ export interface WeatherContext {
     rain24h?: number;
 }
 
-// Extended context for Earth Sciences (weather + seismic data)
+// Extended context for Earth Sciences (weather + seismic + volcanic data)
 export interface EarthSciencesContext extends WeatherContext {
     earthquakes?: {
         contextBlock: string; // Pre-formatted context block for the system prompt
         hasRecentActivity: boolean;
         significantNearby: boolean;
+    };
+    volcanoes?: {
+        contextBlock: string; // Pre-formatted context block for elevated volcanoes
+        hasElevatedActivity: boolean;
     };
     // Coordinates for earthquake lookups
     lat?: number;
@@ -181,6 +185,21 @@ EARTHQUAKE DATA INSTRUCTIONS:
 - If asked "was that an earthquake?" and there's recent activity, mention it
 - For safety questions, combine weather AND seismic data in your assessment
 - If no earthquakes detected, reassure the user - this is normal for most areas
+`;
+        }
+
+        // Add volcano data if there's elevated activity
+        if (earthContext?.volcanoes?.hasElevatedActivity && earthContext.volcanoes.contextBlock) {
+            contextInfo += `
+${earthContext.volcanoes.contextBlock}
+
+VOLCANIC DATA INSTRUCTIONS:
+- This shows US volcanoes currently at elevated alert status
+- RED/WARNING = eruption imminent or underway
+- ORANGE/WATCH = heightened unrest, increased eruption potential
+- YELLOW/ADVISORY = elevated unrest above normal background
+- Mention elevated volcanoes if user asks about volcanic activity
+- For air travel questions, volcanic ash can affect flight routes
 `;
         }
     } else {

@@ -23,6 +23,10 @@ import {
     formatEarthquakeContextBlock,
     type EarthquakeResponse
 } from '@/lib/services/usgs-earthquake';
+import {
+    fetchElevatedVolcanoes,
+    formatVolcanoContextBlock
+} from '@/lib/services/volcano-service';
 
 // Get user from request
 async function getAuthenticatedUser(request: NextRequest) {
@@ -430,6 +434,33 @@ async function fetchEarthquakeContext(lat: number, lon: number): Promise<EarthSc
     }
 }
 
+// Fetch volcano data (global elevated alerts - doesn't need coordinates)
+async function fetchVolcanoContext(): Promise<EarthSciencesContext['volcanoes'] | undefined> {
+    try {
+        const volcanoData = await fetchElevatedVolcanoes();
+
+        if (volcanoData.error) {
+            // Don't log error - volcano API is a stretch goal, graceful fallback to AI knowledge
+            return undefined;
+        }
+
+        // Only return context if there are elevated volcanoes
+        const contextBlock = formatVolcanoContextBlock(volcanoData);
+        if (!contextBlock) {
+            return undefined;
+        }
+
+        return {
+            contextBlock,
+            hasElevatedActivity: volcanoData.hasElevatedActivity
+        };
+    } catch (error) {
+        // Graceful fallback - volcano API is optional
+        console.error('[Chat API] Volcano fetch error:', error);
+        return undefined;
+    }
+}
+
 export async function POST(request: NextRequest) {
     try {
         // Check authentication
@@ -525,20 +556,26 @@ export async function POST(request: NextRequest) {
             ? fetchEarthquakeContext(earthSciencesContext.lat, earthSciencesContext.lon)
             : Promise.resolve(undefined);
 
-        // Save user message to history and fetch earthquake data in parallel
-        const [, earthquakeData] = await Promise.all([
+        // Fetch volcano data (global - doesn't need coordinates)
+        // Only included if there are elevated volcanoes
+        const volcanoPromise = fetchVolcanoContext();
+
+        // Save user message to history and fetch earth sciences data in parallel
+        const [, earthquakeData, volcanoData] = await Promise.all([
             saveMessage(user.id, {
                 role: 'user',
                 content: message
             }),
-            earthquakePromise
+            earthquakePromise,
+            volcanoPromise
         ]);
 
-        // Merge earthquake data into context
-        if (earthquakeData && earthSciencesContext) {
+        // Merge earthquake and volcano data into context
+        if (earthquakeData || volcanoData) {
             earthSciencesContext = {
                 ...earthSciencesContext,
-                earthquakes: earthquakeData
+                ...(earthquakeData && { earthquakes: earthquakeData }),
+                ...(volcanoData && { volcanoes: volcanoData })
             };
         }
 
