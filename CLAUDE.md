@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Active Feature Work
+
+**Current PRD:** `docs/PRD-earth-sciences-chat.md`
+- Expanding AI chat to cover meteorology, geology, volcanology, and seismology
+- Integrating USGS earthquake API for real-time seismic data
+- See PRD for detailed requirements and Ralph loop command
+
 ## Project Overview
 
 16-Bit Weather is a retro-styled weather education platform built with Next.js 15 (App Router) and React 19. It combines real-time weather data with 16-bit pixel art aesthetics, featuring educational content, interactive games, and global weather tracking.

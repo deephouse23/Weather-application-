@@ -13,10 +13,20 @@ import {
     buildSystemPrompt,
     isSimpleLocationSearch,
     type AIPersonality,
-    type WeatherContext
+    type WeatherContext,
+    type EarthSciencesContext
 } from '@/lib/services/ai-config';
 import { checkRateLimit, getRateLimitStatus } from '@/lib/services/chat-rate-limiter';
 import { saveMessage } from '@/lib/services/chat-history-service';
+import {
+    fetchRecentEarthquakes,
+    formatEarthquakeContextBlock,
+    type EarthquakeResponse
+} from '@/lib/services/usgs-earthquake';
+import {
+    fetchElevatedVolcanoes,
+    formatVolcanoContextBlock
+} from '@/lib/services/volcano-service';
 
 // Get user from request
 async function getAuthenticatedUser(request: NextRequest) {
@@ -361,8 +371,8 @@ async function fetch24hPrecipitation(lat: number, lon: number): Promise<{
     };
 }
 
-// Fetch real weather data for a location
-async function fetchWeatherForLocation(location: string, isAuthenticated: boolean = false): Promise<WeatherContext | null> {
+// Fetch real weather data for a location (now returns EarthSciencesContext with coordinates)
+async function fetchWeatherForLocation(location: string, isAuthenticated: boolean = false): Promise<EarthSciencesContext | null> {
     const coords = await geocodeLocation(location);
     if (!coords) return null;
 
@@ -397,7 +407,58 @@ async function fetchWeatherForLocation(location: string, isAuthenticated: boolea
         // 24h totals (authenticated users only)
         snow24h: precip24h?.snow24h,
         rain24h: precip24h?.rain24h,
+        // Coordinates for earthquake lookups
+        lat: coords.lat,
+        lon: coords.lon,
     };
+}
+
+// Fetch earthquake data for a location
+async function fetchEarthquakeContext(lat: number, lon: number): Promise<EarthSciencesContext['earthquakes'] | undefined> {
+    try {
+        const earthquakeData = await fetchRecentEarthquakes(lat, lon, 250, 7);
+
+        if (earthquakeData.error) {
+            console.error('[Chat API] Earthquake fetch error:', earthquakeData.error);
+            return undefined;
+        }
+
+        return {
+            contextBlock: formatEarthquakeContextBlock(earthquakeData, 250, 7),
+            hasRecentActivity: earthquakeData.recent.length > 0,
+            significantNearby: earthquakeData.significantNearby
+        };
+    } catch (error) {
+        console.error('[Chat API] Earthquake fetch error:', error);
+        return undefined;
+    }
+}
+
+// Fetch volcano data (global elevated alerts - doesn't need coordinates)
+async function fetchVolcanoContext(): Promise<EarthSciencesContext['volcanoes'] | undefined> {
+    try {
+        const volcanoData = await fetchElevatedVolcanoes();
+
+        if (volcanoData.error) {
+            // Don't log error - volcano API is a stretch goal, graceful fallback to AI knowledge
+            return undefined;
+        }
+
+        // Only return context if there are elevated volcanoes
+        const contextBlock = formatVolcanoContextBlock(volcanoData);
+        if (!contextBlock) {
+            return undefined;
+        }
+
+        return {
+            contextBlock,
+            hasElevatedActivity: volcanoData.hasElevatedActivity
+        };
+    } catch (error) {
+        // Graceful fallback - volcano API is optional
+        console.error('[Chat API] Volcano fetch error:', error);
+        return undefined;
+    }
 }
 
 export async function POST(request: NextRequest) {
@@ -447,7 +508,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Try to extract location from message and fetch real weather data
-        let weatherContext = providedContext;
+        let earthSciencesContext: EarthSciencesContext | undefined = providedContext;
 
         const extractedLocation = extractLocationFromMessage(message);
 
@@ -465,22 +526,58 @@ export async function POST(request: NextRequest) {
             if (isDifferentLocation || providedContext?.temperature === undefined) {
                 const realWeather = await fetchWeatherForLocation(extractedLocation, true);
                 if (realWeather) {
-                    weatherContext = realWeather;
+                    earthSciencesContext = realWeather;
                 }
             }
         } else if (providedContext?.location && providedContext?.temperature === undefined) {
             // No location in message, but we have a location name without weather data - fetch it
             const realWeather = await fetchWeatherForLocation(providedContext.location, true);
             if (realWeather) {
-                weatherContext = realWeather;
+                earthSciencesContext = realWeather;
             }
         }
 
-        // Save user message to history
-        await saveMessage(user.id, {
-            role: 'user',
-            content: message
-        });
+        // If we have weather context but no coordinates, geocode the location for earthquake lookups
+        // This handles the case when client provides cached weather data without lat/lon
+        if (earthSciencesContext?.location && earthSciencesContext?.lat === undefined) {
+            const coords = await geocodeLocation(earthSciencesContext.location);
+            if (coords) {
+                earthSciencesContext = {
+                    ...earthSciencesContext,
+                    lat: coords.lat,
+                    lon: coords.lon,
+                };
+            }
+        }
+
+        // Fetch earthquake data if we have coordinates (in parallel with saving message)
+        // This runs for all queries where we have a location - earthquake data adds context
+        const earthquakePromise = (earthSciencesContext?.lat !== undefined && earthSciencesContext?.lon !== undefined)
+            ? fetchEarthquakeContext(earthSciencesContext.lat, earthSciencesContext.lon)
+            : Promise.resolve(undefined);
+
+        // Fetch volcano data (global - doesn't need coordinates)
+        // Only included if there are elevated volcanoes
+        const volcanoPromise = fetchVolcanoContext();
+
+        // Save user message to history and fetch earth sciences data in parallel
+        const [, earthquakeData, volcanoData] = await Promise.all([
+            saveMessage(user.id, {
+                role: 'user',
+                content: message
+            }),
+            earthquakePromise,
+            volcanoPromise
+        ]);
+
+        // Merge earthquake and volcano data into context
+        if (earthquakeData || volcanoData) {
+            earthSciencesContext = {
+                ...earthSciencesContext,
+                ...(earthquakeData && { earthquakes: earthquakeData }),
+                ...(volcanoData && { volcanoes: volcanoData })
+            };
+        }
 
         // Build system prompt with current datetime
         const currentDatetime = new Date().toLocaleString('en-US', {
@@ -493,7 +590,7 @@ export async function POST(request: NextRequest) {
             timeZoneName: 'short'
         });
 
-        const systemPrompt = buildSystemPrompt(currentDatetime, aiPersonality, weatherContext);
+        const systemPrompt = buildSystemPrompt(currentDatetime, aiPersonality, earthSciencesContext);
 
         // Use Vercel AI SDK streamText with Anthropic
         const result = streamText({
