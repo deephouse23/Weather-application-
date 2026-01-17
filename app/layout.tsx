@@ -16,25 +16,30 @@ import type React from "react"
 import "./globals.css"
 import "./themes.css"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { Inconsolata, VT323 } from "next/font/google"
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import AppThemeProvider from "@/app/providers/ThemeProvider"
 import { LocationProvider } from "@/components/location-context"
 import { AuthProvider } from "@/lib/auth"
 import { Toaster } from "@/components/ui/toaster"
-import AuthDebug from "@/components/auth/auth-debug"
 import ErrorBoundaryWrapper from "@/components/error-boundary"
-import * as Sentry from "@sentry/nextjs"
-import { SentryLogger } from "@/components/sentry-logger"
+import AuthDebug from "@/components/auth/auth-debug"
 
-// Server-side Sentry log test
-Sentry.logger.info("16-Bit Weather server layout loaded", {
-  timestamp: new Date().toISOString(),
-  environment: process.env.NODE_ENV,
+// PERFORMANCE: Use next/font for non-blocking font loading
+const inconsolata = Inconsolata({
+  subsets: ["latin"],
+  display: 'swap',
+  variable: '--font-inconsolata',
+  weight: ['300', '400', '500', '600', '700', '800'],
 })
 
-const inter = Inter({ subsets: ["latin"] })
+const vt323 = VT323({
+  subsets: ["latin"],
+  display: 'swap',
+  variable: '--font-vt323',
+  weight: '400',
+})
 
 export const metadata: Metadata = {
   title: "16 Bit Weather - Retro Terminal Weather Forecast",
@@ -145,7 +150,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://pollen.googleapis.com" />
         <link rel="dns-prefetch" href="https://www.google.com" />
       </head>
-      <body className={`${inter.className} min-h-screen`} style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
+      <body className={`${inconsolata.variable} ${vt323.variable} min-h-screen font-sans`} style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
         <ErrorBoundaryWrapper>
           <AuthProvider>
             <AppThemeProvider>
@@ -161,7 +166,6 @@ export default function RootLayout({
         </ErrorBoundaryWrapper>
         <Analytics />
         <SpeedInsights />
-        <SentryLogger />
       </body>
     </html>
   )

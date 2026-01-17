@@ -81,6 +81,7 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {/* PERFORMANCE: Server-rendered wrapper for faster initial paint */}
       <HomeClient />
     </>
   )

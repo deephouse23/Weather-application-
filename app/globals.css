@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;500;600;700;800&family=VT323&display=swap');
+/* PERFORMANCE: Moved font loading to next/font for non-blocking loading */
+/* Google Fonts CSS import removed - see app/layout.tsx for font configuration */
 @import "tailwindcss";
 @config "../tailwind.config.ts";
 
@@ -37,8 +38,8 @@
     --chart-5: 0 72% 61%;
     --radius: 1rem;
 
-    --font-sans: 'Inconsolata', monospace;
-    --font-display: 'VT323', monospace;
+    --font-sans: var(--font-inconsolata), 'Inconsolata', monospace;
+    --font-display: var(--font-vt323), 'VT323', monospace;
     --font-weight-light: 300;
     --font-weight-normal: 400;
     --font-weight-medium: 500;

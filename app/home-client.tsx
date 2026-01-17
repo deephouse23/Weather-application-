@@ -25,7 +25,6 @@ import { Button } from "@/components/ui/button"
 import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
 import PageWrapper from "@/components/page-wrapper"
-import { Analytics } from "@vercel/analytics/react"
 import WeatherSearch from "@/components/weather-search"
 import RandomCityLinks from "@/components/random-city-links"
 import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from "@/components/lazy-weather-components"
@@ -391,7 +390,6 @@ function WeatherApp() {
           <RandomCityLinks theme={theme || 'dark'} />
         </ResponsiveContainer>
       </div>
-      <Analytics />
     </PageWrapper>
   )
 }
