@@ -26,6 +26,7 @@ export interface EarthquakeResponse {
 // Cache for earthquake data (5-minute TTL)
 const earthquakeCache = new Map<string, { data: EarthquakeResponse; timestamp: number }>();
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const FETCH_TIMEOUT_MS = 10000; // 10 second timeout for API calls
 
 /**
  * Calculate distance between two coordinates using Haversine formula
@@ -152,12 +153,22 @@ export async function fetchRecentEarthquakes(
         url.searchParams.set('orderby', 'time');
         url.searchParams.set('limit', '20'); // Limit to 20 most recent
 
-        const response = await fetch(url.toString(), {
-            headers: {
-                'Accept': 'application/json',
-                'User-Agent': '16BitWeather/1.0'
-            }
-        });
+        // Create AbortController with timeout to prevent hanging requests
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+        let response: Response;
+        try {
+            response = await fetch(url.toString(), {
+                headers: {
+                    'Accept': 'application/json',
+                    'User-Agent': '16BitWeather/1.0'
+                },
+                signal: controller.signal
+            });
+        } finally {
+            clearTimeout(timeoutId);
+        }
 
         if (!response.ok) {
             throw new Error(`USGS API error: ${response.status}`);
@@ -182,11 +193,12 @@ export async function fetchRecentEarthquakes(
         return result;
 
     } catch (error) {
-        console.error('[USGS API] Error fetching earthquakes:', error);
+        const isTimeout = error instanceof Error && error.name === 'AbortError';
+        console.error('[USGS API] Error fetching earthquakes:', isTimeout ? 'Request timed out' : error);
         return {
             recent: [],
             significantNearby: false,
-            error: 'Failed to fetch earthquake data'
+            error: isTimeout ? 'Earthquake API request timed out' : 'Failed to fetch earthquake data'
         };
     }
 }
@@ -217,12 +229,22 @@ export async function fetchSignificantEarthquakes(days: number = 7): Promise<Ear
         url.searchParams.set('orderby', 'time');
         url.searchParams.set('limit', '10'); // Top 10 significant quakes
 
-        const response = await fetch(url.toString(), {
-            headers: {
-                'Accept': 'application/json',
-                'User-Agent': '16BitWeather/1.0'
-            }
-        });
+        // Create AbortController with timeout to prevent hanging requests
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+        let response: Response;
+        try {
+            response = await fetch(url.toString(), {
+                headers: {
+                    'Accept': 'application/json',
+                    'User-Agent': '16BitWeather/1.0'
+                },
+                signal: controller.signal
+            });
+        } finally {
+            clearTimeout(timeoutId);
+        }
 
         if (!response.ok) {
             throw new Error(`USGS API error: ${response.status}`);
@@ -243,11 +265,12 @@ export async function fetchSignificantEarthquakes(days: number = 7): Promise<Ear
         return result;
 
     } catch (error) {
-        console.error('[USGS API] Error fetching significant earthquakes:', error);
+        const isTimeout = error instanceof Error && error.name === 'AbortError';
+        console.error('[USGS API] Error fetching significant earthquakes:', isTimeout ? 'Request timed out' : error);
         return {
             recent: [],
             significantNearby: false,
-            error: 'Failed to fetch earthquake data'
+            error: isTimeout ? 'Earthquake API request timed out' : 'Failed to fetch earthquake data'
         };
     }
 }

@@ -31,6 +31,7 @@ export interface VolcanoResponse {
 // Cache for volcano data (15-minute TTL - volcano alerts don't change rapidly)
 const volcanoCache = new Map<string, { data: VolcanoResponse; timestamp: number }>();
 const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
+const FETCH_TIMEOUT_MS = 10000; // 10 second timeout for API calls
 
 /**
  * Parse alert level string to typed enum
@@ -70,12 +71,22 @@ export async function fetchElevatedVolcanoes(): Promise<VolcanoResponse> {
     try {
         const url = 'https://volcanoes.usgs.gov/hans-public/api/volcano/getElevatedVolcanoes';
 
-        const response = await fetch(url, {
-            headers: {
-                'Accept': 'application/json',
-                'User-Agent': '16BitWeather/1.0'
-            }
-        });
+        // Create AbortController with timeout to prevent hanging requests
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+        let response: Response;
+        try {
+            response = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'User-Agent': '16BitWeather/1.0'
+                },
+                signal: controller.signal
+            });
+        } finally {
+            clearTimeout(timeoutId);
+        }
 
         if (!response.ok) {
             throw new Error(`USGS Volcano API error: ${response.status}`);
@@ -114,11 +125,12 @@ export async function fetchElevatedVolcanoes(): Promise<VolcanoResponse> {
         return result;
 
     } catch (error) {
-        console.error('[USGS Volcano API] Error fetching elevated volcanoes:', error);
+        const isTimeout = error instanceof Error && error.name === 'AbortError';
+        console.error('[USGS Volcano API] Error fetching elevated volcanoes:', isTimeout ? 'Request timed out' : error);
         return {
             elevatedVolcanoes: [],
             hasElevatedActivity: false,
-            error: 'Failed to fetch volcano data'
+            error: isTimeout ? 'Volcano API request timed out' : 'Failed to fetch volcano data'
         };
     }
 }
