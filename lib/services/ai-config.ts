@@ -234,6 +234,21 @@ NOTE: No seismic data fetched yet. If the user asks about earthquakes:
 - Suggest they provide a location for real-time earthquake data
 `;
         }
+
+        // Add volcano data even without weather data (volcano alerts are global)
+        if (earthContext?.volcanoes?.hasElevatedActivity && earthContext.volcanoes.contextBlock) {
+            contextInfo += `
+${earthContext.volcanoes.contextBlock}
+
+VOLCANIC DATA INSTRUCTIONS:
+- This shows US volcanoes currently at elevated alert status
+- RED/WARNING = eruption imminent or underway
+- ORANGE/WATCH = heightened unrest, increased eruption potential
+- YELLOW/ADVISORY = elevated unrest above normal background
+- Mention elevated volcanoes if user asks about volcanic activity
+- For air travel questions, volcanic ash can affect flight routes
+`;
+        }
     }
 
     const personalityConfig = PERSONALITIES[personality];
