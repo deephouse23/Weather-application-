@@ -86,7 +86,7 @@ function parseUSGSResponse(
         features: Array<{
             id: string;
             properties: {
-                mag: number;
+                mag: number | null;
                 place: string;
                 time: number;
                 url: string;
@@ -99,23 +99,26 @@ function parseUSGSResponse(
     userLat?: number,
     userLon?: number
 ): EarthquakeData[] {
-    return data.features.map(feature => {
-        const [lon, lat, depth] = feature.geometry.coordinates;
-        const quake: EarthquakeData = {
-            magnitude: feature.properties.mag,
-            location: feature.properties.place || 'Unknown location',
-            time: new Date(feature.properties.time),
-            depth: Math.round(depth),
-            id: feature.id,
-            url: feature.properties.url
-        };
+    return data.features
+        // Filter out earthquakes with null magnitude (USGS returns null for unanalyzed quakes)
+        .filter(feature => feature.properties.mag !== null && feature.properties.mag !== undefined)
+        .map(feature => {
+            const [lon, lat, depth] = feature.geometry.coordinates;
+            const quake: EarthquakeData = {
+                magnitude: feature.properties.mag as number,
+                location: feature.properties.place || 'Unknown location',
+                time: new Date(feature.properties.time),
+                depth: Math.round(depth),
+                id: feature.id,
+                url: feature.properties.url
+            };
 
-        if (userLat !== undefined && userLon !== undefined) {
-            quake.distance = calculateDistance(userLat, userLon, lat, lon);
-        }
+            if (userLat !== undefined && userLon !== undefined) {
+                quake.distance = calculateDistance(userLat, userLon, lat, lon);
+            }
 
-        return quake;
-    }).sort((a, b) => b.time.getTime() - a.time.getTime()); // Sort by most recent first
+            return quake;
+        }).sort((a, b) => b.time.getTime() - a.time.getTime()); // Sort by most recent first
 }
 
 /**
@@ -279,24 +282,17 @@ export async function fetchSignificantEarthquakes(days: number = 7): Promise<Ear
  * Format earthquake data for Claude context
  * Produces concise, human-readable strings
  */
-export function formatEarthquakeForContext(
-    earthquake: EarthquakeData,
-    userLat?: number,
-    userLon?: number
-): string {
+export function formatEarthquakeForContext(earthquake: EarthquakeData): string {
     const timeAgo = formatTimeAgo(earthquake.time);
 
     // Extract just the location description (USGS format: "Xkm DIR of Place")
     // The location already contains distance info from epicenter
     const location = earthquake.location;
 
-    // If we have user coordinates and the earthquake has distance, add direction
-    let distanceInfo = '';
-    if (earthquake.distance !== undefined && userLat !== undefined && userLon !== undefined) {
-        // Parse the original USGS coordinates to get direction
-        // Since we don't store them, we'll just use the distance
-        distanceInfo = ` (${earthquake.distance}km away)`;
-    }
+    // If distance was calculated during parsing, include it
+    const distanceInfo = earthquake.distance !== undefined
+        ? ` (${earthquake.distance}km away)`
+        : '';
 
     return `M${earthquake.magnitude.toFixed(1)} ${location}${distanceInfo}, ${timeAgo}, depth ${earthquake.depth}km`;
 }
