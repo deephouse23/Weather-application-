@@ -28,10 +28,19 @@ const getSupabaseClient = () => {
   }
 }
 
+// Null UUID used for mock/test sessions - no profile exists for this
+const NULL_UUID = '00000000-0000-0000-0000-000000000000'
+
 // Profile operations
 export const getProfile = async (userId: string): Promise<Profile | null> => {
+  // Guard: Skip database query for null UUID (used in Playwright test mode)
+  // This prevents "Cannot coerce the result to a single JSON object" errors
+  if (!userId || userId === NULL_UUID) {
+    return null
+  }
+
   const supabase = getSupabaseClient()
-  
+
   // Try with all columns first, fallback to essential columns only
   let { data, error } = await supabase
     .from('profiles')
