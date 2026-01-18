@@ -1,9 +1,9 @@
 /**
  * 16-Bit Weather Platform - Homepage
- * 
+ *
  * Copyright (C) 2025 16-Bit Weather
  * Licensed under Fair Source License, Version 0.9
- * 
+ *
  * Server Component wrapper for SEO optimization
  */
 
@@ -77,6 +77,7 @@ const jsonLd = {
 export default function HomePage() {
   return (
     <>
+      {/* JSON-LD structured data - safe as jsonLd is a static constant */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

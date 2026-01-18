@@ -55,6 +55,11 @@ const nextConfig = {
             key: 'X-DNS-Prefetch-Control',
             value: 'on'
           },
+          // HSTS - enforce HTTPS
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload'
+          },
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff'
@@ -62,6 +67,10 @@ const nextConfig = {
           {
             key: 'X-Frame-Options',
             value: 'SAMEORIGIN'
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block'
           },
           {
             key: 'Referrer-Policy',
@@ -123,6 +132,16 @@ const nextConfig = {
           },
         ],
       },
+      {
+        // Cache all static media files
+        source: '/:all*(svg|jpg|jpeg|png|webp|avif|woff|woff2|ttf|ico)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
     ]
   },
 
@@ -139,7 +158,7 @@ const nextConfig = {
 
   // Experimental features for better performance
   experimental: {
-    optimizeCss: false, // Disabled to fix critters module build error
+    optimizeCss: false, // CSS optimization disabled - not helping performance
     scrollRestoration: true,
     // instrumentationHook removed - now available by default in Next.js 15
   },
@@ -150,6 +169,33 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production' ? {
       exclude: ['error', 'warn'],
     } : false,
+  },
+
+  // PERFORMANCE: Code splitting for large dependencies
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.optimization.splitChunks = {
+        ...config.optimization.splitChunks,
+        cacheGroups: {
+          ...config.optimization.splitChunks?.cacheGroups,
+          // Separate OpenLayers into its own chunk (~400KB)
+          openlayers: {
+            test: /[\\/]node_modules[\\/](ol)[\\/]/,
+            name: 'openlayers',
+            chunks: 'all',
+            priority: 30,
+          },
+          // Separate Sentry into its own chunk (~200KB)
+          sentry: {
+            test: /[\\/]node_modules[\\/](@sentry)[\\/]/,
+            name: 'sentry',
+            chunks: 'all',
+            priority: 20,
+          },
+        },
+      }
+    }
+    return config
   },
 }
 
