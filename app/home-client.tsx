@@ -15,7 +15,7 @@
  */
 
 
-import React, { useState, Suspense } from "react"
+import React, { useState, memo } from "react"
 import Link from 'next/link'
 import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -26,13 +26,23 @@ import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
 import PageWrapper from "@/components/page-wrapper"
 import WeatherSearch from "@/components/weather-search"
-import RandomCityLinks from "@/components/random-city-links"
+import dynamic from 'next/dynamic'
+
+// PERFORMANCE: Lazy load RandomCityLinks as it's below the fold
+const RandomCityLinks = dynamic(() => import('@/components/random-city-links'), {
+  ssr: false,
+  loading: () => <div className="mt-16 pt-8 h-48 animate-pulse bg-gray-800/30 rounded-lg" />
+})
 import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from "@/components/lazy-weather-components"
 import LazyHourlyForecast from "@/components/lazy-hourly-forecast"
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/responsive-container"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { useLocationContext } from "@/components/location-context"
-import { PrecipitationCard } from "@/components/precipitation-card"
+// PERFORMANCE: Lazy load PrecipitationCard as it's below the fold
+const PrecipitationCard = dynamic(
+  () => import('@/components/precipitation-card').then(mod => ({ default: mod.PrecipitationCard })),
+  { ssr: false, loading: () => <div className="h-32 animate-pulse bg-gray-800/30 rounded-lg" /> }
+)
 import LazyWeatherMap from '@/components/lazy-weather-map'
 import { WeatherSkeleton } from '@/components/weather-skeleton'
 import { useWeatherController } from "@/hooks/useWeatherController"
@@ -395,5 +405,7 @@ function WeatherApp() {
   )
 }
 
-export default WeatherApp
+// PERFORMANCE: Memoize the component to prevent unnecessary re-renders
+const MemoizedWeatherApp = memo(WeatherApp)
+export default MemoizedWeatherApp
 export { WeatherApp }

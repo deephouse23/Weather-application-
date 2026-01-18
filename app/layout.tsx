@@ -17,8 +17,8 @@ import "./globals.css"
 import "./themes.css"
 import type { Metadata } from "next"
 import { Inconsolata, VT323 } from "next/font/google"
-import { Analytics } from '@vercel/analytics/react'
-import { SpeedInsights } from "@vercel/speed-insights/next"
+// PERFORMANCE: Analytics lazy loaded via client component wrapper
+import AnalyticsWrapper from "@/components/analytics-wrapper"
 import AppThemeProvider from "@/app/providers/ThemeProvider"
 import { LocationProvider } from "@/components/location-context"
 import { AuthProvider } from "@/lib/auth"
@@ -144,9 +144,17 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme="dark" suppressHydrationWarning>
       <head>
+        {/* PERFORMANCE: Preconnect to critical origins for faster resource loading */}
         <link rel="preconnect" href="https://api.openweathermap.org" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Map tile sources - preconnect for faster map loading */}
+        <link rel="preconnect" href="https://a.basemaps.cartocdn.com" />
+        <link rel="preconnect" href="https://b.basemaps.cartocdn.com" />
+        <link rel="dns-prefetch" href="https://c.basemaps.cartocdn.com" />
+        <link rel="dns-prefetch" href="https://d.basemaps.cartocdn.com" />
+        {/* Radar data sources */}
+        <link rel="dns-prefetch" href="https://mesonet.agron.iastate.edu" />
         <link rel="dns-prefetch" href="https://pollen.googleapis.com" />
         <link rel="dns-prefetch" href="https://www.google.com" />
       </head>
@@ -164,8 +172,7 @@ export default function RootLayout({
             </AppThemeProvider>
           </AuthProvider>
         </ErrorBoundaryWrapper>
-        <Analytics />
-        <SpeedInsights />
+        <AnalyticsWrapper />
       </body>
     </html>
   )
