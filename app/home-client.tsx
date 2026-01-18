@@ -379,6 +379,7 @@ function WeatherApp() {
                       longitude={weather?.coordinates?.lon}
                       locationName={weather?.location}
                       theme={theme || 'dark'}
+                      displayMode="widget"
                     />
                   </div>
                 </div>

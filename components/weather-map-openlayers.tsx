@@ -51,13 +51,15 @@ interface WeatherMapProps {
   longitude?: number
   locationName?: string
   theme?: ThemeType
+  displayMode?: 'full-page' | 'widget'
 }
 
 const WeatherMapOpenLayers = ({
   latitude,
   longitude,
   locationName,
-  theme = 'dark'
+  theme = 'dark',
+  displayMode = 'full-page'
 }: WeatherMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<Map | null>(null)
@@ -607,10 +609,12 @@ const WeatherMapOpenLayers = ({
         )}
       </div>
 
-      {/* Animation Controls - Positioned at TOP of map for better visibility */}
+      {/* Animation Controls - Position varies by display mode: top for full-page, bottom for widget */}
       {isUSLocation && activeLayers.precipitation && timestamps.length > 0 && (
         <div
-          className="absolute top-16 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-auto"
+          className={`absolute left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-auto ${
+            displayMode === 'widget' ? 'bottom-4' : 'top-16'
+          }`}
           style={{ zIndex: 2000 }}
         >
           {/* Compact Controls Bar */}

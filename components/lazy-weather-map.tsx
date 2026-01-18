@@ -20,6 +20,7 @@ interface LazyWeatherMapProps {
   locationName?: string
   theme?: ThemeType
   defaultMode?: 'static' | 'animation'
+  displayMode?: 'full-page' | 'widget'
 }
 
 const WeatherMap = dynamic(() => import('./weather-map-openlayers'), {

@@ -153,6 +153,10 @@ export default function WeatherSearch({
       // Not authenticated - do simple search
       onSearch(searchTerm.trim());
     }
+
+    // Clear input after successful submission (ChatGPT-like behavior)
+    setSearchTerm("")
+    setLocationInput("")
   }
 
   const handleCitySelect = (city: CityData) => {
