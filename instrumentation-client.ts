@@ -17,8 +17,8 @@ if (sentryDsn && sentryDsn.includes('sentry.io')) {
       // Re-enable with lower sample rate if needed: process.env.NODE_ENV === 'production' ? 0.1 : 1.0
       tracesSampleRate: 0,
 
-      // PERFORMANCE: Disable replay on initial load - load lazily on error only
-      // This saves ~100KB+ from initial bundle
+      // PERFORMANCE: Disable session replay on regular sessions, but capture on errors
+      // The replayIntegration uses lazy loading - replay code only loads when an error occurs
       replaysSessionSampleRate: 0,
       replaysOnErrorSampleRate: 1.0,
 
@@ -32,14 +32,15 @@ if (sentryDsn && sentryDsn.includes('sentry.io')) {
         return event;
       },
 
-      // PERFORMANCE: Removed replay integration to reduce bundle size (~80KB)
-      // Uncomment to re-enable if needed for debugging production issues
-      // integrations: [
-      //   Sentry.replayIntegration({
-      //     maskAllText: false,
-      //     blockAllMedia: false,
-      //   }),
-      // ],
+      // PERFORMANCE: Use replayIntegration with lazy loading
+      // With replaysSessionSampleRate: 0, replay code only loads when an error occurs
+      // This minimizes bundle impact while still capturing error replays
+      integrations: [
+        Sentry.replayIntegration({
+          maskAllText: false,
+          blockAllMedia: false,
+        }),
+      ],
     });
   } catch (error) {
     // Silent fail in production
