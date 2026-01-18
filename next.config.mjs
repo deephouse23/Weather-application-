@@ -133,8 +133,8 @@ const nextConfig = {
         ],
       },
       {
-        // Cache all static media files
-        source: '/:all*(svg|jpg|jpeg|png|webp|avif|woff|woff2|ttf|ico)',
+        // Cache all static media files (path-to-regexp with regex parameter)
+        source: '/:path*.:ext(svg|jpg|jpeg|png|webp|avif|woff|woff2|ttf|ico)',
         headers: [
           {
             key: 'Cache-Control',
