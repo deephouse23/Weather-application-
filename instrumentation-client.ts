@@ -13,29 +13,28 @@ if (sentryDsn && sentryDsn.includes('sentry.io')) {
       // Enable Sentry Logs
       enableLogs: true,
 
-      // Lower sample rate in production to reduce costs
-      tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+      // PERFORMANCE: Disable tracing entirely for now to reduce bundle size
+      // Re-enable with lower sample rate if needed: process.env.NODE_ENV === 'production' ? 0.1 : 1.0
+      tracesSampleRate: 0,
 
-      // Capture Replay for 10% of all sessions,
-      // plus for 100% of sessions with an error
-      replaysSessionSampleRate: 0.1,
+      // PERFORMANCE: Disable session replay on regular sessions, but capture on errors
+      // The replayIntegration uses lazy loading - replay code only loads when an error occurs
+      replaysSessionSampleRate: 0,
       replaysOnErrorSampleRate: 1.0,
 
       // Only enable debug in development
-      debug: process.env.NODE_ENV === 'development',
+      debug: false, // Disable even in development for performance
 
       environment: process.env.NODE_ENV || 'development',
 
       // Configure the scope for better error context
       beforeSend(event, hint) {
-        // Only log in development to avoid console spam
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Sentry client event captured:', event);
-        }
         return event;
       },
 
-      // Integrate with React error boundaries
+      // PERFORMANCE: Use replayIntegration with lazy loading
+      // With replaysSessionSampleRate: 0, replay code only loads when an error occurs
+      // This minimizes bundle impact while still capturing error replays
       integrations: [
         Sentry.replayIntegration({
           maskAllText: false,
@@ -43,13 +42,12 @@ if (sentryDsn && sentryDsn.includes('sentry.io')) {
         }),
       ],
     });
-
-    console.log('✅ Sentry client initialized');
   } catch (error) {
-    console.warn('⚠️ Sentry client: Failed to initialize:', error);
+    // Silent fail in production
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('⚠️ Sentry client: Failed to initialize:', error);
+    }
   }
-} else {
-  console.warn('⚠️ Sentry client: DSN not configured, skipping initialization');
 }
 
 // Export router transition tracking for Sentry navigation instrumentation

@@ -143,6 +143,14 @@ const nextConfig = {
     scrollRestoration: true,
     // instrumentationHook removed - now available by default in Next.js 15
   },
+
+  // PERFORMANCE: Enable compiler optimizations
+  compiler: {
+    // Remove console logs in production (except errors)
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'],
+    } : false,
+  },
 }
 
 export default withBundleAnalyzer(withSentryConfig(nextConfig, {
