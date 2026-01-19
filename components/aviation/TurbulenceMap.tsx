@@ -85,11 +85,19 @@ function getSeverityLevel(intensity: string | null): 'smooth' | 'light' | 'moder
   return 'light';
 }
 
-// Get color for turbulence intensity
+// Get color for turbulence intensity - uses same matching logic as getSeverityLevel
 function getTurbulenceColor(intensity: string | null): string {
   if (!intensity) return TURBULENCE_COLORS.NEG;
   const upper = intensity.toUpperCase();
-  return TURBULENCE_COLORS[upper] || TURBULENCE_COLORS.NEG;
+  // First try exact match
+  if (TURBULENCE_COLORS[upper]) return TURBULENCE_COLORS[upper];
+  // Fall back to substring matching for non-standard values
+  if (upper === 'SMOOTH') return TURBULENCE_COLORS.NEG;
+  if (upper.includes('EXTRM') || upper.includes('EXTREME')) return TURBULENCE_COLORS.EXTRM;
+  if (upper.includes('SEV') && !upper.includes('EXTRM')) return TURBULENCE_COLORS.SEV;
+  if (upper.includes('MOD') && !upper.includes('SEV')) return TURBULENCE_COLORS.MOD;
+  if (upper.includes('LGT') && !upper.includes('MOD')) return TURBULENCE_COLORS.LGT;
+  return TURBULENCE_COLORS.NEG;
 }
 
 // CartoDB Dark Matter base map
@@ -313,6 +321,7 @@ export default function TurbulenceMap({
     return () => {
       resizeObserver.disconnect();
       map.setTarget(undefined);
+      map.dispose(); // Properly release OpenLayers resources to prevent memory leaks
       mapInstanceRef.current = null;
     };
   }, []);
@@ -535,7 +544,7 @@ export default function TurbulenceMap({
                   <Mountain className="w-3 h-3" />
                   <span className="font-bold">Altitude:</span>
                   <span>{formatAltitude(selectedPirep.altitudeFt)}</span>
-                  {selectedPirep.turbulenceBaseFt && selectedPirep.turbulenceTopFt && (
+                  {selectedPirep.turbulenceBaseFt !== null && selectedPirep.turbulenceTopFt !== null && (
                     <span className="opacity-60">
                       (TB: {formatAltitude(selectedPirep.turbulenceBaseFt)} - {formatAltitude(selectedPirep.turbulenceTopFt)})
                     </span>
