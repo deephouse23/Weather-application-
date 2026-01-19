@@ -43,8 +43,27 @@ function edrToSeverity(edr: number): GTGDataPoint['severity'] {
   return 'smooth';
 }
 
+// Seeded pseudo-random number generator for deterministic results
+// Uses simple linear congruential generator (LCG) for reproducibility
+function seededRandom(seed: number): () => number {
+  let state = seed;
+  return () => {
+    state = (state * 1664525 + 1013904223) % 4294967296;
+    return state / 4294967296;
+  };
+}
+
+// Create a deterministic seed from parameters (ensures same input = same output)
+function createSeed(altitude: string, forecastHour: number, lat: number, lon: number): number {
+  const altNum = parseInt(altitude.replace('FL', ''), 10) || 350;
+  // Round to 6-hour cycle for time-based stability
+  const hourCycle = Math.floor(Date.now() / (6 * 60 * 60 * 1000));
+  return (altNum * 1000 + forecastHour * 100 + Math.abs(lat * 10) + Math.abs(lon) + hourCycle) % 4294967296;
+}
+
 // Generate simulated turbulence data based on altitude and forecast
 // This simulates the NOAA GTG data structure while they expose a public API
+// Uses deterministic seeding to ensure consistent results for same parameters
 function generateTurbulenceData(altitude: string, forecastHour: number): GTGDataPoint[] {
   const turbulencePoints: GTGDataPoint[] = [];
 
@@ -95,9 +114,10 @@ function generateTurbulenceData(altitude: string, forecastHour: number): GTGData
         }
       }
 
-      // Add some random variation
-      if (Math.random() < baseProbability) {
-        edr = Math.max(edr, Math.random() * 0.3);
+      // Add deterministic variation based on location (seeded random for consistency)
+      const random = seededRandom(createSeed(altitude, forecastHour, lat, lon));
+      if (random() < baseProbability) {
+        edr = Math.max(edr, random() * 0.3);
       }
 
       // Only include points with some turbulence (EDR > 0.05)

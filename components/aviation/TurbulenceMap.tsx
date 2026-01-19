@@ -9,11 +9,12 @@
 
 'use client';
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import { RefreshCw, Plane } from 'lucide-react';
+import { safeStorage } from '@/lib/safe-storage';
 
 interface TurbulenceDataPoint {
   lat: number;
@@ -44,14 +45,19 @@ interface TurbulenceMapProps {
   initialForecast?: number;
 }
 
-// Severity to color mapping matching PRD
+// Severity to color mapping - aligned with Turbulence Guide in FlightConditionsTerminal
+// 4-level scale: Light (green), Moderate (yellow), Severe (orange), Extreme (red)
 const SEVERITY_COLORS: Record<string, string> = {
-  smooth: '#22c55e',   // Green
-  light: '#eab308',    // Yellow
-  moderate: '#f97316', // Orange
-  severe: '#ef4444',   // Red
-  extreme: '#a855f7',  // Purple
+  smooth: '#22c55e',   // Green (treated as Light)
+  light: '#22c55e',    // Green - matches LIGHT in guide
+  moderate: '#eab308', // Yellow - matches MODERATE in guide
+  severe: '#f97316',   // Orange - matches SEVERE in guide
+  extreme: '#ef4444',  // Red - matches EXTREME in guide
 };
+
+// Cache configuration
+const TURBULENCE_CACHE_KEY = 'bitweather_turbulence_cache';
+const TURBULENCE_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
 // Map bounds for CONUS
 const MAP_BOUNDS = {
@@ -74,6 +80,45 @@ export default function TurbulenceMap({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // AbortController ref to cancel in-flight requests
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Cache helpers
+  const getCacheKey = useCallback((alt: string, fcst: number) => {
+    return `${TURBULENCE_CACHE_KEY}_${alt}_${fcst}`;
+  }, []);
+
+  const getCachedData = useCallback((alt: string, fcst: number): TurbulenceData | null => {
+    try {
+      const cacheKey = getCacheKey(alt, fcst);
+      const cached = safeStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Date.now() < parsed.expiresAt) {
+          return parsed.data;
+        }
+        // Expired, remove it
+        safeStorage.removeItem(cacheKey);
+      }
+    } catch (err) {
+      console.warn('Cache read error:', err);
+    }
+    return null;
+  }, [getCacheKey]);
+
+  const setCachedData = useCallback((alt: string, fcst: number, turbData: TurbulenceData) => {
+    try {
+      const cacheKey = getCacheKey(alt, fcst);
+      const cacheEntry = {
+        data: turbData,
+        expiresAt: Date.now() + TURBULENCE_CACHE_TTL
+      };
+      safeStorage.setItem(cacheKey, JSON.stringify(cacheEntry));
+    } catch (err) {
+      console.warn('Cache write error:', err);
+    }
+  }, [getCacheKey]);
+
   const altitudeOptions = [
     { value: 'FL200', label: 'FL200 (20,000 ft)' },
     { value: 'FL250', label: 'FL250 (25,000 ft)' },
@@ -90,13 +135,34 @@ export default function TurbulenceMap({
     { value: 18, label: '+18 hours' },
   ];
 
-  const fetchTurbulenceData = useCallback(async () => {
+  const fetchTurbulenceData = useCallback(async (forceRefresh = false) => {
+    // Cancel any in-flight request to prevent race conditions
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Check cache first (unless force refresh)
+    if (!forceRefresh) {
+      const cached = getCachedData(altitude, forecast);
+      if (cached) {
+        setData(cached);
+        setIsLoading(false);
+        setError(null);
+        return;
+      }
+    }
+
     setIsLoading(true);
     setError(null);
 
+    // Create new AbortController for this request
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
       const response = await fetch(
-        `/api/aviation/turbulence?altitude=${altitude}&forecast=${forecast}`
+        `/api/aviation/turbulence?altitude=${altitude}&forecast=${forecast}`,
+        { signal: controller.signal }
       );
 
       if (!response.ok) {
@@ -104,17 +170,37 @@ export default function TurbulenceMap({
       }
 
       const result = await response.json();
-      setData(result);
+
+      // Only update state if this request wasn't aborted
+      if (!controller.signal.aborted) {
+        setData(result);
+        setCachedData(altitude, forecast, result);
+      }
     } catch (err) {
+      // Ignore abort errors - they're expected when cancelling
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
       console.error('Turbulence fetch error:', err);
-      setError('Unable to load turbulence data');
+      if (!controller.signal.aborted) {
+        setError('Unable to load turbulence data');
+      }
     } finally {
-      setIsLoading(false);
+      if (!controller.signal.aborted) {
+        setIsLoading(false);
+      }
     }
-  }, [altitude, forecast]);
+  }, [altitude, forecast, getCachedData, setCachedData]);
 
   useEffect(() => {
     fetchTurbulenceData();
+
+    // Cleanup: abort any pending request when dependencies change or unmount
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [fetchTurbulenceData]);
 
   // Convert lat/lon to SVG coordinates
@@ -236,7 +322,7 @@ export default function TurbulenceMap({
 
         {/* Refresh Button */}
         <button
-          onClick={fetchTurbulenceData}
+          onClick={() => fetchTurbulenceData(true)}
           disabled={isLoading}
           className={cn(
             'p-1.5 border-2 rounded hover:bg-gray-700 transition-colors',
@@ -291,27 +377,23 @@ export default function TurbulenceMap({
         )}
       </div>
 
-      {/* Legend */}
+      {/* Legend - 4-level scale aligned with Turbulence Guide */}
       <div className={cn('flex flex-wrap items-center gap-4 text-xs font-mono', themeClasses.text)}>
         <span className="uppercase font-bold">Legend:</span>
         <div className="flex items-center gap-1">
           <span className="w-3 h-3 rounded-full bg-green-500" />
-          <span>Smooth</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-full bg-yellow-500" />
           <span>Light</span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-full bg-orange-500" />
+          <span className="w-3 h-3 rounded-full bg-yellow-500" />
           <span>Moderate</span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-full bg-red-500" />
+          <span className="w-3 h-3 rounded-full bg-orange-500" />
           <span>Severe</span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-full bg-purple-500" />
+          <span className="w-3 h-3 rounded-full bg-red-500" />
           <span>Extreme</span>
         </div>
       </div>
