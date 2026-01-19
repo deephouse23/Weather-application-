@@ -5,13 +5,13 @@
  * Licensed under Fair Source License, Version 0.9
  *
  * Consolidated hub for all educational weather content
- * Combines: Weather Systems, Cloud Types, Extremes, 16-Bit Takes, Games, News
+ * Combines: Weather Systems, Cloud Types, Extremes, 16-Bit Takes, News
  */
 
 'use client';
 
 import React from 'react';
-import { Cloud, Zap, BookOpen, Thermometer, Gamepad2, Newspaper } from 'lucide-react';
+import { Cloud, Zap, BookOpen, Thermometer, Newspaper } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
@@ -53,13 +53,6 @@ export default function EducationPage() {
       itemCount: undefined
     },
     {
-      href: '/games',
-      icon: Gamepad2,
-      title: 'Games',
-      description: 'Test your meteorological knowledge with retro-style quizzes and challenges. High scores needed.',
-      itemCount: 3
-    },
-    {
       href: '/news',
       icon: Newspaper,
       title: 'News',
@@ -92,7 +85,7 @@ export default function EducationPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
           <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
             <CardContent className="p-4 text-center">
-              <div className={cn('text-3xl font-bold font-mono', themeClasses.accentText)}>6</div>
+              <div className={cn('text-3xl font-bold font-mono', themeClasses.accentText)}>5</div>
               <div className={cn('text-xs font-mono uppercase', themeClasses.text)}>Topics</div>
             </CardContent>
           </Card>

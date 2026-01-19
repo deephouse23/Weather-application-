@@ -10,12 +10,25 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plane, Wind, AlertTriangle, Clock, Radio, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plane, Wind, AlertTriangle, Clock, Radio, ChevronDown, ChevronUp, Map } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AlertTicker, { AviationAlert } from './AlertTicker';
+import dynamic from 'next/dynamic';
+
+// Lazy load TurbulenceMap to optimize performance
+const TurbulenceMap = dynamic(() => import('./TurbulenceMap'), {
+  loading: () => (
+    <div className="h-[350px] flex items-center justify-center bg-gray-900 border-2 border-dashed border-gray-600 rounded">
+      <div className="text-center text-gray-400 font-mono text-sm">
+        <div className="animate-pulse">Loading Turbulence Map...</div>
+      </div>
+    </div>
+  ),
+  ssr: false
+});
 
 interface FlightConditionsTerminalProps {
   alerts: AviationAlert[];
@@ -145,6 +158,34 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
         {expandedSection === 'alerts' && (
           <CardContent className="p-0">
             <AlertTicker alerts={alerts} isLoading={isLoading} />
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Turbulence Forecast Map Section */}
+      <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
+        <button
+          onClick={() => toggleSection('turbulence')}
+          className={cn(
+            'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
+            themeClasses.borderColor
+          )}
+        >
+          <div className="flex items-center gap-2">
+            <Map className="w-4 h-4 text-purple-500" />
+            <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
+              Turbulence Forecast
+            </span>
+          </div>
+          {expandedSection === 'turbulence' ? (
+            <ChevronUp className="w-4 h-4" />
+          ) : (
+            <ChevronDown className="w-4 h-4" />
+          )}
+        </button>
+        {expandedSection === 'turbulence' && (
+          <CardContent className="p-4">
+            <TurbulenceMap initialAltitude="FL350" initialForecast={0} />
           </CardContent>
         )}
       </Card>
