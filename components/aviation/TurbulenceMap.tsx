@@ -326,6 +326,14 @@ export default function TurbulenceMap({
     };
   }, []);
 
+  // Close popup if selected PIREP is filtered out
+  useEffect(() => {
+    if (selectedPirep && !filteredPireps.some(p => p.id === selectedPirep.id)) {
+      setSelectedPirep(null);
+      popupOverlayRef.current?.setPosition(undefined);
+    }
+  }, [filteredPireps, selectedPirep]);
+
   // Update markers when filtered data changes
   useEffect(() => {
     if (!mapInstanceRef.current) return;
