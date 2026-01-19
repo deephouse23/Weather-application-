@@ -19,7 +19,7 @@ import { safeStorage } from '@/lib/safe-storage';
 
 // OpenLayers imports
 import 'ol/ol.css';
-import Map from 'ol/Map';
+import OLMap from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
 import XYZ from 'ol/source/XYZ';
@@ -119,7 +119,7 @@ export default function TurbulenceMap({
   const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
 
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<Map | null>(null);
+  const mapInstanceRef = useRef<OLMap | null>(null);
   const vectorLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const popupOverlayRef = useRef<Overlay | null>(null);
@@ -261,7 +261,7 @@ export default function TurbulenceMap({
     });
 
     // Create map
-    const map = new Map({
+    const map = new OLMap({
       target: mapRef.current,
       layers: [baseLayer],
       view: new View({

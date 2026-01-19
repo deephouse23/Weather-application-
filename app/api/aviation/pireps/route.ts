@@ -171,7 +171,8 @@ export async function GET(request: NextRequest) {
 
     // Parse CSV
     const lines = csvText.split('\n');
-    const headers = lines[0]?.split(',') || [];
+    // Use parseCSVRow for headers to handle quoted values consistently
+    const headers = lines[0] ? parseCSVRow(lines[0]) : [];
 
     // Find column indices
     const colIndex: Record<string, number> = {};
