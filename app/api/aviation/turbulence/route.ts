@@ -122,14 +122,16 @@ function generateTurbulenceData(altitude: string, forecastHour: number): GTGData
 
       // Only include points with some turbulence (EDR > 0.05)
       if (edr > 0.05) {
-        // Cap EDR at realistic maximum
-        edr = Math.min(edr, 0.8);
+        // Cap EDR at realistic maximum and round to 2 decimal places
+        // Important: Round BEFORE calling edrToSeverity to avoid mismatch
+        // e.g., 0.095 rounds to 0.10 (light), so severity should also be light
+        const roundedEdr = Math.round(Math.min(edr, 0.8) * 100) / 100;
 
         turbulencePoints.push({
           lat,
           lon,
-          edr: Math.round(edr * 100) / 100,
-          severity: edrToSeverity(edr)
+          edr: roundedEdr,
+          severity: edrToSeverity(roundedEdr)
         });
       }
     }
@@ -140,18 +142,46 @@ function generateTurbulenceData(altitude: string, forecastHour: number): GTGData
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const altitude = searchParams.get('altitude') || 'FL350';
-  const forecast = parseInt(searchParams.get('forecast') || '0', 10);
+  const altitudeParam = searchParams.get('altitude');
+  const forecastParam = searchParams.get('forecast');
+
+  // Validate required parameters
+  if (!altitudeParam || !forecastParam) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: `Missing required parameter: ${!altitudeParam ? 'altitude' : 'forecast'}`
+      },
+      { status: 400 }
+    );
+  }
 
   // Validate altitude format
   const validAltitudes = ['FL200', 'FL250', 'FL300', 'FL350', 'FL400', 'FL450'];
-  const normalizedAltitude = validAltitudes.includes(altitude.toUpperCase())
-    ? altitude.toUpperCase()
-    : 'FL350';
+  const normalizedAltitude = altitudeParam.toUpperCase();
+  if (!validAltitudes.includes(normalizedAltitude)) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: `Invalid altitude: ${altitudeParam}. Valid values: ${validAltitudes.join(', ')}`
+      },
+      { status: 400 }
+    );
+  }
 
   // Validate forecast hour
   const validForecasts = [0, 6, 12, 18];
-  const normalizedForecast = validForecasts.includes(forecast) ? forecast : 0;
+  const forecast = parseInt(forecastParam, 10);
+  if (!Number.isFinite(forecast) || !validForecasts.includes(forecast)) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: `Invalid forecast: ${forecastParam}. Valid values: ${validForecasts.join(', ')}`
+      },
+      { status: 400 }
+    );
+  }
+  const normalizedForecast = forecast;
 
   try {
     // Try to fetch from NOAA GTG API (currently returns 404, so we fall back to simulated data)
@@ -161,10 +191,17 @@ export async function GET(request: NextRequest) {
     // Generate turbulence data
     const turbulenceData = generateTurbulenceData(normalizedAltitude, normalizedForecast);
 
-    // Calculate valid time based on forecast hour
+    // Calculate valid time based on forecast hour (use UTC for aviation synoptic times)
+    // Aviation uses standard UTC synoptic hours: 00Z, 06Z, 12Z, 18Z
     const now = new Date();
-    now.setHours(Math.floor(now.getHours() / 6) * 6, 0, 0, 0); // Round to nearest 6-hour cycle
-    const validTime = new Date(now.getTime() + normalizedForecast * 60 * 60 * 1000);
+    const roundedUtc = new Date(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      Math.floor(now.getUTCHours() / 6) * 6,
+      0, 0, 0
+    ));
+    const validTime = new Date(roundedUtc.getTime() + normalizedForecast * 60 * 60 * 1000);
 
     const response: GTGResponse = {
       success: true,
