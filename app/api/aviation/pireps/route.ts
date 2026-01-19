@@ -92,10 +92,46 @@ const CONUS_BOUNDS = {
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const hoursBack = Math.min(parseInt(searchParams.get('hours') || '2', 10), 6);
-  const minAltitude = parseInt(searchParams.get('minAltitude') || '0', 10);
-  const maxAltitude = parseInt(searchParams.get('maxAltitude') || '60000', 10);
+
+  // Parse and validate query parameters
+  const hoursParam = parseInt(searchParams.get('hours') || '2', 10);
+  const minAltParam = parseInt(searchParams.get('minAltitude') || '0', 10);
+  const maxAltParam = parseInt(searchParams.get('maxAltitude') || '60000', 10);
   const turbulenceOnly = searchParams.get('turbulenceOnly') === 'true';
+
+  // Validate hours parameter
+  if (isNaN(hoursParam) || hoursParam < 1 || hoursParam > 6) {
+    return NextResponse.json({
+      success: false,
+      data: { pireps: [], fetchedAt: new Date().toISOString(), count: 0, bounds: CONUS_BOUNDS },
+      source: 'NOAA Aviation Weather Center',
+      error: 'Invalid hours parameter. Must be between 1 and 6.',
+    }, { status: 400 });
+  }
+
+  // Validate altitude parameters
+  if (isNaN(minAltParam) || isNaN(maxAltParam) || minAltParam < 0 || maxAltParam < 0) {
+    return NextResponse.json({
+      success: false,
+      data: { pireps: [], fetchedAt: new Date().toISOString(), count: 0, bounds: CONUS_BOUNDS },
+      source: 'NOAA Aviation Weather Center',
+      error: 'Invalid altitude parameters. Must be non-negative numbers.',
+    }, { status: 400 });
+  }
+
+  // Validate altitude range (min must be <= max)
+  if (minAltParam > maxAltParam) {
+    return NextResponse.json({
+      success: false,
+      data: { pireps: [], fetchedAt: new Date().toISOString(), count: 0, bounds: CONUS_BOUNDS },
+      source: 'NOAA Aviation Weather Center',
+      error: 'Invalid altitude range. minAltitude must be less than or equal to maxAltitude.',
+    }, { status: 400 });
+  }
+
+  const hoursBack = Math.min(hoursParam, 6);
+  const minAltitude = minAltParam;
+  const maxAltitude = maxAltParam;
 
   try {
     // Fetch PIREP cache file
@@ -130,6 +166,8 @@ export async function GET(request: NextRequest) {
         csvText += decoder.decode(value, { stream: true });
       }
     }
+    // Flush any remaining bytes in the decoder buffer
+    csvText += decoder.decode();
 
     // Parse CSV
     const lines = csvText.split('\n');
@@ -168,11 +206,10 @@ export async function GET(request: NextRequest) {
         continue;
       }
 
-      // Filter by time
-      if (obsTimeStr) {
-        const obsTime = new Date(obsTimeStr);
-        if (obsTime < cutoffTime) continue;
-      }
+      // Filter by time - skip PIREPs with missing or invalid observation times
+      if (!obsTimeStr) continue;
+      const obsTime = new Date(obsTimeStr);
+      if (isNaN(obsTime.getTime()) || obsTime < cutoffTime) continue;
 
       // Filter by altitude
       const altitude = alt ?? 0;

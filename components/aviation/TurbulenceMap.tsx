@@ -213,9 +213,10 @@ export default function TurbulenceMap({
     const cutoffTime = new Date(Date.now() - hoursBack * 60 * 60 * 1000);
 
     return pireps.filter((pirep) => {
-      // Time filter
+      // Time filter - skip PIREPs with missing or invalid observation times
+      if (!pirep.observationTime) return false;
       const obsTime = new Date(pirep.observationTime);
-      if (obsTime < cutoffTime) return false;
+      if (isNaN(obsTime.getTime()) || obsTime < cutoffTime) return false;
 
       // Altitude filter
       const alt = pirep.altitudeFt || 0;
@@ -370,7 +371,9 @@ export default function TurbulenceMap({
 
   // Format time ago
   const formatTimeAgo = (isoString: string): string => {
+    if (!isoString) return 'Unknown';
     const date = new Date(isoString);
+    if (isNaN(date.getTime())) return 'Unknown';
     const diff = Date.now() - date.getTime();
     const minutes = Math.floor(diff / 60000);
     if (minutes < 60) return `${minutes}m ago`;
