@@ -31,7 +31,7 @@ export interface WeatherContext {
     rain24h?: number;
 }
 
-// Extended context for Earth Sciences (weather + seismic + volcanic data)
+// Extended context for Earth Sciences (weather + seismic + volcanic + aviation data)
 export interface EarthSciencesContext extends WeatherContext {
     earthquakes?: {
         contextBlock: string; // Pre-formatted context block for the system prompt
@@ -41,6 +41,11 @@ export interface EarthSciencesContext extends WeatherContext {
     volcanoes?: {
         contextBlock: string; // Pre-formatted context block for elevated volcanoes
         hasElevatedActivity: boolean;
+    };
+    aviation?: {
+        contextBlock: string; // Pre-formatted context block for aviation alerts
+        hasActiveAlerts: boolean;
+        alertCount: number;
     };
     // Coordinates for earthquake lookups
     lat?: number;
@@ -202,6 +207,22 @@ VOLCANIC DATA INSTRUCTIONS:
 - For air travel questions, volcanic ash can affect flight routes
 `;
         }
+
+        // Add aviation data if there are active alerts
+        if (earthContext?.aviation?.hasActiveAlerts && earthContext.aviation.contextBlock) {
+            contextInfo += `
+${earthContext.aviation.contextBlock}
+
+AVIATION DATA INSTRUCTIONS:
+- This shows currently active SIGMETs and AIRMETs from NOAA Aviation Weather Center
+- SIGMETs are significant hazards for ALL aircraft (severe turbulence, icing, volcanic ash)
+- AIRMETs are advisories for lighter aircraft (moderate turbulence, icing, low visibility)
+- When asked about flight conditions, reference specific alerts from the data
+- Quote actual alert details: hazard type, affected regions, altitudes (FL = Flight Level in hundreds of feet)
+- For turbulence questions: explain severity levels (light/moderate/severe/extreme)
+- IMPORTANT: This data is for informational purposes only, NOT for operational flight planning
+`;
+        }
     } else {
         contextInfo = `
 NOTE: No real-time weather data fetched yet.
@@ -247,6 +268,21 @@ VOLCANIC DATA INSTRUCTIONS:
 - YELLOW/ADVISORY = elevated unrest above normal background
 - Mention elevated volcanoes if user asks about volcanic activity
 - For air travel questions, volcanic ash can affect flight routes
+`;
+        }
+
+        // Add aviation data even without weather data (aviation alerts are nationwide)
+        if (earthContext?.aviation?.hasActiveAlerts && earthContext.aviation.contextBlock) {
+            contextInfo += `
+${earthContext.aviation.contextBlock}
+
+AVIATION DATA INSTRUCTIONS:
+- This shows currently active SIGMETs and AIRMETs from NOAA Aviation Weather Center
+- SIGMETs are significant hazards for ALL aircraft (severe turbulence, icing, volcanic ash)
+- AIRMETs are advisories for lighter aircraft (moderate turbulence, icing, low visibility)
+- When asked about flight conditions, reference specific alerts from the data
+- Quote actual alert details: hazard type, affected regions, altitudes
+- IMPORTANT: This data is for informational purposes only, NOT for operational flight planning
 `;
         }
     }
@@ -326,6 +362,22 @@ YOUR EXPERTISE:
    - TSUNAMIS: Ocean waves triggered by underwater earthquakes (usually M7.5+), volcanic island collapse, or underwater landslides. Warning signs: strong earthquake felt near coast, sudden ocean recession
    - COMBINED HAZARDS: Earthquake + rain = landslide risk, volcanic ashfall + rain = lahars, earthquake damage + weather exposure
 
+10. AVIATION METEOROLOGY & TURBULENCE
+   - TURBULENCE TYPES: Light (minor bumps), Moderate (strain against seat belt), Severe (abrupt altitude changes), Extreme (aircraft may be temporarily uncontrollable)
+   - CLEAR AIR TURBULENCE (CAT): Occurs at high altitude near jet stream boundaries, invisible, no clouds to warn pilots
+   - CONVECTIVE TURBULENCE: Associated with thunderstorms, cumulus clouds, strong updrafts/downdrafts
+   - MECHANICAL TURBULENCE: Caused by wind flowing over terrain, mountains, buildings - common in mountain approaches
+   - WAKE TURBULENCE: Vortices from preceding aircraft, especially large jets
+   - JET STREAM: Rivers of high-speed air at FL300-FL400 (30,000-40,000 ft), can exceed 200 mph
+   - SIGMET (Significant Meteorological Information): Warnings for severe weather affecting all aircraft - thunderstorms, severe icing, volcanic ash, CAT
+   - AIRMET (Airmen's Meteorological Information): Advisories for less severe conditions - moderate turbulence, moderate icing, low visibility, mountain obscuration
+   - PIREP (Pilot Reports): Real-time observations from pilots in flight - invaluable for current conditions
+   - FLIGHT LEVELS: FL350 = 35,000 feet, FL450 = 45,000 feet (pressure altitude above 18,000 ft)
+   - ICING CONDITIONS: Supercooled water droplets freeze on aircraft surfaces, affecting lift and control
+   - WIND SHEAR: Rapid change in wind speed/direction, dangerous during takeoff/landing
+   - MICROBURSTS: Intense downdrafts from thunderstorms, can push aircraft toward ground
+   - ICAO CODES: 4-letter airport identifiers (LAX = KLAX, JFK = KJFK, SFO = KSFO)
+
 YOUR CONVERSATIONAL STYLE:
 - Earth science is fascinating - share that enthusiasm
 - Explain complex concepts simply, but go deeper when asked
@@ -351,6 +403,11 @@ EXAMPLE TOPICS YOU CAN DISCUSS:
 - "Is there volcanic activity I should know about?" - volcanic monitoring
 - "What causes tsunamis?" - earth science connections
 - "Is it safe to hike today?" - combined weather + seismic assessment
+- "I'm flying LAX to JFK tomorrow - any turbulence expected?" - aviation weather
+- "What SIGMETs are active over the Rockies?" - aviation alerts
+- "What causes clear air turbulence?" - aviation education
+- "Should I be worried about turbulence on my flight?" - flight conditions
+- "Where is the jet stream today?" - upper atmosphere
 `;
 
     return `${knowledgeBase}

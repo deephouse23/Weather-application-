@@ -18,7 +18,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, Gamepad2, Info, Home, Newspaper, Thermometer, Map, GraduationCap } from "lucide-react"
+import { Menu, X, Home, Map, Plane, GraduationCap, Sparkles } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
 import AuthButton from "@/components/auth/auth-button"
@@ -120,11 +120,9 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
   const mainNavItems = [
     { href: "/", label: "HOME", icon: Home },
     { href: "/radar", label: "RADAR", icon: Map },
-    { href: "/learn", label: "LEARN", icon: GraduationCap },
-    { href: "/extremes", label: "EXTREMES", icon: Thermometer },
-    { href: "/news", label: "NEWS", icon: Newspaper },
-    { href: "/games", label: "GAMES", icon: Gamepad2 },
-    { href: "/about", label: "ABOUT", icon: Info }
+    { href: "/aviation", label: "AVIATION", icon: Plane },
+    { href: "/education", label: "EDUCATION", icon: GraduationCap },
+    { href: "/ai", label: "AI", icon: Sparkles }
   ]
 
   return (

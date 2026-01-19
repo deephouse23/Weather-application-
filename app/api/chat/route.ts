@@ -27,6 +27,9 @@ import {
     fetchElevatedVolcanoes,
     formatVolcanoContextBlock
 } from '@/lib/services/volcano-service';
+import {
+    getAviationContext
+} from '@/lib/services/aviation-service';
 
 // Get user from request
 async function getAuthenticatedUser(request: NextRequest) {
@@ -560,22 +563,27 @@ export async function POST(request: NextRequest) {
         // Only included if there are elevated volcanoes
         const volcanoPromise = fetchVolcanoContext();
 
+        // Fetch aviation data (global - SIGMETs/AIRMETs for aviation questions)
+        const aviationPromise = getAviationContext();
+
         // Save user message to history and fetch earth sciences data in parallel
-        const [, earthquakeData, volcanoData] = await Promise.all([
+        const [, earthquakeData, volcanoData, aviationData] = await Promise.all([
             saveMessage(user.id, {
                 role: 'user',
                 content: message
             }),
             earthquakePromise,
-            volcanoPromise
+            volcanoPromise,
+            aviationPromise
         ]);
 
-        // Merge earthquake and volcano data into context
-        if (earthquakeData || volcanoData) {
+        // Merge earthquake, volcano, and aviation data into context
+        if (earthquakeData || volcanoData || aviationData?.hasActiveAlerts) {
             earthSciencesContext = {
                 ...earthSciencesContext,
                 ...(earthquakeData && { earthquakes: earthquakeData }),
-                ...(volcanoData && { volcanoes: volcanoData })
+                ...(volcanoData && { volcanoes: volcanoData }),
+                ...(aviationData?.hasActiveAlerts && { aviation: aviationData })
             };
         }
 

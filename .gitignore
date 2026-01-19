@@ -89,3 +89,7 @@ SENTRY_SETUP_GUIDE.md
 !.github/images/demo/
 !docs/screenshots/
 .vercel
+
+# Lighthouse reports
+docs/lh-*.json
+docs/lighthouse-*.json
