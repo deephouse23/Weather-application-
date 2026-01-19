@@ -8,3 +8,4 @@
 export { default as AlertTicker } from './AlertTicker';
 export type { AviationAlert } from './AlertTicker';
 export { default as FlightConditionsTerminal } from './FlightConditionsTerminal';
+export { default as TurbulenceMap } from './TurbulenceMap';
