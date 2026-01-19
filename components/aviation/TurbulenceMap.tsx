@@ -123,6 +123,7 @@ export default function TurbulenceMap({
   const vectorLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const popupOverlayRef = useRef<Overlay | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const [pireps, setPireps] = useState<PIREPData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -191,16 +192,29 @@ export default function TurbulenceMap({
       }
     }
 
+    // Cancel any in-flight request to prevent race conditions
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/aviation/pireps?hours=6&turbulenceOnly=false`);
+      const response = await fetch(`/api/aviation/pireps?hours=6&turbulenceOnly=false`, {
+        signal: controller.signal,
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch PIREP data');
       }
 
       const result = await response.json();
+
+      // Check if request was aborted before updating state
+      if (controller.signal.aborted) return;
+
       if (result.success) {
         setPireps(result.data.pireps);
         setFetchedAt(result.data.fetchedAt);
@@ -209,10 +223,15 @@ export default function TurbulenceMap({
         throw new Error(result.error || 'Unknown error');
       }
     } catch (err) {
+      // Don't update state if request was aborted
+      if (err instanceof Error && err.name === 'AbortError') return;
       console.error('PIREP fetch error:', err);
       setError('Unable to load PIREP data');
     } finally {
-      setIsLoading(false);
+      // Only update loading state if this is still the current request
+      if (!controller.signal.aborted) {
+        setIsLoading(false);
+      }
     }
   }, [getCachedData, setCachedData]);
 
@@ -241,9 +260,15 @@ export default function TurbulenceMap({
     });
   }, [pireps, hoursBack, altitudeFilter]);
 
-  // Initial fetch
+  // Initial fetch with cleanup on unmount
   useEffect(() => {
     fetchPirepData();
+    return () => {
+      // Abort any in-flight request on unmount
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [fetchPirepData]);
 
   // Initialize map
