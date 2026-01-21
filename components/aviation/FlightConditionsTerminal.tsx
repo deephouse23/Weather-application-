@@ -39,7 +39,8 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
   const { theme } = useTheme();
   const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [expandedSection, setExpandedSection] = useState<string | null>('alerts');
+  // PRD Section 14.1: Map visible by default, alerts expanded by default
+  const [expandedSection, setExpandedSection] = useState<string | null>('turbulence');
 
   // Update time every 10 seconds (reduced frequency for better performance)
   useEffect(() => {
@@ -134,35 +135,7 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
         </CardContent>
       </Card>
 
-      {/* Alert Ticker Section */}
-      <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
-        <button
-          onClick={() => toggleSection('alerts')}
-          className={cn(
-            'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
-            themeClasses.borderColor
-          )}
-        >
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-yellow-500" />
-            <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
-              Aviation Alerts Feed
-            </span>
-          </div>
-          {expandedSection === 'alerts' ? (
-            <ChevronUp className="w-4 h-4" />
-          ) : (
-            <ChevronDown className="w-4 h-4" />
-          )}
-        </button>
-        {expandedSection === 'alerts' && (
-          <CardContent className="p-0">
-            <AlertTicker alerts={alerts} isLoading={isLoading} />
-          </CardContent>
-        )}
-      </Card>
-
-      {/* Turbulence Forecast Map Section */}
+      {/* PRD Section 14.1 & 14.2: Turbulence Map FIRST, visible by default */}
       <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
         <button
           onClick={() => toggleSection('turbulence')}
@@ -174,7 +147,7 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
           <div className="flex items-center gap-2">
             <Map className="w-4 h-4 text-purple-500" />
             <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
-              Turbulence Forecast
+              Turbulence Forecast Map
             </span>
           </div>
           {expandedSection === 'turbulence' ? (
@@ -190,10 +163,45 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
         )}
       </Card>
 
-      {/* Data Sources Section */}
+      {/* PRD Section 14.2: Alert Ticker BELOW the map */}
       <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
         <button
-          onClick={() => toggleSection('sources')}
+          onClick={() => toggleSection('alerts')}
+          className={cn(
+            'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
+            themeClasses.borderColor
+          )}
+        >
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-yellow-500" />
+            <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
+              Aviation Alerts Feed
+            </span>
+            {alertStats.total > 0 && (
+              <span className={cn('text-xs px-2 py-0.5 border',
+                alertStats.severe > 0 ? 'border-red-500 text-red-500' : 'border-yellow-500 text-yellow-500'
+              )}>
+                {alertStats.total} ACTIVE
+              </span>
+            )}
+          </div>
+          {expandedSection === 'alerts' ? (
+            <ChevronUp className="w-4 h-4" />
+          ) : (
+            <ChevronDown className="w-4 h-4" />
+          )}
+        </button>
+        {expandedSection === 'alerts' && (
+          <CardContent className="p-0">
+            <AlertTicker alerts={alerts} isLoading={isLoading} />
+          </CardContent>
+        )}
+      </Card>
+
+      {/* PRD Section 14.3: Data Sources & Guide GROUPED together */}
+      <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
+        <button
+          onClick={() => toggleSection('info')}
           className={cn(
             'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
             themeClasses.borderColor
@@ -202,91 +210,79 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
           <div className="flex items-center gap-2">
             <Radio className="w-4 h-4 text-green-500" />
             <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
-              Data Sources
+              Data Sources & Turbulence Guide
             </span>
           </div>
-          {expandedSection === 'sources' ? (
+          {expandedSection === 'info' ? (
             <ChevronUp className="w-4 h-4" />
           ) : (
             <ChevronDown className="w-4 h-4" />
           )}
         </button>
-        {expandedSection === 'sources' && (
-          <CardContent className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
-              <div className={cn('p-3 border-2', themeClasses.borderColor)}>
-                <div className={cn('font-bold mb-1', themeClasses.accentText)}>NOAA AWC</div>
-                <div className={cn(themeClasses.text)}>Aviation Weather Center</div>
-                <div className="text-green-500 mt-1">STATUS: ONLINE</div>
+        {expandedSection === 'info' && (
+          <CardContent className="p-4 space-y-4">
+            {/* Data Sources */}
+            <div>
+              <div className={cn('text-xs font-mono font-bold mb-2 flex items-center gap-2', themeClasses.headerText)}>
+                <Radio className="w-3 h-3 text-green-500" />
+                DATA SOURCES
               </div>
-              <div className={cn('p-3 border-2', themeClasses.borderColor)}>
-                <div className={cn('font-bold mb-1', themeClasses.accentText)}>NOAA GFS</div>
-                <div className={cn(themeClasses.text)}>Global Forecast System</div>
-                <div className="text-green-500 mt-1">STATUS: ONLINE</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs">
+                <div className={cn('p-3 border-2', themeClasses.borderColor)}>
+                  <div className={cn('font-bold mb-1', themeClasses.accentText)}>NOAA AWC</div>
+                  <div className={cn(themeClasses.text)}>Aviation Weather Center</div>
+                  <div className="text-green-500 mt-1">STATUS: ONLINE</div>
+                </div>
+                <div className={cn('p-3 border-2', themeClasses.borderColor)}>
+                  <div className={cn('font-bold mb-1', themeClasses.accentText)}>NOAA GFS</div>
+                  <div className={cn(themeClasses.text)}>Global Forecast System</div>
+                  <div className="text-green-500 mt-1">STATUS: ONLINE</div>
+                </div>
               </div>
             </div>
-          </CardContent>
-        )}
-      </Card>
 
-      {/* Turbulence Guide Section */}
-      <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
-        <button
-          onClick={() => toggleSection('guide')}
-          className={cn(
-            'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
-            themeClasses.borderColor
-          )}
-        >
-          <div className="flex items-center gap-2">
-            <Wind className="w-4 h-4 text-cyan-500" />
-            <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
-              Turbulence Guide
-            </span>
-          </div>
-          {expandedSection === 'guide' ? (
-            <ChevronUp className="w-4 h-4" />
-          ) : (
-            <ChevronDown className="w-4 h-4" />
-          )}
-        </button>
-        {expandedSection === 'guide' && (
-          <CardContent className="p-4">
-            <div className="space-y-3 font-mono text-xs">
-              <div className={cn('flex items-center gap-3 p-2 border-2', themeClasses.borderColor)}>
-                <div className="w-4 h-4 bg-green-500 rounded" />
-                <div>
-                  <span className="text-green-500 font-bold">LIGHT</span>
-                  <span className={cn('ml-2', themeClasses.text)}>
-                    Minor turbulence. Seat belt recommended.
-                  </span>
-                </div>
+            {/* Turbulence Guide */}
+            <div className={cn('pt-4 border-t', themeClasses.borderColor)}>
+              <div className={cn('text-xs font-mono font-bold mb-2 flex items-center gap-2', themeClasses.headerText)}>
+                <Wind className="w-3 h-3 text-cyan-500" />
+                TURBULENCE INTENSITY GUIDE
               </div>
-              <div className={cn('flex items-center gap-3 p-2 border-2', themeClasses.borderColor)}>
-                <div className="w-4 h-4 bg-yellow-500 rounded" />
-                <div>
-                  <span className="text-yellow-500 font-bold">MODERATE</span>
-                  <span className={cn('ml-2', themeClasses.text)}>
-                    Definite strains against seat belt. Unsecured objects may move.
-                  </span>
+              <div className="space-y-2 font-mono text-xs">
+                <div className={cn('flex items-center gap-3 p-2 border-2', themeClasses.borderColor)}>
+                  <div className="w-4 h-4 bg-green-500 rounded" />
+                  <div>
+                    <span className="text-green-500 font-bold">LIGHT</span>
+                    <span className={cn('ml-2', themeClasses.text)}>
+                      Minor turbulence. Seat belt recommended.
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div className={cn('flex items-center gap-3 p-2 border-2', themeClasses.borderColor)}>
-                <div className="w-4 h-4 bg-orange-500 rounded" />
-                <div>
-                  <span className="text-orange-500 font-bold">SEVERE</span>
-                  <span className={cn('ml-2', themeClasses.text)}>
-                    Abrupt changes in altitude/attitude. Aircraft may be momentarily out of control.
-                  </span>
+                <div className={cn('flex items-center gap-3 p-2 border-2', themeClasses.borderColor)}>
+                  <div className="w-4 h-4 bg-yellow-500 rounded" />
+                  <div>
+                    <span className="text-yellow-500 font-bold">MODERATE</span>
+                    <span className={cn('ml-2', themeClasses.text)}>
+                      Definite strains against seat belt. Unsecured objects may move.
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div className={cn('flex items-center gap-3 p-2 border-2', themeClasses.borderColor)}>
-                <div className="w-4 h-4 bg-red-500 rounded" />
-                <div>
-                  <span className="text-red-500 font-bold">EXTREME</span>
-                  <span className={cn('ml-2', themeClasses.text)}>
-                    Aircraft violently tossed. Practically impossible to control. May cause structural damage.
-                  </span>
+                <div className={cn('flex items-center gap-3 p-2 border-2', themeClasses.borderColor)}>
+                  <div className="w-4 h-4 bg-orange-500 rounded" />
+                  <div>
+                    <span className="text-orange-500 font-bold">SEVERE</span>
+                    <span className={cn('ml-2', themeClasses.text)}>
+                      Abrupt changes in altitude/attitude. Aircraft may be momentarily out of control.
+                    </span>
+                  </div>
+                </div>
+                <div className={cn('flex items-center gap-3 p-2 border-2', themeClasses.borderColor)}>
+                  <div className="w-4 h-4 bg-red-500 rounded" />
+                  <div>
+                    <span className="text-red-500 font-bold">EXTREME</span>
+                    <span className={cn('ml-2', themeClasses.text)}>
+                      Aircraft violently tossed. Practically impossible to control. May cause structural damage.
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

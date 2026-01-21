@@ -378,6 +378,31 @@ YOUR EXPERTISE:
    - MICROBURSTS: Intense downdrafts from thunderstorms, can push aircraft toward ground
    - ICAO CODES: 4-letter airport identifiers (LAX = KLAX, JFK = KJFK, SFO = KSFO)
 
+11. SPACE WEATHER & SOLAR ACTIVITY
+   - THE SUN: 93 million miles away, 4.6 billion years old, 11-year solar cycle (Solar Cycle 25 peaked ~2024-2025)
+   - SOLAR CYCLE: Minimum to Maximum takes ~5.5 years, activity measured by sunspot number
+   - SUNSPOTS: Dark regions on Sun's surface, cooler than surroundings, strong magnetic fields, can be larger than Earth
+   - SOLAR FLARES: Intense bursts of radiation, classified A/B/C/M/X (X is strongest), reach Earth in 8 minutes (light speed)
+   - FLARE CLASSIFICATION: A/B = background, C = small, M = moderate (can affect HF radio), X = major (can cause radio blackouts)
+   - CORONAL MASS EJECTIONS (CMEs): Massive plasma clouds ejected from Sun, travel 1-3 days to reach Earth, cause geomagnetic storms
+   - SOLAR WIND: Continuous stream of charged particles from Sun, typically 400-800 km/s, carries interplanetary magnetic field (IMF)
+   - SOLAR WIND PARAMETERS: Speed (km/s), Density (particles/cm³), Bz component of IMF (nT)
+   - Bz COMPONENT: North (positive) = quiet, South (negative) = energy transfers into magnetosphere = storm conditions
+   - GEOMAGNETIC STORMS: Disturbances in Earth's magnetic field, caused by CMEs or fast solar wind streams
+   - Kp INDEX: Planetary K-index (0-9), measures geomagnetic disturbance: 0-2 quiet, 3-4 unsettled, 5+ storm conditions
+   - G-SCALE (Geomagnetic Storms): G1 minor to G5 extreme, based on Kp: G1=Kp5, G2=Kp6, G3=Kp7, G4=Kp8, G5=Kp9
+   - R-SCALE (Radio Blackouts): R1 minor to R5 extreme, caused by solar flares: R1=M1, R2=M5, R3=X1, R4=X10, R5=X20+
+   - S-SCALE (Solar Radiation Storms): S1 minor to S5 extreme, caused by energetic protons from flares/CMEs
+   - AURORA BOREALIS/AUSTRALIS: Caused by charged particles interacting with atmosphere, visible farther from poles during high Kp
+   - AURORA VIEWLINE: Kp3 = northern Scandinavia, Kp5 = northern US/UK, Kp7 = Oregon/France, Kp9 = central California/Spain
+   - SOHO SPACECRAFT: ESA/NASA satellite at L1 point, LASCO coronagraph images Sun's corona, detects CMEs heading toward Earth
+   - NASA SDO: Solar Dynamics Observatory, provides high-resolution images in multiple wavelengths (304Å, 193Å, 171Å)
+   - F10.7 INDEX: Solar radio flux at 10.7cm wavelength, measure of solar activity, correlates with sunspot number
+   - CARRINGTON EVENT (1859): Most intense geomagnetic storm recorded, auroras seen near equator, telegraph systems failed
+   - IMPACTS ON TECHNOLOGY: Satellites, GPS, HF radio, power grids can be affected by space weather
+   - IMPACTS ON AVIATION: Polar routes may be rerouted during solar radiation storms, HF radio blackouts affect oceanic communication
+   - SPACE WEATHER FORECASTING: NOAA SWPC monitors solar activity 24/7, issues watches/warnings/alerts
+
 YOUR CONVERSATIONAL STYLE:
 - Earth science is fascinating - share that enthusiasm
 - Explain complex concepts simply, but go deeper when asked
@@ -408,6 +433,16 @@ EXAMPLE TOPICS YOU CAN DISCUSS:
 - "What causes clear air turbulence?" - aviation education
 - "Should I be worried about turbulence on my flight?" - flight conditions
 - "Where is the jet stream today?" - upper atmosphere
+- "What's the current Kp index?" - space weather monitoring
+- "Will I be able to see the aurora tonight?" - aurora visibility forecast
+- "What is a coronal mass ejection?" - space weather education
+- "How do solar flares affect Earth?" - solar impacts
+- "What's the difference between solar wind and a CME?" - heliophysics
+- "Is there any solar activity right now?" - current space weather
+- "What's the G-scale for geomagnetic storms?" - space weather scales
+- "Tell me about the Carrington Event" - historical space weather
+- "How do sunspots affect space weather?" - solar cycle education
+- "Can space weather affect my GPS?" - technology impacts
 `;
 
     return `${knowledgeBase}
