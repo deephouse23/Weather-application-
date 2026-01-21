@@ -99,12 +99,13 @@ export async function GET() {
     const sunspotCount = currentEntry.ssn || 0;
 
     // Solar max expected around 2024-2025 for Cycle 25
+    // Order matters: check minimum before declining since >85 is subset of >55
     if (percentComplete >= 45 && percentComplete <= 55 && sunspotCount > 100) {
       phase = 'maximum';
-    } else if (percentComplete > 55) {
-      phase = 'declining';
     } else if (percentComplete > 85 || sunspotCount < 30) {
       phase = 'minimum';
+    } else if (percentComplete > 55) {
+      phase = 'declining';
     }
 
     const result: SunspotData = {
@@ -141,6 +142,6 @@ export async function GET() {
       },
       source: 'NOAA Space Weather Prediction Center',
       error: 'Unable to fetch live data',
-    });
+    }, { status: 500 });
   }
 }

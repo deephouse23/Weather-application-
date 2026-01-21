@@ -64,10 +64,10 @@ function getSeverityColors(severity: SpaceWeatherAlert['severity']): string {
   }
 }
 
-// Format time ago
-function formatTimeAgo(dateStr: string): string {
+// Format time ago - takes current time as parameter to avoid hydration mismatch
+function formatTimeAgo(dateStr: string, now: Date | null): string {
+  if (!now) return '--';
   const date = new Date(dateStr);
-  const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
@@ -84,7 +84,22 @@ export default function SpaceWeatherAlertTicker({ alerts, isLoading = false }: S
   const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoScrolling, setIsAutoScrolling] = useState(true);
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Initialize time on client mount and update every minute for "time ago" display
+  useEffect(() => {
+    setCurrentTime(new Date());
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Reset currentIndex if it goes out of bounds when alerts array changes
+  useEffect(() => {
+    if (alerts.length > 0 && currentIndex >= alerts.length) {
+      setCurrentIndex(0);
+    }
+  }, [alerts.length, currentIndex]);
 
   // Auto-scroll alerts
   useEffect(() => {
@@ -197,7 +212,7 @@ export default function SpaceWeatherAlertTicker({ alerts, isLoading = false }: S
               </div>
             </div>
             <span className={cn('text-xs font-mono', themeClasses.text, 'opacity-70')}>
-              {formatTimeAgo(currentAlert.issuedAt)}
+              {formatTimeAgo(currentAlert.issuedAt, currentTime)}
             </span>
           </div>
 

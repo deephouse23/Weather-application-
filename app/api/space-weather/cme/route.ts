@@ -139,6 +139,6 @@ export async function GET() {
       },
       updatedAt: new Date().toISOString(),
       error: 'Failed to fetch CME data from NASA DONKI',
-    });
+    }, { status: 500 });
   }
 }

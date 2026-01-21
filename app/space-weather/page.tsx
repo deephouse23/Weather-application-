@@ -92,22 +92,24 @@ export default function SpaceWeatherPage() {
         return defaultValue;
       };
 
-      const scales = await parseResult<SpaceWeatherScalesData | null>(scalesRes, null);
-      const alertsData = await parseResult<{ alerts: SpaceWeatherAlert[] }>(alertsRes, { alerts: [] });
-      const kpIndex = await parseResult<KpIndexData | null>(kpRes, null);
-      const solarWind = await parseResult<SolarWindData | null>(windRes, null);
-      const sunspots = await parseResult<SunspotData | null>(sunspotsRes, null);
-      const xrayFlux = await parseResult<XRayFluxData | null>(xrayRes, null);
-      const auroraForecast = await parseResult<AuroraForecastData | null>(auroraRes, null);
+      // Parse and extract inner data from API response wrappers
+      // API routes return { data/scales: {...}, source: '...' } wrappers
+      const scalesWrapper = await parseResult<{ scales: SpaceWeatherScalesData } | null>(scalesRes, null);
+      const alertsWrapper = await parseResult<{ alerts: SpaceWeatherAlert[] }>(alertsRes, { alerts: [] });
+      const kpWrapper = await parseResult<{ data: KpIndexData } | null>(kpRes, null);
+      const windWrapper = await parseResult<{ data: SolarWindData } | null>(windRes, null);
+      const sunspotsWrapper = await parseResult<{ data: SunspotData } | null>(sunspotsRes, null);
+      const xrayWrapper = await parseResult<{ data: XRayFluxData } | null>(xrayRes, null);
+      const auroraWrapper = await parseResult<{ data: AuroraForecastData; kpIndex?: number } | null>(auroraRes, null);
 
       setData({
-        scales,
-        alerts: alertsData.alerts || [],
-        kpIndex,
-        solarWind,
-        sunspots,
-        xrayFlux,
-        auroraForecast,
+        scales: scalesWrapper?.scales ?? null,
+        alerts: alertsWrapper.alerts || [],
+        kpIndex: kpWrapper?.data ?? null,
+        solarWind: windWrapper?.data ?? null,
+        sunspots: sunspotsWrapper?.data ?? null,
+        xrayFlux: xrayWrapper?.data ?? null,
+        auroraForecast: auroraWrapper?.data ?? null,
       });
       setError(null);
     } catch (err) {

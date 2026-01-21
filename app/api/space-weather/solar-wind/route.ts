@@ -132,12 +132,14 @@ export async function GET() {
           }
         }
 
-        // Add Bz to recent data (match by time if possible)
+        // Add Bz to recent data by sampling at 30-minute intervals
         const last360Mag = dataRows.slice(-360);
-        for (let i = 0; i < last360Mag.length && i < recent.length; i += 30) {
-          const row = last360Mag[i * 30] || last360Mag[last360Mag.length - 1];
-          if (Array.isArray(row) && row.length >= 4 && recent[Math.floor(i / 30)]) {
-            recent[Math.floor(i / 30)].bz = parseFloat(row[3] as string) || 0;
+        for (let j = 0; j < recent.length; j++) {
+          // Sample from mag data at 30-entry intervals to match solar wind sampling
+          const rowIndex = Math.min(j * 30, last360Mag.length - 1);
+          const row = last360Mag[rowIndex];
+          if (Array.isArray(row) && row.length >= 4) {
+            recent[j].bz = parseFloat(row[3] as string) || 0;
           }
         }
       }
@@ -173,6 +175,6 @@ export async function GET() {
       },
       source: 'NOAA Space Weather Prediction Center',
       error: 'Unable to fetch live data',
-    });
+    }, { status: 500 });
   }
 }

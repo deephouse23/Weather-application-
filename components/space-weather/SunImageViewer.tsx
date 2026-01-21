@@ -70,12 +70,14 @@ export default function SunImageViewer({ className }: SunImageViewerProps) {
   const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
   const [selectedWavelength, setSelectedWavelength] = useState<Wavelength>(WAVELENGTHS[0]);
   const [isLoading, setIsLoading] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  // Initialize to null to avoid hydration mismatch
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [imageError, setImageError] = useState(false);
   const [showFullsize, setShowFullsize] = useState(false);
 
-  // Auto-refresh every 5 minutes
+  // Set initial time on client mount and auto-refresh every 5 minutes
   useEffect(() => {
+    setLastUpdate(new Date());
     const interval = setInterval(() => {
       setLastUpdate(new Date());
       setIsLoading(true);
@@ -100,9 +102,10 @@ export default function SunImageViewer({ className }: SunImageViewerProps) {
     setImageError(false);
   };
 
-  // Add cache buster to URL
-  const imageUrl = `${selectedWavelength.url512}?t=${lastUpdate.getTime()}`;
-  const fullsizeUrl = `${selectedWavelength.url1024}?t=${lastUpdate.getTime()}`;
+  // Add cache buster to URL (use 0 if not yet mounted to avoid hydration mismatch)
+  const cacheTime = lastUpdate?.getTime() ?? 0;
+  const imageUrl = `${selectedWavelength.url512}?t=${cacheTime}`;
+  const fullsizeUrl = `${selectedWavelength.url1024}?t=${cacheTime}`;
 
   return (
     <>
@@ -213,7 +216,7 @@ export default function SunImageViewer({ className }: SunImageViewerProps) {
 
           {/* Last Update */}
           <div className={cn('text-xs font-mono text-center', themeClasses.text, 'opacity-70')}>
-            Last update: {lastUpdate.toLocaleTimeString()}
+            Last update: {lastUpdate ? lastUpdate.toISOString().slice(11, 19) + 'Z' : '--:--:--'}
           </div>
         </CardContent>
       </Card>

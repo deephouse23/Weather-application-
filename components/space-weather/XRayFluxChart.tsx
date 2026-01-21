@@ -9,7 +9,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Zap, TrendingUp, TrendingDown, Minus, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';

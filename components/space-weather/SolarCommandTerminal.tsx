@@ -109,11 +109,13 @@ export default function SolarCommandTerminal({
 }: SolarCommandTerminalProps) {
   const { theme } = useTheme();
   const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
-  const [currentTime, setCurrentTime] = useState(new Date());
+  // Initialize to null to avoid hydration mismatch, set on client mount
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['scales', 'sun', 'kp']));
 
-  // Update time every 10 seconds
+  // Set time on client mount and update every 10 seconds
   useEffect(() => {
+    setCurrentTime(new Date());
     const timer = setInterval(() => setCurrentTime(new Date()), 10000);
     return () => clearInterval(timer);
   }, []);
@@ -171,10 +173,10 @@ export default function SolarCommandTerminal({
             <div className="flex items-center gap-4 font-mono text-xs">
               <div className={cn('flex items-center gap-1', themeClasses.text)}>
                 <Clock className="w-3 h-3" />
-                <span>UTC: {formatZuluTime(currentTime)}</span>
+                <span>UTC: {currentTime ? formatZuluTime(currentTime) : '--:--:--Z'}</span>
               </div>
               <div className={cn('flex items-center gap-1', themeClasses.text)}>
-                <span>LOCAL: {formatLocalTime(currentTime)}</span>
+                <span>LOCAL: {currentTime ? formatLocalTime(currentTime) : '--:--:--'}</span>
               </div>
             </div>
           </div>

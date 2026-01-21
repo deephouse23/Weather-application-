@@ -119,6 +119,6 @@ export async function GET() {
       kpIndex: 0,
       source: 'NOAA Space Weather Prediction Center',
       error: 'Unable to fetch live Kp data',
-    });
+    }, { status: 500 });
   }
 }

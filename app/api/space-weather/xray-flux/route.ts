@@ -138,6 +138,6 @@ export async function GET() {
       },
       source: 'NOAA Space Weather Prediction Center',
       error: 'Unable to fetch live data',
-    });
+    }, { status: 500 });
   }
 }
