@@ -226,8 +226,11 @@ export async function GET(request: NextRequest) {
       // Filter turbulence only if requested
       if (turbulenceOnly && !turbIntensity) continue;
 
+      // Generate stable ID from PIREP data to maintain identity across refreshes
+      const stableId = `pirep-${lat.toFixed(4)}-${lon.toFixed(4)}-${altitude}-${obsTimeStr}`;
+
       const pirep: PIREPData = {
-        id: `pirep-${i}-${Date.now()}`,
+        id: stableId,
         receiptTime: values[colIndex['receipt_time']] || '',
         observationTime: obsTimeStr || '',
         aircraftRef: values[colIndex['aircraft_ref']] || '',
