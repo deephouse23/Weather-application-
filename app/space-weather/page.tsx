@@ -109,7 +109,10 @@ export default function SpaceWeatherPage() {
         solarWind: windWrapper?.data ?? null,
         sunspots: sunspotsWrapper?.data ?? null,
         xrayFlux: xrayWrapper?.data ?? null,
-        auroraForecast: auroraWrapper?.data ?? null,
+        auroraForecast: auroraWrapper?.data ? {
+          ...auroraWrapper.data,
+          currentKp: auroraWrapper.kpIndex ?? 3,
+        } : null,
       });
       setError(null);
     } catch (err) {
