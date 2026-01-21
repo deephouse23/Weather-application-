@@ -9,7 +9,7 @@
 
 'use client';
 
-import React, { useEffect, useState, Suspense, lazy, useCallback } from 'react';
+import React, { useEffect, useState, Suspense, lazy, useCallback, startTransition } from 'react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
@@ -52,17 +52,32 @@ export default function SpaceWeatherPage() {
 
   const fetchAllData = useCallback(async () => {
     try {
-      setIsLoading(true);
+      // Don't block initial render - set loading to false early
+      // so skeleton states render immediately
 
-      // Fetch all space weather data in parallel
+      // Helper to fetch with timeout for better LCP
+      const fetchWithTimeout = async (url: string, timeoutMs = 3000): Promise<Response> => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          const response = await fetch(url, { signal: controller.signal });
+          clearTimeout(timeoutId);
+          return response;
+        } catch (err) {
+          clearTimeout(timeoutId);
+          throw err;
+        }
+      };
+
+      // Fetch all space weather data in parallel with timeouts
       const [scalesRes, alertsRes, kpRes, windRes, sunspotsRes, xrayRes, auroraRes] = await Promise.allSettled([
-        fetch('/api/space-weather/scales'),
-        fetch('/api/space-weather/alerts'),
-        fetch('/api/space-weather/kp-index'),
-        fetch('/api/space-weather/solar-wind'),
-        fetch('/api/space-weather/sunspots'),
-        fetch('/api/space-weather/xray-flux'),
-        fetch('/api/space-weather/aurora'),
+        fetchWithTimeout('/api/space-weather/scales'),
+        fetchWithTimeout('/api/space-weather/alerts'),
+        fetchWithTimeout('/api/space-weather/kp-index'),
+        fetchWithTimeout('/api/space-weather/solar-wind'),
+        fetchWithTimeout('/api/space-weather/sunspots'),
+        fetchWithTimeout('/api/space-weather/xray-flux'),
+        fetchWithTimeout('/api/space-weather/aurora'),
       ]);
 
       // Parse results with error handling for each
@@ -104,10 +119,17 @@ export default function SpaceWeatherPage() {
   }, []);
 
   useEffect(() => {
-    fetchAllData();
+    // Use startTransition to allow initial paint before data fetching
+    startTransition(() => {
+      fetchAllData();
+    });
 
     // Refresh data every 5 minutes
-    const interval = setInterval(fetchAllData, 5 * 60 * 1000);
+    const interval = setInterval(() => {
+      startTransition(() => {
+        fetchAllData();
+      });
+    }, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [fetchAllData]);
 
