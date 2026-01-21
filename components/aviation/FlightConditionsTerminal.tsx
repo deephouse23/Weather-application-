@@ -185,7 +185,7 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
         </button>
         {expandedSection === 'turbulence' && (
           <CardContent className="p-4">
-            <TurbulenceMap initialAltitude="FL350" initialForecast={0} />
+            <TurbulenceMap initialAltitude="all" initialHours={2} />
           </CardContent>
         )}
       </Card>
