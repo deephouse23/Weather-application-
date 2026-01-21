@@ -130,6 +130,7 @@ export default function TurbulenceMap({
   const [error, setError] = useState<string | null>(null);
   const [selectedPirep, setSelectedPirep] = useState<PIREPData | null>(null);
   const [fetchedAt, setFetchedAt] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState(Date.now()); // For keeping age filter fresh
 
   // Filters
   const [hoursBack, setHoursBack] = useState(initialHours);
@@ -235,9 +236,17 @@ export default function TurbulenceMap({
     }
   }, [getCachedData, setCachedData]);
 
+  // Update current time every minute to keep age filter fresh
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
+
   // Filter PIREPs based on user selections
   const filteredPireps = useMemo(() => {
-    const cutoffTime = new Date(Date.now() - hoursBack * 60 * 60 * 1000);
+    const cutoffTime = new Date(currentTime - hoursBack * 60 * 60 * 1000);
 
     return pireps.filter((pirep) => {
       // Time filter - skip PIREPs with missing or invalid observation times
@@ -258,7 +267,7 @@ export default function TurbulenceMap({
           return true;
       }
     });
-  }, [pireps, hoursBack, altitudeFilter]);
+  }, [pireps, hoursBack, altitudeFilter, currentTime]);
 
   // Initial fetch with cleanup on unmount
   useEffect(() => {
