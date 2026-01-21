@@ -226,7 +226,7 @@ With the addition of Aviation and AI features, the navigation requires restructu
 
 **Current (9 items):** HOME, EXTREMES, CLOUD TYPES, WEATHER SYSTEMS, 16-BIT TAKES, GAMES, NEWS, RADAR, [User]
 
-**Proposed (6 items):** HOME | RADAR | AVIATION | EDUCATION | AI | [User]
+**Proposed (7 items):** HOME | RADAR | SPACE WEATHER | AVIATION | GAMES | EDUCATION | AI | [User]
 
 ### 10.2 Education Hub (New Consolidated Section)
 
@@ -236,19 +236,20 @@ Create `/education` as a hub page that consolidates weather learning content:
 - **Cloud Types:** Existing content from /cloud-types
 - **16-Bit Takes:** Existing content from /fun-facts
 - **Extremes:** Existing content from /extremes
-- **Games:** Weather trivia and educational games
+- **Games:** Removed from Education hub - now top-level nav item
 - **News:** Weather news and stories
 
 The Education hub page displays these as interactive terminal-styled cards. Existing routes remain functional but are now accessible through the hub. Use `GraduationCap` icon from lucide-react.
 
 ### 10.3 Final Navigation Layout
 
-**Desktop:** HOME | RADAR | AVIATION | EDUCATION | AI | [User/Login]
+**Desktop:** HOME | RADAR | SPACE WEATHER | AVIATION | GAMES | EDUCATION | AI | [User/Login]
 
-**Icons:** Home, Radio, Plane, GraduationCap, Bot/Sparkles, User
+**Icons:** Home, Radio, Sun, Plane, Gamepad2, GraduationCap, Bot/Sparkles, User
 
 **Mobile:** Hamburger menu with grouped sections:
-- Weather Tools: Home, Radar, Aviation
+- Weather Tools: Home, Radar, Space Weather, Aviation
+- Fun: Games
 - Learn: Education (with sub-items)
 - AI: Weather AI Assistant
 
@@ -369,9 +370,97 @@ src/
 
 ---
 
+## 14. UI/UX Nitpicks & Adjustments
+
+**IMPORTANT:** The following adjustments must be applied to the Aviation/Turbulence page:
+
+### 14.1 Turbulence Forecast Map - Auto Display
+
+**Current Behavior (WRONG):** User must click an arrow/chevron down to expand and view the turbulence forecast map.
+
+**Required Behavior (CORRECT):** The turbulence forecast map should be **visible by default** when the page loads. No user interaction should be required to see the map. The map is the primary feature and should be immediately visible.
+
+```typescript
+// WRONG - Map hidden by default
+const [mapExpanded, setMapExpanded] = useState(false)
+
+// CORRECT - Map visible by default
+const [mapExpanded, setMapExpanded] = useState(true)
+// Or better: don't use collapsible at all for the map
+```
+
+### 14.2 Alerts Position - Below the Map
+
+**Current Behavior (WRONG):** Alert ticker at the top of the page, above the map.
+
+**Required Behavior (CORRECT):** Alerts should be positioned **underneath the map**, not above it. The map is the hero element and should be at the top. Alerts are supplementary information.
+
+**Layout Order:**
+1. Terminal Header
+2. Turbulence Map (full width, prominent)
+3. Alert Ticker (below map)
+4. Other controls/panels
+
+### 14.3 Data Sources & Guide - Grouped Together
+
+**Current Behavior (WRONG):** Data sources and usage guide are in separate sections/locations.
+
+**Required Behavior (CORRECT):** Group "Data Sources" and "Guide" together in a single collapsible panel or footer section. This keeps reference information consolidated.
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ DATA SOURCES & GUIDE                                         [▼]   │
+├─────────────────────────────────────────────────────────────────────┤
+│ Sources: NOAA AWC, NOAA GFS, NOAA GTG                              │
+│ Updated: Every 15 minutes | Last refresh: 2 min ago                │
+├─────────────────────────────────────────────────────────────────────┤
+│ Guide:                                                              │
+│ • Light (Green): Minor bumps, seatbelt optional                    │
+│ • Moderate (Yellow): Seatbelt recommended                          │
+│ • Severe (Orange): Stay seated, expect movement                    │
+│ • Extreme (Red): Avoid - structural damage possible                │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### 14.4 Updated Page Layout
+
+Revised layout reflecting the above nitpicks:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ [Navigation Bar]                                                     │
+├─────────────────────────────────────────────────────────────────────┤
+│ ┌─────────────────────────────────────────────────────────────────┐ │
+│ │  FLIGHT CONDITIONS TERMINAL v1.0  │  LIVE  │  2026-01-20 15:42  │ │
+│ └─────────────────────────────────────────────────────────────────┘ │
+├─────────────────────────────────────────────────────────────────────┤
+│ ┌─────────────────────────────────────────────────────────────────┐ │
+│ │                                                                   │ │
+│ │                    TURBULENCE FORECAST MAP                       │ │
+│ │                   (VISIBLE BY DEFAULT - NO CLICK)                │ │
+│ │                                                                   │ │
+│ │              [Full-width map with jet stream overlay]            │ │
+│ │                                                                   │ │
+│ └─────────────────────────────────────────────────────────────────┘ │
+│   [FL200] [FL300] [FL350] [FL400] << Altitude selector              │
+├─────────────────────────────────────────────────────────────────────┤
+│ ┌─────────────────────────────────────────────────────────────────┐ │
+│ │ ⚠️ ALERTS (SIGMET/AIRMET)                                        │ │
+│ │ [Scrolling alert ticker - NOW BELOW THE MAP]                     │ │
+│ └─────────────────────────────────────────────────────────────────┘ │
+├─────────────────────────────────────────────────────────────────────┤
+│ ┌─────────────────────────────────────────────────────────────────┐ │
+│ │ DATA SOURCES & GUIDE                                      [▼]   │ │
+│ │ (Grouped together - collapsible)                                 │ │
+│ └─────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Quick Start for Ralph
 
-1. Read this entire PRD
+1. Read this entire PRD (including Section 14 - Nitpicks)
 2. Start with navigation update in `components/navigation.tsx`
 3. Create Education hub at `app/education/page.tsx`
 4. Create Aviation page at `app/aviation/page.tsx`
