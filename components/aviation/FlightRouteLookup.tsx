@@ -451,7 +451,7 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
               </span>
             </div>
             <button
-              onClick={() => handleRouteSearch(departureCode, arrivalCode)}
+              onClick={() => handleRouteSearch(departureCode, arrivalCode, flightData)}
               disabled={isSearching}
               className={cn(
                 'p-1.5 border-2 rounded hover:bg-gray-700 transition-colors',
@@ -500,7 +500,7 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
                     <div className="flex items-center gap-4 opacity-70">
                       <span>{formatAltitude(pirep.altitudeFt)}</span>
                       <span>
-                        {pirep.latitude.toFixed(2)}N, {Math.abs(pirep.longitude).toFixed(2)}W
+                        {Math.abs(pirep.latitude).toFixed(2)}{pirep.latitude >= 0 ? 'N' : 'S'}, {Math.abs(pirep.longitude).toFixed(2)}{pirep.longitude >= 0 ? 'E' : 'W'}
                       </span>
                     </div>
                   </div>
