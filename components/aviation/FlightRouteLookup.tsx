@@ -148,28 +148,14 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
   const [routePireps, setRoutePireps] = useState<RoutePIREP[]>([]);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  // Update form when initialFlight changes
+  // Fix hydration mismatch - only render time-dependent values after mount
   useEffect(() => {
-    if (initialFlight) {
-      setFlightData(initialFlight);
-      setDepartureCode(initialFlight.departure.icao);
-      setArrivalCode(initialFlight.arrival.icao);
-      // Auto-search when flight data is provided
-      handleRouteSearch(initialFlight.departure.icao, initialFlight.arrival.icao, initialFlight);
-    }
-  }, [initialFlight]);
-
-  // Handle flight found from FlightNumberInput
-  const handleFlightFound = useCallback((data: FlightData) => {
-    setFlightData(data);
-    setDepartureCode(data.departure.icao);
-    setArrivalCode(data.arrival.icao);
-    // Auto-search when flight is found
-    handleRouteSearch(data.departure.icao, data.arrival.icao, data);
+    setMounted(true);
   }, []);
 
-  // Search for PIREPs along route
+  // Search for PIREPs along route - defined before useEffect that uses it
   const handleRouteSearch = useCallback(async (depCode: string, arrCode: string, flight?: FlightData | null) => {
     const dep = depCode.trim().toUpperCase();
     const arr = arrCode.trim().toUpperCase();
@@ -203,7 +189,7 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
       }
 
       // Get coordinates for filtering
-      // Use flight data if available, otherwise use a simple lookup
+      // Use flight data if available, otherwise require flight lookup
       const currentFlight = flight || flightData;
       let depLat: number, depLon: number, arrLat: number, arrLon: number;
 
@@ -213,12 +199,10 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
         arrLat = currentFlight.arrival.lat;
         arrLon = currentFlight.arrival.lon;
       } else {
-        // Fallback: estimate coordinates from ICAO code patterns
-        // This is a simplified approach; in production would use airport database
-        depLat = 39.0;
-        depLon = -98.0;
-        arrLat = 39.0;
-        arrLon = -98.0;
+        // Cannot resolve coordinates without flight data - show error
+        setSearchError('Unable to resolve airport coordinates. Please use flight number lookup above.');
+        setIsSearching(false);
+        return;
       }
 
       // Filter PIREPs along route
@@ -249,6 +233,26 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
       setIsSearching(false);
     }
   }, [flightData, onRouteSearch]);
+
+  // Update form when initialFlight changes
+  useEffect(() => {
+    if (initialFlight) {
+      setFlightData(initialFlight);
+      setDepartureCode(initialFlight.departure.icao);
+      setArrivalCode(initialFlight.arrival.icao);
+      // Auto-search when flight data is provided
+      handleRouteSearch(initialFlight.departure.icao, initialFlight.arrival.icao, initialFlight);
+    }
+  }, [initialFlight, handleRouteSearch]);
+
+  // Handle flight found from FlightNumberInput
+  const handleFlightFound = useCallback((data: FlightData) => {
+    setFlightData(data);
+    setDepartureCode(data.departure.icao);
+    setArrivalCode(data.arrival.icao);
+    // Auto-search when flight is found
+    handleRouteSearch(data.departure.icao, data.arrival.icao, data);
+  }, [handleRouteSearch]);
 
   // Handle manual form submission
   const handleSubmit = (e: React.FormEvent) => {
@@ -490,7 +494,7 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
                           <span className="opacity-60">({pirep.turbulenceType})</span>
                         )}
                       </div>
-                      <span className="opacity-60">{formatTimeAgo(pirep.observationTime)}</span>
+                      <span className="opacity-60">{mounted ? formatTimeAgo(pirep.observationTime) : '...'}</span>
                     </div>
                     <div className="flex items-center gap-4 opacity-70">
                       <span>{formatAltitude(pirep.altitudeFt)}</span>

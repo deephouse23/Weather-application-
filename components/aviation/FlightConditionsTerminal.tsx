@@ -10,7 +10,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plane, Wind, AlertTriangle, Clock, Radio, ChevronDown, ChevronUp, Map, Route } from 'lucide-react';
+import { Plane, Wind, AlertTriangle, Clock, Radio, ChevronDown, ChevronUp, Map as MapIcon, Route } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
@@ -157,7 +157,7 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
           )}
         >
           <div className="flex items-center gap-2">
-            <Map className="w-4 h-4 text-purple-500" />
+            <MapIcon className="w-4 h-4 text-purple-500" />
             <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
               Turbulence Forecast Map
             </span>

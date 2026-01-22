@@ -175,92 +175,104 @@ function generateMockRoute(airlineCode: string, flightNum: string): MockRoute {
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const flightParam = searchParams.get('flight');
+  try {
+    const { searchParams } = new URL(request.url);
+    const flightParam = searchParams.get('flight');
 
-  // Validate flight parameter
-  if (!flightParam) {
+    // Validate flight parameter
+    if (!flightParam) {
+      return NextResponse.json<FlightLookupResponse>(
+        {
+          success: false,
+          error: 'Flight number is required. Example: AA123, UA456',
+          errorCode: 'INVALID_FLIGHT_NUMBER',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Parse the flight number
+    const parsed = parseFlightNumber(flightParam);
+
+    if (!parsed) {
+      return NextResponse.json<FlightLookupResponse>(
+        {
+          success: false,
+          error: 'Invalid flight number format. Use airline code + number (e.g., AA123, UA456)',
+          errorCode: 'INVALID_FLIGHT_NUMBER',
+        },
+        { status: 400 }
+      );
+    }
+
+    const { airlineCode, flightNum } = parsed;
+
+    // Check if airline is known
+    const airline = AIRLINES[airlineCode];
+
+    if (!airline) {
+      return NextResponse.json<FlightLookupResponse>(
+        {
+          success: false,
+          error: `Unknown airline code: ${airlineCode}. Supported airlines: ${Object.keys(AIRLINES).join(', ')}`,
+          errorCode: 'FLIGHT_NOT_FOUND',
+        },
+        { status: 404 }
+      );
+    }
+
+    // Format flight number for lookup
+    const formattedFlight = `${airlineCode}${flightNum}`;
+
+    // Try to find a known mock route first
+    let route = MOCK_ROUTES[formattedFlight];
+
+    // If not found, generate a deterministic mock route
+    if (!route) {
+      route = generateMockRoute(airlineCode, flightNum);
+    }
+
+    // Get airport data
+    const departure = AIRPORTS[route.departure];
+    const arrival = AIRPORTS[route.arrival];
+
+    if (!departure || !arrival) {
+      return NextResponse.json<FlightLookupResponse>(
+        {
+          success: false,
+          error: 'Flight not found. Check the flight number and try again.',
+          errorCode: 'FLIGHT_NOT_FOUND',
+        },
+        { status: 404 }
+      );
+    }
+
+    // Return successful response
+    const response: FlightLookupResponse = {
+      success: true,
+      data: {
+        flightNumber: formattedFlight,
+        airline,
+        departure,
+        arrival,
+        status: 'scheduled',
+      },
+    };
+
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+      },
+    });
+  } catch (error) {
+    console.error('[API] Flight lookup error:', error);
     return NextResponse.json<FlightLookupResponse>(
       {
         success: false,
-        error: 'Flight number is required. Example: AA123, UA456',
-        errorCode: 'INVALID_FLIGHT_NUMBER',
+        error: 'Internal server error',
+        errorCode: 'API_ERROR',
       },
-      { status: 400 }
+      { status: 500 }
     );
   }
-
-  // Parse the flight number
-  const parsed = parseFlightNumber(flightParam);
-
-  if (!parsed) {
-    return NextResponse.json<FlightLookupResponse>(
-      {
-        success: false,
-        error: 'Invalid flight number format. Use airline code + number (e.g., AA123, UA456)',
-        errorCode: 'INVALID_FLIGHT_NUMBER',
-      },
-      { status: 400 }
-    );
-  }
-
-  const { airlineCode, flightNum } = parsed;
-
-  // Check if airline is known
-  const airline = AIRLINES[airlineCode];
-
-  if (!airline) {
-    return NextResponse.json<FlightLookupResponse>(
-      {
-        success: false,
-        error: `Unknown airline code: ${airlineCode}. Supported airlines: ${Object.keys(AIRLINES).join(', ')}`,
-        errorCode: 'FLIGHT_NOT_FOUND',
-      },
-      { status: 404 }
-    );
-  }
-
-  // Format flight number for lookup
-  const formattedFlight = `${airlineCode}${flightNum}`;
-
-  // Try to find a known mock route first
-  let route = MOCK_ROUTES[formattedFlight];
-
-  // If not found, generate a deterministic mock route
-  if (!route) {
-    route = generateMockRoute(airlineCode, flightNum);
-  }
-
-  // Get airport data
-  const departure = AIRPORTS[route.departure];
-  const arrival = AIRPORTS[route.arrival];
-
-  if (!departure || !arrival) {
-    return NextResponse.json<FlightLookupResponse>(
-      {
-        success: false,
-        error: 'Flight not found. Check the flight number and try again.',
-        errorCode: 'FLIGHT_NOT_FOUND',
-      },
-      { status: 404 }
-    );
-  }
-
-  // Return successful response
-  const response: FlightLookupResponse = {
-    success: true,
-    data: {
-      flightNumber: formattedFlight,
-      airline,
-      departure,
-      arrival,
-      status: 'scheduled',
-    },
-  };
-
-  return NextResponse.json(response, {
-    headers: {
-      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
-    },
-  });
 }

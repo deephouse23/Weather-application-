@@ -295,7 +295,7 @@ FLIGHT_API_PROVIDER=aerodatabox
 
 ## 11. File Structure
 
-```
+```text
 app/
   api/
     aviation/

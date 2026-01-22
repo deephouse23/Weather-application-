@@ -88,7 +88,10 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const cameraParam = searchParams.get('camera') as 'c2' | 'c3' | null;
-    const frameCount = parseInt(searchParams.get('frames') || '12', 10);
+    const frameParam = searchParams.get('frames');
+    const parsedFrames = frameParam ? parseInt(frameParam, 10) : 12;
+    // Guard against NaN - use default if parseInt fails
+    const frameCount = Number.isFinite(parsedFrames) ? parsedFrames : 12;
 
     // Validate camera parameter, default to c2
     const camera: 'c2' | 'c3' = cameraParam === 'c3' ? 'c3' : 'c2';
