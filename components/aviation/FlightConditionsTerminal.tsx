@@ -10,7 +10,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plane, Wind, AlertTriangle, Clock, Radio, ChevronDown, ChevronUp, Map } from 'lucide-react';
+import { Plane, Wind, AlertTriangle, Clock, Radio, ChevronDown, ChevronUp, Map, Route } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
@@ -24,6 +24,18 @@ const TurbulenceMap = dynamic(() => import('./TurbulenceMap'), {
     <div className="h-[350px] flex items-center justify-center bg-gray-900 border-2 border-dashed border-gray-600 rounded">
       <div className="text-center text-gray-400 font-mono text-sm">
         <div className="animate-pulse">Loading Turbulence Map...</div>
+      </div>
+    </div>
+  ),
+  ssr: false
+});
+
+// Lazy load FlightRouteLookup
+const FlightRouteLookup = dynamic(() => import('./FlightRouteLookup'), {
+  loading: () => (
+    <div className="h-[200px] flex items-center justify-center bg-gray-900 border-2 border-dashed border-gray-600 rounded">
+      <div className="text-center text-gray-400 font-mono text-sm">
+        <div className="animate-pulse">Loading Route Lookup...</div>
       </div>
     </div>
   ),
@@ -159,6 +171,37 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
         {expandedSection === 'turbulence' && (
           <CardContent className="p-4">
             <TurbulenceMap initialAltitude="all" initialHours={2} />
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Flight Route Lookup - Search turbulence along flight paths */}
+      <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
+        <button
+          onClick={() => toggleSection('route')}
+          className={cn(
+            'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
+            themeClasses.borderColor
+          )}
+        >
+          <div className="flex items-center gap-2">
+            <Route className="w-4 h-4 text-cyan-500" />
+            <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
+              Flight Route Lookup
+            </span>
+            <span className={cn('text-xs px-2 py-0.5 border border-cyan-500 text-cyan-500')}>
+              NEW
+            </span>
+          </div>
+          {expandedSection === 'route' ? (
+            <ChevronUp className="w-4 h-4" />
+          ) : (
+            <ChevronDown className="w-4 h-4" />
+          )}
+        </button>
+        {expandedSection === 'route' && (
+          <CardContent className="p-4">
+            <FlightRouteLookup />
           </CardContent>
         )}
       </Card>
