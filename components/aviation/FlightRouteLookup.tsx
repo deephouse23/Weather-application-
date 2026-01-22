@@ -156,6 +156,7 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
   }, []);
 
   // Search for PIREPs along route - defined before useEffect that uses it
+  // Note: flight parameter is required to avoid circular dependency with flightData state
   const handleRouteSearch = useCallback(async (depCode: string, arrCode: string, flight?: FlightData | null) => {
     const dep = depCode.trim().toUpperCase();
     const arr = arrCode.trim().toUpperCase();
@@ -188,16 +189,15 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
         throw new Error(result.error || 'Unknown error');
       }
 
-      // Get coordinates for filtering
-      // Use flight data if available, otherwise require flight lookup
-      const currentFlight = flight || flightData;
+      // Get coordinates for filtering - flight parameter must be provided
+      // to avoid circular dependency with flightData state
       let depLat: number, depLon: number, arrLat: number, arrLon: number;
 
-      if (currentFlight && currentFlight.departure.icao === dep && currentFlight.arrival.icao === arr) {
-        depLat = currentFlight.departure.lat;
-        depLon = currentFlight.departure.lon;
-        arrLat = currentFlight.arrival.lat;
-        arrLon = currentFlight.arrival.lon;
+      if (flight && flight.departure.icao === dep && flight.arrival.icao === arr) {
+        depLat = flight.departure.lat;
+        depLon = flight.departure.lon;
+        arrLat = flight.arrival.lat;
+        arrLon = flight.arrival.lon;
       } else {
         // Cannot resolve coordinates without flight data - show error
         setSearchError('Unable to resolve airport coordinates. Please use flight number lookup above.');
@@ -232,7 +232,7 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
     } finally {
       setIsSearching(false);
     }
-  }, [flightData, onRouteSearch]);
+  }, [onRouteSearch]);
 
   // Update form when initialFlight changes
   useEffect(() => {
@@ -257,7 +257,8 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
   // Handle manual form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    handleRouteSearch(departureCode, arrivalCode);
+    // Pass current flightData state since handleRouteSearch doesn't have it in closure
+    handleRouteSearch(departureCode, arrivalCode, flightData);
   };
 
   // Clear flight data and form

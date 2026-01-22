@@ -143,6 +143,6 @@ export async function GET(request: Request) {
       note: 'Error generating frame URLs. Use fallbackGif for animation.',
     };
 
-    return NextResponse.json(errorResponse);
+    return NextResponse.json(errorResponse, { status: 500 });
   }
 }
