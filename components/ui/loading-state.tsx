@@ -24,9 +24,9 @@ export function LoadingSpinner({
   label = "Loading",
 }: LoadingSpinnerProps) {
   return (
-    <div role="status" aria-label={label} className={cn("inline-flex", className)}>
+    <div role="status" aria-label={label} className={cn("inline-flex text-primary", className)}>
       <Loader2
-        className={cn("animate-spin text-primary", spinnerSizes[size])}
+        className={cn("animate-spin", spinnerSizes[size])}
         aria-hidden="true"
       />
       <span className="sr-only">{label}</span>
@@ -50,12 +50,12 @@ export function LoadingOverlay({
       role="status"
       aria-label={message}
       className={cn(
-        "flex flex-col items-center justify-center gap-3 p-6",
+        "flex flex-col items-center justify-center gap-3 p-6 text-primary",
         className
       )}
     >
       <Loader2
-        className={cn("animate-spin text-primary", spinnerSizes[size])}
+        className={cn("animate-spin", spinnerSizes[size])}
         aria-hidden="true"
       />
       <p className="text-sm text-muted-foreground">{message}</p>

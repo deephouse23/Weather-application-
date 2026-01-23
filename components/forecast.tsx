@@ -1,3 +1,4 @@
+import type { KeyboardEvent } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 // removed ThemeType import as manual mapping is gone, but we might accept the prop for compat
@@ -80,7 +81,7 @@ function ForecastCard({ day, index, onDayClick, isSelected }: {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       handleClick();
