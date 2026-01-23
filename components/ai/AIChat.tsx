@@ -10,7 +10,8 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, User, Send, Loader2, Trash2, AlertCircle } from 'lucide-react';
+import { Bot, User, Send, Trash2, AlertCircle } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-state';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
@@ -234,7 +235,7 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
               themeClasses.background,
               themeClasses.borderColor
             )}>
-              <Loader2 className={cn('w-4 h-4 animate-spin', themeClasses.accentText)} />
+              <LoadingSpinner size="sm" label="AI is thinking" className={themeClasses.accentText} />
             </div>
           </div>
         )}
@@ -278,11 +279,12 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
               themeClasses.accentBg,
               'hover:opacity-90'
             )}
+            aria-label={isLoading ? "Sending message" : "Send message"}
           >
             {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <LoadingSpinner size="sm" label="Sending message" />
             ) : (
-              <Send className="w-4 h-4" />
+              <Send className="w-4 h-4" aria-hidden="true" />
             )}
           </Button>
         </div>

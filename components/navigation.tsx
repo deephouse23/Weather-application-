@@ -201,14 +201,26 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
             size="icon"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="ml-2"
+            aria-label="Toggle navigation menu"
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-menu"
           >
-            {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            {isMobileMenuOpen ? (
+              <X className="w-4 h-4" aria-hidden="true" />
+            ) : (
+              <Menu className="w-4 h-4" aria-hidden="true" />
+            )}
           </Button>
         </div>
 
         {/* Mobile Menu Dropdown */}
         {isMobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 border-b bg-background/95 backdrop-blur-lg shadow-xl animate-in slide-in-from-top-2">
+          <div
+            id="mobile-menu"
+            className="md:hidden absolute top-full left-0 right-0 border-b bg-background/95 backdrop-blur-lg shadow-xl animate-in slide-in-from-top-2"
+            role="navigation"
+            aria-label="Mobile navigation"
+          >
             <div className="p-4 space-y-2">
               {/* All main nav items */}
               {mainNavItems.map((item) => {

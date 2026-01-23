@@ -11,7 +11,8 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { Search, Loader2, Plane, AlertTriangle } from 'lucide-react';
+import { Search, Plane, AlertTriangle } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-state';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
@@ -161,12 +162,12 @@ export default function FlightNumberInput({
         >
           {isSearching ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <LoadingSpinner size="sm" label="Searching flight" />
               <span className="hidden sm:inline">...</span>
             </>
           ) : (
             <>
-              <Search className="w-4 h-4" />
+              <Search className="w-4 h-4" aria-hidden="true" />
               <span className="hidden sm:inline">Search</span>
             </>
           )}

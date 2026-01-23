@@ -232,21 +232,24 @@ export default function SolarCommandTerminal({
             'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
             themeClasses.borderColor
           )}
+          aria-expanded={expandedSections.has('scales')}
+          aria-controls="section-scales-content"
+          aria-label="Toggle NOAA Space Weather Scales section"
         >
           <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-cyan-500" />
+            <Activity className="w-4 h-4 text-cyan-500" aria-hidden="true" />
             <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
               NOAA Space Weather Scales (R-S-G)
             </span>
           </div>
           {expandedSections.has('scales') ? (
-            <ChevronUp className="w-4 h-4" />
+            <ChevronUp className="w-4 h-4" aria-hidden="true" />
           ) : (
-            <ChevronDown className="w-4 h-4" />
+            <ChevronDown className="w-4 h-4" aria-hidden="true" />
           )}
         </button>
         {expandedSections.has('scales') && (
-          <CardContent className="p-4">
+          <CardContent id="section-scales-content" className="p-4">
             <SpaceWeatherScales scales={scales} isLoading={isLoading} />
           </CardContent>
         )}
@@ -261,21 +264,24 @@ export default function SolarCommandTerminal({
               'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
               themeClasses.borderColor
             )}
+            aria-expanded={expandedSections.has('alerts')}
+            aria-controls="section-alerts-content"
+            aria-label={`Toggle Space Weather Alerts section, ${alerts.length} alerts`}
           >
             <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-yellow-500" />
+              <AlertTriangle className="w-4 h-4 text-yellow-500" aria-hidden="true" />
               <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
                 Space Weather Alerts ({alerts.length})
               </span>
             </div>
             {expandedSections.has('alerts') ? (
-              <ChevronUp className="w-4 h-4" />
+              <ChevronUp className="w-4 h-4" aria-hidden="true" />
             ) : (
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown className="w-4 h-4" aria-hidden="true" />
             )}
           </button>
           {expandedSections.has('alerts') && (
-            <CardContent className="p-0">
+            <CardContent id="section-alerts-content" className="p-0">
               <SpaceWeatherAlertTicker alerts={alerts} isLoading={isLoading} />
             </CardContent>
           )}
@@ -290,21 +296,24 @@ export default function SolarCommandTerminal({
             'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
             themeClasses.borderColor
           )}
+          aria-expanded={expandedSections.has('sun')}
+          aria-controls="section-sun-content"
+          aria-label="Toggle Live Sun Imagery section"
         >
           <div className="flex items-center gap-2">
-            <Sun className="w-4 h-4 text-yellow-500" />
+            <Sun className="w-4 h-4 text-yellow-500" aria-hidden="true" />
             <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
               Live Sun Imagery (NASA SDO)
             </span>
           </div>
           {expandedSections.has('sun') ? (
-            <ChevronUp className="w-4 h-4" />
+            <ChevronUp className="w-4 h-4" aria-hidden="true" />
           ) : (
-            <ChevronDown className="w-4 h-4" />
+            <ChevronDown className="w-4 h-4" aria-hidden="true" />
           )}
         </button>
         {expandedSections.has('sun') && (
-          <CardContent className="p-4">
+          <CardContent id="section-sun-content" className="p-4">
             <SunImageViewer />
           </CardContent>
         )}
@@ -319,21 +328,24 @@ export default function SolarCommandTerminal({
               'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
               themeClasses.borderColor
             )}
+            aria-expanded={expandedSections.has('kp')}
+            aria-controls="section-kp-content"
+            aria-label="Toggle Kp Geomagnetic Index section"
           >
             <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-green-500" />
+              <Activity className="w-4 h-4 text-green-500" aria-hidden="true" />
               <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
                 Kp Geomagnetic Index
               </span>
             </div>
             {expandedSections.has('kp') ? (
-              <ChevronUp className="w-4 h-4" />
+              <ChevronUp className="w-4 h-4" aria-hidden="true" />
             ) : (
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown className="w-4 h-4" aria-hidden="true" />
             )}
           </button>
           {expandedSections.has('kp') && (
-            <CardContent className="p-4">
+            <CardContent id="section-kp-content" className="p-4">
               <KpIndexGauge data={kpIndex} isLoading={isLoading} />
             </CardContent>
           )}
@@ -346,21 +358,24 @@ export default function SolarCommandTerminal({
               'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
               themeClasses.borderColor
             )}
+            aria-expanded={expandedSections.has('wind')}
+            aria-controls="section-wind-content"
+            aria-label="Toggle Real-Time Solar Wind section"
           >
             <div className="flex items-center gap-2">
-              <Wind className="w-4 h-4 text-cyan-500" />
+              <Wind className="w-4 h-4 text-cyan-500" aria-hidden="true" />
               <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
                 Real-Time Solar Wind
               </span>
             </div>
             {expandedSections.has('wind') ? (
-              <ChevronUp className="w-4 h-4" />
+              <ChevronUp className="w-4 h-4" aria-hidden="true" />
             ) : (
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown className="w-4 h-4" aria-hidden="true" />
             )}
           </button>
           {expandedSections.has('wind') && (
-            <CardContent className="p-4">
+            <CardContent id="section-wind-content" className="p-4">
               <SolarWindStats data={solarWind} isLoading={isLoading} />
             </CardContent>
           )}
@@ -376,21 +391,24 @@ export default function SolarCommandTerminal({
               'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
               themeClasses.borderColor
             )}
+            aria-expanded={expandedSections.has('xray')}
+            aria-controls="section-xray-content"
+            aria-label="Toggle X-Ray Flux and Solar Flares section"
           >
             <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-yellow-500" />
+              <Zap className="w-4 h-4 text-yellow-500" aria-hidden="true" />
               <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
                 X-Ray Flux / Solar Flares
               </span>
             </div>
             {expandedSections.has('xray') ? (
-              <ChevronUp className="w-4 h-4" />
+              <ChevronUp className="w-4 h-4" aria-hidden="true" />
             ) : (
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown className="w-4 h-4" aria-hidden="true" />
             )}
           </button>
           {expandedSections.has('xray') && (
-            <CardContent className="p-4">
+            <CardContent id="section-xray-content" className="p-4">
               <XRayFluxChart data={xrayFlux} isLoading={isLoading} />
             </CardContent>
           )}
@@ -403,21 +421,24 @@ export default function SolarCommandTerminal({
               'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
               themeClasses.borderColor
             )}
+            aria-expanded={expandedSections.has('sunspots')}
+            aria-controls="section-sunspots-content"
+            aria-label="Toggle Sunspot Activity section"
           >
             <div className="flex items-center gap-2">
-              <Sun className="w-4 h-4 text-orange-500" />
+              <Sun className="w-4 h-4 text-orange-500" aria-hidden="true" />
               <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
                 Sunspot Activity
               </span>
             </div>
             {expandedSections.has('sunspots') ? (
-              <ChevronUp className="w-4 h-4" />
+              <ChevronUp className="w-4 h-4" aria-hidden="true" />
             ) : (
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown className="w-4 h-4" aria-hidden="true" />
             )}
           </button>
           {expandedSections.has('sunspots') && (
-            <CardContent className="p-4">
+            <CardContent id="section-sunspots-content" className="p-4">
               <SunspotDisplay data={sunspots} isLoading={isLoading} />
             </CardContent>
           )}
@@ -433,21 +454,24 @@ export default function SolarCommandTerminal({
               'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
               themeClasses.borderColor
             )}
+            aria-expanded={expandedSections.has('coronagraph')}
+            aria-controls="section-coronagraph-content"
+            aria-label="Toggle SOHO Coronagraph CME Watch section"
           >
             <div className="flex items-center gap-2">
-              <Satellite className="w-4 h-4 text-purple-500" />
+              <Satellite className="w-4 h-4 text-purple-500" aria-hidden="true" />
               <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
                 SOHO Coronagraph (CME Watch)
               </span>
             </div>
             {expandedSections.has('coronagraph') ? (
-              <ChevronUp className="w-4 h-4" />
+              <ChevronUp className="w-4 h-4" aria-hidden="true" />
             ) : (
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown className="w-4 h-4" aria-hidden="true" />
             )}
           </button>
           {expandedSections.has('coronagraph') && (
-            <CardContent className="p-4">
+            <CardContent id="section-coronagraph-content" className="p-4">
               <CoronagraphAnimation />
             </CardContent>
           )}
@@ -460,21 +484,24 @@ export default function SolarCommandTerminal({
               'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
               themeClasses.borderColor
             )}
+            aria-expanded={expandedSections.has('aurora')}
+            aria-controls="section-aurora-content"
+            aria-label="Toggle Aurora Forecast section"
           >
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-green-400" />
+              <Sparkles className="w-4 h-4 text-green-400" aria-hidden="true" />
               <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
                 Aurora Forecast
               </span>
             </div>
             {expandedSections.has('aurora') ? (
-              <ChevronUp className="w-4 h-4" />
+              <ChevronUp className="w-4 h-4" aria-hidden="true" />
             ) : (
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown className="w-4 h-4" aria-hidden="true" />
             )}
           </button>
           {expandedSections.has('aurora') && (
-            <CardContent className="p-4">
+            <CardContent id="section-aurora-content" className="p-4">
               <AuroraForecastMap data={auroraForecast} isLoading={isLoading} />
             </CardContent>
           )}
@@ -489,21 +516,24 @@ export default function SolarCommandTerminal({
             'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
             themeClasses.borderColor
           )}
+          aria-expanded={expandedSections.has('sources')}
+          aria-controls="section-sources-content"
+          aria-label="Toggle Data Sources section"
         >
           <div className="flex items-center gap-2">
-            <Radio className="w-4 h-4 text-green-500" />
+            <Radio className="w-4 h-4 text-green-500" aria-hidden="true" />
             <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
               Data Sources
             </span>
           </div>
           {expandedSections.has('sources') ? (
-            <ChevronUp className="w-4 h-4" />
+            <ChevronUp className="w-4 h-4" aria-hidden="true" />
           ) : (
-            <ChevronDown className="w-4 h-4" />
+            <ChevronDown className="w-4 h-4" aria-hidden="true" />
           )}
         </button>
         {expandedSections.has('sources') && (
-          <CardContent className="p-4">
+          <CardContent id="section-sources-content" className="p-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
               <div className={cn('p-3 border-2', themeClasses.borderColor)}>
                 <div className={cn('font-bold mb-1', themeClasses.accentText)}>NOAA SWPC</div>

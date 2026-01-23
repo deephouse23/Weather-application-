@@ -18,9 +18,8 @@
  */
 
 import { lazy, Suspense } from 'react'
-import { Loader2 } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { ErrorBoundary } from './error-boundary'
+import { LoadingSpinner } from '@/components/ui/loading-state'
 import { WeatherData } from '@/lib/types'
 import { ThemeType } from '@/lib/theme-config'
 
@@ -29,20 +28,12 @@ const Forecast = lazy(() => import('./forecast'))
 const ForecastDetails = lazy(() => import('./forecast-details'))
 const EnvironmentalDisplay = lazy(() => import('./environmental-display'))
 
-// Loading spinner component
+// Loading spinner component - uses CSS variables for theme consistency
 function WeatherComponentLoader({ theme }: { theme: ThemeType }) {
   return (
     <div className="flex justify-center items-center py-8">
-      <Loader2 className={cn(
-        "h-8 w-8 animate-spin",
-        theme === "dark" && "text-blue-500",
-        theme === "miami" && "text-pink-500",
-        theme === "synthwave84" && "text-[#ff7edb]",
-        theme === "dracula" && "text-[#ff79c6]",
-        theme === "cyberpunk" && "text-[#00ffff]",
-        theme === "matrix" && "text-[#00ff41]"
-      )} />
-      <span className="ml-2 text-white text-sm">Loading weather data...</span>
+      <LoadingSpinner size="md" label="Loading weather data" className="text-weather-primary" />
+      <span className="ml-2 text-weather-text text-sm">Loading weather data...</span>
     </div>
   )
 }

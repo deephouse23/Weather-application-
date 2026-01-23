@@ -36,86 +36,28 @@ interface AirQualityDisplayProps {
 }
 
 export function AirQualityDisplay({ aqi, theme, className, minimal = false }: AirQualityDisplayProps) {
-  // Theme-specific styles
-  const getThemeStyles = () => {
-    if (minimal) return {
-      container: '',
-      header: '',
-      text: 'text-white/80',
-      border: 'border-white/20',
-      shadow: 'none'
-    };
-
-    switch (theme) {
-      case 'dark':
-        return {
-          container: 'bg-[#16213e] border-[#00d4ff]',
-          header: 'text-[#00d4ff]',
-          text: 'text-[#e0e0e0]',
-          border: 'border-[#00d4ff66]',
-          shadow: '0 0 15px #00d4ff33'
-        }
-      case 'miami':
-        return {
-          container: 'bg-[#2d1b69] border-[#ff1493]',
-          header: 'text-[#ff1493]',
-          text: 'text-[#00ffff]',
-          border: 'border-[#ff149366]',
-          shadow: '0 0 15px #ff149333'
-        }
-      case 'synthwave84':
-        return {
-          container: 'bg-[#2d1b69]/60 border-[#ff7edb]',
-          header: 'text-[#ff7edb]',
-          text: 'text-[#ffffff]',
-          border: 'border-[#ff7edb66]',
-          shadow: '0 0 15px #ff7edb33'
-        }
-      case 'dracula':
-        return {
-          container: 'bg-[#44475a]/80 border-[#ff79c6]',
-          header: 'text-[#ff79c6]',
-          text: 'text-[#f8f8f2]',
-          border: 'border-[#ff79c666]',
-          shadow: '0 0 15px #ff79c633'
-        }
-      case 'cyberpunk':
-        return {
-          container: 'bg-[#141414]/90 border-[#00ffff]',
-          header: 'text-[#fcee0a]',
-          text: 'text-[#ffffff]',
-          border: 'border-[#00ffff66]',
-          shadow: '0 0 15px #00ffff33'
-        }
-      case 'matrix':
-        return {
-          container: 'bg-[#001400]/80 border-[#008f11]',
-          header: 'text-[#00ff41]',
-          text: 'text-[#00ff41]',
-          border: 'border-[#008f1166]',
-          shadow: '0 0 15px #008f1133'
-        }
-      default:
-        return {
-          container: 'bg-[#16213e] border-[#00d4ff]',
-          header: 'text-[#00d4ff]',
-          text: 'text-[#e0e0e0]',
-          border: 'border-[#00d4ff66]',
-          shadow: '0 0 15px #00d4ff33'
-        }
-    }
-  }
-
-  const styles = getThemeStyles()
+  // Theme-aware styles using CSS variables
+  const styles = minimal
+    ? {
+        container: '',
+        header: '',
+        text: 'text-white/80',
+        border: 'border-white/20'
+      }
+    : {
+        container: 'bg-card border-primary glow-subtle',
+        header: 'text-primary',
+        text: 'text-foreground',
+        border: 'border-primary/40'
+      };
 
   return (
     <div
       className={cn(
-        !minimal && "p-4 rounded-lg text-center border-2 shadow-lg",
+        !minimal && "p-4 rounded-lg text-center border-2",
         !minimal && styles.container,
         className
       )}
-      style={!minimal ? { boxShadow: styles.shadow } : undefined}
     >
       {/* Header */}
       <h2 className={cn("text-xl font-semibold mb-3", styles.header, minimal && "text-lg mb-2 text-center md:text-left")}>

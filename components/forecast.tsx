@@ -1,3 +1,6 @@
+"use client"
+
+import { useMemo, type KeyboardEvent } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 // removed ThemeType import as manual mapping is gone, but we might accept the prop for compat
@@ -65,14 +68,16 @@ function ForecastCard({ day, index, onDayClick, isSelected }: {
   const isUSALocation = day.country === 'US' || day.country === 'USA';
   const tempUnit = isUSALocation ? '°F' : '°C';
 
-  // Generate date in M.DD.YY format
-  const today = new Date();
-  const targetDate = new Date(today);
-  targetDate.setDate(today.getDate() + index);
-  const month = targetDate.getMonth() + 1;
-  const date = targetDate.getDate();
-  const year = targetDate.getFullYear().toString().slice(-2);
-  const formattedDate = `${month}.${date.toString().padStart(2, '0')}.${year}`;
+  // Generate date in M.DD.YY format - memoized to avoid hydration mismatch
+  const formattedDate = useMemo(() => {
+    const today = new Date();
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + index);
+    const month = targetDate.getMonth() + 1;
+    const date = targetDate.getDate();
+    const year = targetDate.getFullYear().toString().slice(-2);
+    return `${month}.${date.toString().padStart(2, '0')}.${year}`;
+  }, [index]);
 
   const handleClick = () => {
     if (onDayClick) {
@@ -80,15 +85,27 @@ function ForecastCard({ day, index, onDayClick, isSelected }: {
     }
   };
 
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
   return (
     <Card
       className={cn(
-        "cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-lg hover:border-primary/50",
+        "cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-lg hover:border-primary/50 card-interactive",
         "flex flex-col justify-between min-h-[120px] sm:min-h-[140px] lg:min-h-[160px]",
         "backdrop-blur-sm bg-card/80",
         isSelected && "ring-2 ring-primary ring-opacity-80 scale-105 shadow-[0_0_15px_rgba(var(--primary),0.3)]"
       )}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label={`Forecast for ${day.day}: High ${Math.round(day.highTemp)}${tempUnit}, Low ${Math.round(day.lowTemp)}${tempUnit}, ${day.description}`}
+      aria-pressed={isSelected}
     >
       <CardContent className="p-2 sm:p-3 flex flex-col items-center justify-between h-full">
         {/* Day - Mobile responsive */}

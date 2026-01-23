@@ -6,7 +6,7 @@
 "use client"
 
 import React, { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-state';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import { useNewsFeed } from '@/lib/hooks/useNewsFeed';
@@ -61,7 +61,7 @@ const NewsSection: React.FC = () => {
           className="refresh-btn bg-transparent text-black font-bold px-1 hover:opacity-80 transition-opacity disabled:opacity-50"
           aria-label="Refresh news"
         >
-          {isRefreshing || loading ? <Loader2 className="w-4 h-4 animate-spin" /> : '↻'}
+          {isRefreshing || loading ? <LoadingSpinner size="sm" label="Refreshing news" /> : '↻'}
         </button>
       </div>
 

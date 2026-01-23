@@ -11,7 +11,8 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Plane, MapPin, Search, AlertTriangle, Loader2, Route, ArrowRight, RefreshCw, Info } from 'lucide-react';
+import { Plane, MapPin, Search, AlertTriangle, Route, ArrowRight, RefreshCw, Info } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-state';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
@@ -417,12 +418,12 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
           >
             {isSearching ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <LoadingSpinner size="sm" label="Searching route" />
                 Searching Route...
               </>
             ) : (
               <>
-                <Search className="w-4 h-4" />
+                <Search className="w-4 h-4" aria-hidden="true" />
                 Search Turbulence Along Route
               </>
             )}

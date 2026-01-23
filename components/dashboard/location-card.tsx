@@ -232,8 +232,10 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
                   ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black border-2`
                   : `${themeClasses.borderColor} ${themeClasses.text} hover:bg-white/10`
                 }`}
+              aria-label={location.is_favorite ? "Remove from favorites" : "Add to favorites"}
+              aria-pressed={location.is_favorite}
             >
-              <Star className={`w-4 h-4 ${location.is_favorite ? 'fill-current' : ''}`} />
+              <Star className={`w-4 h-4 ${location.is_favorite ? 'fill-current' : ''}`} aria-hidden="true" />
             </Button>
 
             <Button
@@ -242,8 +244,9 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
               onClick={fetchWeather}
               disabled={loading}
               className={`h-8 w-8 ${themeClasses.borderColor} ${themeClasses.text} hover:bg-white/10`}
+              aria-label="Refresh weather data"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
             </Button>
 
             <Button
@@ -252,8 +255,9 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
               onClick={handleDelete}
               disabled={actionLoading === 'delete'}
               className="h-8 w-8 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+              aria-label={`Delete ${location.custom_name || location.location_name}`}
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-4 h-4" aria-hidden="true" />
             </Button>
           </div>
         </div>
