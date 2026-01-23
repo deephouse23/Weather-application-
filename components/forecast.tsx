@@ -1,4 +1,6 @@
-import type { KeyboardEvent } from "react"
+"use client"
+
+import { useMemo, type KeyboardEvent } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 // removed ThemeType import as manual mapping is gone, but we might accept the prop for compat
@@ -66,14 +68,16 @@ function ForecastCard({ day, index, onDayClick, isSelected }: {
   const isUSALocation = day.country === 'US' || day.country === 'USA';
   const tempUnit = isUSALocation ? '°F' : '°C';
 
-  // Generate date in M.DD.YY format
-  const today = new Date();
-  const targetDate = new Date(today);
-  targetDate.setDate(today.getDate() + index);
-  const month = targetDate.getMonth() + 1;
-  const date = targetDate.getDate();
-  const year = targetDate.getFullYear().toString().slice(-2);
-  const formattedDate = `${month}.${date.toString().padStart(2, '0')}.${year}`;
+  // Generate date in M.DD.YY format - memoized to avoid hydration mismatch
+  const formattedDate = useMemo(() => {
+    const today = new Date();
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + index);
+    const month = targetDate.getMonth() + 1;
+    const date = targetDate.getDate();
+    const year = targetDate.getFullYear().toString().slice(-2);
+    return `${month}.${date.toString().padStart(2, '0')}.${year}`;
+  }, [index]);
 
   const handleClick = () => {
     if (onDayClick) {
