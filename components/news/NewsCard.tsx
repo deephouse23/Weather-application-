@@ -75,9 +75,9 @@ export default function NewsCard({ item, variant = 'default', className }: NewsC
         )}
         onClick={() => window.open(item.url, '_blank', 'noopener,noreferrer')}
         onKeyDown={handleKeyDown}
-        role="article"
+        role="link"
         tabIndex={0}
-        aria-label={`${item.title} from ${item.source}, ${timeAgo}`}
+        aria-label={`${item.title} from ${item.source}, ${timeAgo}. Opens in new tab`}
       >
         <CardContent className="p-4">
           <div className="flex gap-3">

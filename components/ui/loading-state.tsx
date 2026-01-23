@@ -29,7 +29,6 @@ export function LoadingSpinner({
         className={cn("animate-spin", spinnerSizes[size])}
         aria-hidden="true"
       />
-      <span className="sr-only">{label}</span>
     </div>
   );
 }
@@ -92,7 +91,6 @@ export function SkeletonCard({
           className={cn("h-4", i === lines - 1 ? "w-2/3" : "w-full")}
         />
       ))}
-      <span className="sr-only">Loading content</span>
     </div>
   );
 }
@@ -116,7 +114,6 @@ export function WeatherCardSkeleton({ className }: { className?: string }) {
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-3/4" />
       </div>
-      <span className="sr-only">Loading weather data</span>
     </div>
   );
 }

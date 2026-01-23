@@ -279,6 +279,7 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
               themeClasses.accentBg,
               'hover:opacity-90'
             )}
+            aria-label={isLoading ? "Sending message" : "Send message"}
           >
             {isLoading ? (
               <LoadingSpinner size="sm" label="Sending message" />
