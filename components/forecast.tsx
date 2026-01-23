@@ -80,15 +80,27 @@ function ForecastCard({ day, index, onDayClick, isSelected }: {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
   return (
     <Card
       className={cn(
-        "cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-lg hover:border-primary/50",
+        "cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-lg hover:border-primary/50 card-interactive",
         "flex flex-col justify-between min-h-[120px] sm:min-h-[140px] lg:min-h-[160px]",
         "backdrop-blur-sm bg-card/80",
         isSelected && "ring-2 ring-primary ring-opacity-80 scale-105 shadow-[0_0_15px_rgba(var(--primary),0.3)]"
       )}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label={`Forecast for ${day.day}: High ${Math.round(day.highTemp)}${tempUnit}, Low ${Math.round(day.lowTemp)}${tempUnit}, ${day.description}`}
+      aria-pressed={isSelected}
     >
       <CardContent className="p-2 sm:p-3 flex flex-col items-center justify-between h-full">
         {/* Day - Mobile responsive */}

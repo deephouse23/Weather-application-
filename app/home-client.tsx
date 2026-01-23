@@ -17,8 +17,8 @@
 
 import React, { useState, memo } from "react"
 import Link from 'next/link'
-import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { LoadingSpinner } from "@/components/ui/loading-state"
 // import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card" // (already in main block, just ensuring imports are present)
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -173,7 +173,7 @@ function WeatherApp() {
 
           {(loading || isAutoDetecting) && weather && (
             <div className="flex justify-center items-center mt-4">
-              <Loader2 className="h-8 w-8 animate-spin text-weather-primary" />
+              <LoadingSpinner size="md" label="Updating weather data" className="text-weather-primary" />
               <span className="ml-2 text-weather-text">
                 Updating weather data...
               </span>

@@ -55,17 +55,29 @@ export default function NewsCard({ item, variant = 'default', className }: NewsC
       ? 'border-yellow-500 hover:border-yellow-400'
       : themeClasses.borderColor;
 
+  // Handle keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      window.open(item.url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   // Compact variant
   if (variant === 'compact') {
     return (
       <Card
         className={cn(
-          'border-2 transition-all hover:shadow-lg cursor-pointer group',
+          'border-2 transition-all hover:shadow-lg cursor-pointer group card-interactive',
           priorityBorderClass,
           themeClasses.background,
           className
         )}
         onClick={() => window.open(item.url, '_blank', 'noopener,noreferrer')}
+        onKeyDown={handleKeyDown}
+        role="article"
+        tabIndex={0}
+        aria-label={`${item.title} from ${item.source}, ${timeAgo}`}
       >
         <CardContent className="p-4">
           <div className="flex gap-3">
@@ -192,12 +204,12 @@ export default function NewsCard({ item, variant = 'default', className }: NewsC
       <CardFooter className="flex justify-between items-center border-t-2 pt-4 gap-2">
         <div className="flex flex-col gap-1 min-w-0 flex-1">
           <div className={cn('text-xs flex items-center gap-1', themeClasses.text)}>
-            <Clock className="w-3 h-3 flex-shrink-0" />
+            <Clock className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
             <span className="truncate">{timeAgo}</span>
           </div>
           {item.location && (
             <div className={cn('text-xs flex items-center gap-1', themeClasses.text)}>
-              <MapPin className="w-3 h-3 flex-shrink-0" />
+              <MapPin className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
               <span className="truncate">{item.location}</span>
             </div>
           )}
@@ -210,8 +222,9 @@ export default function NewsCard({ item, variant = 'default', className }: NewsC
           size="sm"
           className={cn('font-mono font-bold text-xs border-2 flex-shrink-0', themeClasses.accentText)}
           onClick={() => window.open(item.url, '_blank', 'noopener,noreferrer')}
+          aria-label={`Read full article: ${item.title}`}
         >
-          READ <ExternalLink className="w-3 h-3 ml-1" />
+          READ <ExternalLink className="w-3 h-3 ml-1" aria-hidden="true" />
         </Button>
       </CardFooter>
     </Card>

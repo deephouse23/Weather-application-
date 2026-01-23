@@ -12,7 +12,8 @@
 
 
 import { useState, useEffect, useRef } from "react"
-import { Search, Loader2, MapPin, X, Sparkles } from "lucide-react"
+import { Search, MapPin, X, Sparkles } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-state"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -285,9 +286,9 @@ export default function WeatherSearch({
                   themeClasses.secondaryText,
                   "hover:text-red-400"
                 )}
-                title="Clear search"
+                aria-label="Clear search"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" aria-hidden="true" />
               </Button>
             )}
 
@@ -303,11 +304,12 @@ export default function WeatherSearch({
                 "hover:text-[#ffe66d]",
                 themeClasses.glow
               )}
+              aria-label={isLoading || isAILoading ? "Searching..." : "Search for weather"}
             >
               {isLoading || isAILoading ? (
-                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                <LoadingSpinner size="sm" label="Searching" />
               ) : (
-                <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Search className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
               )}
             </Button>
           </div>
@@ -337,8 +339,9 @@ export default function WeatherSearch({
               "border-2",
               theme === 'miami' && "border-weather-accent hover:bg-weather-accent hover:text-weather-bg"
             )}
+            aria-label={isAutoDetecting ? "Detecting your location" : isLoading ? "Loading" : isDisabled ? "Rate limited" : "Use my current location"}
           >
-            <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+            <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-2" aria-hidden="true" />
             <span>
               {isAutoDetecting ? "LOCATING..." : isLoading ? "LOADING..." : isDisabled ? "RATE LIMITED" : "USE MY LOCATION"}
             </span>

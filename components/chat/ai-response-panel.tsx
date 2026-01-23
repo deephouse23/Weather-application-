@@ -8,7 +8,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { X, Bot, Loader2, User } from 'lucide-react';
+import { X, Bot, User } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-state';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { parseAIResponse, type ChatAction } from '@/lib/services/ai-config';
@@ -83,7 +84,7 @@ export function AIResponsePanel({
                 onClick={() => setIsExpanded(!isExpanded)}
             >
                 <div className="flex items-center gap-2">
-                    <Bot className="w-4 h-4 text-weather-primary" />
+                    <Bot className="w-4 h-4 text-weather-primary" aria-hidden="true" />
                     <span className="text-xs uppercase tracking-wider text-weather-primary font-mono">
                         AI Assistant
                     </span>
@@ -112,8 +113,9 @@ export function AIResponsePanel({
                             onDismiss();
                         }}
                         className="h-6 w-6 text-weather-muted hover:text-weather-danger"
+                        aria-label="Close AI response panel"
                     >
-                        <X className="w-3 h-3" />
+                        <X className="w-3 h-3" aria-hidden="true" />
                     </Button>
                 </div>
             </div>
@@ -144,7 +146,7 @@ export function AIResponsePanel({
                             >
                                 {msg.role === 'assistant' && (
                                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-weather-primary/20 flex items-center justify-center">
-                                        <Bot className="w-3 h-3 text-weather-primary" />
+                                        <Bot className="w-3 h-3 text-weather-primary" aria-hidden="true" />
                                     </div>
                                 )}
                                 <div
@@ -183,7 +185,7 @@ export function AIResponsePanel({
                                 </div>
                                 {msg.role === 'user' && (
                                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-weather-accent/20 flex items-center justify-center">
-                                        <User className="w-3 h-3 text-weather-accent" />
+                                        <User className="w-3 h-3 text-weather-accent" aria-hidden="true" />
                                     </div>
                                 )}
                             </div>
@@ -192,13 +194,13 @@ export function AIResponsePanel({
 
                     {/* Loading indicator when waiting for response */}
                     {isLoading && !isStreaming && (
-                        <div className="flex gap-2 justify-start">
+                        <div className="flex gap-2 justify-start" role="status" aria-label="AI is thinking">
                             <div className="flex-shrink-0 w-6 h-6 rounded-full bg-weather-primary/20 flex items-center justify-center">
-                                <Bot className="w-3 h-3 text-weather-primary" />
+                                <Bot className="w-3 h-3 text-weather-primary" aria-hidden="true" />
                             </div>
                             <div className="bg-weather-bg border border-weather-border px-3 py-2 rounded-lg">
                                 <div className="flex items-center gap-2 text-weather-muted">
-                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <LoadingSpinner size="sm" label="AI is thinking" />
                                     <span className="text-sm font-mono">Thinking...</span>
                                 </div>
                             </div>

@@ -43,31 +43,15 @@ export default function CityAutocomplete({
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Theme classes
-  const getThemeClasses = () => {
-    switch (theme) {
-      case 'miami':
-        return {
-          dropdown: "bg-[#0a0025] border-[#ff1493] text-[#00ffff]",
-          item: "hover:bg-[#ff1493] hover:text-[#0a0025]",
-          selectedItem: "bg-[#ff1493] text-[#0a0025]",
-          cityName: "text-[#00ffff]",
-          location: "text-[#ff69b4]",
-          pageIndicator: "text-[#ff1493]"
-        };
-      default: // dark
-        return {
-          dropdown: "bg-[#0f0f0f] border-[#00d4ff] text-[#e0e0e0]",
-          item: "hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-          selectedItem: "bg-[#00d4ff] text-[#0f0f0f]",
-          cityName: "text-[#e0e0e0]",
-          location: "text-[#00d4ff]",
-          pageIndicator: "text-[#00d4ff]"
-        };
-    }
+  // Theme-aware classes using CSS variables
+  const themeClasses = {
+    dropdown: "bg-popover border-primary text-popover-foreground",
+    item: "hover:bg-accent hover:text-accent-foreground",
+    selectedItem: "bg-primary text-primary-foreground",
+    cityName: "text-foreground",
+    location: "text-primary",
+    pageIndicator: "text-primary"
   };
-
-  const themeClasses = getThemeClasses();
 
   // Update suggestions when query changes
   useEffect(() => {
@@ -169,23 +153,18 @@ export default function CityAutocomplete({
     <div 
       ref={containerRef}
       className={cn(
-        "absolute top-full left-0 right-0 z-50 mt-1 border-2 rounded shadow-lg",
+        "absolute top-full left-0 right-0 z-50 mt-1 border-2 rounded glow-subtle",
         "font-mono text-sm max-h-64 overflow-y-auto",
         themeClasses.dropdown
       )}
-      style={{ 
-        boxShadow: `0 4px 20px ${themeClasses.dropdown.includes('[#00d4ff]') ? '#00d4ff33' : 
-                    themeClasses.dropdown.includes('[#ff1493]') ? '#ff149333' : 
-                    '#00FFFF33'}` 
-      }}
     >
       {suggestions.map((city, index) => (
         <div
           key={`${city.name}-${city.country}-${city.state || ''}`}
           className={cn(
             "px-4 py-3 cursor-pointer transition-colors duration-150",
-            "flex items-center justify-between border-b border-opacity-20",
-            "border-gray-600 last:border-b-0",
+            "flex items-center justify-between border-b border-border/20",
+            "last:border-b-0",
             selectedIndex === index ? themeClasses.selectedItem : themeClasses.item
           )}
           onClick={() => handleCitySelect(city)}
@@ -194,23 +173,23 @@ export default function CityAutocomplete({
           <div className="flex-1 min-w-0">
             <div className={cn(
               "font-semibold text-sm truncate",
-              selectedIndex === index ? themeClasses.selectedItem.split(' ')[1] : themeClasses.cityName
+              selectedIndex === index ? "text-primary-foreground" : themeClasses.cityName
             )}>
               {city.name}
             </div>
             <div className={cn(
               "text-xs opacity-80 truncate",
-              selectedIndex === index ? themeClasses.selectedItem.split(' ')[1] : themeClasses.location
+              selectedIndex === index ? "text-primary-foreground" : themeClasses.location
             )}>
               {city.country === "US" && city.state ? city.state : city.country}
             </div>
           </div>
-          
+
           {/* Page indicator */}
           {city.hasPage && (
             <div className={cn(
               "ml-2 text-xs font-bold flex-shrink-0",
-              selectedIndex === index ? themeClasses.selectedItem.split(' ')[1] : themeClasses.pageIndicator
+              selectedIndex === index ? "text-primary-foreground" : themeClasses.pageIndicator
             )}>
               PAGE
             </div>
@@ -220,8 +199,8 @@ export default function CityAutocomplete({
       
       {/* Footer hint */}
       <div className={cn(
-        "px-4 py-2 text-xs opacity-60 border-t border-gray-600 border-opacity-20",
-        "text-center bg-opacity-50",
+        "px-4 py-2 text-xs opacity-60 border-t border-border/20",
+        "text-center",
         themeClasses.location
       )}>
         ↑↓ Navigate • Enter Select • Esc Close
