@@ -99,7 +99,7 @@ export default function SpaceWeatherScales({ scales, isLoading = false }: SpaceW
       <CardHeader className="border-b border-subtle py-3">
         <CardTitle className={cn('text-lg font-mono font-bold flex items-center gap-2', themeClasses.headerText)}>
           SPACE WEATHER SCALES
-          <span className={cn('text-xs px-2 py-0.5 bg-green-500/20 text-green-500 border border-green-500',
+          <span className={cn('text-xs px-2 py-0.5 bg-green-500/20 text-green-500 rounded',
             scales ? 'opacity-100' : 'opacity-50')}>
             {scales ? 'LIVE' : 'OFFLINE'}
           </span>

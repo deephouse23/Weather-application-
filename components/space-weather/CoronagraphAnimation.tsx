@@ -474,7 +474,7 @@ export default function CoronagraphAnimation({ className }: CoronagraphAnimation
                 variant="outline"
                 size="sm"
                 onClick={togglePlayPause}
-                className={cn('font-mono text-xs px-4', isPlaying && 'bg-green-500/20 border-green-500')}
+                className={cn('font-mono text-xs px-4', isPlaying && 'bg-green-500/20 ring-2 ring-green-500')}
                 data-testid="coronagraph-play"
               >
                 {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
@@ -512,7 +512,7 @@ export default function CoronagraphAnimation({ className }: CoronagraphAnimation
 
           {/* Frame Load Error/Info Message */}
           {frameLoadError && viewMode === 'frames' && (
-            <div className="flex items-center gap-2 text-xs font-mono px-3 py-2 bg-orange-500/20 border border-orange-500/50 rounded text-orange-400">
+            <div className="flex items-center gap-2 text-xs font-mono px-3 py-2 bg-orange-500/20 rounded text-orange-400">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{frameLoadError}</span>
             </div>
@@ -526,9 +526,9 @@ export default function CoronagraphAnimation({ className }: CoronagraphAnimation
               onClick={cycleViewMode}
               className={cn(
                 'font-mono text-xs',
-                viewMode === 'animated' && 'bg-cyan-500/20 border-cyan-500',
-                viewMode === 'frames' && 'bg-purple-500/20 border-purple-500',
-                viewMode === 'latest' && 'bg-blue-500/20 border-blue-500'
+                viewMode === 'animated' && 'bg-cyan-500/20 ring-2 ring-cyan-500',
+                viewMode === 'frames' && 'bg-purple-500/20 ring-2 ring-purple-500',
+                viewMode === 'latest' && 'bg-blue-500/20 ring-2 ring-blue-500'
               )}
             >
               <ImageIcon className="w-4 h-4 mr-1" />
@@ -541,9 +541,9 @@ export default function CoronagraphAnimation({ className }: CoronagraphAnimation
             <button
               onClick={() => changeCamera('c2')}
               className={cn(
-                'p-2 card-inner font-mono text-xs transition-all duration-200',
+                'p-2 card-inner font-mono text-xs transition-all duration-200 rounded',
                 camera === 'c2'
-                  ? 'border border-cyan-500/50 bg-cyan-500/20 text-cyan-500'
+                  ? 'ring-2 ring-cyan-500/50 bg-cyan-500/20 text-cyan-500'
                   : cn('hover:bg-gray-800', themeClasses.text)
               )}
             >
@@ -553,9 +553,9 @@ export default function CoronagraphAnimation({ className }: CoronagraphAnimation
             <button
               onClick={() => changeCamera('c3')}
               className={cn(
-                'p-2 card-inner font-mono text-xs transition-all duration-200',
+                'p-2 card-inner font-mono text-xs transition-all duration-200 rounded',
                 camera === 'c3'
-                  ? 'border border-cyan-500/50 bg-cyan-500/20 text-cyan-500'
+                  ? 'ring-2 ring-cyan-500/50 bg-cyan-500/20 text-cyan-500'
                   : cn('hover:bg-gray-800', themeClasses.text)
               )}
             >

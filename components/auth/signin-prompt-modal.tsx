@@ -54,11 +54,11 @@ export default function SignInPromptModal({ isOpen, onClose }: SignInPromptModal
           
           {/* Theme Preview */}
           <div className="grid grid-cols-2 gap-2 mb-4">
-            <div className="p-3 border-2 border-orange-400 bg-purple-900 text-center">
+            <div className="p-3 bg-purple-900/80 text-center rounded shadow-lg shadow-orange-400/20">
               <Sun className="w-5 h-5 mx-auto mb-1 text-orange-400" />
               <p className="text-xs font-mono text-orange-400 uppercase">Miami Vice</p>
             </div>
-            <div className="p-3 border-2 border-cyan-400 bg-black text-center">
+            <div className="p-3 bg-black/80 text-center rounded shadow-lg shadow-cyan-400/20">
               <Zap className="w-5 h-5 mx-auto mb-1 text-cyan-400" />
               <p className="text-xs font-mono text-cyan-400 uppercase">TRON</p>
             </div>

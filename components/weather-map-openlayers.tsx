@@ -494,9 +494,9 @@ const WeatherMapOpenLayers = ({
   const themeStyles = useMemo(() => {
     switch (theme) {
       case 'miami':
-        return { container: 'border-4 border-pink-500 shadow-lg shadow-pink-500/50', badge: 'bg-pink-600/90 text-white border-pink-400' }
+        return { container: 'shadow-lg shadow-pink-500/30', badge: 'bg-pink-600/90 text-white' }
       default:
-        return { container: 'border-2 border-gray-600 shadow-lg', badge: 'bg-gray-800/90 text-white border-gray-600' }
+        return { container: 'shadow-lg', badge: 'bg-gray-800/90 text-white' }
     }
   }, [theme])
 
@@ -540,7 +540,7 @@ const WeatherMapOpenLayers = ({
                style={{ backgroundSize: '200% 100%' }} />
           {/* Loading badge */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2">
-            <div className="flex items-center gap-2 px-4 py-2 bg-gray-900/95 text-cyan-400 border-2 border-cyan-500 rounded-md font-mono text-xs shadow-lg shadow-cyan-500/20 backdrop-blur-sm">
+            <div className="flex items-center gap-2 px-4 py-2 bg-gray-900/95 text-cyan-400 rounded-md font-mono text-xs shadow-lg shadow-cyan-500/20 backdrop-blur-sm">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="animate-pulse">LOADING RADAR DATA</span>
             </div>
@@ -556,7 +556,7 @@ const WeatherMapOpenLayers = ({
       )}
 
       {/* Status Badge */}
-      <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-md border-2 font-mono text-xs font-bold z-[2000] ${themeStyles.badge}`}>
+      <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-md font-mono text-xs font-bold z-[2000] ${themeStyles.badge}`}>
         {isUSLocation ? (
           <span>
             {isPlaying ? '▶️' : isLiveFrame ? '🔴 LIVE' : '🎬'} NEXRAD RADAR • 4 HOUR HISTORY
@@ -570,7 +570,7 @@ const WeatherMapOpenLayers = ({
       <div className="absolute top-4 right-4 z-[2000]">
         <button
           onClick={() => setLayerMenuOpen(!layerMenuOpen)}
-          className="flex items-center gap-2 px-3 py-1.5 bg-gray-900 text-white border-2 border-gray-600 rounded-md font-mono text-xs font-bold hover:bg-gray-700 transition-colors shadow-xl"
+          className="flex items-center gap-2 px-3 py-1.5 bg-gray-900/90 text-white rounded-md font-mono text-xs font-bold hover:bg-gray-700 transition-colors shadow-xl backdrop-blur-sm"
         >
           <Layers className="w-4 h-4" />
           LAYERS
@@ -578,7 +578,7 @@ const WeatherMapOpenLayers = ({
         </button>
 
         {layerMenuOpen && (
-          <div className="absolute top-full right-0 mt-2 w-48 bg-gray-900 border-2 border-gray-600 rounded-md overflow-hidden shadow-xl">
+          <div className="absolute top-full right-0 mt-2 w-48 bg-gray-900/95 rounded-md overflow-hidden shadow-xl backdrop-blur-sm">
             <div className="p-2 border-b border-gray-600 font-mono text-xs font-bold text-white">
               RADAR LAYERS
             </div>
@@ -680,7 +680,7 @@ const WeatherMapOpenLayers = ({
             // Progress: if only 1 frame (maxIndex=0), show 100%; otherwise calculate based on frameIndex
             const progress = maxIndex > 0 ? (frameIndex / maxIndex) * 100 : 100
             return (
-          <div className="w-[500px] max-w-[90vw] px-3 py-2 bg-gray-900/95 border-2 border-gray-600 rounded-md shadow-xl backdrop-blur-sm">
+          <div className="w-[500px] max-w-[90vw] px-3 py-2 bg-gray-900/95 rounded-md shadow-xl backdrop-blur-sm">
             {/* Progress bar background */}
             <div className="relative h-3 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
               {/* Animated progress fill */}
@@ -737,7 +737,7 @@ const WeatherMapOpenLayers = ({
       {/* No Radar Message for International */}
       {!isUSLocation && activeLayers.precipitation && (
         <div className="absolute inset-0 flex items-center justify-center z-[2000] pointer-events-none">
-          <div className="bg-gray-800/95 border-2 border-gray-600 rounded-lg p-6 max-w-md text-center">
+          <div className="bg-gray-800/95 rounded-lg p-6 max-w-md text-center shadow-xl">
             <div className="text-2xl font-mono font-bold text-white mb-2">
               HIGH-RESOLUTION RADAR UNAVAILABLE
             </div>
@@ -755,7 +755,7 @@ const WeatherMapOpenLayers = ({
       {/* Radar Reflectivity Legend - Right Side, Outside Map */}
       {isUSLocation && activeLayers.precipitation && radarVisible && (
         <div className="flex-shrink-0 self-center">
-          <div className="bg-gray-900/95 border-2 border-gray-600 rounded-md p-1.5 backdrop-blur-sm shadow-xl">
+          <div className="bg-gray-900/95 rounded-md p-1.5 backdrop-blur-sm shadow-xl">
             <div className="font-mono text-[8px] text-gray-400 mb-1 uppercase tracking-wide text-center">
               dBZ
             </div>

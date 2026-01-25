@@ -139,9 +139,9 @@ export default function AuroraForecastMap({ data, isLoading = false }: AuroraFor
           <button
             onClick={() => setHemisphere('north')}
             className={cn(
-              'p-2 card-inner font-mono text-xs transition-all duration-200',
+              'p-2 card-inner font-mono text-xs transition-all duration-200 rounded',
               hemisphere === 'north'
-                ? 'border border-green-500/50 bg-green-500/20 text-green-500'
+                ? 'ring-2 ring-green-500/50 bg-green-500/20 text-green-500'
                 : cn('hover:bg-gray-800', themeClasses.text)
             )}
           >
@@ -151,9 +151,9 @@ export default function AuroraForecastMap({ data, isLoading = false }: AuroraFor
           <button
             onClick={() => setHemisphere('south')}
             className={cn(
-              'p-2 card-inner font-mono text-xs transition-all duration-200',
+              'p-2 card-inner font-mono text-xs transition-all duration-200 rounded',
               hemisphere === 'south'
-                ? 'border border-green-500/50 bg-green-500/20 text-green-500'
+                ? 'ring-2 ring-green-500/50 bg-green-500/20 text-green-500'
                 : cn('hover:bg-gray-800', themeClasses.text)
             )}
           >
@@ -163,7 +163,7 @@ export default function AuroraForecastMap({ data, isLoading = false }: AuroraFor
         </div>
 
         {/* Aurora Forecast Image */}
-        <div className="relative aspect-square bg-black rounded-lg overflow-hidden border-2 border-gray-700">
+        <div className="relative aspect-square bg-black rounded-lg overflow-hidden">
           {!imageLoaded && !imageError && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
               <div className={cn('text-sm font-mono', themeClasses.text, 'animate-pulse')}>

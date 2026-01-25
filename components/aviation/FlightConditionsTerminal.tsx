@@ -50,21 +50,24 @@ interface FlightConditionsTerminalProps {
 export default function FlightConditionsTerminal({ alerts, isLoading = false }: FlightConditionsTerminalProps) {
   const { theme } = useTheme();
   const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
   // PRD Section 14.1: Map visible by default, alerts expanded by default
   const [expandedSection, setExpandedSection] = useState<string | null>('turbulence');
 
-  // Update time every 10 seconds (reduced frequency for better performance)
+  // Initialize time on client only to avoid hydration mismatch
   useEffect(() => {
+    setCurrentTime(new Date());
     const timer = setInterval(() => setCurrentTime(new Date()), 10000);
     return () => clearInterval(timer);
   }, []);
 
-  const formatZuluTime = (date: Date) => {
+  const formatZuluTime = (date: Date | null) => {
+    if (!date) return '--:--:--Z';
     return date.toISOString().slice(11, 19) + 'Z';
   };
 
-  const formatLocalTime = (date: Date) => {
+  const formatLocalTime = (date: Date | null) => {
+    if (!date) return '--:--:--';
     return date.toLocaleTimeString('en-US', { hour12: false });
   };
 
@@ -151,10 +154,7 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
       <Card className={cn('container-primary', themeClasses.background)}>
         <button
           onClick={() => toggleSection('turbulence')}
-          className={cn(
-            'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
-            themeClasses.borderColor
-          )}
+          className={'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'}
         >
           <div className="flex items-center gap-2">
             <MapIcon className="w-4 h-4 text-purple-500" />
@@ -179,17 +179,14 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
       <Card className={cn('container-primary', themeClasses.background)}>
         <button
           onClick={() => toggleSection('route')}
-          className={cn(
-            'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
-            themeClasses.borderColor
-          )}
+          className={'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'}
         >
           <div className="flex items-center gap-2">
             <Route className="w-4 h-4 text-cyan-500" />
             <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
               Flight Route Lookup
             </span>
-            <span className={cn('text-xs px-2 py-0.5 border border-cyan-500 text-cyan-500')}>
+            <span className="text-xs px-2 py-0.5 bg-cyan-500/20 text-cyan-500 rounded">
               NEW
             </span>
           </div>
@@ -210,10 +207,7 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
       <Card className={cn('container-primary', themeClasses.background)}>
         <button
           onClick={() => toggleSection('alerts')}
-          className={cn(
-            'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
-            themeClasses.borderColor
-          )}
+          className={'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'}
         >
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-yellow-500" />
@@ -221,8 +215,8 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
               Aviation Alerts Feed
             </span>
             {alertStats.total > 0 && (
-              <span className={cn('text-xs px-2 py-0.5 border',
-                alertStats.severe > 0 ? 'border-red-500 text-red-500' : 'border-yellow-500 text-yellow-500'
+              <span className={cn('text-xs px-2 py-0.5 rounded',
+                alertStats.severe > 0 ? 'bg-red-500/20 text-red-500' : 'bg-yellow-500/20 text-yellow-500'
               )}>
                 {alertStats.total} ACTIVE
               </span>
@@ -245,10 +239,7 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
       <Card className={cn('container-primary', themeClasses.background)}>
         <button
           onClick={() => toggleSection('info')}
-          className={cn(
-            'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
-            themeClasses.borderColor
-          )}
+          className={'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'}
         >
           <div className="flex items-center gap-2">
             <Radio className="w-4 h-4 text-green-500" />

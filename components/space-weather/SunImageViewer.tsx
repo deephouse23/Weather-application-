@@ -115,7 +115,7 @@ export default function SunImageViewer({ className }: SunImageViewerProps) {
             <CardTitle className={cn('text-lg font-mono font-bold flex items-center gap-2', themeClasses.headerText)}>
               <Sun className="w-5 h-5 text-orange-500" />
               SUN VIEWER
-              <span className={cn('text-xs px-2 py-0.5 bg-cyan-500/20 text-cyan-500 border border-cyan-500/50')}>
+              <span className="text-xs px-2 py-0.5 bg-cyan-500/20 text-cyan-500 rounded">
                 SDO
               </span>
             </CardTitle>
@@ -142,7 +142,7 @@ export default function SunImageViewer({ className }: SunImageViewerProps) {
         </CardHeader>
         <CardContent className="p-4 space-y-4">
           {/* Sun Image */}
-          <div className="relative aspect-square bg-black rounded-lg overflow-hidden border-2 border-gray-700">
+          <div className="relative aspect-square bg-black rounded-lg overflow-hidden">
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
                 <div className={cn('text-sm font-mono', themeClasses.text, 'animate-pulse')}>
@@ -200,9 +200,9 @@ export default function SunImageViewer({ className }: SunImageViewerProps) {
                   setImageError(false);
                 }}
                 className={cn(
-                  'p-2 card-inner font-mono text-xs transition-all duration-200',
+                  'p-2 card-inner font-mono text-xs transition-all duration-200 rounded',
                   selectedWavelength.id === wavelength.id
-                    ? cn('border border-current', wavelength.color.replace('text-', 'border-'), 'bg-gray-800')
+                    ? cn('ring-2 ring-current', 'bg-gray-800')
                     : 'hover:bg-gray-800',
                   wavelength.color
                 )}

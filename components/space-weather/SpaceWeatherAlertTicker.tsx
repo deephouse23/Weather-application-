@@ -152,7 +152,7 @@ export default function SpaceWeatherAlertTicker({ alerts, isLoading = false }: S
           <CardTitle className={cn('text-lg font-mono font-bold flex items-center gap-2', themeClasses.headerText)}>
             <Radio className="w-5 h-5 text-green-500" />
             SPACE WEATHER ALERTS
-            <span className="text-xs px-2 py-0.5 bg-green-500/20 text-green-500 border border-green-500">
+            <span className="text-xs px-2 py-0.5 bg-green-500/20 text-green-500 rounded">
               ALL QUIET
             </span>
           </CardTitle>

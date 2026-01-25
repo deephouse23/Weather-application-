@@ -160,7 +160,7 @@ export default function SolarWindStats({ data, isLoading = false }: SolarWindSta
         {/* Bz (most important for geomagnetic activity) */}
         <div className={cn(
           'p-3 card-inner rounded flex items-center justify-between',
-          bzStatus.isWarning && 'border border-yellow-500/50 bg-yellow-500/5'
+          bzStatus.isWarning && 'ring-2 ring-yellow-500/50 bg-yellow-500/10'
         )}>
           <div>
             <div className={cn('text-xs font-mono uppercase mb-1 flex items-center gap-1', themeClasses.text)}>
