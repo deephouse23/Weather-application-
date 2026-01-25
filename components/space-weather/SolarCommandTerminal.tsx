@@ -160,8 +160,8 @@ export default function SolarCommandTerminal({
   return (
     <div className={cn('space-y-4', themeClasses.background)}>
       {/* Terminal Header */}
-      <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
-        <CardHeader className={cn('border-b-2 py-3', themeClasses.borderColor)}>
+      <Card className={cn('container-primary', themeClasses.background)}>
+        <CardHeader className={cn('border-b border-subtle py-3')}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <CardTitle className={cn('text-xl font-mono font-bold flex items-center gap-2', themeClasses.headerText)}>
               <Sun className="w-6 h-6 text-yellow-500" />
@@ -185,7 +185,7 @@ export default function SolarCommandTerminal({
         {/* Quick Status Bar */}
         <CardContent className="py-3">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className={cn('text-center p-2 border-2', themeClasses.borderColor)}>
+            <div className={cn('text-center p-2 container-nested')}>
               <div className={cn('text-2xl font-bold font-mono', themeClasses.accentText)}>
                 {kpIndex?.current?.value?.toFixed(0) ?? '—'}
               </div>
@@ -193,7 +193,7 @@ export default function SolarCommandTerminal({
                 Kp Index
               </div>
             </div>
-            <div className={cn('text-center p-2 border-2', themeClasses.borderColor)}>
+            <div className={cn('text-center p-2 container-nested')}>
               <div className="text-2xl font-bold font-mono text-yellow-500">
                 {sunspots?.current?.sunspotNumber ?? '—'}
               </div>
@@ -201,7 +201,7 @@ export default function SolarCommandTerminal({
                 Sunspots
               </div>
             </div>
-            <div className={cn('text-center p-2 border-2', themeClasses.borderColor)}>
+            <div className={cn('text-center p-2 container-nested')}>
               <div className="text-2xl font-bold font-mono text-cyan-500">
                 {solarWind?.current?.speed ?? '—'}
               </div>
@@ -209,7 +209,7 @@ export default function SolarCommandTerminal({
                 Wind km/s
               </div>
             </div>
-            <div className={cn('text-center p-2 border-2', themeClasses.borderColor)}>
+            <div className={cn('text-center p-2 container-nested')}>
               <div className={cn(
                 'text-2xl font-bold font-mono',
                 alerts.length > 0 ? 'text-orange-500' : 'text-green-500'
@@ -225,12 +225,11 @@ export default function SolarCommandTerminal({
       </Card>
 
       {/* Space Weather Scales Section */}
-      <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
+      <Card className={cn('container-primary', themeClasses.background)}>
         <button
           onClick={() => toggleSection('scales')}
           className={cn(
-            'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
-            themeClasses.borderColor
+            'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'
           )}
           aria-expanded={expandedSections.has('scales')}
           aria-controls="section-scales-content"
@@ -257,7 +256,7 @@ export default function SolarCommandTerminal({
 
       {/* Alerts Section */}
       {alerts.length > 0 && (
-        <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
+        <Card className={cn('container-primary', themeClasses.background)}>
           <button
             onClick={() => toggleSection('alerts')}
             className={cn(
@@ -289,12 +288,11 @@ export default function SolarCommandTerminal({
       )}
 
       {/* Sun Imagery Section */}
-      <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
+      <Card className={cn('container-primary', themeClasses.background)}>
         <button
           onClick={() => toggleSection('sun')}
           className={cn(
-            'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
-            themeClasses.borderColor
+            'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'
           )}
           aria-expanded={expandedSections.has('sun')}
           aria-controls="section-sun-content"
@@ -321,7 +319,7 @@ export default function SolarCommandTerminal({
 
       {/* Kp Index & Solar Wind Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
+        <Card className={cn('container-primary', themeClasses.background)}>
           <button
             onClick={() => toggleSection('kp')}
             className={cn(
@@ -351,7 +349,7 @@ export default function SolarCommandTerminal({
           )}
         </Card>
 
-        <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
+        <Card className={cn('container-primary', themeClasses.background)}>
           <button
             onClick={() => toggleSection('wind')}
             className={cn(
@@ -384,7 +382,7 @@ export default function SolarCommandTerminal({
 
       {/* X-Ray Flux & Sunspots Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
+        <Card className={cn('container-primary', themeClasses.background)}>
           <button
             onClick={() => toggleSection('xray')}
             className={cn(
@@ -414,7 +412,7 @@ export default function SolarCommandTerminal({
           )}
         </Card>
 
-        <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
+        <Card className={cn('container-primary', themeClasses.background)}>
           <button
             onClick={() => toggleSection('sunspots')}
             className={cn(
@@ -447,7 +445,7 @@ export default function SolarCommandTerminal({
 
       {/* Coronagraph & Aurora Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
+        <Card className={cn('container-primary', themeClasses.background)}>
           <button
             onClick={() => toggleSection('coronagraph')}
             className={cn(
@@ -477,7 +475,7 @@ export default function SolarCommandTerminal({
           )}
         </Card>
 
-        <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
+        <Card className={cn('container-primary', themeClasses.background)}>
           <button
             onClick={() => toggleSection('aurora')}
             className={cn(
@@ -509,12 +507,11 @@ export default function SolarCommandTerminal({
       </div>
 
       {/* Data Sources Section */}
-      <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
+      <Card className={cn('container-primary', themeClasses.background)}>
         <button
           onClick={() => toggleSection('sources')}
           className={cn(
-            'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
-            themeClasses.borderColor
+            'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'
           )}
           aria-expanded={expandedSections.has('sources')}
           aria-controls="section-sources-content"
@@ -535,17 +532,17 @@ export default function SolarCommandTerminal({
         {expandedSections.has('sources') && (
           <CardContent id="section-sources-content" className="p-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
-              <div className={cn('p-3 border-2', themeClasses.borderColor)}>
+              <div className={cn('p-3 container-nested')}>
                 <div className={cn('font-bold mb-1', themeClasses.accentText)}>NOAA SWPC</div>
                 <div className={cn(themeClasses.text)}>Space Weather Prediction Center</div>
                 <div className="text-green-500 mt-1">STATUS: ONLINE</div>
               </div>
-              <div className={cn('p-3 border-2', themeClasses.borderColor)}>
+              <div className={cn('p-3 container-nested')}>
                 <div className={cn('font-bold mb-1', themeClasses.accentText)}>NASA SDO</div>
                 <div className={cn(themeClasses.text)}>Solar Dynamics Observatory</div>
                 <div className="text-green-500 mt-1">STATUS: ONLINE</div>
               </div>
-              <div className={cn('p-3 border-2', themeClasses.borderColor)}>
+              <div className={cn('p-3 container-nested')}>
                 <div className={cn('font-bold mb-1', themeClasses.accentText)}>SOHO/LASCO</div>
                 <div className={cn(themeClasses.text)}>ESA/NASA Solar Observatory</div>
                 <div className="text-green-500 mt-1">STATUS: ONLINE</div>
@@ -557,8 +554,7 @@ export default function SolarCommandTerminal({
 
       {/* Footer */}
       <div className={cn(
-        'text-center text-xs font-mono py-3 border-t-2',
-        themeClasses.borderColor,
+        'text-center text-xs font-mono py-3 border-t border-subtle',
         themeClasses.text
       )}>
         DATA PROVIDED BY NOAA SWPC, NASA SDO, ESA/NASA SOHO • FOR EDUCATIONAL USE • CHECK OFFICIAL SOURCES FOR CRITICAL DECISIONS

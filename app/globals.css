@@ -57,6 +57,16 @@
     --ok: hsl(142 71% 45%);
     --warn: hsl(38 92% 50%);
     --danger: hsl(0 72% 61%);
+
+    /* Border tiers - opacity-based for subtle styling */
+    --border-subtle: var(--primary) / 0.15;
+    --border-medium: var(--primary) / 0.25;
+    --border-strong: var(--primary) / 0.40;
+
+    /* Glow effects for terminal aesthetic */
+    --glow-subtle: 0 0 10px hsl(var(--primary) / 0.15);
+    --glow-medium: 0 0 15px hsl(var(--primary) / 0.25);
+    --glow-strong: 0 0 20px hsl(var(--primary) / 0.35);
   }
 
   /* Dark theme explicit */
@@ -87,6 +97,16 @@
     --text-muted: hsl(210 13% 50%);
     --weather-primary: hsl(191 100% 50%);
     --weather-accent: hsl(264 85% 62%);
+
+    /* Border tiers */
+    --border-subtle: var(--primary) / 0.15;
+    --border-medium: var(--primary) / 0.25;
+    --border-strong: var(--primary) / 0.40;
+
+    /* Glow effects */
+    --glow-subtle: 0 0 10px hsl(var(--primary) / 0.15);
+    --glow-medium: 0 0 15px hsl(var(--primary) / 0.25);
+    --glow-strong: 0 0 20px hsl(var(--primary) / 0.35);
   }
 
   /* Miami Vice theme */
@@ -117,6 +137,16 @@
     --text-muted: hsl(328 73% 59%);
     --weather-primary: hsl(23 100% 73%);
     --weather-accent: hsl(328 73% 59%);
+
+    /* Border tiers */
+    --border-subtle: var(--primary) / 0.15;
+    --border-medium: var(--primary) / 0.25;
+    --border-strong: var(--primary) / 0.40;
+
+    /* Glow effects */
+    --glow-subtle: 0 0 10px hsl(var(--primary) / 0.15);
+    --glow-medium: 0 0 15px hsl(var(--primary) / 0.25);
+    --glow-strong: 0 0 20px hsl(var(--primary) / 0.35);
   }
 
   /* TRON theme */
@@ -147,6 +177,16 @@
     --text-muted: hsl(189 100% 76%);
     --weather-primary: hsl(180 100% 50%);
     --weather-accent: hsl(165 59% 62%);
+
+    /* Border tiers */
+    --border-subtle: var(--primary) / 0.15;
+    --border-medium: var(--primary) / 0.25;
+    --border-strong: var(--primary) / 0.40;
+
+    /* Glow effects */
+    --glow-subtle: 0 0 10px hsl(var(--primary) / 0.15);
+    --glow-medium: 0 0 15px hsl(var(--primary) / 0.25);
+    --glow-strong: 0 0 20px hsl(var(--primary) / 0.35);
   }
 
   /* Atari 2600 theme */
@@ -177,6 +217,16 @@
     --text-muted: hsl(0 0% 53%);
     --weather-primary: hsl(72 66% 76%);
     --weather-accent: hsl(10 100% 30%);
+
+    /* Border tiers */
+    --border-subtle: var(--primary) / 0.15;
+    --border-medium: var(--primary) / 0.25;
+    --border-strong: var(--primary) / 0.40;
+
+    /* Glow effects */
+    --glow-subtle: 0 0 10px hsl(var(--primary) / 0.15);
+    --glow-medium: 0 0 15px hsl(var(--primary) / 0.25);
+    --glow-strong: 0 0 20px hsl(var(--primary) / 0.35);
   }
 
   /* Terminal Green / Monochrome Green theme */
@@ -207,6 +257,16 @@
     --text-muted: hsl(120 100% 70%);
     --weather-primary: hsl(120 100% 60%);
     --weather-accent: hsl(120 100% 80%);
+
+    /* Border tiers */
+    --border-subtle: var(--primary) / 0.15;
+    --border-medium: var(--primary) / 0.25;
+    --border-strong: var(--primary) / 0.40;
+
+    /* Glow effects */
+    --glow-subtle: 0 0 10px hsl(var(--primary) / 0.15);
+    --glow-medium: 0 0 15px hsl(var(--primary) / 0.25);
+    --glow-strong: 0 0 20px hsl(var(--primary) / 0.35);
   }
 
   /* 8-Bit Classic theme */
@@ -237,6 +297,16 @@
     --text-muted: hsl(0 0% 40%);
     --weather-primary: hsl(0 100% 40%);
     --weather-accent: hsl(210 100% 40%);
+
+    /* Border tiers */
+    --border-subtle: var(--primary) / 0.15;
+    --border-medium: var(--primary) / 0.25;
+    --border-strong: var(--primary) / 0.40;
+
+    /* Glow effects */
+    --glow-subtle: 0 0 10px hsl(var(--primary) / 0.15);
+    --glow-medium: 0 0 15px hsl(var(--primary) / 0.25);
+    --glow-strong: 0 0 20px hsl(var(--primary) / 0.35);
   }
 
   /* 16-Bit SNES theme */
@@ -267,6 +337,16 @@
     --text-muted: hsl(240 15% 49%);
     --weather-primary: hsl(51 100% 50%);
     --weather-accent: hsl(240 20% 63%);
+
+    /* Border tiers */
+    --border-subtle: var(--primary) / 0.15;
+    --border-medium: var(--primary) / 0.25;
+    --border-strong: var(--primary) / 0.40;
+
+    /* Glow effects */
+    --glow-subtle: 0 0 10px hsl(var(--primary) / 0.15);
+    --glow-medium: 0 0 15px hsl(var(--primary) / 0.25);
+    --glow-strong: 0 0 20px hsl(var(--primary) / 0.35);
   }
 
   /* Synthwave '84 theme */
@@ -297,6 +377,16 @@
     --text-muted: hsl(319 50% 70%);
     --weather-primary: hsl(319 100% 75%);
     --weather-accent: hsl(180 100% 50%);
+
+    /* Border tiers */
+    --border-subtle: var(--primary) / 0.15;
+    --border-medium: var(--primary) / 0.25;
+    --border-strong: var(--primary) / 0.40;
+
+    /* Glow effects */
+    --glow-subtle: 0 0 10px hsl(var(--primary) / 0.15);
+    --glow-medium: 0 0 15px hsl(var(--primary) / 0.25);
+    --glow-strong: 0 0 20px hsl(var(--primary) / 0.35);
   }
 
   /* Tokyo Night theme */
@@ -327,6 +417,16 @@
     --text-muted: hsl(267 42% 67%);
     --weather-primary: hsl(199 89% 74%);
     --weather-accent: hsl(267 42% 67%);
+
+    /* Border tiers */
+    --border-subtle: var(--primary) / 0.15;
+    --border-medium: var(--primary) / 0.25;
+    --border-strong: var(--primary) / 0.40;
+
+    /* Glow effects */
+    --glow-subtle: 0 0 10px hsl(var(--primary) / 0.15);
+    --glow-medium: 0 0 15px hsl(var(--primary) / 0.25);
+    --glow-strong: 0 0 20px hsl(var(--primary) / 0.35);
   }
 
   /* Dracula theme */
@@ -357,6 +457,16 @@
     --text-muted: hsl(265 89% 78%);
     --weather-primary: hsl(326 100% 74%);
     --weather-accent: hsl(265 89% 78%);
+
+    /* Border tiers */
+    --border-subtle: var(--primary) / 0.15;
+    --border-medium: var(--primary) / 0.25;
+    --border-strong: var(--primary) / 0.40;
+
+    /* Glow effects */
+    --glow-subtle: 0 0 10px hsl(var(--primary) / 0.15);
+    --glow-medium: 0 0 15px hsl(var(--primary) / 0.25);
+    --glow-strong: 0 0 20px hsl(var(--primary) / 0.35);
   }
 
   /* Cyberpunk theme */
@@ -387,6 +497,16 @@
     --text-muted: hsl(180 100% 50%);
     --weather-primary: hsl(56 100% 52%);
     --weather-accent: hsl(180 100% 50%);
+
+    /* Border tiers */
+    --border-subtle: var(--primary) / 0.15;
+    --border-medium: var(--primary) / 0.25;
+    --border-strong: var(--primary) / 0.40;
+
+    /* Glow effects */
+    --glow-subtle: 0 0 10px hsl(var(--primary) / 0.15);
+    --glow-medium: 0 0 15px hsl(var(--primary) / 0.25);
+    --glow-strong: 0 0 20px hsl(var(--primary) / 0.35);
   }
 
   /* Matrix theme */
@@ -417,6 +537,16 @@
     --text-muted: hsl(120 60% 35%);
     --weather-primary: hsl(120 100% 50%);
     --weather-accent: hsl(120 60% 35%);
+
+    /* Border tiers */
+    --border-subtle: var(--primary) / 0.15;
+    --border-medium: var(--primary) / 0.25;
+    --border-strong: var(--primary) / 0.40;
+
+    /* Glow effects */
+    --glow-subtle: 0 0 10px hsl(var(--primary) / 0.15);
+    --glow-medium: 0 0 15px hsl(var(--primary) / 0.25);
+    --glow-strong: 0 0 20px hsl(var(--primary) / 0.35);
   }
 
   /* Base element styles */
@@ -727,6 +857,66 @@ body {
   .border-terminal-glow {
     border: 1px solid hsl(var(--primary) / 0.5);
     box-shadow: 0 0 10px hsl(var(--primary) / 0.2);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     TIERED BORDER SYSTEM - PRD Border Styling Improvements
+     ═══════════════════════════════════════════════════════════ */
+
+  /* Primary container - subtle glow + medium border */
+  .container-primary {
+    border: 1px solid hsl(var(--border-medium));
+    box-shadow: var(--glow-subtle);
+    border-radius: var(--radius);
+  }
+
+  /* Nested elements - subtle border only, no glow */
+  .container-nested {
+    border: 1px solid hsl(var(--border-subtle));
+    border-radius: var(--radius);
+  }
+
+  /* Interactive glow on hover/focus */
+  .glow-interactive {
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .glow-interactive:hover {
+    border-color: hsl(var(--border-medium));
+    box-shadow: var(--glow-medium);
+  }
+
+  .glow-interactive:focus-visible {
+    border-color: hsl(var(--border-strong));
+    box-shadow: var(--glow-strong);
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* Border tier utilities for direct use */
+  .border-subtle {
+    border-color: hsl(var(--border-subtle));
+  }
+
+  .border-medium {
+    border-color: hsl(var(--border-medium));
+  }
+
+  .border-strong {
+    border-color: hsl(var(--border-strong));
+  }
+
+  /* Shadow glow utilities */
+  .shadow-glow-subtle {
+    box-shadow: var(--glow-subtle);
+  }
+
+  .shadow-glow-medium {
+    box-shadow: var(--glow-medium);
+  }
+
+  .shadow-glow-strong {
+    box-shadow: var(--glow-strong);
   }
 
   /* Interactive card styles with accessibility */
