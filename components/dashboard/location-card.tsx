@@ -393,7 +393,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
 
                 {/* Environmental Data */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className={`p-3 border ${themeClasses.borderColor} text-center rounded-sm`}>
+                  <div className="p-3 container-nested text-center">
                     <Sun className={`w-5 h-5 mx-auto mb-1 ${themeClasses.mutedText}`} />
                     <p className={`font-mono text-sm font-bold ${themeClasses.text}`}>
                       UV Index: {detailedWeatherData.uvIndex}
@@ -405,7 +405,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
                     </p>
                   </div>
 
-                  <div className={`p-3 border ${themeClasses.borderColor} text-center rounded-sm`}>
+                  <div className="p-3 container-nested text-center">
                     <Wind className={`w-5 h-5 mx-auto mb-1 ${themeClasses.mutedText}`} />
                     <p className={`font-mono text-sm font-bold ${themeClasses.text}`}>
                       AQI: {detailedWeatherData.airQuality.aqi}
@@ -418,7 +418,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
 
                 {/* Link to Full Weather Page */}
                 <Link href={`/weather/${citySlug}`} className="block w-full">
-                  <Button variant="outline" className={`w-full font-mono uppercase tracking-wider ${themeClasses.borderColor} ${themeClasses.text} hover:bg-white/10`}>
+                  <Button variant="outline" className={`w-full font-mono uppercase tracking-wider border-subtle ${themeClasses.text} hover:bg-white/10`}>
                     <MapPin className="w-4 h-4 inline mr-2" />
                     View Full Weather Page
                   </Button>
