@@ -32,7 +32,7 @@ export default function SignInPromptModal({ isOpen, onClose }: SignInPromptModal
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div className={`w-full max-w-md p-6 border-4 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
+      <div className={`w-full max-w-md p-6 container-primary ${themeClasses.background}`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className={`text-xl font-bold uppercase tracking-wider font-mono ${themeClasses.text}`}>

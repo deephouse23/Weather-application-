@@ -144,7 +144,7 @@ export default function AddLocationModal({ isOpen, onClose, onLocationAdded }: A
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className={`sm:max-w-md border-4 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow} p-0 overflow-hidden`}>
+      <DialogContent className={`sm:max-w-md container-primary ${themeClasses.background} p-0 overflow-hidden`}>
         <DialogHeader className={`p-6 pb-2`}>
           <DialogTitle className={`text-xl font-bold uppercase tracking-wider font-mono ${themeClasses.text}`}>
             Add Location

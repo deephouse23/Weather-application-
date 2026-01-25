@@ -172,7 +172,7 @@ export default function DetailedWeatherModal({ location, isOpen, onClose }: Deta
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div className={`w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 border-4 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
+      <div className={`w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 container-primary ${themeClasses.background}`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
