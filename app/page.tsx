@@ -9,9 +9,12 @@
  */
 
 import type { Metadata } from 'next'
-import { Suspense } from 'react'
+import { Suspense, lazy } from 'react'
 import { WeatherCardsSkeleton } from '@/components/home-shell'
-import HomeClient from './home-client'
+
+// PERFORMANCE: Lazy load HomeClient so Suspense fallback renders while it loads
+// This enables the server-rendered shell to display immediately as LCP
+const HomeClient = lazy(() => import('./home-client'))
 
 export const metadata: Metadata = {
   title: '16 Bit Weather - Retro Terminal Weather Forecast App',

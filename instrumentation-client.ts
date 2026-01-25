@@ -15,7 +15,17 @@ async function initSentryLazy() {
   if (sentryInitialized || typeof window === 'undefined') return;
 
   const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN;
-  if (!sentryDsn || !sentryDsn.includes('sentry.io')) return;
+  if (!sentryDsn) return;
+
+  // Validate DSN is a valid URL (supports both sentry.io and self-hosted instances)
+  try {
+    new URL(sentryDsn);
+  } catch {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('⚠️ Sentry client: Invalid DSN format:', sentryDsn);
+    }
+    return;
+  }
 
   try {
     // Dynamic import - only loads Sentry when called
