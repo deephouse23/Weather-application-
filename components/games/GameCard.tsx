@@ -46,10 +46,9 @@ export default function GameCard({ game, topScore, userHighScore, className }: G
     <Link href={`/games/${game.slug}`} className="block h-full">
       <Card
         className={cn(
-          'h-full border-4 transition-all duration-300',
-          'hover:scale-105 hover:shadow-2xl relative overflow-hidden group',
+          'h-full container-primary glow-interactive transition-all duration-300',
+          'hover:scale-105 relative overflow-hidden group',
           themeClasses.background,
-          themeClasses.borderColor,
           className
         )}
       >
@@ -57,9 +56,8 @@ export default function GameCard({ game, topScore, userHighScore, className }: G
         {game.featured && (
           <div className={cn(
             'absolute top-0 right-0 px-3 py-1 text-xs font-bold font-mono z-10',
-            'border-l-2 border-b-2',
-            themeClasses.accentBg,
-            themeClasses.borderColor
+            'border-l border-b border-subtle',
+            themeClasses.accentBg
           )}>
             FEATURED
           </div>
@@ -68,10 +66,9 @@ export default function GameCard({ game, topScore, userHighScore, className }: G
         <CardHeader className="text-center pb-2">
           {/* Game Icon */}
           <div className={cn(
-            'w-20 h-20 flex items-center justify-center border-4 mb-4 mx-auto rounded-md',
+            'w-20 h-20 flex items-center justify-center container-nested mb-4 mx-auto rounded-md',
             'transition-all duration-300 group-hover:animate-pulse',
-            themeClasses.accentBg,
-            themeClasses.borderColor
+            themeClasses.accentBg
           )}>
             <span className="text-4xl">{game.icon_emoji || '🎮'}</span>
           </div>
@@ -109,8 +106,7 @@ export default function GameCard({ game, topScore, userHighScore, className }: G
 
           {/* Stats */}
           <div className={cn(
-            'grid grid-cols-2 gap-2 pt-4 border-t-2',
-            themeClasses.borderColor
+            'grid grid-cols-2 gap-2 pt-4 border-t border-subtle'
           )}>
             {/* Play Count */}
             <div className="text-center">
@@ -145,8 +141,7 @@ export default function GameCard({ game, topScore, userHighScore, className }: G
           {userHighScore !== undefined && userHighScore > 0 && (
             <div className={cn(
               'flex items-center justify-center gap-2 py-2 w-full',
-              'border-t-2 border-dashed',
-              themeClasses.borderColor
+              'border-t border-dashed border-subtle'
             )}>
               <Clock className="w-3 h-3" />
               <span className={cn('text-xs font-mono', themeClasses.text)}>

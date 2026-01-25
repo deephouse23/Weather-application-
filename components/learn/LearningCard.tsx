@@ -39,18 +39,16 @@ export default function LearningCard({
   return (
     <Link href={href} className="block h-full">
       <Card className={cn(
-        'h-full border-4 transition-all duration-300',
-        'hover:scale-105 hover:shadow-lg flex flex-col',
+        'h-full container-primary glow-interactive transition-all duration-300',
+        'hover:scale-105 flex flex-col',
         themeClasses.background,
-        themeClasses.borderColor,
         themeClasses.text
       )}>
         <CardHeader className="text-center pb-2">
           <div className={cn(
-            'w-16 h-16 flex items-center justify-center border-2 mb-4 mx-auto transition-colors rounded-md',
+            'w-16 h-16 flex items-center justify-center container-nested mb-4 mx-auto transition-colors rounded-md',
             'group-hover:animate-pulse',
-            themeClasses.accentBg,
-            themeClasses.borderColor
+            themeClasses.accentBg
           )}>
             <Icon className="w-8 h-8 text-black" />
           </div>
@@ -72,8 +70,7 @@ export default function LearningCard({
 
           {itemCount !== undefined && (
             <Badge variant="outline" className={cn(
-              'font-mono font-bold border-2',
-              themeClasses.borderColor,
+              'font-mono font-bold border border-subtle',
               themeClasses.text
             )}>
               {itemCount} ITEMS
@@ -81,8 +78,7 @@ export default function LearningCard({
           )}
         </CardContent>
         <CardFooter className={cn(
-          'border-t-2 flex items-center justify-between py-3',
-          themeClasses.borderColor
+          'border-t border-subtle flex items-center justify-between py-3'
         )}>
           <span className={cn(
             'text-sm font-mono font-bold uppercase',

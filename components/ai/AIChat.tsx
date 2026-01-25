@@ -85,8 +85,7 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
   if (!isAuthenticated) {
     return (
       <div className={cn(
-        'border-4 p-8 text-center font-mono',
-        themeClasses.borderColor,
+        'container-primary p-8 text-center font-mono',
         themeClasses.background
       )}>
         <AlertCircle className={cn('w-12 h-12 mx-auto mb-4', themeClasses.accentText)} />
@@ -109,14 +108,12 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
 
   return (
     <div className={cn(
-      'border-4 flex flex-col h-[600px] max-h-[70vh]',
-      themeClasses.borderColor,
+      'container-primary flex flex-col h-[600px] max-h-[70vh]',
       themeClasses.background
     )}>
       {/* Header */}
       <div className={cn(
-        'flex items-center justify-between p-3 border-b-2',
-        themeClasses.borderColor
+        'flex items-center justify-between p-3 border-b border-subtle'
       )}>
         <div className="flex items-center gap-2">
           <Bot className={cn('w-5 h-5', themeClasses.accentText)} />
@@ -133,10 +130,10 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
                 key={p.id}
                 onClick={() => setPersonality(p.id)}
                 className={cn(
-                  'px-2 py-1 text-xs font-mono border-2 transition-all',
+                  'px-2 py-1 text-xs font-mono border transition-all glow-interactive',
                   personality === p.id
-                    ? cn(themeClasses.accentBg, themeClasses.borderColor)
-                    : cn('border-gray-600 hover:border-gray-400')
+                    ? cn(themeClasses.accentBg, 'border-medium')
+                    : cn('border-subtle hover:border-medium')
                 )}
                 title={p.label}
               >
@@ -201,10 +198,10 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
 
                 <div
                   className={cn(
-                    'max-w-[80%] p-3 rounded font-mono text-sm border-2',
+                    'max-w-[80%] p-3 rounded font-mono text-sm container-nested',
                     msg.role === 'user'
-                      ? cn('bg-gray-800', themeClasses.borderColor)
-                      : cn(themeClasses.background, themeClasses.borderColor)
+                      ? 'bg-gray-800'
+                      : themeClasses.background
                   )}
                 >
                   <p className={cn('whitespace-pre-wrap', themeClasses.text)}>
@@ -231,9 +228,8 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
               <Bot className="w-4 h-4 text-black" />
             </div>
             <div className={cn(
-              'p-3 rounded font-mono text-sm border-2',
-              themeClasses.background,
-              themeClasses.borderColor
+              'p-3 rounded font-mono text-sm container-nested',
+              themeClasses.background
             )}>
               <LoadingSpinner size="sm" label="AI is thinking" className={themeClasses.accentText} />
             </div>
@@ -253,7 +249,7 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
       {/* Input Area */}
       <form
         onSubmit={handleSubmit}
-        className={cn('p-3 border-t-2', themeClasses.borderColor)}
+        className="p-3 border-t border-subtle"
       >
         <div className="flex gap-2">
           <input
@@ -264,9 +260,8 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
             placeholder="Ask about weather, aviation, or turbulence..."
             disabled={isLoading}
             className={cn(
-              'flex-1 px-3 py-2 font-mono text-sm border-2 rounded',
-              'bg-transparent focus:outline-none',
-              themeClasses.borderColor,
+              'flex-1 px-3 py-2 font-mono text-sm border rounded',
+              'bg-transparent focus:outline-none border-subtle focus:border-medium',
               themeClasses.text,
               isLoading && 'opacity-50'
             )}

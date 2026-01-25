@@ -20,7 +20,12 @@ const config: Config = {
 		},
 		extend: {
 			colors: {
-				border: "hsl(var(--border))",
+				border: {
+					DEFAULT: "hsl(var(--border))",
+					subtle: "hsl(var(--border-subtle))",
+					medium: "hsl(var(--border-medium))",
+					strong: "hsl(var(--border-strong))",
+				},
 				input: "hsl(var(--input))",
 				ring: "hsl(var(--ring))",
 				background: "hsl(var(--background))",
@@ -69,6 +74,11 @@ const config: Config = {
 				lg: "var(--radius)",
 				md: "calc(var(--radius) - 2px)",
 				sm: "calc(var(--radius) - 4px)",
+			},
+			boxShadow: {
+				'glow-subtle': 'var(--glow-subtle)',
+				'glow-medium': 'var(--glow-medium)',
+				'glow-strong': 'var(--glow-strong)',
 			},
 			keyframes: {
 				"accordion-down": {

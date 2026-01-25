@@ -201,7 +201,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
   const citySlug = `${location.city.toLowerCase().replace(/\s+/g, '-')}-${location.state?.toLowerCase().replace(/\s+/g, '-') || location.country.toLowerCase()}`
 
   return (
-    <Card className={`transition-all duration-200 hover:scale-[1.02] border-2 ${themeClasses.borderColor} ${themeClasses.glow} ${themeClasses.background}`}>
+    <Card className={`transition-all duration-200 hover:scale-[1.02] container-primary glow-interactive ${themeClasses.background}`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -270,7 +270,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
             <div className={`animate-spin rounded-full h-6 w-6 border-b-2 ${themeClasses.borderColor}`}></div>
           </div>
         ) : weather ? (
-          <div className={`p-4 border-2 rounded-md ${themeClasses.background} ${themeClasses.borderColor}`}>
+          <div className={`p-4 container-nested ${themeClasses.background}`}>
             {/* Current Weather */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-4">
@@ -293,25 +293,25 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
 
             {/* Weather Details Grid */}
             <div className="grid grid-cols-2 gap-3 text-center">
-              <div className={`p-3 border ${themeClasses.borderColor} rounded-sm`}>
+              <div className={`p-3 border border-subtle rounded-sm`}>
                 <Droplets className={`w-4 h-4 mx-auto mb-1 ${themeClasses.mutedText}`} />
                 <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>{weather.humidity}%</p>
                 <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Humidity</p>
               </div>
 
-              <div className={`p-3 border ${themeClasses.borderColor} rounded-sm`}>
+              <div className={`p-3 border border-subtle rounded-sm`}>
                 <Wind className={`w-4 h-4 mx-auto mb-1 ${themeClasses.mutedText}`} />
                 <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>{Math.round(weather.windSpeed)} mph</p>
                 <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Wind Speed</p>
               </div>
 
-              <div className={`p-3 border ${themeClasses.borderColor} rounded-sm`}>
+              <div className={`p-3 border border-subtle rounded-sm`}>
                 <Thermometer className={`w-4 h-4 mx-auto mb-1 ${themeClasses.mutedText}`} />
                 <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>{weather.pressure} hPa</p>
                 <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Pressure</p>
               </div>
 
-              <div className={`p-3 border ${themeClasses.borderColor} rounded-sm`}>
+              <div className={`p-3 border border-subtle rounded-sm`}>
                 <MapPin className={`w-4 h-4 mx-auto mb-1 ${themeClasses.mutedText}`} />
                 <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>{weather.visibility} km</p>
                 <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Visibility</p>
@@ -330,7 +330,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
             </div>
           </div>
         ) : (
-          <div className={`p-4 border-2 text-center ${themeClasses.borderColor} rounded-md`}>
+          <div className={`p-4 container-nested text-center`}>
             <p className={`text-sm font-mono ${themeClasses.mutedText}`}>
               Weather data unavailable
             </p>
@@ -356,7 +356,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
 
         {/* Detailed Weather - Inline Expansion */}
         {showDetailedWeather && (
-          <div className={`mt-4 p-4 border-2 rounded-md ${themeClasses.borderColor} ${themeClasses.background} animate-in slide-in-from-top-2 duration-300`}>
+          <div className={`mt-4 p-4 container-nested ${themeClasses.background} animate-in slide-in-from-top-2 duration-300`}>
             {detailedLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${themeClasses.borderColor}`}></div>
@@ -372,7 +372,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
                     {detailedWeatherData.forecast.map((day, index) => (
                       <div
                         key={index}
-                        className={`p-2 border ${themeClasses.borderColor} ${themeClasses.background} text-center rounded-sm`}
+                        className={`p-2 border border-subtle ${themeClasses.background} text-center rounded-sm`}
                       >
                         <p className={`font-mono text-xs font-bold mb-1 ${themeClasses.text}`}>
                           {day.day}
