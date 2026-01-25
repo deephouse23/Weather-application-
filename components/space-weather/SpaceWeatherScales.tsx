@@ -53,8 +53,8 @@ export default function SpaceWeatherScales({ scales, isLoading = false }: SpaceW
 
   if (isLoading) {
     return (
-      <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
-        <CardHeader className={cn('border-b-2 py-3', themeClasses.borderColor)}>
+      <Card className={cn('container-primary', themeClasses.background)}>
+        <CardHeader className="border-b border-subtle py-3">
           <CardTitle className={cn('text-lg font-mono font-bold', themeClasses.headerText)}>
             SPACE WEATHER SCALES
           </CardTitle>
@@ -62,7 +62,7 @@ export default function SpaceWeatherScales({ scales, isLoading = false }: SpaceW
         <CardContent className="p-4">
           <div className="grid grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className={cn('p-4 border-2 animate-pulse', themeClasses.borderColor)}>
+              <div key={i} className="p-4 card-inner animate-pulse">
                 <div className="h-8 bg-gray-700 rounded mb-2" />
                 <div className="h-4 bg-gray-700 rounded w-1/2" />
               </div>
@@ -95,8 +95,8 @@ export default function SpaceWeatherScales({ scales, isLoading = false }: SpaceW
   ];
 
   return (
-    <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
-      <CardHeader className={cn('border-b-2 py-3', themeClasses.borderColor)}>
+    <Card className={cn('container-primary', themeClasses.background)}>
+      <CardHeader className="border-b border-subtle py-3">
         <CardTitle className={cn('text-lg font-mono font-bold flex items-center gap-2', themeClasses.headerText)}>
           SPACE WEATHER SCALES
           <span className={cn('text-xs px-2 py-0.5 bg-green-500/20 text-green-500 border border-green-500',
@@ -116,8 +116,7 @@ export default function SpaceWeatherScales({ scales, isLoading = false }: SpaceW
               <div
                 key={key}
                 className={cn(
-                  'p-4 border-2 transition-all duration-300',
-                  themeClasses.borderColor,
+                  'p-4 card-inner transition-all duration-300',
                   scale > 2 && 'animate-pulse'
                 )}
               >

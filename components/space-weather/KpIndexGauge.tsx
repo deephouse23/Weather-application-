@@ -74,8 +74,8 @@ export default function KpIndexGauge({ data, isLoading = false }: KpIndexGaugePr
 
   if (isLoading) {
     return (
-      <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
-        <CardHeader className={cn('border-b-2 py-3', themeClasses.borderColor)}>
+      <Card className={cn('container-primary', themeClasses.background)}>
+        <CardHeader className={'border-b border-subtle py-3'}>
           <CardTitle className={cn('text-lg font-mono font-bold', themeClasses.headerText)}>
             Kp INDEX
           </CardTitle>
@@ -96,8 +96,8 @@ export default function KpIndexGauge({ data, isLoading = false }: KpIndexGaugePr
   const auroraVisibility = getAuroraVisibility(currentKp);
 
   return (
-    <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
-      <CardHeader className={cn('border-b-2 py-3', themeClasses.borderColor)}>
+    <Card className={cn('container-primary', themeClasses.background)}>
+      <CardHeader className={'border-b border-subtle py-3'}>
         <CardTitle className={cn('text-lg font-mono font-bold flex items-center gap-2', themeClasses.headerText)}>
           <Activity className="w-5 h-5 text-yellow-500" />
           Kp INDEX
@@ -152,7 +152,7 @@ export default function KpIndexGauge({ data, isLoading = false }: KpIndexGaugePr
         </div>
 
         {/* Aurora Visibility */}
-        <div className={cn('p-3 border-2 rounded', themeClasses.borderColor)}>
+        <div className={'p-3 card-inner rounded'}>
           <div className="flex items-center gap-2 mb-1">
             <Sparkles className="w-4 h-4 text-green-400" />
             <span className={cn('text-xs font-mono font-bold', themeClasses.headerText)}>
@@ -166,7 +166,7 @@ export default function KpIndexGauge({ data, isLoading = false }: KpIndexGaugePr
 
         {/* Forecast */}
         {data?.forecast && (
-          <div className={cn('p-3 border-2 rounded', themeClasses.borderColor)}>
+          <div className={'p-3 card-inner rounded'}>
             <div className={cn('text-xs font-mono font-bold mb-1', themeClasses.headerText)}>
               24H FORECAST
             </div>

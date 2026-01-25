@@ -76,8 +76,8 @@ export default function SolarWindStats({ data, isLoading = false }: SolarWindSta
 
   if (isLoading) {
     return (
-      <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
-        <CardHeader className={cn('border-b-2 py-3', themeClasses.borderColor)}>
+      <Card className={cn('container-primary', themeClasses.background)}>
+        <CardHeader className={'border-b border-subtle py-3'}>
           <CardTitle className={cn('text-lg font-mono font-bold', themeClasses.headerText)}>
             SOLAR WIND
           </CardTitle>
@@ -103,8 +103,8 @@ export default function SolarWindStats({ data, isLoading = false }: SolarWindSta
   const densityStatus = getDensityStatus(density);
 
   return (
-    <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
-      <CardHeader className={cn('border-b-2 py-3', themeClasses.borderColor)}>
+    <Card className={cn('container-primary', themeClasses.background)}>
+      <CardHeader className={'border-b border-subtle py-3'}>
         <div className="flex items-center justify-between">
           <CardTitle className={cn('text-lg font-mono font-bold flex items-center gap-2', themeClasses.headerText)}>
             <Wind className="w-5 h-5 text-cyan-500" />
@@ -122,7 +122,7 @@ export default function SolarWindStats({ data, isLoading = false }: SolarWindSta
       </CardHeader>
       <CardContent className="p-4 space-y-3">
         {/* Speed */}
-        <div className={cn('p-3 border-2 rounded flex items-center justify-between', themeClasses.borderColor)}>
+        <div className={'p-3 card-inner rounded flex items-center justify-between'}>
           <div>
             <div className={cn('text-xs font-mono uppercase mb-1', themeClasses.text)}>
               SPEED
@@ -140,7 +140,7 @@ export default function SolarWindStats({ data, isLoading = false }: SolarWindSta
         </div>
 
         {/* Density */}
-        <div className={cn('p-3 border-2 rounded flex items-center justify-between', themeClasses.borderColor)}>
+        <div className={'p-3 card-inner rounded flex items-center justify-between'}>
           <div>
             <div className={cn('text-xs font-mono uppercase mb-1', themeClasses.text)}>
               DENSITY
@@ -159,8 +159,8 @@ export default function SolarWindStats({ data, isLoading = false }: SolarWindSta
 
         {/* Bz (most important for geomagnetic activity) */}
         <div className={cn(
-          'p-3 border-2 rounded flex items-center justify-between',
-          bzStatus.isWarning ? 'border-yellow-500 bg-yellow-500/5' : themeClasses.borderColor
+          'p-3 card-inner rounded flex items-center justify-between',
+          bzStatus.isWarning && 'border border-yellow-500/50 bg-yellow-500/5'
         )}>
           <div>
             <div className={cn('text-xs font-mono uppercase mb-1 flex items-center gap-1', themeClasses.text)}>
@@ -180,7 +180,7 @@ export default function SolarWindStats({ data, isLoading = false }: SolarWindSta
         </div>
 
         {/* Bt (Total Field) */}
-        <div className={cn('p-3 border-2 rounded', themeClasses.borderColor)}>
+        <div className={'p-3 card-inner rounded'}>
           <div className="flex items-center justify-between">
             <div className={cn('text-xs font-mono uppercase', themeClasses.text)}>
               Bt (Total Field)

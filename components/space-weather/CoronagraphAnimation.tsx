@@ -359,8 +359,8 @@ export default function CoronagraphAnimation({ className }: CoronagraphAnimation
 
   return (
     <>
-      <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background, className)} data-testid="coronagraph">
-        <CardHeader className={cn('border-b-2 py-3', themeClasses.borderColor)}>
+      <Card className={cn('container-primary', themeClasses.background, className)} data-testid="coronagraph">
+        <CardHeader className={'border-b border-subtle py-3'}>
           <div className="flex items-center justify-between">
             <CardTitle className={cn('text-lg font-mono font-bold flex items-center gap-2', themeClasses.headerText)}>
               CORONAGRAPH
@@ -541,10 +541,9 @@ export default function CoronagraphAnimation({ className }: CoronagraphAnimation
             <button
               onClick={() => changeCamera('c2')}
               className={cn(
-                'p-2 border-2 font-mono text-xs transition-all duration-200',
-                themeClasses.borderColor,
+                'p-2 card-inner font-mono text-xs transition-all duration-200',
                 camera === 'c2'
-                  ? 'border-cyan-500 bg-cyan-500/20 text-cyan-500'
+                  ? 'border border-cyan-500/50 bg-cyan-500/20 text-cyan-500'
                   : cn('hover:bg-gray-800', themeClasses.text)
               )}
             >
@@ -554,10 +553,9 @@ export default function CoronagraphAnimation({ className }: CoronagraphAnimation
             <button
               onClick={() => changeCamera('c3')}
               className={cn(
-                'p-2 border-2 font-mono text-xs transition-all duration-200',
-                themeClasses.borderColor,
+                'p-2 card-inner font-mono text-xs transition-all duration-200',
                 camera === 'c3'
-                  ? 'border-cyan-500 bg-cyan-500/20 text-cyan-500'
+                  ? 'border border-cyan-500/50 bg-cyan-500/20 text-cyan-500'
                   : cn('hover:bg-gray-800', themeClasses.text)
               )}
             >

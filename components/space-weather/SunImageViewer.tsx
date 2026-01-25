@@ -109,13 +109,13 @@ export default function SunImageViewer({ className }: SunImageViewerProps) {
 
   return (
     <>
-      <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background, className)}>
-        <CardHeader className={cn('border-b-2 py-3', themeClasses.borderColor)}>
+      <Card className={cn('container-primary', themeClasses.background, className)}>
+        <CardHeader className="border-b border-subtle py-3">
           <div className="flex items-center justify-between">
             <CardTitle className={cn('text-lg font-mono font-bold flex items-center gap-2', themeClasses.headerText)}>
               <Sun className="w-5 h-5 text-orange-500" />
               SUN VIEWER
-              <span className={cn('text-xs px-2 py-0.5', themeClasses.accentBg, themeClasses.borderColor, 'border')}>
+              <span className={cn('text-xs px-2 py-0.5 bg-cyan-500/20 text-cyan-500 border border-cyan-500/50')}>
                 SDO
               </span>
             </CardTitle>
@@ -200,10 +200,9 @@ export default function SunImageViewer({ className }: SunImageViewerProps) {
                   setImageError(false);
                 }}
                 className={cn(
-                  'p-2 border-2 font-mono text-xs transition-all duration-200',
-                  themeClasses.borderColor,
+                  'p-2 card-inner font-mono text-xs transition-all duration-200',
                   selectedWavelength.id === wavelength.id
-                    ? cn('border-2', wavelength.color.replace('text-', 'border-'), 'bg-gray-800')
+                    ? cn('border border-current', wavelength.color.replace('text-', 'border-'), 'bg-gray-800')
                     : 'hover:bg-gray-800',
                   wavelength.color
                 )}
