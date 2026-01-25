@@ -84,7 +84,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
-      <Card className={`w-full max-w-md border-4 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
+      <Card className={`w-full max-w-md container-primary ${themeClasses.background}`}>
         <CardHeader className="text-center space-y-4">
           <div className={`w-12 h-12 border-2 flex items-center justify-center mx-auto rounded-md ${themeClasses.accentBg} ${themeClasses.borderColor}`}>
             <span className="text-black font-bold text-lg">16</span>

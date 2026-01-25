@@ -34,8 +34,8 @@ export default function NewsHero({ item, className }: NewsHeroProps) {
   return (
     <Card
       className={cn(
-        'border-4 overflow-hidden group cursor-pointer transition-all hover:shadow-xl',
-        item.priority === 'high' ? 'border-red-500' : themeClasses.borderColor,
+        'overflow-hidden group cursor-pointer transition-all hover:shadow-xl container-primary',
+        item.priority === 'high' && 'ring-2 ring-red-500',
         themeClasses.background,
         className
       )}
@@ -59,8 +59,7 @@ export default function NewsHero({ item, className }: NewsHeroProps) {
         ) : (
           <div
             className={cn(
-              'w-full lg:w-1/2 h-64 lg:h-80 flex items-center justify-center border-b-2 lg:border-b-0 lg:border-r-2',
-              themeClasses.borderColor,
+              'w-full lg:w-1/2 h-64 lg:h-80 flex items-center justify-center border-b border-subtle lg:border-b-0 lg:border-r',
               themeClasses.background
             )}
           >
@@ -69,10 +68,10 @@ export default function NewsHero({ item, className }: NewsHeroProps) {
               {item.magnitude && (
                 <div className="mt-4">
                   <span className={cn(
-                    'inline-flex items-center gap-2 px-4 py-2 text-2xl font-bold border-4 rounded font-mono',
-                    item.magnitude >= 6 ? 'bg-red-600 text-white border-red-800' :
-                    item.magnitude >= 5 ? 'bg-orange-500 text-white border-orange-700' :
-                    'bg-yellow-500 text-black border-yellow-700'
+                    'inline-flex items-center gap-2 px-4 py-2 text-2xl font-bold rounded font-mono',
+                    item.magnitude >= 6 ? 'bg-red-600 text-white' :
+                    item.magnitude >= 5 ? 'bg-orange-500 text-white' :
+                    'bg-yellow-500 text-black'
                   )}>
                     <Activity className="w-6 h-6" />
                     M{item.magnitude.toFixed(1)}
@@ -90,10 +89,10 @@ export default function NewsHero({ item, className }: NewsHeroProps) {
               <CategoryBadge category={item.category} />
               {item.magnitude && (
                 <span className={cn(
-                  'inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold border-2 rounded font-mono',
-                  item.magnitude >= 6 ? 'bg-red-600 text-white border-red-800' :
-                  item.magnitude >= 5 ? 'bg-orange-500 text-white border-orange-700' :
-                  'bg-yellow-500 text-black border-yellow-700'
+                  'inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold rounded font-mono',
+                  item.magnitude >= 6 ? 'bg-red-600 text-white' :
+                  item.magnitude >= 5 ? 'bg-orange-500 text-white' :
+                  'bg-yellow-500 text-black'
                 )}>
                   <Activity className="w-3 h-3" />
                   M{item.magnitude.toFixed(1)}

@@ -87,7 +87,7 @@ export default function AviationPage() {
 
         {/* Main Terminal */}
         <Suspense fallback={
-          <div className={cn('border-4 p-8 text-center font-mono', themeClasses.borderColor, themeClasses.background)}>
+          <div className={cn('container-primary p-8 text-center font-mono', themeClasses.background)}>
             <div className="animate-pulse">Loading aviation terminal...</div>
           </div>
         }>

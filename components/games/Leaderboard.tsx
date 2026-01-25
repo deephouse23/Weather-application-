@@ -82,7 +82,7 @@ export default function Leaderboard({
   return (
     <div className={cn('w-full', className)}>
       {/* Header */}
-      <div className={cn('p-4 border-4', themeClasses.borderColor, themeClasses.background)}>
+      <div className={cn('p-4 container-primary', themeClasses.background)}>
         <h3 className={cn('text-xl font-bold font-mono uppercase mb-4', themeClasses.headerText)}>
           LEADERBOARD
         </h3>
@@ -109,7 +109,7 @@ export default function Leaderboard({
       </div>
 
       {/* Scores List */}
-      <div className={cn('border-4 border-t-0', themeClasses.borderColor, themeClasses.background)}>
+      <div className={cn('container-nested', themeClasses.background)}>
         {isLoading && (
           <div className={cn('p-8 text-center', themeClasses.text)}>
             <div className="animate-pulse">Loading scores...</div>
@@ -194,9 +194,8 @@ export default function Leaderboard({
         <button
           onClick={loadLeaderboard}
           className={cn(
-            'w-full p-2 border-4 border-t-0 text-xs font-mono font-bold uppercase transition-colors',
+            'w-full p-2 card-inner text-xs font-mono font-bold uppercase transition-colors',
             themeClasses.background,
-            themeClasses.borderColor,
             themeClasses.text,
             themeClasses.hoverBg
           )}

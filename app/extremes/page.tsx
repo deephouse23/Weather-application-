@@ -246,7 +246,7 @@ export default function ExtremesPage() {
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Hottest Place */}
           <Card
-            className="border-2 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
+            className="container-primary hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
             onClick={() => data.hottest && handleLocationClick(data.hottest)}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -282,7 +282,7 @@ export default function ExtremesPage() {
                   </div>
 
                   {data.hottest.fact && (
-                    <div className="text-xs text-muted-foreground italic mt-3 p-3 border rounded bg-muted/30">
+                    <div className="text-xs text-muted-foreground italic mt-3 p-3 card-inner rounded bg-muted/30">
                       💡 {data.hottest.fact}
                     </div>
                   )}
@@ -293,7 +293,7 @@ export default function ExtremesPage() {
 
           {/* Coldest Place */}
           <Card
-            className="border-2 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
+            className="container-primary hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
             onClick={() => data.coldest && handleLocationClick(data.coldest)}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -329,7 +329,7 @@ export default function ExtremesPage() {
                   </div>
 
                   {data.coldest.fact && (
-                    <div className="text-xs text-muted-foreground italic mt-3 p-3 border rounded bg-muted/30">
+                    <div className="text-xs text-muted-foreground italic mt-3 p-3 card-inner rounded bg-muted/30">
                       💡 {data.coldest.fact}
                     </div>
                   )}
@@ -342,7 +342,7 @@ export default function ExtremesPage() {
         {/* Temperature Leaderboards */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Top 5 Hottest */}
-          <Card className="border-2">
+          <Card className="container-primary">
             <CardHeader>
               <CardTitle className="text-lg font-mono font-bold text-orange-500">
                 🏆 TOP 5 HOTTEST
@@ -354,7 +354,7 @@ export default function ExtremesPage() {
                   <div
                     key={index}
                     onClick={() => handleLocationClick(loc)}
-                    className="flex items-center justify-between p-3 border rounded hover:bg-muted cursor-pointer transition-colors"
+                    className="flex items-center justify-between p-3 card-inner rounded hover:bg-muted cursor-pointer transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <Badge variant="secondary" className="font-mono">#{index + 1}</Badge>
@@ -372,7 +372,7 @@ export default function ExtremesPage() {
           </Card>
 
           {/* Top 5 Coldest */}
-          <Card className="border-2">
+          <Card className="container-primary">
             <CardHeader>
               <CardTitle className="text-lg font-mono font-bold text-blue-500">
                 🏆 TOP 5 COLDEST
@@ -384,7 +384,7 @@ export default function ExtremesPage() {
                   <div
                     key={index}
                     onClick={() => handleLocationClick(loc)}
-                    className="flex items-center justify-between p-3 border rounded hover:bg-muted cursor-pointer transition-colors"
+                    className="flex items-center justify-between p-3 card-inner rounded hover:bg-muted cursor-pointer transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <Badge variant="secondary" className="font-mono">#{index + 1}</Badge>
@@ -404,7 +404,7 @@ export default function ExtremesPage() {
 
         {/* User Location Ranking */}
         {data.userLocation && (
-          <Card className="border-2 mb-8">
+          <Card className="container-primary mb-8">
             <CardHeader>
               <CardTitle className="text-lg font-mono font-bold flex items-center">
                 <MapPin className="inline mr-2 text-primary" />
@@ -434,7 +434,7 @@ export default function ExtremesPage() {
 
         {/* Temperature Difference */}
         {data.hottest && data.coldest && (
-          <Card className="border-2 text-center bg-muted/20">
+          <Card className="container-primary text-center bg-muted/20">
             <CardHeader>
               <CardTitle className="text-lg font-mono font-bold text-muted-foreground">
                 🌡️ GLOBAL TEMPERATURE SPREAD
@@ -489,7 +489,7 @@ export default function ExtremesPage() {
         {selectedLocation && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div
-              className="bg-weather-bg-elev w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg border-4 border-weather-primary pixel-border shadow-2xl animate-in zoom-in-95 duration-200"
+              className="bg-weather-bg-elev w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg container-primary shadow-2xl animate-in zoom-in-95 duration-200"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6">

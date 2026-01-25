@@ -123,7 +123,7 @@ export default function ExpandableForecast({
   };
 
   return (
-    <div className={`${themeClasses.background} p-3 sm:p-4 lg:p-6 rounded-lg border-2 sm:border-4 ${themeClasses.borderColor} pixel-shadow`}>
+    <div className={`${themeClasses.background} p-3 sm:p-4 lg:p-6 rounded-lg container-primary pixel-shadow`}>
       <h2 className={`text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4 ${themeClasses.accentText} uppercase tracking-wider text-center pixel-glow`}>
         5-DAY DETAILED FORECAST
       </h2>

@@ -96,8 +96,8 @@ export default function AuroraForecastMap({ data, isLoading = false }: AuroraFor
 
   if (isLoading) {
     return (
-      <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
-        <CardHeader className={cn('border-b-2 py-3', themeClasses.borderColor)}>
+      <Card className={cn('container-primary', themeClasses.background)}>
+        <CardHeader className={'border-b border-subtle py-3'}>
           <CardTitle className={cn('text-lg font-mono font-bold', themeClasses.headerText)}>
             AURORA FORECAST
           </CardTitle>
@@ -113,8 +113,8 @@ export default function AuroraForecastMap({ data, isLoading = false }: AuroraFor
   }
 
   return (
-    <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)} data-testid="aurora-forecast">
-      <CardHeader className={cn('border-b-2 py-3', themeClasses.borderColor)}>
+    <Card className={cn('container-primary', themeClasses.background)} data-testid="aurora-forecast">
+      <CardHeader className={'border-b border-subtle py-3'}>
         <div className="flex items-center justify-between">
           <CardTitle className={cn('text-lg font-mono font-bold flex items-center gap-2', themeClasses.headerText)}>
             <Sparkles className="w-5 h-5 text-green-400" />
@@ -139,10 +139,9 @@ export default function AuroraForecastMap({ data, isLoading = false }: AuroraFor
           <button
             onClick={() => setHemisphere('north')}
             className={cn(
-              'p-2 border-2 font-mono text-xs transition-all duration-200',
-              themeClasses.borderColor,
+              'p-2 card-inner font-mono text-xs transition-all duration-200 rounded',
               hemisphere === 'north'
-                ? 'border-green-500 bg-green-500/20 text-green-500'
+                ? 'ring-2 ring-green-500/50 bg-green-500/20 text-green-500'
                 : cn('hover:bg-gray-800', themeClasses.text)
             )}
           >
@@ -152,10 +151,9 @@ export default function AuroraForecastMap({ data, isLoading = false }: AuroraFor
           <button
             onClick={() => setHemisphere('south')}
             className={cn(
-              'p-2 border-2 font-mono text-xs transition-all duration-200',
-              themeClasses.borderColor,
+              'p-2 card-inner font-mono text-xs transition-all duration-200 rounded',
               hemisphere === 'south'
-                ? 'border-green-500 bg-green-500/20 text-green-500'
+                ? 'ring-2 ring-green-500/50 bg-green-500/20 text-green-500'
                 : cn('hover:bg-gray-800', themeClasses.text)
             )}
           >
@@ -165,7 +163,7 @@ export default function AuroraForecastMap({ data, isLoading = false }: AuroraFor
         </div>
 
         {/* Aurora Forecast Image */}
-        <div className="relative aspect-square bg-black rounded-lg overflow-hidden border-2 border-gray-700">
+        <div className="relative aspect-square bg-black rounded-lg overflow-hidden">
           {!imageLoaded && !imageError && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
               <div className={cn('text-sm font-mono', themeClasses.text, 'animate-pulse')}>
@@ -211,7 +209,7 @@ export default function AuroraForecastMap({ data, isLoading = false }: AuroraFor
         </div>
 
         {/* Viewline Info */}
-        <div className={cn('p-3 border-2 rounded', themeClasses.borderColor)}>
+        <div className={'p-3 card-inner rounded'}>
           <div className="flex items-center gap-2 mb-2">
             <MapPin className="w-4 h-4 text-green-400" />
             <span className={cn('text-xs font-mono font-bold uppercase', themeClasses.headerText)}>
@@ -232,7 +230,7 @@ export default function AuroraForecastMap({ data, isLoading = false }: AuroraFor
         </div>
 
         {/* Legend */}
-        <div className={cn('p-3 border-2 rounded', themeClasses.borderColor)}>
+        <div className={'p-3 card-inner rounded'}>
           <div className={cn('text-xs font-mono font-bold mb-2', themeClasses.headerText)}>
             AURORA INTENSITY
           </div>

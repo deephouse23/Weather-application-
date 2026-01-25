@@ -32,7 +32,7 @@ export default function SignInPromptModal({ isOpen, onClose }: SignInPromptModal
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div className={`w-full max-w-md p-6 border-4 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.glow}`}>
+      <div className={`w-full max-w-md p-6 container-primary ${themeClasses.background}`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className={`text-xl font-bold uppercase tracking-wider font-mono ${themeClasses.text}`}>
@@ -40,7 +40,7 @@ export default function SignInPromptModal({ isOpen, onClose }: SignInPromptModal
           </h2>
           <button
             onClick={onClose}
-            className={`p-2 border-2 transition-all duration-200 hover:scale-105 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`}
+            className={`p-2 card-inner rounded transition-all duration-200 hover:scale-105 ${themeClasses.background} ${themeClasses.text} ${themeClasses.hoverBg}`}
           >
             <X className="w-4 h-4" />
           </button>
@@ -54,11 +54,11 @@ export default function SignInPromptModal({ isOpen, onClose }: SignInPromptModal
           
           {/* Theme Preview */}
           <div className="grid grid-cols-2 gap-2 mb-4">
-            <div className="p-3 border-2 border-orange-400 bg-purple-900 text-center">
+            <div className="p-3 bg-purple-900/80 text-center rounded shadow-lg shadow-orange-400/20">
               <Sun className="w-5 h-5 mx-auto mb-1 text-orange-400" />
               <p className="text-xs font-mono text-orange-400 uppercase">Miami Vice</p>
             </div>
-            <div className="p-3 border-2 border-cyan-400 bg-black text-center">
+            <div className="p-3 bg-black/80 text-center rounded shadow-lg shadow-cyan-400/20">
               <Zap className="w-5 h-5 mx-auto mb-1 text-cyan-400" />
               <p className="text-xs font-mono text-cyan-400 uppercase">TRON</p>
             </div>
@@ -77,14 +77,14 @@ export default function SignInPromptModal({ isOpen, onClose }: SignInPromptModal
           <Link
             href="/signin"
             onClick={onClose}
-            className={`w-full flex items-center justify-center px-4 py-3 border-2 text-sm font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 ${themeClasses.accentBg} ${themeClasses.borderColor} text-black ${themeClasses.glow}`}
+            className={`w-full flex items-center justify-center px-4 py-3 text-sm font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 rounded ${themeClasses.accentBg} text-black ${themeClasses.glow}`}
           >
             Sign In / Sign Up
           </Link>
-          
+
           <button
             onClick={onClose}
-            className={`w-full px-4 py-2 border-2 text-sm font-mono uppercase tracking-wider transition-all duration-200 hover:scale-105 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`}
+            className={`w-full px-4 py-2 card-inner rounded text-sm font-mono uppercase tracking-wider transition-all duration-200 hover:scale-105 ${themeClasses.background} ${themeClasses.text} ${themeClasses.hoverBg}`}
           >
             Maybe Later
           </button>

@@ -259,10 +259,7 @@ export default function SolarCommandTerminal({
         <Card className={cn('container-primary', themeClasses.background)}>
           <button
             onClick={() => toggleSection('alerts')}
-            className={cn(
-              'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
-              themeClasses.borderColor
-            )}
+            className="w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors"
             aria-expanded={expandedSections.has('alerts')}
             aria-controls="section-alerts-content"
             aria-label={`Toggle Space Weather Alerts section, ${alerts.length} alerts`}
@@ -322,10 +319,7 @@ export default function SolarCommandTerminal({
         <Card className={cn('container-primary', themeClasses.background)}>
           <button
             onClick={() => toggleSection('kp')}
-            className={cn(
-              'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
-              themeClasses.borderColor
-            )}
+            className="w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors"
             aria-expanded={expandedSections.has('kp')}
             aria-controls="section-kp-content"
             aria-label="Toggle Kp Geomagnetic Index section"
@@ -352,10 +346,7 @@ export default function SolarCommandTerminal({
         <Card className={cn('container-primary', themeClasses.background)}>
           <button
             onClick={() => toggleSection('wind')}
-            className={cn(
-              'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
-              themeClasses.borderColor
-            )}
+            className="w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors"
             aria-expanded={expandedSections.has('wind')}
             aria-controls="section-wind-content"
             aria-label="Toggle Real-Time Solar Wind section"
@@ -385,10 +376,7 @@ export default function SolarCommandTerminal({
         <Card className={cn('container-primary', themeClasses.background)}>
           <button
             onClick={() => toggleSection('xray')}
-            className={cn(
-              'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
-              themeClasses.borderColor
-            )}
+            className="w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors"
             aria-expanded={expandedSections.has('xray')}
             aria-controls="section-xray-content"
             aria-label="Toggle X-Ray Flux and Solar Flares section"
@@ -415,10 +403,7 @@ export default function SolarCommandTerminal({
         <Card className={cn('container-primary', themeClasses.background)}>
           <button
             onClick={() => toggleSection('sunspots')}
-            className={cn(
-              'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
-              themeClasses.borderColor
-            )}
+            className="w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors"
             aria-expanded={expandedSections.has('sunspots')}
             aria-controls="section-sunspots-content"
             aria-label="Toggle Sunspot Activity section"
@@ -448,10 +433,7 @@ export default function SolarCommandTerminal({
         <Card className={cn('container-primary', themeClasses.background)}>
           <button
             onClick={() => toggleSection('coronagraph')}
-            className={cn(
-              'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
-              themeClasses.borderColor
-            )}
+            className="w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors"
             aria-expanded={expandedSections.has('coronagraph')}
             aria-controls="section-coronagraph-content"
             aria-label="Toggle SOHO Coronagraph CME Watch section"
@@ -478,10 +460,7 @@ export default function SolarCommandTerminal({
         <Card className={cn('container-primary', themeClasses.background)}>
           <button
             onClick={() => toggleSection('aurora')}
-            className={cn(
-              'w-full flex items-center justify-between p-3 border-b-2 hover:bg-gray-800/50 transition-colors',
-              themeClasses.borderColor
-            )}
+            className="w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors"
             aria-expanded={expandedSections.has('aurora')}
             aria-controls="section-aurora-content"
             aria-label="Toggle Aurora Forecast section"

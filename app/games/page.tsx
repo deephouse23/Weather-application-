@@ -117,7 +117,7 @@ export default function GamesPage() {
 
           {/* Stats Bar */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-8">
-            <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
+            <Card className={cn('container-nested', themeClasses.background)}>
               <CardContent className="p-4 text-center">
                 <Gamepad2 className={cn('w-6 h-6 mx-auto mb-2', themeClasses.accentText)} />
                 <div className={cn('text-2xl font-bold font-mono', themeClasses.accentText)}>
@@ -127,7 +127,7 @@ export default function GamesPage() {
               </CardContent>
             </Card>
 
-            <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
+            <Card className={cn('container-nested', themeClasses.background)}>
               <CardContent className="p-4 text-center">
                 <Zap className={cn('w-6 h-6 mx-auto mb-2', themeClasses.accentText)} />
                 <div className={cn('text-2xl font-bold font-mono', themeClasses.accentText)}>
@@ -137,7 +137,7 @@ export default function GamesPage() {
               </CardContent>
             </Card>
 
-            <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
+            <Card className={cn('container-nested', themeClasses.background)}>
               <CardContent className="p-4 text-center">
                 <Trophy className={cn('w-6 h-6 mx-auto mb-2', themeClasses.accentText)} />
                 <div className={cn('text-2xl font-bold font-mono', themeClasses.accentText)}>
@@ -147,7 +147,7 @@ export default function GamesPage() {
               </CardContent>
             </Card>
 
-            <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
+            <Card className={cn('container-nested', themeClasses.background)}>
               <CardContent className="p-4 text-center">
                 <Users className={cn('w-6 h-6 mx-auto mb-2', themeClasses.accentText)} />
                 <div className={cn('text-2xl font-bold font-mono', themeClasses.accentText)}>FREE</div>
@@ -158,7 +158,7 @@ export default function GamesPage() {
         </div>
 
         {/* Filters */}
-        <Card className={cn('mb-8 border-4', themeClasses.borderColor, themeClasses.background)}>
+        <Card className={cn('mb-8 container-primary', themeClasses.background)}>
           <CardContent className="p-4">
             {/* Search */}
             <div className="mb-6">
@@ -172,9 +172,8 @@ export default function GamesPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className={cn(
-                    'pl-10 h-10 border-2 font-mono text-sm',
+                    'pl-10 h-10 font-mono text-sm card-inner',
                     themeClasses.background,
-                    themeClasses.borderColor,
                     themeClasses.text
                   )}
                 />
@@ -197,10 +196,10 @@ export default function GamesPage() {
                     size="sm"
                     onClick={() => setSelectedCategory(cat.value)}
                     className={cn(
-                      'font-mono font-bold uppercase border-2',
+                      'font-mono font-bold uppercase',
                       selectedCategory === cat.value
-                        ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black hover:${themeClasses.accentBg}`
-                        : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text}`
+                        ? `${themeClasses.accentBg} text-black ring-2 ring-offset-1`
+                        : `card-inner ${themeClasses.text}`
                     )}
                   >
                     {cat.icon} {cat.label}
@@ -225,10 +224,10 @@ export default function GamesPage() {
                     size="sm"
                     onClick={() => setSelectedDifficulty(diff as GameDifficulty | 'all')}
                     className={cn(
-                      'font-mono font-bold uppercase border-2',
+                      'font-mono font-bold uppercase',
                       selectedDifficulty === diff
-                        ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black hover:${themeClasses.accentBg}`
-                        : `${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text}`
+                        ? `${themeClasses.accentBg} text-black ring-2 ring-offset-1`
+                        : `card-inner ${themeClasses.text}`
                     )}
                   >
                     {diff.toUpperCase()}
@@ -239,7 +238,7 @@ export default function GamesPage() {
 
             {/* Active Filters Count */}
             {(searchQuery || selectedCategory !== 'all' || selectedDifficulty !== 'all') && (
-              <div className={cn('mt-6 pt-4 border-t-2 text-sm font-mono flex items-center gap-4', themeClasses.borderColor, themeClasses.text)}>
+              <div className={cn('mt-6 pt-4 border-t border-subtle text-sm font-mono flex items-center gap-4', themeClasses.text)}>
                 <span>Showing {filteredGames.length} of {games.length} games</span>
                 <Button
                   variant="link"
@@ -272,8 +271,7 @@ export default function GamesPage() {
               onClick={loadGames}
               variant="outline"
               className={cn(
-                'mt-4 font-mono font-bold border-2',
-                themeClasses.borderColor,
+                'mt-4 font-mono font-bold',
                 themeClasses.text
               )}
             >
@@ -295,7 +293,7 @@ export default function GamesPage() {
                     setSelectedDifficulty('all');
                   }}
                   variant="outline"
-                  className={cn('font-mono font-bold border-2', themeClasses.borderColor)}
+                  className="font-mono font-bold"
                 >
                   CLEAR FILTERS
                 </Button>
@@ -312,7 +310,7 @@ export default function GamesPage() {
 
         {/* Info Footer */}
         {!isLoading && !error && filteredGames.length > 0 && (
-          <Card className={cn('mt-12 border-4 text-center', themeClasses.borderColor, themeClasses.background)}>
+          <Card className={cn('mt-12 container-primary text-center', themeClasses.background)}>
             <CardContent className="p-6">
               <h3 className={cn('font-mono font-bold text-lg uppercase mb-4', themeClasses.headerText)}>
                 ARCADE FEATURES

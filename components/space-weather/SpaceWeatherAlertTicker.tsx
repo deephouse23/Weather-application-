@@ -131,8 +131,8 @@ export default function SpaceWeatherAlertTicker({ alerts, isLoading = false }: S
 
   if (isLoading) {
     return (
-      <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
-        <CardHeader className={cn('border-b-2 py-3', themeClasses.borderColor)}>
+      <Card className={cn('container-primary', themeClasses.background)}>
+        <CardHeader className={'border-b border-subtle py-3'}>
           <CardTitle className={cn('text-lg font-mono font-bold flex items-center gap-2', themeClasses.headerText)}>
             <AlertTriangle className="w-5 h-5 text-yellow-500" />
             SPACE WEATHER ALERTS
@@ -147,12 +147,12 @@ export default function SpaceWeatherAlertTicker({ alerts, isLoading = false }: S
 
   if (alerts.length === 0) {
     return (
-      <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
-        <CardHeader className={cn('border-b-2 py-3', themeClasses.borderColor)}>
+      <Card className={cn('container-primary', themeClasses.background)}>
+        <CardHeader className={'border-b border-subtle py-3'}>
           <CardTitle className={cn('text-lg font-mono font-bold flex items-center gap-2', themeClasses.headerText)}>
             <Radio className="w-5 h-5 text-green-500" />
             SPACE WEATHER ALERTS
-            <span className="text-xs px-2 py-0.5 bg-green-500/20 text-green-500 border border-green-500">
+            <span className="text-xs px-2 py-0.5 bg-green-500/20 text-green-500 rounded">
               ALL QUIET
             </span>
           </CardTitle>
@@ -171,8 +171,8 @@ export default function SpaceWeatherAlertTicker({ alerts, isLoading = false }: S
   const severityColors = getSeverityColors(currentAlert.severity);
 
   return (
-    <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)} data-testid="alert-ticker">
-      <CardHeader className={cn('border-b-2 py-3', themeClasses.borderColor)}>
+    <Card className={cn('container-primary', themeClasses.background)} data-testid="alert-ticker">
+      <CardHeader className={'border-b border-subtle py-3'}>
         <div className="flex items-center justify-between">
           <CardTitle className={cn('text-lg font-mono font-bold flex items-center gap-2', themeClasses.headerText)}>
             <AlertTriangle className="w-5 h-5 text-yellow-500" />

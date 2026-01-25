@@ -199,7 +199,7 @@ export default function NewsPage() {
 
         {/* Stats Footer */}
         {!isLoading && news.length > 0 && (
-          <div className={cn('mt-8 pt-6 border-t-2 text-center', themeClasses.borderColor)}>
+          <div className={cn('mt-8 pt-6 border-t border-subtle text-center')}>
             <p className={cn('text-xs font-mono', themeClasses.text)}>
               Showing {filteredNews.length} of {news.length} articles
               {currentCategory !== 'all' && ` in ${currentCategory.toUpperCase()}`}

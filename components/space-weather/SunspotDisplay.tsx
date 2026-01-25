@@ -74,8 +74,8 @@ export default function SunspotDisplay({ data, isLoading = false }: SunspotDispl
 
   if (isLoading) {
     return (
-      <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
-        <CardHeader className={cn('border-b-2 py-3', themeClasses.borderColor)}>
+      <Card className={cn('container-primary', themeClasses.background)}>
+        <CardHeader className={'border-b border-subtle py-3'}>
           <CardTitle className={cn('text-lg font-mono font-bold', themeClasses.headerText)}>
             SUNSPOTS
           </CardTitle>
@@ -96,8 +96,8 @@ export default function SunspotDisplay({ data, isLoading = false }: SunspotDispl
   const phaseColor = getPhaseColor(cyclePhase);
 
   return (
-    <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
-      <CardHeader className={cn('border-b-2 py-3', themeClasses.borderColor)}>
+    <Card className={cn('container-primary', themeClasses.background)}>
+      <CardHeader className={'border-b border-subtle py-3'}>
         <CardTitle className={cn('text-lg font-mono font-bold flex items-center gap-2', themeClasses.headerText)}>
           <Sun className="w-5 h-5 text-yellow-500" />
           SUNSPOTS
@@ -141,7 +141,7 @@ export default function SunspotDisplay({ data, isLoading = false }: SunspotDispl
         </div>
 
         {/* Solar Cycle Progress */}
-        <div className={cn('p-3 border-2 rounded', themeClasses.borderColor)}>
+        <div className={'p-3 card-inner rounded'}>
           <div className="flex items-center justify-between mb-2">
             <span className={cn('text-xs font-mono uppercase font-bold', themeClasses.headerText)}>
               SOLAR CYCLE {data?.solarCycle?.cycleNumber || 25}
@@ -175,7 +175,7 @@ export default function SunspotDisplay({ data, isLoading = false }: SunspotDispl
 
         {/* F10.7 Solar Radio Flux */}
         {data?.current?.observedF107 && data.current.observedF107 > 0 && (
-          <div className={cn('p-3 border-2 rounded', themeClasses.borderColor)}>
+          <div className={'p-3 card-inner rounded'}>
             <div className="flex items-center justify-between">
               <div className={cn('text-xs font-mono uppercase', themeClasses.text)}>
                 F10.7 Radio Flux
@@ -192,7 +192,7 @@ export default function SunspotDisplay({ data, isLoading = false }: SunspotDispl
 
         {/* Monthly Smoothed */}
         {data?.monthlySmoothed && data.monthlySmoothed > 0 && (
-          <div className={cn('p-3 border-2 rounded', themeClasses.borderColor)}>
+          <div className={'p-3 card-inner rounded'}>
             <div className="flex items-center justify-between">
               <div className={cn('text-xs font-mono uppercase', themeClasses.text)}>
                 13-Month Smoothed

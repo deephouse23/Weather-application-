@@ -112,8 +112,8 @@ export default function XRayFluxChart({ data, isLoading = false }: XRayFluxChart
 
   if (isLoading) {
     return (
-      <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)}>
-        <CardHeader className={cn('border-b-2 py-3', themeClasses.borderColor)}>
+      <Card className={cn('container-primary', themeClasses.background)}>
+        <CardHeader className={'border-b border-subtle py-3'}>
           <CardTitle className={cn('text-lg font-mono font-bold', themeClasses.headerText)}>
             X-RAY FLUX
           </CardTitle>
@@ -135,8 +135,8 @@ export default function XRayFluxChart({ data, isLoading = false }: XRayFluxChart
   const description = getClassificationDescription(classification);
 
   return (
-    <Card className={cn('border-4', themeClasses.borderColor, themeClasses.background)} data-testid="xray-flux">
-      <CardHeader className={cn('border-b-2 py-3', themeClasses.borderColor)}>
+    <Card className={cn('container-primary', themeClasses.background)} data-testid="xray-flux">
+      <CardHeader className={'border-b border-subtle py-3'}>
         <div className="flex items-center justify-between">
           <CardTitle className={cn('text-lg font-mono font-bold flex items-center gap-2', themeClasses.headerText)}>
             <Zap className="w-5 h-5 text-yellow-500" />
@@ -209,7 +209,7 @@ export default function XRayFluxChart({ data, isLoading = false }: XRayFluxChart
 
         {/* Flux Values */}
         <div className="grid grid-cols-2 gap-2">
-          <div className={cn('p-3 border-2 rounded', themeClasses.borderColor)}>
+          <div className={'p-3 card-inner rounded'}>
             <div className={cn('text-xs font-mono uppercase mb-1', themeClasses.text)}>
               Long Wave (1-8Å)
             </div>
@@ -217,7 +217,7 @@ export default function XRayFluxChart({ data, isLoading = false }: XRayFluxChart
               {data?.current?.longWave ? formatFlux(data.current.longWave) : '—'} W/m²
             </div>
           </div>
-          <div className={cn('p-3 border-2 rounded', themeClasses.borderColor)}>
+          <div className={'p-3 card-inner rounded'}>
             <div className={cn('text-xs font-mono uppercase mb-1', themeClasses.text)}>
               Short Wave (0.5-4Å)
             </div>
@@ -229,7 +229,7 @@ export default function XRayFluxChart({ data, isLoading = false }: XRayFluxChart
 
         {/* 24h Peak */}
         {data?.peak24h && (
-          <div className={cn('p-3 border-2 rounded', themeClasses.borderColor)}>
+          <div className={'p-3 card-inner rounded'}>
             <div className="flex items-center justify-between">
               <div className={cn('text-xs font-mono uppercase', themeClasses.text)}>
                 24h Peak Flare
@@ -249,7 +249,7 @@ export default function XRayFluxChart({ data, isLoading = false }: XRayFluxChart
 
         {/* Background Level */}
         {data?.background && (
-          <div className={cn('p-3 border-2 rounded', themeClasses.borderColor)}>
+          <div className={'p-3 card-inner rounded'}>
             <div className="flex items-center justify-between">
               <div className={cn('text-xs font-mono uppercase', themeClasses.text)}>
                 Background Level

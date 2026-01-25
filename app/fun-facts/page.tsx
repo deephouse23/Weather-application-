@@ -289,17 +289,15 @@ export default function FunFactsPage() {
             return (
               <Card
                 key={phenomenon.id}
-                className={`border-4 transition-all duration-300 cursor-pointer h-fit`}
-                style={{ boxShadow: `0 0 15px ${themeClasses.shadowColor}33` }}
+                className={`container-primary transition-all duration-300 cursor-pointer h-fit`}
                 onClick={() => toggleCard(phenomenon.id)}
               >
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-3xl">{phenomenon.emoji}</div>
                     <div
-                      className="text-xs font-mono font-bold px-2 py-1 border-2 rounded"
+                      className="text-xs font-mono font-bold px-2 py-1 rounded"
                       style={{
-                        borderColor: getRarityColor(phenomenon.rarity),
                         color: getRarityColor(phenomenon.rarity),
                         backgroundColor: getRarityColor(phenomenon.rarity) + '20'
                       }}
@@ -371,7 +369,7 @@ export default function FunFactsPage() {
                       )}
 
                       {/* 16-Bit Take */}
-                      <div className={`border-2 ${themeClasses.borderColor} p-3 mt-4`}
+                      <div className="card-inner p-3 mt-4 rounded"
                         style={{ backgroundColor: getRarityColor(phenomenon.rarity) + '10' }}>
                         <h4 className={`font-mono font-bold text-sm uppercase mb-2 ${themeClasses.headerText}`}>
                           16-Bit Take:
