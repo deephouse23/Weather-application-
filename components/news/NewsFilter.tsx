@@ -86,8 +86,7 @@ export default function NewsFilter({
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
             className={cn(
-              'pl-10 font-mono border-2',
-              themeClasses.borderColor,
+              'pl-10 font-mono card-inner',
               themeClasses.background,
               themeClasses.text
             )}
@@ -98,7 +97,7 @@ export default function NewsFilter({
           size="icon"
           onClick={onRefresh}
           disabled={isLoading}
-          className={cn('border-2 font-mono', themeClasses.borderColor)}
+          className="font-mono"
           title="Refresh news"
         >
           <RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin')} />
@@ -113,9 +112,8 @@ export default function NewsFilter({
       >
         <TabsList
           className={cn(
-            'w-full flex flex-wrap gap-1 p-1 border-2 font-mono h-auto',
-            themeClasses.background,
-            themeClasses.borderColor
+            'w-full flex flex-wrap gap-1 p-1 font-mono h-auto container-nested',
+            themeClasses.background
           )}
         >
           {categories.map((cat) => {
@@ -125,9 +123,8 @@ export default function NewsFilter({
                 key={cat.id}
                 value={cat.id}
                 className={cn(
-                  'flex items-center gap-1 text-xs sm:text-sm font-bold uppercase tracking-wide border-2 data-[state=active]:border-current transition-all px-2 sm:px-3 py-1.5',
-                  themeClasses.text,
-                  themeClasses.borderColor
+                  'flex items-center gap-1 text-xs sm:text-sm font-bold uppercase tracking-wide data-[state=active]:ring-2 data-[state=active]:ring-current transition-all px-2 sm:px-3 py-1.5 card-inner',
+                  themeClasses.text
                 )}
               >
                 <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -143,12 +140,12 @@ export default function NewsFilter({
         <div className={cn('flex items-center gap-2 text-xs font-mono flex-wrap', themeClasses.text)}>
           <span>Filters:</span>
           {currentCategory !== 'all' && (
-            <span className={cn('px-2 py-1 rounded border', themeClasses.accentText)}>
+            <span className={cn('px-2 py-1 rounded card-inner', themeClasses.accentText)}>
               {categories.find(c => c.id === currentCategory)?.label || currentCategory.toUpperCase()}
             </span>
           )}
           {searchQuery && (
-            <span className={cn('px-2 py-1 rounded border', themeClasses.accentText)}>
+            <span className={cn('px-2 py-1 rounded card-inner', themeClasses.accentText)}>
               &quot;{searchQuery}&quot;
             </span>
           )}

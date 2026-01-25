@@ -40,7 +40,7 @@ export default function SignInPromptModal({ isOpen, onClose }: SignInPromptModal
           </h2>
           <button
             onClick={onClose}
-            className={`p-2 border-2 transition-all duration-200 hover:scale-105 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`}
+            className={`p-2 card-inner rounded transition-all duration-200 hover:scale-105 ${themeClasses.background} ${themeClasses.text} ${themeClasses.hoverBg}`}
           >
             <X className="w-4 h-4" />
           </button>
@@ -77,14 +77,14 @@ export default function SignInPromptModal({ isOpen, onClose }: SignInPromptModal
           <Link
             href="/signin"
             onClick={onClose}
-            className={`w-full flex items-center justify-center px-4 py-3 border-2 text-sm font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 ${themeClasses.accentBg} ${themeClasses.borderColor} text-black ${themeClasses.glow}`}
+            className={`w-full flex items-center justify-center px-4 py-3 text-sm font-mono font-bold uppercase tracking-wider transition-all duration-200 hover:scale-105 rounded ${themeClasses.accentBg} text-black ${themeClasses.glow}`}
           >
             Sign In / Sign Up
           </Link>
-          
+
           <button
             onClick={onClose}
-            className={`w-full px-4 py-2 border-2 text-sm font-mono uppercase tracking-wider transition-all duration-200 hover:scale-105 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`}
+            className={`w-full px-4 py-2 card-inner rounded text-sm font-mono uppercase tracking-wider transition-all duration-200 hover:scale-105 ${themeClasses.background} ${themeClasses.text} ${themeClasses.hoverBg}`}
           >
             Maybe Later
           </button>

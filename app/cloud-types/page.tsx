@@ -405,7 +405,7 @@ export default function CloudTypesPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Achievement Notification */}
         {achievementUnlocked && (
-          <Card className={`fixed top-4 right-4 z-50 border-2 ${themeClasses.borderColor} ${themeClasses.glow}`}>
+          <Card className={`fixed top-4 right-4 z-50 container-primary ${themeClasses.glow}`}>
             <CardContent className="p-4">
               <p className={`font-mono text-sm font-bold ${themeClasses.accentText}`}>
                 {achievementUnlocked}
@@ -424,7 +424,7 @@ export default function CloudTypesPage() {
           </p>
 
           {/* Stats Display */}
-          <Card className={`inline-block border-2 ${themeClasses.borderColor}`}>
+          <Card className="inline-block container-nested">
             <CardContent className="p-4">
               <div className="grid grid-cols-5 gap-4 text-xs font-mono">
                 <div className="text-center">
@@ -459,7 +459,7 @@ export default function CloudTypesPage() {
               <TabsTrigger
                 key={category}
                 value={category}
-                className={`px-4 py-2 border-2 text-xs font-mono font-bold uppercase tracking-wider ${themeClasses.borderColor} data-[state=active]:${themeClasses.accentBg} data-[state=active]:text-black`}
+                className={`px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider card-inner data-[state=active]:${themeClasses.accentBg} data-[state=active]:text-black`}
               >
                 {category.toUpperCase()}
                 {category !== 'all' && (
@@ -483,7 +483,7 @@ export default function CloudTypesPage() {
               {/* Cloud Card */}
               <Card
                 onClick={() => handleCloudToggle(cloud.id)}
-                className={`cursor-pointer transition-all duration-300 hover:scale-105 border-2 ${themeClasses.borderColor} ${expandedCloudId === cloud.id ? themeClasses.glow : ''}`}
+                className={`cursor-pointer transition-all duration-300 hover:scale-105 container-primary ${expandedCloudId === cloud.id ? themeClasses.glow : ''}`}
               >
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
@@ -512,7 +512,7 @@ export default function CloudTypesPage() {
                   </div>
 
                   {/* 16-bit Description */}
-                  <div className={`mt-3 p-2 border ${themeClasses.borderColor} bg-opacity-50`}>
+                  <div className="mt-3 p-2 card-inner rounded bg-opacity-50">
                     <p className={`font-mono text-xs italic ${themeClasses.text}`}>
                       &ldquo;{cloud.description16bit}&rdquo;
                     </p>
@@ -527,7 +527,7 @@ export default function CloudTypesPage() {
 
               {/* Expanded Details */}
               {expandedCloudId === cloud.id && (
-                <Card className={`col-span-full mt-6 border-2 ${themeClasses.borderColor} ${themeClasses.glow}`}>
+                <Card className={`col-span-full mt-6 container-primary ${themeClasses.glow}`}>
                   <CardHeader>
                     <CardTitle className={`text-2xl font-mono uppercase tracking-wider text-center ${themeClasses.accentText}`}>
                       [{cloud.abbreviation}] {cloud.name} TECHNICAL ANALYSIS
@@ -540,7 +540,7 @@ export default function CloudTypesPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                       {/* Technical Specifications */}
                       <div>
-                        <h4 className={`text-lg font-bold mb-4 font-mono ${themeClasses.accentText} border-b-2 pb-2 ${themeClasses.borderColor}`}>
+                        <h4 className={`text-lg font-bold mb-4 font-mono ${themeClasses.accentText} border-b pb-2 border-subtle`}>
                           TECHNICAL SPECIFICATIONS
                         </h4>
                         <div className="space-y-3 text-sm font-mono">
@@ -595,7 +595,7 @@ export default function CloudTypesPage() {
 
                       {/* Visual & Formation Info */}
                       <div>
-                        <h4 className={`text-lg font-bold mb-4 font-mono ${themeClasses.accentText} border-b-2 pb-2 ${themeClasses.borderColor}`}>
+                        <h4 className={`text-lg font-bold mb-4 font-mono ${themeClasses.accentText} border-b pb-2 border-subtle`}>
                           VISUAL & FORMATION
                         </h4>
                         <div className="space-y-4 text-sm font-mono">
@@ -618,13 +618,13 @@ export default function CloudTypesPage() {
 
                       {/* Weather Impact & Facts */}
                       <div>
-                        <h4 className={`text-lg font-bold mb-4 font-mono ${themeClasses.accentText} border-b-2 pb-2 ${themeClasses.borderColor}`}>
+                        <h4 className={`text-lg font-bold mb-4 font-mono ${themeClasses.accentText} border-b pb-2 border-subtle`}>
                           WEATHER IMPACT & DATA
                         </h4>
                         <div className="space-y-4 text-sm font-mono">
                           <div>
                             <div className={`${themeClasses.accentText} mb-2 font-bold`}>Weather Prediction:</div>
-                            <div className={`p-2 border rounded font-bold ${themeClasses.borderColor} ${themeClasses.text}`}>
+                            <div className={`p-2 card-inner rounded font-bold ${themeClasses.text}`}>
                               {cloud.weatherPrediction}
                             </div>
                           </div>
@@ -653,7 +653,7 @@ export default function CloudTypesPage() {
                       <Button
                         onClick={() => setExpandedCloudId(null)}
                         variant="outline"
-                        className={`font-mono font-bold uppercase tracking-wider border-2 ${themeClasses.borderColor}`}
+                        className="font-mono font-bold uppercase tracking-wider"
                       >
                         CLOSE TECHNICAL ANALYSIS
                       </Button>
@@ -666,7 +666,7 @@ export default function CloudTypesPage() {
         </div>
 
         {/* Educational Section */}
-        <Card className={`mt-16 max-w-6xl mx-auto border-4 ${themeClasses.borderColor}`}>
+        <Card className="mt-16 max-w-6xl mx-auto container-primary">
           <CardHeader>
             <CardTitle className={`text-2xl font-mono uppercase tracking-wider text-center ${themeClasses.accentText}`}>
               CLOUD FORMATION DATABASE
@@ -709,7 +709,7 @@ export default function CloudTypesPage() {
         </Card>
 
         {/* Achievement System */}
-        <Card className={`mt-8 max-w-4xl mx-auto border-2 ${themeClasses.borderColor}`}>
+        <Card className="mt-8 max-w-4xl mx-auto container-nested">
           <CardHeader>
             <CardTitle className={`text-lg font-mono uppercase text-center ${themeClasses.accentText}`}>
               CLOUD SPOTTER ACHIEVEMENTS
