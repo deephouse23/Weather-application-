@@ -186,18 +186,40 @@ export async function seedFreshWeatherCache(page: Page, opts: StubOptions = {}):
 
 export async function setupStableApp(page: Page, opts: StubOptions = {}): Promise<void> {
   // Set test mode cookie to bypass middleware auth checks
-  // NOTE: Use URL instead of domain+path for localhost to ensure proper cookie propagation
+  // Use the actual test URL (from env or default to localhost)
+  const testUrl = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://127.0.0.1:3000';
+  const isHttps = testUrl.startsWith('https');
+  
   await page.context().addCookies([{
     name: 'playwright-test-mode',
     value: 'true',
-    url: 'http://127.0.0.1:3000',  // URL includes domain and path, don't set path separately
+    url: testUrl,
     httpOnly: false,
-    secure: false,
+    secure: isHttps,
     sameSite: 'Lax',
   }]);
 
   await seedFreshWeatherCache(page, opts);
   await stubWeatherApis(page, opts);
+  
+  // Stub IP geolocation services (they fail in cloud browsers)
+  await page.route('**/ipapi.co/**', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ city: 'New York', region: 'NY', country: 'US', latitude: 40.7128, longitude: -74.006 })
+  }));
+  
+  await page.route('**/ipinfo.io/**', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ city: 'New York', region: 'NY', country: 'US', loc: '40.7128,-74.006' })
+  }));
+  
+  await page.route('**/api.ipgeolocation.io/**', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ city: 'New York', state_prov: 'NY', country_name: 'US', latitude: 40.7128, longitude: -74.006 })
+  }));
 }
 
 export async function expectHomeLoaded(page: Page): Promise<void> {
@@ -311,13 +333,16 @@ export async function setupMockAuth(page: Page, userId: string = '00000000-0000-
   // Avoid persisting access/refresh tokens in clear text in tests (cookies/localStorage),
   // as code scanning flags this. Playwright test mode bypasses middleware via this cookie,
   // and auth behavior is mocked via route intercepts above.
+  const testUrl = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://127.0.0.1:3000';
+  const isHttps = testUrl.startsWith('https');
+  
   await page.context().addCookies([
     {
       name: 'playwright-test-mode',
       value: 'true',
-      url: 'http://127.0.0.1:3000',
+      url: testUrl,
       httpOnly: false,
-      secure: false,
+      secure: isHttps,
       sameSite: 'Lax' as const,
     },
   ]);
