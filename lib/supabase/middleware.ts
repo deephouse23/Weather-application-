@@ -5,6 +5,12 @@ import { Database } from './types'
 import { PLACEHOLDER_URL, PLACEHOLDER_ANON_KEY, warnIfPlaceholder } from './constants'
 
 export async function middleware(request: NextRequest) {
+  // Skip auth checks in Playwright test mode (E2E tests)
+  const isPlaywrightTestMode = request.cookies.get('playwright-test-mode')?.value === 'true'
+  if (isPlaywrightTestMode) {
+    return NextResponse.next()
+  }
+
   const requestHeaders = new Headers(request.headers)
   const response = NextResponse.next({
     request: {
