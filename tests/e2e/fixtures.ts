@@ -6,6 +6,11 @@
  *
  * Mode is determined by KERNEL_API_KEY environment variable.
  */
+
+/* eslint-disable react-hooks/rules-of-hooks */
+// Note: Playwright's use() function is not a React hook, but ESLint's
+// react-hooks plugin incorrectly flags it. Safe to disable for test fixtures.
+
 import { test as base, expect as baseExpect, chromium, type BrowserContext, type Page, type Browser } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
