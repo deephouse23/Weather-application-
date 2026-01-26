@@ -1,0 +1,82 @@
+name: E2E Tests on Vercel Preview
+
+on:
+  deployment_status:
+
+jobs:
+  e2e-preview:
+    # Only run on successful deployments (Vercel uses "Preview" or "Preview – project-name")
+    if: |
+      github.event.deployment_status.state == 'success' &&
+      (contains(github.event.deployment_status.environment, 'Preview') ||
+       contains(github.event.deployment_status.environment, 'preview'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      # Vercel may use target_url or environment_url depending on integration version
+      PREVIEW_URL: ${{ github.event.deployment_status.target_url || github.event.deployment_status.environment_url }}
+
+    steps:
+      - name: Debug deployment info
+        run: |
+          echo "🔍 Deployment Status Event:"
+          echo "  Environment: ${{ github.event.deployment_status.environment }}"
+          echo "  State: ${{ github.event.deployment_status.state }}"
+          echo "  Target URL: ${{ github.event.deployment_status.target_url }}"
+          echo "  Environment URL: ${{ github.event.deployment_status.environment_url }}"
+          echo "  Using: ${{ env.PREVIEW_URL }}"
+
+      - name: Validate preview URL
+        run: |
+          if [ -z "${{ env.PREVIEW_URL }}" ]; then
+            echo "❌ Error: No preview URL found in deployment_status event"
+            exit 1
+          fi
+          echo "✅ Preview URL: ${{ env.PREVIEW_URL }}"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify Kernel SDK installed
+        run: |
+          if ! npm ls @onkernel/sdk > /dev/null 2>&1; then
+            echo "❌ @onkernel/sdk not found in dependencies"
+            exit 1
+          fi
+          echo "✅ @onkernel/sdk installed"
+
+      - name: Verify KERNEL_API_KEY is set
+        run: |
+          if [ -z "${{ secrets.KERNEL_API_KEY }}" ]; then
+            echo "❌ KERNEL_API_KEY secret is not set"
+            echo "   Please add it to repository Settings > Secrets > Actions"
+            exit 1
+          fi
+          echo "✅ KERNEL_API_KEY is configured"
+
+      # Note: No 'npx playwright install' - Kernel provides cloud browsers
+
+      - name: Run E2E tests against Vercel preview
+        run: npm run test:e2e:ci
+        env:
+          CI: true
+          KERNEL_API_KEY: ${{ secrets.KERNEL_API_KEY }}
+          PLAYWRIGHT_TEST_BASE_URL: ${{ env.PREVIEW_URL }}
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ github.run_id }}
+          path: playwright-report/
+          retention-days: 14
