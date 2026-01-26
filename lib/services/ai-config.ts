@@ -31,7 +31,7 @@ export interface WeatherContext {
     rain24h?: number;
 }
 
-// Extended context for Earth Sciences (weather + seismic + volcanic + aviation data)
+// Extended context for Earth Sciences (weather + seismic + volcanic + aviation + space data)
 export interface EarthSciencesContext extends WeatherContext {
     earthquakes?: {
         contextBlock: string; // Pre-formatted context block for the system prompt
@@ -46,6 +46,11 @@ export interface EarthSciencesContext extends WeatherContext {
         contextBlock: string; // Pre-formatted context block for aviation alerts
         hasActiveAlerts: boolean;
         alertCount: number;
+    };
+    spaceWeather?: {
+        contextBlock: string; // Pre-formatted context block for space weather
+        kpIndex: number | null;
+        auroraActivity: string;
     };
     // Coordinates for earthquake lookups
     lat?: number;
@@ -123,13 +128,14 @@ export function buildSystemPrompt(
         
         // 24-hour totals (premium data for authenticated users)
         if (weatherContext.snow24h !== undefined || weatherContext.rain24h !== undefined) {
-            precipInfo += '24-HOUR PRECIPITATION TOTALS:\n';
+            precipInfo += 'PRECIPITATION TOTALS (LAST 24 HOURS):\n';
             if (weatherContext.snow24h !== undefined) {
-                precipInfo += `  Snowfall (24h): ${weatherContext.snow24h.toFixed(1)}"\n`;
+                precipInfo += `  Snowfall: ${weatherContext.snow24h.toFixed(1)} inches\n`;
             }
             if (weatherContext.rain24h !== undefined) {
-                precipInfo += `  Rainfall (24h): ${weatherContext.rain24h.toFixed(2)}"\n`;
+                precipInfo += `  Rainfall: ${weatherContext.rain24h.toFixed(2)} inches\n`;
             }
+            precipInfo += '\n';
         }
         
         // Current precipitation rates
@@ -177,6 +183,12 @@ CRITICAL INSTRUCTIONS - READ CAREFULLY:
 5. Format example for snow question in Tahoe:
    - Check forecast for Thursday
    - Report: "Thursday in South Lake Tahoe shows [condition] with a high of [X]°F and low of [Y]°F"
+
+6. PRECIPITATION QUERIES - When users ask "How much snow/rain fell?":
+   - ALWAYS quote the actual numbers from the precipitation data above
+   - Include timeframes: "8.2 inches of snow in the last 24 hours"
+   - If forecast data shows upcoming precipitation, mention it: "...with another 3-5 inches expected tonight"
+   - Example: "Boston received 8.2 inches of snow in the last 24 hours. The 7-day total is 15.6 inches."
 `;
 
         // Add earthquake data if available
@@ -221,6 +233,21 @@ AVIATION DATA INSTRUCTIONS:
 - Quote actual alert details: hazard type, affected regions, altitudes (FL = Flight Level in hundreds of feet)
 - For turbulence questions: explain severity levels (light/moderate/severe/extreme)
 - IMPORTANT: This data is for informational purposes only, NOT for operational flight planning
+`;
+        }
+
+        // Add space weather data if available
+        if (earthContext?.spaceWeather?.contextBlock) {
+            contextInfo += `
+${earthContext.spaceWeather.contextBlock}
+
+SPACE WEATHER DATA INSTRUCTIONS:
+- Quote actual Kp index and solar wind values from the data above
+- For aurora questions: Use the viewline latitude to determine visibility for user's location
+- Kp 3-4 = aurora visible at 55-58°N (northern US border), Kp 5+ = visible at 45-50°N (central US)
+- Bz component: Negative values favor aurora activity (energy transfer into magnetosphere)
+- Solar wind speed: 400-500 km/s normal, 600+ km/s elevated, 800+ km/s high
+- If asked about aurora tonight: Check Kp forecast and give probability for their location
 `;
         }
     } else {
@@ -283,6 +310,19 @@ AVIATION DATA INSTRUCTIONS:
 - When asked about flight conditions, reference specific alerts from the data
 - Quote actual alert details: hazard type, affected regions, altitudes
 - IMPORTANT: This data is for informational purposes only, NOT for operational flight planning
+`;
+        }
+
+        // Add space weather data even without weather data (space weather is global)
+        if (earthContext?.spaceWeather?.contextBlock) {
+            contextInfo += `
+${earthContext.spaceWeather.contextBlock}
+
+SPACE WEATHER DATA INSTRUCTIONS:
+- Quote actual Kp index and solar wind values from the data above
+- For aurora questions: Use the viewline latitude to determine visibility
+- Kp 3-4 = aurora visible at 55-58°N (northern US border), Kp 5+ = visible at 45-50°N (central US)
+- Bz component: Negative values favor aurora activity
 `;
         }
     }

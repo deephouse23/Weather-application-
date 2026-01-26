@@ -1,12 +1,18 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { setupStableApp, setupMockAuth, stubSupabaseProfile, setTheme, getCurrentTheme, navigateToProfile, navigateToMapPage, waitForRadarToLoad, checkRadarVisibility } from '../fixtures/utils';
+
+// Check if running in Kernel cloud browsers (Preview/CI mode)
+const useKernelBrowsers = !!process.env.KERNEL_API_KEY;
 
 test.describe('Theme System', () => {
   test.beforeEach(async ({ page }) => {
     await setupStableApp(page);
   });
 
+  // Skip this test in Preview/CI - auth mocking doesn't work with Kernel cloud browsers
   test('can change theme via profile page', async ({ page }) => {
+    test.skip(useKernelBrowsers, 'Auth mocking not supported in Kernel cloud browsers');
+    
     await setupMockAuth(page);
     await stubSupabaseProfile(page, {
       id: '00000000-0000-0000-0000-000000000000',
@@ -114,7 +120,8 @@ test.describe('Theme System', () => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     
     // Verify search input is visible
-    await expect(page.getByTestId('location-search-input')).toBeVisible({ timeout: 10000 });
+    // Use .first() to handle potential duplicate elements during Suspense hydration
+    await expect(page.getByTestId('location-search-input').first()).toBeVisible({ timeout: 10000 });
     
     // Verify theme is applied
     const currentTheme = await getCurrentTheme(page);
