@@ -30,7 +30,6 @@ async function initSentryLazy() {
   try {
     // Dynamic import - only loads Sentry when called
     const Sentry = await import('@sentry/nextjs');
-    sentryModule = Sentry;
 
     Sentry.init({
       dsn: sentryDsn,
@@ -43,6 +42,8 @@ async function initSentryLazy() {
       integrations: [],
     });
 
+    // Only expose module reference after successful initialization
+    sentryModule = Sentry;
     sentryInitialized = true;
   } catch (error) {
     // Silent fail

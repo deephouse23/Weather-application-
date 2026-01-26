@@ -9,12 +9,15 @@
  */
 
 import type { Metadata } from 'next'
-import { Suspense, lazy } from 'react'
+import { Suspense } from 'react'
+import dynamic from 'next/dynamic'
 import { WeatherCardsSkeleton } from '@/components/home-shell'
 
-// PERFORMANCE: Lazy load HomeClient so Suspense fallback renders while it loads
+// PERFORMANCE: Use next/dynamic for proper SSR streaming with fallback
 // This enables the server-rendered shell to display immediately as LCP
-const HomeClient = lazy(() => import('./home-client'))
+const HomeClient = dynamic(() => import('./home-client'), {
+  ssr: true, // Enable SSR but lazy-load the component
+})
 
 export const metadata: Metadata = {
   title: '16 Bit Weather - Retro Terminal Weather Forecast App',
