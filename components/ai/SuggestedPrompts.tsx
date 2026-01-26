@@ -18,12 +18,30 @@ import { Button } from '@/components/ui/button';
 
 const suggestedPrompts = [
   {
+    category: 'Precipitation',
+    prompts: [
+      "How much snow fell in Boston yesterday?",
+      "What's the rainfall total for Seattle this week?",
+      "Is it snowing anywhere in Colorado right now?",
+      "Compare snowfall in Denver vs Salt Lake City"
+    ]
+  },
+  {
     category: 'Aviation',
     prompts: [
       "I'm flying from LAX to JFK tomorrow. Should I expect turbulence?",
       "What SIGMETs are active over the Rocky Mountains?",
-      "Explain what causes mountain wave turbulence.",
-      "What altitude should I fly to avoid the jet stream?"
+      "Should I be worried about my flight to Denver?",
+      "Explain what causes clear air turbulence."
+    ]
+  },
+  {
+    category: 'Space Weather',
+    prompts: [
+      "Will I be able to see the aurora tonight?",
+      "What's the current solar activity like?",
+      "Is there a solar storm coming this week?",
+      "Explain what the Kp index means for aurora visibility."
     ]
   },
   {
@@ -31,17 +49,26 @@ const suggestedPrompts = [
     prompts: [
       "What's causing the extreme temperatures today?",
       "Is there a storm system moving across the midwest?",
-      "Why do hurricanes form in the Atlantic?",
-      "What's the difference between a watch and a warning?"
+      "What's the difference between a watch and a warning?",
+      "Should I go skiing in Colorado or Utah this weekend?"
+    ]
+  },
+  {
+    category: 'Earthquakes',
+    prompts: [
+      "Were there any earthquakes near me today?",
+      "How do earthquakes work?",
+      "Tell me about the San Andreas Fault.",
+      "What's the difference between magnitude and intensity?"
     ]
   },
   {
     category: 'Education',
     prompts: [
       "How do meteorologists predict the weather?",
-      "What are the different types of clouds?",
+      "What causes ball lightning?",
       "Explain the Coriolis effect in simple terms.",
-      "What causes ball lightning?"
+      "What is a coronal mass ejection?"
     ]
   }
 ];

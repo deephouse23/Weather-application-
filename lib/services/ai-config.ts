@@ -123,13 +123,14 @@ export function buildSystemPrompt(
         
         // 24-hour totals (premium data for authenticated users)
         if (weatherContext.snow24h !== undefined || weatherContext.rain24h !== undefined) {
-            precipInfo += '24-HOUR PRECIPITATION TOTALS:\n';
+            precipInfo += 'PRECIPITATION TOTALS (LAST 24 HOURS):\n';
             if (weatherContext.snow24h !== undefined) {
-                precipInfo += `  Snowfall (24h): ${weatherContext.snow24h.toFixed(1)}"\n`;
+                precipInfo += `  Snowfall: ${weatherContext.snow24h.toFixed(1)} inches\n`;
             }
             if (weatherContext.rain24h !== undefined) {
-                precipInfo += `  Rainfall (24h): ${weatherContext.rain24h.toFixed(2)}"\n`;
+                precipInfo += `  Rainfall: ${weatherContext.rain24h.toFixed(2)} inches\n`;
             }
+            precipInfo += '\n';
         }
         
         // Current precipitation rates
@@ -177,6 +178,12 @@ CRITICAL INSTRUCTIONS - READ CAREFULLY:
 5. Format example for snow question in Tahoe:
    - Check forecast for Thursday
    - Report: "Thursday in South Lake Tahoe shows [condition] with a high of [X]°F and low of [Y]°F"
+
+6. PRECIPITATION QUERIES - When users ask "How much snow/rain fell?":
+   - ALWAYS quote the actual numbers from the precipitation data above
+   - Include timeframes: "8.2 inches of snow in the last 24 hours"
+   - If forecast data shows upcoming precipitation, mention it: "...with another 3-5 inches expected tonight"
+   - Example: "Boston received 8.2 inches of snow in the last 24 hours. The 7-day total is 15.6 inches."
 `;
 
         // Add earthquake data if available
