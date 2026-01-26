@@ -82,7 +82,7 @@ export interface PrecipitationContext {
 }
 
 export interface SpaceWeatherContext {
-  kpIndex: number;
+  kpIndex: number | null;
   kpForecast?: number;
   auroraActivity: string;
   auroraViewline: {

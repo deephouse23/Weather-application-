@@ -49,7 +49,7 @@ export interface EarthSciencesContext extends WeatherContext {
     };
     spaceWeather?: {
         contextBlock: string; // Pre-formatted context block for space weather
-        kpIndex: number;
+        kpIndex: number | null;
         auroraActivity: string;
     };
     // Coordinates for earthquake lookups
