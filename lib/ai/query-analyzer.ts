@@ -91,10 +91,10 @@ const QUERY_PATTERNS: Record<ContextType, RegExp[]> = {
     /wind\s*shear/i,
     /microburst/i,
     /convective/i,
-    /\b[A-Z]{4}\b/, // ICAO airport codes (e.g., KJFK, KLAX)
-    /\b[A-Z]{2}\d{1,4}\b/, // Flight numbers (e.g., AA123, UA456)
-    /from\s+[A-Z]{3}\s+to\s+[A-Z]{3}/i, // "from LAX to JFK"
-    /to\s+[A-Z]{3}\s+from\s+[A-Z]{3}/i, // "to JFK from LAX"
+    /\b[A-Za-z]{4}\b/i, // ICAO airport codes (e.g., KJFK, KLAX, kjfk)
+    /\b[A-Za-z]{2}\d{1,4}\b/i, // Flight numbers (e.g., AA123, UA456, aa123)
+    /from\s+[A-Za-z]{3}\s+to\s+[A-Za-z]{3}/i, // "from LAX to JFK"
+    /to\s+[A-Za-z]{3}\s+from\s+[A-Za-z]{3}/i, // "to JFK from LAX"
   ],
   earthquake: [
     /earthquake/i,
@@ -255,8 +255,8 @@ export function extractFlightInfo(query: string): {
 } | null {
   const result: { flightNumber?: string; departure?: string; arrival?: string } = {};
 
-  // Flight number pattern (e.g., AA123, UA456, DL789)
-  const flightMatch = query.match(/\b([A-Z]{2})(\d{1,4})\b/);
+  // Flight number pattern (e.g., AA123, UA456, DL789, aa123)
+  const flightMatch = query.match(/\b([A-Za-z]{2})(\d{1,4})\b/i);
   if (flightMatch) {
     result.flightNumber = flightMatch[0];
   }

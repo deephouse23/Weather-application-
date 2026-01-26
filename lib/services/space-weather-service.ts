@@ -14,7 +14,7 @@ export interface SpaceWeatherContext {
 }
 
 interface KpData {
-  current: number;
+  current: number | null;
   forecast?: number;
   maxForecast?: number;
 }
@@ -43,17 +43,18 @@ async function fetchKpIndex(baseUrl: string): Promise<KpData> {
     });
 
     if (!response.ok) {
-      return { current: 0 };
+      return { current: null };
     }
 
     const data = await response.json();
+    const currentValue = data.data?.current?.value;
     return {
-      current: data.data?.current?.value || 0,
+      current: typeof currentValue === 'number' ? currentValue : null,
       forecast: data.data?.forecast?.expected,
       maxForecast: data.data?.forecast?.maxExpected
     };
   } catch {
-    return { current: 0 };
+    return { current: null };
   }
 }
 
