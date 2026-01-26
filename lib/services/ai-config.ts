@@ -31,7 +31,7 @@ export interface WeatherContext {
     rain24h?: number;
 }
 
-// Extended context for Earth Sciences (weather + seismic + volcanic + aviation data)
+// Extended context for Earth Sciences (weather + seismic + volcanic + aviation + space data)
 export interface EarthSciencesContext extends WeatherContext {
     earthquakes?: {
         contextBlock: string; // Pre-formatted context block for the system prompt
@@ -46,6 +46,11 @@ export interface EarthSciencesContext extends WeatherContext {
         contextBlock: string; // Pre-formatted context block for aviation alerts
         hasActiveAlerts: boolean;
         alertCount: number;
+    };
+    spaceWeather?: {
+        contextBlock: string; // Pre-formatted context block for space weather
+        kpIndex: number;
+        auroraActivity: string;
     };
     // Coordinates for earthquake lookups
     lat?: number;
@@ -230,6 +235,21 @@ AVIATION DATA INSTRUCTIONS:
 - IMPORTANT: This data is for informational purposes only, NOT for operational flight planning
 `;
         }
+
+        // Add space weather data if available
+        if (earthContext?.spaceWeather?.contextBlock) {
+            contextInfo += `
+${earthContext.spaceWeather.contextBlock}
+
+SPACE WEATHER DATA INSTRUCTIONS:
+- Quote actual Kp index and solar wind values from the data above
+- For aurora questions: Use the viewline latitude to determine visibility for user's location
+- Kp 3-4 = aurora visible at 55-58°N (northern US border), Kp 5+ = visible at 45-50°N (central US)
+- Bz component: Negative values favor aurora activity (energy transfer into magnetosphere)
+- Solar wind speed: 400-500 km/s normal, 600+ km/s elevated, 800+ km/s high
+- If asked about aurora tonight: Check Kp forecast and give probability for their location
+`;
+        }
     } else {
         contextInfo = `
 NOTE: No real-time weather data fetched yet.
@@ -290,6 +310,19 @@ AVIATION DATA INSTRUCTIONS:
 - When asked about flight conditions, reference specific alerts from the data
 - Quote actual alert details: hazard type, affected regions, altitudes
 - IMPORTANT: This data is for informational purposes only, NOT for operational flight planning
+`;
+        }
+
+        // Add space weather data even without weather data (space weather is global)
+        if (earthContext?.spaceWeather?.contextBlock) {
+            contextInfo += `
+${earthContext.spaceWeather.contextBlock}
+
+SPACE WEATHER DATA INSTRUCTIONS:
+- Quote actual Kp index and solar wind values from the data above
+- For aurora questions: Use the viewline latitude to determine visibility
+- Kp 3-4 = aurora visible at 55-58°N (northern US border), Kp 5+ = visible at 45-50°N (central US)
+- Bz component: Negative values favor aurora activity
 `;
         }
     }

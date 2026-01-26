@@ -30,6 +30,10 @@ import {
 import {
     getAviationContext
 } from '@/lib/services/aviation-service';
+import {
+    getSpaceWeatherContext,
+    isSpaceWeatherQuery
+} from '@/lib/services/space-weather-service';
 
 // Get user from request
 async function getAuthenticatedUser(request: NextRequest) {
@@ -566,24 +570,31 @@ export async function POST(request: NextRequest) {
         // Fetch aviation data (global - SIGMETs/AIRMETs for aviation questions)
         const aviationPromise = getAviationContext();
 
+        // Fetch space weather data if the query is about space weather, aurora, etc.
+        const spaceWeatherPromise = isSpaceWeatherQuery(message)
+            ? getSpaceWeatherContext()
+            : Promise.resolve(null);
+
         // Save user message to history and fetch earth sciences data in parallel
-        const [, earthquakeData, volcanoData, aviationData] = await Promise.all([
+        const [, earthquakeData, volcanoData, aviationData, spaceWeatherData] = await Promise.all([
             saveMessage(user.id, {
                 role: 'user',
                 content: message
             }),
             earthquakePromise,
             volcanoPromise,
-            aviationPromise
+            aviationPromise,
+            spaceWeatherPromise
         ]);
 
-        // Merge earthquake, volcano, and aviation data into context
-        if (earthquakeData || volcanoData || aviationData?.hasActiveAlerts) {
+        // Merge earthquake, volcano, aviation, and space weather data into context
+        if (earthquakeData || volcanoData || aviationData?.hasActiveAlerts || spaceWeatherData) {
             earthSciencesContext = {
                 ...earthSciencesContext,
                 ...(earthquakeData && { earthquakes: earthquakeData }),
                 ...(volcanoData && { volcanoes: volcanoData }),
-                ...(aviationData?.hasActiveAlerts && { aviation: aviationData })
+                ...(aviationData?.hasActiveAlerts && { aviation: aviationData }),
+                ...(spaceWeatherData && { spaceWeather: spaceWeatherData })
             };
         }
 
