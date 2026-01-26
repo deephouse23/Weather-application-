@@ -23,6 +23,7 @@ dotenv.config({ path: path.resolve(__dirname, '.env.local') });
 
 const useKernelBrowsers = !!process.env.KERNEL_API_KEY;
 const baseURL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://127.0.0.1:3000';
+const vercelBypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 
 // Validate configuration: Kernel browsers require a real test URL (not localhost)
 if (useKernelBrowsers && !process.env.PLAYWRIGHT_TEST_BASE_URL) {
@@ -75,6 +76,7 @@ export default defineConfig({
     navigationTimeout: 30000,
     extraHTTPHeaders: {
       'x-playwright-test-mode': 'true',
+      ...(vercelBypassSecret ? { 'x-vercel-protection-bypass': vercelBypassSecret } : {}),
     },
   },
 

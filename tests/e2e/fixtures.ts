@@ -100,10 +100,13 @@ export const test = useKernelBrowsers
         }
 
         // Create new context for this test
+        // Include Vercel bypass header if secret is set (for deployment protection)
+        const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
         const context = await sharedBrowser.newContext({
           baseURL,
           extraHTTPHeaders: {
             'x-playwright-test-mode': 'true',
+            ...(bypassSecret ? { 'x-vercel-protection-bypass': bypassSecret } : {}),
           },
         });
 
