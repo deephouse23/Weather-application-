@@ -234,7 +234,8 @@ export async function getSpaceWeatherContext(): Promise<SpaceWeatherContext | nu
     ]);
 
     // Only return context if we have valid Kp data
-    if (kpData.current === 0 && !solarWindData) {
+    // Note: kpData.current === null means API failure, kpData.current === 0 is valid "quiet" reading
+    if (kpData.current === null && !solarWindData) {
       return null;
     }
 

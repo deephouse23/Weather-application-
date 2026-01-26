@@ -6,7 +6,12 @@ import { PLACEHOLDER_URL, PLACEHOLDER_ANON_KEY, warnIfPlaceholder } from './cons
 
 export async function middleware(request: NextRequest) {
   // Skip auth checks in Playwright test mode (E2E tests)
-  const isPlaywrightTestMode = request.cookies.get('playwright-test-mode')?.value === 'true'
+  // SECURITY: Only allow bypass when explicitly enabled via env var AND not in production
+  const isPlaywrightTestMode =
+    process.env.PLAYWRIGHT_TEST_MODE === 'true' &&
+    process.env.NODE_ENV !== 'production' &&
+    request.cookies.get('playwright-test-mode')?.value === 'true'
+  
   if (isPlaywrightTestMode) {
     return NextResponse.next()
   }

@@ -175,8 +175,9 @@ export class AIContextManager {
     };
 
     // Determine coordinates if we have a location
+    // Note: Use !== undefined to allow lat=0 or lon=0 (equator/prime meridian)
     let coords: { lat: number; lon: number } | null = null;
-    if (params.lat && params.lon) {
+    if (params.lat !== undefined && params.lon !== undefined) {
       coords = { lat: params.lat, lon: params.lon };
     } else if (params.location) {
       coords = await this.geocodeLocation(params.location);
@@ -341,7 +342,8 @@ export class AIContextManager {
       const auroraData = auroraResponse.ok ? await auroraResponse.json() : null;
       const solarWindData = solarWindResponse.ok ? await solarWindResponse.json() : null;
 
-      const kpIndex = kpData?.data?.current?.value || 0;
+      // Use ?? null to preserve 0 as valid "quiet" reading, only null means missing data
+      const kpIndex = kpData?.data?.current?.value ?? null;
 
       return {
         kpIndex,

@@ -72,6 +72,7 @@ jobs:
           CI: true
           KERNEL_API_KEY: ${{ secrets.KERNEL_API_KEY }}
           PLAYWRIGHT_TEST_BASE_URL: ${{ env.PREVIEW_URL }}
+          PLAYWRIGHT_TEST_MODE: 'true'
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
       - name: Upload Playwright report

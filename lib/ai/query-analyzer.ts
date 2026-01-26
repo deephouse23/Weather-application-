@@ -258,7 +258,8 @@ export function extractFlightInfo(query: string): {
   // Flight number pattern (e.g., AA123, UA456, DL789, aa123)
   const flightMatch = query.match(/\b([A-Za-z]{2})(\d{1,4})\b/i);
   if (flightMatch) {
-    result.flightNumber = flightMatch[0];
+    // Uppercase the flight number for consistency
+    result.flightNumber = flightMatch[0].toUpperCase();
   }
 
   // Airport codes pattern (e.g., "LAX to JFK", "from SFO to DEN")
