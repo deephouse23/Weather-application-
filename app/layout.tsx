@@ -27,11 +27,12 @@ import ErrorBoundaryWrapper from "@/components/error-boundary"
 import AuthDebug from "@/components/auth/auth-debug"
 
 // PERFORMANCE: Use next/font for non-blocking font loading
+// Include all weights used in codebase (400, 500, 600, 700, 800)
 const inconsolata = Inconsolata({
   subsets: ["latin"],
   display: 'swap',
   variable: '--font-inconsolata',
-  weight: ['300', '400', '500', '600', '700', '800'],
+  weight: ['400', '500', '600', '700', '800'], // 500=medium, 800=extrabold used in components
 })
 
 const vt323 = VT323({

@@ -1,49 +1,79 @@
 // Instrumentation client configuration
 // This file replaces sentry.client.config.ts (deprecated in Next.js with Turbopack)
-import * as Sentry from '@sentry/nextjs';
 
-// Only initialize Sentry if DSN is configured and valid
-const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN;
+// PERFORMANCE: Defer Sentry initialization to after page load to improve LCP and TBT
+// Sentry adds ~200KB to the bundle and blocks the main thread during initialization
 
-if (sentryDsn && sentryDsn.includes('sentry.io')) {
+let sentryInitialized = false;
+let sentryModule: typeof import('@sentry/nextjs') | null = null;
+
+/**
+ * Lazy initialize Sentry after the page has loaded
+ * This significantly improves initial page load performance
+ */
+async function initSentryLazy() {
+  if (sentryInitialized || typeof window === 'undefined') return;
+
+  const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN;
+  if (!sentryDsn) return;
+
+  // Validate DSN is a valid URL (supports both sentry.io and self-hosted instances)
   try {
+    new URL(sentryDsn);
+  } catch {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('⚠️ Sentry client: Invalid DSN format:', sentryDsn);
+    }
+    return;
+  }
+
+  try {
+    // Dynamic import - only loads Sentry when called
+    const Sentry = await import('@sentry/nextjs');
+
     Sentry.init({
       dsn: sentryDsn,
-
-      // Enable Sentry Logs
       enableLogs: true,
-
-      // PERFORMANCE: Disable tracing entirely for now to reduce bundle size
-      // Re-enable with lower sample rate if needed: process.env.NODE_ENV === 'production' ? 0.1 : 1.0
       tracesSampleRate: 0,
-
-      // PERFORMANCE: Disable session replay entirely (replay removed)
       replaysSessionSampleRate: 0,
       replaysOnErrorSampleRate: 0,
-
-      // Only enable debug in development
-      debug: false, // Disable even in development for performance
-
+      debug: false,
       environment: process.env.NODE_ENV || 'development',
-
-      // Configure the scope for better error context
-      beforeSend(event, hint) {
-        return event;
-      },
-
-      // PERFORMANCE: Disable replayIntegration entirely for maximum performance
-      // Replay adds significant bundle size (~80KB) even with lazy loading
-      // Re-enable if error replay is needed for debugging
       integrations: [],
     });
+
+    // Only expose module reference after successful initialization
+    sentryModule = Sentry;
+    sentryInitialized = true;
   } catch (error) {
-    // Silent fail in production
+    // Silent fail
     if (process.env.NODE_ENV === 'development') {
       console.warn('⚠️ Sentry client: Failed to initialize:', error);
     }
   }
 }
 
-// Export router transition tracking for Sentry navigation instrumentation
-// See: https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/#router-instrumentation
-export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+// Schedule Sentry initialization after page load with idle callback
+if (typeof window !== 'undefined') {
+  // Wait for page to fully load, then wait for idle time
+  const scheduleInit = () => {
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(() => initSentryLazy(), { timeout: 5000 });
+    } else {
+      setTimeout(initSentryLazy, 3000);
+    }
+  };
+
+  if (document.readyState === 'complete') {
+    scheduleInit();
+  } else {
+    window.addEventListener('load', scheduleInit, { once: true });
+  }
+}
+
+// Export router transition tracking - will be a no-op until Sentry is loaded
+export const onRouterTransitionStart = (href: string, navigationType: string) => {
+  if (sentryModule) {
+    sentryModule.captureRouterTransitionStart(href, navigationType);
+  }
+};
