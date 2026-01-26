@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { setupStableApp, setupMockAuth, stubSupabaseProfile, stubProfileUpdate, navigateToProfile, fillProfileForm, saveProfile } from '../fixtures/utils';
 
 test.describe('Profile Settings', () => {

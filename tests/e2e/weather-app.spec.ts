@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { stubWeatherApis } from '../fixtures/utils';
 
 test.beforeEach(async ({ page }) => {

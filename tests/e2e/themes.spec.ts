@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { setupStableApp, setupMockAuth, stubSupabaseProfile, setTheme, getCurrentTheme, navigateToProfile, navigateToMapPage, waitForRadarToLoad, checkRadarVisibility } from '../fixtures/utils';
 
 test.describe('Theme System', () => {

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { setupStableApp, navigateToMapPage, waitForRadarToLoad, checkRadarVisibility, setTheme } from '../fixtures/utils';
 
 test.describe('Radar Map', () => {
