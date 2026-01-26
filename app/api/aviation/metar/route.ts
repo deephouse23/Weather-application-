@@ -59,17 +59,28 @@ function parseMetar(raw: string): Partial<MetarObservation> {
   // Extract observation time (format: DDHHMMz)
   const timeMatch = raw.match(/\b(\d{6})Z\b/);
   if (timeMatch) {
-    const day = timeMatch[1].slice(0, 2);
-    const hour = timeMatch[1].slice(2, 4);
-    const minute = timeMatch[1].slice(4, 6);
+    const day = parseInt(timeMatch[1].slice(0, 2));
+    const hour = parseInt(timeMatch[1].slice(2, 4));
+    const minute = parseInt(timeMatch[1].slice(4, 6));
     const now = new Date();
-    const obsTime = new Date(Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      parseInt(day),
-      parseInt(hour),
-      parseInt(minute)
-    ));
+
+    // Start with current year/month
+    let year = now.getUTCFullYear();
+    let month = now.getUTCMonth();
+
+    let obsTime = new Date(Date.UTC(year, month, day, hour, minute));
+
+    // If obsTime is in the future, it means we crossed a month boundary
+    // Roll back one month (METAR day is from previous month)
+    if (obsTime > now) {
+      month -= 1;
+      if (month < 0) {
+        month = 11;
+        year -= 1;
+      }
+      obsTime = new Date(Date.UTC(year, month, day, hour, minute));
+    }
+
     result.observationTime = obsTime.toISOString();
   }
 
@@ -85,14 +96,23 @@ function parseMetar(raw: string): Partial<MetarObservation> {
     }
   }
 
-  // Extract visibility (format: SM or just number followed by SM)
-  const visMatch = raw.match(/\b(\d+(?:\/\d+)?)\s*SM\b/);
+  // Extract visibility (formats: SM, P6SM, 1/2SM, 1 1/2SM, 10SM)
+  // P prefix means "greater than" (P6SM = >6 statute miles)
+  const visMatch = raw.match(/\b(P)?(\d+)?\s*(\d+\/\d+)?\s*SM\b/);
   if (visMatch) {
-    const visParts = visMatch[1].split('/');
-    if (visParts.length === 2) {
-      result.visibility = parseInt(visParts[0]) / parseInt(visParts[1]);
-    } else {
-      result.visibility = parseFloat(visMatch[1]);
+    const isGreaterThan = visMatch[1] === 'P';
+    const wholePart = visMatch[2] ? parseInt(visMatch[2]) : 0;
+    const fractionPart = visMatch[3];
+
+    if (isGreaterThan) {
+      // P6SM means greater than 6
+      result.visibility = wholePart || 6;
+    } else if (fractionPart) {
+      // Handle fractions like 1/2 or mixed like wholePart + fraction
+      const [num, denom] = fractionPart.split('/').map(Number);
+      result.visibility = wholePart + (num / denom);
+    } else if (wholePart) {
+      result.visibility = wholePart;
     }
   }
 
@@ -245,7 +265,7 @@ export async function GET(request: NextRequest) {
         station,
         error: 'No METAR data available for this station',
         timestamp: new Date().toISOString(),
-      });
+      }, { status: 404 });
     }
 
     // Parse the METAR

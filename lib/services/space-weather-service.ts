@@ -188,10 +188,38 @@ SOLAR WIND (Real-time from DSCOVR):
 }
 
 /**
+ * Get the base URL for internal API calls.
+ * Handles both local development and Vercel deployments.
+ */
+function getBaseUrl(): string | null {
+  // Explicit base URL takes priority
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL;
+  }
+
+  // Vercel deployment URL (production/preview)
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  // Local development fallback (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3000';
+  }
+
+  return null;
+}
+
+/**
  * Fetch all space weather data and build context for AI
  */
 export async function getSpaceWeatherContext(): Promise<SpaceWeatherContext | null> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const baseUrl = getBaseUrl();
+
+  if (!baseUrl) {
+    console.error('[Space Weather Service] No base URL configured. Set NEXT_PUBLIC_BASE_URL or VERCEL_URL.');
+    return null;
+  }
 
   try {
     // Fetch all data in parallel

@@ -265,8 +265,8 @@ function estimateSnowDepth(snow7d: number, avgTemp: number = 30): number {
 
 export async function GET(request: NextRequest) {
   try {
-    // Authentication is optional but allows access to more detailed data
-    const user = await getAuthenticatedUser(request);
+    // Authentication is optional - reserved for future premium features
+    // const user = await getAuthenticatedUser(request);
 
     const apiKey = process.env.OPENWEATHER_API_KEY;
     if (!apiKey) {

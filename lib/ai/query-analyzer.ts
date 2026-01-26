@@ -163,7 +163,6 @@ const EXCLUDE_WORDS = new Set([
  */
 export function analyzeQuery(query: string): ContextType[] {
   const contexts: Set<ContextType> = new Set();
-  const lowerQuery = query.toLowerCase();
 
   // Check each context type
   for (const [contextType, patterns] of Object.entries(QUERY_PATTERNS)) {

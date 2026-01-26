@@ -24,6 +24,15 @@ dotenv.config({ path: path.resolve(__dirname, '.env.local') });
 const useKernelBrowsers = !!process.env.KERNEL_API_KEY;
 const baseURL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://127.0.0.1:3000';
 
+// Validate configuration: Kernel browsers require a real test URL (not localhost)
+if (useKernelBrowsers && !process.env.PLAYWRIGHT_TEST_BASE_URL) {
+  throw new Error(
+    'Configuration error: KERNEL_API_KEY is set but PLAYWRIGHT_TEST_BASE_URL is missing.\n' +
+    'When using Kernel cloud browsers, you must provide a target URL.\n' +
+    'Set PLAYWRIGHT_TEST_BASE_URL to the Vercel preview URL or production URL.'
+  );
+}
+
 export default defineConfig({
   testDir: './tests/e2e',
 
