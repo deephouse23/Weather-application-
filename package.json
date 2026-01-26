@@ -12,7 +12,9 @@
     "test:watch": "jest --watch",
     "test:ci": "jest --ci --runInBand",
     "test:profile": "tsx scripts/test-profile-save.ts",
-    "analyze": "ANALYZE=true npm run build"
+    "analyze": "ANALYZE=true npm run build",
+    "test:e2e": "playwright test",
+    "test:e2e:ci": "playwright test --reporter=github,html"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.2",
