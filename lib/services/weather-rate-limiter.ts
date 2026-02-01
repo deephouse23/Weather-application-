@@ -215,8 +215,9 @@ export async function rateLimitRequest(request: NextRequest): Promise<
 
 /**
  * Get current rate limit status for a client (without consuming a request)
+ * Note: Currently unused in production, kept for potential future use
  */
-export async function getRateLimitStatus(request: NextRequest): Promise<RateLimitResult> {
+async function getRateLimitStatus(request: NextRequest): Promise<RateLimitResult> {
   const identifier = await getClientIdentifier(request);
   const now = Date.now();
   const entry = rateLimitStore.get(identifier);

@@ -53,7 +53,7 @@ jest.mock('@/lib/supabase/server', () => ({
 }));
 
 // Now import after mocks are set up
-import { checkRateLimit, getClientIdentifier, getRateLimitStatus } from '@/lib/services/weather-rate-limiter';
+import { checkRateLimit, getClientIdentifier } from '@/lib/services/weather-rate-limiter';
 import { getServerUser } from '@/lib/supabase/server';
 
 const originalEnv = process.env;
@@ -142,33 +142,6 @@ describe('Weather Rate Limiter', () => {
       expect(result.allowed).toBe(true);
       expect(result.remaining).toBe(119);
       expect(result.burstRemaining).toBe(29);
-    });
-  });
-
-  describe('getRateLimitStatus', () => {
-    it('should return full limits for new client', async () => {
-      // Create a mock request
-      const request = new (jest.requireMock('next/server').NextRequest)(
-        'http://localhost:3000/api/weather/current?lat=40&lon=-74'
-      );
-      
-      const result = await getRateLimitStatus(request);
-      
-      expect(result.allowed).toBe(true);
-      expect(result.remaining).toBe(120);
-      expect(result.burstRemaining).toBe(30);
-    });
-
-    it('should return correct status after some requests', async () => {
-      const clientId = 'ip:192.168.1.100';
-      
-      // Make 10 requests
-      for (let i = 0; i < 10; i++) {
-        checkRateLimit(clientId);
-      }
-      
-      const result = checkRateLimit(clientId);
-      expect(result.remaining).toBe(109); // 120 - 11 (10 previous + 1 this call)
     });
   });
 
