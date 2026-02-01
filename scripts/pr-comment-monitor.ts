@@ -195,6 +195,7 @@ function generateFixScript(reviews: PRReview[]): void {
   
   // Write issues to JSON for the fix script
   const issuesPath = path.join(process.cwd(), '.opencode', 'skills', 'pr-issues.json');
+  fs.mkdirSync(path.dirname(issuesPath), { recursive: true });
   fs.writeFileSync(issuesPath, JSON.stringify(allIssues, null, 2));
   
   console.log(`💾 Issues saved to: ${issuesPath}`);
