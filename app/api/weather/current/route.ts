@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { trackWeatherApiCall } from '@/lib/services/sentry-metrics'
+import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5'
 
@@ -17,6 +18,12 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now()
 
   try {
+    // Check rate limit first
+    const rateLimit = await rateLimitRequest(request)
+    if (!rateLimit.allowed) {
+      return rateLimit.response
+    }
+
     // Get API key from server-side environment
     const apiKey = process.env.OPENWEATHER_API_KEY
 
@@ -83,8 +90,10 @@ export async function GET(request: NextRequest) {
     // Track successful API call
     trackWeatherApiCall(weatherData.name || 'unknown', responseTime, true, 'current')
 
-    // Return the weather data
-    return NextResponse.json(weatherData)
+    // Return the weather data with rate limit headers
+    return NextResponse.json(weatherData, {
+      headers: rateLimit.headers,
+    })
 
   } catch (error) {
     const responseTime = Date.now() - startTime

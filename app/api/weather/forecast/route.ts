@@ -13,11 +13,18 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5'
 
 export async function GET(request: NextRequest) {
   try {
+    // Check rate limit first
+    const rateLimit = await rateLimitRequest(request)
+    if (!rateLimit.allowed) {
+      return rateLimit.response
+    }
+
     // Get API key from server-side environment
     const apiKey = process.env.OPENWEATHER_API_KEY
     
@@ -77,8 +84,8 @@ export async function GET(request: NextRequest) {
 
     const forecastData = await response.json()
     
-    // Return the forecast data
-    return NextResponse.json(forecastData)
+    // Return the forecast data with rate limit headers
+    return NextResponse.json(forecastData, { headers: rateLimit.headers })
 
   } catch (error) {
     console.error('Forecast API error:', error)

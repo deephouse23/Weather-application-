@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
 
 // One Call 3.0 aggregation endpoint
 // GET /api/weather/onecall?lat=..&lon=..&units=metric|imperial[&exclude=parts]
 export async function GET(request: NextRequest) {
   try {
+    // Check rate limit first
+    const rateLimit = await rateLimitRequest(request)
+    if (!rateLimit.allowed) {
+      return rateLimit.response
+    }
+
     const apiKey = process.env.OPENWEATHER_API_KEY
     if (!apiKey) {
       return NextResponse.json({ error: 'OpenWeather API key not configured' }, { status: 500 })
@@ -66,6 +73,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(data, {
       headers: {
         'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
+        ...rateLimit.headers,
       },
     })
   } catch (error) {

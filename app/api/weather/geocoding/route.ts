@@ -13,6 +13,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
 
 const GEO_URL = 'https://api.openweathermap.org/geo/1.0'
 
@@ -115,6 +116,12 @@ const generateFallbackQueries = (originalQuery: string): string[] => {
 
 export async function GET(request: NextRequest) {
   try {
+    // Check rate limit first
+    const rateLimit = await rateLimitRequest(request)
+    if (!rateLimit.allowed) {
+      return rateLimit.response
+    }
+
     // Get API key from server-side environment
     const apiKey = process.env.OPENWEATHER_API_KEY
     
@@ -166,7 +173,7 @@ export async function GET(request: NextRequest) {
       }
 
       const reverseData = await response.json()
-      return NextResponse.json(reverseData)
+      return NextResponse.json(reverseData, { headers: rateLimit.headers })
     }
 
     if (zip) {
@@ -186,7 +193,7 @@ export async function GET(request: NextRequest) {
       }
 
       const geocodingData = await response.json()
-      return NextResponse.json(geocodingData)
+      return NextResponse.json(geocodingData, { headers: rateLimit.headers })
     } else {
       // Direct geocoding with fallback strategies
       const limitNum = parseInt(limit, 10)
@@ -218,7 +225,7 @@ export async function GET(request: NextRequest) {
         )
       }
 
-      return NextResponse.json(result.data)
+      return NextResponse.json(result.data, { headers: rateLimit.headers })
     }
 
   } catch (error) {
