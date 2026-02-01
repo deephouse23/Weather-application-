@@ -17,10 +17,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerUser } from '@/lib/supabase/server';
 
+// Helper to safely parse env integers with validation
+function parseEnvInt(value: string | undefined, defaultValue: number): number {
+  if (!value) return defaultValue;
+  const parsed = parseInt(value, 10);
+  return isNaN(parsed) || parsed <= 0 ? defaultValue : parsed;
+}
+
 // Rate limit configuration from env vars with sensible defaults
-const HOURLY_LIMIT = parseInt(process.env.WEATHER_RATE_LIMIT_HOURLY || '120', 10);
-const BURST_LIMIT = parseInt(process.env.WEATHER_RATE_LIMIT_BURST || '30', 10);
-const BURST_WINDOW_MS = parseInt(process.env.WEATHER_RATE_LIMIT_BURST_WINDOW_MS || '300000', 10); // 5 minutes
+const HOURLY_LIMIT = parseEnvInt(process.env.WEATHER_RATE_LIMIT_HOURLY, 120);
+const BURST_LIMIT = parseEnvInt(process.env.WEATHER_RATE_LIMIT_BURST, 30);
+const BURST_WINDOW_MS = parseEnvInt(process.env.WEATHER_RATE_LIMIT_BURST_WINDOW_MS, 300000); // 5 minutes
 const HOURLY_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 // In-memory rate limit stores

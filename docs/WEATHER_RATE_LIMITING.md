@@ -6,7 +6,7 @@ Rate limiting is now implemented for all weather API endpoints under `app/api/we
 ## Default Limits
 - **Hourly**: 120 requests per hour per user/IP
 - **Burst**: 30 requests per 5-minute window
-- **Identifier**: Supabase user ID (authenticated) or `x-forwarded-for` IP
+- **Identifier**: Supabase user ID (authenticated), or falls back to `x-forwarded-for` header, then `x-real-ip` header for IP-based identification
 
 ## Endpoints Protected
 All endpoints in `app/api/weather/**` now have rate limiting:

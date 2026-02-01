@@ -168,7 +168,7 @@ export async function GET(request: NextRequest) {
         grass: { 'Grass': 'No Data' },
         weed: { 'Weed': 'No Data' },
         source: 'unavailable'
-      })
+      }, { headers: rateLimit.headers })
     }
 
     const data = await response.json()

@@ -174,6 +174,9 @@ describe('Weather Rate Limiter', () => {
 
   describe('Environment variable configuration', () => {
     it('should use default values when env vars not set', () => {
+      // Reset module cache to re-evaluate env vars at load time
+      jest.resetModules();
+      
       delete process.env.WEATHER_RATE_LIMIT_HOURLY;
       delete process.env.WEATHER_RATE_LIMIT_BURST;
       delete process.env.WEATHER_RATE_LIMIT_BURST_WINDOW_MS;
