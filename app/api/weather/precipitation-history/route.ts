@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { rateLimitRequest } from '@/lib/services/weather-rate-limiter';
 
 // Simple in-memory cache with 1-hour TTL
 const precipitationCache = new Map<string, { data: PrecipitationResponse; expires: number }>();
@@ -205,6 +206,12 @@ async function fetchDailyPrecipitation(
 
 export async function GET(request: NextRequest) {
   try {
+    // Check rate limit first
+    const rateLimit = await rateLimitRequest(request);
+    if (!rateLimit.allowed) {
+      return rateLimit.response;
+    }
+
     // Require authentication
     const user = await getAuthenticatedUser(request);
     
@@ -253,6 +260,7 @@ export async function GET(request: NextRequest) {
         headers: {
           'X-Cache': 'HIT',
           'Cache-Control': 'private, max-age=3600',
+          ...rateLimit.headers,
         },
       });
     }
@@ -301,6 +309,7 @@ export async function GET(request: NextRequest) {
       headers: {
         'X-Cache': 'MISS',
         'Cache-Control': 'private, max-age=3600',
+        ...rateLimit.headers,
       },
     });
 

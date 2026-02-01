@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
 
 export const runtime = 'nodejs'
 
 // GET /api/weather/onecall/minutely?lat=..&lon=..&units=metric|imperial
 export async function GET(request: NextRequest) {
   try {
+    // Check rate limit first
+    const rateLimit = await rateLimitRequest(request)
+    if (!rateLimit.allowed) {
+      return rateLimit.response
+    }
+
     const apiKey = process.env.OPENWEATHER_API_KEY
     if (!apiKey) return NextResponse.json({ error: 'API key not configured' }, { status: 500 })
 
@@ -42,7 +49,10 @@ export async function GET(request: NextRequest) {
     const data = await res.json()
     // Only return minutely array for smaller payload
     return NextResponse.json({ lat, lon, units, minutely: data.minutely || [] }, {
-      headers: { 'Cache-Control': 'public, max-age=30, s-maxage=30' }
+      headers: { 
+        'Cache-Control': 'public, max-age=30, s-maxage=30',
+        ...rateLimit.headers 
+      }
     })
   } catch (e) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 })

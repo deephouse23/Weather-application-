@@ -643,6 +643,44 @@ All API routes are internal Next.js routes that proxy external APIs to keep API 
 
 ## Rate Limits
 
+### Weather API Endpoints (Server-Side)
+All weather endpoints under `/api/weather/**` implement rate limiting:
+
+- **Hourly Limit**: 120 requests per hour per user/IP (configurable via `WEATHER_RATE_LIMIT_HOURLY`)
+- **Burst Limit**: 30 requests per 5-minute window (configurable via `WEATHER_RATE_LIMIT_BURST` and `WEATHER_RATE_LIMIT_BURST_WINDOW_MS`)
+- **Identifier**: Uses Supabase user ID when authenticated, falls back to `x-forwarded-for` or `x-real-ip` header
+
+**Rate Limit Response (HTTP 429):**
+```json
+{
+  "error": "Too Many Requests",
+  "code": "RATE_LIMIT_EXCEEDED",
+  "message": "Rate limit exceeded. Try again in 300 seconds.",
+  "retryAfter": 300,
+  "limit": 120,
+  "remaining": 0,
+  "burstLimit": 30,
+  "burstRemaining": 0
+}
+```
+
+**Response Headers:**
+- `X-RateLimit-Limit`: Hourly request limit (default: 120)
+- `X-RateLimit-Remaining`: Remaining hourly requests
+- `X-RateLimit-Reset`: Unix timestamp when hourly limit resets
+- `X-RateLimit-Burst-Limit`: Burst window limit (default: 30)
+- `X-RateLimit-Burst-Remaining`: Remaining burst requests
+- `X-RateLimit-Burst-Reset`: Unix timestamp when burst window resets
+- `Retry-After`: Seconds until next request is allowed
+
+**Configuration (Environment Variables):**
+```bash
+# Optional: Customize rate limits
+WEATHER_RATE_LIMIT_HOURLY=120              # Max requests per hour
+WEATHER_RATE_LIMIT_BURST=30                # Max requests per burst window
+WEATHER_RATE_LIMIT_BURST_WINDOW_MS=300000  # Burst window in ms (5 min)
+```
+
 ### OpenWeatherMap Free Tier
 - **Current Weather API**: 60 calls/minute, 1,000,000 calls/month
 - **5-Day Forecast API**: 60 calls/minute, 1,000,000 calls/month
@@ -650,6 +688,7 @@ All API routes are internal Next.js routes that proxy external APIs to keep API 
 - **Geocoding API**: 60 calls/minute
 
 ### Rate Limit Handling
+- Server-side rate limiting (see above)
 - Client-side throttling (max 1 request per second per endpoint)
 - Response caching (10 minutes for weather data)
 - User search rate limiting (10 searches per hour)

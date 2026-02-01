@@ -13,11 +13,18 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5'
 
 export async function GET(request: NextRequest) {
   try {
+    // Check rate limit first
+    const rateLimit = await rateLimitRequest(request)
+    if (!rateLimit.allowed) {
+      return rateLimit.response
+    }
+
     // Get API keys from server-side environment
     const openWeatherApiKey = process.env.OPENWEATHER_API_KEY
     const googlePollenApiKey = process.env.GOOGLE_POLLEN_API_KEY
@@ -142,7 +149,7 @@ export async function GET(request: NextRequest) {
               grass: grassBreakdown,
               weed: weedBreakdown,
               source: 'google'
-            })
+            }, { headers: rateLimit.headers })
           }
         }
       } catch {
@@ -161,7 +168,7 @@ export async function GET(request: NextRequest) {
         grass: { 'Grass': 'No Data' },
         weed: { 'Weed': 'No Data' },
         source: 'unavailable'
-      })
+      }, { headers: rateLimit.headers })
     }
 
     const data = await response.json()
@@ -182,7 +189,7 @@ export async function GET(request: NextRequest) {
       grass: { 'Grass': getPollenCategory(Math.min(Math.round(airQualityIndex * 8), 100)) },
       weed: { 'Weed': getPollenCategory(Math.min(Math.round(airQualityIndex * 6), 100)) },
       source: 'openweather_fallback'
-    })
+    }, { headers: rateLimit.headers })
 
   } catch (error) {
     console.error('Pollen API error:', error)

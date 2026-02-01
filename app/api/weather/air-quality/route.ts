@@ -9,6 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
 
 // Type definitions for Google Air Quality API responses
 interface GoogleAQIIndex {
@@ -50,6 +51,12 @@ const CACHE_DURATION = 600; // 10 minutes
 
 export async function GET(request: NextRequest) {
   try {
+    // Check rate limit first
+    const rateLimit = await rateLimitRequest(request)
+    if (!rateLimit.allowed) {
+      return rateLimit.response
+    }
+
     // Get API keys from server-side environment
     const openWeatherApiKey = process.env.OPENWEATHER_API_KEY
     const googleApiKey = process.env.GOOGLE_AIR_QUALITY_API_KEY
@@ -192,7 +199,8 @@ export async function GET(request: NextRequest) {
                 status: 200,
                 headers: {
                   'Cache-Control': `public, s-maxage=${CACHE_DURATION}, stale-while-revalidate`,
-                  'X-AQI-Source': 'google'
+                  'X-AQI-Source': 'google',
+                  ...rateLimit.headers
                 }
               })
             }
@@ -296,7 +304,8 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers: {
         'Cache-Control': `public, s-maxage=${CACHE_DURATION}, stale-while-revalidate`,
-        'X-AQI-Source': 'openweather'
+        'X-AQI-Source': 'openweather',
+        ...rateLimit.headers
       }
     })
 

@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { rateLimitRequest } from '@/lib/services/weather-rate-limiter';
 
 // Cache with 15-minute TTL for precipitation data
 const precipCache = new Map<string, { data: PrecipitationResponse; expires: number }>();
@@ -265,6 +266,12 @@ function estimateSnowDepth(snow7d: number, avgTemp: number = 30): number {
 
 export async function GET(request: NextRequest) {
   try {
+    // Check rate limit first
+    const rateLimit = await rateLimitRequest(request);
+    if (!rateLimit.allowed) {
+      return rateLimit.response;
+    }
+
     // Authentication is optional - reserved for future premium features
     // const user = await getAuthenticatedUser(request);
 
@@ -306,7 +313,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(cached.data, {
         headers: {
           'X-Cache': 'HIT',
-          'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=1800'
+          'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=1800',
+          ...rateLimit.headers
         }
       });
     }
@@ -357,7 +365,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response, {
       headers: {
         'X-Cache': 'MISS',
-        'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=1800'
+        'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=1800',
+        ...rateLimit.headers
       }
     });
 

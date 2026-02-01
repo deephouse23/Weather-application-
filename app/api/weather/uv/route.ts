@@ -13,12 +13,19 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
 
 const BASE_URL_V3 = 'https://api.openweathermap.org/data/3.0'
 const BASE_URL = 'https://api.openweathermap.org/data/2.5'
 
 export async function GET(request: NextRequest) {
   try {
+    // Check rate limit first
+    const rateLimit = await rateLimitRequest(request)
+    if (!rateLimit.allowed) {
+      return rateLimit.response
+    }
+
     // Get API key from server-side environment
     const apiKey = process.env.OPENWEATHER_API_KEY
     
@@ -73,7 +80,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
           uvi: currentUV,
           source: 'onecall_3.0'
-        })
+        }, { headers: rateLimit.headers })
       }
     } catch {
       // One Call API 3.0 not available, trying fallback
@@ -97,7 +104,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
           uvi: Math.round(currentUV),
           source: 'uvi_daily_estimated'
-        })
+        }, { headers: rateLimit.headers })
       }
     } catch {
       // UV fallback API also failed
@@ -107,7 +114,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       uvi: 0,
       source: 'unavailable'
-    })
+    }, { headers: rateLimit.headers })
 
   } catch (error) {
     console.error('UV API error:', error)
