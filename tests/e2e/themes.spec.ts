@@ -12,7 +12,7 @@ test.describe('Theme System', () => {
   // Skip this test in Preview/CI - auth mocking doesn't work with Kernel cloud browsers
   test('can change theme via profile page', async ({ page }) => {
     test.skip(useKernelBrowsers, 'Auth mocking not supported in Kernel cloud browsers');
-    
+
     await setupMockAuth(page);
     await stubSupabaseProfile(page, {
       id: '00000000-0000-0000-0000-000000000000',
@@ -118,11 +118,11 @@ test.describe('Theme System', () => {
   test('UI elements render correctly in dark theme', async ({ page }) => {
     await setTheme(page, 'dark');
     await page.goto('/', { waitUntil: 'domcontentloaded' });
-    
+
     // Verify search input is visible
     // Use .first() to handle potential duplicate elements during Suspense hydration
     await expect(page.getByTestId('location-search-input').first()).toBeVisible({ timeout: 10000 });
-    
+
     // Verify theme is applied
     const currentTheme = await getCurrentTheme(page);
     expect(currentTheme).toBe('dark');
@@ -131,12 +131,12 @@ test.describe('Theme System', () => {
   test('UI elements render correctly in synthwave theme', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await setTheme(page, 'synthwave84');
-    
+
     // Wait for theme to be applied
     await page.waitForTimeout(300);
-    
-    // Verify search input is visible
-    await expect(page.getByTestId('location-search-input')).toBeVisible({ timeout: 10000 });
+
+    // Verify search input is visible (use .first() to handle duplicate elements)
+    await expect(page.getByTestId('location-search-input').first()).toBeVisible({ timeout: 10000 });
     
     // Verify theme is applied
     const currentTheme = await getCurrentTheme(page);

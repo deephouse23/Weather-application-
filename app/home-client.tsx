@@ -26,6 +26,7 @@ import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
 import PageWrapper from "@/components/page-wrapper"
 import WeatherSearch from "@/components/weather-search"
+import { ShareButton } from "@/components/share-weather-modal"
 import dynamic from 'next/dynamic'
 
 // PERFORMANCE: Lazy load RandomCityLinks as it's below the fold
@@ -196,11 +197,26 @@ function WeatherApp() {
               <div className="space-y-4 sm:space-y-6">
                 {/* Location Title */}
                 <div className="text-center mb-4">
-                  <h1 className={cn("text-2xl sm:text-3xl font-extrabold tracking-wider", themeClasses.headerText, themeClasses.glow)} style={{
-                    fontSize: "clamp(20px, 4vw, 32px)"
-                  }}>
-                    {weather.location} WEATHER
-                  </h1>
+                  <div className="flex items-center justify-center gap-3">
+                    <h1 className={cn("text-2xl sm:text-3xl font-extrabold tracking-wider", themeClasses.headerText, themeClasses.glow)} style={{
+                      fontSize: "clamp(20px, 4vw, 32px)"
+                    }}>
+                      {weather.location} WEATHER
+                    </h1>
+                    {weather.forecast?.[0] && (
+                      <ShareButton
+                        weatherData={{
+                          location: weather.location,
+                          temperature: weather.temperature,
+                          unit: weather.unit,
+                          condition: weather.condition,
+                          highTemp: Math.round(weather.forecast[0].highTemp),
+                          lowTemp: Math.round(weather.forecast[0].lowTemp),
+                        }}
+                        variant="button"
+                      />
+                    )}
+                  </div>
                 </div>
 
                 {/* Current Weather using Cards with staggered animations */}

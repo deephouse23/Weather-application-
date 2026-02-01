@@ -68,11 +68,11 @@ test('responsive layout on mobile', async ({ page }) => {
   // Set mobile viewport
   await page.setViewportSize({ width: 375, height: 667 });
 
-  // Wait for app to initialize - use proper wait instead of timeout
-  await expect(page.getByTestId('location-search-input')).toBeVisible({ timeout: 10000 });
+  // Wait for app to initialize - use .first() to handle duplicate elements
+  await expect(page.getByTestId('location-search-input').first()).toBeVisible({ timeout: 10000 });
 
   // Check that the app is still functional
-  await expect(page.getByTestId('location-search-input')).toBeVisible();
+  await expect(page.getByTestId('location-search-input').first()).toBeVisible();
 });
 
 test('navigation links work correctly', async ({ page }) => {
