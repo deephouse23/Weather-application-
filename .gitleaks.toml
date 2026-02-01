@@ -50,7 +50,6 @@ paths = [
     '''\.next/''',
     '''test-results/''',
     '''playwright-report/''',
-    '''\.md$''',  # Documentation files (but still caught by CI pattern check)
 ]
 
 # Specific strings to ignore (e.g., placeholder values)

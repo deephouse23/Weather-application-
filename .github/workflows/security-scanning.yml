@@ -26,6 +26,7 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
           GITLEAKS_ENABLE_COMMENTS: false
         continue-on-error: false
 
@@ -48,7 +49,7 @@ jobs:
 
           FOUND_SECRETS=0
           for pattern in "${PATTERNS[@]}"; do
-            if git grep -lE "$pattern" -- ':!*.example' ':!.gitignore' ':!*.md' 2>/dev/null; then
+            if git grep -lE "$pattern" -- ':!*.example' ':!.gitignore' 2>/dev/null; then
               echo "::error::Found potential secret matching pattern: $pattern"
               FOUND_SECRETS=1
             fi
