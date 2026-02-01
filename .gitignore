@@ -73,6 +73,35 @@ results/
 # Sentry setup guide with potential secrets
 SENTRY_SETUP_GUIDE.md
 
+# Sentry auth tokens (CRITICAL - never commit these)
+*sntryu_*
+*sntrys_*
+*SENTRY_AUTH_TOKEN*
+
+# Common secret patterns - prevent accidental commits
+*.pem
+*.key
+*_rsa
+*_dsa
+*_ecdsa
+*_ed25519
+*.pfx
+*.p12
+credentials.json
+service-account*.json
+*secret*.json
+!package.json
+!package-lock.json
+
+# API key files
+*apikey*
+*api_key*
+!*.example
+
+# Test infrastructure state files (contain ephemeral tokens)
+tests/e2e/.kernel-browser-state.json
+*browser-state.json
+
 # Plan files may contain sensitive information
 *.plan.md
 

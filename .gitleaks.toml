@@ -1,0 +1,61 @@
+# Gitleaks configuration for 16-bit-weather
+# https://github.com/gitleaks/gitleaks
+
+title = "16-bit-weather secret scanning rules"
+
+[extend]
+# Use the default gitleaks rules as a base
+useDefault = true
+
+# Custom rules for project-specific secrets
+[[rules]]
+id = "sentry-auth-token"
+description = "Sentry Authentication Token"
+regex = '''sntryu_[a-zA-Z0-9]{64}'''
+keywords = ["sntryu_"]
+
+[[rules]]
+id = "sentry-system-token"
+description = "Sentry System Token"
+regex = '''sntrys_[a-zA-Z0-9]{64}'''
+keywords = ["sntrys_"]
+
+[[rules]]
+id = "supabase-service-role"
+description = "Supabase Service Role Key (JWT)"
+regex = '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+'''
+keywords = ["service_role", "supabase"]
+
+[[rules]]
+id = "openweather-api-key"
+description = "OpenWeatherMap API Key"
+regex = '''[a-f0-9]{32}'''
+keywords = ["openweather", "appid"]
+entropy = 3.5
+
+[[rules]]
+id = "kernel-api-key"
+description = "Kernel API Key"
+regex = '''kernel_[a-zA-Z0-9_-]{20,}'''
+keywords = ["kernel"]
+
+# Allowlist - paths and patterns to ignore
+[allowlist]
+description = "Global allowlist"
+paths = [
+    '''\.env\.example$''',
+    '''\.env\.local\.example$''',
+    '''package-lock\.json$''',
+    '''node_modules/''',
+    '''\.next/''',
+    '''test-results/''',
+    '''playwright-report/''',
+]
+
+# Specific strings to ignore (e.g., placeholder values)
+regexes = [
+    '''your_[a-z_]+_here''',
+    '''placeholder''',
+    '''test-api-key''',
+    '''DEMO_KEY''',
+]
