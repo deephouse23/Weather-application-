@@ -105,16 +105,51 @@ export default function ShareWeatherModal({
   }, [weatherData]);
 
   // Generate share URL for the location
+  // Format: /weather/city-name-xx where xx is state abbreviation
+  // This matches the route parser in /weather/[city]/page.tsx
   const generateShareUrl = useCallback(() => {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://16bitweather.co";
-    // Use Unicode-safe slug generation that preserves international characters
-    const citySlug = weatherData.location
+
+    // Parse location: "City, State" or "City, State, Country"
+    const parts = weatherData.location.split(",").map((p) => p.trim());
+    const cityName = parts[0] || "";
+
+    // Extract state - could be full name or abbreviation
+    let stateAbbrev = "";
+    if (parts.length >= 2) {
+      const statePart = parts[1].toUpperCase();
+      // If it's already a 2-letter abbreviation, use it
+      if (statePart.length === 2) {
+        stateAbbrev = statePart.toLowerCase();
+      } else {
+        // Try to convert full state name to abbreviation
+        const stateMap: Record<string, string> = {
+          ALABAMA: "al", ALASKA: "ak", ARIZONA: "az", ARKANSAS: "ar", CALIFORNIA: "ca",
+          COLORADO: "co", CONNECTICUT: "ct", DELAWARE: "de", FLORIDA: "fl", GEORGIA: "ga",
+          HAWAII: "hi", IDAHO: "id", ILLINOIS: "il", INDIANA: "in", IOWA: "ia",
+          KANSAS: "ks", KENTUCKY: "ky", LOUISIANA: "la", MAINE: "me", MARYLAND: "md",
+          MASSACHUSETTS: "ma", MICHIGAN: "mi", MINNESOTA: "mn", MISSISSIPPI: "ms", MISSOURI: "mo",
+          MONTANA: "mt", NEBRASKA: "ne", NEVADA: "nv", "NEW HAMPSHIRE": "nh", "NEW JERSEY": "nj",
+          "NEW MEXICO": "nm", "NEW YORK": "ny", "NORTH CAROLINA": "nc", "NORTH DAKOTA": "nd",
+          OHIO: "oh", OKLAHOMA: "ok", OREGON: "or", PENNSYLVANIA: "pa", "RHODE ISLAND": "ri",
+          "SOUTH CAROLINA": "sc", "SOUTH DAKOTA": "sd", TENNESSEE: "tn", TEXAS: "tx", UTAH: "ut",
+          VERMONT: "vt", VIRGINIA: "va", WASHINGTON: "wa", "WEST VIRGINIA": "wv",
+          WISCONSIN: "wi", WYOMING: "wy", "DISTRICT OF COLUMBIA": "dc"
+        };
+        stateAbbrev = stateMap[statePart] || "";
+      }
+    }
+
+    // Create slug: city-name-xx
+    const citySlug = cityName
       .toLowerCase()
-      .normalize("NFD") // Normalize accented characters
+      .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "") // Remove diacritical marks
-      .replace(/[^\p{L}\p{N}]+/gu, "-") // Replace non-letter/number with hyphen (Unicode-aware)
+      .replace(/[^a-z0-9]+/g, "-") // Replace non-alphanumeric with hyphen
       .replace(/(^-|-$)/g, ""); // Trim leading/trailing hyphens
-    return `${baseUrl}/weather/${encodeURIComponent(citySlug)}`;
+
+    const fullSlug = stateAbbrev ? `${citySlug}-${stateAbbrev}` : citySlug;
+    return `${baseUrl}/weather/${encodeURIComponent(fullSlug)}`;
   }, [weatherData.location]);
 
   // Share platforms configuration
