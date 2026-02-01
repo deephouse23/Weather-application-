@@ -203,7 +203,7 @@ function WeatherApp() {
                     }}>
                       {weather.location} WEATHER
                     </h1>
-                    {weather.forecast[0] && (
+                    {weather.forecast?.[0] && (
                       <ShareButton
                         weatherData={{
                           location: weather.location,

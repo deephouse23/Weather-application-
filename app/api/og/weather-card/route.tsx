@@ -8,7 +8,7 @@
  */
 
 import { ImageResponse } from 'next/og'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 
 export const runtime = 'edge'
 

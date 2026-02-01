@@ -107,10 +107,13 @@ export default function ShareWeatherModal({
   // Generate share URL for the location
   const generateShareUrl = useCallback(() => {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://16bitweather.co";
+    // Use Unicode-safe slug generation that preserves international characters
     const citySlug = weatherData.location
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
+      .normalize("NFD") // Normalize accented characters
+      .replace(/[\u0300-\u036f]/g, "") // Remove diacritical marks
+      .replace(/[^\p{L}\p{N}]+/gu, "-") // Replace non-letter/number with hyphen (Unicode-aware)
+      .replace(/(^-|-$)/g, ""); // Trim leading/trailing hyphens
     return `${baseUrl}/weather/${encodeURIComponent(citySlug)}`;
   }, [weatherData.location]);
 
@@ -146,21 +149,15 @@ export default function ShareWeatherModal({
   ];
 
   // Handle platform share
-  const handlePlatformShare = async (platform: SharePlatform) => {
-    setIsGenerating(true);
-
-    // Simulate generating weather card (1-2 seconds)
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
+  const handlePlatformShare = (platform: SharePlatform) => {
+    // Generate URLs synchronously to avoid popup blocking
     const text = generateShareText();
     const url = generateShareUrl();
     const shareUrl = platform.getShareUrl(text, url);
 
-    // Open share dialog in new window
+    // Open share dialog immediately (must be synchronous from user click)
     const windowFeatures = "width=600,height=400,scrollbars=yes,resizable=yes";
     window.open(shareUrl, "_blank", windowFeatures);
-
-    setIsGenerating(false);
 
     toast({
       title: "SHARE OPENED",
