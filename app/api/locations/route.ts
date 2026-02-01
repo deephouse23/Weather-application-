@@ -16,6 +16,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate coordinate ranges
+    const lat = parseFloat(latitude)
+    const lon = parseFloat(longitude)
+    if (isNaN(lat) || lat < -90 || lat > 90 || isNaN(lon) || lon < -180 || lon > 180) {
+      return NextResponse.json(
+        { error: 'Invalid coordinates - latitude must be between -90 and 90, longitude between -180 and 180' },
+        { status: 400 }
+      )
+    }
+
     // Get auth header from request
     const authHeader = request.headers.get('authorization')
 
@@ -78,8 +88,8 @@ export async function POST(request: NextRequest) {
       city: city || null,
       state: body.state || null,
       country,
-      latitude: parseFloat(latitude),
-      longitude: parseFloat(longitude),
+      latitude: lat,
+      longitude: lon,
       is_favorite: !!is_favorite,
       custom_name: custom_name || null,  // correct column name
       notes: notes || null  // notes column exists in schema
