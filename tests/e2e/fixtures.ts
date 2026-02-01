@@ -21,7 +21,6 @@ const useKernelBrowsers = !!process.env.KERNEL_API_KEY;
 
 // Shared browser connection for Kernel mode
 let sharedBrowser: Browser | null = null;
-let connectionAttempts = 0;
 const MAX_CONNECTION_ATTEMPTS = 3;
 const CONNECTION_RETRY_DELAY = 2000;
 
@@ -66,8 +65,9 @@ async function connectToKernelBrowser(cdpUrl: string): Promise<Browser> {
       }
     }
   }
-
-  throw new Error('Unreachable');
+  // TypeScript will see this as unreachable since the loop always returns or throws
+  // But we need to satisfy the return type - this line is never actually executed
+  throw new Error('Connection loop completed without returning');
 }
 
 // Export test based on mode
@@ -96,7 +96,6 @@ export const test = useKernelBrowsers
           console.log('[Kernel] Connecting to cloud browser via CDP...');
           console.log(`[Kernel] Base URL: ${baseURL}`);
           sharedBrowser = await connectToKernelBrowser(kernelState.cdpUrl);
-          connectionAttempts = 0;
         }
 
         // Create new context for this test

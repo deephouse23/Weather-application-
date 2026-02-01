@@ -1,17 +1,18 @@
 import { test, expect } from './fixtures';
 import { setupStableApp, setupMockAuth, stubSupabaseProfile, setTheme, getCurrentTheme, navigateToProfile, navigateToMapPage, waitForRadarToLoad, checkRadarVisibility } from '../fixtures/utils';
 
-// Skip auth-dependent tests in CI/Kernel mode
-const isKernelMode = !!process.env.KERNEL_API_KEY;
+// Check if running in Kernel cloud browsers (Preview/CI mode)
+const useKernelBrowsers = !!process.env.KERNEL_API_KEY;
 
 test.describe('Theme System', () => {
   test.beforeEach(async ({ page }) => {
     await setupStableApp(page);
   });
 
+  // Skip this test in Preview/CI - auth mocking doesn't work with Kernel cloud browsers
   test('can change theme via profile page', async ({ page }) => {
-    // Skip in Kernel mode - auth mocking doesn't work with cloud browsers
-    test.skip(isKernelMode, 'Auth-dependent test does not work in CI/Kernel mode');
+    test.skip(useKernelBrowsers, 'Auth mocking not supported in Kernel cloud browsers');
+
     await setupMockAuth(page);
     await stubSupabaseProfile(page, {
       id: '00000000-0000-0000-0000-000000000000',
@@ -118,7 +119,8 @@ test.describe('Theme System', () => {
     await setTheme(page, 'dark');
     await page.goto('/', { waitUntil: 'domcontentloaded' });
 
-    // Verify search input is visible (use .first() to handle duplicate elements)
+    // Verify search input is visible
+    // Use .first() to handle potential duplicate elements during Suspense hydration
     await expect(page.getByTestId('location-search-input').first()).toBeVisible({ timeout: 10000 });
 
     // Verify theme is applied

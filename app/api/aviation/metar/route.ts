@@ -96,23 +96,35 @@ function parseMetar(raw: string): Partial<MetarObservation> {
     }
   }
 
-  // Extract visibility (formats: SM, P6SM, 1/2SM, 1 1/2SM, 10SM)
+  // Extract visibility (formats: SM, P6SM, M1/4SM, 1/2SM, 1 1/2SM, 10SM)
   // P prefix means "greater than" (P6SM = >6 statute miles)
-  const visMatch = raw.match(/\b(P)?(\d+)?\s*(\d+\/\d+)?\s*SM\b/);
+  // M prefix means "less than" (M1/4SM = <1/4 statute miles)
+  const visMatch = raw.match(/\b([PM])?(\d+)?\s*(\d+\/\d+)?\s*SM\b/);
   if (visMatch) {
-    const isGreaterThan = visMatch[1] === 'P';
+    const prefix = visMatch[1];
+    const isGreaterThan = prefix === 'P';
+    const isLessThan = prefix === 'M';
     const wholePart = visMatch[2] ? parseInt(visMatch[2]) : 0;
     const fractionPart = visMatch[3];
 
-    if (isGreaterThan) {
-      // P6SM means greater than 6
-      result.visibility = wholePart || 6;
-    } else if (fractionPart) {
+    let visibility: number;
+    
+    if (fractionPart) {
       // Handle fractions like 1/2 or mixed like wholePart + fraction
       const [num, denom] = fractionPart.split('/').map(Number);
-      result.visibility = wholePart + (num / denom);
-    } else if (wholePart) {
-      result.visibility = wholePart;
+      visibility = wholePart + (num / denom);
+    } else {
+      visibility = wholePart;
+    }
+
+    if (isGreaterThan) {
+      // P6SM means greater than 6 (use 6 as minimum)
+      result.visibility = visibility || 6;
+    } else if (isLessThan) {
+      // M1/4SM means less than 1/4 (reduce slightly to indicate "less than")
+      result.visibility = Math.max(0, visibility - 0.01);
+    } else {
+      result.visibility = visibility;
     }
   }
 
@@ -148,17 +160,24 @@ function parseMetar(raw: string): Partial<MetarObservation> {
     'RA', 'SN', 'DZ', 'SH', 'TS', 'FG', 'BR', 'HZ', 'FU', 'DU', 'SA',
     'GR', 'GS', 'IC', 'PL', 'SG', 'UP', 'FC', 'SS', 'DS', 'SQ', 'PO'
   ];
-  const intensities = ['+', '-', ''];
+  const intensities = ['\\+', '-', ''];
   const descriptors = ['MI', 'PR', 'BC', 'DR', 'BL', 'SH', 'TS', 'FZ', 'VC'];
+
+  // Build a regex to properly match weather codes (not substrings of ICAO codes)
+  // Weather format: [intensity][descriptor][weather code(s)]
+  // Examples: -RA, +TSRA, FZRA, VCSH, BR, HZ
+  const weatherRegex = new RegExp(
+    `^(?:\\+|-)?(?:${descriptors.join('|')})?(?:${weatherCodes.join('|')})+$`
+  );
 
   const weather: string[] = [];
   for (const part of parts) {
-    // Check if part starts with intensity/descriptor and contains weather code
-    for (const code of weatherCodes) {
-      if (part.includes(code)) {
-        weather.push(part);
-        break;
-      }
+    // Skip ICAO station codes (4-letter codes at start)
+    if (/^[A-Z]{4}$/.test(part)) continue;
+    
+    // Check if part matches weather pattern
+    if (weatherRegex.test(part)) {
+      weather.push(part);
     }
   }
   if (weather.length > 0) {

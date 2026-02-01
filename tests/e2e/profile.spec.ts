@@ -1,12 +1,13 @@
 import { test, expect } from './fixtures';
 import { setupStableApp, setupMockAuth, stubSupabaseProfile, stubProfileUpdate, navigateToProfile, fillProfileForm, saveProfile } from '../fixtures/utils';
 
-// Skip all profile tests in CI/Kernel mode - auth mocking doesn't work with cloud browsers
-const isKernelMode = !!process.env.KERNEL_API_KEY;
+// Skip profile tests in Preview/CI mode - auth mocking doesn't work with Kernel cloud browsers
+// The server-side middleware redirects to login before client-side mocking can take effect
+const useKernelBrowsers = !!process.env.KERNEL_API_KEY;
 
 test.describe('Profile Settings', () => {
-  // Skip entire describe block in Kernel mode
-  test.skip(isKernelMode, 'Auth-dependent tests do not work in CI/Kernel mode');
+  test.skip(useKernelBrowsers, 'Auth mocking not supported in Kernel cloud browsers');
+
   test.beforeEach(async ({ page }) => {
     await setupStableApp(page);
     

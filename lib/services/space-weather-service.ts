@@ -9,12 +9,12 @@
 
 export interface SpaceWeatherContext {
   contextBlock: string;
-  kpIndex: number;
+  kpIndex: number | null;
   auroraActivity: string;
 }
 
 interface KpData {
-  current: number;
+  current: number | null;
   forecast?: number;
   maxForecast?: number;
 }
@@ -43,17 +43,18 @@ async function fetchKpIndex(baseUrl: string): Promise<KpData> {
     });
 
     if (!response.ok) {
-      return { current: 0 };
+      return { current: null };
     }
 
     const data = await response.json();
+    const currentValue = data.data?.current?.value;
     return {
-      current: data.data?.current?.value || 0,
+      current: typeof currentValue === 'number' ? currentValue : null,
       forecast: data.data?.forecast?.expected,
       maxForecast: data.data?.forecast?.maxExpected
     };
   } catch {
-    return { current: 0 };
+    return { current: null };
   }
 }
 
@@ -116,7 +117,8 @@ async function fetchSolarWind(baseUrl: string): Promise<SolarWindData | null> {
 /**
  * Get activity description from Kp index
  */
-function getActivityDescription(kp: number): string {
+function getActivityDescription(kp: number | null): string {
+  if (kp === null) return 'data unavailable';
   if (kp >= 7) return 'major geomagnetic storm';
   if (kp >= 5) return 'minor geomagnetic storm';
   if (kp >= 4) return 'active conditions';
@@ -127,7 +129,8 @@ function getActivityDescription(kp: number): string {
 /**
  * Get aurora visibility description based on Kp
  */
-function getAuroraVisibility(kp: number): string {
+function getAuroraVisibility(kp: number | null): string {
+  if (kp === null) return 'Aurora visibility unknown - Kp data unavailable';
   if (kp >= 9) return 'Rare event! Aurora visible as far south as 40°N (central California, Spain)';
   if (kp >= 8) return 'Aurora visible to 42°N (northern California, Rome)';
   if (kp >= 7) return 'Aurora visible to 45°N (Oregon, France)';
@@ -150,11 +153,12 @@ function buildSpaceWeatherContextBlock(
   const activityDesc = getActivityDescription(kp.current);
   const visibilityDesc = getAuroraVisibility(kp.current);
 
+  const kpDisplay = kp.current !== null ? kp.current : 'N/A';
   let contextBlock = `
 REAL-TIME SPACE WEATHER DATA (NOAA Space Weather Prediction Center):
 ====================================================
 GEOMAGNETIC CONDITIONS:
-  Current Kp Index: ${kp.current} (${activityDesc})
+  Current Kp Index: ${kpDisplay} (${activityDesc})
   ${kp.forecast !== undefined ? `Forecast Kp (24h): ${kp.forecast}` : ''}
   ${kp.maxForecast !== undefined ? `Max Expected Kp: ${kp.maxForecast}` : ''}
 
@@ -230,7 +234,8 @@ export async function getSpaceWeatherContext(): Promise<SpaceWeatherContext | nu
     ]);
 
     // Only return context if we have valid Kp data
-    if (kpData.current === 0 && !solarWindData) {
+    // Note: kpData.current === null means API failure, kpData.current === 0 is valid "quiet" reading
+    if (kpData.current === null && !solarWindData) {
       return null;
     }
 
