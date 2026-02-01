@@ -90,7 +90,8 @@ SENTRY_SETUP_GUIDE.md
 credentials.json
 service-account*.json
 *secret*.json
-!package*.json
+!package.json
+!package-lock.json
 
 # API key files
 *apikey*

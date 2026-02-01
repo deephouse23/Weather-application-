@@ -32,7 +32,7 @@ jobs:
 
       - name: Check for common secret patterns
         run: |
-          echo "Checking for hardcoded secrets in staged files..."
+          echo "Checking for hardcoded secrets in tracked files..."
 
           # Patterns that should never appear in code
           PATTERNS=(
@@ -49,7 +49,7 @@ jobs:
 
           FOUND_SECRETS=0
           for pattern in "${PATTERNS[@]}"; do
-            if git grep -lE "$pattern" -- ':!*.example' ':!.gitignore' 2>/dev/null; then
+            if git grep -nE "$pattern" -- ':!*.example' ':!.gitignore' 2>/dev/null; then
               echo "::error::Found potential secret matching pattern: $pattern"
               FOUND_SECRETS=1
             fi
