@@ -192,7 +192,19 @@ export default function ShareWeatherModal({
 
     // Open share dialog immediately (must be synchronous from user click)
     const windowFeatures = "width=600,height=400,scrollbars=yes,resizable=yes";
-    window.open(shareUrl, "_blank", windowFeatures);
+    const popup = window.open(shareUrl, "_blank", windowFeatures);
+
+    // Check if popup was blocked
+    if (!popup || popup.closed || typeof popup.closed === "undefined") {
+      toast({
+        title: "POPUP BLOCKED",
+        description: `Please allow popups for ${platform.name} or copy the link instead.`,
+        variant: "destructive",
+        duration: 5000,
+        className: "font-mono uppercase tracking-wider border-2",
+      });
+      return;
+    }
 
     toast({
       title: "SHARE OPENED",
