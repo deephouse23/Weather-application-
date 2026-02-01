@@ -9,6 +9,58 @@ on:
     - cron: '30 1 * * 0' # Run at 01:30 UTC every Sunday
 
 jobs:
+  secret-scanning:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for comprehensive scanning
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: false
+        continue-on-error: false
+
+      - name: Check for common secret patterns
+        run: |
+          echo "Checking for hardcoded secrets in staged files..."
+
+          # Patterns that should never appear in code
+          PATTERNS=(
+            'sntryu_[a-zA-Z0-9]+'
+            'sntrys_[a-zA-Z0-9]+'
+            'sk_live_[a-zA-Z0-9]+'
+            'sk_test_[a-zA-Z0-9]+'
+            'ghp_[a-zA-Z0-9]+'
+            'gho_[a-zA-Z0-9]+'
+            'github_pat_[a-zA-Z0-9]+'
+            'xox[baprs]-[a-zA-Z0-9-]+'
+            'AKIA[A-Z0-9]{16}'
+          )
+
+          FOUND_SECRETS=0
+          for pattern in "${PATTERNS[@]}"; do
+            if git grep -lE "$pattern" -- ':!*.example' ':!.gitignore' ':!*.md' 2>/dev/null; then
+              echo "::error::Found potential secret matching pattern: $pattern"
+              FOUND_SECRETS=1
+            fi
+          done
+
+          if [ $FOUND_SECRETS -eq 1 ]; then
+            echo "::error::Secrets detected! Please remove them before merging."
+            exit 1
+          fi
+
+          echo "✅ No hardcoded secrets detected"
+
   analyze:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
