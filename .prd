@@ -1,0 +1,929 @@
+# Terminal Design System PRD
+
+## 16bitweather.co — UI Theme Architecture
+
+**Author:** Justin
+**Date:** February 1, 2026
+**Status:** Draft
+**Version:** 1.0
+
+---
+
+## 1. Problem Statement
+
+The current theme system (dark/miami/tron) suffers from CSS conflicts, inconsistent color application, and maintenance overhead. Three competing theme systems fight each other at the component level, causing unpredictable styling behavior. The miami and tron themes introduced visual gimmicks (scanlines, CRT glow effects, neon gradients) that prioritized novelty over usability and added significant code complexity for marginal design value.
+
+This PRD defines a clean terminal design system with a single shared TUI layout structure and swappable color palettes inspired by real-world terminal themes used by developers daily.
+
+---
+
+## 2. Goals
+
+- **One layout, many palettes.** Every theme shares identical TUI structure (box-drawing characters, monospace typography, table layouts, terminal prompt patterns). The only thing that changes between themes is color.
+- **Zero gimmicks.** No scanlines, no CRT curvature, no animated glow effects, no retro filters. The aesthetic comes from structure and typography, not post-processing.
+- **Developer-familiar palettes.** Color schemes are drawn from real terminal/editor themes that developers already know and use (Dracula, Nord, Catppuccin, Gruvbox). This gives the app instant visual credibility and makes palette selection intuitive.
+- **Maintainability.** A single CSS architecture where adding a new palette requires only defining color variables, never touching component code.
+- **Accessibility.** All palettes must maintain a minimum WCAG 2.1 AA contrast ratio (4.5:1) for text elements.
+
+---
+
+## 3. Non-Goals
+
+- Per-component theme overrides
+- User-created custom palettes (future consideration)
+- Animated theme transitions
+- Theme-specific layout differences
+
+---
+
+## 4. Design Philosophy
+
+### Inspiration
+
+The visual language draws from modern TUI applications that developers use daily:
+
+| Tool | What to Reference |
+|------|------------------|
+| htop | Data-dense layouts, color-coded metrics, compact information display |
+| lazygit | Panel-based navigation, box-drawing borders, status bars |
+| Warp | Clean terminal aesthetic with modern typography hierarchy |
+| k9s | Table-heavy data display, header rows, resource indicators |
+| btop | Multi-panel dashboards, progress bars, sparkline-style data |
+
+### Core Principles
+
+1. **Structure is the brand.** Box-drawing characters (`╔═══╗`, `║`, `╚═══╝`), monospace fonts, and table-based layouts ARE the 16bitweather identity. These never change regardless of palette.
+2. **Color is the mood.** Palettes change the emotional tone without altering layout, spacing, typography, or component behavior.
+3. **Data density over decoration.** Weather data should be presented like a terminal dashboard — compact, scannable, information-rich. Every pixel earns its place.
+4. **Consistency over cleverness.** One color system, one set of CSS variables, one source of truth. No conditional theme classes scattered across components.
+
+---
+
+## 5. Architecture
+
+### 5.1 CSS Variable System
+
+All colors flow through CSS custom properties. Components reference semantic variables, never raw hex values.
+
+```
+Theme Architecture:
+
+  terminal-system.css          (shared structure — borders, spacing, typography)
+         │
+         ▼
+  terminal-palettes.css        (all palette definitions as CSS variable sets)
+         │
+         ▼
+  globals.css                  (imports both, sets default palette)
+         │
+         ▼
+  Components                   (reference only semantic variables)
+```
+
+### 5.2 Semantic Variable Naming
+
+Components use semantic names that describe PURPOSE, not color:
+
+```css
+:root {
+  /* Backgrounds */
+  --terminal-bg-primary:       /* deepest background */
+  --terminal-bg-secondary:     /* panels, cards */
+  --terminal-bg-elevated:      /* modals, dropdowns, hover states */
+  --terminal-bg-surface:       /* interactive surface elements */
+
+  /* Text */
+  --terminal-text-primary:     /* main body text */
+  --terminal-text-secondary:   /* labels, descriptions, muted text */
+  --terminal-text-muted:       /* placeholders, disabled states */
+
+  /* Accent Colors (functional) */
+  --terminal-accent-primary:   /* primary interactive elements, links */
+  --terminal-accent-secondary: /* secondary highlights */
+  --terminal-accent-info:      /* informational indicators */
+  --terminal-accent-success:   /* positive states, good weather */
+  --terminal-accent-warning:   /* caution states, weather alerts */
+  --terminal-accent-danger:    /* error states, severe weather */
+
+  /* UI Chrome */
+  --terminal-border:           /* box-drawing borders, dividers */
+  --terminal-border-focus:     /* focused/active element borders */
+  --terminal-selection:        /* text selection, highlighted rows */
+  --terminal-scrollbar:        /* scrollbar thumb */
+
+  /* Weather-Specific */
+  --terminal-temp-hot:         /* high temperature display */
+  --terminal-temp-cold:        /* low temperature display */
+  --terminal-precip:           /* precipitation indicators */
+  --terminal-wind:             /* wind data indicators */
+  --terminal-uv:               /* UV index indicators */
+}
+```
+
+### 5.3 Palette Activation
+
+Palettes activate via a `data-palette` attribute on the root element:
+
+```html
+<html data-palette="terminal">
+<html data-palette="dracula">
+<html data-palette="nord">
+<html data-palette="catppuccin">
+<html data-palette="gruvbox">
+```
+
+Theme provider sets this attribute. Components never check which palette is active.
+
+---
+
+## 6. Color Palettes
+
+### 6.1 Terminal (Default)
+
+The house theme. High contrast cyan-on-dark inspired by classic terminal emulators. This is what 16bitweather ships with out of the box.
+
+**Personality:** Sharp, electric, unapologetic terminal energy.
+
+```css
+[data-palette="terminal"] {
+  /* Backgrounds */
+  --terminal-bg-primary:       #0a0a0f;
+  --terminal-bg-secondary:     #0d1117;
+  --terminal-bg-elevated:      #151b23;
+  --terminal-bg-surface:       #1c2333;
+
+  /* Text */
+  --terminal-text-primary:     #e0e0e0;
+  --terminal-text-secondary:   #8b949e;
+  --terminal-text-muted:       #484f58;
+
+  /* Accents */
+  --terminal-accent-primary:   #00d4ff;    /* cyan — the signature color */
+  --terminal-accent-secondary: #ff6ec7;    /* magenta */
+  --terminal-accent-info:      #58a6ff;
+  --terminal-accent-success:   #3fb950;
+  --terminal-accent-warning:   #d29922;
+  --terminal-accent-danger:    #f85149;
+
+  /* UI Chrome */
+  --terminal-border:           #00d4ff40;  /* cyan at 25% opacity */
+  --terminal-border-focus:     #00d4ff;
+  --terminal-selection:        #00d4ff20;
+  --terminal-scrollbar:        #00d4ff40;
+
+  /* Weather */
+  --terminal-temp-hot:         #f85149;
+  --terminal-temp-cold:        #58a6ff;
+  --terminal-precip:           #00d4ff;
+  --terminal-wind:             #8b949e;
+  --terminal-uv:               #d29922;
+}
+```
+
+### 6.2 Dracula
+
+The most widely adopted dark theme in developer tools (400+ app ports). Purple-anchored with vivid accent colors. Familiar to anyone who uses VS Code, iTerm, or Sublime.
+
+**Source:** draculatheme.com/spec
+**Personality:** Rich, vibrant, confident.
+
+```css
+[data-palette="dracula"] {
+  /* Backgrounds */
+  --terminal-bg-primary:       #282a36;
+  --terminal-bg-secondary:     #21222c;
+  --terminal-bg-elevated:      #44475a;
+  --terminal-bg-surface:       #343746;
+
+  /* Text */
+  --terminal-text-primary:     #f8f8f2;
+  --terminal-text-secondary:   #bfbfbf;
+  --terminal-text-muted:       #6272a4;
+
+  /* Accents */
+  --terminal-accent-primary:   #bd93f9;    /* purple — dracula's signature */
+  --terminal-accent-secondary: #ff79c6;    /* pink */
+  --terminal-accent-info:      #8be9fd;    /* cyan */
+  --terminal-accent-success:   #50fa7b;    /* green */
+  --terminal-accent-warning:   #f1fa8c;    /* yellow */
+  --terminal-accent-danger:    #ff5555;    /* red */
+
+  /* UI Chrome */
+  --terminal-border:           #6272a4;    /* comment color as border */
+  --terminal-border-focus:     #bd93f9;
+  --terminal-selection:        #44475a;
+  --terminal-scrollbar:        #6272a480;
+
+  /* Weather */
+  --terminal-temp-hot:         #ff5555;
+  --terminal-temp-cold:        #8be9fd;
+  --terminal-precip:           #8be9fd;
+  --terminal-wind:             #6272a4;
+  --terminal-uv:               #ffb86c;    /* orange */
+}
+```
+
+### 6.3 Nord
+
+Arctic-inspired palette with muted, blue-tinted colors. Deliberately restrained — the opposite of flashy. Popular with developers who prioritize long-session comfort over visual punch.
+
+**Source:** nordtheme.com
+**Personality:** Calm, focused, Scandinavian minimalism.
+
+```css
+[data-palette="nord"] {
+  /* Backgrounds — Polar Night */
+  --terminal-bg-primary:       #2e3440;    /* nord0 */
+  --terminal-bg-secondary:     #3b4252;    /* nord1 */
+  --terminal-bg-elevated:      #434c5e;    /* nord2 */
+  --terminal-bg-surface:       #4c566a;    /* nord3 */
+
+  /* Text — Snow Storm */
+  --terminal-text-primary:     #eceff4;    /* nord6 */
+  --terminal-text-secondary:   #d8dee9;    /* nord4 */
+  --terminal-text-muted:       #4c566a;    /* nord3 */
+
+  /* Accents — Frost + Aurora */
+  --terminal-accent-primary:   #88c0d0;    /* nord8 — frost primary */
+  --terminal-accent-secondary: #81a1c1;    /* nord9 */
+  --terminal-accent-info:      #5e81ac;    /* nord10 */
+  --terminal-accent-success:   #a3be8c;    /* nord14 — aurora green */
+  --terminal-accent-warning:   #ebcb8b;    /* nord13 — aurora yellow */
+  --terminal-accent-danger:    #bf616a;    /* nord11 — aurora red */
+
+  /* UI Chrome */
+  --terminal-border:           #4c566a;    /* nord3 */
+  --terminal-border-focus:     #88c0d0;
+  --terminal-selection:        #434c5e80;
+  --terminal-scrollbar:        #4c566a80;
+
+  /* Weather */
+  --terminal-temp-hot:         #bf616a;
+  --terminal-temp-cold:        #88c0d0;
+  --terminal-precip:           #5e81ac;
+  --terminal-wind:             #d8dee9;
+  --terminal-uv:               #d08770;    /* nord12 — aurora orange */
+}
+```
+
+### 6.4 Catppuccin Mocha
+
+The fastest-growing theme in the developer ecosystem. Pastel colors on a warm dark background. Community-driven with ports for 400+ apps. Hits the sweet spot between colorful and comfortable.
+
+**Source:** catppuccin.com/palette (Mocha flavor)
+**Personality:** Warm, modern, approachable.
+
+```css
+[data-palette="catppuccin"] {
+  /* Backgrounds */
+  --terminal-bg-primary:       #1e1e2e;    /* base */
+  --terminal-bg-secondary:     #181825;    /* mantle */
+  --terminal-bg-elevated:      #313244;    /* surface0 */
+  --terminal-bg-surface:       #45475a;    /* surface1 */
+
+  /* Text */
+  --terminal-text-primary:     #cdd6f4;    /* text */
+  --terminal-text-secondary:   #bac2de;    /* subtext1 */
+  --terminal-text-muted:       #585b70;    /* overlay0 → surface2 */
+
+  /* Accents */
+  --terminal-accent-primary:   #89b4fa;    /* blue */
+  --terminal-accent-secondary: #cba6f7;    /* mauve */
+  --terminal-accent-info:      #89dceb;    /* sky */
+  --terminal-accent-success:   #a6e3a1;    /* green */
+  --terminal-accent-warning:   #f9e2af;    /* yellow */
+  --terminal-accent-danger:    #f38ba8;    /* red */
+
+  /* UI Chrome */
+  --terminal-border:           #45475a;    /* surface1 */
+  --terminal-border-focus:     #89b4fa;
+  --terminal-selection:        #31324480;
+  --terminal-scrollbar:        #45475a80;
+
+  /* Weather */
+  --terminal-temp-hot:         #f38ba8;    /* red */
+  --terminal-temp-cold:        #89dceb;    /* sky */
+  --terminal-precip:           #74c7ec;    /* sapphire */
+  --terminal-wind:             #9399b2;    /* overlay2 */
+  --terminal-uv:               #fab387;    /* peach */
+}
+```
+
+### 6.5 Gruvbox
+
+A retro warm palette born from the Vim community. Heavy use of earth tones with no blue dominance — unusual for a dark theme. Feels like autumn in a terminal. Cult following among Linux users.
+
+**Source:** github.com/morhetz/gruvbox (dark hard variant)
+**Personality:** Warm, earthy, vintage without being kitschy.
+
+```css
+[data-palette="gruvbox"] {
+  /* Backgrounds */
+  --terminal-bg-primary:       #1d2021;    /* bg0_h (hard) */
+  --terminal-bg-secondary:     #282828;    /* bg0 */
+  --terminal-bg-elevated:      #3c3836;    /* bg1 */
+  --terminal-bg-surface:       #504945;    /* bg2 */
+
+  /* Text */
+  --terminal-text-primary:     #ebdbb2;    /* fg / light1 */
+  --terminal-text-secondary:   #d5c4a1;    /* fg2 / light2 */
+  --terminal-text-muted:       #665c54;    /* bg4 */
+
+  /* Accents */
+  --terminal-accent-primary:   #83a598;    /* aqua */
+  --terminal-accent-secondary: #d3869b;    /* purple */
+  --terminal-accent-info:      #83a598;    /* aqua */
+  --terminal-accent-success:   #b8bb26;    /* green */
+  --terminal-accent-warning:   #fabd2f;    /* yellow */
+  --terminal-accent-danger:    #fb4934;    /* red */
+
+  /* UI Chrome */
+  --terminal-border:           #504945;    /* bg2 */
+  --terminal-border-focus:     #83a598;
+  --terminal-selection:        #3c383680;
+  --terminal-scrollbar:        #50494580;
+
+  /* Weather */
+  --terminal-temp-hot:         #fb4934;
+  --terminal-temp-cold:        #83a598;
+  --terminal-precip:           #458588;    /* dark aqua */
+  --terminal-wind:             #a89984;    /* gray */
+  --terminal-uv:               #fe8019;    /* orange */
+}
+```
+
+### 6.6 Light Mode Variants
+
+Each palette includes a light variant for users who prefer bright backgrounds. Light variants follow the same semantic variable structure but invert the background/foreground relationship while preserving the palette's accent colors and personality.
+
+**Activation:** Light mode activates via `data-mode="light"` attribute alongside `data-palette`:
+
+```html
+<html data-palette="terminal" data-mode="dark">   <!-- default -->
+<html data-palette="terminal" data-mode="light">  <!-- light variant -->
+<html data-palette="dracula" data-mode="light">   <!-- dracula light -->
+```
+
+**Implementation pattern:** Each palette defines both modes in CSS:
+
+```css
+[data-palette="terminal"][data-mode="light"] {
+  /* Backgrounds — inverted */
+  --terminal-bg-primary:       #f8f9fa;
+  --terminal-bg-secondary:     #ffffff;
+  --terminal-bg-elevated:      #e9ecef;
+  --terminal-bg-surface:       #dee2e6;
+
+  /* Text — inverted */
+  --terminal-text-primary:     #1a1a2e;
+  --terminal-text-secondary:   #495057;
+  --terminal-text-muted:       #adb5bd;
+
+  /* Accents — same hue, adjusted for light background contrast */
+  --terminal-accent-primary:   #0099cc;    /* darker cyan for contrast */
+  --terminal-accent-secondary: #d946a3;    /* darker magenta */
+  /* ... other accents adjusted for 4.5:1 contrast on light bg ... */
+}
+```
+
+**Light palette summary:**
+
+```
+PALETTE       BG (LIGHT)  FG (LIGHT)  PRIMARY     VIBE
+───────────────────────────────────────────────────────────
+terminal      #f8f9fa     #1a1a2e     #0099cc     Clean electric
+dracula       #f8f8f2     #282a36     #9d6fc9     Soft violet
+nord          #eceff4     #2e3440     #5e81ac     Arctic snow
+catppuccin    #eff1f5     #4c4f69     #1e66f5     Latte warmth
+gruvbox       #fbf1c7     #3c3836     #427b58     Parchment
+```
+
+**Note:** Light mode uses Catppuccin Latte and Gruvbox Light as source palettes where available. Terminal, Dracula, and Nord light variants are custom-designed to preserve brand personality.
+
+---
+
+## 7. Shared TUI Components
+
+All components below use ONLY semantic CSS variables. They render identically across all palettes with different colors.
+
+### 7.1 TerminalCard
+
+The primary container. Uses box-drawing characters for borders.
+
+```
+╔══════════════════════════════════════╗
+║  CURRENT CONDITIONS                  ║
+╠══════════════════════════════════════╣
+║                                      ║
+║  Temperature:  72°F                  ║
+║  Feels Like:   68°F                  ║
+║  Humidity:     45%                   ║
+║  Wind:         8 mph NW              ║
+║                                      ║
+╚══════════════════════════════════════╝
+```
+
+Implementation notes:
+- Border uses `--terminal-border` color
+- Title row uses `--terminal-accent-primary` color
+- Body text uses `--terminal-text-primary`
+- Labels use `--terminal-text-secondary`
+- Background uses `--terminal-bg-secondary`
+
+### 7.2 TerminalHeader
+
+Section headers with box-drawing top border.
+
+```
+╔══ FORECAST ══════════════════════════╗
+```
+
+Implementation notes:
+- Title text in `--terminal-accent-primary`, uppercased
+- Border characters in `--terminal-border`
+- Font: monospace, tracking wide
+
+### 7.3 TerminalTable
+
+Data tables for forecast grids, hourly breakdowns.
+
+```
+┌──────────┬──────┬──────┬──────┬──────┐
+│ DAY      │ HIGH │ LOW  │ WIND │ RAIN │
+├──────────┼──────┼──────┼──────┼──────┤
+│ Mon      │ 75°  │ 58°  │ 12   │  10% │
+│ Tue      │ 72°  │ 55°  │  8   │  25% │
+│ Wed      │ 68°  │ 52°  │ 15   │  60% │
+│ Thu      │ 71°  │ 54°  │  6   │   5% │
+│ Fri      │ 78°  │ 60°  │ 10   │   0% │
+└──────────┴──────┴──────┴──────┴──────┘
+```
+
+Implementation notes:
+- Header row: `--terminal-accent-primary` text, `--terminal-bg-elevated` background
+- Alternating rows: `--terminal-bg-secondary` / `--terminal-bg-primary`
+- Borders: `--terminal-border`
+- Temperature HIGH uses `--terminal-temp-hot` for values above user-comfort threshold
+- Temperature LOW uses `--terminal-temp-cold` for values below user-comfort threshold
+- Precipitation uses `--terminal-precip` when probability > 30%
+
+### 7.4 TerminalPrompt
+
+Command-style interactive element for search.
+
+```
+user@16bitweather:~$ search_location █
+```
+
+Implementation notes:
+- Prompt prefix: `--terminal-accent-success` (green in most palettes)
+- User input text: `--terminal-text-primary`
+- Cursor block: `--terminal-accent-primary`, blinking
+- Background: `--terminal-bg-primary`
+
+### 7.5 TerminalStatusBar
+
+Bottom-of-card or bottom-of-page status indicator.
+
+```
+[LAST UPDATED: 2:34 PM PST] [SOURCE: NWS] [LAT: 37.68 LON: -121.77]
+```
+
+Implementation notes:
+- All text: `--terminal-text-muted`
+- Brackets: `--terminal-border`
+- Background: `--terminal-bg-secondary`
+
+### 7.6 TerminalNav
+
+Navigation menu using terminal-style commands.
+
+```
+[DASHBOARD] [FORECAST] [RADAR] [ALERTS] [SETTINGS]
+```
+
+Implementation notes:
+- Active item: `--terminal-accent-primary` text, `--terminal-selection` background
+- Inactive items: `--terminal-text-secondary`
+- Hover: `--terminal-bg-elevated` background
+- Brackets: `--terminal-border`
+
+---
+
+## 8. Typography
+
+All themes use the same font stack. No exceptions.
+
+```css
+--terminal-font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+```
+
+### Scale
+
+| Element | Size | Weight | Case | Tracking |
+|---------|------|--------|------|----------|
+| Card Title | 0.875rem (14px) | 700 | UPPERCASE | 0.1em |
+| Body Text | 0.875rem (14px) | 400 | Normal | 0.02em |
+| Data Value | 1.5rem (24px) | 700 | Normal | 0 |
+| Data Label | 0.75rem (12px) | 400 | UPPERCASE | 0.08em |
+| Status/Meta | 0.6875rem (11px) | 400 | Normal | 0.02em |
+| Nav Item | 0.8125rem (13px) | 600 | UPPERCASE | 0.06em |
+
+---
+
+## 9. Theme Selector UI
+
+The theme selector replaces the old SYSTEM dropdown. Located in the navigation bar.
+
+### Interaction Pattern
+
+Two controls: palette selector and light/dark toggle.
+
+```
+[PALETTE: TERMINAL ▾] [◐ DARK]
+```
+
+Clicking palette opens a dropdown panel:
+
+```
+╔══ SELECT PALETTE ════════════════╗
+║                                  ║
+║  ● TERMINAL    ◦ cyan/magenta    ║
+║  ○ DRACULA     ◦ purple/pink     ║
+║  ○ NORD        ◦ frost blue      ║
+║  ○ CATPPUCCIN  ◦ pastel blue     ║
+║  ○ GRUVBOX     ◦ warm earth      ║
+║                                  ║
+╚══════════════════════════════════╝
+```
+
+Clicking light/dark toggle cycles through:
+- `◐ DARK` (default)
+- `◑ LIGHT`
+- `◐ SYSTEM` (respects `prefers-color-scheme`)
+
+Implementation notes:
+- Each palette row shows the palette name and a small color indicator (two dots using the palette's primary and secondary accent)
+- Active palette marked with filled circle `●`, inactive with `○`
+- Palette and mode selections persist independently in localStorage
+- Dropdown uses box-drawing characters matching current palette
+- Dropdown background: `--terminal-bg-elevated`
+- On palette selection, update `data-palette` attribute on root element — no page reload
+- On mode toggle, update `data-mode` attribute — no page reload
+- System mode adds listener for `prefers-color-scheme` media query changes
+
+---
+
+## 10. File Structure
+
+```
+styles/
+├── terminal-system.css        # Shared TUI structure
+│   ├── Box-drawing character classes
+│   ├── Monospace typography system
+│   ├── Table layout system
+│   ├── Spacing scale
+│   └── Component structure (no colors)
+│
+├── terminal-palettes.css      # All palette definitions (dark + light)
+│   ├── [data-palette="terminal"][data-mode="dark"]   { ... }
+│   ├── [data-palette="terminal"][data-mode="light"]  { ... }
+│   ├── [data-palette="dracula"][data-mode="dark"]    { ... }
+│   ├── [data-palette="dracula"][data-mode="light"]   { ... }
+│   ├── [data-palette="nord"][data-mode="dark"]       { ... }
+│   ├── [data-palette="nord"][data-mode="light"]      { ... }
+│   ├── [data-palette="catppuccin"][data-mode="dark"] { ... }
+│   ├── [data-palette="catppuccin"][data-mode="light"]{ ... }
+│   ├── [data-palette="gruvbox"][data-mode="dark"]    { ... }
+│   └── [data-palette="gruvbox"][data-mode="light"]   { ... }
+│
+└── globals.css                # Imports + defaults
+
+components/
+├── terminal/
+│   ├── TerminalCard.tsx
+│   ├── TerminalHeader.tsx
+│   ├── TerminalTable.tsx
+│   ├── TerminalPrompt.tsx
+│   ├── TerminalStatusBar.tsx
+│   ├── TerminalNav.tsx
+│   ├── PaletteSelector.tsx
+│   └── ModeToggle.tsx
+│
+└── theme-provider.tsx         # Manages data-palette and data-mode attributes
+                               # Reads/writes localStorage
+                               # Handles prefers-color-scheme for system mode
+                               # Provides palette + mode context
+```
+
+---
+
+## 11. Migration Plan
+
+Three phases. Ship incrementally. Each phase results in a working, deployable state.
+
+### Phase 1: Foundation (CSS Architecture)
+
+Create the CSS infrastructure without changing any visible UI.
+
+**Tasks:**
+- Create `terminal-system.css` with all structural classes (box-drawing, monospace, spacing)
+- Create `terminal-palettes.css` with all five palette definitions
+- Update `globals.css` to import both files and set `terminal` as default
+- Update `theme-provider.tsx` to manage `data-palette` attribute instead of the old theme system
+- Set `terminal` as default palette in localStorage fallback
+- Remove all references to "dark", "miami", "tron" theme identifiers
+
+**Definition of Done:**
+- App loads with Terminal palette active
+- No visual regressions on existing pages
+- Old theme CSS is no longer imported
+- `data-palette` attribute correctly set on root element
+
+### Phase 2: Components (TUI Building Blocks)
+
+Build the shared terminal components and swap them in.
+
+**Tasks:**
+- Build all six terminal components (Card, Header, Table, Prompt, StatusBar, Nav)
+- Each component references ONLY semantic CSS variables
+- Build PaletteSelector component with dropdown
+- Refactor existing page components to use terminal components
+- Remove all hardcoded color values from component files
+- Remove all conditional theme CSS (`theme === "miami"`, etc.)
+
+**Definition of Done:**
+- All pages render using terminal components
+- Switching palettes via PaletteSelector changes all colors instantly
+- No hardcoded hex values in any component file
+- No conditional theme logic in any component file
+- All five palettes render correctly across all pages
+
+### Phase 3: Cleanup (Remove Legacy)
+
+Remove everything from the old theme system.
+
+**Tasks:**
+- Delete old theme CSS files
+- Delete old theme-specific components (if any remain)
+- Remove unused color definitions from `tailwind.config.ts`
+- Remove old theme toggle component
+- Audit for any remaining old theme references (`grep -r "miami\|tron" src/`)
+- Update README if it references old themes
+
+**Definition of Done:**
+- `grep -r "miami\|tron" src/` returns zero results
+- No unused CSS in the bundle
+- Tailwind config contains only palette-system colors
+- Clean git diff with no orphaned code
+
+---
+
+## 12. Adding a New Palette (Future)
+
+The architecture makes adding palettes trivial. Here is the complete process:
+
+1. Add two new blocks in `terminal-palettes.css`:
+   - `[data-palette="name"][data-mode="dark"]` with all semantic variables
+   - `[data-palette="name"][data-mode="light"]` with light variant variables
+2. Add the palette name and metadata to the `PALETTES` constant array in `PaletteSelector.tsx`
+3. Done. No component changes. No layout changes. No conditional logic.
+
+Candidate future palettes for consideration: Tokyo Night, Rose Pine, Solarized Dark, One Dark, Kanagawa.
+
+---
+
+## 13. Tailwind Config Integration
+
+Extend Tailwind to reference CSS variables so utility classes work with the palette system:
+
+```js
+// tailwind.config.ts
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        terminal: {
+          'bg-primary':     'var(--terminal-bg-primary)',
+          'bg-secondary':   'var(--terminal-bg-secondary)',
+          'bg-elevated':    'var(--terminal-bg-elevated)',
+          'bg-surface':     'var(--terminal-bg-surface)',
+          'text-primary':   'var(--terminal-text-primary)',
+          'text-secondary': 'var(--terminal-text-secondary)',
+          'text-muted':     'var(--terminal-text-muted)',
+          'accent-primary': 'var(--terminal-accent-primary)',
+          'accent-secondary': 'var(--terminal-accent-secondary)',
+          'accent-info':    'var(--terminal-accent-info)',
+          'accent-success': 'var(--terminal-accent-success)',
+          'accent-warning': 'var(--terminal-accent-warning)',
+          'accent-danger':  'var(--terminal-accent-danger)',
+          'border':         'var(--terminal-border)',
+          'border-focus':   'var(--terminal-border-focus)',
+          'selection':      'var(--terminal-selection)',
+        },
+      },
+      fontFamily: {
+        mono: ['JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', 'Consolas', 'monospace'],
+      },
+    },
+  },
+}
+```
+
+This allows writing `bg-terminal-bg-primary` or `text-terminal-accent-primary` in JSX and having it automatically resolve to the active palette's colors.
+
+---
+
+## 14. Acceptance Criteria
+
+### Functional
+
+- [ ] App loads with Terminal palette (dark mode) as default
+- [ ] PaletteSelector dropdown lists all five palettes with color previews
+- [ ] Selecting a palette instantly updates all UI colors (no reload)
+- [ ] Palette selection persists across browser sessions (localStorage)
+- [ ] Mode toggle cycles through Dark → Light → System
+- [ ] Mode selection persists independently from palette selection
+- [ ] System mode respects `prefers-color-scheme` and updates on OS change
+- [ ] All five palettes render correctly in both dark and light modes
+- [ ] All pages render correctly: Dashboard, Forecast, Radar, Alerts, Settings
+- [ ] No hardcoded hex color values exist in any component file
+- [ ] No conditional theme logic exists in any component file
+- [ ] `grep -r "miami\|tron\|dark.*theme" src/` returns zero legacy results
+
+### Visual
+
+- [ ] Box-drawing characters render consistently across Chrome, Firefox, Safari
+- [ ] Monospace font loads correctly (JetBrains Mono primary, fallback chain works)
+- [ ] All text meets WCAG 2.1 AA contrast ratio (4.5:1) in every palette
+- [ ] Weather data values are visually distinct from labels in every palette
+- [ ] Temperature hot/cold colors are distinguishable in every palette
+- [ ] Active nav item is clearly distinguishable from inactive items in every palette
+
+### Technical
+
+- [ ] Zero CSS specificity conflicts between palettes
+- [ ] Lighthouse performance score >= 90 (no regression from theme system)
+- [ ] No unused CSS in production bundle
+- [ ] Adding a sixth palette requires changes to exactly two files (`terminal-palettes.css` and `PaletteSelector.tsx`)
+- [ ] Light mode variants maintain WCAG 2.1 AA contrast (4.5:1) with adjusted accent colors
+
+---
+
+## 15. Palette Quick Reference
+
+Summary card for all five palettes at a glance:
+
+```
+PALETTE       BG        FG        PRIMARY   SECONDARY  VIBE
+─────────────────────────────────────────────────────────────
+terminal      #0a0a0f   #e0e0e0   #00d4ff   #ff6ec7    Electric
+dracula       #282a36   #f8f8f2   #bd93f9   #ff79c6    Vivid
+nord          #2e3440   #eceff4   #88c0d0   #81a1c1    Calm
+catppuccin    #1e1e2e   #cdd6f4   #89b4fa   #cba6f7    Warm
+gruvbox       #1d2021   #ebdbb2   #83a598   #d3869b    Earthy
+```
+
+---
+
+## 16. Open Questions
+
+### Resolved
+
+1. **Font loading strategy** — **DECISION: Self-host variable font, subset to Latin.**
+   - Use JetBrains Mono variable font (~100KB single file covers all weights)
+   - Subset to Latin characters only (drops 30-40% file size)
+   - Final payload: ~60-70KB for full weight range
+   - Implementation:
+     ```css
+     @font-face {
+       font-family: 'JetBrains Mono';
+       src: url('/fonts/JetBrainsMono-Variable-Latin.woff2') format('woff2');
+       font-weight: 100 800;
+       font-display: swap;
+     }
+     ```
+   - Use Fontsource or google-webfonts-helper to generate the subset
+
+2. **Radar map colors** — **DECISION: Fixed meteorological standard colors.**
+   - Radar overlays use standard NWS/meteorological color scales regardless of palette
+   - Users expect green/yellow/red to indicate specific precipitation intensity
+   - Palette-aware radar would cause confusion and potentially safety issues
+
+4. **Mobile responsiveness** — **DECISION: CSS border fallback below 640px.**
+   - Desktop (>= 640px): Unicode box-drawing characters
+   - Mobile (< 640px): CSS borders with `border-radius: 0` to maintain sharp terminal aesthetic
+   - Terminal feel preserved via monospace font, color palette, and data density
+   - Implementation:
+     ```css
+     @media (min-width: 640px) {
+       .terminal-card { /* box-drawing pseudo-elements */ }
+     }
+     @media (max-width: 639px) {
+       .terminal-card {
+         border: 1px solid var(--terminal-border);
+         border-radius: 0;
+       }
+     }
+     ```
+
+3. **Weather icons** — **DECISION: Use CSS `currentColor`.**
+   - Icons inherit color from parent text color via `currentColor`
+   - Single icon set works across all palettes automatically
+   - SVG icons should use `fill="currentColor"` or `stroke="currentColor"`
+   - No theme-specific icon assets needed
+
+5. **Palette persistence scope** — **DECISION: localStorage only (for now).**
+   - Palette and mode stored in localStorage independently
+   - No Supabase sync required (avoids auth dependency, schema changes)
+   - Can add cross-device sync as future enhancement if user demand warrants
+
+---
+
+## 17. Kill Switch Protocol
+
+**Purpose:** Provide a mechanism to abort the design system rollout if Vercel preview reveals unacceptable visual results.
+
+### Implementation
+
+1. **Feature Flag:** All terminal design system changes gated behind `NEXT_PUBLIC_TERMINAL_DESIGN=true` environment variable
+2. **Vercel Preview Check:** Before merging any PR:
+   - Deploy to Vercel preview
+   - Visual review of all five palettes on key pages
+   - If design is unacceptable, close PR without merging
+3. **Rollback Plan:** If issues discovered post-merge:
+   - Set `NEXT_PUBLIC_TERMINAL_DESIGN=false` in production
+   - Old theme system remains intact until flag is permanently removed in Phase 3
+
+### Decision Points
+
+| Checkpoint | Action if Unacceptable |
+|------------|----------------------|
+| Phase 1 PR Preview | Close PR, iterate on CSS |
+| Phase 2 PR Preview | Close PR, iterate on components |
+| Phase 3 PR Preview | Close PR, keep feature flag |
+| Post-Launch (1 week) | Toggle flag off, investigate |
+
+---
+
+## 18. Performance Requirements
+
+### Lighthouse Score Gate
+
+**Requirement:** All PRs must maintain Lighthouse Performance score >= 90
+
+### Pre-PR Push Checklist
+
+Before pushing any PR related to this design system:
+
+1. Run production build: `npm run build`
+2. Start production server: `npm run start`
+3. Run Lighthouse audit on key pages:
+   - Homepage/Dashboard
+   - Forecast page
+   - Radar page
+4. Verify Performance score >= 90 on all pages
+5. If score < 90, do not push PR until resolved
+
+### Automated Enforcement
+
+Add to CI pipeline (`.github/workflows/lighthouse.yml`):
+
+```yaml
+name: Lighthouse CI
+on: [pull_request]
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npm run build
+      - name: Run Lighthouse
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          urls: |
+            http://localhost:3000/
+            http://localhost:3000/forecast
+            http://localhost:3000/radar
+          budgetPath: ./lighthouse-budget.json
+          uploadArtifacts: true
+```
+
+### Lighthouse Budget (`lighthouse-budget.json`)
+
+```json
+[
+  {
+    "path": "/*",
+    "performance": 90
+  }
+]
+```
+
+---
+
+*End of document.*

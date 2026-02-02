@@ -1,0 +1,390 @@
+/*
+ * Terminal Palettes CSS
+ *
+ * All color palettes for the 16bitweather terminal design system.
+ * Each palette defines both dark and light mode variants.
+ *
+ * Palettes:
+ * - terminal: The house theme with cyan/magenta
+ * - dracula: Purple-anchored from draculatheme.com
+ * - nord: Arctic-inspired from nordtheme.com
+ * - catppuccin: Pastel warmth from catppuccin.com
+ * - gruvbox: Warm earth tones from github.com/morhetz/gruvbox
+ */
+
+/* ==========================================================================
+   TERMINAL PALETTE
+   The house theme. High contrast cyan-on-dark inspired by classic terminals.
+   ========================================================================== */
+
+/* Terminal - Dark Mode */
+[data-palette="terminal"][data-mode="dark"] {
+  /* Backgrounds */
+  --terminal-bg-primary:       #0a0a0f;
+  --terminal-bg-secondary:     #0d1117;
+  --terminal-bg-elevated:      #151b23;
+  --terminal-bg-surface:       #1c2333;
+
+  /* Text */
+  --terminal-text-primary:     #e0e0e0;
+  --terminal-text-secondary:   #8b949e;
+  --terminal-text-muted:       #484f58;
+
+  /* Accents */
+  --terminal-accent-primary:   #00d4ff;
+  --terminal-accent-secondary: #ff6ec7;
+  --terminal-accent-info:      #58a6ff;
+  --terminal-accent-success:   #3fb950;
+  --terminal-accent-warning:   #d29922;
+  --terminal-accent-danger:    #f85149;
+
+  /* UI Chrome */
+  --terminal-border:           #00d4ff40;
+  --terminal-border-focus:     #00d4ff;
+  --terminal-selection:        #00d4ff20;
+  --terminal-scrollbar:        #00d4ff40;
+
+  /* Weather */
+  --terminal-temp-hot:         #f85149;
+  --terminal-temp-cold:        #58a6ff;
+  --terminal-precip:           #00d4ff;
+  --terminal-wind:             #8b949e;
+  --terminal-uv:               #d29922;
+}
+
+/* Terminal - Light Mode */
+[data-palette="terminal"][data-mode="light"] {
+  /* Backgrounds - inverted */
+  --terminal-bg-primary:       #f8f9fa;
+  --terminal-bg-secondary:     #ffffff;
+  --terminal-bg-elevated:      #e9ecef;
+  --terminal-bg-surface:       #dee2e6;
+
+  /* Text - inverted */
+  --terminal-text-primary:     #1a1a2e;
+  --terminal-text-secondary:   #495057;
+  --terminal-text-muted:       #adb5bd;
+
+  /* Accents - adjusted for light background contrast */
+  --terminal-accent-primary:   #0099cc;
+  --terminal-accent-secondary: #d946a3;
+  --terminal-accent-info:      #0969da;
+  --terminal-accent-success:   #1a7f37;
+  --terminal-accent-warning:   #9a6700;
+  --terminal-accent-danger:    #cf222e;
+
+  /* UI Chrome */
+  --terminal-border:           #0099cc40;
+  --terminal-border-focus:     #0099cc;
+  --terminal-selection:        #0099cc20;
+  --terminal-scrollbar:        #0099cc40;
+
+  /* Weather */
+  --terminal-temp-hot:         #cf222e;
+  --terminal-temp-cold:        #0969da;
+  --terminal-precip:           #0099cc;
+  --terminal-wind:             #495057;
+  --terminal-uv:               #9a6700;
+}
+
+/* ==========================================================================
+   DRACULA PALETTE
+   Purple-anchored with vivid accent colors from draculatheme.com/spec
+   ========================================================================== */
+
+/* Dracula - Dark Mode */
+[data-palette="dracula"][data-mode="dark"] {
+  /* Backgrounds */
+  --terminal-bg-primary:       #282a36;
+  --terminal-bg-secondary:     #21222c;
+  --terminal-bg-elevated:      #44475a;
+  --terminal-bg-surface:       #343746;
+
+  /* Text */
+  --terminal-text-primary:     #f8f8f2;
+  --terminal-text-secondary:   #bfbfbf;
+  --terminal-text-muted:       #6272a4;
+
+  /* Accents */
+  --terminal-accent-primary:   #bd93f9;
+  --terminal-accent-secondary: #ff79c6;
+  --terminal-accent-info:      #8be9fd;
+  --terminal-accent-success:   #50fa7b;
+  --terminal-accent-warning:   #f1fa8c;
+  --terminal-accent-danger:    #ff5555;
+
+  /* UI Chrome */
+  --terminal-border:           #6272a4;
+  --terminal-border-focus:     #bd93f9;
+  --terminal-selection:        #44475a;
+  --terminal-scrollbar:        #6272a480;
+
+  /* Weather */
+  --terminal-temp-hot:         #ff5555;
+  --terminal-temp-cold:        #8be9fd;
+  --terminal-precip:           #8be9fd;
+  --terminal-wind:             #6272a4;
+  --terminal-uv:               #ffb86c;
+}
+
+/* Dracula - Light Mode */
+[data-palette="dracula"][data-mode="light"] {
+  /* Backgrounds - inverted */
+  --terminal-bg-primary:       #f8f8f2;
+  --terminal-bg-secondary:     #ffffff;
+  --terminal-bg-elevated:      #e8e8e0;
+  --terminal-bg-surface:       #d8d8d0;
+
+  /* Text - inverted */
+  --terminal-text-primary:     #282a36;
+  --terminal-text-secondary:   #44475a;
+  --terminal-text-muted:       #9099b8;
+
+  /* Accents - adjusted for light background contrast */
+  --terminal-accent-primary:   #9d6fc9;
+  --terminal-accent-secondary: #d9509e;
+  --terminal-accent-info:      #0e8eb0;
+  --terminal-accent-success:   #2a9d4a;
+  --terminal-accent-warning:   #b89d00;
+  --terminal-accent-danger:    #e63535;
+
+  /* UI Chrome */
+  --terminal-border:           #9099b8;
+  --terminal-border-focus:     #9d6fc9;
+  --terminal-selection:        #9d6fc920;
+  --terminal-scrollbar:        #9099b880;
+
+  /* Weather */
+  --terminal-temp-hot:         #e63535;
+  --terminal-temp-cold:        #0e8eb0;
+  --terminal-precip:           #0e8eb0;
+  --terminal-wind:             #44475a;
+  --terminal-uv:               #d08800;
+}
+
+/* ==========================================================================
+   NORD PALETTE
+   Arctic-inspired with muted, blue-tinted colors from nordtheme.com
+   ========================================================================== */
+
+/* Nord - Dark Mode */
+[data-palette="nord"][data-mode="dark"] {
+  /* Backgrounds - Polar Night */
+  --terminal-bg-primary:       #2e3440;
+  --terminal-bg-secondary:     #3b4252;
+  --terminal-bg-elevated:      #434c5e;
+  --terminal-bg-surface:       #4c566a;
+
+  /* Text - Snow Storm */
+  --terminal-text-primary:     #eceff4;
+  --terminal-text-secondary:   #d8dee9;
+  --terminal-text-muted:       #4c566a;
+
+  /* Accents - Frost + Aurora */
+  --terminal-accent-primary:   #88c0d0;
+  --terminal-accent-secondary: #81a1c1;
+  --terminal-accent-info:      #5e81ac;
+  --terminal-accent-success:   #a3be8c;
+  --terminal-accent-warning:   #ebcb8b;
+  --terminal-accent-danger:    #bf616a;
+
+  /* UI Chrome */
+  --terminal-border:           #4c566a;
+  --terminal-border-focus:     #88c0d0;
+  --terminal-selection:        #434c5e80;
+  --terminal-scrollbar:        #4c566a80;
+
+  /* Weather */
+  --terminal-temp-hot:         #bf616a;
+  --terminal-temp-cold:        #88c0d0;
+  --terminal-precip:           #5e81ac;
+  --terminal-wind:             #d8dee9;
+  --terminal-uv:               #d08770;
+}
+
+/* Nord - Light Mode (Snow Storm) */
+[data-palette="nord"][data-mode="light"] {
+  /* Backgrounds - Snow Storm */
+  --terminal-bg-primary:       #eceff4;
+  --terminal-bg-secondary:     #e5e9f0;
+  --terminal-bg-elevated:      #d8dee9;
+  --terminal-bg-surface:       #c9d1de;
+
+  /* Text - Polar Night */
+  --terminal-text-primary:     #2e3440;
+  --terminal-text-secondary:   #3b4252;
+  --terminal-text-muted:       #7b88a1;
+
+  /* Accents - adjusted for light background contrast */
+  --terminal-accent-primary:   #5e81ac;
+  --terminal-accent-secondary: #4c6a94;
+  --terminal-accent-info:      #4c6a94;
+  --terminal-accent-success:   #6a8a5a;
+  --terminal-accent-warning:   #b58900;
+  --terminal-accent-danger:    #a3404a;
+
+  /* UI Chrome */
+  --terminal-border:           #c9d1de;
+  --terminal-border-focus:     #5e81ac;
+  --terminal-selection:        #5e81ac20;
+  --terminal-scrollbar:        #c9d1de80;
+
+  /* Weather */
+  --terminal-temp-hot:         #a3404a;
+  --terminal-temp-cold:        #5e81ac;
+  --terminal-precip:           #4c6a94;
+  --terminal-wind:             #3b4252;
+  --terminal-uv:               #b55a50;
+}
+
+/* ==========================================================================
+   CATPPUCCIN PALETTE
+   Pastel colors on warm backgrounds from catppuccin.com
+   Dark: Mocha flavor | Light: Latte flavor
+   ========================================================================== */
+
+/* Catppuccin - Dark Mode (Mocha) */
+[data-palette="catppuccin"][data-mode="dark"] {
+  /* Backgrounds */
+  --terminal-bg-primary:       #1e1e2e;
+  --terminal-bg-secondary:     #181825;
+  --terminal-bg-elevated:      #313244;
+  --terminal-bg-surface:       #45475a;
+
+  /* Text */
+  --terminal-text-primary:     #cdd6f4;
+  --terminal-text-secondary:   #bac2de;
+  --terminal-text-muted:       #585b70;
+
+  /* Accents */
+  --terminal-accent-primary:   #89b4fa;
+  --terminal-accent-secondary: #cba6f7;
+  --terminal-accent-info:      #89dceb;
+  --terminal-accent-success:   #a6e3a1;
+  --terminal-accent-warning:   #f9e2af;
+  --terminal-accent-danger:    #f38ba8;
+
+  /* UI Chrome */
+  --terminal-border:           #45475a;
+  --terminal-border-focus:     #89b4fa;
+  --terminal-selection:        #31324480;
+  --terminal-scrollbar:        #45475a80;
+
+  /* Weather */
+  --terminal-temp-hot:         #f38ba8;
+  --terminal-temp-cold:        #89dceb;
+  --terminal-precip:           #74c7ec;
+  --terminal-wind:             #9399b2;
+  --terminal-uv:               #fab387;
+}
+
+/* Catppuccin - Light Mode (Latte) */
+[data-palette="catppuccin"][data-mode="light"] {
+  /* Backgrounds - Latte base colors */
+  --terminal-bg-primary:       #eff1f5;
+  --terminal-bg-secondary:     #e6e9ef;
+  --terminal-bg-elevated:      #dce0e8;
+  --terminal-bg-surface:       #ccd0da;
+
+  /* Text - Latte text colors */
+  --terminal-text-primary:     #4c4f69;
+  --terminal-text-secondary:   #5c5f77;
+  --terminal-text-muted:       #9ca0b0;
+
+  /* Accents - Latte accent colors */
+  --terminal-accent-primary:   #1e66f5;
+  --terminal-accent-secondary: #8839ef;
+  --terminal-accent-info:      #04a5e5;
+  --terminal-accent-success:   #40a02b;
+  --terminal-accent-warning:   #df8e1d;
+  --terminal-accent-danger:    #d20f39;
+
+  /* UI Chrome */
+  --terminal-border:           #ccd0da;
+  --terminal-border-focus:     #1e66f5;
+  --terminal-selection:        #1e66f520;
+  --terminal-scrollbar:        #ccd0da80;
+
+  /* Weather */
+  --terminal-temp-hot:         #d20f39;
+  --terminal-temp-cold:        #04a5e5;
+  --terminal-precip:           #209fb5;
+  --terminal-wind:             #5c5f77;
+  --terminal-uv:               #fe640b;
+}
+
+/* ==========================================================================
+   GRUVBOX PALETTE
+   Retro warm palette with earth tones from github.com/morhetz/gruvbox
+   Dark: Hard variant | Light: Official Gruvbox Light
+   ========================================================================== */
+
+/* Gruvbox - Dark Mode (Hard) */
+[data-palette="gruvbox"][data-mode="dark"] {
+  /* Backgrounds */
+  --terminal-bg-primary:       #1d2021;
+  --terminal-bg-secondary:     #282828;
+  --terminal-bg-elevated:      #3c3836;
+  --terminal-bg-surface:       #504945;
+
+  /* Text */
+  --terminal-text-primary:     #ebdbb2;
+  --terminal-text-secondary:   #d5c4a1;
+  --terminal-text-muted:       #665c54;
+
+  /* Accents */
+  --terminal-accent-primary:   #83a598;
+  --terminal-accent-secondary: #d3869b;
+  --terminal-accent-info:      #83a598;
+  --terminal-accent-success:   #b8bb26;
+  --terminal-accent-warning:   #fabd2f;
+  --terminal-accent-danger:    #fb4934;
+
+  /* UI Chrome */
+  --terminal-border:           #504945;
+  --terminal-border-focus:     #83a598;
+  --terminal-selection:        #3c383680;
+  --terminal-scrollbar:        #50494580;
+
+  /* Weather */
+  --terminal-temp-hot:         #fb4934;
+  --terminal-temp-cold:        #83a598;
+  --terminal-precip:           #458588;
+  --terminal-wind:             #a89984;
+  --terminal-uv:               #fe8019;
+}
+
+/* Gruvbox - Light Mode */
+[data-palette="gruvbox"][data-mode="light"] {
+  /* Backgrounds - Gruvbox Light */
+  --terminal-bg-primary:       #fbf1c7;
+  --terminal-bg-secondary:     #f2e5bc;
+  --terminal-bg-elevated:      #ebdbb2;
+  --terminal-bg-surface:       #d5c4a1;
+
+  /* Text - Gruvbox Light text */
+  --terminal-text-primary:     #3c3836;
+  --terminal-text-secondary:   #504945;
+  --terminal-text-muted:       #928374;
+
+  /* Accents - adjusted for light background contrast */
+  --terminal-accent-primary:   #427b58;
+  --terminal-accent-secondary: #8f3f71;
+  --terminal-accent-info:      #076678;
+  --terminal-accent-success:   #79740e;
+  --terminal-accent-warning:   #b57614;
+  --terminal-accent-danger:    #9d0006;
+
+  /* UI Chrome */
+  --terminal-border:           #d5c4a1;
+  --terminal-border-focus:     #427b58;
+  --terminal-selection:        #427b5820;
+  --terminal-scrollbar:        #d5c4a180;
+
+  /* Weather */
+  --terminal-temp-hot:         #9d0006;
+  --terminal-temp-cold:        #076678;
+  --terminal-precip:           #076678;
+  --terminal-wind:             #504945;
+  --terminal-uv:               #af3a03;
+}
