@@ -492,6 +492,15 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Validate message length to prevent API abuse and excessive costs
+        const MAX_MESSAGE_LENGTH = 4000;
+        if (message.length > MAX_MESSAGE_LENGTH) {
+            return NextResponse.json(
+                { error: `Message exceeds maximum length of ${MAX_MESSAGE_LENGTH} characters` },
+                { status: 400 }
+            );
+        }
+
         // Check if this is a simple location search (bypass AI)
         if (isSimpleLocationSearch(message)) {
             return NextResponse.json({
