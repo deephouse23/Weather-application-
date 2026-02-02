@@ -12,9 +12,9 @@ export interface TerminalNavProps {
 export function TerminalNav({ items, className }: TerminalNavProps) {
   return (
     <nav className={cn("terminal-nav", className)}>
-      {items.map((item, index) => (
+      {items.map((item) => (
         <Link
-          key={index}
+          key={item.href}
           href={item.href}
           className={cn("terminal-nav-item", item.active && "active")}
           aria-current={item.active ? "page" : undefined}

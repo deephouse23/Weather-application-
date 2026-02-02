@@ -92,13 +92,17 @@ function HomePageShell() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-[var(--bg,#0a0a1a)]">
       <div className="max-w-6xl mx-auto px-4 py-6">
-        {/* Large header - this is the LCP element */}
+        {/* Large header - this is the LCP element with fetchpriority for performance */}
         <h1
           className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-center mb-8 text-[var(--primary,#00ff00)]"
           style={{
             textShadow: '0 0 10px var(--primary, #00ff00), 0 0 20px var(--primary, #00ff00)',
-            fontFamily: 'var(--font-vt323), monospace'
+            fontFamily: 'var(--font-vt323), monospace',
+            contentVisibility: 'auto',
+            containIntrinsicSize: '0 80px'
           }}
+          // @ts-expect-error - fetchpriority is valid HTML attribute
+          fetchpriority="high"
         >
           16 BIT WEATHER
         </h1>

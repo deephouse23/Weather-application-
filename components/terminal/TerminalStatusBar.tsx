@@ -11,8 +11,8 @@ export interface TerminalStatusBarProps {
 export function TerminalStatusBar({ items, className }: TerminalStatusBarProps) {
   return (
     <div className={cn("terminal-status-bar", className)}>
-      {items.map((item, index) => (
-        <span key={index} className="terminal-status-text">
+      {items.map((item) => (
+        <span key={item.label} className="terminal-status-text">
           [{item.label.toUpperCase()}: {item.value}]
         </span>
       ))}
