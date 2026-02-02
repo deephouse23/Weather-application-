@@ -186,6 +186,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const root = window.document.documentElement
     const body = window.document.body
 
+    // Check if Terminal Design System is enabled - if so, skip legacy style injection
+    const isTerminalDesignEnabled = process.env.NEXT_PUBLIC_TERMINAL_DESIGN === 'true'
+
     // Remove all old classes
     THEME_LIST.forEach(t => {
       root.classList.remove(t)
@@ -196,6 +199,13 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     root.classList.add(theme)
     root.setAttribute('data-theme', theme)
     body.classList.add(`theme-${theme}`)
+
+    // If Terminal Design System is enabled, skip legacy inline style injection
+    // The terminal design system uses CSS [data-palette] rules which would be
+    // overridden by inline styles (inline styles have highest specificity)
+    if (isTerminalDesignEnabled) {
+      return
+    }
 
     // DYNAMIC CSS INJECTION
     // Get definition from config
