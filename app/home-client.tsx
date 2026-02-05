@@ -40,7 +40,6 @@ import { PollenDisplay } from "@/components/pollen-display"
 import LazyHourlyForecast from "@/components/lazy-hourly-forecast"
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/responsive-container"
 import { ErrorBoundary } from "@/components/error-boundary"
-import { useLocationContext } from "@/components/location-context"
 import LazyWeatherMap from '@/components/lazy-weather-map'
 import { WeatherSkeleton } from '@/components/weather-skeleton'
 import { MoonPhaseIcon } from '@/components/moon-phase-icon'
@@ -56,8 +55,6 @@ import { useWeatherController } from "@/hooks/useWeatherController"
 function WeatherApp() {
   const { theme } = useTheme()
   const themeClasses = getComponentStyles(theme as ThemeType, 'weather')
-  // Location context - values available if needed
-  useLocationContext()
 
   // Use the new controller hook
   const {
@@ -373,7 +370,7 @@ function WeatherApp() {
                     </CardHeader>
                     <CardContent className="text-center pt-1">
                       <p className={cn("text-2xl font-bold", themeClasses.text)}>
-                        0&quot;
+                        {weather?.precipitation ?? 0}&quot;
                       </p>
                       <p className={cn("text-xs", themeClasses.headerText)}>Today</p>
                     </CardContent>
