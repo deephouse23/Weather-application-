@@ -23,7 +23,13 @@ import { useLocationContext } from "./location-context"
 import { useTheme } from "./theme-provider"
 import { Input } from "@/components/ui/input"
 import { useAIChat } from "@/hooks/useAIChat"
-import { AIResponsePanel } from "@/components/chat/ai-response-panel"
+import dynamic from "next/dynamic"
+
+// PERFORMANCE: Lazy load AI panel - only needed for authenticated users with active chat
+const AIResponsePanel = dynamic(
+  () => import("@/components/chat/ai-response-panel").then(mod => ({ default: mod.AIResponsePanel })),
+  { ssr: false, loading: () => null }
+)
 
 interface WeatherContext {
   location?: string;
@@ -337,7 +343,6 @@ export default function WeatherSearch({
               "w-full sm:w-auto max-w-xs min-h-[48px]",
               "text-xs sm:text-sm uppercase tracking-wider font-mono",
               "border-0",
-              theme === 'miami' && "hover:bg-weather-accent hover:text-weather-bg"
             )}
             aria-label={isAutoDetecting ? "Detecting your location" : isLoading ? "Loading" : isDisabled ? "Rate limited" : "Use my current location"}
           >
@@ -366,8 +371,8 @@ export default function WeatherSearch({
 
       {/* Error Display - Mobile responsive */}
       {(error || rateLimitError || aiError) && (
-        <div className={`p-3 sm:p-4 mx-2 sm:mx-0 ${themeClasses.errorBg} border ${themeClasses.errorText} 
-                      text-xs sm:text-sm text-center pixel-font ${theme === 'miami' ? 'border-weather-accent' : themeClasses.specialBorder}`}>
+        <div className={`p-3 sm:p-4 mx-2 sm:mx-0 ${themeClasses.errorBg} border ${themeClasses.errorText}
+                      text-xs sm:text-sm text-center pixel-font ${themeClasses.specialBorder}`}>
           <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
             <span>!</span>
             <span className="uppercase tracking-wider break-words">{error || rateLimitError || aiError}</span>

@@ -493,8 +493,8 @@ const WeatherMapOpenLayers = ({
 
   const themeStyles = useMemo(() => {
     switch (theme) {
-      case 'miami':
-        return { container: 'shadow-lg shadow-pink-500/30', badge: 'bg-pink-600/90 text-white' }
+      case 'nord':
+        return { container: 'shadow-lg shadow-blue-500/20', badge: 'bg-slate-700/90 text-white' }
       default:
         return { container: 'shadow-lg', badge: 'bg-gray-800/90 text-white' }
     }

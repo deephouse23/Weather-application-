@@ -14,7 +14,40 @@
 
 @layer components {
   /* ═══════════════════════════════════════════════════════════
-     SYNTHWAVE '84 Theme - Neon 1980s Miami 
+     NORD Theme - Arctic North-Bluish Palette
+     ═══════════════════════════════════════════════════════════ */
+
+  [data-theme="nord"] body {
+    background: linear-gradient(180deg, hsl(220 16% 22%) 0%, hsl(220 16% 18%) 100%) fixed;
+    position: relative;
+  }
+
+  /* Subtle aurora-like glow overlay */
+  [data-theme="nord"] body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+      radial-gradient(ellipse at 30% 20%, hsl(193 43% 67% / 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 80%, hsl(210 34% 63% / 0.06) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  [data-theme="nord"] .weather-card {
+    background: hsl(222 16% 28% / 0.9);
+    border: 2px solid hsl(210 34% 63%);
+    box-shadow:
+      0 0 15px hsl(193 43% 67% / 0.2),
+      inset 0 0 10px hsl(193 43% 67% / 0.05);
+    backdrop-filter: blur(8px);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     SYNTHWAVE '84 Theme - Neon 1980s Miami
      ═══════════════════════════════════════════════════════════ */
 
   [data-theme="synthwave84"] body {
@@ -227,51 +260,6 @@
       0 0 20px hsl(120 100% 50% / 0.4),
       inset 0 0 10px hsl(120 100% 50% / 0.1);
     backdrop-filter: blur(5px);
-  }
-
-  /* ═══════════════════════════════════════════════════════════
-     MIAMI VICE Theme - Neon Sunset
-     ═══════════════════════════════════════════════════════════ */
-
-  [data-theme="miami"] body {
-    background:
-      linear-gradient(180deg,
-        hsl(256 62% 13%) 0%,
-        hsl(280 60% 20%) 30%,
-        hsl(290 50% 30%) 60%,
-        hsl(23 100% 50%) 90%,
-        hsl(328 73% 59%) 100%) fixed;
-    position: relative;
-    overflow-x: hidden;
-  }
-
-  [data-theme="miami"] body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background:
-      radial-gradient(circle at 20% 80%, hsl(23 100% 50% / 0.3) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, hsl(328 73% 59% / 0.2) 0%, transparent 50%),
-      radial-gradient(circle at 50% 50%, hsl(23 100% 50% / 0.1) 0%, transparent 70%);
-    z-index: 0;
-    animation: miamiGlow 10s ease-in-out infinite;
-  }
-
-  @keyframes miamiGlow {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 1; }
-  }
-
-  [data-theme="miami"] .weather-card {
-    background: hsl(280 60% 20% / 0.7);
-    border: 2px solid hsl(23 100% 50%);
-    box-shadow: 
-      0 0 20px hsl(23 100% 50% / 0.5),
-      inset 0 0 20px hsl(328 73% 59% / 0.1);
-    backdrop-filter: blur(10px);
   }
 
   /* ═══════════════════════════════════════════════════════════

@@ -36,8 +36,8 @@ export function ThemeToggle() {
 
   const getThemeIcon = () => {
     switch (theme) {
-      case 'miami':
-        return <Sun className="w-4 h-4" />
+      case 'nord':
+        return <Moon className="w-4 h-4" />
       case 'synthwave84':
       case 'cyberpunk':
         return <Zap className="w-4 h-4" />

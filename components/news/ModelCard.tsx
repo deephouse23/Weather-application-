@@ -171,8 +171,7 @@ export default function ModelCard({ item, variant = 'default', className }: Mode
         <div
           className={cn(
             'absolute bottom-0 left-0 right-0 h-1',
-            'bg-gradient-to-r',
-            theme === 'miami' ? 'from-pink-500 to-purple-500' : 'from-red-500 to-orange-500'
+            'bg-gradient-to-r from-red-500 to-orange-500'
           )}
         />
       )}

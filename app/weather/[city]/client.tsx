@@ -20,10 +20,9 @@ import PageWrapper from '@/components/page-wrapper'
 import WeatherSearch from '@/components/weather-search'
 import { useTheme } from '@/components/theme-provider'
 import { Loader2 } from 'lucide-react'
-import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from '@/components/lazy-weather-components'
-import { ResponsiveContainer, ResponsiveGrid } from '@/components/responsive-container'
+import { ResponsiveContainer } from '@/components/responsive-container'
 import { useLocationContext } from '@/components/location-context'
-import { MoonPhaseIcon } from '@/components/moon-phase-icon'
+import { WeatherDisplay } from '@/components/weather-display'
 
 interface CityWeatherClientProps {
   city: {
@@ -57,6 +56,17 @@ export default function CityWeatherClient({ city, citySlug, isPredefinedCity = f
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>("")
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
+  const [precipitation, setPrecipitation] = useState<{rain24h: number; snow24h: number} | null>(null)
+
+  // Fetch 24h precipitation data when weather loads
+  useEffect(() => {
+    if (weather?.coordinates) {
+      fetch(`/api/weather/precipitation-history?lat=${weather.coordinates.lat}&lon=${weather.coordinates.lon}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => data?.dataAvailable ? setPrecipitation({rain24h: data.rain24h, snow24h: data.snow24h}) : setPrecipitation(null))
+        .catch(() => setPrecipitation(null))
+    }
+  }, [weather?.coordinates?.lat, weather?.coordinates?.lon])
 
   // Helper: normalize "San Ramon, CA" -> "san-ramon-ca"
   const toSlug = (input: string) =>
@@ -161,10 +171,6 @@ export default function CityWeatherClient({ city, citySlug, isPredefinedCity = f
     }
   }
 
-  const handleDayClick = (index: number) => {
-    setSelectedDay(selectedDay === index ? null : index)
-  }
-
   return (
     <PageWrapper
       weatherLocation={weather?.location}
@@ -208,110 +214,16 @@ export default function CityWeatherClient({ city, citySlug, isPredefinedCity = f
             </div>
           )}
 
-          {/* Weather Display - Same as homepage */}
+          {/* Weather Display - Unified with homepage */}
           {weather && !loading && !error && (
-            <div className="space-y-4 sm:space-y-6">
-              {/* Current Weather - Same styling as homepage */}
-              <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
-                {/* Temperature Box */}
-                <div className="p-4 rounded-lg text-center border-2 shadow-lg bg-weather-bg-elev border-weather-border">
-                  <h2 className="text-xl font-semibold mb-2 text-weather-primary">Temperature</h2>
-                  <p className="text-3xl font-bold text-weather-text">{weather.temperature}{weather.unit}</p>
-                </div>
-
-                {/* Conditions Box */}
-                <div className="p-4 rounded-lg text-center border-2 shadow-lg bg-weather-bg-elev border-weather-border">
-                  <h2 className="text-xl font-semibold mb-2 text-weather-primary">Conditions</h2>
-                  <p className="text-lg text-weather-text">{weather.condition}</p>
-                  <p className="text-sm text-weather-muted">{weather.description}</p>
-                </div>
-
-                {/* Wind Box */}
-                <div className="p-4 rounded-lg text-center border-2 shadow-lg bg-weather-bg-elev border-weather-border">
-                  <h2 className="text-xl font-semibold mb-2 text-weather-primary">Wind</h2>
-                  <p className="text-lg text-weather-text">
-                    {weather.wind.direction ? `${weather.wind.direction} ` : ''}
-                    {weather.wind.speed} mph
-                    {weather.wind.gust ? ` (gusts ${weather.wind.gust} mph)` : ''}
-                  </p>
-                </div>
-              </ResponsiveGrid>
-
-              {/* Sun Times, UV Index, Moon Phase - Same as homepage */}
-              <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
-                {/* Sun Times Box */}
-                <div className="p-4 rounded-lg text-center border-2 shadow-lg bg-weather-bg-elev border-weather-border">
-                  <h2 className="text-xl font-semibold mb-2 text-weather-primary">Sun Times</h2>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-yellow-400">☀️</span>
-                      <p className="text-weather-text">Sunrise: {weather?.sunrise || 'N/A'}</p>
-                    </div>
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-orange-400">🌅</span>
-                      <p className="text-weather-text">Sunset: {weather?.sunset || 'N/A'}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* UV Index Box */}
-                <div className="p-4 rounded-lg text-center border-2 shadow-lg bg-weather-bg-elev border-weather-border">
-                  <h2 className="text-xl font-semibold mb-2 text-weather-primary">UV Index</h2>
-                  <p className="text-lg font-bold text-weather-text">{weather?.uvIndex || 'N/A'}</p>
-                </div>
-
-                {/* Moon Phase Box */}
-                <div className="p-4 rounded-lg text-center border-2 shadow-lg bg-weather-bg-elev border-weather-border">
-                  <h2 className="text-xl font-semibold mb-2 text-weather-primary">Moon Phase</h2>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-3">
-                      <MoonPhaseIcon
-                        phase={weather?.moonPhase?.phase || 'new moon'}
-                        illumination={weather?.moonPhase?.illumination || 0}
-                        size={48}
-                      />
-                      <div className="text-left">
-                        <p className="text-lg font-semibold text-weather-text">{weather?.moonPhase?.phase || 'Unknown'}</p>
-                        <p className="text-sm font-medium text-weather-muted">
-                          {weather?.moonPhase?.illumination || 0}% illuminated
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </ResponsiveGrid>
-
-              {/* AQI and Pollen Count - Using Lazy Loaded Shared Components */}
-              <LazyEnvironmentalDisplay weather={weather} theme={theme || 'dark'} />
-
-              {/* Forecast Components - Lazy Loaded */}
-              <LazyForecast
-                forecast={weather.forecast.map(day => ({
-                  ...day,
-                  country: weather.country
-                }))}
-                theme={theme || 'dark'}
-                onDayClick={handleDayClick}
-                selectedDay={selectedDay}
-              />
-
-              <LazyForecastDetails
-                forecast={weather.forecast.map(day => ({
-                  ...day,
-                  country: weather.country
-                }))}
-                theme={theme || 'dark'}
-                selectedDay={selectedDay}
-                currentWeatherData={{
-                  humidity: weather.humidity,
-                  wind: weather.wind,
-                  pressure: weather.pressure,
-                  uvIndex: weather.uvIndex,
-                  sunrise: weather.sunrise,
-                  sunset: weather.sunset
-                }}
-              />
-            </div>
+            <WeatherDisplay
+              weather={weather}
+              theme={theme || 'nord'}
+              selectedDay={selectedDay}
+              onDayClick={(index) => setSelectedDay(selectedDay === index ? null : index)}
+              precipitation={precipitation}
+              showRadar={true}
+            />
           )}
 
           {/* SEO Content Section - Only show for predefined cities */}
