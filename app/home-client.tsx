@@ -363,14 +363,14 @@ function WeatherApp() {
                     </CardContent>
                   </Card>
 
-                  {/* Precipitation */}
+                  {/* Precipitation Chance */}
                   <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '250ms' }}>
                     <CardHeader className="pb-1 text-center">
-                      <CardTitle className={cn("text-sm mb-0", "text-terminal-text-primary")}>Precipitation</CardTitle>
+                      <CardTitle className={cn("text-sm mb-0", "text-terminal-text-primary")}>Precip Chance</CardTitle>
                     </CardHeader>
                     <CardContent className="text-center pt-1">
                       <p className={cn("text-2xl font-bold", themeClasses.text)}>
-                        {weather?.precipitation ?? 0}&quot;
+                        {weather?.forecast?.[0]?.details?.precipitationChance ?? 0}%
                       </p>
                       <p className={cn("text-xs", themeClasses.headerText)}>Today</p>
                     </CardContent>
