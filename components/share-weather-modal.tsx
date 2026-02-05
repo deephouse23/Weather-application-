@@ -201,7 +201,7 @@ export default function ShareWeatherModal({
         description: `Please allow popups for ${platform.name} or copy the link instead.`,
         variant: "destructive",
         duration: 5000,
-        className: "font-mono uppercase tracking-wider border-2",
+        className: "font-mono uppercase tracking-wider border-0",
       });
       return;
     }
@@ -210,7 +210,7 @@ export default function ShareWeatherModal({
       title: "SHARE OPENED",
       description: `Opening ${platform.name} share dialog...`,
       duration: 3000,
-      className: "font-mono uppercase tracking-wider border-2",
+      className: "font-mono uppercase tracking-wider border-0",
     });
   };
 
@@ -237,7 +237,7 @@ export default function ShareWeatherModal({
         title: "SHARED!",
         description: "Weather shared successfully",
         duration: 3000,
-        className: "font-mono uppercase tracking-wider border-2",
+        className: "font-mono uppercase tracking-wider border-0",
       });
     } catch (error) {
       // User cancelled or share failed
@@ -263,7 +263,7 @@ export default function ShareWeatherModal({
         title: "LINK COPIED!",
         description: "Weather link copied to clipboard",
         duration: 3000,
-        className: "font-mono uppercase tracking-wider border-2",
+        className: "font-mono uppercase tracking-wider border-0",
       });
 
       setTimeout(() => setCopied(false), 2000);
@@ -274,7 +274,7 @@ export default function ShareWeatherModal({
         description: "Could not copy to clipboard",
         variant: "destructive",
         duration: 3000,
-        className: "font-mono uppercase tracking-wider border-2",
+        className: "font-mono uppercase tracking-wider border-0",
       });
     }
   };
@@ -286,7 +286,7 @@ export default function ShareWeatherModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className={cn(
-          "sm:max-w-md border-4",
+          "sm:max-w-md border-0",
           themeClasses.background,
           themeClasses.borderColor
         )}
@@ -309,7 +309,7 @@ export default function ShareWeatherModal({
         {/* Weather Preview Card */}
         <div
           className={cn(
-            "p-4 border-2 rounded-lg space-y-2",
+            "p-4 border-0 rounded-lg space-y-2",
             themeClasses.borderColor,
             themeClasses.cardBg
           )}

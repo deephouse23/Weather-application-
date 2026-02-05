@@ -1,5 +1,12 @@
 /* PERFORMANCE: Moved font loading to next/font for non-blocking loading */
 /* Google Fonts CSS import removed - see app/layout.tsx for font configuration */
+
+/* Terminal Design System - Feature Flag: NEXT_PUBLIC_TERMINAL_DESIGN */
+/* NOTE: @import must come before other at-rules like @config */
+@import "../styles/fonts.css";
+@import "../styles/terminal-system.css";
+@import "../styles/terminal-palettes.css";
+
 @import "tailwindcss";
 @config "../tailwind.config.ts";
 
@@ -1301,4 +1308,49 @@ input:focus-visible,
 /* Our controls should always be on top and interactive */
 [data-radar-container]>div:not([class*="ol-"]) {
   position: relative;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Terminal Design System - Backward Compatibility Bridge
+   Maps terminal semantic variables to shadcn variables when
+   terminal design is active (data-palette attribute present)
+   ═══════════════════════════════════════════════════════════ */
+
+[data-palette] {
+  /* Map terminal variables to shadcn variables */
+  --background: var(--terminal-bg-primary);
+  --foreground: var(--terminal-text-primary);
+  --card: var(--terminal-bg-secondary);
+  --card-foreground: var(--terminal-text-primary);
+  --popover: var(--terminal-bg-elevated);
+  --popover-foreground: var(--terminal-text-primary);
+  --primary: var(--terminal-accent-primary);
+  --primary-foreground: var(--terminal-text-primary);
+  --secondary: var(--terminal-accent-secondary);
+  --secondary-foreground: var(--terminal-text-primary);
+  --muted: var(--terminal-bg-surface);
+  --muted-foreground: var(--terminal-text-muted);
+  --accent: var(--terminal-accent-secondary);
+  --accent-foreground: var(--terminal-text-primary);
+  --destructive: var(--terminal-accent-danger);
+  --destructive-foreground: var(--terminal-text-primary);
+  --border: var(--terminal-border);
+  --input: var(--terminal-bg-surface);
+  --ring: var(--terminal-accent-primary);
+
+  /* Shorthand aliases for inline styles */
+  --terminal-accent: var(--terminal-accent-primary);
+  --terminal-selection: var(--terminal-bg-elevated);
+  --terminal-bg-tertiary: var(--terminal-bg-elevated);
+
+  /* Legacy variables */
+  --bg: var(--terminal-bg-primary);
+  --bg-elev: var(--terminal-bg-secondary);
+  --text: var(--terminal-text-primary);
+  --text-muted: var(--terminal-text-muted);
+  --weather-primary: var(--terminal-accent-primary);
+  --weather-accent: var(--terminal-accent-secondary);
+  --ok: var(--terminal-accent-success);
+  --warn: var(--terminal-accent-warning);
+  --danger: var(--terminal-accent-danger);
 }

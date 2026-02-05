@@ -49,11 +49,10 @@ export function ThemeCard({ children, className = '' }: ThemeWrapperProps) {
   
   return (
     <div 
-      className={`theme-card bg-[var(--bg-elev)] border-2 border-[var(--border)] p-4 ${className}`}
+      className={`theme-card bg-[var(--bg-elev)] border-0 p-4 ${className}`}
       data-theme={theme}
       style={{
         backgroundColor: 'var(--bg-elev)',
-        borderColor: 'var(--border)',
         color: 'var(--text)',
         boxShadow: theme === 'miami' || theme === 'synthwave84'
           ? '0 0 15px var(--primary)'

@@ -54,7 +54,7 @@ export default function NewsEmpty({
       icon: Cloud,
       title: 'No Weather News',
       description: message || 'No recent weather news available. Check back soon!',
-      iconColor: 'text-blue-500',
+      iconColor: 'text-terminal-accent-info',
     },
   };
 

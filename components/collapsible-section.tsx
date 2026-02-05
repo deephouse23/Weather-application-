@@ -31,28 +31,11 @@ interface CollapsibleSectionProps {
 export function CollapsibleSection({ title, children, theme, className }: CollapsibleSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
-  // Theme-specific styles
-  const getThemeStyles = () => {
-    switch (theme) {
-      case 'dark':
-        return {
-          button: 'bg-[#0f0f0f] border-[#00d4ff] text-[#00d4ff] hover:bg-[#001a33]',
-          content: 'bg-[#0f0f0f] border-[#00d4ff] text-[#e0e0e0]'
-        }
-      case 'miami':
-        return {
-          button: 'bg-[#0a0025] border-[#ff1493] text-[#ff1493] hover:bg-[#1a0040]',
-          content: 'bg-[#0a0025] border-[#ff1493] text-[#00ffff]'
-        }
-      default:
-        return {
-          button: 'bg-[#0f0f0f] border-[#00d4ff] text-[#00d4ff] hover:bg-[#001a33]',
-          content: 'bg-[#0f0f0f] border-[#00d4ff] text-[#e0e0e0]'
-        }
-    }
+  // Terminal-aware theme styles using CSS variables (borders removed)
+  const styles = {
+    button: 'bg-terminal-bg-primary text-terminal-accent hover:bg-terminal-bg-elevated',
+    content: 'bg-terminal-bg-primary text-terminal-text-primary'
   }
-
-  const styles = getThemeStyles()
 
   return (
     <div className={cn("w-full", className)}>
@@ -60,7 +43,7 @@ export function CollapsibleSection({ title, children, theme, className }: Collap
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className={cn(
-          "w-full p-3 border-2 rounded-lg flex items-center justify-between text-sm font-mono font-bold uppercase tracking-wider transition-colors",
+          "w-full p-3 border-0 rounded-lg flex items-center justify-between text-sm font-mono font-bold uppercase tracking-wider transition-colors",
           styles.button
         )}
       >
@@ -75,7 +58,7 @@ export function CollapsibleSection({ title, children, theme, className }: Collap
       {/* Collapsible Content */}
       {isExpanded && (
         <div className={cn(
-          "border-2 border-t-0 rounded-b-lg p-4 text-sm font-mono",
+          "border-0 rounded-b-lg p-4 text-sm font-mono",
           styles.content
         )}>
           {children}

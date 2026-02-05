@@ -70,7 +70,7 @@ function HourlyPageContent() {
       <div className="container mx-auto px-4 py-8">
         <button
           onClick={handleBack}
-          className="flex items-center gap-2 mb-6 px-4 py-2 bg-[var(--card-bg)] border-2 border-[var(--accent)] text-[var(--text)] hover:bg-[var(--accent)] hover:text-[var(--card-bg)] transition-colors"
+          className="flex items-center gap-2 mb-6 px-4 py-2 bg-[var(--card-bg)] border-0 text-[var(--text)] hover:bg-[var(--accent)] hover:text-[var(--card-bg)] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back
@@ -88,7 +88,7 @@ function HourlyPageContent() {
       <div className="mb-6">
         <button
           onClick={handleBack}
-          className="flex items-center gap-2 mb-4 px-4 py-2 bg-[var(--card-bg)] border-2 border-[var(--accent)] text-[var(--text)] hover:bg-[var(--accent)] hover:text-[var(--card-bg)] transition-colors font-mono uppercase tracking-wider"
+          className="flex items-center gap-2 mb-4 px-4 py-2 bg-[var(--card-bg)] border-0 text-[var(--text)] hover:bg-[var(--accent)] hover:text-[var(--card-bg)] transition-colors font-mono uppercase tracking-wider"
         >
           <ArrowLeft className="w-4 h-4" />
           Back
@@ -112,7 +112,7 @@ function HourlyPageContent() {
       />
 
       {/* Additional Info */}
-      <div className="mt-8 p-4 bg-[var(--card-bg)] border-2 border-[var(--border)] text-[var(--text-secondary)] font-mono text-sm">
+      <div className="mt-8 p-4 bg-[var(--card-bg)] border-0 text-[var(--text-secondary)] font-mono text-sm">
         <p>💡 <strong>Tip:</strong> Scroll horizontally to view all 48 hours of forecast data</p>
         <p className="mt-2">🌡️ Temperatures shown are in {weather.unit === '°F' ? 'Fahrenheit' : 'Celsius'}</p>
         <p className="mt-2">💧 Precipitation chances are displayed for each hour</p>

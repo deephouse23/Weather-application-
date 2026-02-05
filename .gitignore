@@ -122,3 +122,9 @@ tests/e2e/.kernel-browser-state.json
 # Lighthouse reports
 docs/lh-*.json
 docs/lighthouse-*.json
+.claude/settings.local.json
+
+# Documentation and PRD files (keep local only)
+*.prd
+docs/
+tasks/

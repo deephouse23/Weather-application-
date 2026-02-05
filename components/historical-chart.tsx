@@ -85,7 +85,7 @@ export default function HistoricalChart({ currentTheme, latitude, longitude, loc
 
   if (loading) {
     return (
-      <div className={`p-4 ${themeClasses.cardBg} border ${themeClasses.borderColor} rounded-lg ${themeClasses.glow}`}>
+      <div className={`p-4 ${themeClasses.cardBg} border-0 rounded-lg ${themeClasses.glow}`}>
         <div className={`text-center ${themeClasses.text}`}>Loading historical data...</div>
       </div>
     )
@@ -93,7 +93,7 @@ export default function HistoricalChart({ currentTheme, latitude, longitude, loc
 
   if (error) {
     return (
-      <div className={`p-4 ${themeClasses.cardBg} border ${themeClasses.borderColor} rounded-lg ${themeClasses.glow}`}>
+      <div className={`p-4 ${themeClasses.cardBg} border-0 rounded-lg ${themeClasses.glow}`}>
         <div className={`text-center ${themeClasses.warningText}`}>{error}</div>
       </div>
     )
@@ -192,7 +192,7 @@ export default function HistoricalChart({ currentTheme, latitude, longitude, loc
   }
 
   return (
-    <div className={`p-4 ${themeClasses.cardBg} border ${themeClasses.borderColor} rounded-lg ${themeClasses.glow}`}>
+    <div className={`p-4 ${themeClasses.cardBg} border-0 rounded-lg ${themeClasses.glow}`}>
       <div className="h-[400px]">
         <Line data={chartData} options={chartOptions} />
       </div>

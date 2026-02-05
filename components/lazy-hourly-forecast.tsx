@@ -7,9 +7,9 @@ import type { ThemeType } from '@/lib/theme-utils'
 
 const HourlyForecast = dynamic(() => import('./hourly-forecast'), {
   loading: () => (
-    <div className="flex items-center justify-center p-8 bg-[#16213e] border-4 border-[#00d4ff] rounded-lg">
-      <Loader2 className="w-8 h-8 animate-spin text-[#00d4ff]" />
-      <span className="ml-3 text-[#00d4ff]">Loading hourly forecast...</span>
+    <div className="flex items-center justify-center p-8 bg-terminal-bg-secondary border-0 rounded-lg">
+      <Loader2 className="w-8 h-8 animate-spin text-terminal-accent" />
+      <span className="ml-3 text-terminal-accent">Loading hourly forecast...</span>
     </div>
   ),
   ssr: false

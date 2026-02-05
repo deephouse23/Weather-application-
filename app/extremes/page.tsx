@@ -297,7 +297,7 @@ export default function ExtremesPage() {
             onClick={() => data.coldest && handleLocationClick(data.coldest)}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xl font-mono font-bold text-blue-500 flex items-center gap-2">
+              <CardTitle className="text-xl font-mono font-bold text-terminal-weather-cold flex items-center gap-2">
                 <TrendingDown className="h-5 w-5" />
                 COLDEST ON EARTH
               </CardTitle>
@@ -309,7 +309,7 @@ export default function ExtremesPage() {
                     <ThermometerViz temp={data.coldest.temp} />
                   </div>
 
-                  <div className="text-4xl font-mono font-bold mb-4 text-blue-500 text-center">
+                  <div className="text-4xl font-mono font-bold mb-4 text-terminal-weather-cold text-center">
                     {data.coldest.temp}°F <span className="text-2xl text-muted-foreground">/ {data.coldest.tempC}°C</span>
                   </div>
 
@@ -374,7 +374,7 @@ export default function ExtremesPage() {
           {/* Top 5 Coldest */}
           <Card className="container-primary">
             <CardHeader>
-              <CardTitle className="text-lg font-mono font-bold text-blue-500">
+              <CardTitle className="text-lg font-mono font-bold text-terminal-weather-cold">
                 🏆 TOP 5 COLDEST
               </CardTitle>
             </CardHeader>
@@ -392,7 +392,7 @@ export default function ExtremesPage() {
                         {loc.emoji} {loc.name}
                       </span>
                     </div>
-                    <span className="font-mono font-bold text-blue-500">
+                    <span className="font-mono font-bold text-terminal-weather-cold">
                       {loc.temp}°F
                     </span>
                   </div>

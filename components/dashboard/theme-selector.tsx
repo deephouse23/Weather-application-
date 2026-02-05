@@ -61,9 +61,9 @@ function ThemeCard({
   }
 
   return (
-    <Card 
+    <Card
       className={cn(
-        "relative overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 border-2",
+        "relative overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 border-0",
         isActive ? "ring-2 ring-primary ring-offset-2" : "",
         isLocked ? "opacity-75" : "",
         isPreviewActive ? "ring-2 ring-orange-500 ring-offset-2" : ""
@@ -112,16 +112,16 @@ function ThemeCard({
 
         {/* Color Preview */}
         <div className="flex gap-1 mb-3 h-6">
-          <div 
-            className="flex-1 rounded-sm border"
+          <div
+            className="flex-1 rounded-sm border-0"
             style={{ backgroundColor: theme.colors.primary }}
           />
-          <div 
-            className="flex-1 rounded-sm border"
+          <div
+            className="flex-1 rounded-sm border-0"
             style={{ backgroundColor: theme.colors.background }}
           />
-          <div 
-            className="flex-1 rounded-sm border"
+          <div
+            className="flex-1 rounded-sm border-0"
             style={{ backgroundColor: theme.colors.accent }}
           />
         </div>
@@ -223,7 +223,7 @@ export function ThemeSelectorEnhanced() {
 
       {/* Preview Status */}
       {isPreviewActive && (
-        <div className="bg-gradient-to-r from-orange-100 to-pink-100 dark:from-orange-900/20 dark:to-pink-900/20 p-4 rounded-lg border-2 border-orange-200 dark:border-orange-700">
+        <div className="bg-gradient-to-r from-orange-100 to-pink-100 dark:from-orange-900/20 dark:to-pink-900/20 p-4 rounded-lg border-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Timer className="w-5 h-5 text-orange-600" />

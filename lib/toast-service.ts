@@ -20,7 +20,7 @@ export const toastService = {
       title: "✅ SUCCESS",
       description: message,
       duration: 4000,
-      className: "font-mono uppercase tracking-wider border-2"
+      className: "font-mono uppercase tracking-wider border-0"
     })
   },
 
@@ -30,7 +30,7 @@ export const toastService = {
       description: message,
       variant: "destructive",
       duration: 4000,
-      className: "font-mono uppercase tracking-wider border-2"
+      className: "font-mono uppercase tracking-wider border-0"
     })
   },
 
@@ -39,7 +39,7 @@ export const toastService = {
       title: "⚠️ WARNING",
       description: message,
       duration: 4000,
-      className: "font-mono uppercase tracking-wider border-2 border-yellow-500"
+      className: "font-mono uppercase tracking-wider border-0 border-yellow-500"
     })
   },
 
@@ -48,7 +48,7 @@ export const toastService = {
       title: "ℹ️ INFO",
       description: message,
       duration: 4000,
-      className: "font-mono uppercase tracking-wider border-2 border-blue-500"
+      className: "font-mono uppercase tracking-wider border-0 border-terminal-accent-info"
     })
   },
 
@@ -57,7 +57,7 @@ export const toastService = {
       title: "📍 LOCATION ADDED",
       description: `${locationName} has been saved to your dashboard`,
       duration: 3000,
-      className: "font-mono uppercase tracking-wider border-2"
+      className: "font-mono uppercase tracking-wider border-0"
     })
   },
 
@@ -66,7 +66,7 @@ export const toastService = {
       title: "🌤️ WEATHER UPDATED",
       description: `Fresh weather data loaded for ${locationName}`,
       duration: 2000,
-      className: "font-mono uppercase tracking-wider border-2"
+      className: "font-mono uppercase tracking-wider border-0"
     })
   },
 
@@ -75,7 +75,7 @@ export const toastService = {
       title: "🎨 THEME CHANGED",
       description: `Switched to ${themeName.toUpperCase()} theme`,
       duration: 2000,
-      className: "font-mono uppercase tracking-wider border-2"
+      className: "font-mono uppercase tracking-wider border-0"
     })
   },
 
@@ -85,7 +85,7 @@ export const toastService = {
       description: "Too many requests. Please wait a moment.",
       variant: "destructive",
       duration: 5000,
-      className: "font-mono uppercase tracking-wider border-2"
+      className: "font-mono uppercase tracking-wider border-0"
     })
   },
 
@@ -95,7 +95,7 @@ export const toastService = {
       description: `Could not find weather data for "${searchTerm}"`,
       variant: "destructive",
       duration: 4000,
-      className: "font-mono uppercase tracking-wider border-2"
+      className: "font-mono uppercase tracking-wider border-0"
     })
   },
 
@@ -105,7 +105,7 @@ export const toastService = {
       description: "Check your internet connection and try again",
       variant: "destructive",
       duration: 5000,
-      className: "font-mono uppercase tracking-wider border-2"
+      className: "font-mono uppercase tracking-wider border-0"
     })
   }
 }

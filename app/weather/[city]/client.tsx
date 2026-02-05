@@ -23,24 +23,7 @@ import { Loader2 } from 'lucide-react'
 import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from '@/components/lazy-weather-components'
 import { ResponsiveContainer, ResponsiveGrid } from '@/components/responsive-container'
 import { useLocationContext } from '@/components/location-context'
-
-
-// Helper function to get moon phase icon
-const getMoonPhaseIcon = (phase: string): string => {
-  const phaseLower = phase.toLowerCase();
-
-  if (phaseLower.includes('new')) return '●';
-  if (phaseLower.includes('waxing crescent')) return '🌒';
-  if (phaseLower.includes('first quarter')) return '🌓';
-  if (phaseLower.includes('waxing gibbous')) return '🌔';
-  if (phaseLower.includes('full')) return '🌕';
-  if (phaseLower.includes('waning gibbous')) return '🌖';
-  if (phaseLower.includes('last quarter')) return '🌗';
-  if (phaseLower.includes('waning crescent')) return '🌘';
-
-  // Fallback for any other phases
-  return '🌑';
-};
+import { MoonPhaseIcon } from '@/components/moon-phase-icon'
 
 interface CityWeatherClientProps {
   city: {
@@ -281,13 +264,19 @@ export default function CityWeatherClient({ city, citySlug, isPredefinedCity = f
                 <div className="p-4 rounded-lg text-center border-2 shadow-lg bg-weather-bg-elev border-weather-border">
                   <h2 className="text-xl font-semibold mb-2 text-weather-primary">Moon Phase</h2>
                   <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-2xl">{getMoonPhaseIcon(weather?.moonPhase?.phase || 'new')}</span>
-                      <p className="text-lg font-semibold text-weather-text">{weather?.moonPhase?.phase || 'Unknown'}</p>
+                    <div className="flex items-center justify-center gap-3">
+                      <MoonPhaseIcon
+                        phase={weather?.moonPhase?.phase || 'new moon'}
+                        illumination={weather?.moonPhase?.illumination || 0}
+                        size={48}
+                      />
+                      <div className="text-left">
+                        <p className="text-lg font-semibold text-weather-text">{weather?.moonPhase?.phase || 'Unknown'}</p>
+                        <p className="text-sm font-medium text-weather-muted">
+                          {weather?.moonPhase?.illumination || 0}% illuminated
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-sm font-medium text-weather-muted">
-                      {weather?.moonPhase?.illumination || 0}% illuminated
-                    </p>
                   </div>
                 </div>
               </ResponsiveGrid>

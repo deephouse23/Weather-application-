@@ -222,9 +222,7 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
              theme === 'miami' ? 'bg-pink-600 text-white' : 
              'bg-cyan-500 text-black';
     }
-    return theme === 'dark' ? 'bg-blue-800 text-blue-100' : 
-           theme === 'miami' ? 'bg-purple-500 text-white' : 
-           'bg-blue-400 text-black';
+    return 'bg-terminal-accent-info/20 text-terminal-accent-info';
   };
 
   // Create continuous content string with mobile optimizations and improved design

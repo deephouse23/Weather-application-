@@ -69,6 +69,40 @@ const config: Config = {
 				'weather-ok': 'var(--ok)',
 				'weather-warn': 'var(--warn)',
 				'weather-danger': 'var(--danger)',
+				/* Terminal Design System Colors */
+				'terminal': {
+					'bg': {
+						'primary': 'var(--terminal-bg-primary)',
+						'secondary': 'var(--terminal-bg-secondary)',
+						'elevated': 'var(--terminal-bg-elevated)',
+						'surface': 'var(--terminal-bg-surface)',
+					},
+					'text': {
+						'primary': 'var(--terminal-text-primary)',
+						'secondary': 'var(--terminal-text-secondary)',
+						'muted': 'var(--terminal-text-muted)',
+					},
+					'accent': {
+						DEFAULT: 'var(--terminal-accent-primary)',
+						'primary': 'var(--terminal-accent-primary)',
+						'secondary': 'var(--terminal-accent-secondary)',
+						'info': 'var(--terminal-accent-info)',
+						'success': 'var(--terminal-accent-success)',
+						'warning': 'var(--terminal-accent-warning)',
+						'danger': 'var(--terminal-accent-danger)',
+					},
+					'border': {
+						DEFAULT: 'var(--terminal-border)',
+						'focus': 'var(--terminal-border-focus)',
+					},
+					'weather': {
+						'hot': 'var(--terminal-temp-hot)',
+						'cold': 'var(--terminal-temp-cold)',
+						'precip': 'var(--terminal-precip)',
+						'wind': 'var(--terminal-wind)',
+						'uv': 'var(--terminal-uv)',
+					},
+				},
 			},
 			borderRadius: {
 				lg: "var(--radius)",

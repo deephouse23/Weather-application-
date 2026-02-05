@@ -22,7 +22,7 @@ export default function NotFound() {
       <div className="text-center">
         <h2 className="text-2xl font-bold text-white mb-4">Not Found</h2>
         <p className="text-gray-300 mb-6">Could not find requested resource</p>
-        <Link href="/" className="text-blue-400 hover:underline">
+        <Link href="/" className="text-terminal-accent hover:underline">
           Return Home
         </Link>
       </div>

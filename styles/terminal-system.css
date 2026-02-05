@@ -1,0 +1,847 @@
+/**
+ * Terminal Design System
+ *
+ * Structural styles only - all colors come from semantic CSS variables.
+ * Requires semantic variables to be defined:
+ * - --terminal-bg-primary, --terminal-bg-secondary, --terminal-bg-tertiary
+ * - --terminal-text-primary, --terminal-text-secondary, --terminal-text-muted
+ * - --terminal-border, --terminal-border-focus
+ * - --terminal-accent, --terminal-accent-hover
+ */
+
+/* =============================================================================
+   CSS Custom Properties - Spacing Scale
+   ============================================================================= */
+
+:root {
+  /* Spacing scale (4px base) */
+  --terminal-space-1: 0.25rem;   /* 4px */
+  --terminal-space-2: 0.5rem;    /* 8px */
+  --terminal-space-3: 0.75rem;   /* 12px */
+  --terminal-space-4: 1rem;      /* 16px */
+  --terminal-space-5: 1.25rem;   /* 20px */
+  --terminal-space-6: 1.5rem;    /* 24px */
+  --terminal-space-8: 2rem;      /* 32px */
+  --terminal-space-10: 2.5rem;   /* 40px */
+  --terminal-space-12: 3rem;     /* 48px */
+  --terminal-space-16: 4rem;     /* 64px */
+
+  /* Typography */
+  --terminal-font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+}
+
+/* =============================================================================
+   Typography System
+   ============================================================================= */
+
+/* Card Title: 0.875rem, 700, UPPERCASE, 0.1em tracking */
+.terminal-title {
+  font-family: var(--terminal-font-mono);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  line-height: 1.4;
+  color: var(--terminal-text-primary);
+}
+
+/* Body Text: 0.875rem, 400, Normal, 0.02em tracking */
+.terminal-body {
+  font-family: var(--terminal-font-mono);
+  font-size: 0.875rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+  color: var(--terminal-text-primary);
+}
+
+/* Data Value: 1.5rem, 700, Normal, 0 tracking */
+.terminal-data-value {
+  font-family: var(--terminal-font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: 1.2;
+  color: var(--terminal-text-primary);
+}
+
+/* Data Label: 0.75rem, 400, UPPERCASE, 0.08em tracking */
+.terminal-data-label {
+  font-family: var(--terminal-font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  color: var(--terminal-text-secondary);
+}
+
+/* Status/Meta: 0.6875rem, 400, Normal, 0.02em tracking */
+.terminal-status-text {
+  font-family: var(--terminal-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  color: var(--terminal-text-muted);
+}
+
+/* Nav Item: 0.8125rem, 600, UPPERCASE, 0.06em tracking */
+.terminal-nav-text {
+  font-family: var(--terminal-font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  color: var(--terminal-text-primary);
+}
+
+/* =============================================================================
+   Box-Drawing Character System
+   ============================================================================= */
+
+/* Full box with all corners using double-line characters */
+.terminal-box {
+  position: relative;
+  font-family: var(--terminal-font-mono);
+  background-color: var(--terminal-bg-primary);
+  padding: var(--terminal-space-4);
+  margin: var(--terminal-space-2) 0;
+}
+
+.terminal-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Top border with corners: ╔═══════════╗ */
+.terminal-box-top::before,
+.terminal-box::before {
+  content: '╔' attr(data-width) '╗';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.2em;
+  display: flex;
+  justify-content: space-between;
+  color: var(--terminal-border);
+  font-family: var(--terminal-font-mono);
+  line-height: 1;
+}
+
+/* Box structure using pseudo-elements */
+.terminal-box {
+  border: none;
+  background-color: var(--terminal-bg-primary);
+}
+
+/* Top border line */
+.terminal-box::before {
+  content: '╔════════════════════════════════════════════════════════════════╗';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  color: var(--terminal-border);
+  font-family: var(--terminal-font-mono);
+  font-size: 1em;
+  line-height: 1;
+}
+
+/* Bottom border line */
+.terminal-box::after {
+  content: '╚════════════════════════════════════════════════════════════════╝';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  color: var(--terminal-border);
+  font-family: var(--terminal-font-mono);
+  font-size: 1em;
+  line-height: 1;
+}
+
+/* Side borders using box-shadow technique with character overlay */
+.terminal-box > .terminal-box-sides {
+  position: absolute;
+  top: 1em;
+  bottom: 1em;
+  left: 0;
+  width: 1ch;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.terminal-box > .terminal-box-sides::before,
+.terminal-box > .terminal-box-sides::after {
+  content: '║';
+  color: var(--terminal-border);
+  font-family: var(--terminal-font-mono);
+}
+
+/* Simplified box using CSS with character decorators */
+.terminal-box-simple {
+  position: relative;
+  font-family: var(--terminal-font-mono);
+  background-color: var(--terminal-bg-primary);
+  padding: var(--terminal-space-4);
+  padding-top: calc(var(--terminal-space-4) + 1.2em);
+  padding-bottom: calc(var(--terminal-space-4) + 1.2em);
+}
+
+.terminal-box-simple::before {
+  content: '╔══════════════════════════════════════════════════════════════════════════════╗';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  color: var(--terminal-border);
+  font-family: var(--terminal-font-mono);
+  font-size: inherit;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+.terminal-box-simple::after {
+  content: '╚══════════════════════════════════════════════════════════════════════════════╝';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  color: var(--terminal-border);
+  font-family: var(--terminal-font-mono);
+  font-size: inherit;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+/* Single-line box variant using thin characters */
+.terminal-box-thin {
+  position: relative;
+  font-family: var(--terminal-font-mono);
+  background-color: var(--terminal-bg-primary);
+  padding: var(--terminal-space-4);
+  padding-top: calc(var(--terminal-space-4) + 1.2em);
+  padding-bottom: calc(var(--terminal-space-4) + 1.2em);
+}
+
+.terminal-box-thin::before {
+  content: '┌──────────────────────────────────────────────────────────────────────────────┐';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  color: var(--terminal-border);
+  font-family: var(--terminal-font-mono);
+  font-size: inherit;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+.terminal-box-thin::after {
+  content: '└──────────────────────────────────────────────────────────────────────────────┘';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  color: var(--terminal-border);
+  font-family: var(--terminal-font-mono);
+  font-size: inherit;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+/* Top border only with corners */
+.terminal-box-top {
+  position: relative;
+  font-family: var(--terminal-font-mono);
+  padding-top: 1.4em;
+}
+
+.terminal-box-top::before {
+  content: '╔══════════════════════════════════════════════════════════════════════════════╗';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  color: var(--terminal-border);
+  font-family: var(--terminal-font-mono);
+  font-size: inherit;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+/* Header row with separator below */
+.terminal-box-header {
+  position: relative;
+  font-family: var(--terminal-font-mono);
+  padding: var(--terminal-space-2) var(--terminal-space-4);
+  background-color: var(--terminal-bg-secondary);
+}
+
+.terminal-box-header::before {
+  content: '╔══════════════════════════════════════════════════════════════════════════════╗';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  color: var(--terminal-border);
+  font-family: var(--terminal-font-mono);
+  font-size: inherit;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+.terminal-box-header::after {
+  content: '╠══════════════════════════════════════════════════════════════════════════════╣';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  color: var(--terminal-border);
+  font-family: var(--terminal-font-mono);
+  font-size: inherit;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+/* Separator using T-junction characters */
+.terminal-separator {
+  position: relative;
+  height: 1.2em;
+  font-family: var(--terminal-font-mono);
+}
+
+.terminal-separator::before {
+  content: '╠══════════════════════════════════════════════════════════════════════════════╣';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  color: var(--terminal-border);
+  font-family: var(--terminal-font-mono);
+  font-size: inherit;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+/* Thin separator variant */
+.terminal-separator-thin {
+  position: relative;
+  height: 1.2em;
+  font-family: var(--terminal-font-mono);
+}
+
+.terminal-separator-thin::before {
+  content: '├──────────────────────────────────────────────────────────────────────────────┤';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  color: var(--terminal-border);
+  font-family: var(--terminal-font-mono);
+  font-size: inherit;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+/* =============================================================================
+   Terminal Table Classes
+   ============================================================================= */
+
+.terminal-table {
+  width: 100%;
+  font-family: var(--terminal-font-mono);
+  font-size: 0.875rem;
+  border-collapse: collapse;
+  background-color: var(--terminal-bg-primary);
+}
+
+.terminal-table th,
+.terminal-table td {
+  padding: var(--terminal-space-2) var(--terminal-space-3);
+  text-align: left;
+  border-bottom: 1px solid var(--terminal-border);
+}
+
+/* Table with box-drawing borders */
+.terminal-table-bordered {
+  width: 100%;
+  font-family: var(--terminal-font-mono);
+  font-size: 0.875rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  background-color: var(--terminal-bg-primary);
+}
+
+.terminal-table-bordered th,
+.terminal-table-bordered td {
+  padding: var(--terminal-space-2) var(--terminal-space-3);
+  text-align: left;
+  position: relative;
+}
+
+.terminal-table-bordered th::after,
+.terminal-table-bordered td::after {
+  content: '│';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--terminal-border);
+}
+
+.terminal-table-bordered th:last-child::after,
+.terminal-table-bordered td:last-child::after {
+  content: none;
+}
+
+/* Header row styling */
+.terminal-table-header,
+.terminal-table thead tr {
+  background-color: var(--terminal-bg-secondary);
+}
+
+.terminal-table-header th,
+.terminal-table thead th {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: var(--terminal-text-secondary);
+  border-bottom: 1px solid var(--terminal-border);
+}
+
+/* Alternating row backgrounds */
+.terminal-table-row:nth-child(even),
+.terminal-table tbody tr:nth-child(even) {
+  background-color: var(--terminal-bg-secondary);
+}
+
+.terminal-table-row:nth-child(odd),
+.terminal-table tbody tr:nth-child(odd) {
+  background-color: var(--terminal-bg-primary);
+}
+
+/* Row hover state */
+.terminal-table-row:hover,
+.terminal-table tbody tr:hover {
+  background-color: var(--terminal-bg-tertiary);
+}
+
+/* =============================================================================
+   Structural Component Classes
+   ============================================================================= */
+
+/* Card container */
+.terminal-card {
+  position: relative;
+  font-family: var(--terminal-font-mono);
+  background-color: var(--terminal-bg-primary);
+  padding: var(--terminal-space-4);
+  margin-bottom: var(--terminal-space-4);
+}
+
+.terminal-card::before {
+  content: '╔══════════════════════════════════════════════════════════════════════════════╗';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  color: var(--terminal-border);
+  font-family: var(--terminal-font-mono);
+  font-size: inherit;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: clip;
+  pointer-events: none;
+}
+
+.terminal-card::after {
+  content: '╚══════════════════════════════════════════════════════════════════════════════╝';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  color: var(--terminal-border);
+  font-family: var(--terminal-font-mono);
+  font-size: inherit;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: clip;
+  pointer-events: none;
+}
+
+.terminal-card-content {
+  padding-top: 1em;
+  padding-bottom: 1em;
+}
+
+/* Section header */
+.terminal-header {
+  font-family: var(--terminal-font-mono);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--terminal-text-primary);
+  padding: var(--terminal-space-2) 0;
+  margin-bottom: var(--terminal-space-3);
+  position: relative;
+}
+
+.terminal-header::after {
+  content: '════════════════════════════════════════════════════════════════════════════════';
+  display: block;
+  color: var(--terminal-border);
+  overflow: hidden;
+  text-overflow: clip;
+  margin-top: var(--terminal-space-1);
+}
+
+/* Command prompt input style */
+.terminal-prompt {
+  display: flex;
+  align-items: center;
+  font-family: var(--terminal-font-mono);
+  font-size: 0.875rem;
+  background-color: var(--terminal-bg-secondary);
+  padding: var(--terminal-space-2) var(--terminal-space-3);
+  gap: var(--terminal-space-2);
+}
+
+.terminal-prompt::before {
+  content: '>';
+  color: var(--terminal-accent);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.terminal-prompt input,
+.terminal-prompt textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--terminal-font-mono);
+  font-size: inherit;
+  color: var(--terminal-text-primary);
+  letter-spacing: 0.02em;
+}
+
+.terminal-prompt input::placeholder,
+.terminal-prompt textarea::placeholder {
+  color: var(--terminal-text-muted);
+}
+
+/* Blinking cursor effect */
+.terminal-prompt-cursor::after {
+  content: '█';
+  animation: terminal-blink 1s step-end infinite;
+  color: var(--terminal-accent);
+}
+
+@keyframes terminal-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Status bar at bottom */
+.terminal-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--terminal-font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.02em;
+  background-color: var(--terminal-bg-secondary);
+  padding: var(--terminal-space-1) var(--terminal-space-3);
+  color: var(--terminal-text-muted);
+  gap: var(--terminal-space-4);
+}
+
+.terminal-status-bar-item {
+  display: flex;
+  align-items: center;
+  gap: var(--terminal-space-2);
+}
+
+.terminal-status-bar-divider {
+  color: var(--terminal-border);
+}
+
+.terminal-status-bar-divider::before {
+  content: '│';
+}
+
+/* Navigation container */
+.terminal-nav {
+  display: flex;
+  align-items: center;
+  font-family: var(--terminal-font-mono);
+  background-color: var(--terminal-bg-secondary);
+  padding: var(--terminal-space-2) var(--terminal-space-3);
+  gap: var(--terminal-space-1);
+}
+
+/* Navigation item */
+.terminal-nav-item {
+  font-family: var(--terminal-font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--terminal-text-secondary);
+  padding: var(--terminal-space-2) var(--terminal-space-3);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.terminal-nav-item:hover {
+  color: var(--terminal-text-primary);
+  background-color: var(--terminal-bg-tertiary);
+}
+
+.terminal-nav-item:focus {
+  outline: 1px solid var(--terminal-border-focus);
+  outline-offset: -1px;
+}
+
+.terminal-nav-item[aria-current="page"],
+.terminal-nav-item.active {
+  color: var(--terminal-accent);
+  background-color: var(--terminal-bg-primary);
+}
+
+/* Navigation divider */
+.terminal-nav-divider::before {
+  content: '│';
+  color: var(--terminal-border);
+  padding: 0 var(--terminal-space-2);
+}
+
+/* =============================================================================
+   Utility Classes
+   ============================================================================= */
+
+/* Text alignment */
+.terminal-text-left { text-align: left; }
+.terminal-text-center { text-align: center; }
+.terminal-text-right { text-align: right; }
+
+/* Display utilities */
+.terminal-flex { display: flex; }
+.terminal-flex-col { flex-direction: column; }
+.terminal-items-center { align-items: center; }
+.terminal-justify-between { justify-content: space-between; }
+.terminal-gap-1 { gap: var(--terminal-space-1); }
+.terminal-gap-2 { gap: var(--terminal-space-2); }
+.terminal-gap-3 { gap: var(--terminal-space-3); }
+.terminal-gap-4 { gap: var(--terminal-space-4); }
+
+/* Spacing utilities */
+.terminal-p-1 { padding: var(--terminal-space-1); }
+.terminal-p-2 { padding: var(--terminal-space-2); }
+.terminal-p-3 { padding: var(--terminal-space-3); }
+.terminal-p-4 { padding: var(--terminal-space-4); }
+.terminal-p-6 { padding: var(--terminal-space-6); }
+
+.terminal-m-1 { margin: var(--terminal-space-1); }
+.terminal-m-2 { margin: var(--terminal-space-2); }
+.terminal-m-3 { margin: var(--terminal-space-3); }
+.terminal-m-4 { margin: var(--terminal-space-4); }
+.terminal-m-6 { margin: var(--terminal-space-6); }
+
+.terminal-mb-1 { margin-bottom: var(--terminal-space-1); }
+.terminal-mb-2 { margin-bottom: var(--terminal-space-2); }
+.terminal-mb-3 { margin-bottom: var(--terminal-space-3); }
+.terminal-mb-4 { margin-bottom: var(--terminal-space-4); }
+.terminal-mb-6 { margin-bottom: var(--terminal-space-6); }
+
+.terminal-mt-1 { margin-top: var(--terminal-space-1); }
+.terminal-mt-2 { margin-top: var(--terminal-space-2); }
+.terminal-mt-3 { margin-top: var(--terminal-space-3); }
+.terminal-mt-4 { margin-top: var(--terminal-space-4); }
+.terminal-mt-6 { margin-top: var(--terminal-space-6); }
+
+/* =============================================================================
+   Mobile Fallback - Replace box-drawing with CSS borders at < 640px
+   ============================================================================= */
+
+@media (max-width: 639px) {
+  /* Hide box-drawing characters on mobile */
+  .terminal-box::before,
+  .terminal-box::after,
+  .terminal-box-simple::before,
+  .terminal-box-simple::after,
+  .terminal-box-thin::before,
+  .terminal-box-thin::after,
+  .terminal-box-top::before,
+  .terminal-box-header::before,
+  .terminal-box-header::after,
+  .terminal-separator::before,
+  .terminal-separator-thin::before,
+  .terminal-card::before,
+  .terminal-card::after,
+  .terminal-header::after {
+    content: none;
+  }
+
+  /* Apply CSS borders instead */
+  .terminal-box {
+    border: 1px solid var(--terminal-border);
+    border-radius: 0;
+    padding: var(--terminal-space-3);
+  }
+
+  .terminal-box-simple {
+    border: 1px solid var(--terminal-border);
+    border-radius: 0;
+    padding: var(--terminal-space-3);
+  }
+
+  .terminal-box-thin {
+    border: 1px solid var(--terminal-border);
+    border-radius: 0;
+    padding: var(--terminal-space-3);
+  }
+
+  .terminal-box-top {
+    border-top: 1px solid var(--terminal-border);
+    padding-top: var(--terminal-space-2);
+  }
+
+  .terminal-box-header {
+    border: 1px solid var(--terminal-border);
+    border-bottom: 2px solid var(--terminal-border);
+    padding: var(--terminal-space-2) var(--terminal-space-3);
+  }
+
+  .terminal-separator {
+    height: auto;
+    border-top: 1px solid var(--terminal-border);
+    margin: var(--terminal-space-2) 0;
+  }
+
+  .terminal-separator-thin {
+    height: auto;
+    border-top: 1px solid var(--terminal-border);
+    margin: var(--terminal-space-2) 0;
+  }
+
+  .terminal-card {
+    border: 1px solid var(--terminal-border);
+    border-radius: 0;
+    padding: var(--terminal-space-3);
+  }
+
+  .terminal-card-content {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .terminal-header {
+    border-bottom: 1px solid var(--terminal-border);
+    padding-bottom: var(--terminal-space-2);
+  }
+
+  /* Adjust table styling for mobile */
+  .terminal-table-bordered th::after,
+  .terminal-table-bordered td::after {
+    content: none;
+  }
+
+  .terminal-table-bordered th,
+  .terminal-table-bordered td {
+    border-right: 1px solid var(--terminal-border);
+  }
+
+  .terminal-table-bordered th:last-child,
+  .terminal-table-bordered td:last-child {
+    border-right: none;
+  }
+
+  /* Adjust navigation for mobile */
+  .terminal-nav {
+    flex-wrap: wrap;
+    padding: var(--terminal-space-2);
+    gap: var(--terminal-space-1);
+  }
+
+  .terminal-nav-item {
+    font-size: 0.75rem;
+    padding: var(--terminal-space-1) var(--terminal-space-2);
+  }
+
+  .terminal-nav-divider::before {
+    content: none;
+  }
+
+  /* Adjust status bar for mobile */
+  .terminal-status-bar {
+    flex-wrap: wrap;
+    padding: var(--terminal-space-2);
+    font-size: 0.625rem;
+    gap: var(--terminal-space-2);
+  }
+
+  .terminal-status-bar-divider::before {
+    content: '|';
+  }
+
+  /* Reduce spacing on mobile */
+  .terminal-p-4 { padding: var(--terminal-space-3); }
+  .terminal-p-6 { padding: var(--terminal-space-4); }
+  .terminal-m-4 { margin: var(--terminal-space-3); }
+  .terminal-m-6 { margin: var(--terminal-space-4); }
+}
+
+/* =============================================================================
+   Print Styles
+   ============================================================================= */
+
+@media print {
+  .terminal-box,
+  .terminal-box-simple,
+  .terminal-box-thin,
+  .terminal-card {
+    border: 1px solid #000;
+  }
+
+  .terminal-box::before,
+  .terminal-box::after,
+  .terminal-box-simple::before,
+  .terminal-box-simple::after,
+  .terminal-box-thin::before,
+  .terminal-box-thin::after,
+  .terminal-card::before,
+  .terminal-card::after {
+    content: none;
+  }
+}

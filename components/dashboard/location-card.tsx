@@ -228,9 +228,9 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
               size="icon"
               onClick={handleToggleFavorite}
               disabled={actionLoading === 'favorite'}
-              className={`h-8 w-8 ${location.is_favorite
-                  ? `${themeClasses.accentBg} ${themeClasses.borderColor} text-black border-2`
-                  : `${themeClasses.borderColor} ${themeClasses.text} hover:bg-white/10`
+              className={`h-8 w-8 border-0 ${location.is_favorite
+                  ? `${themeClasses.accentBg} text-black`
+                  : `${themeClasses.text} hover:bg-white/10`
                 }`}
               aria-label={location.is_favorite ? "Remove from favorites" : "Add to favorites"}
               aria-pressed={location.is_favorite}
@@ -243,7 +243,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
               size="icon"
               onClick={fetchWeather}
               disabled={loading}
-              className={`h-8 w-8 ${themeClasses.borderColor} ${themeClasses.text} hover:bg-white/10`}
+              className={`h-8 w-8 border-0 ${themeClasses.text} hover:bg-white/10`}
               aria-label="Refresh weather data"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
@@ -254,7 +254,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
               size="icon"
               onClick={handleDelete}
               disabled={actionLoading === 'delete'}
-              className="h-8 w-8 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+              className="h-8 w-8 border-0 text-red-500 hover:bg-red-500 hover:text-white"
               aria-label={`Delete ${location.custom_name || location.location_name}`}
             >
               <Trash2 className="w-4 h-4" aria-hidden="true" />
@@ -267,7 +267,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
         {/* Weather Data */}
         {loading ? (
           <div className="flex items-center justify-center py-6">
-            <div className={`animate-spin rounded-full h-6 w-6 border-b-2 ${themeClasses.borderColor}`}></div>
+            <div className={`animate-spin rounded-full h-6 w-6 border-b-2 border-terminal-accent`}></div>
           </div>
         ) : weather ? (
           <div className={`p-4 container-nested ${themeClasses.background}`}>
@@ -293,25 +293,25 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
 
             {/* Weather Details Grid */}
             <div className="grid grid-cols-2 gap-3 text-center">
-              <div className={`p-3 border border-subtle rounded-sm`}>
+              <div className={`p-3 border-0 rounded-sm`}>
                 <Droplets className={`w-4 h-4 mx-auto mb-1 ${themeClasses.mutedText}`} />
                 <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>{weather.humidity}%</p>
                 <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Humidity</p>
               </div>
 
-              <div className={`p-3 border border-subtle rounded-sm`}>
+              <div className={`p-3 border-0 rounded-sm`}>
                 <Wind className={`w-4 h-4 mx-auto mb-1 ${themeClasses.mutedText}`} />
                 <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>{Math.round(weather.windSpeed)} mph</p>
                 <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Wind Speed</p>
               </div>
 
-              <div className={`p-3 border border-subtle rounded-sm`}>
+              <div className={`p-3 border-0 rounded-sm`}>
                 <Thermometer className={`w-4 h-4 mx-auto mb-1 ${themeClasses.mutedText}`} />
                 <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>{weather.pressure} hPa</p>
                 <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Pressure</p>
               </div>
 
-              <div className={`p-3 border border-subtle rounded-sm`}>
+              <div className={`p-3 border-0 rounded-sm`}>
                 <MapPin className={`w-4 h-4 mx-auto mb-1 ${themeClasses.mutedText}`} />
                 <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>{weather.visibility} km</p>
                 <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Visibility</p>
@@ -338,7 +338,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
               variant="outline"
               size="sm"
               onClick={fetchWeather}
-              className={`mt-2 font-mono uppercase ${themeClasses.borderColor} ${themeClasses.text} hover:bg-white/10`}
+              className={`mt-2 font-mono uppercase border-0 ${themeClasses.text} hover:bg-white/10`}
             >
               Retry
             </Button>
@@ -347,7 +347,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
 
         {/* Notes */}
         {location.notes && (
-          <div className="mt-4 p-3 border border-dashed border-white/20 rounded-sm">
+          <div className="mt-4 p-3 border-0 rounded-sm bg-white/5">
             <p className={`text-xs font-mono ${themeClasses.mutedText}`}>
               <strong>Notes:</strong> {location.notes}
             </p>
@@ -359,7 +359,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
           <div className={`mt-4 p-4 container-nested ${themeClasses.background} animate-in slide-in-from-top-2 duration-300`}>
             {detailedLoading ? (
               <div className="flex items-center justify-center py-8">
-                <div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${themeClasses.borderColor}`}></div>
+                <div className={`animate-spin rounded-full h-8 w-8 border-b-2 border-terminal-accent`}></div>
               </div>
             ) : detailedWeatherData ? (
               <div className="space-y-4">
@@ -372,7 +372,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
                     {detailedWeatherData.forecast.map((day, index) => (
                       <div
                         key={index}
-                        className={`p-2 border border-subtle ${themeClasses.background} text-center rounded-sm`}
+                        className={`p-2 border-0 ${themeClasses.background} text-center rounded-sm`}
                       >
                         <p className={`font-mono text-xs font-bold mb-1 ${themeClasses.text}`}>
                           {day.day}
@@ -418,7 +418,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
 
                 {/* Link to Full Weather Page */}
                 <Link href={`/weather/${citySlug}`} className="block w-full">
-                  <Button variant="outline" className={`w-full font-mono uppercase tracking-wider border-subtle ${themeClasses.text} hover:bg-white/10`}>
+                  <Button variant="outline" className={`w-full font-mono uppercase tracking-wider border-0 ${themeClasses.text} hover:bg-white/10`}>
                     <MapPin className="w-4 h-4 inline mr-2" />
                     View Full Weather Page
                   </Button>

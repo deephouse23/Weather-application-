@@ -2,19 +2,17 @@
 
 /**
  * 16-Bit Weather Platform - v1.0.0
- * 
+ *
  * Precipitation Card Component
- * Displays 24-hour rain and snow totals for authenticated users
+ * Displays 24-hour rain and snow totals
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { Droplets, Snowflake, Loader2, Lock, RefreshCw, AlertCircle } from 'lucide-react';
+import { Droplets, Snowflake, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/lib/auth';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import type { PrecipitationData } from '@/lib/types';
@@ -26,19 +24,16 @@ interface PrecipitationCardProps {
 }
 
 export function PrecipitationCard({ latitude, longitude, className }: PrecipitationCardProps) {
-  const { user, session } = useAuth();
   const { theme } = useTheme();
   const themeClasses = getComponentStyles(theme as ThemeType, 'weather');
-  
+
   const [precipitation, setPrecipitation] = useState<PrecipitationData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isAuthenticated = !!user && !!session;
-
   const fetchPrecipitation = useCallback(async () => {
     // Use explicit undefined checks since 0 is a valid coordinate (equator/prime meridian)
-    if (!isAuthenticated || latitude === undefined || longitude === undefined) {
+    if (latitude === undefined || longitude === undefined) {
       setPrecipitation(null);
       return;
     }
@@ -48,19 +43,10 @@ export function PrecipitationCard({ latitude, longitude, className }: Precipitat
 
     try {
       const response = await fetch(
-        `/api/weather/precipitation-history?lat=${latitude}&lon=${longitude}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${session?.access_token}`,
-          },
-        }
+        `/api/weather/precipitation-history?lat=${latitude}&lon=${longitude}`
       );
 
       if (!response.ok) {
-        if (response.status === 401) {
-          setError('Authentication required');
-          return;
-        }
         throw new Error('Failed to fetch precipitation data');
       }
 
@@ -72,38 +58,11 @@ export function PrecipitationCard({ latitude, longitude, className }: Precipitat
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, latitude, longitude, session?.access_token]);
+  }, [latitude, longitude]);
 
   useEffect(() => {
     fetchPrecipitation();
   }, [fetchPrecipitation]);
-
-  // Don't render if not authenticated
-  if (!isAuthenticated) {
-    return (
-      <Card className={cn(
-        "weather-card-enter border-2 shadow-md bg-black/40 backdrop-blur-sm opacity-60",
-        className
-      )} style={{ animationDelay: '275ms' }}>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className={cn("text-lg flex items-center gap-2", themeClasses.headerText)}>
-              <Lock className="w-4 h-4" />
-              24-Hour Precipitation
-            </CardTitle>
-            <Badge variant="outline" className="text-xs font-mono opacity-75">
-              LOGIN REQUIRED
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-2">
-          <p className={cn("text-sm font-mono text-center", themeClasses.secondaryText)}>
-            Sign in to view precipitation totals
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   // Don't render if no coordinates (use explicit undefined check since 0 is valid)
   if (latitude === undefined || longitude === undefined) {
@@ -112,27 +71,15 @@ export function PrecipitationCard({ latitude, longitude, className }: Precipitat
 
   return (
     <Card className={cn(
-      "weather-card-enter border-2 shadow-md hover:shadow-lg transition-all duration-300",
+      "weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300",
       "bg-black/40 backdrop-blur-sm",
       className
     )} style={{ animationDelay: '275ms' }}>
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className={cn("text-lg flex items-center gap-2", themeClasses.headerText)}>
-            <Droplets className="w-5 h-5 text-blue-400" />
-            24-Hour Precipitation
-          </CardTitle>
-          <Badge 
-            variant="outline" 
-            className={cn(
-              "text-xs font-mono",
-              themeClasses.borderColor,
-              themeClasses.accentText
-            )}
-          >
-            PREMIUM
-          </Badge>
-        </div>
+        <CardTitle className={cn("text-lg flex items-center gap-2", themeClasses.headerText)}>
+          <Droplets className="w-5 h-5 text-terminal-weather-precip" />
+          24-Hour Precipitation
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-2">
         {loading ? (
@@ -179,7 +126,7 @@ export function PrecipitationCard({ latitude, longitude, className }: Precipitat
             {/* Rainfall Section */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <Droplets className="w-5 h-5 text-blue-400" />
+                <Droplets className="w-5 h-5 text-terminal-weather-precip" />
                 <span className={cn("text-sm font-mono font-bold uppercase tracking-wider", themeClasses.text)}>
                   Rainfall
                 </span>

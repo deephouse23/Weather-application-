@@ -54,7 +54,7 @@ export function AirQualityDisplay({ aqi, theme, className, minimal = false }: Ai
   return (
     <div
       className={cn(
-        !minimal && "p-4 rounded-lg text-center border-2",
+        !minimal && "p-4 rounded-lg text-center border-0",
         !minimal && styles.container,
         className
       )}

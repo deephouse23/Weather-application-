@@ -154,7 +154,7 @@ export default function AddLocationModal({ isOpen, onClose, onLocationAdded }: A
         <div className="p-6 pt-2">
           {/* Error Message */}
           {error && (
-            <div className="p-3 mb-4 border-2 border-red-500 bg-red-100 text-red-700 text-sm font-mono">
+            <div className="p-3 mb-4 border-0 bg-red-100 text-red-700 text-sm font-mono">
               {error}
             </div>
           )}
@@ -218,9 +218,9 @@ export default function AddLocationModal({ isOpen, onClose, onLocationAdded }: A
               <button
                 type="button"
                 onClick={() => setIsFavorite(!isFavorite)}
-                className={`w-5 h-5 border-2 flex items-center justify-center transition-all duration-200 ${isFavorite
-                    ? `${themeClasses.accentBg} ${themeClasses.borderColor}`
-                    : `${themeClasses.background} ${themeClasses.borderColor}`
+                className={`w-5 h-5 border-0 flex items-center justify-center transition-all duration-200 ${isFavorite
+                    ? `${themeClasses.accentBg}`
+                    : `${themeClasses.background} bg-white/10`
                   }`}
               >
                 {isFavorite && <Star className="w-3 h-3 text-black fill-current" />}

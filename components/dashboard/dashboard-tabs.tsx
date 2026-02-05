@@ -65,8 +65,7 @@ export default function DashboardTabs({
     <Tabs defaultValue="favorites" className="w-full">
       <TabsList className={cn(
         "grid w-full grid-cols-3 mb-8",
-        "border-2",
-        themeClasses.borderColor
+        "border-0"
       )}>
         <TabsTrigger 
           value="favorites"
@@ -203,7 +202,7 @@ export default function DashboardTabs({
               </div>
             </div>
             
-            <div className="p-4 border-2 border-primary">
+            <div className="p-4 border-0">
               <p className="font-mono text-sm">
                 Current theme: <span className="text-primary uppercase">{theme}</span>
               </p>

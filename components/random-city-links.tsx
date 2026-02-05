@@ -75,37 +75,21 @@ export default function RandomCityLinks({ theme = 'dark' }: RandomCityLinksProps
 
   if (isLoading) {
     return (
-      <div className={cn(
-        "mt-16 pt-8 border-t-2 text-center",
-        theme === "dark" && "border-[#00d4ff]",
-        theme === "miami" && "border-[#ff1493]"
-      )}>
-        <div className="animate-pulse text-weather-text">Loading cities...</div>
+      <div className="mt-16 pt-8 border-t-0 text-center">
+        <div className="animate-pulse text-terminal-text-primary">Loading cities...</div>
       </div>
     )
   }
 
   return (
-    <div className={cn(
-      "mt-16 pt-8 border-t-2 text-center",
-      theme === "dark" && "border-[#00d4ff]",
-      theme === "miami" && "border-[#ff1493]"
-    )}>
+    <div className="mt-16 pt-8 border-t-0 text-center">
       <div className="flex items-center justify-center gap-4 mb-4">
-        <h2 className={cn(
-          "text-lg font-bold uppercase tracking-wider font-mono",
-          theme === "dark" && "text-[#00d4ff]",
-          theme === "miami" && "text-[#ff1493]"
-        )}>
+        <h2 className="text-lg font-bold uppercase tracking-wider font-mono text-terminal-accent">
           WEATHER BY CITY
         </h2>
         <button
           onClick={handleRefresh}
-          className={cn(
-            "px-3 py-1 text-xs font-mono rounded border transition-all duration-200",
-            theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] bg-[#00d4ff]/20 hover:bg-[#00d4ff]/40",
-            theme === "miami" && "border-[#ff1493] text-[#00ffff] bg-[#ff1493]/20 hover:bg-[#ff1493]/40"
-          )}
+          className="px-3 py-1 text-xs font-mono rounded border-0 transition-all duration-200 text-terminal-text-primary bg-terminal-accent/20 hover:bg-terminal-accent/40"
           title="Show different cities"
           aria-label="Shuffle cities"
         >
@@ -118,11 +102,7 @@ export default function RandomCityLinks({ theme = 'dark' }: RandomCityLinksProps
           <Link
             key={city.slug}
             href={`/weather/${city.slug}`}
-            className={cn(
-              "block px-3 py-2 text-sm font-mono rounded border transition-all duration-200",
-              theme === "dark" && "border-[#00d4ff] text-[#e0e0e0] hover:bg-[#00d4ff] hover:text-[#0f0f0f]",
-              theme === "miami" && "border-[#ff1493] text-[#00ffff] hover:bg-[#ff1493] hover:text-[#0a0025]"
-            )}
+            className="block px-3 py-2 text-sm font-mono rounded border-0 transition-all duration-200 text-terminal-text-primary hover:bg-terminal-accent hover:text-terminal-bg-primary"
           >
             {city.name}
           </Link>

@@ -612,50 +612,66 @@ const WeatherMapOpenLayers = ({
       {/* Animation Controls - Position varies by display mode: top for full-page, bottom for widget */}
       {isUSLocation && activeLayers.precipitation && timestamps.length > 0 && (
         <div
-          className={`absolute left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-auto ${
-            displayMode === 'widget' ? 'bottom-4' : 'top-16'
+          className={`absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-auto ${
+            displayMode === 'widget' ? 'bottom-2 gap-1' : 'top-16 gap-2'
           }`}
           style={{ zIndex: 2000 }}
         >
-          {/* Compact Controls Bar */}
-          <div className="flex items-center gap-2 bg-gray-900/95 px-3 py-2 rounded-md border-2 border-cyan-500 shadow-2xl backdrop-blur-sm">
+          {/* Compact Controls Bar - smaller in widget mode */}
+          <div className={`flex items-center bg-gray-900/95 rounded-md border-2 border-cyan-500 shadow-2xl backdrop-blur-sm ${
+            displayMode === 'widget' ? 'gap-1 px-2 py-1' : 'gap-2 px-3 py-2'
+          }`}>
             <button
               onClick={handleSkipToStart}
-              className="px-2 py-1.5 bg-gray-700 border-2 border-gray-500 rounded text-white hover:bg-gray-600 transition-colors"
+              className={`bg-gray-700 border border-gray-500 rounded text-white hover:bg-gray-600 transition-colors ${
+                displayMode === 'widget' ? 'px-1 py-0.5' : 'px-2 py-1.5 border-2'
+              }`}
               title="Go to start (4 hours ago)"
             >
-              <SkipBack className="w-4 h-4" />
+              <SkipBack className={displayMode === 'widget' ? 'w-3 h-3' : 'w-4 h-4'} />
             </button>
 
             <button
               onClick={handlePlayPause}
-              className={`px-4 py-1.5 border-2 rounded text-white font-mono text-xs font-bold transition-colors min-w-[90px] ${isPlaying
+              className={`border rounded text-white font-mono font-bold transition-colors ${
+                displayMode === 'widget'
+                  ? 'px-2 py-0.5 text-[10px] min-w-[60px] border'
+                  : 'px-4 py-1.5 text-xs min-w-[90px] border-2'
+              } ${isPlaying
                 ? 'bg-yellow-600 border-yellow-400 hover:bg-yellow-500'
                 : 'bg-cyan-600 border-cyan-400 hover:bg-cyan-500'
                 }`}
             >
               {isPlaying ? (
-                <><Pause className="w-4 h-4 inline mr-1" /> PAUSE</>
+                <><Pause className={`inline mr-0.5 ${displayMode === 'widget' ? 'w-3 h-3' : 'w-4 h-4'}`} /> PAUSE</>
               ) : (
-                <><Play className="w-4 h-4 inline mr-1" /> PLAY</>
+                <><Play className={`inline mr-0.5 ${displayMode === 'widget' ? 'w-3 h-3' : 'w-4 h-4'}`} /> PLAY</>
               )}
             </button>
 
             <button
               onClick={handleSkipToEnd}
-              className="px-2 py-1.5 bg-gray-700 border-2 border-gray-500 rounded text-white hover:bg-gray-600 transition-colors"
+              className={`bg-gray-700 border border-gray-500 rounded text-white hover:bg-gray-600 transition-colors ${
+                displayMode === 'widget' ? 'px-1 py-0.5' : 'px-2 py-1.5 border-2'
+              }`}
               title="Go to end (now)"
             >
-              <SkipForward className="w-4 h-4" />
+              <SkipForward className={displayMode === 'widget' ? 'w-3 h-3' : 'w-4 h-4'} />
             </button>
 
             {/* Speed Controls */}
-            <div className="flex gap-1 ml-1 border-l-2 border-gray-600 pl-2">
+            <div className={`flex border-l border-gray-600 ${
+              displayMode === 'widget' ? 'gap-0.5 ml-0.5 pl-1' : 'gap-1 ml-1 border-l-2 pl-2'
+            }`}>
               {[0.5, 1, 2].map((s) => (
                 <button
                   key={s}
                   onClick={() => setSpeed(s as 0.5 | 1 | 2)}
-                  className={`px-2 py-1 border-2 rounded font-mono text-xs font-bold transition-colors ${speed === s
+                  className={`border rounded font-mono font-bold transition-colors ${
+                    displayMode === 'widget'
+                      ? 'px-1 py-0.5 text-[10px] border'
+                      : 'px-2 py-1 text-xs border-2'
+                  } ${speed === s
                     ? 'bg-cyan-600 border-cyan-400 text-white'
                     : 'bg-gray-700 border-gray-500 text-gray-300 hover:bg-gray-600'
                     }`}
@@ -666,8 +682,12 @@ const WeatherMapOpenLayers = ({
             </div>
 
             {/* Time Display */}
-            <div className="ml-2 border-l-2 border-gray-600 pl-2 text-center min-w-[80px]">
-              <span className={`font-mono text-xs font-bold ${isLiveFrame ? 'text-red-400 animate-pulse' : 'text-cyan-400'}`}>
+            <div className={`border-l border-gray-600 text-center ${
+              displayMode === 'widget' ? 'ml-1 pl-1 min-w-[50px]' : 'ml-2 border-l-2 pl-2 min-w-[80px]'
+            }`}>
+              <span className={`font-mono font-bold ${
+                displayMode === 'widget' ? 'text-[10px]' : 'text-xs'
+              } ${isLiveFrame ? 'text-red-400 animate-pulse' : 'text-cyan-400'}`}>
                 {relativeTime}
               </span>
             </div>
@@ -680,11 +700,15 @@ const WeatherMapOpenLayers = ({
             // Progress: if only 1 frame (maxIndex=0), show 100%; otherwise calculate based on frameIndex
             const progress = maxIndex > 0 ? (frameIndex / maxIndex) * 100 : 100
             return (
-          <div className="w-[500px] max-w-[90vw] px-3 py-2 bg-gray-900/95 rounded-md shadow-xl backdrop-blur-sm">
+          <div className={`max-w-[90vw] bg-gray-900/95 rounded-md shadow-xl backdrop-blur-sm ${
+            displayMode === 'widget' ? 'w-[280px] px-2 py-1' : 'w-[500px] px-3 py-2'
+          }`}>
             {/* Progress bar background */}
-            <div className="relative h-3 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
+            <div className={`relative bg-gray-800 rounded-full overflow-hidden border border-gray-700 ${
+              displayMode === 'widget' ? 'h-2' : 'h-3'
+            }`}>
               {/* Animated progress fill */}
-              <div 
+              <div
                 className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-600 to-cyan-400 rounded-full transition-all duration-150 ease-out"
                 style={{ width: `${progress}%` }}
               />
@@ -705,19 +729,23 @@ const WeatherMapOpenLayers = ({
                   setFrameIndex(parseInt(e.target.value))
                 }}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                style={{ 
+                style={{
                   WebkitAppearance: 'none',
                   appearance: 'none'
                 }}
               />
               {/* Custom thumb indicator */}
-              <div 
-                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-cyan-400 rounded-full shadow-lg shadow-cyan-400/50 pointer-events-none transition-all duration-150 ease-out"
-                style={{ left: `calc(${progress}% - 8px)` }}
+              <div
+                className={`absolute top-1/2 -translate-y-1/2 bg-white border-2 border-cyan-400 rounded-full shadow-lg shadow-cyan-400/50 pointer-events-none transition-all duration-150 ease-out ${
+                  displayMode === 'widget' ? 'w-3 h-3' : 'w-4 h-4'
+                }`}
+                style={{ left: `calc(${progress}% - ${displayMode === 'widget' ? '6px' : '8px'})` }}
               />
             </div>
             {/* Time labels */}
-            <div className="mt-1.5 flex justify-between items-center font-mono text-[10px]">
+            <div className={`flex justify-between items-center font-mono ${
+              displayMode === 'widget' ? 'mt-0.5 text-[8px]' : 'mt-1.5 text-[10px]'
+            }`}>
               <span className="text-gray-500">-4h</span>
               <div className="flex items-center gap-1">
                 <span className="text-gray-400">Frame</span>

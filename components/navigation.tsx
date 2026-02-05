@@ -245,7 +245,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
               })}
 
               {/* Mobile Auth */}
-              <div className="flex items-center justify-start pt-4 border-t mt-4">
+              <div className="flex items-center justify-start gap-2 pt-4 border-t mt-4 flex-wrap">
                 <AuthButton />
               </div>
             </div>

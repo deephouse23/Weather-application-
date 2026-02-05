@@ -185,7 +185,7 @@ export default function DetailedWeatherModal({ location, isOpen, onClose }: Deta
           </div>
           <button
             onClick={onClose}
-            className={`p-2 border-2 transition-all duration-200 hover:scale-105 ${themeClasses.background} ${themeClasses.borderColor} ${themeClasses.text} ${themeClasses.hoverBg}`}
+            className={`p-2 border-0 transition-all duration-200 hover:scale-105 ${themeClasses.background} ${themeClasses.text} ${themeClasses.hoverBg}`}
           >
             <X className="w-5 h-5" />
           </button>
@@ -195,7 +195,7 @@ export default function DetailedWeatherModal({ location, isOpen, onClose }: Deta
         {loading && (
           <div className="flex items-center justify-center min-h-[300px]">
             <div className="text-center">
-              <div className={`animate-spin rounded-full h-12 w-12 border-b-2 mb-4 ${themeClasses.borderColor}`}></div>
+              <div className={`animate-spin rounded-full h-12 w-12 border-b-2 mb-4 border-terminal-accent`}></div>
               <p className={`font-mono ${themeClasses.text}`}>Loading weather data...</p>
             </div>
           </div>
@@ -208,7 +208,7 @@ export default function DetailedWeatherModal({ location, isOpen, onClose }: Deta
               <p className="text-red-500 font-mono mb-4">{error}</p>
               <button
                 onClick={fetchFullWeather}
-                className={`px-4 py-2 border-2 font-mono uppercase tracking-wider ${themeClasses.accentBg} ${themeClasses.borderColor} text-black`}
+                className={`px-4 py-2 border-0 font-mono uppercase tracking-wider ${themeClasses.accentBg} text-black`}
               >
                 Retry
               </button>
@@ -220,7 +220,7 @@ export default function DetailedWeatherModal({ location, isOpen, onClose }: Deta
         {weatherData && !loading && (
           <div className="space-y-6">
             {/* Current Conditions */}
-            <div className={`p-4 border-2 ${themeClasses.background} ${themeClasses.borderColor}`}>
+            <div className={`p-4 border-0 ${themeClasses.background}`}>
               <h3 className={`text-lg font-bold font-mono uppercase mb-4 ${themeClasses.text}`}>
                 Current Conditions
               </h3>
@@ -245,7 +245,7 @@ export default function DetailedWeatherModal({ location, isOpen, onClose }: Deta
 
                 {/* Weather Details Grid */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className={`p-3 border ${themeClasses.borderColor}`}>
+                  <div className={`p-3 border-0`}>
                     <div className="flex items-center space-x-2 mb-1">
                       <Droplets className={`w-4 h-4 ${themeClasses.text}`} />
                       <span className={`text-xs font-mono uppercase ${themeClasses.mutedText}`}>Humidity</span>
@@ -255,7 +255,7 @@ export default function DetailedWeatherModal({ location, isOpen, onClose }: Deta
                     </div>
                   </div>
 
-                  <div className={`p-3 border ${themeClasses.borderColor}`}>
+                  <div className={`p-3 border-0`}>
                     <div className="flex items-center space-x-2 mb-1">
                       <Wind className={`w-4 h-4 ${themeClasses.text}`} />
                       <span className={`text-xs font-mono uppercase ${themeClasses.mutedText}`}>Wind</span>
@@ -265,7 +265,7 @@ export default function DetailedWeatherModal({ location, isOpen, onClose }: Deta
                     </div>
                   </div>
 
-                  <div className={`p-3 border ${themeClasses.borderColor}`}>
+                  <div className={`p-3 border-0`}>
                     <div className="flex items-center space-x-2 mb-1">
                       <Gauge className={`w-4 h-4 ${themeClasses.text}`} />
                       <span className={`text-xs font-mono uppercase ${themeClasses.mutedText}`}>Pressure</span>
@@ -275,7 +275,7 @@ export default function DetailedWeatherModal({ location, isOpen, onClose }: Deta
                     </div>
                   </div>
 
-                  <div className={`p-3 border ${themeClasses.borderColor}`}>
+                  <div className={`p-3 border-0`}>
                     <div className="flex items-center space-x-2 mb-1">
                       <Eye className={`w-4 h-4 ${themeClasses.text}`} />
                       <span className={`text-xs font-mono uppercase ${themeClasses.mutedText}`}>Visibility</span>
@@ -290,13 +290,13 @@ export default function DetailedWeatherModal({ location, isOpen, onClose }: Deta
 
             {/* UV Index & Air Quality */}
             {(weatherData.uvIndex !== undefined || weatherData.aqi) && (
-              <div className={`p-4 border-2 ${themeClasses.background} ${themeClasses.borderColor}`}>
+              <div className={`p-4 border-0 ${themeClasses.background}`}>
                 <h3 className={`text-lg font-bold font-mono uppercase mb-4 ${themeClasses.text}`}>
                   Environmental Data
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {weatherData.uvIndex !== undefined && (
-                    <div className={`p-3 border ${themeClasses.borderColor}`}>
+                    <div className={`p-3 border-0`}>
                       <div className={`text-sm font-mono uppercase mb-2 ${themeClasses.mutedText}`}>UV Index</div>
                       <div className={`text-2xl font-bold font-mono ${themeClasses.text}`}>
                         {weatherData.uvIndex}
@@ -304,7 +304,7 @@ export default function DetailedWeatherModal({ location, isOpen, onClose }: Deta
                     </div>
                   )}
                   {weatherData.aqi && (
-                    <div className={`p-3 border ${themeClasses.borderColor}`}>
+                    <div className={`p-3 border-0`}>
                       <div className={`text-sm font-mono uppercase mb-2 ${themeClasses.mutedText}`}>Air Quality</div>
                       <div className={`text-2xl font-bold font-mono ${themeClasses.text}`}>
                         {weatherData.aqi}
@@ -320,13 +320,13 @@ export default function DetailedWeatherModal({ location, isOpen, onClose }: Deta
 
             {/* 5-Day Forecast */}
             {weatherData.forecast && weatherData.forecast.length > 0 && (
-              <div className={`p-4 border-2 ${themeClasses.background} ${themeClasses.borderColor}`}>
+              <div className={`p-4 border-0 ${themeClasses.background}`}>
                 <h3 className={`text-lg font-bold font-mono uppercase mb-4 ${themeClasses.text}`}>
                   5-Day Forecast
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                   {weatherData.forecast.slice(0, 5).map((day, index) => (
-                    <div key={index} className={`p-3 border text-center ${themeClasses.borderColor}`}>
+                    <div key={index} className={`p-3 border-0 text-center`}>
                       <div className={`text-sm font-mono uppercase mb-2 ${themeClasses.mutedText}`}>
                         {day.day}
                       </div>
@@ -345,7 +345,7 @@ export default function DetailedWeatherModal({ location, isOpen, onClose }: Deta
 
             {/* Sun & Moon */}
             {weatherData.sunrise && weatherData.sunset && (
-              <div className={`p-4 border-2 ${themeClasses.background} ${themeClasses.borderColor}`}>
+              <div className={`p-4 border-0 ${themeClasses.background}`}>
                 <h3 className={`text-lg font-bold font-mono uppercase mb-4 ${themeClasses.text}`}>
                   Sun & Moon
                 </h3>
