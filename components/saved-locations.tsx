@@ -17,7 +17,7 @@ const SavedLocations = () => {
         {locations.map((loc) => (
           <li key={loc.name} className="flex justify-between items-center bg-gray-900/60 p-2 rounded">
             <span className="text-white">{loc.name}</span>
-            <span className="text-blue-400 font-mono">{loc.temp}</span>
+            <span className="text-terminal-accent font-mono">{loc.temp}</span>
           </li>
         ))}
       </ul>

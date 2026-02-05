@@ -19,7 +19,7 @@ import { useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
 import { Droplets } from "lucide-react"
 import { ThemeType } from "@/lib/theme-config" // Ensure using shared type or just remove if not needed for logic
-import ModernWeatherIcon from "./modern-weather-icon"
+import WeatherIconModern from "./weather-icon-modern"
 
 export interface HourlyForecastData {
   dt: number;
@@ -67,7 +67,7 @@ export default function HourlyForecast({
   const now = Date.now();
 
   return (
-    <Card className="p-3 sm:p-4 lg:p-6 border-2 shadow-xl backdrop-blur-md bg-card/40 animate-slide-in">
+    <Card className="p-3 sm:p-4 lg:p-6 border-0 shadow-xl backdrop-blur-md bg-card/40 animate-slide-in">
       <CardHeader className="p-0 mb-3 sm:mb-4">
         <CardTitle className="text-center text-base sm:text-lg lg:text-xl font-bold uppercase tracking-wider text-primary glow">
           HOURLY FORECAST
@@ -130,9 +130,9 @@ function HourlyCard({
         "transition-all duration-300 hover:scale-105 hover:-translate-y-1",
         "backdrop-blur-md",
         isCurrentHour
-          ? "bg-primary/10 border-primary shadow-[0_0_15px_rgba(var(--primary),0.3)] current-hour"
-          : "bg-card/50 hover:bg-card/80 border-border",
-        isMidnight && "border-l-4 border-l-primary/50"
+          ? "bg-primary/10 border-0 shadow-[0_0_15px_rgba(var(--primary),0.3)] current-hour"
+          : "bg-card/50 hover:bg-card/80 border-0",
+        isMidnight && "border-l-0"
       )}
     >
       {/* Time */}
@@ -152,9 +152,9 @@ function HourlyCard({
 
       {/* Weather Icon */}
       <div className="mb-3 flex items-center justify-center filter drop-shadow-md">
-        <ModernWeatherIcon
-          code={hour.icon}
+        <WeatherIconModern
           condition={hour.condition}
+          isNight={hour.icon?.endsWith('n')}
           size={54}
           className="hover:scale-110 transition-transform"
         />
@@ -173,7 +173,7 @@ function HourlyCard({
         {/* Precip */}
         <div className={cn(
           "flex items-center gap-0.5",
-          hour.precipChance > 0 ? "text-blue-400" : "text-muted-foreground"
+          hour.precipChance > 0 ? "text-terminal-weather-precip" : "text-muted-foreground"
         )}>
           <Droplets className="w-3 h-3" />
           <span>{hour.precipChance}%</span>

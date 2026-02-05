@@ -36,24 +36,24 @@ interface SunspotDisplayProps {
   isLoading?: boolean;
 }
 
-// Get phase color
+// Get phase color - using semantic terminal colors
 function getPhaseColor(phase: SunspotData['solarCycle']['phase']): string {
   switch (phase) {
-    case 'minimum': return 'text-blue-500';
-    case 'rising': return 'text-green-500';
-    case 'maximum': return 'text-orange-500';
-    case 'declining': return 'text-yellow-500';
-    default: return 'text-gray-500';
+    case 'minimum': return 'text-terminal-accent-info';
+    case 'rising': return 'text-terminal-accent-success';
+    case 'maximum': return 'text-terminal-accent-warning';
+    case 'declining': return 'text-terminal-accent-warning';
+    default: return 'text-terminal-text-muted';
   }
 }
 
-// Get sunspot activity level
+// Get sunspot activity level - using semantic terminal colors
 function getActivityLevel(count: number): { text: string; color: string } {
-  if (count < 30) return { text: 'QUIET', color: 'text-blue-400' };
-  if (count < 80) return { text: 'LOW', color: 'text-green-500' };
-  if (count < 130) return { text: 'MODERATE', color: 'text-yellow-500' };
+  if (count < 30) return { text: 'QUIET', color: 'text-terminal-accent-info' };
+  if (count < 80) return { text: 'LOW', color: 'text-terminal-accent-success' };
+  if (count < 130) return { text: 'MODERATE', color: 'text-terminal-accent-warning' };
   if (count < 180) return { text: 'HIGH', color: 'text-orange-500' };
-  return { text: 'VERY HIGH', color: 'text-red-500' };
+  return { text: 'VERY HIGH', color: 'text-terminal-accent-danger' };
 }
 
 // Trend icon
@@ -156,9 +156,9 @@ export default function SunspotDisplay({ data, isLoading = false }: SunspotDispl
             <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
               <div
                 className={cn('h-full rounded-full transition-all duration-1000',
-                  cyclePhase === 'minimum' ? 'bg-blue-500' :
-                  cyclePhase === 'rising' ? 'bg-green-500' :
-                  cyclePhase === 'maximum' ? 'bg-orange-500' : 'bg-yellow-500'
+                  cyclePhase === 'minimum' ? 'bg-terminal-accent-info' :
+                  cyclePhase === 'rising' ? 'bg-terminal-accent-success' :
+                  cyclePhase === 'maximum' ? 'bg-orange-500' : 'bg-terminal-accent-warning'
                 )}
                 style={{ width: `${data?.solarCycle?.percentComplete || 0}%` }}
               />

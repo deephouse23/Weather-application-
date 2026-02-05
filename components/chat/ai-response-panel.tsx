@@ -74,13 +74,13 @@ export function AIResponsePanel({
 
     return (
         <div className={cn(
-            "mt-3 mx-2 sm:mx-0 border-2 rounded-lg overflow-hidden transition-all duration-300",
-            "bg-weather-bg-elev border-weather-border",
+            "mt-3 mx-2 sm:mx-0 border-0 rounded-lg overflow-hidden transition-all duration-300",
+            "bg-weather-bg-elev",
             isExpanded ? "max-h-[400px]" : "max-h-12"
         )}>
             {/* Header */}
             <div
-                className="flex items-center justify-between px-3 py-2 cursor-pointer bg-weather-bg border-b border-weather-border"
+                className="flex items-center justify-between px-3 py-2 cursor-pointer bg-weather-bg border-b-0"
                 onClick={() => setIsExpanded(!isExpanded)}
             >
                 <div className="flex items-center gap-2">
@@ -154,7 +154,7 @@ export function AIResponsePanel({
                                         "max-w-[80%] px-3 py-2 rounded-lg font-mono text-sm",
                                         msg.role === 'user'
                                             ? "bg-weather-primary/20 text-weather-text"
-                                            : "bg-weather-bg text-weather-text border border-weather-border"
+                                            : "bg-weather-bg text-weather-text border-0"
                                     )}
                                 >
                                     <p className="leading-relaxed whitespace-pre-wrap">
@@ -198,7 +198,7 @@ export function AIResponsePanel({
                             <div className="flex-shrink-0 w-6 h-6 rounded-full bg-weather-primary/20 flex items-center justify-center">
                                 <Bot className="w-3 h-3 text-weather-primary" aria-hidden="true" />
                             </div>
-                            <div className="bg-weather-bg border border-weather-border px-3 py-2 rounded-lg">
+                            <div className="bg-weather-bg border-0 px-3 py-2 rounded-lg">
                                 <div className="flex items-center gap-2 text-weather-muted">
                                     <LoadingSpinner size="sm" label="AI is thinking" />
                                     <span className="text-sm font-mono">Thinking...</span>

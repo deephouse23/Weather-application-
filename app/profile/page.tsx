@@ -137,10 +137,10 @@ function ProfileContent() {
   // Don't render until mounted to prevent hydration issues
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-[#0a0a1a]">
+      <div className="min-h-screen bg-terminal-bg-primary">
         <Navigation />
         <div className="flex items-center justify-center min-h-[50vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-[#00d4ff]" />
+          <Loader2 className="h-8 w-8 animate-spin text-terminal-accent" />
         </div>
       </div>
     )

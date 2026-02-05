@@ -1,14 +1,15 @@
 /**
  * 16-Bit Weather Platform - v1.0.0
- * 
+ *
  * Precipitation History API Route
  * Fetches 24-hour precipitation totals using One Call 3.0 timemachine
- * Only available for authenticated users with 1-hour cache TTL
+ * Available for all users with 1-hour cache TTL
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { rateLimitRequest } from '@/lib/services/weather-rate-limiter';
+
+// NOTE: Supabase import removed - authentication no longer required for this endpoint
 
 // Simple in-memory cache with 1-hour TTL
 const precipitationCache = new Map<string, { data: PrecipitationResponse; expires: number }>();
@@ -29,31 +30,32 @@ interface PrecipitationResponse {
   dataQuality: 'full' | 'partial'; // 'full' = both days available, 'partial' = only one day
 }
 
-// Get user from request
-async function getAuthenticatedUser(request: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return null;
-  }
-
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return null;
-  }
-
-  const token = authHeader.substring(7);
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-
-  if (error || !user) {
-    return null;
-  }
-
-  return user;
-}
+// NOTE: Authentication function preserved for potential future use
+// async function getAuthenticatedUser(request: NextRequest) {
+//   const { createClient } = await import('@supabase/supabase-js');
+//   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+//   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+//
+//   if (!supabaseUrl || !supabaseAnonKey) {
+//     return null;
+//   }
+//
+//   const authHeader = request.headers.get('authorization');
+//   if (!authHeader?.startsWith('Bearer ')) {
+//     return null;
+//   }
+//
+//   const token = authHeader.substring(7);
+//   const supabase = createClient(supabaseUrl, supabaseAnonKey);
+//
+//   const { data: { user }, error } = await supabase.auth.getUser(token);
+//
+//   if (error || !user) {
+//     return null;
+//   }
+//
+//   return user;
+// }
 
 // Convert mm to inches
 function mmToInches(mm: number): number {
@@ -212,15 +214,7 @@ export async function GET(request: NextRequest) {
       return rateLimit.response;
     }
 
-    // Require authentication
-    const user = await getAuthenticatedUser(request);
-    
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Authentication required for precipitation history' },
-        { status: 401 }
-      );
-    }
+    // NOTE: Authentication removed - endpoint now available to all users
 
     const apiKey = process.env.OPENWEATHER_API_KEY;
     if (!apiKey) {

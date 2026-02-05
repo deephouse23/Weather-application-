@@ -352,7 +352,7 @@ export default function CoronagraphAnimation({ className }: CoronagraphAnimation
         color: isPlaying ? 'text-green-500' : 'text-cyan-500',
       };
     }
-    return { text: 'Latest', color: 'text-blue-500' };
+    return { text: 'Latest', color: 'text-terminal-accent-info' };
   };
 
   const status = getStatusText();
@@ -528,7 +528,7 @@ export default function CoronagraphAnimation({ className }: CoronagraphAnimation
                 'font-mono text-xs',
                 viewMode === 'animated' && 'bg-cyan-500/20 ring-2 ring-cyan-500',
                 viewMode === 'frames' && 'bg-purple-500/20 ring-2 ring-purple-500',
-                viewMode === 'latest' && 'bg-blue-500/20 ring-2 ring-blue-500'
+                viewMode === 'latest' && 'bg-terminal-accent-info/20 ring-2 ring-terminal-accent-info'
               )}
             >
               <ImageIcon className="w-4 h-4 mr-1" />

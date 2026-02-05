@@ -180,7 +180,7 @@ function ExpandableForecastCard({
   } : day.details;
 
   return (
-    <div className={`${themeClasses.cardBg} border ${themeClasses.borderColor} transition-all duration-300 hover:border-opacity-80`}>
+    <div className={`${themeClasses.cardBg} border-0 transition-all duration-300`}>
       {/* Clickable Header */}
       <button
         onClick={onToggle}
@@ -211,7 +211,7 @@ function ExpandableForecastCard({
           <div className={`text-lg sm:text-xl font-bold ${themeClasses.accentText} pixel-glow`}>
             {Math.round(day.highTemp)}{tempUnit}
           </div>
-          <div className="w-8 sm:w-12 h-1 bg-gradient-to-r from-blue-400 via-yellow-400 to-red-400 rounded"></div>
+          <div className="w-8 sm:w-12 h-1 bg-gradient-to-r from-terminal-weather-cold via-terminal-accent-warning to-terminal-weather-hot rounded"></div>
           <div className={`text-sm sm:text-base ${themeClasses.secondary} opacity-80`}>
             {Math.round(day.lowTemp)}{tempUnit}
           </div>
@@ -220,7 +220,7 @@ function ExpandableForecastCard({
         {/* Right: Expand Icon */}
         <div className="flex items-center space-x-2 flex-shrink-0">
           {details?.precipitationChance !== undefined && (
-            <div className="flex items-center space-x-1 text-xs text-blue-400">
+            <div className="flex items-center space-x-1 text-xs text-terminal-weather-precip">
               <Droplets className="w-3 h-3" />
               <span>{details.precipitationChance}%</span>
             </div>
@@ -234,7 +234,7 @@ function ExpandableForecastCard({
       {/* Expandable Content */}
       <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
         }`}>
-        <div className={`p-3 sm:p-4 border-t ${themeClasses.borderColor} border-opacity-30`}>
+        <div className={`p-3 sm:p-4 border-t-0`}>
           <DetailedWeatherInfo
             details={details}
             theme={theme}
@@ -334,13 +334,13 @@ function HourlyForecast({ hourlyData, theme, themeClasses, tempUnit }: {
   tempUnit: string;
 }) {
   return (
-    <div className="mt-4 pt-3 border-t border-opacity-30" style={{ borderColor: themeClasses.borderColor }}>
+    <div className="mt-4 pt-3 border-t-0">
       <h4 className={`text-sm font-bold ${themeClasses.accentText} mb-3 uppercase tracking-wider`}>
         Hourly Forecast
       </h4>
       <div className="flex space-x-3 overflow-x-auto pb-2">
         {hourlyData?.slice(0, 8).map((hour: NonNullable<DetailedForecastDay['hourlyForecast']>[0], index: number) => (
-          <div key={index} className={`flex-shrink-0 text-center p-2 rounded ${themeClasses.cardBg} border ${themeClasses.borderColor} min-w-[60px]`}>
+          <div key={index} className={`flex-shrink-0 text-center p-2 rounded ${themeClasses.cardBg} border-0 min-w-[60px]`}>
             <div className={`text-xs ${themeClasses.secondary} mb-1`}>
               {hour.time}
             </div>
@@ -350,8 +350,8 @@ function HourlyForecast({ hourlyData, theme, themeClasses, tempUnit }: {
             </div>
             {hour.precipChance > 0 && (
               <div className="flex items-center justify-center space-x-1 mt-1">
-                <Droplets className="w-3 h-3 text-blue-400" />
-                <span className="text-xs text-blue-400">{hour.precipChance}%</span>
+                <Droplets className="w-3 h-3 text-terminal-weather-precip" />
+                <span className="text-xs text-terminal-weather-precip">{hour.precipChance}%</span>
               </div>
             )}
           </div>
@@ -391,8 +391,8 @@ function WeatherIcon({ condition, size, theme }: { condition: string; size: "sma
     return (
       <div className={cn("relative", sizeClasses[size])} style={iconStyle}>
         <div className="absolute top-0 left-0 w-3/4 h-1/2 bg-[#6c7b7f] rounded-full"></div>
-        <div className="absolute bottom-0 left-1/4 w-1 h-1/3 bg-[#00d4ff] animate-slide-in"></div>
-        <div className="absolute bottom-0 right-1/4 w-1 h-1/3 bg-[#00d4ff] animate-slide-in"></div>
+        <div className="absolute bottom-0 left-1/4 w-1 h-1/3 bg-terminal-weather-precip animate-slide-in"></div>
+        <div className="absolute bottom-0 right-1/4 w-1 h-1/3 bg-terminal-weather-precip animate-slide-in"></div>
       </div>
     );
   }

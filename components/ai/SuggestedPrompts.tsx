@@ -122,8 +122,7 @@ export default function SuggestedPrompts({ onPromptClick }: SuggestedPromptsProp
 
   return (
     <div className={cn(
-      'border-4 p-4 font-mono',
-      themeClasses.borderColor,
+      'border-0 p-4 font-mono',
       themeClasses.background
     )}>
       {/* Header */}
@@ -135,8 +134,7 @@ export default function SuggestedPrompts({ onPromptClick }: SuggestedPromptsProp
           </span>
         </div>
         <span className={cn(
-          'text-xs px-2 py-0.5 border-2',
-          themeClasses.borderColor,
+          'text-xs px-2 py-0.5 border-0',
           themeClasses.accentText
         )}>
           {currentCategory.category}
@@ -147,10 +145,8 @@ export default function SuggestedPrompts({ onPromptClick }: SuggestedPromptsProp
       <button
         onClick={() => onPromptClick(currentPrompt)}
         className={cn(
-          'w-full text-left p-3 border-2 mb-3 transition-all duration-200',
-          'hover:scale-[1.02] cursor-pointer',
-          themeClasses.borderColor,
-          'hover:border-opacity-75'
+          'w-full text-left p-3 border-0 mb-3 transition-all duration-200',
+          'hover:scale-[1.02] cursor-pointer'
         )}
       >
         <p className={cn('text-sm italic', themeClasses.text)}>

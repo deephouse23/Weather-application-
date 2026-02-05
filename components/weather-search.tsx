@@ -262,9 +262,9 @@ export default function WeatherSearch({
             placeholder={isDisabled ? "Rate limit reached..." : isAuthenticated ? "Ask about weather or search a location..." : "ZIP, City+State, or City+Country..."}
             disabled={controlsDisabled}
             aria-label="Search location"
-            className={`w-full pr-10 sm:pr-12 ${themeClasses.cardBg} border-2 ${theme === 'miami' ? 'border-weather-accent' : themeClasses.borderColor} ${themeClasses.text} ${themeClasses.placeholderText} 
-                     font-mono text-sm sm:text-base uppercase tracking-wider ${theme === 'miami' ? 'hover:border-weather-accent' : themeClasses.hoverBorder} 
-                     transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed pixel-font ${theme === 'miami' ? 'border-weather-accent' : themeClasses.specialBorder}
+            className={`w-full pr-10 sm:pr-12 ${themeClasses.cardBg} border-0 ${themeClasses.text} ${themeClasses.placeholderText}
+                     font-mono text-sm sm:text-base uppercase tracking-wider
+                     transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed pixel-font
                      min-h-[48px] touch-manipulation py-3 sm:py-4 px-3 sm:px-4`}
             style={{
               imageRendering: "pixelated",
@@ -301,7 +301,7 @@ export default function WeatherSearch({
               className={cn(
                 "h-10 w-10",
                 themeClasses.secondaryText,
-                "hover:text-[#ffe66d]",
+                "hover:text-terminal-accent-warning",
                 themeClasses.glow
               )}
               aria-label={isLoading || isAILoading ? "Searching..." : "Search for weather"}
@@ -336,8 +336,8 @@ export default function WeatherSearch({
             className={cn(
               "w-full sm:w-auto max-w-xs min-h-[48px]",
               "text-xs sm:text-sm uppercase tracking-wider font-mono",
-              "border-2",
-              theme === 'miami' && "border-weather-accent hover:bg-weather-accent hover:text-weather-bg"
+              "border-0",
+              theme === 'miami' && "hover:bg-weather-accent hover:text-weather-bg"
             )}
             aria-label={isAutoDetecting ? "Detecting your location" : isLoading ? "Loading" : isDisabled ? "Rate limited" : "Use my current location"}
           >
@@ -386,7 +386,7 @@ export default function WeatherSearch({
                   className={cn(
                     "justify-start h-auto py-2",
                     themeClasses.warningText,
-                    "hover:text-[#00d4ff]",
+                    "hover:text-terminal-accent",
                     themeClasses.glow
                   )}
                   disabled={isDisabled}
@@ -399,7 +399,7 @@ export default function WeatherSearch({
                   className={cn(
                     "justify-start h-auto py-2",
                     themeClasses.warningText,
-                    "hover:text-[#00d4ff]",
+                    "hover:text-terminal-accent",
                     themeClasses.glow
                   )}
                   disabled={isDisabled}
@@ -412,7 +412,7 @@ export default function WeatherSearch({
                   className={cn(
                     "justify-start h-auto py-2",
                     themeClasses.warningText,
-                    "hover:text-[#00d4ff]",
+                    "hover:text-terminal-accent",
                     themeClasses.glow
                   )}
                   disabled={isDisabled}

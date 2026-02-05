@@ -596,7 +596,7 @@ export default function TurbulenceMap({
                 {/* Icing */}
                 {selectedPirep.icingIntensity && (
                   <div className="flex items-center gap-2">
-                    <span className="text-blue-400">❄</span>
+                    <span className="text-terminal-weather-cold">❄</span>
                     <span className="font-bold">Icing:</span>
                     <span>{selectedPirep.icingIntensity}</span>
                     {selectedPirep.icingType && (

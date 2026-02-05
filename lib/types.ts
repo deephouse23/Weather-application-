@@ -81,6 +81,8 @@ export interface WeatherData {
     illumination: number;
     emoji: string;
     phaseAngle: number;
+    nextFullMoon: string;
+    nextMoonset: string;
   };
   uvIndex: number;
   aqi: number;

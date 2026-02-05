@@ -43,7 +43,7 @@ export default function ForecastDetails({
   }
 
   return (
-    <Card className="p-3 sm:p-4 lg:p-6 border-2 shadow-xl animate-slide-in">
+    <Card className="p-3 sm:p-4 lg:p-6 border-0 shadow-xl animate-slide-in">
       <CardHeader className="p-0 mb-3 sm:mb-4">
         <CardTitle className="text-center text-base sm:text-lg lg:text-xl font-bold uppercase tracking-wider text-primary glow">
           DETAILED FORECAST
@@ -51,7 +51,7 @@ export default function ForecastDetails({
       </CardHeader>
 
       <CardContent className="p-0">
-        <div className="bg-muted/50 p-4 rounded-lg border border-border">
+        <div className="bg-muted/50 p-4 rounded-lg border-0">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-lg font-bold text-primary pixel-glow">

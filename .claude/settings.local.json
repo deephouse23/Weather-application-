@@ -70,7 +70,16 @@
       "Bash(npm install)",
       "Bash(./node_modules/.bin/tsc:*)",
       "Bash(npm test:*)",
-      "mcp__filesystem__list_directory"
+      "mcp__filesystem__list_directory",
+      "Bash(npx lighthouse:*)",
+      "Bash(git -C \"C:\\\\Projects\\\\Weather-application--main\" log --all --oneline --grep=\"terminal\\\\|design.*system\" --source)",
+      "Bash(git -C \"C:\\\\Projects\\\\Weather-application--main\" show 8cd3ab1 --name-only)",
+      "Bash(grep:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npx eslint:*)",
+      "Bash(timeout:*)",
+      "Bash(curl:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []

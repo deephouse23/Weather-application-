@@ -153,7 +153,7 @@ export default function CityAutocomplete({
     <div 
       ref={containerRef}
       className={cn(
-        "absolute top-full left-0 right-0 z-50 mt-1 border-2 rounded glow-subtle",
+        "absolute top-full left-0 right-0 z-50 mt-1 border-0 rounded glow-subtle",
         "font-mono text-sm max-h-64 overflow-y-auto",
         themeClasses.dropdown
       )}

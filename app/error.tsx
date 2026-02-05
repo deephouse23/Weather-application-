@@ -29,7 +29,7 @@ export default function Error({
         <h2 className="text-2xl font-bold text-white mb-4">Something went wrong!</h2>
         <button
           onClick={() => reset()}
-          className="text-blue-400 hover:underline px-4 py-2 border border-blue-400 rounded"
+          className="text-terminal-accent hover:underline px-4 py-2 border-0 rounded"
         >
           Try again
         </button>

@@ -2,14 +2,13 @@
  * Terminal Palettes CSS
  *
  * All color palettes for the 16bitweather terminal design system.
- * Each palette defines both dark and light mode variants.
+ * Dark mode only.
  *
  * Palettes:
  * - terminal: The house theme with cyan/magenta
  * - dracula: Purple-anchored from draculatheme.com
  * - nord: Arctic-inspired from nordtheme.com
  * - catppuccin: Pastel warmth from catppuccin.com
- * - gruvbox: Warm earth tones from github.com/morhetz/gruvbox
  */
 
 /* ==========================================================================
@@ -19,8 +18,8 @@
 
 /* Terminal - Dark Mode */
 [data-palette="terminal"][data-mode="dark"] {
-  /* Backgrounds */
-  --terminal-bg-primary:       #0a0a0f;
+  /* Backgrounds - primary is darkest, secondary slightly lighter for card distinction */
+  --terminal-bg-primary:       #06080c;
   --terminal-bg-secondary:     #0d1117;
   --terminal-bg-elevated:      #151b23;
   --terminal-bg-surface:       #1c2333;
@@ -52,41 +51,6 @@
   --terminal-uv:               #d29922;
 }
 
-/* Terminal - Light Mode */
-[data-palette="terminal"][data-mode="light"] {
-  /* Backgrounds - inverted */
-  --terminal-bg-primary:       #f8f9fa;
-  --terminal-bg-secondary:     #ffffff;
-  --terminal-bg-elevated:      #e9ecef;
-  --terminal-bg-surface:       #dee2e6;
-
-  /* Text - inverted */
-  --terminal-text-primary:     #1a1a2e;
-  --terminal-text-secondary:   #495057;
-  --terminal-text-muted:       #adb5bd;
-
-  /* Accents - adjusted for light background contrast */
-  --terminal-accent-primary:   #0099cc;
-  --terminal-accent-secondary: #d946a3;
-  --terminal-accent-info:      #0969da;
-  --terminal-accent-success:   #1a7f37;
-  --terminal-accent-warning:   #9a6700;
-  --terminal-accent-danger:    #cf222e;
-
-  /* UI Chrome */
-  --terminal-border:           #0099cc40;
-  --terminal-border-focus:     #0099cc;
-  --terminal-selection:        #0099cc20;
-  --terminal-scrollbar:        #0099cc40;
-
-  /* Weather */
-  --terminal-temp-hot:         #cf222e;
-  --terminal-temp-cold:        #0969da;
-  --terminal-precip:           #0099cc;
-  --terminal-wind:             #495057;
-  --terminal-uv:               #9a6700;
-}
-
 /* ==========================================================================
    DRACULA PALETTE
    Purple-anchored with vivid accent colors from draculatheme.com/spec
@@ -94,9 +58,9 @@
 
 /* Dracula - Dark Mode */
 [data-palette="dracula"][data-mode="dark"] {
-  /* Backgrounds */
-  --terminal-bg-primary:       #282a36;
-  --terminal-bg-secondary:     #21222c;
+  /* Backgrounds - primary is darkest, secondary slightly lighter for card distinction */
+  --terminal-bg-primary:       #1e1f29;
+  --terminal-bg-secondary:     #282a36;
   --terminal-bg-elevated:      #44475a;
   --terminal-bg-surface:       #343746;
 
@@ -127,41 +91,6 @@
   --terminal-uv:               #ffb86c;
 }
 
-/* Dracula - Light Mode */
-[data-palette="dracula"][data-mode="light"] {
-  /* Backgrounds - inverted */
-  --terminal-bg-primary:       #f8f8f2;
-  --terminal-bg-secondary:     #ffffff;
-  --terminal-bg-elevated:      #e8e8e0;
-  --terminal-bg-surface:       #d8d8d0;
-
-  /* Text - inverted */
-  --terminal-text-primary:     #282a36;
-  --terminal-text-secondary:   #44475a;
-  --terminal-text-muted:       #9099b8;
-
-  /* Accents - adjusted for light background contrast */
-  --terminal-accent-primary:   #9d6fc9;
-  --terminal-accent-secondary: #d9509e;
-  --terminal-accent-info:      #0e8eb0;
-  --terminal-accent-success:   #2a9d4a;
-  --terminal-accent-warning:   #b89d00;
-  --terminal-accent-danger:    #e63535;
-
-  /* UI Chrome */
-  --terminal-border:           #9099b8;
-  --terminal-border-focus:     #9d6fc9;
-  --terminal-selection:        #9d6fc920;
-  --terminal-scrollbar:        #9099b880;
-
-  /* Weather */
-  --terminal-temp-hot:         #e63535;
-  --terminal-temp-cold:        #0e8eb0;
-  --terminal-precip:           #0e8eb0;
-  --terminal-wind:             #44475a;
-  --terminal-uv:               #d08800;
-}
-
 /* ==========================================================================
    NORD PALETTE
    Arctic-inspired with muted, blue-tinted colors from nordtheme.com
@@ -169,11 +98,11 @@
 
 /* Nord - Dark Mode */
 [data-palette="nord"][data-mode="dark"] {
-  /* Backgrounds - Polar Night */
-  --terminal-bg-primary:       #2e3440;
-  --terminal-bg-secondary:     #3b4252;
-  --terminal-bg-elevated:      #434c5e;
-  --terminal-bg-surface:       #4c566a;
+  /* Backgrounds - Polar Night (primary darkest, secondary lighter for card distinction) */
+  --terminal-bg-primary:       #242933;
+  --terminal-bg-secondary:     #2e3440;
+  --terminal-bg-elevated:      #3b4252;
+  --terminal-bg-surface:       #434c5e;
 
   /* Text - Snow Storm */
   --terminal-text-primary:     #eceff4;
@@ -202,52 +131,16 @@
   --terminal-uv:               #d08770;
 }
 
-/* Nord - Light Mode (Snow Storm) */
-[data-palette="nord"][data-mode="light"] {
-  /* Backgrounds - Snow Storm */
-  --terminal-bg-primary:       #eceff4;
-  --terminal-bg-secondary:     #e5e9f0;
-  --terminal-bg-elevated:      #d8dee9;
-  --terminal-bg-surface:       #c9d1de;
-
-  /* Text - Polar Night */
-  --terminal-text-primary:     #2e3440;
-  --terminal-text-secondary:   #3b4252;
-  --terminal-text-muted:       #7b88a1;
-
-  /* Accents - adjusted for light background contrast */
-  --terminal-accent-primary:   #5e81ac;
-  --terminal-accent-secondary: #4c6a94;
-  --terminal-accent-info:      #4c6a94;
-  --terminal-accent-success:   #6a8a5a;
-  --terminal-accent-warning:   #b58900;
-  --terminal-accent-danger:    #a3404a;
-
-  /* UI Chrome */
-  --terminal-border:           #c9d1de;
-  --terminal-border-focus:     #5e81ac;
-  --terminal-selection:        #5e81ac20;
-  --terminal-scrollbar:        #c9d1de80;
-
-  /* Weather */
-  --terminal-temp-hot:         #a3404a;
-  --terminal-temp-cold:        #5e81ac;
-  --terminal-precip:           #4c6a94;
-  --terminal-wind:             #3b4252;
-  --terminal-uv:               #b55a50;
-}
-
 /* ==========================================================================
    CATPPUCCIN PALETTE
-   Pastel colors on warm backgrounds from catppuccin.com
-   Dark: Mocha flavor | Light: Latte flavor
+   Pastel colors on warm backgrounds from catppuccin.com (Mocha flavor)
    ========================================================================== */
 
 /* Catppuccin - Dark Mode (Mocha) */
 [data-palette="catppuccin"][data-mode="dark"] {
-  /* Backgrounds */
-  --terminal-bg-primary:       #1e1e2e;
-  --terminal-bg-secondary:     #181825;
+  /* Backgrounds - primary is darkest, secondary slightly lighter for card distinction */
+  --terminal-bg-primary:       #11111b;
+  --terminal-bg-secondary:     #1e1e2e;
   --terminal-bg-elevated:      #313244;
   --terminal-bg-surface:       #45475a;
 
@@ -278,113 +171,60 @@
   --terminal-uv:               #fab387;
 }
 
-/* Catppuccin - Light Mode (Latte) */
-[data-palette="catppuccin"][data-mode="light"] {
-  /* Backgrounds - Latte base colors */
-  --terminal-bg-primary:       #eff1f5;
-  --terminal-bg-secondary:     #e6e9ef;
-  --terminal-bg-elevated:      #dce0e8;
-  --terminal-bg-surface:       #ccd0da;
-
-  /* Text - Latte text colors */
-  --terminal-text-primary:     #4c4f69;
-  --terminal-text-secondary:   #5c5f77;
-  --terminal-text-muted:       #9ca0b0;
-
-  /* Accents - Latte accent colors */
-  --terminal-accent-primary:   #1e66f5;
-  --terminal-accent-secondary: #8839ef;
-  --terminal-accent-info:      #04a5e5;
-  --terminal-accent-success:   #40a02b;
-  --terminal-accent-warning:   #df8e1d;
-  --terminal-accent-danger:    #d20f39;
-
-  /* UI Chrome */
-  --terminal-border:           #ccd0da;
-  --terminal-border-focus:     #1e66f5;
-  --terminal-selection:        #1e66f520;
-  --terminal-scrollbar:        #ccd0da80;
-
-  /* Weather */
-  --terminal-temp-hot:         #d20f39;
-  --terminal-temp-cold:        #04a5e5;
-  --terminal-precip:           #209fb5;
-  --terminal-wind:             #5c5f77;
-  --terminal-uv:               #fe640b;
-}
-
 /* ==========================================================================
-   GRUVBOX PALETTE
-   Retro warm palette with earth tones from github.com/morhetz/gruvbox
-   Dark: Hard variant | Light: Official Gruvbox Light
+   PAGE BACKGROUND TEXTURE & DEPTH
+   Adds subtle visual depth to distinguish page background from cards.
+   Uses a radial vignette gradient and optional noise texture.
    ========================================================================== */
 
-/* Gruvbox - Dark Mode (Hard) */
-[data-palette="gruvbox"][data-mode="dark"] {
-  /* Backgrounds */
-  --terminal-bg-primary:       #1d2021;
-  --terminal-bg-secondary:     #282828;
-  --terminal-bg-elevated:      #3c3836;
-  --terminal-bg-surface:       #504945;
+/* Base page background with subtle radial vignette for depth */
+[data-palette] {
+  /* Subtle radial gradient: slightly lighter center, darker edges (vignette effect) */
+  --terminal-bg-gradient: radial-gradient(
+    ellipse 80% 60% at 50% 30%,
+    var(--terminal-bg-primary) 0%,
+    color-mix(in srgb, var(--terminal-bg-primary) 95%, black 5%) 100%
+  );
 
-  /* Text */
-  --terminal-text-primary:     #ebdbb2;
-  --terminal-text-secondary:   #d5c4a1;
-  --terminal-text-muted:       #665c54;
-
-  /* Accents */
-  --terminal-accent-primary:   #83a598;
-  --terminal-accent-secondary: #d3869b;
-  --terminal-accent-info:      #83a598;
-  --terminal-accent-success:   #b8bb26;
-  --terminal-accent-warning:   #fabd2f;
-  --terminal-accent-danger:    #fb4934;
-
-  /* UI Chrome */
-  --terminal-border:           #504945;
-  --terminal-border-focus:     #83a598;
-  --terminal-selection:        #3c383680;
-  --terminal-scrollbar:        #50494580;
-
-  /* Weather */
-  --terminal-temp-hot:         #fb4934;
-  --terminal-temp-cold:        #83a598;
-  --terminal-precip:           #458588;
-  --terminal-wind:             #a89984;
-  --terminal-uv:               #fe8019;
+  /* Subtle noise texture overlay (very faint) */
+  --terminal-bg-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
 }
 
-/* Gruvbox - Light Mode */
-[data-palette="gruvbox"][data-mode="light"] {
-  /* Backgrounds - Gruvbox Light */
-  --terminal-bg-primary:       #fbf1c7;
-  --terminal-bg-secondary:     #f2e5bc;
-  --terminal-bg-elevated:      #ebdbb2;
-  --terminal-bg-surface:       #d5c4a1;
-
-  /* Text - Gruvbox Light text */
-  --terminal-text-primary:     #3c3836;
-  --terminal-text-secondary:   #504945;
-  --terminal-text-muted:       #928374;
-
-  /* Accents - adjusted for light background contrast */
-  --terminal-accent-primary:   #427b58;
-  --terminal-accent-secondary: #8f3f71;
-  --terminal-accent-info:      #076678;
-  --terminal-accent-success:   #79740e;
-  --terminal-accent-warning:   #b57614;
-  --terminal-accent-danger:    #9d0006;
-
-  /* UI Chrome */
-  --terminal-border:           #d5c4a1;
-  --terminal-border-focus:     #427b58;
-  --terminal-selection:        #427b5820;
-  --terminal-scrollbar:        #d5c4a180;
-
-  /* Weather */
-  --terminal-temp-hot:         #9d0006;
-  --terminal-temp-cold:        #076678;
-  --terminal-precip:           #076678;
-  --terminal-wind:             #504945;
-  --terminal-uv:               #af3a03;
+/* Apply background to page container when terminal design is active */
+[data-palette] body,
+[data-palette] .min-h-screen {
+  background:
+    var(--terminal-bg-gradient),
+    var(--terminal-bg-primary);
 }
+
+/* Optional: Add very subtle noise texture overlay to the page */
+[data-palette] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: var(--terminal-bg-noise);
+  opacity: 0.015;
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: overlay;
+}
+
+/* Ensure main content is above the noise layer */
+[data-palette] body > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Cards get a solid background that stands out against the textured page bg */
+[data-palette] [class*="card"],
+[data-palette] .terminal-card,
+[data-palette] .terminal-box,
+[data-palette] .terminal-box-simple {
+  background-color: var(--terminal-bg-secondary);
+  /* Subtle inner shadow to add depth perception */
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.02),
+    0 2px 8px -2px rgba(0, 0, 0, 0.3);
+}
+

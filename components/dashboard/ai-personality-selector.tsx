@@ -62,11 +62,11 @@ export default function AIPersonalitySelector() {
                             key={p.id}
                             onClick={() => setPersonality(p.id)}
                             className={cn(
-                                "p-4 border-2 rounded-lg transition-all duration-200 text-left",
+                                "p-4 border-0 rounded-lg transition-all duration-200 text-left",
                                 "bg-black/40 hover:bg-black/60",
                                 isSelected
-                                    ? `border-2 ${p.textColor} shadow-lg`
-                                    : `border-weather-border ${p.hoverColor}`,
+                                    ? `${p.textColor} shadow-lg`
+                                    : `${p.hoverColor}`,
                                 isSelected && "ring-2 ring-offset-2 ring-offset-black ring-opacity-50",
                                 p.id === 'storm' && isSelected && "ring-weather-primary",
                                 p.id === 'sass' && isSelected && "ring-pink-500",

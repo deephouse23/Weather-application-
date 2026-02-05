@@ -46,21 +46,21 @@ function getAlertIcon(type: SpaceWeatherAlert['type']) {
   }
 }
 
-// Get color based on severity
+// Get color based on severity - using semantic terminal colors
 function getSeverityColors(severity: SpaceWeatherAlert['severity']): string {
   switch (severity) {
     case 'extreme':
       return 'text-purple-500 bg-purple-500/10 border-purple-500';
     case 'severe':
-      return 'text-red-500 bg-red-500/10 border-red-500';
+      return 'text-terminal-accent-danger bg-terminal-accent-danger/10 border-terminal-accent-danger';
     case 'strong':
       return 'text-orange-500 bg-orange-500/10 border-orange-500';
     case 'moderate':
-      return 'text-yellow-500 bg-yellow-500/10 border-yellow-500';
+      return 'text-terminal-accent-warning bg-terminal-accent-warning/10 border-terminal-accent-warning';
     case 'minor':
-      return 'text-yellow-400 bg-yellow-400/10 border-yellow-400';
+      return 'text-terminal-accent-warning bg-terminal-accent-warning/10 border-terminal-accent-warning';
     default:
-      return 'text-blue-400 bg-blue-400/10 border-blue-400';
+      return 'text-terminal-accent-info bg-terminal-accent-info/10 border-terminal-accent-info';
   }
 }
 

@@ -15,13 +15,13 @@
  */
 
 
-import React, { useState, memo } from "react"
+import React, { memo } from "react"
 import Link from 'next/link'
 import { cn } from "@/lib/utils"
 import { LoadingSpinner } from "@/components/ui/loading-state"
 // import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card" // (already in main block, just ensuring imports are present)
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+// Button import removed - no longer needed after hourly forecast toggle removal
 import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
 import PageWrapper from "@/components/page-wrapper"
@@ -34,18 +34,16 @@ const RandomCityLinks = dynamic(() => import('@/components/random-city-links'), 
   ssr: false,
   loading: () => <div className="mt-16 pt-8 h-48 animate-pulse bg-gray-800/30 rounded-lg" />
 })
-import { LazyEnvironmentalDisplay, LazyForecast, LazyForecastDetails } from "@/components/lazy-weather-components"
+import { LazyForecast, LazyForecastDetails } from "@/components/lazy-weather-components"
+import { AirQualityDisplay } from "@/components/air-quality-display"
+import { PollenDisplay } from "@/components/pollen-display"
 import LazyHourlyForecast from "@/components/lazy-hourly-forecast"
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/responsive-container"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { useLocationContext } from "@/components/location-context"
-// PERFORMANCE: Lazy load PrecipitationCard as it's below the fold
-const PrecipitationCard = dynamic(
-  () => import('@/components/precipitation-card').then(mod => ({ default: mod.PrecipitationCard })),
-  { ssr: false, loading: () => <div className="h-32 animate-pulse bg-gray-800/30 rounded-lg" /> }
-)
 import LazyWeatherMap from '@/components/lazy-weather-map'
 import { WeatherSkeleton } from '@/components/weather-skeleton'
+import { MoonPhaseIcon } from '@/components/moon-phase-icon'
 import { useWeatherController } from "@/hooks/useWeatherController"
 
 // Note: UV Index data is now only available in One Call API 3.0 (paid subscription required)
@@ -58,10 +56,8 @@ import { useWeatherController } from "@/hooks/useWeatherController"
 function WeatherApp() {
   const { theme } = useTheme()
   const themeClasses = getComponentStyles(theme as ThemeType, 'weather')
-  const {
-    locationInput,
-    currentLocation,
-  } = useLocationContext()
+  // Location context - values available if needed
+  useLocationContext()
 
   // Use the new controller hook
   const {
@@ -74,54 +70,11 @@ function WeatherApp() {
     isAutoDetecting
   } = useWeatherController()
 
-  const [selectedDay, setSelectedDay] = useState<number | null>(null)
-  const [showHourlyForecast, setShowHourlyForecast] = useState(false)
+  const [selectedDay, setSelectedDay] = React.useState<number | null>(null)
 
   const handleSearchWrapper = (locationInput: string) => {
     handleSearch(locationInput)
   }
-
-  // Helper function to get weather icon
-  const getWeatherIcon = (condition: string): string => {
-    const conditionLower = condition.toLowerCase();
-
-    if (conditionLower.includes('sun') || conditionLower.includes('clear')) return '☀️';
-    if (conditionLower.includes('partly cloudy')) return '⛅';
-    if (conditionLower.includes('cloud')) return '☁️';
-    if (conditionLower.includes('rain') || conditionLower.includes('drizzle')) return '🌧️';
-    if (conditionLower.includes('storm') || conditionLower.includes('thunder')) return '⛈️';
-    if (conditionLower.includes('snow') || conditionLower.includes('flurry')) return '❄️';
-    if (conditionLower.includes('fog') || conditionLower.includes('mist')) return '🌫️';
-
-    return '🌈';
-  };
-
-  // Helper function to get moon phase icon
-  const getMoonPhaseIcon = (phase: string): string => {
-    const phaseLower = phase.toLowerCase();
-
-    if (phaseLower.includes('new')) return '🌑';
-    if (phaseLower.includes('waxing crescent')) return '🌒';
-    if (phaseLower.includes('first quarter')) return '🌓';
-    if (phaseLower.includes('waxing gibbous')) return '🌔';
-    if (phaseLower.includes('full')) return '🌕';
-    if (phaseLower.includes('waning gibbous')) return '🌖';
-    if (phaseLower.includes('last quarter')) return '🌗';
-    if (phaseLower.includes('waning crescent')) return '🌘';
-
-    // Fallback for any other phases
-    return '🌑';
-  };
-
-  // Helper function to format location display
-  const formatLocationDisplay = (location: string): string => {
-    // Handle edge cases for long city names
-    const maxLength = 30;
-    if (location.length > maxLength) {
-      return `${location.substring(0, maxLength - 3)}...`;
-    }
-    return location;
-  };
 
   return (
     <PageWrapper
@@ -155,7 +108,7 @@ function WeatherApp() {
           {!weather && !loading && !error && (
             <div className="text-center mt-8 mb-8 px-2 sm:px-0">
               <div className="w-full max-w-xl mx-auto">
-                <div className="p-2 sm:p-3 border-2 shadow-lg bg-weather-bg-elev border-weather-primary shadow-weather-primary/20">
+                <div className="p-2 sm:p-3 border-0 shadow-lg bg-weather-bg-elev border-weather-primary shadow-weather-primary/20">
                   <p className="text-sm font-bold uppercase tracking-wider text-white" style={{
                     fontSize: "clamp(10px, 2.4vw, 14px)"
                   }}>
@@ -195,11 +148,11 @@ function WeatherApp() {
           {weather && !loading && !error && (
             <ErrorBoundary componentName="Weather Display">
               <div className="space-y-4 sm:space-y-6">
-                {/* Location Title */}
+                {/* 1. Location Header with Large Temperature */}
                 <div className="text-center mb-4">
-                  <div className="flex items-center justify-center gap-3">
-                    <h1 className={cn("text-2xl sm:text-3xl font-extrabold tracking-wider", themeClasses.headerText, themeClasses.glow)} style={{
-                      fontSize: "clamp(20px, 4vw, 32px)"
+                  <div className="flex items-center justify-center gap-3 mb-2">
+                    <h1 className={cn("text-xl sm:text-2xl font-extrabold tracking-wider uppercase", themeClasses.headerText, themeClasses.glow)} style={{
+                      fontSize: "clamp(18px, 3.5vw, 28px)"
                     }}>
                       {weather.location} WEATHER
                     </h1>
@@ -217,119 +170,18 @@ function WeatherApp() {
                       />
                     )}
                   </div>
+                  <p data-testid="temperature-value" className={cn("text-6xl sm:text-8xl font-bold my-2", themeClasses.text)} style={{
+                    fontSize: "clamp(48px, 12vw, 96px)"
+                  }}>
+                    {weather?.temperature ?? 'N/A'}{weather?.temperature != null ? '°' : ''}
+                  </p>
+                  <p className={cn("text-base sm:text-lg", themeClasses.secondaryText)}>
+                    {weather?.condition || 'Unknown'} - {weather?.description || 'No description available'}
+                  </p>
                 </div>
 
-                {/* Current Weather using Cards with staggered animations */}
-                <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
-                  <Card className="weather-card-enter border-2 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '0ms' }}>
-                    <CardHeader className="pb-2 text-center">
-                      <CardTitle className={cn("text-xl mb-0", themeClasses.headerText)}>Temperature</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-center pt-2">
-                      <p data-testid="temperature-value" className={cn("text-3xl font-bold", themeClasses.text)}>
-                        {weather?.temperature ?? 'N/A'}{weather?.temperature != null ? (weather?.unit ?? '°F') : ''}
-                      </p>
-                      <p className={cn("mt-2 text-sm", themeClasses.secondaryText)}>
-                        Humidity: {weather?.humidity ?? 'N/A'}%
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="weather-card-enter border-2 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '50ms' }}>
-                    <CardHeader className="pb-2 text-center">
-                      <CardTitle className={cn("text-xl mb-0", themeClasses.headerText)}>Conditions</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-center pt-2">
-                      <p className={cn("text-lg", themeClasses.text)}>{weather?.condition || 'Unknown'}</p>
-                      <p className={cn("text-sm", themeClasses.secondaryText)}>{weather?.description || 'No description available'}</p>
-                      {weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowHourlyForecast(!showHourlyForecast)}
-                          className={cn("mt-3 font-mono text-xs font-bold transition-all hover:scale-105", themeClasses.borderColor, themeClasses.text)}
-                        >
-                          {showHourlyForecast ? '║ Hide Hourly' : '║ Hourly'}
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  <Card className="weather-card-enter border-2 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '100ms' }}>
-                    <CardHeader className="pb-2 text-center">
-                      <CardTitle className={cn("text-xl mb-0", themeClasses.headerText)}>Wind</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-center pt-2">
-                      <p className={cn("text-lg", themeClasses.text)}>
-                        {weather?.wind?.direction ? `${weather.wind.direction} ` : ''}
-                        {weather?.wind?.speed || 'N/A'} mph
-                        {weather?.wind?.gust ? ` (gusts ${weather.wind.gust} mph)` : ''}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </ResponsiveGrid>
-
-                {/* Sun Times, UV Index, Moon Phase with staggered animations */}
-                <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
-                  {/* Sun Times Box */}
-                  <Card className="weather-card-enter border-2 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '150ms' }}>
-                    <CardHeader className="pb-2 text-center">
-                      <CardTitle className={cn("text-xl mb-0", themeClasses.headerText)}>Sun Times</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-center pt-2">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-center gap-2">
-                          <span className="text-yellow-400">☀️</span>
-                          <p className={themeClasses.text}>Sunrise: {weather?.sunrise || 'N/A'}</p>
-                        </div>
-                        <div className="flex items-center justify-center gap-2">
-                          <span className="text-orange-400">🌅</span>
-                          <p className={themeClasses.text}>Sunset: {weather?.sunset || 'N/A'}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* UV Index Box */}
-                  <Card className="weather-card-enter border-2 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '200ms' }}>
-                    <CardHeader className="pb-2 text-center">
-                      <CardTitle className={cn("text-xl mb-0", themeClasses.headerText)}>UV Index</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-center pt-2">
-                      <p className={cn("text-lg font-bold", themeClasses.text)}>{weather?.uvIndex || 'N/A'}</p>
-                    </CardContent>
-                  </Card>
-
-                  {/* Moon Phase Box */}
-                  <Card className="weather-card-enter border-2 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '250ms' }}>
-                    <CardHeader className="pb-2 text-center">
-                      <CardTitle className={cn("text-xl mb-0", themeClasses.headerText)}>Moon Phase</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-center pt-2">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-center gap-2">
-                          <span className="text-2xl">{getMoonPhaseIcon(weather?.moonPhase?.phase || 'new')}</span>
-                          <p className={cn("text-lg font-semibold", themeClasses.text)}>{weather?.moonPhase?.phase || 'Unknown'}</p>
-                        </div>
-                        <p className={cn("text-sm font-medium", themeClasses.secondaryText)}>
-                          {weather?.moonPhase?.illumination || 0}% illuminated
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </ResponsiveGrid>
-
-                {/* 24-Hour Precipitation Card - Premium feature for authenticated users */}
-                <PrecipitationCard
-                  latitude={weather?.coordinates?.lat}
-                  longitude={weather?.coordinates?.lon}
-                />
-
-                {/* AQI and Pollen Count - Using Lazy Loaded Shared Components */}
-                <LazyEnvironmentalDisplay weather={weather} theme={theme || 'dark'} />
-
-                {/* Expandable Hourly Forecast */}
-                {showHourlyForecast && weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
+                {/* 2. Hourly Forecast - Always visible if data exists */}
+                {weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
                   <LazyHourlyForecast
                     hourly={weather.hourlyForecast}
                     theme={theme}
@@ -337,78 +189,248 @@ function WeatherApp() {
                   />
                 )}
 
-                {/* Day click handler */}
-                {(() => {
-                  const handleDayClick = (index: number) => {
-                    setSelectedDay(selectedDay === index ? null : index);
-                  };
+                {/* 3. Two-column layout: 5-Day Forecast + AQI (left) / Radar (right) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* LEFT: 5-Day Forecast + AQI stacked */}
+                  <div className="space-y-4">
+                    {(() => {
+                      const handleDayClick = (index: number) => {
+                        setSelectedDay(selectedDay === index ? null : index);
+                      };
 
-                  return (
-                    <>
-                      {/* 5-Day Forecast */}
-                      {weather?.forecast && weather.forecast.length > 0 ? (
-                        <LazyForecast
-                          forecast={weather.forecast.map((day, index) => ({
-                            ...day,
-                            country: weather?.country || 'US'
-                          }))}
-                          theme={theme || 'dark'}
-                          onDayClick={handleDayClick}
-                          selectedDay={selectedDay}
-                        />
-                      ) : weather ? (
-                        <div className="bg-gray-800 p-4 rounded-lg border-2 border-blue-500 text-center">
-                          <p className="text-white font-mono">
-                            No forecast data available
-                          </p>
-                        </div>
-                      ) : null}
+                      return (
+                        <>
+                          {weather?.forecast && weather.forecast.length > 0 ? (
+                            <LazyForecast
+                              forecast={weather.forecast.map((day) => ({
+                                ...day,
+                                country: weather?.country || 'US'
+                              }))}
+                              theme={theme || 'dark'}
+                              onDayClick={handleDayClick}
+                              selectedDay={selectedDay}
+                            />
+                          ) : (
+                            <div className="bg-terminal-bg-secondary p-4 rounded-lg border-0 border-terminal-border text-center">
+                              <p className="text-terminal-text-primary font-mono">
+                                No forecast data available
+                              </p>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
 
-                      {/* Expandable Details Section */}
-                      <LazyForecastDetails
-                        forecast={(weather?.forecast || []).map((day, index) => ({
-                          ...day,
-                          country: weather?.country || 'US'
-                        }))}
-                        theme={theme || 'dark'}
-                        selectedDay={selectedDay}
-                        currentWeatherData={{
-                          humidity: weather?.humidity || 0,
-                          wind: weather?.wind || { speed: 0, direction: '', gust: null },
-                          pressure: weather?.pressure || '1013',
-                          uvIndex: weather?.uvIndex || 0,
-                          sunrise: weather?.sunrise || 'N/A',
-                          sunset: weather?.sunset || 'N/A'
-                        }}
-                      />
-                    </>
-                  );
-                })()}
-
-                {/* Weather Radar - Moved Below Forecast */}
-                <div className="mt-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className={cn("text-xl font-semibold text-center flex-1", themeClasses.headerText, themeClasses.glow)}>
-                      Weather Radar
-                    </h2>
-                    <Link
-                      href="/radar"
-                      className={cn("px-3 py-1.5 border-2 rounded-md font-mono text-xs font-bold transition-colors hover:scale-105", themeClasses.borderColor, themeClasses.text, themeClasses.hoverBg)}
-                    >
-                      VIEW FULL RADAR →
-                    </Link>
-                  </div>
-                  {/* Container with overflow-visible to allow controls to render properly */}
-                  <div className="h-[450px] rounded-lg overflow-visible">
-                    <LazyWeatherMap
-                      latitude={weather?.coordinates?.lat}
-                      longitude={weather?.coordinates?.lon}
-                      locationName={weather?.location}
-                      theme={theme || 'dark'}
-                      displayMode="widget"
+                    {/* Air Quality */}
+                    <AirQualityDisplay
+                      aqi={weather.aqi}
+                      theme={(theme || 'dark') as import('@/lib/theme-config').ThemeType}
                     />
                   </div>
+
+                  {/* RIGHT: Weather Radar only */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-lg font-semibold text-terminal-text-primary">
+                        Weather Radar
+                      </h2>
+                      <Link
+                        href="/radar"
+                        className="px-2 py-1 border-0 rounded-md font-mono text-xs font-bold transition-colors hover:scale-105 text-terminal-text-primary hover:text-white"
+                      >
+                        VIEW FULL →
+                      </Link>
+                    </div>
+                    <div className="h-[400px] rounded-lg overflow-visible">
+                      <LazyWeatherMap
+                        latitude={weather?.coordinates?.lat}
+                        longitude={weather?.coordinates?.lon}
+                        locationName={weather?.location}
+                        theme={theme || 'dark'}
+                        displayMode="widget"
+                      />
+                    </div>
+                  </div>
                 </div>
+
+                {/* Expandable Forecast Details Section */}
+                <LazyForecastDetails
+                  forecast={(weather?.forecast || []).map((day) => ({
+                    ...day,
+                    country: weather?.country || 'US'
+                  }))}
+                  theme={theme || 'dark'}
+                  selectedDay={selectedDay}
+                  currentWeatherData={{
+                    humidity: weather?.humidity || 0,
+                    wind: weather?.wind || { speed: 0, direction: '', gust: null },
+                    pressure: weather?.pressure || '1013',
+                    uvIndex: weather?.uvIndex || 0,
+                    sunrise: weather?.sunrise || 'N/A',
+                    sunset: weather?.sunset || 'N/A'
+                  }}
+                />
+
+                {/* 4. Two-column layout: Moon Phase + Wind */}
+                <ResponsiveGrid cols={{ sm: 1, md: 2 }} className="gap-4">
+                  {/* Moon Phase Card */}
+                  <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '0ms' }}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className={cn("text-xl mb-0", "text-terminal-text-primary")}>Moon Phase</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-2">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-1.5">
+                          <p className={cn("text-lg font-semibold", themeClasses.text)}>{weather?.moonPhase?.phase || 'Unknown'}</p>
+                          <p className={cn("text-sm", themeClasses.secondaryText)}>
+                            {weather?.moonPhase?.illumination || 0}% illuminated
+                          </p>
+                          <p className={cn("text-sm", themeClasses.secondaryText)}>
+                            Moonset: {weather?.moonPhase?.nextMoonset || 'N/A'}
+                          </p>
+                          <p className={cn("text-sm", themeClasses.secondaryText)}>
+                            Full Moon: {weather?.moonPhase?.nextFullMoon || 'N/A'}
+                          </p>
+                        </div>
+                        <MoonPhaseIcon
+                          phase={weather?.moonPhase?.phase || 'new moon'}
+                          illumination={weather?.moonPhase?.illumination || 0}
+                          size={64}
+                          className="flex-shrink-0"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Wind Card */}
+                  <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '50ms' }}>
+                    <CardHeader className="pb-2 text-center">
+                      <CardTitle className={cn("text-xl mb-0", "text-terminal-text-primary")}>Wind</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center pt-2">
+                      <p className={cn("text-2xl font-bold", themeClasses.text)}>
+                        {weather?.wind?.speed || 'N/A'} mph
+                      </p>
+                      <p className={cn("text-sm", themeClasses.secondaryText)}>
+                        {weather?.wind?.direction ? `Direction: ${weather.wind.direction}` : 'Direction: N/A'}
+                      </p>
+                      {weather?.wind?.gust && (
+                        <p className={cn("text-sm", themeClasses.secondaryText)}>
+                          Gusts up to {weather.wind.gust} mph
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </ResponsiveGrid>
+
+                {/* 5. Four-column grid: UV, Sunrise/Sunset, Feels Like, Precipitation */}
+                <ResponsiveGrid cols={{ sm: 2, md: 4 }} className="gap-4">
+                  {/* UV Index */}
+                  <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '100ms' }}>
+                    <CardHeader className="pb-1 text-center">
+                      <CardTitle className={cn("text-sm mb-0", "text-terminal-text-primary")}>UV Index</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center pt-1">
+                      <p className={cn("text-2xl font-bold", themeClasses.text)}>{weather?.uvIndex ?? 'N/A'}</p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Sunrise/Sunset */}
+                  <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '150ms' }}>
+                    <CardHeader className="pb-1 text-center">
+                      <CardTitle className={cn("text-sm mb-0", "text-terminal-text-primary")}>Sun Times</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center pt-1">
+                      <div className="space-y-1">
+                        <p className={cn("text-sm", themeClasses.text)}>
+                          <span className="text-yellow-400">☀️</span> {weather?.sunrise || 'N/A'}
+                        </p>
+                        <p className={cn("text-sm", themeClasses.text)}>
+                          <span className="text-orange-400">🌅</span> {weather?.sunset || 'N/A'}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Feels Like */}
+                  <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '200ms' }}>
+                    <CardHeader className="pb-1 text-center">
+                      <CardTitle className={cn("text-sm mb-0", "text-terminal-text-primary")}>Feels Like</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center pt-1">
+                      <p className={cn("text-2xl font-bold", themeClasses.text)}>
+                        {weather?.hourlyForecast?.[0]?.feelsLike != null
+                          ? `${Math.round(weather.hourlyForecast[0].feelsLike)}°`
+                          : `${weather?.temperature ?? 'N/A'}°`}
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Precipitation */}
+                  <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '250ms' }}>
+                    <CardHeader className="pb-1 text-center">
+                      <CardTitle className={cn("text-sm mb-0", "text-terminal-text-primary")}>Precipitation</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center pt-1">
+                      <p className={cn("text-2xl font-bold", themeClasses.text)}>
+                        0&quot;
+                      </p>
+                      <p className={cn("text-xs", themeClasses.headerText)}>Today</p>
+                    </CardContent>
+                  </Card>
+                </ResponsiveGrid>
+
+                {/* 6. Four-column grid: Visibility, Humidity, Pressure, Pollen */}
+                <ResponsiveGrid cols={{ sm: 2, md: 4 }} className="gap-4">
+                  {/* Visibility */}
+                  <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '300ms' }}>
+                    <CardHeader className="pb-1 text-center">
+                      <CardTitle className={cn("text-sm mb-0", "text-terminal-text-primary")}>Visibility</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center pt-1">
+                      <p className={cn("text-2xl font-bold", themeClasses.text)}>
+                        {weather?.forecast?.[0]?.details?.visibility != null
+                          ? `${weather.forecast[0].details.visibility} mi`
+                          : 'N/A'}
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Humidity */}
+                  <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '350ms' }}>
+                    <CardHeader className="pb-1 text-center">
+                      <CardTitle className={cn("text-sm mb-0", "text-terminal-text-primary")}>Humidity</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center pt-1">
+                      <p className={cn("text-2xl font-bold", themeClasses.text)}>{weather?.humidity ?? 'N/A'}%</p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Pressure */}
+                  <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '400ms' }}>
+                    <CardHeader className="pb-1 text-center">
+                      <CardTitle className={cn("text-sm mb-0", "text-terminal-text-primary")}>Pressure</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center pt-1">
+                      <p className={cn("text-2xl font-bold", themeClasses.text)}>{weather?.pressure || 'N/A'}</p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Pollen */}
+                  <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '450ms' }}>
+                    <CardHeader className="pb-1 text-center">
+                      <CardTitle className={cn("text-sm mb-0", "text-terminal-text-primary")}>Pollen</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center pt-1 px-2">
+                      <PollenDisplay
+                        pollen={weather.pollen}
+                        theme={(theme || 'dark') as import('@/lib/theme-config').ThemeType}
+                        minimal={true}
+                        className="border-none shadow-none p-0 bg-transparent"
+                      />
+                    </CardContent>
+                  </Card>
+                </ResponsiveGrid>
               </div>
             </ErrorBoundary>
           )}

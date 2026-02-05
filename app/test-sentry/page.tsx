@@ -49,7 +49,7 @@ export default function TestSentryPage() {
 
           <button
             onClick={captureManualError}
-            className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold"
+            className="w-full px-4 py-3 bg-terminal-accent-info hover:bg-terminal-accent-info/80 rounded-lg font-semibold"
           >
             Capture Manual Error
           </button>

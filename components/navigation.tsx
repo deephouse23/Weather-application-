@@ -24,7 +24,6 @@ import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
 import AuthButton from "@/components/auth/auth-button"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { PaletteSelector, ModeToggle } from "@/components/terminal"
 
 interface NavigationProps {
   weatherLocation?: string;
@@ -176,11 +175,8 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
             })}
           </div>
 
-          {/* Auth Button + Terminal Theme Controls - TOP RIGHT */}
+          {/* Auth Button - TOP RIGHT */}
           <div className="flex items-center space-x-2">
-            {/* Terminal Design System Controls (only visible when enabled) */}
-            <PaletteSelector />
-            <ModeToggle />
             <AuthButton />
           </div>
         </div>
@@ -248,10 +244,8 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
                 )
               })}
 
-              {/* Mobile Auth + Terminal Theme Controls */}
+              {/* Mobile Auth */}
               <div className="flex items-center justify-start gap-2 pt-4 border-t mt-4 flex-wrap">
-                <PaletteSelector />
-                <ModeToggle />
                 <AuthButton />
               </div>
             </div>

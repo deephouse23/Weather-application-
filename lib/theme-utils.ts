@@ -14,14 +14,131 @@
 
 /**
  * Centralized Theme Utility System
- * 
+ *
  * Provides consistent theme styling across all components with optimized
  * color management and responsive design patterns.
+ *
+ * IMPORTANT: When NEXT_PUBLIC_TERMINAL_DESIGN=true, this module returns
+ * terminal CSS variable classes instead of hardcoded hex colors.
  */
 
 import { ThemeType, getThemeDefinition, THEME_DEFINITIONS } from './theme-config';
 
 export type { ThemeType };
+
+// Check if Terminal Design System is enabled
+const isTerminalDesignEnabled = process.env.NEXT_PUBLIC_TERMINAL_DESIGN === 'true';
+
+/**
+ * Terminal Design System theme styles
+ * These use CSS variables that respond to data-palette and data-mode attributes
+ */
+const getTerminalThemeStyles = (): ThemeStyles => ({
+  background: 'bg-terminal-bg-primary',
+  text: 'text-terminal-text-primary',
+  mutedText: 'text-terminal-text-muted',
+  borderColor: 'border-transparent',
+  border: 'border-transparent',
+  accentBg: 'bg-terminal-accent',
+  accentText: 'text-terminal-accent',
+  cardBg: 'bg-terminal-bg-secondary',
+  hoverBg: 'hover:bg-terminal-bg-elevated hover:text-terminal-text-primary',
+  glow: 'shadow-lg shadow-terminal-accent/20',
+  secondary: 'text-terminal-text-secondary',
+  headerText: 'text-terminal-accent font-mono font-bold',
+  secondaryText: 'text-terminal-text-secondary',
+  warningText: 'text-terminal-accent-warning',
+  successText: 'text-terminal-accent-success',
+  shadowColor: 'var(--terminal-accent-primary)'
+});
+
+/**
+ * Terminal Design System component variant styles
+ */
+const getTerminalComponentStyles = (variant: keyof ComponentVariants): ThemeStyles => {
+  const base = getTerminalThemeStyles();
+
+  switch (variant) {
+    case 'card':
+      return {
+        ...base,
+        background: 'bg-terminal-bg-secondary',
+        borderColor: 'border-transparent',
+        border: 'border-transparent',
+        cardBg: 'bg-terminal-bg-elevated'
+      };
+
+    case 'button':
+      return {
+        ...base,
+        background: 'bg-terminal-bg-secondary',
+        hoverBg: 'hover:bg-terminal-accent hover:text-terminal-bg-primary hover:scale-105',
+        borderColor: 'border-transparent',
+        border: 'border-transparent'
+      };
+
+    case 'input':
+      return {
+        ...base,
+        background: 'bg-terminal-bg-elevated',
+        borderColor: 'border-transparent focus:border-transparent',
+        border: 'border-transparent focus:border-transparent',
+        text: 'text-terminal-text-primary placeholder:text-terminal-text-muted'
+      };
+
+    case 'navigation':
+      return {
+        ...base,
+        background: 'bg-terminal-bg-primary',
+        borderColor: 'border-transparent',
+        border: 'border-transparent',
+        hoverBg: 'hover:bg-terminal-accent hover:text-terminal-bg-primary'
+      };
+
+    case 'weather':
+      return {
+        ...base,
+        background: 'bg-terminal-bg-primary',
+        cardBg: 'bg-terminal-bg-secondary',
+        borderColor: 'border-transparent',
+        border: 'border-transparent',
+        headerText: 'text-terminal-accent font-mono font-bold',
+        glow: 'shadow-lg shadow-terminal-accent/20',
+        secondaryText: 'text-terminal-text-secondary'
+      };
+
+    case 'dashboard':
+      return {
+        ...base,
+        background: 'bg-terminal-bg-secondary',
+        borderColor: 'border-transparent',
+        border: 'border-transparent',
+        accentBg: 'bg-terminal-accent',
+        hoverBg: 'hover:bg-terminal-bg-elevated'
+      };
+
+    case 'modal':
+      return {
+        ...base,
+        background: 'bg-terminal-bg-primary',
+        borderColor: 'border-transparent',
+        border: 'border-transparent',
+        glow: 'shadow-2xl shadow-terminal-accent/30'
+      };
+
+    case 'auth':
+      return {
+        ...base,
+        background: 'bg-terminal-bg-secondary',
+        borderColor: 'border-transparent',
+        border: 'border-transparent',
+        accentBg: 'bg-terminal-accent'
+      };
+
+    default:
+      return base;
+  }
+};
 
 export interface ThemeStyles {
   background: string;
@@ -63,9 +180,15 @@ const getThemeColors = (theme: ThemeType) => {
 
 /**
  * Get base theme styles for any component
+ * When Terminal Design System is enabled, returns CSS variable-based classes
  */
 export const getThemeStyles = (theme: ThemeType): ThemeStyles => {
-  // Default to 'dark' theme if invalid theme is provided
+  // Use terminal design system if enabled
+  if (isTerminalDesignEnabled) {
+    return getTerminalThemeStyles();
+  }
+
+  // Legacy: Default to 'dark' theme if invalid theme is provided
   const validTheme = (theme && THEME_DEFINITIONS[theme]) ? theme : 'dark';
   const colors = getThemeColors(validTheme);
 
@@ -73,8 +196,8 @@ export const getThemeStyles = (theme: ThemeType): ThemeStyles => {
     background: `bg-[${colors.background}]`,
     text: `text-[${colors.text}]`,
     mutedText: `text-[${colors.textSecondary}]`,
-    borderColor: `border-[${colors.border}]`,
-    border: `border-[${colors.border}]`,
+    borderColor: 'border-transparent',
+    border: 'border-0',
     accentBg: `bg-[${colors.primary}]`,
     accentText: `text-[${colors.primary}]`,
     cardBg: `bg-[${colors.backgroundSecondary}]`,
@@ -92,9 +215,15 @@ export const getThemeStyles = (theme: ThemeType): ThemeStyles => {
 
 /**
  * Get component-specific theme styles with variants
+ * When Terminal Design System is enabled, returns CSS variable-based classes
  */
 export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVariants): ThemeStyles => {
-  // Default to 'dark' theme if invalid theme is provided
+  // Use terminal design system if enabled
+  if (isTerminalDesignEnabled) {
+    return getTerminalComponentStyles(variant);
+  }
+
+  // Legacy: Default to 'dark' theme if invalid theme is provided
   const validTheme = (theme && THEME_DEFINITIONS[theme]) ? theme : 'dark';
   const base = getThemeStyles(validTheme);
   const colors = getThemeColors(validTheme);
@@ -104,8 +233,8 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
       return {
         ...base,
         background: `bg-[${colors.backgroundSecondary}]`,
-        borderColor: `border-[${colors.border}]`,
-        border: `border-[${colors.border}]`,
+        borderColor: 'border-transparent',
+        border: 'border-0',
         cardBg: `bg-[${colors.backgroundTertiary}]`
       };
 
@@ -114,16 +243,16 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
         ...base,
         background: `bg-[${colors.backgroundSecondary}]`,
         hoverBg: `hover:bg-[${colors.primary}] hover:text-[${colors.background}] hover:scale-105`,
-        borderColor: `border-[${colors.border}]`,
-        border: `border-[${colors.border}]`
+        borderColor: 'border-transparent',
+        border: 'border-0'
       };
 
     case 'input':
       return {
         ...base,
         background: `bg-[${colors.backgroundTertiary}]`,
-        borderColor: `border-[${colors.border}] focus:border-[${colors.primary}]`,
-        border: `border-[${colors.border}] focus:border-[${colors.primary}]`,
+        borderColor: 'border-transparent focus:border-transparent',
+        border: 'border-0 focus:border-0',
         text: `text-[${colors.text}] placeholder:text-[${colors.textSecondary}]`
       };
 
@@ -131,8 +260,8 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
       return {
         ...base,
         background: `bg-[${colors.background}]`,
-        borderColor: `border-[${colors.border}]`,
-        border: `border-[${colors.border}]`,
+        borderColor: 'border-transparent',
+        border: 'border-0',
         hoverBg: `hover:bg-[${colors.primary}] hover:text-[${colors.background}]`
       };
 
@@ -141,8 +270,8 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
         ...base,
         background: `bg-[${colors.background}]`,
         cardBg: `bg-[${colors.backgroundSecondary}]`,
-        borderColor: `border-[${colors.primary}]`,
-        border: `border-[${colors.primary}]`,
+        borderColor: 'border-transparent',
+        border: 'border-0',
         headerText: `text-[${colors.primary}] font-mono font-bold`,
         glow: `shadow-lg shadow-[${colors.primary}]/20`,
         secondaryText: `text-[${colors.textSecondary}]`
@@ -152,8 +281,8 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
       return {
         ...base,
         background: `bg-[${colors.backgroundSecondary}]`,
-        borderColor: `border-[${colors.border}]`,
-        border: `border-[${colors.border}]`,
+        borderColor: 'border-transparent',
+        border: 'border-0',
         accentBg: `bg-[${colors.primary}]`,
         hoverBg: `hover:bg-[${colors.backgroundTertiary}]`
       };
@@ -162,8 +291,8 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
       return {
         ...base,
         background: `bg-[${colors.background}]`,
-        borderColor: `border-[${colors.primary}]`,
-        border: `border-[${colors.primary}]`,
+        borderColor: 'border-transparent',
+        border: 'border-0',
         glow: `shadow-2xl shadow-[${colors.primary}]/30`
       };
 
@@ -171,8 +300,8 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
       return {
         ...base,
         background: `bg-[${colors.backgroundSecondary}]`,
-        borderColor: `border-[${colors.border}]`,
-        border: `border-[${colors.border}]`,
+        borderColor: 'border-transparent',
+        border: 'border-0',
         accentBg: `bg-[${colors.primary}]`
       };
 

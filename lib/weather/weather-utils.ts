@@ -19,6 +19,8 @@ export interface MoonPhaseInfo {
   illumination: number;
   emoji: string;
   phaseAngle: number;
+  nextFullMoon: string;
+  nextMoonset: string;
 }
 
 export interface WindData {
@@ -364,7 +366,39 @@ export const calculateMoonPhase = (currentDate?: Date | number): MoonPhaseInfo =
     emoji = '🌘';
   }
 
-  return { phase, illumination, emoji, phaseAngle };
+  // Calculate next full moon date
+  // Full moon occurs at phaseAngle = 180; calculate days remaining until next full moon
+  const daysToFullMoon = phaseAngle <= 180
+    ? ((180 - phaseAngle) / 360) * synodicMonth
+    : ((360 - phaseAngle + 180) / 360) * synodicMonth;
+  const nextFullMoonDate = new Date(now.getTime() + daysToFullMoon * 24 * 60 * 60 * 1000);
+  const nextFullMoon = nextFullMoonDate.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
+
+  // Estimate next moonset time based on lunar age
+  // The moon sets roughly 50 minutes later each day relative to the sun.
+  // At new moon, moonset is near sunset (~6:00 PM). At full moon, moonset is near sunrise (~6:00 AM).
+  // This is an approximation since actual moonset depends on latitude and season.
+  const moonsetBaseHour = 18; // ~6 PM at new moon phase
+  const moonsetOffsetHours = (lunarAge / synodicMonth) * 24; // shifts ~24h over the cycle
+  const moonsetHour = (moonsetBaseHour + moonsetOffsetHours) % 24;
+  const moonsetHourInt = Math.floor(moonsetHour);
+  const moonsetMinute = Math.round((moonsetHour - moonsetHourInt) * 60);
+  const moonsetDate = new Date(now);
+  moonsetDate.setHours(moonsetHourInt, moonsetMinute, 0, 0);
+  // If the estimated moonset has already passed today, show tomorrow's
+  if (moonsetDate.getTime() < now.getTime()) {
+    moonsetDate.setDate(moonsetDate.getDate() + 1);
+  }
+  const nextMoonset = moonsetDate.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+
+  return { phase, illumination, emoji, phaseAngle, nextFullMoon, nextMoonset };
 };
 
 // ============================================================================

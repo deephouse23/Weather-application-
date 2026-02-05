@@ -5,4 +5,3 @@ export * from './TerminalPrompt';
 export * from './TerminalStatusBar';
 export * from './TerminalNav';
 export * from './PaletteSelector';
-export * from './ModeToggle';

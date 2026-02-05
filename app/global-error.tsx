@@ -26,11 +26,11 @@ export default function GlobalError({
             <p className="text-gray-300 mb-6">An unexpected error occurred</p>
             <button
               onClick={() => reset()}
-              className="text-blue-400 hover:underline px-4 py-2 border border-blue-400 rounded mr-4"
+              className="text-cyan-400 hover:underline px-4 py-2 border border-cyan-400 rounded mr-4"
             >
               Try again
             </button>
-            <Link href="/" className="text-blue-400 hover:underline px-4 py-2 border border-blue-400 rounded">
+            <Link href="/" className="text-cyan-400 hover:underline px-4 py-2 border border-cyan-400 rounded">
               Go home
             </Link>
           </div>

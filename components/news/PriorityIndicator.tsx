@@ -44,8 +44,8 @@ const priorityConfig: Record<
   low: {
     label: 'INFO',
     icon: Info,
-    colorClass: 'text-blue-500',
-    textClass: 'text-blue-600 font-normal',
+    colorClass: 'text-terminal-accent-info',
+    textClass: 'text-terminal-accent-info font-normal',
   },
 };
 

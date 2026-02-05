@@ -40,13 +40,6 @@ const PALETTE_OPTIONS: PaletteOption[] = [
     primaryColor: "#89b4fa",
     secondaryColor: "#cba6f7",
   },
-  {
-    id: "gruvbox",
-    name: "GRUVBOX",
-    description: "warm earth",
-    primaryColor: "#83a598",
-    secondaryColor: "#d3869b",
-  },
 ]
 
 export function PaletteSelector() {

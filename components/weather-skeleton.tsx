@@ -35,7 +35,7 @@ export function WeatherSkeleton({ theme }: { theme?: ThemeType }) {
         {[1, 2, 3].map((i) => (
           <div
             key={`temp-${i}`}
-            className={`p-4 card-rounded-md border-2 ${themeClasses.cardBg} ${themeClasses.borderColor} animate-pulse`}
+            className={`p-4 card-rounded-md border-0 ${themeClasses.cardBg} ${themeClasses.borderColor} animate-pulse`}
           >
             <div
               className="h-6 rounded w-24 mx-auto mb-3"
@@ -54,7 +54,7 @@ export function WeatherSkeleton({ theme }: { theme?: ThemeType }) {
         {[1, 2, 3].map((i) => (
           <div
             key={`sun-${i}`}
-            className={`p-4 card-rounded-md border-2 ${themeClasses.cardBg} ${themeClasses.borderColor} animate-pulse`}
+            className={`p-4 card-rounded-md border-0 ${themeClasses.cardBg} ${themeClasses.borderColor} animate-pulse`}
           >
             <div
               className="h-6 rounded w-20 mx-auto mb-2"
@@ -69,7 +69,7 @@ export function WeatherSkeleton({ theme }: { theme?: ThemeType }) {
       </ResponsiveGrid>
 
       {/* 5-day forecast skeleton */}
-      <div className={`p-4 card-rounded-md border-2 ${themeClasses.cardBg} ${themeClasses.borderColor} animate-pulse`}>
+      <div className={`p-4 card-rounded-md border-0 ${themeClasses.cardBg} ${themeClasses.borderColor} animate-pulse`}>
         <div
           className="h-6 rounded w-32 mb-4"
           style={{ backgroundColor: 'rgba(156, 163, 175, 0.3)' }}
@@ -86,7 +86,7 @@ export function WeatherSkeleton({ theme }: { theme?: ThemeType }) {
       </div>
 
       {/* Map skeleton placeholder */}
-      <div className={`h-96 card-rounded-md border-2 ${themeClasses.cardBg} ${themeClasses.borderColor} animate-pulse`}>
+      <div className={`h-96 card-rounded-md border-0 ${themeClasses.cardBg} ${themeClasses.borderColor} animate-pulse`}>
         <div className="w-full h-full flex items-center justify-center">
           <div
             className="h-8 rounded w-48"

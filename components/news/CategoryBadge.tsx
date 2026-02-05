@@ -85,7 +85,7 @@ const categoryConfig: Record<
   weather: {
     label: 'WEATHER',
     icon: Cloud,
-    colorClass: 'bg-blue-600 text-white border-blue-800',
+    colorClass: 'bg-terminal-accent-info text-white border-terminal-border',
   },
   severe: {
     label: 'SEVERE',
@@ -100,7 +100,7 @@ const categoryConfig: Record<
   climate: {
     label: 'CLIMATE',
     icon: Thermometer,
-    colorClass: 'bg-blue-500 text-white border-blue-700',
+    colorClass: 'bg-terminal-accent text-white border-terminal-border',
   },
   tropical: {
     label: 'TROPICAL',

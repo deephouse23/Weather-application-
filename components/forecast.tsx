@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 // removed ThemeType import as manual mapping is gone, but we might accept the prop for compat
 import type { ThemeType } from "@/lib/theme-config"
-import ModernWeatherIcon from "./modern-weather-icon"
+import WeatherIconModern from "./weather-icon-modern"
 
 interface ForecastDay {
   day: string;
@@ -36,7 +36,7 @@ export default function Forecast({ forecast, onDayClick, selectedDay }: Forecast
     : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5";
 
   return (
-    <Card className="p-3 sm:p-4 lg:p-6 border-2 shadow-md hover:shadow-lg transition-all duration-300 animate-slide-in">
+    <Card className="p-3 sm:p-4 lg:p-6 border-0 shadow-md hover:shadow-lg transition-all duration-300 animate-slide-in">
       <CardHeader className="p-0 mb-3 sm:mb-4">
         <CardTitle className="text-center text-base sm:text-lg lg:text-xl font-extrabold uppercase tracking-wider text-primary glow">
           {title}
@@ -119,7 +119,7 @@ function ForecastCard({ day, index, onDayClick, isSelected }: {
 
         {/* Icon */}
         <div className="flex justify-center my-2">
-          <ModernWeatherIcon
+          <WeatherIconModern
             condition={day.condition}
             size={40}
             className="hover:scale-110 transition-transform drop-shadow"

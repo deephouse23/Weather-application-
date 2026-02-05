@@ -66,13 +66,15 @@ export function getWeatherIcon(iconCode: string): string {
 }
 
 export function getTemperatureColor(temp: number): string {
-  if (temp >= 100) return 'text-red-600'
-  if (temp >= 90) return 'text-red-500'
+  // Use terminal weather semantic colors for hot/cold extremes
+  // and semantic accent colors for mid-range temperatures
+  if (temp >= 100) return 'text-terminal-weather-hot'
+  if (temp >= 90) return 'text-terminal-accent-danger'
   if (temp >= 80) return 'text-orange-500'
-  if (temp >= 70) return 'text-yellow-500'
-  if (temp >= 60) return 'text-green-500'
-  if (temp >= 50) return 'text-blue-400'
-  if (temp >= 40) return 'text-blue-500'
-  if (temp >= 32) return 'text-blue-600'
-  return 'text-blue-700'
+  if (temp >= 70) return 'text-terminal-accent-warning'
+  if (temp >= 60) return 'text-terminal-accent-success'
+  if (temp >= 50) return 'text-terminal-accent-info'
+  if (temp >= 40) return 'text-terminal-weather-cold'
+  if (temp >= 32) return 'text-terminal-weather-cold'
+  return 'text-terminal-weather-cold'
 }
