@@ -28,7 +28,7 @@ export function ThemeToggle() {
 
   const handleClick = () => {
     // Cycle through themes using the preview system
-    const themes = ['dark', 'miami', 'synthwave84', 'dracula', 'cyberpunk', 'matrix']
+    const themes = ['dark', 'nord', 'synthwave84', 'dracula', 'cyberpunk', 'matrix']
     const currentIndex = themes.indexOf(theme)
     const nextTheme = themes[(currentIndex + 1) % themes.length]
     startPreview(nextTheme)

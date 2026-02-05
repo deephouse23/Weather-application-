@@ -3,7 +3,7 @@
 // Phase 1: Smoother playback (500ms transition, 500ms interval), tile preloading, CSS easing
 // Phase 2: CartoDB Dark Matter base map, precipitation legend, pulse marker animation
 
-import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
+import { useEffect, useRef, useState, useMemo, useCallback, useLayoutEffect } from 'react'
 import { Play, Pause, SkipBack, SkipForward, Layers, ChevronDown, Loader2 } from 'lucide-react'
 import { isInMRMSCoverage } from '@/lib/utils/location-utils'
 import { ThemeType } from '@/lib/theme-config'
@@ -90,15 +90,21 @@ const WeatherMapOpenLayers = ({
   const NEXRAD_STEP_MINUTES = 5
   const NEXRAD_PAST_STEPS = 48 // 4 hours past (5 min * 48 = 240 min = 4 hours)
 
+  // Track client-side mount to prevent hydration mismatch with Date.now()
+  const [isMounted, setIsMounted] = useState(false)
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
   // Check if location is in US
   const isUSLocation = useMemo(() => {
     if (!latitude || !longitude) return false
     return isInMRMSCoverage(latitude, longitude)
   }, [latitude, longitude])
 
-  // Generate NEXRAD timestamps
+  // Generate NEXRAD timestamps - only after client mount to prevent hydration mismatch
   const timestamps = useMemo(() => {
-    if (!isUSLocation) return []
+    if (!isUSLocation || !isMounted) return []
 
     const now = Date.now()
     const quantize = (ms: number) => Math.floor(ms / (NEXRAD_STEP_MINUTES * 60 * 1000)) * (NEXRAD_STEP_MINUTES * 60 * 1000)
@@ -110,7 +116,7 @@ const WeatherMapOpenLayers = ({
     }
 
     return times
-  }, [isUSLocation])
+  }, [isUSLocation, isMounted])
 
   // Initialize map
   useEffect(() => {
