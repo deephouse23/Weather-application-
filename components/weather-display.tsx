@@ -253,14 +253,14 @@ export function WeatherDisplay({
           </CardContent>
         </Card>
 
-        {/* Precipitation (24h actuals) */}
+        {/* Precipitation (24h actuals - rain + snow combined) */}
         <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '250ms' }}>
           <CardHeader className="pb-1 text-center">
             <CardTitle className={cn("text-sm mb-0", "text-terminal-text-primary")}>Precipitation</CardTitle>
           </CardHeader>
           <CardContent className="text-center pt-1">
             <p className={cn("text-2xl font-bold", themeClasses.text)}>
-              {precipitation?.rain24h?.toFixed(2) ?? '0.00'}"
+              {((precipitation?.rain24h ?? 0) + (precipitation?.snow24h ?? 0)).toFixed(2)}"
             </p>
             <p className={cn("text-xs", themeClasses.headerText)}>24h Total</p>
           </CardContent>

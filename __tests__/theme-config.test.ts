@@ -19,7 +19,7 @@ describe('Theme Configuration', () => {
     });
 
     it('should contain all expected themes', () => {
-      const expectedThemes = ['dark', 'miami', 'synthwave84', 'dracula', 'cyberpunk', 'matrix'];
+      const expectedThemes = ['dark', 'nord', 'synthwave84', 'dracula', 'cyberpunk', 'matrix'];
       expectedThemes.forEach(theme => {
         expect(THEME_DEFINITIONS).toHaveProperty(theme);
       });
@@ -58,9 +58,9 @@ describe('Theme Configuration', () => {
       });
     });
 
-    it('should include dark and miami', () => {
+    it('should include dark and nord', () => {
       expect(FREE_THEMES).toContain('dark');
-      expect(FREE_THEMES).toContain('miami');
+      expect(FREE_THEMES).toContain('nord');
     });
   });
 
@@ -84,8 +84,8 @@ describe('Theme Configuration', () => {
       expect(isThemePremium('dark')).toBe(false);
     });
 
-    it('should return false for miami theme', () => {
-      expect(isThemePremium('miami')).toBe(false);
+    it('should return false for nord theme', () => {
+      expect(isThemePremium('nord')).toBe(false);
     });
 
     it('should return true for premium themes', () => {
@@ -103,9 +103,9 @@ describe('Theme Configuration', () => {
       expect(darkTheme.displayName).toBe('Dark Mode');
     });
 
-    it('should return dark theme for invalid theme names', () => {
+    it('should return nord theme for invalid theme names', () => {
       const result = getThemeDefinition('invalid' as ThemeType);
-      expect(result.name).toBe('dark');
+      expect(result.name).toBe('nord');
     });
   });
 });

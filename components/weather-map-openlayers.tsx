@@ -3,7 +3,7 @@
 // Phase 1: Smoother playback (500ms transition, 500ms interval), tile preloading, CSS easing
 // Phase 2: CartoDB Dark Matter base map, precipitation legend, pulse marker animation
 
-import { useEffect, useRef, useState, useMemo, useCallback, useLayoutEffect } from 'react'
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { Play, Pause, SkipBack, SkipForward, Layers, ChevronDown, Loader2 } from 'lucide-react'
 import { isInMRMSCoverage } from '@/lib/utils/location-utils'
 import { ThemeType } from '@/lib/theme-config'
