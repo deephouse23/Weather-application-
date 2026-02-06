@@ -11,7 +11,6 @@ import React from 'react';
 import { AlertTriangle, AlertCircle, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NewsPriority } from '@/lib/types/news';
-import { useTheme } from '@/components/theme-provider';
 
 interface PriorityIndicatorProps {
   priority: NewsPriority;
@@ -55,7 +54,6 @@ export default function PriorityIndicator({
   size = 'md',
   className,
 }: PriorityIndicatorProps) {
-  const { theme } = useTheme();
   const config = priorityConfig[priority];
   const Icon = config.icon;
 
@@ -66,24 +64,9 @@ export default function PriorityIndicator({
     lg: 'w-5 h-5',
   };
 
-  // Adjust colors for themes
-  const themeColorClass =
-    theme === 'miami'
-      ? priority === 'high'
-        ? 'text-pink-500'
-        : priority === 'medium'
-        ? 'text-purple-500'
-        : 'text-cyan-500'
-      : config.colorClass;
-
-  const themeTextClass =
-    theme === 'miami'
-      ? priority === 'high'
-        ? 'text-pink-400'
-        : priority === 'medium'
-        ? 'text-purple-400'
-        : 'text-cyan-400'
-      : config.textClass;
+  // Use config colors
+  const themeColorClass = config.colorClass;
+  const themeTextClass = config.textClass;
 
   return (
     <div className={cn('inline-flex items-center gap-1.5', className)}>

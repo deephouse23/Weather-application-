@@ -34,16 +34,16 @@ export const THEME_CONFIGS: ThemeConfig[] = [
     }
   },
   {
-    id: 'miami',
-    name: 'miami',
-    displayName: 'Miami Vice',
-    description: 'Neon-soaked 80s cyberpunk vibes',
+    id: 'nord',
+    name: 'nord',
+    displayName: 'Nord',
+    description: 'Arctic, north-bluish color palette',
     tier: 'free',
-    category: 'retro',
+    category: 'basic',
     colors: {
-      primary: '#ff007f',
-      background: '#4a0e4e',
-      accent: '#ff1493'
+      primary: '#88C0D0',
+      background: '#2E3440',
+      accent: '#81A1C1'
     }
   },
 

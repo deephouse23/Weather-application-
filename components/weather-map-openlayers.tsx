@@ -90,15 +90,21 @@ const WeatherMapOpenLayers = ({
   const NEXRAD_STEP_MINUTES = 5
   const NEXRAD_PAST_STEPS = 48 // 4 hours past (5 min * 48 = 240 min = 4 hours)
 
+  // Track client-side mount to prevent hydration mismatch with Date.now()
+  const [isMounted, setIsMounted] = useState(false)
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
   // Check if location is in US
   const isUSLocation = useMemo(() => {
     if (!latitude || !longitude) return false
     return isInMRMSCoverage(latitude, longitude)
   }, [latitude, longitude])
 
-  // Generate NEXRAD timestamps
+  // Generate NEXRAD timestamps - only after client mount to prevent hydration mismatch
   const timestamps = useMemo(() => {
-    if (!isUSLocation) return []
+    if (!isUSLocation || !isMounted) return []
 
     const now = Date.now()
     const quantize = (ms: number) => Math.floor(ms / (NEXRAD_STEP_MINUTES * 60 * 1000)) * (NEXRAD_STEP_MINUTES * 60 * 1000)
@@ -110,7 +116,7 @@ const WeatherMapOpenLayers = ({
     }
 
     return times
-  }, [isUSLocation])
+  }, [isUSLocation, isMounted])
 
   // Initialize map
   useEffect(() => {
@@ -493,8 +499,8 @@ const WeatherMapOpenLayers = ({
 
   const themeStyles = useMemo(() => {
     switch (theme) {
-      case 'miami':
-        return { container: 'shadow-lg shadow-pink-500/30', badge: 'bg-pink-600/90 text-white' }
+      case 'nord':
+        return { container: 'shadow-lg shadow-blue-500/20', badge: 'bg-slate-700/90 text-white' }
       default:
         return { container: 'shadow-lg', badge: 'bg-gray-800/90 text-white' }
     }

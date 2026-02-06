@@ -4,7 +4,7 @@
  * Defines all available themes including premium themes for registered users
  */
 
-export type ThemeType = 'dark' | 'miami' | 'synthwave84' | 'dracula' | 'cyberpunk' | 'matrix';
+export type ThemeType = 'dark' | 'nord' | 'synthwave84' | 'dracula' | 'cyberpunk' | 'matrix';
 
 export interface ThemeDefinition {
   name: string;
@@ -56,21 +56,23 @@ export const THEME_DEFINITIONS: Record<ThemeType, ThemeDefinition> = {
     },
     description: 'Classic dark theme with cyan accents'
   },
-  miami: {
-    name: 'miami',
-    displayName: 'Miami Vice',
+  nord: {
+    name: 'nord',
+    displayName: 'Nord',
     isPremium: false,
     colors: {
-      background: '#0a0025',
-      backgroundSecondary: '#2d1b69',
-      backgroundTertiary: '#4a0e4e',
-      primary: '#ff1493',
-      text: '#00ffff',
-      textSecondary: '#22d3ee',
-      accent: '#ff1493',
-      border: '#ff1493'
+      background: '#2E3440',
+      backgroundSecondary: '#3B4252',
+      backgroundTertiary: '#434C5E',
+      primary: '#88C0D0',
+      text: '#ECEFF4',
+      textSecondary: '#D8DEE9',
+      accent: '#81A1C1',
+      border: '#5E81AC',
+      highlight: '#EBCB8B',
+      comments: '#4C566A'
     },
-    description: 'Retro 80s synthwave vibes'
+    description: 'Arctic, north-bluish color palette'
   },
   // Premium themes - only for registered users
   synthwave84: {
@@ -215,5 +217,5 @@ export const isThemePremium = (theme: ThemeType): boolean => {
 
 // Get theme definition
 export const getThemeDefinition = (theme: ThemeType): ThemeDefinition => {
-  return THEME_DEFINITIONS[theme] || THEME_DEFINITIONS.dark;
+  return THEME_DEFINITIONS[theme] || THEME_DEFINITIONS.nord;
 };

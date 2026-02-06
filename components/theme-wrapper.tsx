@@ -18,7 +18,7 @@ export function ThemeWrapper({ children, className = '' }: ThemeWrapperProps) {
   // Create theme-specific classes
   const themeClasses: Record<string, string> = {
     dark: 'theme-dark bg-[var(--bg)] text-[var(--text)]',
-    miami: 'theme-miami bg-[var(--bg)] text-[var(--text)]',
+    nord: 'theme-nord bg-[var(--bg)] text-[var(--text)]',
     synthwave84: 'theme-synthwave84 bg-[var(--bg)] text-[var(--text)]',
     dracula: 'theme-dracula bg-[var(--bg)] text-[var(--text)]',
     cyberpunk: 'theme-cyberpunk bg-[var(--bg)] text-[var(--text)]',
@@ -54,7 +54,7 @@ export function ThemeCard({ children, className = '' }: ThemeWrapperProps) {
       style={{
         backgroundColor: 'var(--bg-elev)',
         color: 'var(--text)',
-        boxShadow: theme === 'miami' || theme === 'synthwave84'
+        boxShadow: theme === 'synthwave84'
           ? '0 0 15px var(--primary)'
           : '0 0 10px var(--primary)'
       }}

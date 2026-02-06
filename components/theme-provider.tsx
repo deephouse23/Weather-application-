@@ -45,7 +45,7 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setThemeState] = useState<Theme>('dark')
+  const [theme, setThemeState] = useState<Theme>('nord')
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -85,7 +85,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         setIsAuthenticated(false)
         // Revert to free theme if current is premium
         if (!FREE_THEMES.includes(theme as any)) {
-          setTheme('dark')
+          setTheme('nord')
         }
       }
     })
@@ -110,11 +110,15 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         .eq('user_id', userId)
         .single() as { data: { theme: string } | null, error: any }
 
-      if (data && data.theme && THEME_LIST.includes(data.theme as Theme)) {
-        // Only apply DB theme if no local preference exists
-        const localTheme = safeStorage.getItem('weather-edu-theme')
-        if (!localTheme || forceApply) {
-          setThemeState(data.theme as Theme)
+      if (data && data.theme) {
+        // Migration: if user had miami theme in DB, use nord instead
+        const dbTheme = data.theme === 'miami' ? 'nord' : data.theme
+        if (THEME_LIST.includes(dbTheme as Theme)) {
+          // Only apply DB theme if no local preference exists
+          const localTheme = safeStorage.getItem('weather-edu-theme')
+          if (!localTheme || forceApply) {
+            setThemeState(dbTheme as Theme)
+          }
         }
       }
     } catch (e) {
@@ -170,11 +174,16 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   // Load local preference on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedTheme = safeStorage.getItem('weather-edu-theme') as Theme
-      if (savedTheme && THEME_LIST.includes(savedTheme)) {
+      let savedTheme = safeStorage.getItem('weather-edu-theme') as string | null
+      // Migration: if user had miami theme saved, migrate to nord
+      if (savedTheme === 'miami') {
+        savedTheme = 'nord'
+        safeStorage.setItem('weather-edu-theme', 'nord')
+      }
+      if (savedTheme && THEME_LIST.includes(savedTheme as Theme)) {
         // If saved theme is premium but user not logged in yet, we might render it briefly
         // matching logic will correct it once auth loads
-        setThemeState(savedTheme)
+        setThemeState(savedTheme as Theme)
       }
     }
   }, [])

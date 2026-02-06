@@ -9,7 +9,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ExternalLink, RefreshCw, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -28,11 +28,18 @@ export default function ModelCard({ item, variant = 'default', className }: Mode
   const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'card');
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch - only calculate time on client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const isFeatured = variant === 'featured';
 
-  // Format timestamp
+  // Format timestamp - only calculate after mount to prevent hydration mismatch
   const timeAgo = React.useMemo(() => {
+    if (!mounted) return '...';
     const now = new Date();
     const diff = now.getTime() - item.timestamp.getTime();
     const minutes = Math.floor(diff / 60000);
@@ -41,7 +48,7 @@ export default function ModelCard({ item, variant = 'default', className }: Mode
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     return item.timestamp.toLocaleDateString();
-  }, [item.timestamp]);
+  }, [item.timestamp, mounted]);
 
   return (
     <div
@@ -171,8 +178,7 @@ export default function ModelCard({ item, variant = 'default', className }: Mode
         <div
           className={cn(
             'absolute bottom-0 left-0 right-0 h-1',
-            'bg-gradient-to-r',
-            theme === 'miami' ? 'from-pink-500 to-purple-500' : 'from-red-500 to-orange-500'
+            'bg-gradient-to-r from-red-500 to-orange-500'
           )}
         />
       )}

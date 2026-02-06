@@ -218,8 +218,7 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
   // Get category color
   const getCategoryColor = (category: string, priority: string) => {
     if (priority === 'high') {
-      return theme === 'dark' ? 'bg-red-900 text-red-200' : 
-             theme === 'miami' ? 'bg-pink-600 text-white' : 
+      return theme === 'dark' || theme === 'nord' ? 'bg-red-900 text-red-200' :
              'bg-cyan-500 text-black';
     }
     return 'bg-terminal-accent-info/20 text-terminal-accent-info';

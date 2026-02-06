@@ -28,7 +28,7 @@ export function ThemeToggle() {
 
   const handleClick = () => {
     // Cycle through themes using the preview system
-    const themes = ['dark', 'miami', 'synthwave84', 'dracula', 'cyberpunk', 'matrix']
+    const themes = ['dark', 'nord', 'synthwave84', 'dracula', 'cyberpunk', 'matrix']
     const currentIndex = themes.indexOf(theme)
     const nextTheme = themes[(currentIndex + 1) % themes.length]
     startPreview(nextTheme)
@@ -36,8 +36,8 @@ export function ThemeToggle() {
 
   const getThemeIcon = () => {
     switch (theme) {
-      case 'miami':
-        return <Sun className="w-4 h-4" />
+      case 'nord':
+        return <Moon className="w-4 h-4" />
       case 'synthwave84':
       case 'cyberpunk':
         return <Zap className="w-4 h-4" />

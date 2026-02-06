@@ -324,11 +324,11 @@ export const getThemeGradients = (theme: ThemeType): { primary: string; accent: 
         card: 'linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%)'
       };
 
-    case 'miami':
+    case 'nord':
       return {
-        primary: 'linear-gradient(135deg, #0a0025 0%, #2d1b69 50%, #4a0e4e 100%)',
-        accent: 'linear-gradient(90deg, #ff1493 0%, #00ffff 100%)',
-        card: 'linear-gradient(135deg, #2d1b69 0%, #4a0e4e 100%)'
+        primary: 'linear-gradient(135deg, #2E3440 0%, #3B4252 50%, #434C5E 100%)',
+        accent: 'linear-gradient(90deg, #88C0D0 0%, #81A1C1 100%)',
+        card: 'linear-gradient(135deg, #3B4252 0%, #434C5E 100%)'
       };
 
     default:
