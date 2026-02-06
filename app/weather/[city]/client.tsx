@@ -60,14 +60,31 @@ export default function CityWeatherClient({ city, citySlug, isPredefinedCity = f
 
   // Fetch 24h precipitation data when weather loads
   useEffect(() => {
-    if (weather?.coordinates) {
-      // Clear stale data immediately on city transition
-      setPrecipitation(null)
-      fetch(`/api/weather/precipitation-history?lat=${weather.coordinates.lat}&lon=${weather.coordinates.lon}`)
-        .then(res => res.ok ? res.json() : null)
-        .then(data => data?.dataAvailable ? setPrecipitation({rain24h: data.rain24h, snow24h: data.snow24h}) : setPrecipitation(null))
-        .catch(() => setPrecipitation(null))
-    }
+    if (!weather?.coordinates) return
+
+    // Clear stale data immediately on city transition
+    setPrecipitation(null)
+
+    // AbortController to prevent race conditions when switching cities quickly
+    const controller = new AbortController()
+
+    fetch(`/api/weather/precipitation-history?lat=${weather.coordinates.lat}&lon=${weather.coordinates.lon}`, {
+      signal: controller.signal
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!controller.signal.aborted) {
+          data?.dataAvailable ? setPrecipitation({rain24h: data.rain24h, snow24h: data.snow24h}) : setPrecipitation(null)
+        }
+      })
+      .catch((err) => {
+        // Ignore abort errors, only handle real failures
+        if (err.name !== 'AbortError') {
+          setPrecipitation(null)
+        }
+      })
+
+    return () => controller.abort()
   }, [weather?.coordinates?.lat, weather?.coordinates?.lon])
 
   // Helper: normalize "San Ramon, CA" -> "san-ramon-ca"

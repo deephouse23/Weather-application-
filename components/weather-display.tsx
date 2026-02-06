@@ -260,7 +260,9 @@ export function WeatherDisplay({
           </CardHeader>
           <CardContent className="text-center pt-1">
             <p className={cn("text-2xl font-bold", themeClasses.text)}>
-              {((precipitation?.rain24h ?? 0) + (precipitation?.snow24h ?? 0)).toFixed(2)}"
+              {precipitation != null
+                ? `${((precipitation.rain24h ?? 0) + (precipitation.snow24h ?? 0)).toFixed(2)}"`
+                : 'N/A'}
             </p>
             <p className={cn("text-xs", themeClasses.headerText)}>24h Total</p>
           </CardContent>
