@@ -66,7 +66,13 @@ export async function GET() {
 
     const formatDate = (d: Date) => d.toISOString().split('T')[0];
 
-    const apiKey = process.env.NASA_API_KEY || 'DEMO_KEY';
+    const apiKey = process.env.NASA_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'NASA API key not configured', events: [], summary: { total: 0, byClass: { X: 0, M: 0, C: 0, B: 0 }, strongestFlare: 'None', withCME: 0 }, updatedAt: new Date().toISOString() },
+        { status: 503 }
+      );
+    }
     const url = `https://api.nasa.gov/DONKI/FLR?startDate=${formatDate(startDate)}&endDate=${formatDate(endDate)}&api_key=${apiKey}`;
 
     const response = await fetch(url, {

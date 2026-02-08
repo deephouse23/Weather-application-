@@ -115,44 +115,6 @@
   }
 
   /* ═══════════════════════════════════════════════════════════
-     TOKYO NIGHT Theme - Modern Japanese Cityscape
-     ═══════════════════════════════════════════════════════════ */
-
-  [data-theme="tokyoNight"] body {
-    background: linear-gradient(180deg, hsl(235 21% 13%) 0%, hsl(240 20% 10%) 100%) fixed;
-    position: relative;
-  }
-
-  /* Bokeh light effects */
-  [data-theme="tokyoNight"] body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-      radial-gradient(circle at 20% 30%, hsl(267 42% 67% / 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 70%, hsl(199 89% 74% / 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 50% 50%, hsl(24 90% 70% / 0.05) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 0;
-    animation: bokehFloat 20s ease-in-out infinite;
-  }
-
-  @keyframes bokehFloat {
-    0%, 100% { transform: translate(0, 0); }
-    50% { transform: translate(30px, -30px); }
-  }
-
-  [data-theme="tokyoNight"] .weather-card {
-    background: hsl(232 23% 18% / 0.9);
-    border: 2px solid hsl(267 42% 67%);
-    box-shadow: 0 0 15px hsl(199 89% 74% / 0.3);
-    backdrop-filter: blur(8px);
-  }
-
-  /* ═══════════════════════════════════════════════════════════
      DRACULA Theme - Gothic Purple
      ═══════════════════════════════════════════════════════════ */
 
@@ -269,7 +231,6 @@
   [data-theme="tron"] body {
     background: hsl(0 0% 0%);
     position: relative;
-    overflow: hidden;
   }
 
   [data-theme="tron"] body::before {

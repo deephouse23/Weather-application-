@@ -74,7 +74,13 @@ export async function GET() {
 
     const formatDate = (d: Date) => d.toISOString().split('T')[0];
 
-    const apiKey = process.env.NASA_API_KEY || 'DEMO_KEY';
+    const apiKey = process.env.NASA_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'NASA API key not configured', events: [], summary: { total: 0, earthDirected: 0, fastest: 0, averageSpeed: 0 }, updatedAt: new Date().toISOString() },
+        { status: 503 }
+      );
+    }
     const url = `https://api.nasa.gov/DONKI/CME?startDate=${formatDate(startDate)}&endDate=${formatDate(endDate)}&api_key=${apiKey}`;
 
     const response = await fetch(url, {

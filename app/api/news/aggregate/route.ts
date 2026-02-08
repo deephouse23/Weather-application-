@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
         cacheHit: false,
       },
       {
-        status: 200, // Return 200 to prevent UI errors
+        status: 500,
         headers: {
           'Cache-Control': `public, s-maxage=${CACHE_DURATION * 2}, stale-while-revalidate=${STALE_WHILE_REVALIDATE}`,
           'X-Response-Time': String(errorTime),
