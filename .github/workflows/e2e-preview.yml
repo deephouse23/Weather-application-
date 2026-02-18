@@ -3,6 +3,10 @@ name: E2E Tests on Vercel Preview
 on:
   deployment_status:
 
+concurrency:
+  group: e2e-preview-${{ github.event.deployment.sha }}
+  cancel-in-progress: true
+
 jobs:
   e2e-preview:
     # Only run on successful deployments (Vercel uses "Preview" or "Preview – project-name")

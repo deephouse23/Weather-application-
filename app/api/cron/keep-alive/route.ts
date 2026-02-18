@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || PLACEHOLDER_URL
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || PLACEHOLDER_SERVICE_KEY
 
-  if (supabaseUrl === PLACEHOLDER_URL) {
+  if (supabaseUrl === PLACEHOLDER_URL || serviceRoleKey === PLACEHOLDER_SERVICE_KEY) {
     return Response.json(
       { success: false, error: 'Supabase not configured' },
       { status: 500 }
