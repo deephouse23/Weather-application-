@@ -36,5 +36,11 @@
       "source": "/sitemap.xml",
       "destination": "/sitemap"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/keep-alive",
+      "schedule": "0 8 */3 * *"
+    }
   ]
 }
