@@ -112,7 +112,7 @@ function InfoTooltip({ text, theme }: { text: string; theme: ThemeType }) {
 
 export default function ExpandableForecast({
   forecast,
-  theme = 'dark',
+  theme = 'nord',
   currentWeatherData
 }: ExpandableForecastProps) {
   const [expandedCard, setExpandedCard] = useState<number | null>(null);

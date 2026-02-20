@@ -137,7 +137,7 @@ function getTurbulenceColor(intensity: string | null): string {
 
 export default function FlightRouteLookup({ initialFlight, onRouteSearch }: FlightRouteLookupProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
 
   // Form state
   const [departureCode, setDepartureCode] = useState('');

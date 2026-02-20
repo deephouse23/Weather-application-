@@ -108,7 +108,7 @@ export default function SolarCommandTerminal({
   isLoading = false
 }: SolarCommandTerminalProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
   // Initialize to null to avoid hydration mismatch, set on client mount
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['scales', 'sun', 'kp']));

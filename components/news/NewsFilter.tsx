@@ -61,7 +61,7 @@ export default function NewsFilter({
   className,
 }: NewsFilterProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'navigation');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'navigation');
 
   const [localSearch, setLocalSearch] = React.useState(searchQuery);
 

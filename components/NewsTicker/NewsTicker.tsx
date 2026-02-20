@@ -99,35 +99,35 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
   });
 
   // Use news directly from the feed - already filtered by domain
-  const newsItems = useRealData && news.length > 0 
+  const newsItems = useRealData && news.length > 0
     ? news
     : [{
-        id: 'loading',
-        title: 'Loading weather updates...',
-        url: '#',
-        source: 'System',
-        category: 'weather' as const,
-        priority: 'low' as const,
-        timestamp: new Date()
-      }];
+      id: 'loading',
+      title: 'Loading weather updates...',
+      url: '#',
+      source: 'System',
+      category: 'weather' as const,
+      priority: 'low' as const,
+      timestamp: new Date()
+    }];
 
   // Calculate animation duration based on content length and device type
   const getAnimationDuration = () => {
     const totalLength = newsItems.reduce((acc, item) => acc + item.title.length, 0);
-    
+
     // Base durations - Desktop slowed by additional 20%
     let baseDuration = 234; // Desktop: 234s (3.9 minutes, was 195s)
-    
+
     if (isMobile) {
       baseDuration = 293 * mobileSpeedFactor; // Mobile: 293s × 3 = 879s (14.65 minutes, unchanged)
     } else if (isTablet) {
       baseDuration = 244 * 1.5; // Tablet: 366s (6.1 minutes, unchanged)
     }
-    
+
     // Additional slowdown for longer content
     const contentFactor = Math.max(1, totalLength / 500);
     const adjustedDuration = baseDuration * contentFactor;
-    
+
     return `${adjustedDuration}s`;
   };
 
@@ -146,7 +146,7 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
       if (!userHasInteracted) {
         setIsPaused(true);
       }
-      
+
       // Resume after user stops scrolling for 3 seconds
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(() => {
@@ -191,7 +191,7 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
   if (loading && newsItems.length === 0) {
     return (
       <div className={`relative w-full overflow-hidden ${themeClasses.background}`}
-           style={{ height: isMobile ? '48px' : '32px' }}>
+        style={{ height: isMobile ? '48px' : '32px' }}>
         <div className="flex items-center justify-center h-full">
           <Loader2 className="w-4 h-4 animate-spin mr-2" />
           <span className={`text-xs font-mono ${isMobile ? 'text-sm' : ''}`}>
@@ -218,8 +218,8 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
   // Get category color
   const getCategoryColor = (category: string, priority: string) => {
     if (priority === 'high') {
-      return theme === 'dark' || theme === 'nord' ? 'bg-red-900 text-red-200' :
-             'bg-cyan-500 text-black';
+      return theme === 'nord' ? 'bg-red-900 text-red-200' :
+        'bg-cyan-500 text-black';
     }
     return 'bg-terminal-accent-info/20 text-terminal-accent-info';
   };
@@ -228,11 +228,10 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
   const tickerContent = (
     <>
       {newsItems.map((item, index) => (
-        <span 
-          key={`${item.id}-${index}`} 
-          className={`inline-flex items-center mx-4 whitespace-nowrap ${
-            isMobile ? 'touch-manipulation' : ''
-          }`}
+        <span
+          key={`${item.id}-${index}`}
+          className={`inline-flex items-center mx-4 whitespace-nowrap ${isMobile ? 'touch-manipulation' : ''
+            }`}
           onClick={(e) => handleItemClick(e, item.url)}
           style={{ cursor: isTouch ? 'pointer' : 'default' }}
         >
@@ -254,11 +253,10 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
   );
 
   return (
-    <div 
-      className={`relative w-full overflow-hidden ${themeClasses.background} ${
-        isMobile ? 'touch-manipulation' : ''
-      }`}
-      style={{ 
+    <div
+      className={`relative w-full overflow-hidden ${themeClasses.background} ${isMobile ? 'touch-manipulation' : ''
+        }`}
+      style={{
         height: isMobile ? '48px' : '32px',
         WebkitOverflowScrolling: 'touch' // Smooth scrolling on iOS
       }}
@@ -277,14 +275,14 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
           )}
         </button>
       )}
-      
-      <div 
+
+      <div
         className={styles.tickerWrapper}
-        style={{ 
-          paddingLeft: isMobile && enableMobileControls ? '48px' : '0' 
+        style={{
+          paddingLeft: isMobile && enableMobileControls ? '48px' : '0'
         }}
       >
-        <div 
+        <div
           ref={scrollRef}
           className={`${styles.tickerScroll} ${isPaused ? styles.paused : ''}`}
           style={{

@@ -54,7 +54,7 @@ export function useThemePreview() {
   // End preview and revert to free theme
   const endPreview = () => {
     clearTimers()
-    setTheme('dark' as Theme) // Revert to free dark theme
+    setTheme('nord' as Theme) // Revert to free dark theme
     setPreviewState({
       isPreviewActive: false,
       previewTheme: null,

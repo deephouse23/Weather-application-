@@ -70,7 +70,7 @@ function TrendIcon({ trend }: { trend: SunspotData['trend'] }) {
 
 export default function SunspotDisplay({ data, isLoading = false }: SunspotDisplayProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
 
   if (isLoading) {
     return (

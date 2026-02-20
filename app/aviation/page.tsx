@@ -21,7 +21,7 @@ const FlightConditionsTerminal = lazy(() => import('@/components/aviation/Flight
 
 export default function AviationPage() {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
   const [alerts, setAlerts] = useState<AviationAlert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

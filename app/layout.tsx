@@ -14,7 +14,6 @@
 
 import type React from "react"
 import "./globals.css"
-import "./themes.css"
 import type { Metadata } from "next"
 import { Inconsolata, VT323 } from "next/font/google"
 // PERFORMANCE: Analytics lazy loaded via client component wrapper
@@ -143,7 +142,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" data-theme="dark" suppressHydrationWarning>
+    <html lang="en" data-theme="nord" suppressHydrationWarning>
       <head>
         {/* PERFORMANCE: Preconnect to critical origins for faster resource loading */}
         <link rel="preconnect" href="https://api.openweathermap.org" />

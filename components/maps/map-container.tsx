@@ -34,7 +34,7 @@ export function MapContainer({
   latitude,
   longitude,
   locationName,
-  theme = 'dark',
+  theme = 'nord',
   displayMode = 'widget',
   className
 }: MapContainerProps) {

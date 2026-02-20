@@ -26,7 +26,7 @@ interface AIChatProps {
 
 export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
 
   const {
     isAuthenticated,

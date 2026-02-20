@@ -25,7 +25,7 @@ interface ModelCardProps {
 
 export default function ModelCard({ item, variant = 'default', className }: ModelCardProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'card');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'card');
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [mounted, setMounted] = useState(false);

@@ -48,7 +48,7 @@ export default function GFSModelPage({ params }: PageProps) {
   const resolvedParams = React.use(params);
   const { region, run } = resolvedParams;
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'card');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'card');
 
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);

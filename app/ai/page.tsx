@@ -23,7 +23,7 @@ const AIChat = lazy(() => import('@/components/ai/AIChat'));
 
 function AIPageContent() {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
   const searchParams = useSearchParams();
   const initialPrompt = searchParams.get('prompt');
   const [chatInput, setChatInput] = useState('');

@@ -76,7 +76,7 @@ interface QuickActionsProps {
 
 export default function QuickActions({ onActionClick, disabled = false }: QuickActionsProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
 
   return (
     <div className="space-y-4">

@@ -90,14 +90,13 @@ const jsonLd = {
  */
 function HomePageShell() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-[var(--bg,#0a0a1a)]">
+    <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Large header - this is the LCP element with fetchpriority for performance */}
         <h1
-          className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-center mb-8 text-[var(--primary,#00ff00)]"
+          className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-center mb-8 text-primary glow"
           style={{
-            textShadow: '0 0 10px var(--primary, #00ff00), 0 0 20px var(--primary, #00ff00)',
-            fontFamily: 'var(--font-vt323), monospace',
+            fontFamily: 'var(--theme-font), monospace',
             contentVisibility: 'auto',
             containIntrinsicSize: '0 80px'
           }}
@@ -118,7 +117,7 @@ function HomePageShell() {
         {/* Welcome message */}
         <div className="text-center mt-8 mb-8 px-2 sm:px-0">
           <div className="w-full max-w-xl mx-auto">
-            <div className="p-2 sm:p-3 border-2 shadow-lg bg-[var(--bg-elev,#1a1a2e)] border-[var(--primary,#00ff00)] shadow-[var(--primary,#00ff00)]/20">
+            <div className="p-2 sm:p-3 container-outer">
               <p className="text-sm font-bold uppercase tracking-wider text-white" style={{
                 fontSize: "clamp(10px, 2.4vw, 14px)"
               }}>

@@ -243,7 +243,7 @@ export default function MapPage() {
           latitude={weatherData.coordinates!.lat}
           longitude={weatherData.coordinates!.lon}
           locationName={weatherData.location}
-          theme={theme || 'dark'}
+          theme={theme || 'nord'}
           displayMode="full-page"
         />
       </div>

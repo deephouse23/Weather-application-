@@ -178,7 +178,7 @@ function WeatherApp() {
           )}
 
           {/* SEO City Links Section with Random Display */}
-          <RandomCityLinks theme={theme || 'dark'} />
+          <RandomCityLinks theme={theme || 'nord'} />
         </ResponsiveContainer>
       </div>
     </PageWrapper>

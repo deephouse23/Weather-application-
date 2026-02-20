@@ -49,7 +49,7 @@ interface FlightConditionsTerminalProps {
 
 export default function FlightConditionsTerminal({ alerts, isLoading = false }: FlightConditionsTerminalProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   // PRD Section 14.1: Map visible by default, alerts expanded by default
   const [expandedSection, setExpandedSection] = useState<string | null>('turbulence');

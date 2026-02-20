@@ -21,8 +21,8 @@ export interface ThemeConfig {
 export const THEME_CONFIGS: ThemeConfig[] = [
   // FREE TIER - Available to everyone
   {
-    id: 'dark',
-    name: 'dark',
+    id: 'nord',
+    name: 'nord',
     displayName: 'Dark Mode',
     description: 'Easy on the eyes dark theme',
     tier: 'free',

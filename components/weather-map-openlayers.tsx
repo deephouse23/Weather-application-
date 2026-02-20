@@ -58,7 +58,7 @@ const WeatherMapOpenLayers = ({
   latitude,
   longitude,
   locationName,
-  theme = 'dark',
+  theme = 'nord',
   displayMode = 'full-page'
 }: WeatherMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null)

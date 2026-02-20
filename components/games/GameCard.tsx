@@ -40,7 +40,7 @@ const categoryLabels = {
 
 export default function GameCard({ game, topScore, userHighScore, className }: GameCardProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
 
   return (
     <Link href={`/games/${game.slug}`} className="block h-full">

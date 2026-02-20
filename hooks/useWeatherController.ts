@@ -350,8 +350,6 @@ export function useWeatherController() {
     useEffect(() => {
         if (!isClient || autoLocationAttempted || authLoading) return
 
-        // Playwright E2E runs should be deterministic: skip auto-location entirely and
-        // allow the seeded localStorage cache (or explicit searches) to drive state.
         if (process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true') {
             setAutoLocationAttempted(true)
             return
@@ -359,7 +357,6 @@ export function useWeatherController() {
 
         const tryAutoLocation = async () => {
             try {
-                // Check auth preferences first, then fallback to local storage
                 const localPrefs = userCacheService.getPreferences()
                 const localAutoLocate =
                     (localPrefs as any)?.settings?.auto_location ??
@@ -385,8 +382,6 @@ export function useWeatherController() {
 
                 const lastLocation = userCacheService.getLastLocation()
                 if (lastLocation?.displayName) {
-                    // Stored last location excludes coordinates for privacy;
-                    // fall back to normal search by display name.
                     await handleSearch(lastLocation.displayName, false, true)
                     setAutoLocationAttempted(true)
                     return
@@ -394,12 +389,23 @@ export function useWeatherController() {
 
                 setIsAutoDetecting(true)
                 try {
-                    const locationPromise = locationService.getCurrentLocation()
-                    const timeoutPromise = new Promise<never>((_, reject) =>
-                        setTimeout(() => reject(new Error('Location detection timeout')), 5000)
-                    )
-                    const location = await Promise.race([locationPromise, timeoutPromise]) as LocationData
-                    await handleLocationDetected(location)
+                    // Fast-path IP location for Lighthouse/unprompted users
+                    let hasDbPermission = false
+                    if (navigator.permissions && navigator.permissions.query) {
+                        const perm = await navigator.permissions.query({ name: 'geolocation' }).catch(() => null)
+                        hasDbPermission = perm?.state === 'granted'
+                    }
+
+                    if (hasDbPermission) {
+                        const locationPromise = locationService.getCurrentLocation()
+                        const timeoutPromise = new Promise<never>((_, reject) =>
+                            setTimeout(() => reject(new Error('Location detection timeout')), 5000)
+                        )
+                        const location = await Promise.race([locationPromise, timeoutPromise]) as LocationData
+                        await handleLocationDetected(location)
+                    } else {
+                        throw new Error('Geolocation requires prompt, using IP fallback for perf')
+                    }
                 } catch (error) {
                     try {
                         const ipLocation = await locationService.getLocationByIP()
@@ -417,7 +423,7 @@ export function useWeatherController() {
             }
         }
 
-        const timer = setTimeout(tryAutoLocation, 1000)
+        const timer = setTimeout(tryAutoLocation, 50) // Reduced 1000ms delay to 50ms
         return () => clearTimeout(timer)
     }, [isClient, autoLocationAttempted, authLoading, profile, preferences, handleSearch, handleLocationDetected])
 

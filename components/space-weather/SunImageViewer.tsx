@@ -67,7 +67,7 @@ interface SunImageViewerProps {
 
 export default function SunImageViewer({ className }: SunImageViewerProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
   const [selectedWavelength, setSelectedWavelength] = useState<Wavelength>(WAVELENGTHS[0]);
   const [isLoading, setIsLoading] = useState(true);
   // Initialize to null to avoid hydration mismatch

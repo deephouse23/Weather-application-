@@ -350,7 +350,7 @@ export default function CloudTypesPage() {
   const [expandedCloudId, setExpandedCloudId] = useState<number | null>(null)
   const [achievementUnlocked, setAchievementUnlocked] = useState<string>('')
 
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'card')
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'card')
 
 
   // Filter clouds by category

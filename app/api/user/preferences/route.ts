@@ -44,7 +44,7 @@ export async function GET() {
     return NextResponse.json({
       preferences: preferences || {
         user_id: user.id,
-        theme: 'dark',
+        theme: 'nord',
         temperature_unit: 'fahrenheit',
         wind_unit: 'mph',
         pressure_unit: 'hpa',

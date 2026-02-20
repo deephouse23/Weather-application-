@@ -85,7 +85,7 @@ const MAX_FAILED_FRAMES = 3;
 
 export default function CoronagraphAnimation({ className }: CoronagraphAnimationProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
 
   const [camera, setCamera] = useState<Camera>('c2');
   const [viewMode, setViewMode] = useState<ViewMode>('animated');

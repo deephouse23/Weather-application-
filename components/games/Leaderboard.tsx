@@ -32,7 +32,7 @@ export default function Leaderboard({
   maxEntries = 10,
 }: LeaderboardProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
 
   const [scores, setScores] = useState<LeaderboardEntry[]>(initialScores);
   const [period, setPeriod] = useState<LeaderboardPeriod>(defaultPeriod);

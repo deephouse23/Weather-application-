@@ -34,7 +34,7 @@ export default function CityAutocomplete({
   query,
   onSelect,
   onQueryChange,
-  theme = 'dark',
+  theme = 'nord',
   isVisible,
   onVisibilityChange
 }: CityAutocompleteProps) {
