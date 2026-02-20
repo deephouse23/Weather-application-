@@ -47,10 +47,15 @@ export class NewsService {
   private static instance: NewsService;
   private cache: Map<string, { data: NewsItem[], timestamp: number }> = new Map();
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-  private readonly NEWS_API_KEY = process.env.NEXT_PUBLIC_NEWS_API_KEY || '';
-  private readonly NEWS_API_URL = 'https://newsapi.org/v2';
   private readonly WEATHER_ALERTS_URL = 'https://api.weather.gov/alerts/active?';
   private readonly isProduction = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
+
+  private _getBaseUrl(): string {
+    if (typeof window !== 'undefined') return '';
+    if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL;
+    if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+    return 'http://localhost:3000';
+  }
 
   // Trusted weather domains - only get news from these sources
   private readonly WEATHER_DOMAINS = [
@@ -262,7 +267,7 @@ export class NewsService {
   private async fetchSevereWeatherNews(): Promise<NewsItem[]> {
     try {
       const weatherQuery = '("hurricane" OR "tornado" OR "derecho" OR "blizzard" OR "flood" OR "heat wave" OR "severe storm" OR "winter storm" OR "tropical storm" OR "cyclone" OR "typhoon") AND (warning OR alert OR emergency OR watch OR advisory)';
-      const baseUrl = typeof window !== 'undefined' ? '' : 'http://localhost:3000';
+      const baseUrl = this._getBaseUrl();
       const response = await fetch(
         `${baseUrl}/api/news?endpoint=everything&q=${encodeURIComponent(weatherQuery)}&domains=${encodeURIComponent(this.WEATHER_DOMAINS)}&language=en&pageSize=20`
       );
@@ -294,7 +299,7 @@ export class NewsService {
   private async fetchExtremeWeatherNews(): Promise<NewsItem[]> {
     try {
       const extremeQuery = '("record temperature" OR "unprecedented" OR "historic storm" OR "emergency evacuation" OR "disaster declaration" OR "catastrophic flooding" OR "life-threatening")';
-      const baseUrl = typeof window !== 'undefined' ? '' : 'http://localhost:3000';
+      const baseUrl = this._getBaseUrl();
       const response = await fetch(
         `${baseUrl}/api/news?endpoint=everything&q=${encodeURIComponent(extremeQuery)}&domains=${encodeURIComponent(this.WEATHER_DOMAINS)}&language=en&pageSize=15`
       );
@@ -326,7 +331,7 @@ export class NewsService {
   private async fetchClimateNews(): Promise<NewsItem[]> {
     try {
       const climateQuery = '("El Nino" OR "La Nina" OR "polar vortex" OR "atmospheric river" OR "jet stream" OR "weather pattern" OR "climate change impact")';
-      const baseUrl = typeof window !== 'undefined' ? '' : 'http://localhost:3000';
+      const baseUrl = this._getBaseUrl();
       const response = await fetch(
         `${baseUrl}/api/news?endpoint=everything&q=${encodeURIComponent(climateQuery)}&domains=${encodeURIComponent(this.WEATHER_DOMAINS)}&language=en&pageSize=10`
       );
