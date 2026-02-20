@@ -14,12 +14,12 @@ import {
 
 describe('Theme Configuration', () => {
   describe('THEME_DEFINITIONS', () => {
-    it('should have exactly 6 themes', () => {
-      expect(Object.keys(THEME_DEFINITIONS)).toHaveLength(6);
+    it('should have exactly 5 themes', () => {
+      expect(Object.keys(THEME_DEFINITIONS)).toHaveLength(5);
     });
 
     it('should contain all expected themes', () => {
-      const expectedThemes = ['dark', 'nord', 'synthwave84', 'dracula', 'cyberpunk', 'matrix'];
+      const expectedThemes = ['nord', 'synthwave84', 'dracula', 'cyberpunk', 'matrix'];
       expectedThemes.forEach(theme => {
         expect(THEME_DEFINITIONS).toHaveProperty(theme);
       });
@@ -30,10 +30,6 @@ describe('Theme Configuration', () => {
         expect(theme).toHaveProperty('name');
         expect(theme).toHaveProperty('displayName');
         expect(theme).toHaveProperty('isPremium');
-        expect(theme).toHaveProperty('colors');
-        expect(theme.colors).toHaveProperty('background');
-        expect(theme.colors).toHaveProperty('primary');
-        expect(theme.colors).toHaveProperty('text');
       });
     });
   });
@@ -41,7 +37,7 @@ describe('Theme Configuration', () => {
   describe('THEME_LIST', () => {
     it('should be an array of theme names', () => {
       expect(Array.isArray(THEME_LIST)).toBe(true);
-      expect(THEME_LIST).toHaveLength(6);
+      expect(THEME_LIST).toHaveLength(5);
     });
 
     it('should contain valid theme types', () => {
@@ -58,8 +54,7 @@ describe('Theme Configuration', () => {
       });
     });
 
-    it('should include dark and nord', () => {
-      expect(FREE_THEMES).toContain('dark');
+    it('should include nord', () => {
       expect(FREE_THEMES).toContain('nord');
     });
   });
@@ -80,10 +75,6 @@ describe('Theme Configuration', () => {
   });
 
   describe('isThemePremium', () => {
-    it('should return false for dark theme', () => {
-      expect(isThemePremium('dark')).toBe(false);
-    });
-
     it('should return false for nord theme', () => {
       expect(isThemePremium('nord')).toBe(false);
     });
@@ -98,61 +89,14 @@ describe('Theme Configuration', () => {
 
   describe('getThemeDefinition', () => {
     it('should return correct theme definition', () => {
-      const darkTheme = getThemeDefinition('dark');
-      expect(darkTheme.name).toBe('dark');
-      expect(darkTheme.displayName).toBe('Dark Mode');
+      const theme = getThemeDefinition('nord');
+      expect(theme.name).toBe('nord');
+      expect(theme.displayName).toBe('Nord');
     });
 
     it('should return nord theme for invalid theme names', () => {
       const result = getThemeDefinition('invalid' as ThemeType);
       expect(result.name).toBe('nord');
-    });
-  });
-});
-
-describe('Theme Colors', () => {
-  it('should have valid hex color values', () => {
-    const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
-    const rgbaRegex = /^rgba?\(/;
-
-    Object.values(THEME_DEFINITIONS).forEach(theme => {
-      const { background, primary, text } = theme.colors;
-
-      // Background can be hex or rgba
-      expect(
-        hexColorRegex.test(background) || rgbaRegex.test(background)
-      ).toBe(true);
-
-      // Primary should be hex
-      expect(hexColorRegex.test(primary)).toBe(true);
-
-      // Text can be hex or color name
-      expect(
-        hexColorRegex.test(text) || text === '#ffffff' || text === '#000000'
-      ).toBe(true);
-    });
-  });
-});
-
-describe('Theme Effects', () => {
-  it('should have effects defined for enhanced themes', () => {
-    const themesWithEffects = ['synthwave84', 'dracula', 'cyberpunk', 'matrix'] as const;
-
-    themesWithEffects.forEach(themeName => {
-      const theme = THEME_DEFINITIONS[themeName];
-      expect(theme.effects).toBeDefined();
-    });
-  });
-
-  it('should have valid effect properties', () => {
-    const themesWithEffects = ['synthwave84', 'dracula', 'cyberpunk', 'matrix'] as const;
-
-    themesWithEffects.forEach(themeName => {
-      const theme = THEME_DEFINITIONS[themeName];
-      if (theme.effects) {
-        expect(theme.effects).toHaveProperty('backgroundGradient');
-        expect(theme.effects).toHaveProperty('cardGlow');
-      }
     });
   });
 });
