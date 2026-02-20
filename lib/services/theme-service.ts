@@ -13,7 +13,7 @@ export interface UserThemePreference {
 }
 
 export class ThemeService {
-  private static readonly DEFAULT_THEME: ThemeType = 'dark';
+  private static readonly DEFAULT_THEME: ThemeType = 'nord';
   private static readonly THEME_STORAGE_KEY = 'weather-theme';
 
   /**
@@ -139,21 +139,11 @@ export class ThemeService {
    */
   static applyThemeToDocument(theme: ThemeType): void {
     if (typeof document !== 'undefined') {
-      const definition = THEME_DEFINITIONS[theme];
       const root = document.documentElement;
 
-      // Apply theme class
+      // Ensure exact application of standard themes mapping
       root.setAttribute('data-theme', theme);
-
-      // Apply custom font if defined
-      if (definition.font) {
-        root.style.setProperty('--theme-font', definition.font);
-      }
-
-      // Apply color variables
-      Object.entries(definition.colors).forEach(([key, value]) => {
-        root.style.setProperty(`--theme-${key}`, value);
-      });
+      root.className = theme;
     }
   }
 }

@@ -246,7 +246,7 @@ const weatherPhenomena: WeatherPhenomena[] = [
 
 export default function FunFactsPage() {
   const { theme } = useTheme()
-  const currentTheme = (theme || 'dark') as ThemeType
+  const currentTheme = (theme || 'nord') as ThemeType
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
 
   const themeClasses = getComponentStyles(currentTheme, 'weather')

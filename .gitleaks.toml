@@ -41,7 +41,7 @@ keywords = ["kernel"]
 
 # Allowlist - paths and patterns to ignore
 [allowlist]
-description = "Global allowlist"
+description = "Global allowlist and ignore false positive Sentry key in Lighthouse generated reports"
 paths = [
     '''\.env\.example$''',
     '''\.env\.local\.example$''',
@@ -50,6 +50,7 @@ paths = [
     '''\.next/''',
     '''test-results/''',
     '''playwright-report/''',
+    '''lighthouse\.json'''
 ]
 
 # Specific strings to ignore (e.g., placeholder values)
@@ -58,4 +59,8 @@ regexes = [
     '''placeholder''',
     '''test-api-key''',
     '''DEMO_KEY''',
+]
+
+commits = [
+    "f091ee9530ec59c357c851f1c38a0b81030bf2ef"
 ]

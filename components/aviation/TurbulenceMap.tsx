@@ -116,7 +116,7 @@ export default function TurbulenceMap({
   initialHours = 2,
 }: TurbulenceMapProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
 
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<OLMap | null>(null);

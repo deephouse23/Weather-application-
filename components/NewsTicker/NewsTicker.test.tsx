@@ -15,7 +15,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 
 // Mock the theme provider
 jest.mock('@/components/theme-provider', () => ({
-  useTheme: () => ({ theme: 'dark' }),
+  useTheme: () => ({ theme: 'nord' }),
   ThemeProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
 }));
 

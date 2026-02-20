@@ -94,7 +94,7 @@ export function WeatherDisplay({
                 ...day,
                 country: weather?.country || 'US'
               }))}
-              theme={(theme || 'dark') as ThemeType}
+              theme={(theme || 'nord') as ThemeType}
               onDayClick={onDayClick}
               selectedDay={selectedDay}
             />
@@ -109,7 +109,7 @@ export function WeatherDisplay({
           {/* Air Quality */}
           <AirQualityDisplay
             aqi={weather.aqi}
-            theme={(theme || 'dark') as import('@/lib/theme-config').ThemeType}
+            theme={(theme || 'nord') as import('@/lib/theme-config').ThemeType}
           />
         </div>
 
@@ -132,7 +132,7 @@ export function WeatherDisplay({
                 latitude={weather?.coordinates?.lat}
                 longitude={weather?.coordinates?.lon}
                 locationName={weather?.location}
-                theme={(theme || 'dark') as ThemeType}
+                theme={(theme || 'nord') as ThemeType}
                 displayMode="widget"
               />
             </div>
@@ -146,7 +146,7 @@ export function WeatherDisplay({
           ...day,
           country: weather?.country || 'US'
         }))}
-        theme={(theme || 'dark') as ThemeType}
+        theme={(theme || 'nord') as ThemeType}
         selectedDay={selectedDay}
         currentWeatherData={{
           humidity: weather?.humidity || 0,
@@ -313,7 +313,7 @@ export function WeatherDisplay({
           <CardContent className="text-center pt-1 px-2">
             <PollenDisplay
               pollen={weather.pollen}
-              theme={(theme || 'dark') as import('@/lib/theme-config').ThemeType}
+              theme={(theme || 'nord') as import('@/lib/theme-config').ThemeType}
               minimal={true}
               className="border-none shadow-none p-0 bg-transparent"
             />

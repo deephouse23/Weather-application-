@@ -21,7 +21,7 @@ import { Card, CardContent } from '@/components/ui/card';
 
 export default function EducationPage() {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
 
   const educationTopics = [
     {

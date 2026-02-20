@@ -31,7 +31,7 @@ interface RandomCityLinksProps {
   theme?: ThemeType
 }
 
-export default function RandomCityLinks({ theme = 'dark' }: RandomCityLinksProps) {
+export default function RandomCityLinks({ theme = 'nord' }: RandomCityLinksProps) {
   const [displayedCities, setDisplayedCities] = useState<typeof ALL_CITIES>([])
   const [isLoading, setIsLoading] = useState(true)
 

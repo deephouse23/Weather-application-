@@ -108,7 +108,7 @@ function TrendIcon({ trend }: { trend: XRayFluxData['trend'] }) {
 
 export default function XRayFluxChart({ data, isLoading = false }: XRayFluxChartProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
 
   if (isLoading) {
     return (

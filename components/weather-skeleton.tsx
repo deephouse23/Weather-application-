@@ -18,7 +18,7 @@ import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
 import { ResponsiveGrid } from '@/components/responsive-container'
 
 export function WeatherSkeleton({ theme }: { theme?: ThemeType }) {
-  const themeClasses = getComponentStyles(theme || 'dark', 'weather')
+  const themeClasses = getComponentStyles(theme || 'nord', 'weather')
 
   return (
     <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">

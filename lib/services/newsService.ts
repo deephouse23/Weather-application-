@@ -47,11 +47,16 @@ export class NewsService {
   private static instance: NewsService;
   private cache: Map<string, { data: NewsItem[], timestamp: number }> = new Map();
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-  private readonly NEWS_API_KEY = process.env.NEXT_PUBLIC_NEWS_API_KEY || '';
-  private readonly NEWS_API_URL = 'https://newsapi.org/v2';
   private readonly WEATHER_ALERTS_URL = 'https://api.weather.gov/alerts/active?';
   private readonly isProduction = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
-  
+
+  private _getBaseUrl(): string {
+    if (typeof window !== 'undefined') return '';
+    if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL;
+    if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+    return 'http://localhost:3000';
+  }
+
   // Trusted weather domains - only get news from these sources
   private readonly WEATHER_DOMAINS = [
     'noaa.gov',
@@ -65,7 +70,7 @@ export class NewsService {
     'bom.gov.au'
   ].join(',');
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): NewsService {
     if (!NewsService.instance) {
@@ -80,17 +85,17 @@ export class NewsService {
   private deduplicateNews(news: NewsItem[]): NewsItem[] {
     const seen = new Map<string, NewsItem>();
     const seenTopics = new Set<string>();
-    
+
     news.forEach(item => {
       // Extract key topics from the title (e.g., "Tropical Storm Bernadette")
       const title = item.title.toLowerCase();
-      
+
       // Look for named storms, hurricanes, etc.
       const stormMatch = title.match(/(tropical storm|hurricane|typhoon|cyclone)\s+([a-z]+)/i);
       const locationMatch = title.match(/(floods?|flooding|wildfire|blizzard|tornado|earthquake).*?(?:in|at|near)\s+([a-z\s]+)/i);
-      
+
       let topicKey = '';
-      
+
       if (stormMatch) {
         // For named storms, use storm type + name as key
         topicKey = `${stormMatch[1]}-${stormMatch[2]}`.toLowerCase().replace(/\s+/g, '');
@@ -108,27 +113,27 @@ export class NewsService {
           .join('');
         topicKey = words;
       }
-      
+
       // Skip if we've seen this topic
       if (topicKey && seenTopics.has(topicKey)) {
         return; // Skip this duplicate
       }
-      
+
       if (topicKey) {
         seenTopics.add(topicKey);
       }
-      
+
       // Also check for exact duplicates
       const exactKey = item.title
         .toLowerCase()
         .replace(/[^a-z0-9]/g, '')
         .substring(0, 60);
-      
+
       if (!seen.has(exactKey)) {
         seen.set(exactKey, item);
       }
     });
-    
+
     return Array.from(seen.values());
   }
 
@@ -140,7 +145,7 @@ export class NewsService {
     maxItems: number = 10
   ): Promise<NewsItem[]> {
     const cacheKey = `news-${categories.join('-')}-${maxItems}`;
-    
+
     // Check cache first
     const cached = this.getFromCache(cacheKey);
     if (cached) {
@@ -163,7 +168,7 @@ export class NewsService {
 
       // Wait for all fetches to complete
       const results = await Promise.allSettled(fetchPromises);
-      
+
       results.forEach(result => {
         if (result.status === 'fulfilled') {
           allNews.push(...result.value);
@@ -172,10 +177,10 @@ export class NewsService {
 
       // Sort by timestamp and priority
       const sortedNews = this.sortAndPrioritizeNews(allNews);
-      
+
       // Remove duplicates
       const deduplicatedNews = this.deduplicateNews(sortedNews);
-      
+
       // Limit to maxItems
       const limitedNews = deduplicatedNews.slice(0, maxItems);
 
@@ -207,22 +212,22 @@ export class NewsService {
       }
 
       const data: WeatherAlertResponse = await response.json();
-      
+
       // Deduplicate NOAA alerts based on event type and area
       const uniqueAlerts = new Map<string, typeof data.features[0]>();
-      
+
       data.features.forEach(feature => {
         // Create a key based on event type and affected area
         const event = feature.properties.event || '';
         const headline = feature.properties.headline || '';
-        
+
         // Extract the main event and location
         const eventKey = event.toLowerCase().replace(/[^a-z0-9]/g, '');
         const locationMatch = headline.match(/for (.+?)(?:until|\[|$)/i);
         const location = locationMatch ? locationMatch[1].trim().toLowerCase() : '';
-        
+
         const dedupeKey = `${eventKey}-${location.substring(0, 20)}`;
-        
+
         // Keep the most severe or most recent alert for each event/location
         if (!uniqueAlerts.has(dedupeKey)) {
           uniqueAlerts.set(dedupeKey, feature);
@@ -231,13 +236,13 @@ export class NewsService {
           const severityOrder = { 'Extreme': 0, 'Severe': 1, 'Moderate': 2, 'Minor': 3 };
           const existingSeverity = severityOrder[existing.properties.severity] || 4;
           const newSeverity = severityOrder[feature.properties.severity] || 4;
-          
+
           if (newSeverity < existingSeverity) {
             uniqueAlerts.set(dedupeKey, feature);
           }
         }
       });
-      
+
       // Convert back to array and limit to 5 (reduced from 15)
       const uniqueFeatures = Array.from(uniqueAlerts.values()).slice(0, 5);
 
@@ -260,32 +265,19 @@ export class NewsService {
    * Fetch severe weather news from trusted weather domains
    */
   private async fetchSevereWeatherNews(): Promise<NewsItem[]> {
-    if (!this.NEWS_API_KEY) {
-      return [];
-    }
-
     try {
-      let response;
-      
-      // Use specific weather query with domain filtering
       const weatherQuery = '("hurricane" OR "tornado" OR "derecho" OR "blizzard" OR "flood" OR "heat wave" OR "severe storm" OR "winter storm" OR "tropical storm" OR "cyclone" OR "typhoon") AND (warning OR alert OR emergency OR watch OR advisory)';
-      
-      if (this.isProduction) {
-        response = await fetch(
-          `/api/news?endpoint=everything&q=${encodeURIComponent(weatherQuery)}&domains=${encodeURIComponent(this.WEATHER_DOMAINS)}&language=en&pageSize=20`
-        );
-      } else {
-        response = await fetch(
-          `${this.NEWS_API_URL}/everything?q=${encodeURIComponent(weatherQuery)}&domains=${this.WEATHER_DOMAINS}&language=en&sortBy=publishedAt&pageSize=20&apiKey=${this.NEWS_API_KEY}`
-        );
-      }
+      const baseUrl = this._getBaseUrl();
+      const response = await fetch(
+        `${baseUrl}/api/news?endpoint=everything&q=${encodeURIComponent(weatherQuery)}&domains=${encodeURIComponent(this.WEATHER_DOMAINS)}&language=en&pageSize=20`
+      );
 
       if (!response.ok) {
         throw new Error('Failed to fetch severe weather news');
       }
 
       const data: NewsAPIResponse = await response.json();
-      
+
       return data.articles.map(article => ({
         id: `severe-${article.publishedAt}-${article.title.substring(0, 10)}`,
         title: article.title,
@@ -305,31 +297,19 @@ export class NewsService {
    * Fetch extreme weather news from trusted sources
    */
   private async fetchExtremeWeatherNews(): Promise<NewsItem[]> {
-    if (!this.NEWS_API_KEY) {
-      return [];
-    }
-
     try {
-      let response;
-      
       const extremeQuery = '("record temperature" OR "unprecedented" OR "historic storm" OR "emergency evacuation" OR "disaster declaration" OR "catastrophic flooding" OR "life-threatening")';
-      
-      if (this.isProduction) {
-        response = await fetch(
-          `/api/news?endpoint=everything&q=${encodeURIComponent(extremeQuery)}&domains=${encodeURIComponent(this.WEATHER_DOMAINS)}&language=en&pageSize=15`
-        );
-      } else {
-        response = await fetch(
-          `${this.NEWS_API_URL}/everything?q=${encodeURIComponent(extremeQuery)}&domains=${this.WEATHER_DOMAINS}&language=en&sortBy=publishedAt&pageSize=15&apiKey=${this.NEWS_API_KEY}`
-        );
-      }
+      const baseUrl = this._getBaseUrl();
+      const response = await fetch(
+        `${baseUrl}/api/news?endpoint=everything&q=${encodeURIComponent(extremeQuery)}&domains=${encodeURIComponent(this.WEATHER_DOMAINS)}&language=en&pageSize=15`
+      );
 
       if (!response.ok) {
         throw new Error('Failed to fetch extreme weather news');
       }
 
       const data: NewsAPIResponse = await response.json();
-      
+
       return data.articles.map(article => ({
         id: `extreme-${article.publishedAt}-${article.title.substring(0, 10)}`,
         title: article.title,
@@ -349,31 +329,19 @@ export class NewsService {
    * Fetch climate and weather pattern news
    */
   private async fetchClimateNews(): Promise<NewsItem[]> {
-    if (!this.NEWS_API_KEY) {
-      return [];
-    }
-
     try {
-      let response;
-      
       const climateQuery = '("El Nino" OR "La Nina" OR "polar vortex" OR "atmospheric river" OR "jet stream" OR "weather pattern" OR "climate change impact")';
-      
-      if (this.isProduction) {
-        response = await fetch(
-          `/api/news?endpoint=everything&q=${encodeURIComponent(climateQuery)}&domains=${encodeURIComponent(this.WEATHER_DOMAINS)}&language=en&pageSize=10`
-        );
-      } else {
-        response = await fetch(
-          `${this.NEWS_API_URL}/everything?q=${encodeURIComponent(climateQuery)}&domains=${this.WEATHER_DOMAINS}&language=en&sortBy=publishedAt&pageSize=10&apiKey=${this.NEWS_API_KEY}`
-        );
-      }
+      const baseUrl = this._getBaseUrl();
+      const response = await fetch(
+        `${baseUrl}/api/news?endpoint=everything&q=${encodeURIComponent(climateQuery)}&domains=${encodeURIComponent(this.WEATHER_DOMAINS)}&language=en&pageSize=10`
+      );
 
       if (!response.ok) {
         throw new Error('Failed to fetch climate news');
       }
 
       const data: NewsAPIResponse = await response.json();
-      
+
       return data.articles.map(article => ({
         id: `climate-${article.publishedAt}-${article.title.substring(0, 10)}`,
         title: article.title,
@@ -412,11 +380,11 @@ export class NewsService {
       // First sort by priority
       const priorityOrder = { high: 0, medium: 1, low: 2 };
       const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
-      
+
       if (priorityDiff !== 0) {
         return priorityDiff;
       }
-      
+
       // Then sort by timestamp (newest first)
       return b.timestamp.getTime() - a.timestamp.getTime();
     });
@@ -427,18 +395,18 @@ export class NewsService {
    */
   private getFromCache(key: string): NewsItem[] | null {
     const cached = this.cache.get(key);
-    
+
     if (!cached) {
       return null;
     }
-    
+
     const isExpired = Date.now() - cached.timestamp > this.CACHE_DURATION;
-    
+
     if (isExpired) {
       this.cache.delete(key);
       return null;
     }
-    
+
     return cached.data;
   }
 

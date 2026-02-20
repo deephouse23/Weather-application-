@@ -85,7 +85,7 @@ export default function ShareWeatherModal({
   weatherData,
 }: ShareWeatherModalProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || "dark") as ThemeType, "modal");
+  const themeClasses = getComponentStyles((theme || "nord") as ThemeType, "modal");
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -446,7 +446,7 @@ export function ShareButton({
 }: ShareButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || "dark") as ThemeType, "button");
+  const themeClasses = getComponentStyles((theme || "nord") as ThemeType, "button");
 
   const handleClick = () => {
     setIsModalOpen(true);

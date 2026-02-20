@@ -56,7 +56,7 @@ export function LazyForecast(props: {
 }) {
   return (
     <ErrorBoundary componentName="Weather Forecast">
-      <Suspense fallback={<WeatherComponentLoader theme={props.theme || 'dark'} />}>
+      <Suspense fallback={<WeatherComponentLoader theme={props.theme || 'nord'} />}>
         <Forecast {...props} />
       </Suspense>
     </ErrorBoundary>
@@ -78,7 +78,7 @@ export function LazyForecastDetails(props: {
 }) {
   return (
     <ErrorBoundary componentName="Forecast Details">
-      <Suspense fallback={<WeatherComponentLoader theme={props.theme || 'dark'} />}>
+      <Suspense fallback={<WeatherComponentLoader theme={props.theme || 'nord'} />}>
         <ForecastDetails {...props} />
       </Suspense>
     </ErrorBoundary>

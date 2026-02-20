@@ -74,7 +74,7 @@ function getKpColor(kp: number): string {
 
 export default function AuroraForecastMap({ data, isLoading = false }: AuroraForecastMapProps) {
   const { theme } = useTheme()
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
   const [hemisphere, setHemisphere] = useState<'north' | 'south'>('north');
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);

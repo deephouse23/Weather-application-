@@ -41,7 +41,7 @@ export const updatePreferencesSchema = z.object({
  * Uses defaults for required fields
  */
 export const createPreferencesSchema = z.object({
-  theme: themeSchema.default('dark'),
+  theme: themeSchema.default('nord'),
   temperature_unit: temperatureUnitSchema.default('fahrenheit'),
 }).strict()
 

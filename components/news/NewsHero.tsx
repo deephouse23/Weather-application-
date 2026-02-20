@@ -25,7 +25,7 @@ interface NewsHeroProps {
 
 export default function NewsHero({ item, className }: NewsHeroProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
   const [imageError, setImageError] = useState(false);
 
   // Calculate time ago

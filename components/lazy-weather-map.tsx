@@ -29,7 +29,7 @@ export default function LazyWeatherMap({
   latitude,
   longitude,
   locationName,
-  theme = 'dark',
+  theme = 'nord',
   displayMode = 'widget'
 }: LazyWeatherMapProps) {
   return (

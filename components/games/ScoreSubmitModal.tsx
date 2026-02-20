@@ -39,7 +39,7 @@ export default function ScoreSubmitModal({
   onSuccess,
 }: ScoreSubmitModalProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
 
   const [playerName, setPlayerName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);

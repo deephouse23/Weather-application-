@@ -1,0 +1,270 @@
+/* ═══════════════════════════════════════════════════════════
+   16-BIT WEATHER - CANONICAL THEME DEFINITIONS
+   Single source of truth for all themes.
+   Nord is the canonical default theme.
+   Every theme defines EXACTLY the same tokens.
+   ═══════════════════════════════════════════════════════════ */
+
+@layer base {
+
+  /* 
+   * THEME: NORD (Default)
+   * The authoritative default theme. Uses official Nord palette.
+   */
+  :root,
+  [data-theme="nord"] {
+    --background: 220 16% 22%;
+    --foreground: 218 27% 94%;
+    --card: 222 16% 28%;
+    --card-foreground: 218 27% 94%;
+    --popover: 222 16% 28%;
+    --popover-foreground: 218 27% 94%;
+    --primary: 193 43% 67%;
+    --primary-foreground: 220 16% 22%;
+    --secondary: 220 17% 32%;
+    --secondary-foreground: 218 27% 94%;
+    --muted: 220 17% 32%;
+    --muted-foreground: 219 28% 88%;
+    --accent: 210 34% 63%;
+    --accent-foreground: 220 16% 22%;
+    --destructive: 354 42% 56%;
+    --destructive-foreground: 218 27% 94%;
+    --border: 220 16% 36%;
+    --input: 220 17% 32%;
+    --ring: 193 43% 67%;
+    --radius: 0.5rem;
+
+    /* Legacy Mappings */
+    --bg: hsl(220 16% 22%);
+    --bg-elev: hsl(222 16% 28%);
+    --text: hsl(218 27% 94%);
+    --text-muted: hsl(219 28% 88%);
+    --weather-primary: hsl(193 43% 67%);
+    --weather-accent: hsl(210 34% 63%);
+
+    /* RGB values for Glow System (Nord Primary: #88C0D0) */
+    --theme-accent-rgb: 136, 192, 208;
+    --theme-bg-rgb: 46, 52, 64;
+
+    /* Theme Structural Variables */
+    --border-invisible: rgba(var(--theme-accent-rgb), 0.08);
+    --border-subtle: rgba(var(--theme-accent-rgb), 0.12);
+    --border-hover: rgba(var(--theme-accent-rgb), 0.20);
+    --border-focus: rgba(var(--theme-accent-rgb), 0.30);
+    --glow-container: 0 0 20px rgba(var(--theme-accent-rgb), 0.15);
+    --glow-hover: 0 0 15px rgba(var(--theme-accent-rgb), 0.12);
+    --glow-focus: 0 0 20px rgba(var(--theme-accent-rgb), 0.25);
+    --glow-subtle: 0 0 10px rgba(var(--theme-accent-rgb), 0.10);
+    --glow-medium: 0 0 15px rgba(var(--theme-accent-rgb), 0.18);
+    --glow-strong: 0 0 20px rgba(var(--theme-accent-rgb), 0.28);
+    --card-bg-tint: rgba(var(--theme-accent-rgb), 0.05);
+    --card-bg-hover: rgba(var(--theme-accent-rgb), 0.08);
+
+    /* Feature toggles / UI logic */
+    --theme-font: var(--font-inconsolata), 'Inconsolata', monospace;
+  }
+
+  /* 
+   * THEME: SYNTHWAVE '84
+   */
+  [data-theme="synthwave84"] {
+    --background: 268 40% 15%;
+    --foreground: 0 0% 100%;
+    --card: 268 60% 25%;
+    --card-foreground: 0 0% 100%;
+    --popover: 268 60% 25%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 319 100% 75%;
+    --primary-foreground: 268 40% 15%;
+    --secondary: 180 100% 50%;
+    --secondary-foreground: 268 40% 15%;
+    --muted: 268 60% 25%;
+    --muted-foreground: 319 50% 70%;
+    --accent: 180 100% 50%;
+    --accent-foreground: 268 40% 15%;
+    --destructive: 0 72% 61%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 319 100% 75%;
+    --input: 268 60% 25%;
+    --ring: 319 100% 75%;
+    --radius: 0.5rem;
+
+    --bg: hsl(268 40% 15%);
+    --bg-elev: hsl(268 60% 25%);
+    --text: hsl(0 0% 100%);
+    --text-muted: hsl(319 50% 70%);
+    --weather-primary: hsl(319 100% 75%);
+    --weather-accent: hsl(180 100% 50%);
+
+    --theme-accent-rgb: 255, 126, 219;
+    --theme-bg-rgb: 26, 15, 46;
+
+    --border-invisible: rgba(var(--theme-accent-rgb), 0.08);
+    --border-subtle: rgba(var(--theme-accent-rgb), 0.12);
+    --border-hover: rgba(var(--theme-accent-rgb), 0.20);
+    --border-focus: rgba(var(--theme-accent-rgb), 0.30);
+    --glow-container: 0 0 20px rgba(var(--theme-accent-rgb), 0.15);
+    --glow-hover: 0 0 15px rgba(var(--theme-accent-rgb), 0.12);
+    --glow-focus: 0 0 20px rgba(var(--theme-accent-rgb), 0.25);
+    --glow-subtle: 0 0 10px rgba(var(--theme-accent-rgb), 0.10);
+    --glow-medium: 0 0 15px rgba(var(--theme-accent-rgb), 0.18);
+    --glow-strong: 0 0 20px rgba(var(--theme-accent-rgb), 0.28);
+    --card-bg-tint: rgba(var(--theme-accent-rgb), 0.05);
+    --card-bg-hover: rgba(var(--theme-accent-rgb), 0.08);
+
+    --theme-font: var(--font-vt323), 'VT323', monospace;
+  }
+
+  /* 
+   * THEME: DRACULA
+   */
+  [data-theme="dracula"] {
+    --background: 231 15% 18%;
+    --foreground: 60 30% 96%;
+    --card: 232 14% 31%;
+    --card-foreground: 60 30% 96%;
+    --popover: 232 14% 31%;
+    --popover-foreground: 60 30% 96%;
+    --primary: 326 100% 74%;
+    --primary-foreground: 231 15% 18%;
+    --secondary: 265 89% 78%;
+    --secondary-foreground: 231 15% 18%;
+    --muted: 232 14% 31%;
+    --muted-foreground: 265 89% 78%;
+    --accent: 265 89% 78%;
+    --accent-foreground: 231 15% 18%;
+    --destructive: 0 72% 61%;
+    --destructive-foreground: 60 30% 96%;
+    --border: 326 100% 74%;
+    --input: 232 14% 31%;
+    --ring: 326 100% 74%;
+    --radius: 0.5rem;
+
+    --bg: hsl(231 15% 18%);
+    --bg-elev: hsl(232 14% 31%);
+    --text: hsl(60 30% 96%);
+    --text-muted: hsl(265 89% 78%);
+    --weather-primary: hsl(326 100% 74%);
+    --weather-accent: hsl(265 89% 78%);
+
+    --theme-accent-rgb: 189, 147, 249;
+    --theme-bg-rgb: 40, 42, 54;
+
+    --border-invisible: rgba(var(--theme-accent-rgb), 0.08);
+    --border-subtle: rgba(var(--theme-accent-rgb), 0.12);
+    --border-hover: rgba(var(--theme-accent-rgb), 0.20);
+    --border-focus: rgba(var(--theme-accent-rgb), 0.30);
+    --glow-container: 0 0 20px rgba(var(--theme-accent-rgb), 0.15);
+    --glow-hover: 0 0 15px rgba(var(--theme-accent-rgb), 0.12);
+    --glow-focus: 0 0 20px rgba(var(--theme-accent-rgb), 0.25);
+    --glow-subtle: 0 0 10px rgba(var(--theme-accent-rgb), 0.10);
+    --glow-medium: 0 0 15px rgba(var(--theme-accent-rgb), 0.18);
+    --glow-strong: 0 0 20px rgba(var(--theme-accent-rgb), 0.28);
+    --card-bg-tint: rgba(var(--theme-accent-rgb), 0.05);
+    --card-bg-hover: rgba(var(--theme-accent-rgb), 0.08);
+
+    --theme-font: var(--font-inconsolata), 'Inconsolata', monospace;
+  }
+
+  /* 
+   * THEME: CYBERPUNK 2077
+   */
+  [data-theme="cyberpunk"] {
+    --background: 0 0% 5%;
+    --foreground: 56 100% 52%;
+    --card: 0 0% 8%;
+    --card-foreground: 56 100% 52%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 56 100% 52%;
+    --primary: 56 100% 52%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 180 100% 50%;
+    --secondary-foreground: 0 0% 5%;
+    --muted: 0 0% 8%;
+    --muted-foreground: 180 100% 50%;
+    --accent: 180 100% 50%;
+    --accent-foreground: 0 0% 5%;
+    --destructive: 348 100% 50%;
+    --destructive-foreground: 56 100% 52%;
+    --border: 180 100% 50%;
+    --input: 0 0% 8%;
+    --ring: 56 100% 52%;
+    --radius: 0.5rem;
+
+    --bg: hsl(0 0% 5%);
+    --bg-elev: hsl(0 0% 8%);
+    --text: hsl(56 100% 52%);
+    --text-muted: hsl(180 100% 50%);
+    --weather-primary: hsl(56 100% 52%);
+    --weather-accent: hsl(180 100% 50%);
+
+    --theme-accent-rgb: 255, 220, 50;
+    --theme-bg-rgb: 15, 15, 20;
+
+    --border-invisible: rgba(var(--theme-accent-rgb), 0.08);
+    --border-subtle: rgba(var(--theme-accent-rgb), 0.12);
+    --border-hover: rgba(var(--theme-accent-rgb), 0.20);
+    --border-focus: rgba(var(--theme-accent-rgb), 0.30);
+    --glow-container: 0 0 20px rgba(var(--theme-accent-rgb), 0.15);
+    --glow-hover: 0 0 15px rgba(var(--theme-accent-rgb), 0.12);
+    --glow-focus: 0 0 20px rgba(var(--theme-accent-rgb), 0.25);
+    --glow-subtle: 0 0 10px rgba(var(--theme-accent-rgb), 0.10);
+    --glow-medium: 0 0 15px rgba(var(--theme-accent-rgb), 0.18);
+    --glow-strong: 0 0 20px rgba(var(--theme-accent-rgb), 0.28);
+    --card-bg-tint: rgba(var(--theme-accent-rgb), 0.05);
+    --card-bg-hover: rgba(var(--theme-accent-rgb), 0.08);
+
+    --theme-font: var(--font-inconsolata), 'Inconsolata', monospace;
+  }
+
+  /* 
+   * THEME: MATRIX
+   */
+  [data-theme="matrix"] {
+    --background: 120 100% 3%;
+    --foreground: 120 100% 50%;
+    --card: 120 100% 5%;
+    --card-foreground: 120 100% 50%;
+    --popover: 120 100% 5%;
+    --popover-foreground: 120 100% 50%;
+    --primary: 120 100% 50%;
+    --primary-foreground: 120 100% 3%;
+    --secondary: 120 60% 35%;
+    --secondary-foreground: 120 100% 50%;
+    --muted: 120 100% 5%;
+    --muted-foreground: 120 60% 35%;
+    --accent: 120 60% 35%;
+    --accent-foreground: 120 100% 50%;
+    --destructive: 120 100% 50%;
+    --destructive-foreground: 120 100% 3%;
+    --border: 120 60% 35%;
+    --input: 120 100% 5%;
+    --ring: 120 100% 50%;
+    --radius: 0.5rem;
+
+    --bg: hsl(120 100% 3%);
+    --bg-elev: hsl(120 100% 5%);
+    --text: hsl(120 100% 50%);
+    --text-muted: hsl(120 60% 35%);
+    --weather-primary: hsl(120 100% 50%);
+    --weather-accent: hsl(120 60% 35%);
+
+    --theme-accent-rgb: 0, 255, 65;
+    --theme-bg-rgb: 0, 10, 0;
+
+    --border-invisible: rgba(var(--theme-accent-rgb), 0.08);
+    --border-subtle: rgba(var(--theme-accent-rgb), 0.12);
+    --border-hover: rgba(var(--theme-accent-rgb), 0.20);
+    --border-focus: rgba(var(--theme-accent-rgb), 0.30);
+    --glow-container: 0 0 20px rgba(var(--theme-accent-rgb), 0.15);
+    --glow-hover: 0 0 15px rgba(var(--theme-accent-rgb), 0.12);
+    --glow-focus: 0 0 20px rgba(var(--theme-accent-rgb), 0.25);
+    --glow-subtle: 0 0 10px rgba(var(--theme-accent-rgb), 0.10);
+    --glow-medium: 0 0 15px rgba(var(--theme-accent-rgb), 0.18);
+    --glow-strong: 0 0 20px rgba(var(--theme-accent-rgb), 0.28);
+    --card-bg-tint: rgba(var(--theme-accent-rgb), 0.05);
+    --card-bg-hover: rgba(var(--theme-accent-rgb), 0.08);
+
+    --theme-font: var(--font-vt323), 'VT323', monospace;
+  }
+}

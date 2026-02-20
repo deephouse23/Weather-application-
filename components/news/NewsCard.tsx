@@ -26,7 +26,7 @@ interface NewsCardProps {
 
 export default function NewsCard({ item, variant = 'default', className }: NewsCardProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
   const [imageError, setImageError] = useState(false);
 
   // Calculate time ago

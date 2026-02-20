@@ -56,7 +56,7 @@ export default function FlightNumberInput({
   className,
 }: FlightNumberInputProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
 
   const [flightNumber, setFlightNumber] = useState('');
   const [isSearching, setIsSearching] = useState(false);

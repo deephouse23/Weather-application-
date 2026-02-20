@@ -9,7 +9,7 @@ export class ThemeObserver {
   private currentTheme: ThemeType;
   private observer: MutationObserver | null = null;
 
-  constructor(initialTheme: ThemeType = 'dark') {
+  constructor(initialTheme: ThemeType = 'nord') {
     this.currentTheme = initialTheme;
   }
 
@@ -30,7 +30,7 @@ export class ThemeObserver {
 
     // Remove all theme classes from body
     const allThemes: ThemeType[] = [
-      'dark', 'nord', 'synthwave84', 'dracula', 'cyberpunk', 'matrix'
+      'nord', 'nord', 'synthwave84', 'dracula', 'cyberpunk', 'matrix'
     ];
 
     allThemes.forEach(t => {
@@ -114,7 +114,7 @@ export class ThemeObserver {
       document.querySelectorAll('[data-theme-target]').forEach(element => {
         // Remove old theme classes
         const allThemes: ThemeType[] = [
-          'dark', 'nord', 'synthwave84', 'dracula', 'cyberpunk', 'matrix'
+          'nord', 'nord', 'synthwave84', 'dracula', 'cyberpunk', 'matrix'
         ];
         allThemes.forEach(t => {
           element.classList.remove(`theme-${t}`);
@@ -142,7 +142,7 @@ let themeObserverInstance: ThemeObserver | null = null;
 /**
  * Get or create the ThemeObserver singleton
  */
-export function getThemeObserver(initialTheme: ThemeType = 'dark'): ThemeObserver {
+export function getThemeObserver(initialTheme: ThemeType = 'nord'): ThemeObserver {
   if (typeof window === 'undefined') {
     // Return a dummy observer for SSR
     return {

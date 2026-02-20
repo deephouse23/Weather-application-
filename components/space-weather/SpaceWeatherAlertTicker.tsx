@@ -81,7 +81,7 @@ function formatTimeAgo(dateStr: string, now: Date | null): string {
 
 export default function SpaceWeatherAlertTicker({ alerts, isLoading = false }: SpaceWeatherAlertTickerProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoScrolling, setIsAutoScrolling] = useState(true);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);

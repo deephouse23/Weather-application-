@@ -79,7 +79,7 @@ interface SuggestedPromptsProps {
 
 export default function SuggestedPrompts({ onPromptClick }: SuggestedPromptsProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
   const [categoryIndex, setCategoryIndex] = useState(0);
   const [promptIndex, setPromptIndex] = useState(0);
 

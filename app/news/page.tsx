@@ -24,7 +24,7 @@ type FilterCategory = FeedCategory | 'all';
 
 export default function NewsPage() {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
 
   // State
   const [news, setNews] = useState<RSSItem[]>([]);

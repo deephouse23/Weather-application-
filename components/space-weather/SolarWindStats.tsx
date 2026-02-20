@@ -72,7 +72,7 @@ function TrendIcon({ trend }: { trend: SolarWindData['trend'] }) {
 
 export default function SolarWindStats({ data, isLoading = false }: SolarWindStatsProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
 
   if (isLoading) {
     return (

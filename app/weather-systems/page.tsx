@@ -367,7 +367,7 @@ const weatherSystemsDatabase: WeatherSystemData[] = [
 
 export default function WeatherSystemsPage() {
   const { theme } = useTheme()
-  const currentTheme = (theme || 'dark') as ThemeType
+  const currentTheme = (theme || 'nord') as ThemeType
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [expandedSystemId, setExpandedSystemId] = useState<number | null>(null)
   const [achievementUnlocked, setAchievementUnlocked] = useState<string>('')

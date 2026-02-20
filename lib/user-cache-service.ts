@@ -93,7 +93,7 @@ export class UserCacheService {
       const defaultPreferences: UserPreferences = {
         settings: {
           units: 'imperial',
-          theme: 'dark',
+          theme: 'nord',
           cacheEnabled: true
         },
         updatedAt: Date.now()
@@ -468,7 +468,7 @@ export class UserCacheService {
     const defaultPreferences: UserPreferences = {
       settings: {
         units: 'imperial',
-        theme: 'dark',
+        theme: 'nord',
         cacheEnabled: true
       },
       updatedAt: Date.now()
@@ -509,7 +509,7 @@ export class UserCacheService {
           units: preferences.settings.units === 'metric' || preferences.settings.units === 'imperial'
             ? preferences.settings.units
             : defaultPreferences.settings.units,
-          theme: ['dark', 'miami', 'synthwave84', 'dracula', 'cyberpunk', 'matrix'].includes(preferences.settings.theme as string)
+          theme: ['nord', 'miami', 'synthwave84', 'dracula', 'cyberpunk', 'matrix'].includes(preferences.settings.theme as string)
             ? (preferences.settings.theme as ThemeType)
             : defaultPreferences.settings.theme,
           cacheEnabled: typeof preferences.settings.cacheEnabled === 'boolean'

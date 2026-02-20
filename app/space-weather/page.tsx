@@ -37,7 +37,7 @@ interface SpaceWeatherData {
 
 export default function SpaceWeatherPage() {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
   const [data, setData] = useState<SpaceWeatherData>({
     scales: null,
     alerts: [],

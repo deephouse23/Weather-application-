@@ -7,7 +7,7 @@
 import { useState } from 'react'
 import { Crown, X, Gamepad2, Terminal, Grid3x3 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useTheme } from '@/components/enhanced-theme-provider'
+import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles } from '@/lib/theme-utils'
 import { PREMIUM_THEMES } from '@/lib/theme-config'
 
@@ -17,10 +17,10 @@ interface ThemeUpgradePromptProps {
   compact?: boolean
 }
 
-export default function ThemeUpgradePrompt({ 
-  show = true, 
+export default function ThemeUpgradePrompt({
+  show = true,
   onClose,
-  compact = false 
+  compact = false
 }: ThemeUpgradePromptProps) {
   const { theme, isAuthenticated } = useTheme()
   const router = useRouter()
@@ -54,18 +54,18 @@ export default function ThemeUpgradePrompt({
         >
           <X className="w-4 h-4" />
         </button>
-        
+
         <div className="flex items-center gap-2 mb-3">
           <Crown className="w-5 h-5 text-yellow-500" />
           <h3 className={`font-mono font-bold text-sm uppercase ${themeClasses.text}`}>
             Premium Themes
           </h3>
         </div>
-        
+
         <p className={`text-xs font-mono mb-3 ${themeClasses.mutedText}`}>
           Unlock 4 additional retro themes inspired by classic gaming systems!
         </p>
-        
+
         <div className="flex gap-2">
           <button
             onClick={handleSignUp}
@@ -93,7 +93,7 @@ export default function ThemeUpgradePrompt({
         >
           <X className="w-5 h-5" />
         </button>
-        
+
         {/* Header */}
         <div className="text-center mb-6">
           <Crown className="w-12 h-12 text-yellow-500 mx-auto mb-3" />
@@ -104,7 +104,7 @@ export default function ThemeUpgradePrompt({
             Register for free to access 4 additional retro themes
           </p>
         </div>
-        
+
         {/* Theme Preview */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <div className="text-center">
@@ -113,21 +113,21 @@ export default function ThemeUpgradePrompt({
             </div>
             <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Atari 2600</p>
           </div>
-          
+
           <div className="text-center">
             <div className="w-full h-16 bg-[#0D0D0D] border-2 border-[#33FF33] flex items-center justify-center mb-2">
               <Terminal className="w-6 h-6 text-[#33FF33]" />
             </div>
             <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Terminal Green</p>
           </div>
-          
+
           <div className="text-center">
             <div className="w-full h-16 bg-[#D3D3D3] border-2 border-black flex items-center justify-center mb-2">
               <Grid3x3 className="w-6 h-6 text-[#CC0000]" />
             </div>
             <p className={`text-xs font-mono ${themeClasses.mutedText}`}>8-Bit Classic</p>
           </div>
-          
+
           <div className="text-center">
             <div className="w-full h-16 bg-[#B8B8D0] border-2 border-[#5B5B8B] flex items-center justify-center mb-2">
               <Gamepad2 className="w-6 h-6 text-[#FFD700]" />
@@ -135,7 +135,7 @@ export default function ThemeUpgradePrompt({
             <p className={`text-xs font-mono ${themeClasses.mutedText}`}>16-Bit SNES</p>
           </div>
         </div>
-        
+
         {/* Features */}
         <div className={`mb-6 p-3 border ${themeClasses.borderColor} ${themeClasses.background}`}>
           <h3 className={`font-mono font-bold text-sm uppercase mb-2 ${themeClasses.text}`}>
@@ -148,7 +148,7 @@ export default function ThemeUpgradePrompt({
             <li>• No ads, completely free</li>
           </ul>
         </div>
-        
+
         {/* Actions */}
         <div className="flex gap-3">
           <button
@@ -164,7 +164,7 @@ export default function ThemeUpgradePrompt({
             Login
           </button>
         </div>
-        
+
         <p className={`text-center text-xs font-mono mt-4 ${themeClasses.mutedText}`}>
           Already have an account? Just login to access your themes.
         </p>

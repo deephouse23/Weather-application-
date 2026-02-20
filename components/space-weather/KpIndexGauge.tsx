@@ -70,7 +70,7 @@ function getAuroraVisibility(kp: number): string {
 
 export default function KpIndexGauge({ data, isLoading = false }: KpIndexGaugeProps) {
   const { theme } = useTheme();
-  const themeClasses = getComponentStyles((theme || 'dark') as ThemeType, 'weather');
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
 
   if (isLoading) {
     return (
