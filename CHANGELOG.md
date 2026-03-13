@@ -2,6 +2,30 @@
 
 All notable changes to 16-Bit Weather are documented in this file.
 
+## [1.0.1] - 2026-03-12
+
+### Codebase Cleanup
+
+Comprehensive audit and cleanup pass removing dead code, consolidating duplicate types, and fixing import hygiene.
+
+#### Removed
+- **Dead components**: `modern-weather-icon.tsx`, `weather-search-enhanced.tsx` (zero imports)
+- **Dead hooks**: `lib/hooks.ts` — 5 unused hooks (`useDebounce`, `useMemoizedCalculation`, `useLazyComponent`, `useOfflineDetection`, `useRetry`)
+- **Deprecated shim**: `lib/weather-api.ts` — consumers migrated to `@/lib/weather`
+- **Stale files**: `app/error.tsx.backup`, `.eslintrc.json` (empty), `.env.local.example` (redundant), `DELETION_MANIFEST.md` (root copy), `PiHole.txt`
+- **Unused dependency**: `sonner` (toast system uses Radix, not Sonner)
+
+#### Changed
+- **Hooks consolidated**: Moved `useNewsFeed.ts` and `use-theme-preview.ts` from `lib/hooks/` to `hooks/`
+- **`AviationAlert` type**: Consolidated 3 definitions → single source in `lib/services/aviation-service.ts`
+- **`GeocodingResponse` type**: Removed duplicates from 2 API routes → import from `lib/weather`
+- **`ForecastDay` type**: Removed duplicates from 3 components → centralized in `lib/types.ts`
+- **`LocationTemperature` type**: Removed duplicate from API route → import from `lib/extremes/extremes-data`
+- **`NEWS_API_KEY`**: Removed `NEXT_PUBLIC_NEWS_API_KEY` client-side check (redundant; API route handles missing keys)
+- **`.env.example`**: Added missing vars (`CRON_SECRET`, `NASA_API_KEY`, `NEXT_PUBLIC_SENTRY_DSN`, `SUPABASE_SERVICE_ROLE_KEY`)
+
+---
+
 ## [1.0.0] - 2025-12-27
 
 ### Release Highlights

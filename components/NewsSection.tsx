@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { LoadingSpinner } from '@/components/ui/loading-state';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
-import { useNewsFeed } from '@/lib/hooks/useNewsFeed';
+import { useNewsFeed } from '@/hooks/useNewsFeed';
 
 const NewsSection: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);

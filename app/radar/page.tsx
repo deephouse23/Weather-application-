@@ -19,7 +19,7 @@ import { useLocationContext } from '@/components/location-context'
 import { userCacheService } from '@/lib/user-cache-service'
 import { WeatherData } from '@/lib/types'
 import { useTheme } from '@/components/theme-provider'
-import { fetchWeatherData } from '@/lib/weather-api'
+import { fetchWeatherData } from '@/lib/weather'
 import Navigation from '@/components/navigation'
 
 const WeatherMap = dynamicImport(() => import('@/components/weather-map'), {

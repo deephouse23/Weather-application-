@@ -8,15 +8,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Droplets, Wind, Eye, Gauge, Sunrise, Sunset, Info } from "lucide-react"
 import { ThemeType } from "@/lib/theme-config"
-
-interface ForecastDay {
-  day: string;
-  highTemp: number;
-  lowTemp: number;
-  condition: string;
-  description: string;
-  country?: string;
-}
+import type { ForecastDay } from "@/lib/types"
 
 interface ForecastDetailsProps {
   forecast: ForecastDay[];

@@ -12,6 +12,15 @@
  * Report issues: https://github.com/deephouse23/Weather-application-/issues
  */
 
+export interface ForecastDay {
+  day: string;
+  highTemp: number;
+  lowTemp: number;
+  condition: string;
+  description: string;
+  country?: string;
+}
+
 export interface HourlyForecast {
   time: string;
   temp: number;
