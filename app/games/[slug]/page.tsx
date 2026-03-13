@@ -18,6 +18,7 @@ import { ArrowLeft, Maximize2, Minimize2, Play } from 'lucide-react';
 import type { Game, ScoreSubmission } from '@/lib/types/games';
 import { fetchGames, incrementPlayCount } from '@/lib/services/gamesService';
 import { useAuth } from '@/lib/auth';
+import { toastService } from '@/lib/toast-service';
 
 export default function GameDetailPage() {
   const params = useParams();
@@ -35,6 +36,7 @@ export default function GameDetailPage() {
 
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [gameScore, setGameScore] = useState<ScoreSubmission | null>(null);
+  const [leaderboardRefreshKey, setLeaderboardRefreshKey] = useState(0);
 
   const { user } = useAuth();
 
@@ -84,13 +86,13 @@ export default function GameDetailPage() {
         metadata: scoreData.metadata,
       });
 
-      alert(`Score ${scoreData.score} submitted successfully!`);
+      toastService.success(`Score ${scoreData.score} submitted successfully!`);
 
-      // Reload to update leaderboard
-      setTimeout(() => window.location.reload(), 1500);
+      // Refresh leaderboard without full page reload
+      setLeaderboardRefreshKey((k) => k + 1);
     } catch (err) {
       console.error('[Game Detail] ❌ Failed to submit score:', err);
-      alert(`Failed to submit score: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      toastService.error(`Failed to submit score: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
 
@@ -310,7 +312,7 @@ export default function GameDetailPage() {
           {/* Leaderboard Sidebar */}
           {!isFullscreen && (
             <div className="lg:col-span-1">
-              <Leaderboard gameSlug={slug} maxEntries={20} />
+              <Leaderboard gameSlug={slug} maxEntries={20} refreshKey={leaderboardRefreshKey} />
             </div>
           )}
         </div>
@@ -328,7 +330,7 @@ export default function GameDetailPage() {
             metadata={gameScore.metadata}
             onSuccess={() => {
               // Refresh leaderboard after successful submission
-              window.location.reload();
+              setLeaderboardRefreshKey((k) => k + 1);
             }}
           />
         )}

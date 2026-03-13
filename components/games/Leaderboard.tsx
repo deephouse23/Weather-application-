@@ -21,6 +21,7 @@ interface LeaderboardProps {
   className?: string;
   showPeriodToggle?: boolean;
   maxEntries?: number;
+  refreshKey?: number;
 }
 
 export default function Leaderboard({
@@ -30,6 +31,7 @@ export default function Leaderboard({
   className,
   showPeriodToggle = true,
   maxEntries = 10,
+  refreshKey = 0,
 }: LeaderboardProps) {
   const { theme } = useTheme();
   const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
@@ -41,7 +43,7 @@ export default function Leaderboard({
 
   useEffect(() => {
     loadLeaderboard();
-  }, [period, gameSlug]);
+  }, [period, gameSlug, refreshKey]);
 
   const loadLeaderboard = async () => {
     setIsLoading(true);
