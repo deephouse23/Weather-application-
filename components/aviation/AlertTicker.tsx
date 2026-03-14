@@ -14,18 +14,9 @@ import { AlertTriangle, Info, Plane } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
+import type { AviationAlert } from '@/lib/services/aviation-service';
 
-export interface AviationAlert {
-  id: string;
-  type: 'SIGMET' | 'AIRMET' | 'CWA' | 'PIREP';
-  severity: 'low' | 'moderate' | 'severe' | 'extreme';
-  hazard: string;
-  region: string;
-  validFrom: string;
-  validTo: string;
-  text: string;
-  rawText?: string;
-}
+export type { AviationAlert };
 
 interface AlertTickerProps {
   alerts: AviationAlert[];

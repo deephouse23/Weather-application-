@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { WeatherData } from '@/lib/types'
-import { fetchWeatherData, fetchWeatherByLocation } from '@/lib/weather-api'
+import { fetchWeatherData, fetchWeatherByLocation } from '@/lib/weather'
 import { locationService, LocationData } from '@/lib/location-service'
 import { userCacheService } from '@/lib/user-cache-service'
 import { toastService } from '@/lib/toast-service'

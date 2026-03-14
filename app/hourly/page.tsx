@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useTheme } from "@/components/theme-provider"
 import { ArrowLeft, Loader2 } from "lucide-react"
-import { fetchWeatherByLocation } from "@/lib/weather-api"
+import { fetchWeatherByLocation } from "@/lib/weather"
 import HourlyForecast from "@/components/hourly-forecast"
 import type { WeatherData } from "@/lib/types"
 

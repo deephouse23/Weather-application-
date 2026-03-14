@@ -20,7 +20,7 @@
 import { lazy, Suspense } from 'react'
 import { ErrorBoundary } from './error-boundary'
 import { LoadingSpinner } from '@/components/ui/loading-state'
-import { WeatherData } from '@/lib/types'
+import { WeatherData, ForecastDay } from '@/lib/types'
 import { ThemeType } from '@/lib/theme-config'
 
 // Lazy load weather components
@@ -36,16 +36,6 @@ function WeatherComponentLoader({ theme }: { theme: ThemeType }) {
       <span className="ml-2 text-weather-text text-sm">Loading weather data...</span>
     </div>
   )
-}
-
-// Lazy wrapper components with fallback loading states
-interface ForecastDay {
-  day: string;
-  highTemp: number;
-  lowTemp: number;
-  condition: string;
-  description: string;
-  country?: string;
 }
 
 export function LazyForecast(props: { 

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { fetchWeatherData } from '@/lib/weather-api'
+import { fetchWeatherData } from '@/lib/weather'
 import { captureError } from '@/lib/error-utils'
 
 type Props = {

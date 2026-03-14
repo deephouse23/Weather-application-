@@ -6,15 +6,7 @@ import { cn } from "@/lib/utils"
 // removed ThemeType import as manual mapping is gone, but we might accept the prop for compat
 import type { ThemeType } from "@/lib/theme-config"
 import WeatherIconModern from "./weather-icon-modern"
-
-interface ForecastDay {
-  day: string;
-  highTemp: number;
-  lowTemp: number;
-  condition: string;
-  description: string;
-  country?: string;
-}
+import type { ForecastDay } from "@/lib/types"
 
 interface ForecastProps {
   forecast: ForecastDay[];

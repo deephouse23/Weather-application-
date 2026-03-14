@@ -18,23 +18,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { HOT_LOCATIONS, COLD_LOCATIONS, LOCATION_FACTS, HISTORICAL_AVERAGES } from '@/lib/extremes/extremes-data';
-
-interface LocationTemperature {
-  name: string;
-  country: string;
-  lat: number;
-  lon: number;
-  emoji: string;
-  temp: number;
-  tempC: number;
-  condition: string;
-  humidity: number;
-  windSpeed: number;
-  fact?: string;
-  historicalAvg?: { summer: number; winter: number };
-  lastUpdated: number;
-}
+import { HOT_LOCATIONS, COLD_LOCATIONS, LOCATION_FACTS, HISTORICAL_AVERAGES, type LocationTemperature } from '@/lib/extremes/extremes-data';
 
 /**
  * Fetch temperature data for a specific location using server-side API

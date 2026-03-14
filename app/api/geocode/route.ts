@@ -13,17 +13,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import type { GeocodingResponse } from '@/lib/weather'
 
 const GEO_URL = 'https://api.openweathermap.org/geo/1.0'
-
-interface GeocodingResponse {
-  name: string;
-  local_names?: { [key: string]: string };
-  lat: number;
-  lon: number;
-  country: string;
-  state?: string;
-}
 
 // Helper function to try multiple geocoding strategies
 const tryGeocoding = async (queries: string[], apiKey: string, limit: string): Promise<GeocodingResponse[]> => {

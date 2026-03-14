@@ -14,17 +14,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
+import type { GeocodingResponse } from '@/lib/weather'
 
 const GEO_URL = 'https://api.openweathermap.org/geo/1.0'
-
-interface GeocodingResponse {
-  name: string;
-  local_names?: { [key: string]: string };
-  lat: number;
-  lon: number;
-  country: string;
-  state?: string;
-}
 
 // Helper function to try multiple geocoding strategies
 // Returns { data, error } to distinguish between "not found" and "API error"

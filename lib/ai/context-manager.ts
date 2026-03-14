@@ -14,6 +14,7 @@ import {
   extractFlightInfo,
   type ContextType,
 } from './query-analyzer';
+import type { AviationAlert } from '@/lib/services/aviation-service';
 
 // Type definition for precipitation API response
 interface PrecipitationApiResponse {
@@ -105,17 +106,6 @@ export interface AviationContext {
   alerts: AviationAlert[];
   hasActiveAlerts: boolean;
   alertCount: number;
-}
-
-export interface AviationAlert {
-  id: string;
-  type: 'SIGMET' | 'AIRMET';
-  severity: string;
-  hazard: string;
-  region: string;
-  validFrom: string;
-  validTo: string;
-  text: string;
 }
 
 export interface EarthquakeContext {

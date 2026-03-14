@@ -15,12 +15,13 @@ export {
   type PrecipitationContext,
   type SpaceWeatherContext,
   type AviationContext,
-  type AviationAlert,
   type EarthquakeContext,
   type VolcanoContext,
   type QueryParams,
   type ContextType,
 } from './context-manager';
+
+export type { AviationAlert } from '@/lib/services/aviation-service';
 
 export {
   analyzeQuery,

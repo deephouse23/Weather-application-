@@ -18,7 +18,7 @@ import * as React from "react"
 import { Moon, Sun, Zap, Timer } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
-import { useThemePreview } from "@/lib/hooks/use-theme-preview"
+import { useThemePreview } from "@/hooks/use-theme-preview"
 import { Badge } from "@/components/ui/badge"
 
 export function ThemeToggle() {

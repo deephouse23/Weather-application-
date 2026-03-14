@@ -13,7 +13,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { fetchWeatherData } from '@/lib/weather-api'
+import { fetchWeatherData } from '@/lib/weather'
 import { useAuth } from '@/lib/auth'
 import { WeatherData } from '@/lib/types'
 import PageWrapper from '@/components/page-wrapper'
@@ -178,7 +178,7 @@ export default function CityWeatherClient({ city, citySlug, isPredefinedCity = f
       const { latitude, longitude } = position.coords
       // API key is now handled by internal API routes
 
-      const { fetchWeatherByLocation } = await import('@/lib/weather-api')
+      const { fetchWeatherByLocation } = await import('@/lib/weather')
       const unitSystem: 'metric' | 'imperial' = preferences?.temperature_unit === 'celsius' ? 'metric' : 'imperial'
       const weatherData = await fetchWeatherByLocation(`${latitude},${longitude}`, unitSystem)
       setWeather(weatherData)

@@ -13,7 +13,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Crown, Lock, Play, Timer, Sparkles, Star } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { useTheme } from '@/components/theme-provider'
-import { useThemePreview } from '@/lib/hooks/use-theme-preview'
+import { useThemePreview } from '@/hooks/use-theme-preview'
 import { 
   THEME_CONFIGS, 
   getFreeThemes, 

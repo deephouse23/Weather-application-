@@ -16,7 +16,7 @@ import NewsTickerItem from './NewsTickerItem';
 import styles from './NewsTicker.module.css';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
-import { useNewsFeed } from '@/lib/hooks/useNewsFeed';
+import { useNewsFeed } from '@/hooks/useNewsFeed';
 
 export interface NewsItem {
   id: string;
@@ -163,13 +163,9 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
     };
   }, [isMobile, enableMobileControls, userHasInteracted]);
 
-  // Check API key availability
+  // Always try real data sources (NOAA, API route handles missing keys gracefully)
   useEffect(() => {
-    const hasApiKey = process.env.NEXT_PUBLIC_NEWS_API_KEY;
-    if (!hasApiKey) {
-      console.warn('News API key not configured.');
-      setUseRealData(true); // Still try NOAA
-    }
+    setUseRealData(true);
   }, []);
 
   // Touch-friendly click handler for mobile
