@@ -250,7 +250,10 @@ export function useWeatherController() {
                 saveWeatherToCache(weatherData)
             }
         } catch (error: unknown) {
-            console.error('Failed to load weather for detected location:', error)
+            // Use warn instead of error for auto-detected locations — 404 "Location not found"
+            // is expected when IP geolocation returns imprecise coordinates. This prevents
+            // noisy red console errors on pages that don't use weather data.
+            console.warn('[auto-location] Failed to load weather for detected location:', error)
             setError('Failed to load weather data for your location')
         } finally {
             setLoading(false)
