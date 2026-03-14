@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-16-Bit Weather is a retro-styled weather education platform built with Next.js 15 (App Router) and React 19. It combines real-time weather data with 16-bit pixel art aesthetics, featuring educational content, interactive games, and global weather tracking.
+16-Bit Weather is a retro-styled weather education platform built with Next.js 15 (App Router) and React 19. It combines real-time weather data with 16-bit pixel art aesthetics, featuring educational content, interactive games, and global weather tracking. Live at 16bitweather.co, deployed on Vercel.
 
 ## Common Commands
 
@@ -21,14 +21,32 @@ npm run dev              # Start development server (localhost:3000)
 npm run build            # Production build
 npm run start            # Start production server
 npm run lint             # ESLint
+npm run analyze          # Bundle analysis (ANALYZE=true build)
 
-# Testing
-npm test                 # Run Jest unit tests
+# Unit Testing (Jest)
+npm test                 # Run all unit tests
+npm test -- weather-utils.test.ts                    # Single test file
+npm test -- --testNamePattern="should convert 0°C"   # Single test by name
 npm run test:watch       # Jest in watch mode
-npx playwright test      # Run all E2E tests (Chromium, Firefox, WebKit)
-npx playwright test --project=chromium  # Single browser
-npx playwright test tests/e2e/weather-app.spec.ts  # Single test file
+npm run test:ci          # Jest for CI (sequential, --runInBand)
+
+# E2E Testing (Playwright)
+npx playwright test                                  # All E2E tests
+npx playwright test --project=chromium               # Single browser
+npx playwright test tests/e2e/weather-app.spec.ts    # Single test file
+
+# PR Validation
+npm run validate:pr      # Build + E2E + Lighthouse CI (runs on pre-push hook)
+npm run lighthouse       # Lighthouse CI only
 ```
+
+## Pre-Push Git Hook
+
+A pre-push hook runs automatically before every `git push`:
+1. Playwright E2E tests (Chromium)
+2. Lighthouse CI (performance score >= 85)
+
+Config: `.git/hooks/pre-push` and `lighthouserc.js`
 
 ## Architecture
 
@@ -39,23 +57,46 @@ npx playwright test tests/e2e/weather-app.spec.ts  # Single test file
   - `api/` - API routes that proxy external services (keeps API keys server-side)
   - Dynamic routes: `weather/[city]`, `games/[slug]`, `gfs-model/[region]/[run]`
 
+### API Route Groups
+
+- **Weather**: `api/weather/{current,forecast,onecall,precipitation,air-quality,uv,geocoding}`
+- **Aviation**: `api/aviation/{alerts,metar,pireps,flight-lookup,turbulence}`
+- **Space Weather**: `api/space-weather/{kp-index,aurora,coronagraph,cme,flares,alerts,solar-wind,xray-flux,sunspots,scales}`
+- **News**: `api/news/{aggregate,rss,fox,nasa,reddit}`
+- **Games**: `api/games/{route,scores,play}`
+- **AI Chat**: `api/chat` (uses Vercel AI SDK + `@ai-sdk/anthropic`)
+- **Radar**: `api/weather/{noaa-wms,iowa-nexrad,radar}`
+
 ### Key Directories
 
 - **`lib/`** - Core business logic
-  - `weather-api.ts` - Main weather API client with caching and deduplication
+  - `weather-server.ts` - Server-side weather data fetching
   - `location-service.ts` - Geolocation with GPS, IP fallback, and reverse geocoding
   - `user-cache-service.ts` - Client-side caching (10-min weather TTL)
+  - `theme-config.ts` - Theme definitions (12 themes with CSS custom properties)
+  - `env-validation.ts` - Environment variable validation
   - `supabase/` - Database client, auth, middleware, SQL schemas
-  - `services/` - Domain services (games, news, GFS models, RSS parsing, AI chat)
+  - `services/` - Domain services (games, news, GFS models, RSS, AI chat, aviation, space weather, USGS earthquakes, volcanoes)
+  - `weather/` - Weather data modules (current, forecast, geocoding, utils)
+  - `validations/` - Zod validation schemas
+  - `ai/` - AI utilities and configuration
 
 - **`components/`** - React components
   - `ui/` - shadcn/ui primitives
-  - `weather-map-openlayers.tsx` - NOAA MRMS radar with OpenLayers
+  - `ai/` - AI chat interface (AIChat, QuickActions, SuggestedPrompts)
+  - `dashboard/` - Dashboard cards, modals, theme selector
+  - `aviation/` - Flight conditions terminal, turbulence map
+  - `space-weather/` - Aurora forecast, Kp index, solar wind, coronagraph
+  - `news/` - News grid, cards, filters
+  - `games/` - Game cards, score submission
+  - `terminal/` - Terminal-style UI components
   - `location-context.tsx` - Location state provider
 
 - **`hooks/`** - Custom React hooks
   - `useAIChat.ts` - AI chat functionality
   - `useWeatherController.ts` - Weather data orchestration
+  - `useNewsFeed.ts` - News feed data
+  - `use-theme-preview.ts` - Theme preview
 
 ### Data Flow
 
@@ -69,7 +110,11 @@ npx playwright test tests/e2e/weather-app.spec.ts  # Single test file
 - **OpenWeatherMap** - Weather data, forecasts, AQI
 - **Supabase** - PostgreSQL database, authentication
 - **NOAA MRMS** - High-resolution US radar via WMS (nowcoast.noaa.gov)
+- **Vercel AI SDK + Anthropic** - AI chat (`@ai-sdk/anthropic`)
+- **USGS** - Earthquake data
+- **NASA** - Space/climate data
 - **Sentry** - Error monitoring
+- **OpenLayers** - Map rendering (~400KB, code-split)
 
 ### Context Providers
 
@@ -78,15 +123,16 @@ Three main contexts wrap the app in `app/layout.tsx`:
 - `AuthContext` - Supabase auth session
 - `ThemeContext` - 12 available themes with persistence
 
+### Path Aliases
+
+`@/*` maps to project root (configured in `tsconfig.json`). Use `@/lib/`, `@/components/`, `@/hooks/`, etc.
+
 ## Testing
 
-E2E tests are in `tests/e2e/` using Playwright:
-- `weather-app.spec.ts` - Core weather functionality
-- `profile.spec.ts` - User profile features
-- `radar.spec.ts` - NOAA MRMS radar tests
-- `themes.spec.ts` - Theme switching
+**Unit tests** in `__tests__/` with `.test.ts` suffix (Jest + jsdom).
+**E2E tests** in `tests/e2e/` with `.spec.ts` suffix (Playwright).
 
-Playwright auto-starts dev server unless `PLAYWRIGHT_TEST_BASE_URL` is set.
+Playwright config supports hybrid mode: local browsers for development, Kernel cloud browsers for CI. Auto-starts dev server locally unless `PLAYWRIGHT_TEST_BASE_URL` is set.
 
 ## Environment Variables
 
@@ -101,10 +147,19 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ## Code Patterns
 
 - TypeScript strict mode
-- Zod for form validation
-- Tailwind CSS v4 with CSS custom properties for theming
+- Zod for form validation (schemas in `lib/validations/`)
+- Tailwind CSS v4 with CSS custom properties for theming (`var(--bg)`, `var(--text)`, `var(--primary)`)
+- `cn()` utility from `@/lib/utils` for conditional Tailwind classes
 - React Hook Form for forms
 - Sonner for toast notifications
+- Prefer `type` imports: `import type { MyType } from './types'`
+- API routes return JSON with consistent error format: `{ error: string }`
+- Console logging: `console.error('[context]', error)` with context prefix
+- Props interfaces named `{ComponentName}Props`
+
+## Pull Requests
+
+Use the GitHub CLI (`gh`). Always create descriptive titles. Never include emojis in PR descriptions.
 
 ## Workflow Orchestration
 

@@ -4,12 +4,14 @@
  * Copyright (C) 2025 16-Bit Weather
  * Licensed under Fair Source License, Version 0.9
  *
- * Displays NASA SDO sun imagery with wavelength selector
+ * Displays NASA SDO sun imagery with wavelength selector.
+ * Images are fetched via /api/space-weather/sdo-image proxy to
+ * avoid DNS/CORS issues with direct sdo.gsfc.nasa.gov requests.
  */
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Sun, RefreshCw, Maximize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
@@ -22,8 +24,8 @@ interface Wavelength {
   name: string;
   description: string;
   color: string;
-  url512: string;
-  url1024: string;
+  /** Wavelength param for the SDO proxy API */
+  wavelengthParam: string;
 }
 
 const WAVELENGTHS: Wavelength[] = [
@@ -32,34 +34,36 @@ const WAVELENGTHS: Wavelength[] = [
     name: 'AIA 304',
     description: 'Chromosphere (60,000K)',
     color: 'text-orange-500',
-    url512: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0304.jpg',
-    url1024: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0304.jpg',
+    wavelengthParam: '0304',
   },
   {
     id: '193',
     name: 'AIA 193',
     description: 'Corona (1.2M K)',
     color: 'text-green-500',
-    url512: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0193.jpg',
-    url1024: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0193.jpg',
+    wavelengthParam: '0193',
   },
   {
     id: '171',
     name: 'AIA 171',
     description: 'Corona (600,000K)',
     color: 'text-yellow-500',
-    url512: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0171.jpg',
-    url1024: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0171.jpg',
+    wavelengthParam: '0171',
   },
   {
     id: 'HMI',
     name: 'HMI',
     description: 'Sunspots (Visible)',
     color: 'text-gray-300',
-    url512: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_HMIIF.jpg',
-    url1024: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_HMIIF.jpg',
+    wavelengthParam: 'HMIIF',
   },
 ];
+
+const MAX_RETRIES = 2;
+
+function buildProxyUrl(wavelengthParam: string, size: string, cacheBust: number): string {
+  return `/api/space-weather/sdo-image?wavelength=${wavelengthParam}&size=${size}&t=${cacheBust}`;
+}
 
 interface SunImageViewerProps {
   className?: string;
@@ -74,6 +78,7 @@ export default function SunImageViewer({ className }: SunImageViewerProps) {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [imageError, setImageError] = useState(false);
   const [showFullsize, setShowFullsize] = useState(false);
+  const retryCountRef = useRef(0);
 
   // Set initial time on client mount and auto-refresh every 5 minutes
   useEffect(() => {
@@ -81,31 +86,42 @@ export default function SunImageViewer({ className }: SunImageViewerProps) {
     const interval = setInterval(() => {
       setLastUpdate(new Date());
       setIsLoading(true);
+      retryCountRef.current = 0;
     }, 5 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, []);
 
-  const handleImageLoad = () => {
+  const handleImageLoad = useCallback(() => {
     setIsLoading(false);
     setImageError(false);
-  };
+    retryCountRef.current = 0;
+  }, []);
 
-  const handleImageError = () => {
-    setIsLoading(false);
-    setImageError(true);
-  };
+  const handleImageError = useCallback(() => {
+    if (retryCountRef.current < MAX_RETRIES) {
+      retryCountRef.current += 1;
+      // Retry after a short delay
+      setTimeout(() => {
+        setLastUpdate(new Date());
+      }, 1500 * retryCountRef.current);
+    } else {
+      setIsLoading(false);
+      setImageError(true);
+    }
+  }, []);
 
   const handleRefresh = () => {
     setLastUpdate(new Date());
     setIsLoading(true);
     setImageError(false);
+    retryCountRef.current = 0;
   };
 
   // Add cache buster to URL (use 0 if not yet mounted to avoid hydration mismatch)
   const cacheTime = lastUpdate?.getTime() ?? 0;
-  const imageUrl = `${selectedWavelength.url512}?t=${cacheTime}`;
-  const fullsizeUrl = `${selectedWavelength.url1024}?t=${cacheTime}`;
+  const imageUrl = buildProxyUrl(selectedWavelength.wavelengthParam, '512', cacheTime);
+  const fullsizeUrl = buildProxyUrl(selectedWavelength.wavelengthParam, '1024', cacheTime);
 
   return (
     <>
@@ -154,6 +170,9 @@ export default function SunImageViewer({ className }: SunImageViewerProps) {
               <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
                 <div className="text-center">
                   <div className="text-red-500 font-mono text-sm">SIGNAL LOST</div>
+                  <div className={cn('text-xs font-mono mt-1', themeClasses.text, 'opacity-60')}>
+                    NASA SDO servers unreachable
+                  </div>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -198,6 +217,7 @@ export default function SunImageViewer({ className }: SunImageViewerProps) {
                   setSelectedWavelength(wavelength);
                   setIsLoading(true);
                   setImageError(false);
+                  retryCountRef.current = 0;
                 }}
                 className={cn(
                   'p-2 card-inner font-mono text-xs transition-all duration-200 rounded',

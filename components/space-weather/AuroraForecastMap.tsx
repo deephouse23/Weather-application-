@@ -79,6 +79,14 @@ export default function AuroraForecastMap({ data, isLoading = false }: AuroraFor
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  // Force reflow after dynamic import + conditional render in collapsible sections.
+  // Without this, the aspect-square container can have 0 dimensions when first
+  // mounted inside a grid cell, making the image invisible until window resize.
+  useEffect(() => {
+    requestAnimationFrame(() => setMounted(true));
+  }, []);
 
   const currentKp = data?.currentKp ?? 3;
   const viewlineLatitude = data?.viewline?.latitude ?? getViewlineLatitude(currentKp);
@@ -163,7 +171,7 @@ export default function AuroraForecastMap({ data, isLoading = false }: AuroraFor
         </div>
 
         {/* Aurora Forecast Image */}
-        <div className="relative aspect-square bg-black rounded-lg overflow-hidden">
+        <div className="relative aspect-square bg-black rounded-lg overflow-hidden" style={{ minHeight: '200px' }}>
           {!imageLoaded && !imageError && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
               <div className={cn('text-sm font-mono', themeClasses.text, 'animate-pulse')}>
@@ -187,7 +195,7 @@ export default function AuroraForecastMap({ data, isLoading = false }: AuroraFor
                 Retry
               </Button>
             </div>
-          ) : (
+          ) : mounted ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
               key={`${hemisphere}-${refreshKey}`}
@@ -200,6 +208,12 @@ export default function AuroraForecastMap({ data, isLoading = false }: AuroraFor
               onLoad={() => setImageLoaded(true)}
               onError={() => setImageError(true)}
             />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
+              <div className={cn('text-sm font-mono', themeClasses.text, 'animate-pulse')}>
+                LOADING AURORA DATA...
+              </div>
+            </div>
           )}
 
           {/* Hemisphere label */}

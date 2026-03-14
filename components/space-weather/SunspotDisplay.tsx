@@ -9,7 +9,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sun, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
@@ -71,6 +71,13 @@ function TrendIcon({ trend }: { trend: SunspotData['trend'] }) {
 export default function SunspotDisplay({ data, isLoading = false }: SunspotDisplayProps) {
   const { theme } = useTheme();
   const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
+  // Delay transition so the progress bar renders at full width on mount.
+  // Without this, the bar animates from 0 when the collapsible section first
+  // expands because the grid cell has 0 width during initial layout.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    requestAnimationFrame(() => setMounted(true));
+  }, []);
 
   if (isLoading) {
     return (
@@ -155,12 +162,14 @@ export default function SunspotDisplay({ data, isLoading = false }: SunspotDispl
           <div className="space-y-1">
             <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
               <div
-                className={cn('h-full rounded-full transition-all duration-1000',
+                className={cn(
+                  'h-full rounded-full',
+                  mounted ? 'transition-all duration-1000' : '',
                   cyclePhase === 'minimum' ? 'bg-terminal-accent-info' :
                   cyclePhase === 'rising' ? 'bg-terminal-accent-success' :
                   cyclePhase === 'maximum' ? 'bg-orange-500' : 'bg-terminal-accent-warning'
                 )}
-                style={{ width: `${data?.solarCycle?.percentComplete || 0}%` }}
+                style={{ width: mounted ? `${data?.solarCycle?.percentComplete || 0}%` : '0%' }}
               />
             </div>
             <div className="flex justify-between text-xs font-mono">
