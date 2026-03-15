@@ -102,7 +102,7 @@ function WeatherApp() {
       weatherUnit={weather?.unit}
     >
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-weather-bg">
-        <ResponsiveContainer maxWidth="xl" padding="md">
+        <ResponsiveContainer maxWidth="2xl" padding="md">
           <ErrorBoundary componentName="Weather Search">
             <WeatherSearch
               onSearch={handleSearchWrapper}

@@ -464,6 +464,23 @@ body {
     background-color: hsl(var(--destructive));
   }
 
+  /* Weather metric card glow (moderately louder Nord) */
+  .weather-metric-glow {
+    box-shadow: 0 0 12px rgba(var(--theme-accent-rgb), 0.20),
+                inset 0 1px 0 rgba(var(--theme-accent-rgb), 0.08);
+    transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+  }
+
+  .weather-metric-glow:hover {
+    box-shadow: 0 0 18px rgba(var(--theme-accent-rgb), 0.30),
+                inset 0 1px 0 rgba(var(--theme-accent-rgb), 0.12);
+  }
+
+  /* Subtle gradient for card backgrounds */
+  .weather-card-gradient {
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%);
+  }
+
   /* Loading spinner animation */
   .loading-spin {
     animation: spin 1s linear infinite;
