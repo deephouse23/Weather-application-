@@ -1,86 +1,109 @@
 /**
- * 16-Bit Weather Platform - SDO Solar Image Proxy
+ * 16-Bit Weather Platform - Solar Image Proxy
  *
  * Copyright (C) 2025 16-Bit Weather
  * Licensed under Fair Source License, Version 0.9
  *
- * Proxy route to fetch NASA SDO solar imagery server-side.
- * This avoids DNS resolution issues and CORS problems when
- * browsers try to load images directly from sdo.gsfc.nasa.gov.
+ * Proxy route to fetch solar imagery from NOAA SWPC.
+ * Uses GOES SUVI (Solar Ultraviolet Imager) for EUV wavelengths and
+ * SWPC's SDO HMI mirror for magnetogram/sunspot imagery.
+ *
+ * Primary source: services.swpc.noaa.gov (NOAA, highly reliable)
+ * Fallback: sdo.gsfc.nasa.gov (NASA, intermittently unreachable)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'edge';
 
-// Valid wavelength -> filename mappings
-const WAVELENGTH_FILES: Record<string, string> = {
-  '0304': '0304',
-  '0193': '0193',
-  '0171': '0171',
-  'HMIIF': 'HMIIF',
+/**
+ * Wavelength configuration mapping our IDs to upstream sources.
+ *
+ * GOES SUVI replaces SDO AIA for operational solar monitoring:
+ * - SUVI 304 ≈ AIA 304 (He II, chromosphere ~50,000K)
+ * - SUVI 195 ≈ AIA 193 (Fe XII, corona ~1.2MK)
+ * - SUVI 171 ≈ AIA 171 (Fe IX, corona ~600,000K)
+ * - SDO HMI Intensitygram for visible-light sunspot imagery
+ */
+const WAVELENGTH_CONFIG: Record<string, {
+  primary: string;
+  fallback: string;
+  contentType: string;
+}> = {
+  '0304': {
+    primary: 'https://services.swpc.noaa.gov/images/animations/suvi/primary/304/latest.png',
+    fallback: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0304.jpg',
+    contentType: 'image/png',
+  },
+  '0193': {
+    // SUVI 195 is the closest match to AIA 193 (both Fe XII coronal line)
+    primary: 'https://services.swpc.noaa.gov/images/animations/suvi/primary/195/latest.png',
+    fallback: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0193.jpg',
+    contentType: 'image/png',
+  },
+  '0171': {
+    primary: 'https://services.swpc.noaa.gov/images/animations/suvi/primary/171/latest.png',
+    fallback: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0171.jpg',
+    contentType: 'image/png',
+  },
+  'HMIIF': {
+    primary: 'https://services.swpc.noaa.gov/images/animations/sdo-hmii/latest.jpg',
+    fallback: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_HMIIF.jpg',
+    contentType: 'image/jpeg',
+  },
 };
 
-const VALID_SIZES = ['512', '1024'];
-
 /**
- * GET /api/space-weather/sdo-image?wavelength=0304&size=512
+ * GET /api/space-weather/sdo-image?wavelength=0304
  *
- * Fetches the latest SDO image from NASA and returns it.
+ * Returns the latest solar image for the given wavelength.
+ * The `size` param is accepted for backwards compatibility but ignored
+ * since SUVI images come in a single resolution.
  */
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const wavelength = searchParams.get('wavelength');
-  const size = searchParams.get('size') || '512';
 
-  if (!wavelength || !WAVELENGTH_FILES[wavelength]) {
+  if (!wavelength || !WAVELENGTH_CONFIG[wavelength]) {
     return NextResponse.json(
-      { error: `Invalid wavelength. Must be one of: ${Object.keys(WAVELENGTH_FILES).join(', ')}` },
+      { error: `Invalid wavelength. Must be one of: ${Object.keys(WAVELENGTH_CONFIG).join(', ')}` },
       { status: 400 }
     );
   }
 
-  if (!VALID_SIZES.includes(size)) {
-    return NextResponse.json(
-      { error: `Invalid size. Must be one of: ${VALID_SIZES.join(', ')}` },
-      { status: 400 }
-    );
-  }
+  const config = WAVELENGTH_CONFIG[wavelength];
 
-  const filename = `latest_${size}_${WAVELENGTH_FILES[wavelength]}.jpg`;
-  const imageUrl = `https://sdo.gsfc.nasa.gov/assets/img/latest/${filename}`;
+  // Try primary source (NOAA SWPC), then fallback (NASA SDO)
+  for (const url of [config.primary, config.fallback]) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': '16BitWeather/1.0 (https://www.16bitweather.co)',
+        },
+        signal: AbortSignal.timeout(8000),
+      });
 
-  try {
-    const response = await fetch(imageUrl, {
-      headers: {
-        'User-Agent': '16BitWeather/1.0 (https://www.16bitweather.co)',
-      },
-      // Allow up to 10 seconds for NASA servers
-      signal: AbortSignal.timeout(10000),
-    });
+      if (!response.ok) continue;
 
-    if (!response.ok) {
-      console.error(`Failed to fetch SDO image: ${response.status} ${response.statusText}`);
-      return NextResponse.json(
-        { error: 'Failed to fetch SDO image from NASA', status: response.status },
-        { status: response.status }
-      );
+      const imageData = await response.arrayBuffer();
+
+      return new NextResponse(imageData, {
+        headers: {
+          'Content-Type': config.contentType,
+          'Cache-Control': 'public, max-age=300',
+          'X-Source': url.includes('swpc.noaa.gov') ? 'NOAA SWPC SUVI' : 'NASA SDO',
+        },
+      });
+    } catch {
+      // Try next source
+      continue;
     }
-
-    const imageData = await response.arrayBuffer();
-
-    return new NextResponse(imageData, {
-      headers: {
-        'Content-Type': 'image/jpeg',
-        'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
-        'X-Source': 'NASA SDO',
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching SDO image:', error);
-    return NextResponse.json(
-      { error: 'Unable to reach NASA SDO servers' },
-      { status: 502 }
-    );
   }
+
+  // Both sources failed
+  console.error(`[sdo-image] All sources failed for wavelength=${wavelength}`);
+  return NextResponse.json(
+    { error: 'Unable to reach solar imagery servers' },
+    { status: 502 }
+  );
 }
