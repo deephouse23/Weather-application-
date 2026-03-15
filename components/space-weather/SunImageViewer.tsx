@@ -4,9 +4,9 @@
  * Copyright (C) 2025 16-Bit Weather
  * Licensed under Fair Source License, Version 0.9
  *
- * Displays NASA SDO sun imagery with wavelength selector.
- * Images are fetched via /api/space-weather/sdo-image proxy to
- * avoid DNS/CORS issues with direct sdo.gsfc.nasa.gov requests.
+ * Displays solar imagery with wavelength selector.
+ * Images are fetched via /api/space-weather/sdo-image proxy which
+ * sources from NOAA SWPC SUVI (primary) with NASA SDO fallback.
  */
 
 'use client';
@@ -31,21 +31,21 @@ interface Wavelength {
 const WAVELENGTHS: Wavelength[] = [
   {
     id: '304',
-    name: 'AIA 304',
-    description: 'Chromosphere (60,000K)',
+    name: '304 Å',
+    description: 'Chromosphere (50,000K)',
     color: 'text-orange-500',
     wavelengthParam: '0304',
   },
   {
-    id: '193',
-    name: 'AIA 193',
+    id: '195',
+    name: '195 Å',
     description: 'Corona (1.2M K)',
     color: 'text-green-500',
     wavelengthParam: '0193',
   },
   {
     id: '171',
-    name: 'AIA 171',
+    name: '171 Å',
     description: 'Corona (600,000K)',
     color: 'text-yellow-500',
     wavelengthParam: '0171',
@@ -61,8 +61,8 @@ const WAVELENGTHS: Wavelength[] = [
 
 const MAX_RETRIES = 2;
 
-function buildProxyUrl(wavelengthParam: string, size: string, cacheBust: number): string {
-  return `/api/space-weather/sdo-image?wavelength=${wavelengthParam}&size=${size}&t=${cacheBust}`;
+function buildProxyUrl(wavelengthParam: string, cacheBust: number): string {
+  return `/api/space-weather/sdo-image?wavelength=${wavelengthParam}&t=${cacheBust}`;
 }
 
 interface SunImageViewerProps {
@@ -120,8 +120,7 @@ export default function SunImageViewer({ className }: SunImageViewerProps) {
 
   // Add cache buster to URL (use 0 if not yet mounted to avoid hydration mismatch)
   const cacheTime = lastUpdate?.getTime() ?? 0;
-  const imageUrl = buildProxyUrl(selectedWavelength.wavelengthParam, '512', cacheTime);
-  const fullsizeUrl = buildProxyUrl(selectedWavelength.wavelengthParam, '1024', cacheTime);
+  const imageUrl = buildProxyUrl(selectedWavelength.wavelengthParam, cacheTime);
 
   return (
     <>
@@ -132,7 +131,7 @@ export default function SunImageViewer({ className }: SunImageViewerProps) {
               <Sun className="w-5 h-5 text-orange-500" />
               SUN VIEWER
               <span className="text-xs px-2 py-0.5 bg-cyan-500/20 text-cyan-500 rounded">
-                SDO
+                SUVI/SDO
               </span>
             </CardTitle>
             <div className="flex items-center gap-2">
@@ -255,7 +254,7 @@ export default function SunImageViewer({ className }: SunImageViewerProps) {
             </button>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={fullsizeUrl}
+              src={imageUrl}
               alt={`Sun in ${selectedWavelength.name} (full resolution)`}
               className="max-w-full max-h-[90vh] object-contain"
             />
