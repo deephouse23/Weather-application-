@@ -332,33 +332,27 @@ export const weatherTools = {
             if (!/^[A-Z]{4}$/.test(code)) {
                 return { error: `Invalid ICAO code: ${station}. Must be exactly 4 letters (e.g. KJFK, EGLL).` };
             }
-            try {
-                const url = `https://aviationweather.gov/api/data/metar?ids=${encodeURIComponent(code)}&format=json&taf=false`;
-                const res = await fetch(url);
-                if (!res.ok) return { error: `METAR data unavailable for ${code}` };
-                const data = await res.json();
-                if (!data?.length) return { error: `No METAR data found for ${code}` };
+            const url = `https://aviationweather.gov/api/data/metar?ids=${encodeURIComponent(code)}&format=json&taf=false`;
+            const { data, error } = await safeFetch(url, `METAR data unavailable for ${code}`);
+            if (error || !Array.isArray(data)) return { error: error ?? `METAR data unavailable for ${code}` };
+            if (!data.length) return { error: `No METAR data found for ${code}` };
 
-                const m = data[0];
-                return {
-                    station: code,
-                    raw_metar: m.rawOb,
-                    flight_category: m.fltcat ?? 'Unknown',
-                    temperature_c: m.temp,
-                    dewpoint_c: m.dewp,
-                    wind_dir: m.wdir,
-                    wind_speed_kt: m.wspd,
-                    wind_gust_kt: m.wgst,
-                    visibility_miles: m.visib,
-                    altimeter_inHg: m.altim ? Math.round(m.altim * 100) / 100 : null,
-                    clouds: m.clouds?.map((c: { cover: string; base: number }) => `${c.cover} at ${c.base} ft`) ?? [],
-                    weather: m.wxString ?? 'None',
-                    observed: m.reportTime,
-                };
-            } catch (error) {
-                console.error('[AI Tools] METAR error:', error);
-                return { error: `Failed to fetch METAR for ${code}` };
-            }
+            const m = data[0];
+            return {
+                station: code,
+                raw_metar: m.rawOb,
+                flight_category: m.fltcat ?? 'Unknown',
+                temperature_c: m.temp,
+                dewpoint_c: m.dewp,
+                wind_dir: m.wdir,
+                wind_speed_kt: m.wspd,
+                wind_gust_kt: m.wgst,
+                visibility_miles: m.visib,
+                altimeter_inHg: m.altim ? Math.round(m.altim * 100) / 100 : null,
+                clouds: m.clouds?.map((c: { cover: string; base: number }) => `${c.cover} at ${c.base} ft`) ?? [],
+                weather: m.wxString ?? 'None',
+                observed: m.reportTime,
+            };
         },
     }),
 
