@@ -26,10 +26,13 @@ import { getSpaceWeatherContext } from '@/lib/services/space-weather-service';
 
 const OWM_KEY = () => process.env.OPENWEATHER_API_KEY ?? '';
 
-/** Safe fetch wrapper that returns structured error instead of throwing on network failures. */
+/** Safe fetch wrapper with 10s timeout. Returns structured error on network/timeout failures. */
+const FETCH_TIMEOUT_MS = 10_000;
 async function safeFetch(url: string, errorLabel: string): Promise<{ data: any | null; error: string | null }> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     try {
-        const res = await fetch(url);
+        const res = await fetch(url, { signal: controller.signal });
         if (!res.ok) return { data: null, error: `${errorLabel} (HTTP ${res.status})` };
         const data = await res.json();
         return { data, error: null };
@@ -37,6 +40,8 @@ async function safeFetch(url: string, errorLabel: string): Promise<{ data: any |
         const message = err instanceof Error ? err.message : 'Unknown error';
         console.error(`[AI Tools] ${errorLabel}:`, err);
         return { data: null, error: `${errorLabel}: ${message}` };
+    } finally {
+        clearTimeout(timeoutId);
     }
 }
 
@@ -109,7 +114,7 @@ export const weatherTools = {
                 wind_mph: Math.round(d.wind?.speed ?? 0),
                 wind_direction: d.wind?.deg ?? 0,
                 pressure_hPa: d.main?.pressure ?? 0,
-                visibility_miles: d.visibility ? Math.round(d.visibility / 1609) : null,
+                visibility_miles: d.visibility == null ? null : Math.round(d.visibility / 1609),
                 clouds_pct: d.clouds?.all ?? 0,
                 rain_1h_in: d.rain?.['1h'] ? Math.round((d.rain['1h'] / 25.4) * 100) / 100 : 0,
                 snow_1h_in: d.snow?.['1h'] ? Math.round((d.snow['1h'] / 25.4) * 10) / 10 : 0,
@@ -323,9 +328,12 @@ export const weatherTools = {
                 .describe('4-letter ICAO airport code (e.g. KJFK, KSFO, EGLL)'),
         }),
         execute: async ({ station }) => {
-            const code = station.toUpperCase();
+            const code = station.trim().toUpperCase();
+            if (!/^[A-Z]{4}$/.test(code)) {
+                return { error: `Invalid ICAO code: ${station}. Must be exactly 4 letters (e.g. KJFK, EGLL).` };
+            }
             try {
-                const url = `https://aviationweather.gov/api/data/metar?ids=${code}&format=json&taf=false`;
+                const url = `https://aviationweather.gov/api/data/metar?ids=${encodeURIComponent(code)}&format=json&taf=false`;
                 const res = await fetch(url);
                 if (!res.ok) return { error: `METAR data unavailable for ${code}` };
                 const data = await res.json();
