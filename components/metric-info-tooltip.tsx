@@ -46,7 +46,7 @@ export function MetricInfoTooltip({ metricId }: MetricInfoTooltipProps): React.R
         side="top"
         align="end"
         className="max-w-[280px] p-3 w-auto"
-        onOpenAutoFocus={(e) => e.preventDefault()}
+
       >
         <p className="font-semibold text-sm mb-1">{metric.name}</p>
         <p className="text-xs leading-relaxed text-popover-foreground/80 mb-2">
