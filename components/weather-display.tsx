@@ -13,8 +13,6 @@ import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-// Radix Tooltip is safe on <button> elements — only breaks when using asChild on Card (React error #185)
-import { TooltipProvider } from "@/components/ui/tooltip"
 import { MetricInfoTooltip } from "@/components/metric-info-tooltip"
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
 import { ShareButton } from "@/components/share-weather-modal"
@@ -91,7 +89,6 @@ export function WeatherDisplay({
     : 0
 
   return (
-    <TooltipProvider delayDuration={300}>
     <div className="space-y-4 sm:space-y-6">
       {/* 1. Location Header with Large Temperature */}
       <div className="text-center mb-4">
@@ -499,6 +496,5 @@ export function WeatherDisplay({
         </Card>
       </ResponsiveGrid>
     </div>
-    </TooltipProvider>
   )
 }
