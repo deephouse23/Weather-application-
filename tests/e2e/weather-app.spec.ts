@@ -49,7 +49,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('displays main weather search component', async ({ page }) => {
-  await expect(page.getByTestId('location-search-input')).toBeVisible({ timeout: 30000 });
+  // Use .first() because both desktop and mobile search inputs share the same testid
+  await expect(page.getByTestId('location-search-input').first()).toBeVisible({ timeout: 30000 });
 });
 
 test('can search for weather by city name', async ({ page }) => {
