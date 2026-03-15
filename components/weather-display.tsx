@@ -13,7 +13,9 @@ import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-// Tooltips removed — Radix TooltipTrigger asChild on Card causes infinite re-render in production (React error #185)
+// Radix Tooltip is safe on <button> elements — only breaks when using asChild on Card (React error #185)
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { MetricInfoTooltip } from "@/components/metric-info-tooltip"
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
 import { ShareButton } from "@/components/share-weather-modal"
 import { LazyForecast, LazyForecastDetails } from "@/components/lazy-weather-components"
@@ -89,6 +91,7 @@ export function WeatherDisplay({
     : 0
 
   return (
+    <TooltipProvider delayDuration={300}>
     <div className="space-y-4 sm:space-y-6">
       {/* 1. Location Header with Large Temperature */}
       <div className="text-center mb-4">
@@ -206,7 +209,8 @@ export function WeatherDisplay({
       />
 
       {/* 4. Hero Card: Moon Phase */}
-      <Card className={cn(HERO_CARD)} style={{ animationDelay: '0ms' }}>
+      <Card className={cn(HERO_CARD, "relative")} style={{ animationDelay: '0ms' }}>
+        <MetricInfoTooltip metricId="moon-phase" />
         <CardHeader className="pb-3 px-5 pt-5">
           <CardTitle className={cn("text-lg font-bold tracking-wide uppercase flex items-center gap-2", "text-terminal-text-primary")}>
             <Moon size={18} className="text-primary" />
@@ -247,7 +251,8 @@ export function WeatherDisplay({
       {/* 5. Three-column grid Row A: UV Index, Feels Like, Sun Times */}
       <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
         {/* UV Index */}
-        <Card className={cn(METRIC_CARD)} style={{ animationDelay: '30ms' }} title="UV Index measures ultraviolet radiation. Apply sunscreen above 3.">
+        <Card className={cn(METRIC_CARD, "relative")} style={{ animationDelay: '30ms' }}>
+          <MetricInfoTooltip metricId="uv-index" />
           <CardHeader className="pb-2 pt-4 px-4 text-center">
             <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1.5">
               <Sun size={14} className="text-primary group-hover:text-accent transition-colors" />
@@ -274,7 +279,8 @@ export function WeatherDisplay({
         </Card>
 
         {/* Feels Like */}
-        <Card className={cn(METRIC_CARD)} style={{ animationDelay: '60ms' }} title="How the temperature actually feels, accounting for wind and humidity.">
+        <Card className={cn(METRIC_CARD, "relative")} style={{ animationDelay: '60ms' }}>
+          <MetricInfoTooltip metricId="feels-like" />
           <CardHeader className="pb-2 pt-4 px-4 text-center">
             <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1.5">
               <Thermometer size={14} className="text-primary group-hover:text-accent transition-colors" />
@@ -304,7 +310,8 @@ export function WeatherDisplay({
         </Card>
 
         {/* Sun Times */}
-        <Card className={cn(METRIC_CARD)} style={{ animationDelay: '90ms' }}>
+        <Card className={cn(METRIC_CARD, "relative")} style={{ animationDelay: '90ms' }}>
+          <MetricInfoTooltip metricId="sun-times" />
           <CardHeader className="pb-2 pt-4 px-4 text-center">
             <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1.5">
               <Sunrise size={14} className="text-primary group-hover:text-accent transition-colors" />
@@ -333,7 +340,8 @@ export function WeatherDisplay({
       {/* 6. Three-column grid Row B: Humidity, Pressure, Wind */}
       <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
         {/* Humidity */}
-        <Card className={cn(METRIC_CARD)} style={{ animationDelay: '120ms' }} title="Relative humidity. Comfortable range is 30-60%.">
+        <Card className={cn(METRIC_CARD, "relative")} style={{ animationDelay: '120ms' }}>
+          <MetricInfoTooltip metricId="humidity" />
           <CardHeader className="pb-2 pt-4 px-4 text-center">
             <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1.5">
               <Droplets size={14} className="text-primary group-hover:text-accent transition-colors" />
@@ -360,7 +368,8 @@ export function WeatherDisplay({
         </Card>
 
         {/* Pressure */}
-        <Card className={cn(METRIC_CARD)} style={{ animationDelay: '150ms' }} title="Atmospheric pressure. Standard is 1013.25 hPa.">
+        <Card className={cn(METRIC_CARD, "relative")} style={{ animationDelay: '150ms' }}>
+          <MetricInfoTooltip metricId="pressure" />
           <CardHeader className="pb-2 pt-4 px-4 text-center">
             <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1.5">
               <Gauge size={14} className="text-primary group-hover:text-accent transition-colors" />
@@ -383,7 +392,8 @@ export function WeatherDisplay({
         </Card>
 
         {/* Wind */}
-        <Card className={cn(METRIC_CARD)} style={{ animationDelay: '180ms' }}>
+        <Card className={cn(METRIC_CARD, "relative")} style={{ animationDelay: '180ms' }}>
+          <MetricInfoTooltip metricId="wind" />
           <CardHeader className="pb-2 pt-4 px-4 text-center">
             <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1.5">
               <Wind size={14} className="text-primary group-hover:text-accent transition-colors" />
@@ -425,7 +435,8 @@ export function WeatherDisplay({
       {/* 7. Three-column grid Row C: Precipitation, Visibility, Pollen */}
       <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
         {/* Precipitation */}
-        <Card className={cn(METRIC_CARD)} style={{ animationDelay: '210ms' }}>
+        <Card className={cn(METRIC_CARD, "relative")} style={{ animationDelay: '210ms' }}>
+          <MetricInfoTooltip metricId="precipitation" />
           <CardHeader className="pb-2 pt-4 px-4 text-center">
             <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1.5">
               <CloudRain size={14} className="text-primary group-hover:text-accent transition-colors" />
@@ -443,7 +454,8 @@ export function WeatherDisplay({
         </Card>
 
         {/* Visibility */}
-        <Card className={cn(METRIC_CARD)} style={{ animationDelay: '240ms' }} title="How far you can see clearly.">
+        <Card className={cn(METRIC_CARD, "relative")} style={{ animationDelay: '240ms' }}>
+          <MetricInfoTooltip metricId="visibility" />
           <CardHeader className="pb-2 pt-4 px-4 text-center">
             <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1.5">
               <Eye size={14} className="text-primary group-hover:text-accent transition-colors" />
@@ -468,7 +480,8 @@ export function WeatherDisplay({
         </Card>
 
         {/* Pollen */}
-        <Card className={cn(METRIC_CARD)} style={{ animationDelay: '270ms' }}>
+        <Card className={cn(METRIC_CARD, "relative")} style={{ animationDelay: '270ms' }}>
+          <MetricInfoTooltip metricId="pollen" />
           <CardHeader className="pb-2 pt-4 px-4 text-center">
             <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1.5">
               <Leaf size={14} className="text-primary group-hover:text-accent transition-colors" />
@@ -486,5 +499,6 @@ export function WeatherDisplay({
         </Card>
       </ResponsiveGrid>
     </div>
+    </TooltipProvider>
   )
 }
