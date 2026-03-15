@@ -11,6 +11,9 @@ import React from "react"
 import Link from 'next/link'
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
 import { ShareButton } from "@/components/share-weather-modal"
 import { LazyForecast, LazyForecastDetails } from "@/components/lazy-weather-components"
@@ -20,7 +23,30 @@ import LazyHourlyForecast from "@/components/lazy-hourly-forecast"
 import { ResponsiveGrid } from "@/components/responsive-container"
 import LazyWeatherMap from '@/components/lazy-weather-map'
 import { MoonPhaseIcon } from '@/components/moon-phase-icon'
-import { WeatherData } from "@/lib/types"
+import type { WeatherData } from "@/lib/types"
+import {
+  getUVSeverity,
+  getHumiditySeverity,
+  getPressureCategory,
+  getWindSeverity,
+  getVisibilitySeverity,
+  windDirectionToDegrees,
+} from "@/lib/weather-severity"
+import {
+  Sun,
+  Thermometer,
+  Sunrise,
+  Droplets,
+  Gauge,
+  Wind,
+  CloudRain,
+  Eye,
+  Leaf,
+  Moon,
+  Navigation,
+  ArrowDown,
+  ArrowUp,
+} from "lucide-react"
 
 interface WeatherDisplayProps {
   weather: WeatherData
@@ -31,6 +57,10 @@ interface WeatherDisplayProps {
   showRadar?: boolean
 }
 
+// Card style constants
+const HERO_CARD = "weather-card-enter border-0 border-l-4 border-l-primary shadow-md weather-metric-glow weather-card-gradient hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300"
+const METRIC_CARD = "group weather-card-enter border-0 border-t-2 border-t-primary/40 shadow-md weather-metric-glow weather-card-gradient hover:border-t-primary hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 min-h-[140px]"
+
 export function WeatherDisplay({
   weather,
   theme,
@@ -40,6 +70,23 @@ export function WeatherDisplay({
   showRadar = true
 }: WeatherDisplayProps) {
   const themeClasses = getComponentStyles(theme as ThemeType, 'weather')
+
+  // Compute severity values
+  const uvSeverity = getUVSeverity(weather?.uvIndex ?? 0)
+  const humiditySeverity = getHumiditySeverity(weather?.humidity ?? 0)
+  const pressureCategory = getPressureCategory(weather?.pressure || '1013')
+  const windSpeed = weather?.wind?.speed ?? 0
+  const windSeverity = getWindSeverity(windSpeed)
+  const windDeg = windDirectionToDegrees(weather?.wind?.direction || '')
+  const visibilityMi = weather?.forecast?.[0]?.details?.visibility ?? 10
+  const visibilitySeverity = getVisibilitySeverity(visibilityMi)
+
+  const feelsLike = weather?.hourlyForecast?.[0]?.feelsLike != null
+    ? Math.round(weather.hourlyForecast[0].feelsLike)
+    : weather?.temperature ?? null
+  const feelsLikeDelta = feelsLike != null && weather?.temperature != null
+    ? feelsLike - weather.temperature
+    : 0
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -158,20 +205,27 @@ export function WeatherDisplay({
         }}
       />
 
-      {/* 4. Two-column layout: Moon Phase + Wind */}
-      <ResponsiveGrid cols={{ sm: 1, md: 2 }} className="gap-4">
-        {/* Moon Phase Card */}
-        <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '0ms' }}>
-          <CardHeader className="pb-2">
-            <CardTitle className={cn("text-xl mb-0", "text-terminal-text-primary")}>Moon Phase</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-2">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-1.5">
-                <p className={cn("text-lg font-semibold", themeClasses.text)}>{weather?.moonPhase?.phase || 'Unknown'}</p>
-                <p className={cn("text-sm", themeClasses.secondaryText)}>
-                  {weather?.moonPhase?.illumination || 0}% illuminated
-                </p>
+      {/* 4. Hero Card: Moon Phase */}
+      <Card className={cn(HERO_CARD)} style={{ animationDelay: '0ms' }}>
+        <CardHeader className="pb-3 px-5 pt-5">
+          <CardTitle className={cn("text-lg font-bold tracking-wide uppercase flex items-center gap-2", "text-terminal-text-primary")}>
+            <Moon size={18} className="text-primary" />
+            Moon Phase
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-3 px-5 pb-5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1.5 flex-1">
+              <p className={cn("text-lg font-semibold", themeClasses.text)}>{weather?.moonPhase?.phase || 'Unknown'}</p>
+              <p className={cn("text-sm", themeClasses.secondaryText)}>
+                {weather?.moonPhase?.illumination || 0}% illuminated
+              </p>
+              <Progress
+                value={weather?.moonPhase?.illumination || 0}
+                className="h-2 mt-2"
+                indicatorColor="#EBCB8B"
+              />
+              <div className="flex gap-4 mt-2">
                 <p className={cn("text-sm", themeClasses.secondaryText)}>
                   Moonset: {weather?.moonPhase?.nextMoonset || 'N/A'}
                 </p>
@@ -179,147 +233,285 @@ export function WeatherDisplay({
                   Full Moon: {weather?.moonPhase?.nextFullMoon || 'N/A'}
                 </p>
               </div>
-              <MoonPhaseIcon
-                phase={weather?.moonPhase?.phase || 'new moon'}
-                illumination={weather?.moonPhase?.illumination || 0}
-                size={64}
-                className="flex-shrink-0"
-              />
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Wind Card */}
-        <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '50ms' }}>
-          <CardHeader className="pb-2 text-center">
-            <CardTitle className={cn("text-xl mb-0", "text-terminal-text-primary")}>Wind</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center pt-2">
-            <p className={cn("text-2xl font-bold", themeClasses.text)}>
-              {weather?.wind?.speed || 'N/A'} mph
-            </p>
-            <p className={cn("text-sm", themeClasses.secondaryText)}>
-              {weather?.wind?.direction ? `Direction: ${weather.wind.direction}` : 'Direction: N/A'}
-            </p>
-            {weather?.wind?.gust && (
-              <p className={cn("text-sm", themeClasses.secondaryText)}>
-                Gusts up to {weather.wind.gust} mph
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </ResponsiveGrid>
-
-      {/* 5. Four-column grid: UV, Sunrise/Sunset, Feels Like, Precipitation */}
-      <ResponsiveGrid cols={{ sm: 2, md: 4 }} className="gap-4">
-        {/* UV Index */}
-        <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '100ms' }}>
-          <CardHeader className="pb-1 text-center">
-            <CardTitle className={cn("text-sm mb-0", "text-terminal-text-primary")}>UV Index</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center pt-1">
-            <p className={cn("text-2xl font-bold", themeClasses.text)}>{weather?.uvIndex ?? 'N/A'}</p>
-          </CardContent>
-        </Card>
-
-        {/* Sunrise/Sunset */}
-        <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '150ms' }}>
-          <CardHeader className="pb-1 text-center">
-            <CardTitle className={cn("text-sm mb-0", "text-terminal-text-primary")}>Sun Times</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center pt-1">
-            <div className="space-y-1">
-              <p className={cn("text-sm", themeClasses.text)}>
-                <span className="text-yellow-400">☀️</span> {weather?.sunrise || 'N/A'}
-              </p>
-              <p className={cn("text-sm", themeClasses.text)}>
-                <span className="text-orange-400">🌅</span> {weather?.sunset || 'N/A'}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Feels Like */}
-        <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '200ms' }}>
-          <CardHeader className="pb-1 text-center">
-            <CardTitle className={cn("text-sm mb-0", "text-terminal-text-primary")}>Feels Like</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center pt-1">
-            <p className={cn("text-2xl font-bold", themeClasses.text)}>
-              {weather?.hourlyForecast?.[0]?.feelsLike != null
-                ? `${Math.round(weather.hourlyForecast[0].feelsLike)}°`
-                : `${weather?.temperature ?? 'N/A'}°`}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Precipitation (24h actuals - rain + snow combined) */}
-        <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '250ms' }}>
-          <CardHeader className="pb-1 text-center">
-            <CardTitle className={cn("text-sm mb-0", "text-terminal-text-primary")}>Precipitation</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center pt-1">
-            <p className={cn("text-2xl font-bold", themeClasses.text)}>
-              {precipitation != null
-                ? `${((precipitation.rain24h ?? 0) + (precipitation.snow24h ?? 0)).toFixed(2)}"`
-                : 'N/A'}
-            </p>
-            <p className={cn("text-xs", themeClasses.headerText)}>24h Total</p>
-          </CardContent>
-        </Card>
-      </ResponsiveGrid>
-
-      {/* 6. Four-column grid: Visibility, Humidity, Pressure, Pollen */}
-      <ResponsiveGrid cols={{ sm: 2, md: 4 }} className="gap-4">
-        {/* Visibility */}
-        <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '300ms' }}>
-          <CardHeader className="pb-1 text-center">
-            <CardTitle className={cn("text-sm mb-0", "text-terminal-text-primary")}>Visibility</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center pt-1">
-            <p className={cn("text-2xl font-bold", themeClasses.text)}>
-              {weather?.forecast?.[0]?.details?.visibility != null
-                ? `${weather.forecast[0].details.visibility} mi`
-                : 'N/A'}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Humidity */}
-        <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '350ms' }}>
-          <CardHeader className="pb-1 text-center">
-            <CardTitle className={cn("text-sm mb-0", "text-terminal-text-primary")}>Humidity</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center pt-1">
-            <p className={cn("text-2xl font-bold", themeClasses.text)}>{weather?.humidity ?? 'N/A'}%</p>
-          </CardContent>
-        </Card>
-
-        {/* Pressure */}
-        <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '400ms' }}>
-          <CardHeader className="pb-1 text-center">
-            <CardTitle className={cn("text-sm mb-0", "text-terminal-text-primary")}>Pressure</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center pt-1">
-            <p className={cn("text-2xl font-bold", themeClasses.text)}>{weather?.pressure || 'N/A'}</p>
-          </CardContent>
-        </Card>
-
-        {/* Pollen */}
-        <Card className="weather-card-enter border-0 shadow-md hover:shadow-lg transition-all duration-300" style={{ animationDelay: '450ms' }}>
-          <CardHeader className="pb-1 text-center">
-            <CardTitle className={cn("text-sm mb-0", "text-terminal-text-primary")}>Pollen</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center pt-1 px-2">
-            <PollenDisplay
-              pollen={weather.pollen}
-              theme={(theme || 'nord') as import('@/lib/theme-config').ThemeType}
-              minimal={true}
-              className="border-none shadow-none p-0 bg-transparent"
+            <MoonPhaseIcon
+              phase={weather?.moonPhase?.phase || 'new moon'}
+              illumination={weather?.moonPhase?.illumination || 0}
+              size={64}
+              className="flex-shrink-0"
             />
-          </CardContent>
-        </Card>
-      </ResponsiveGrid>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 5. Three-column grid Row A: UV Index, Feels Like, Sun Times */}
+      <TooltipProvider delayDuration={300}>
+        <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
+          {/* UV Index */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Card className={cn(METRIC_CARD)} style={{ animationDelay: '30ms' }}>
+                <CardHeader className="pb-2 pt-4 px-4 text-center">
+                  <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1.5">
+                    <Sun size={14} className="text-primary group-hover:text-accent transition-colors" />
+                    UV Index
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-center pt-2 px-4 pb-4">
+                  <p className={cn("text-3xl font-bold tabular-nums", themeClasses.text)}>
+                    {weather?.uvIndex ?? 'N/A'}
+                  </p>
+                  <Badge
+                    variant="outline"
+                    className="mt-2 border-0"
+                    style={{ color: uvSeverity.textColor, backgroundColor: `${uvSeverity.bgColor}20` }}
+                  >
+                    {uvSeverity.label}
+                  </Badge>
+                  <Progress
+                    value={uvSeverity.percentage}
+                    className="h-1.5 mt-3"
+                    indicatorColor={uvSeverity.bgColor}
+                  />
+                </CardContent>
+              </Card>
+            </TooltipTrigger>
+            <TooltipContent>UV Index measures ultraviolet radiation. Apply sunscreen above 3.</TooltipContent>
+          </Tooltip>
+
+          {/* Feels Like */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Card className={cn(METRIC_CARD)} style={{ animationDelay: '60ms' }}>
+                <CardHeader className="pb-2 pt-4 px-4 text-center">
+                  <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1.5">
+                    <Thermometer size={14} className="text-primary group-hover:text-accent transition-colors" />
+                    Feels Like
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-center pt-2 px-4 pb-4">
+                  <p className={cn("text-3xl font-bold tabular-nums", themeClasses.text)}>
+                    {feelsLike != null ? `${feelsLike}°` : 'N/A'}
+                  </p>
+                  {feelsLikeDelta !== 0 && (
+                    <div className="flex items-center justify-center gap-1 mt-2">
+                      {feelsLikeDelta < 0 ? (
+                        <ArrowDown size={14} style={{ color: '#88C0D0' }} />
+                      ) : (
+                        <ArrowUp size={14} style={{ color: '#BF616A' }} />
+                      )}
+                      <span className="text-sm" style={{ color: feelsLikeDelta < 0 ? '#88C0D0' : '#BF616A' }}>
+                        {Math.abs(feelsLikeDelta)}° {feelsLikeDelta < 0 ? 'cooler' : 'warmer'}
+                      </span>
+                    </div>
+                  )}
+                  {feelsLikeDelta === 0 && (
+                    <p className="text-sm mt-2" style={{ color: '#A3BE8C' }}>Same as actual</p>
+                  )}
+                </CardContent>
+              </Card>
+            </TooltipTrigger>
+            <TooltipContent>How the temperature actually feels, accounting for wind and humidity.</TooltipContent>
+          </Tooltip>
+
+          {/* Sun Times */}
+          <Card className={cn(METRIC_CARD)} style={{ animationDelay: '90ms' }}>
+            <CardHeader className="pb-2 pt-4 px-4 text-center">
+              <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1.5">
+                <Sunrise size={14} className="text-primary group-hover:text-accent transition-colors" />
+                Sun Times
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center pt-2 px-4 pb-4">
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Sunrise</p>
+                  <p className={cn("text-xl font-bold tabular-nums", themeClasses.text)}>
+                    {weather?.sunrise || 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Sunset</p>
+                  <p className={cn("text-xl font-bold tabular-nums", themeClasses.text)}>
+                    {weather?.sunset || 'N/A'}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </ResponsiveGrid>
+
+        {/* 6. Three-column grid Row B: Humidity, Pressure, Wind */}
+        <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
+          {/* Humidity */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Card className={cn(METRIC_CARD)} style={{ animationDelay: '120ms' }}>
+                <CardHeader className="pb-2 pt-4 px-4 text-center">
+                  <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1.5">
+                    <Droplets size={14} className="text-primary group-hover:text-accent transition-colors" />
+                    Humidity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-center pt-2 px-4 pb-4">
+                  <p className={cn("text-3xl font-bold tabular-nums", themeClasses.text)}>
+                    {weather?.humidity ?? 'N/A'}%
+                  </p>
+                  <Progress
+                    value={weather?.humidity ?? 0}
+                    className="h-1.5 mt-3"
+                    indicatorColor={humiditySeverity.bgColor}
+                  />
+                  <Badge
+                    variant="outline"
+                    className="mt-2 border-0"
+                    style={{ color: humiditySeverity.textColor, backgroundColor: `${humiditySeverity.bgColor}20` }}
+                  >
+                    {humiditySeverity.label}
+                  </Badge>
+                </CardContent>
+              </Card>
+            </TooltipTrigger>
+            <TooltipContent>Relative humidity. Comfortable range is 30-60%.</TooltipContent>
+          </Tooltip>
+
+          {/* Pressure */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Card className={cn(METRIC_CARD)} style={{ animationDelay: '150ms' }}>
+                <CardHeader className="pb-2 pt-4 px-4 text-center">
+                  <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1.5">
+                    <Gauge size={14} className="text-primary group-hover:text-accent transition-colors" />
+                    Pressure
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-center pt-2 px-4 pb-4">
+                  <p className={cn("text-3xl font-bold tabular-nums", themeClasses.text)}>
+                    {weather?.pressure || 'N/A'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">hPa</p>
+                  <Badge
+                    variant="outline"
+                    className="mt-2 border-0"
+                    style={{ color: pressureCategory.textColor, backgroundColor: `${pressureCategory.bgColor}20` }}
+                  >
+                    {pressureCategory.label}
+                  </Badge>
+                </CardContent>
+              </Card>
+            </TooltipTrigger>
+            <TooltipContent>Atmospheric pressure. Standard is 1013.25 hPa.</TooltipContent>
+          </Tooltip>
+
+          {/* Wind */}
+          <Card className={cn(METRIC_CARD)} style={{ animationDelay: '180ms' }}>
+            <CardHeader className="pb-2 pt-4 px-4 text-center">
+              <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1.5">
+                <Wind size={14} className="text-primary group-hover:text-accent transition-colors" />
+                Wind
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center pt-2 px-4 pb-4">
+              <p className={cn("text-3xl font-bold tabular-nums", themeClasses.text)}>
+                {windSpeed || 'N/A'} <span className="text-lg">mph</span>
+              </p>
+              <div className="flex items-center justify-center gap-2 mt-2">
+                {weather?.wind?.direction && (
+                  <Navigation
+                    size={16}
+                    className="text-primary"
+                    style={{ transform: `rotate(${windDeg + 180}deg)` }}
+                  />
+                )}
+                <span className={cn("text-sm", themeClasses.secondaryText)}>
+                  {weather?.wind?.direction || 'N/A'}
+                </span>
+              </div>
+              {weather?.wind?.gust && (
+                <p className={cn("text-xs mt-1", themeClasses.secondaryText)}>
+                  Gusts {weather.wind.gust} mph
+                </p>
+              )}
+              <Badge
+                variant="outline"
+                className="mt-2 border-0"
+                style={{ color: windSeverity.textColor, backgroundColor: `${windSeverity.bgColor}20` }}
+              >
+                {windSeverity.label}
+              </Badge>
+            </CardContent>
+          </Card>
+        </ResponsiveGrid>
+
+        {/* 7. Three-column grid Row C: Precipitation, Visibility, Pollen */}
+        <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
+          {/* Precipitation */}
+          <Card className={cn(METRIC_CARD)} style={{ animationDelay: '210ms' }}>
+            <CardHeader className="pb-2 pt-4 px-4 text-center">
+              <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1.5">
+                <CloudRain size={14} className="text-primary group-hover:text-accent transition-colors" />
+                Precipitation
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center pt-2 px-4 pb-4">
+              <p className={cn("text-3xl font-bold tabular-nums", themeClasses.text)}>
+                {precipitation != null
+                  ? `${((precipitation.rain24h ?? 0) + (precipitation.snow24h ?? 0)).toFixed(2)}"`
+                  : 'N/A'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">24h Total</p>
+            </CardContent>
+          </Card>
+
+          {/* Visibility */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Card className={cn(METRIC_CARD)} style={{ animationDelay: '240ms' }}>
+                <CardHeader className="pb-2 pt-4 px-4 text-center">
+                  <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1.5">
+                    <Eye size={14} className="text-primary group-hover:text-accent transition-colors" />
+                    Visibility
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-center pt-2 px-4 pb-4">
+                  <p className={cn("text-3xl font-bold tabular-nums", themeClasses.text)}>
+                    {weather?.forecast?.[0]?.details?.visibility != null
+                      ? `${weather.forecast[0].details.visibility}`
+                      : 'N/A'}
+                    <span className="text-lg ml-1">mi</span>
+                  </p>
+                  <Badge
+                    variant="outline"
+                    className="mt-2 border-0"
+                    style={{ color: visibilitySeverity.textColor, backgroundColor: `${visibilitySeverity.bgColor}20` }}
+                  >
+                    {visibilitySeverity.label}
+                  </Badge>
+                </CardContent>
+              </Card>
+            </TooltipTrigger>
+            <TooltipContent>How far you can see clearly.</TooltipContent>
+          </Tooltip>
+
+          {/* Pollen */}
+          <Card className={cn(METRIC_CARD)} style={{ animationDelay: '270ms' }}>
+            <CardHeader className="pb-2 pt-4 px-4 text-center">
+              <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1.5">
+                <Leaf size={14} className="text-primary group-hover:text-accent transition-colors" />
+                Pollen
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center pt-2 px-4 pb-4">
+              <PollenDisplay
+                pollen={weather.pollen}
+                theme={(theme || 'nord') as import('@/lib/theme-config').ThemeType}
+                minimal={true}
+                className="border-none shadow-none p-0 bg-transparent"
+              />
+            </CardContent>
+          </Card>
+        </ResponsiveGrid>
+      </TooltipProvider>
     </div>
   )
 }
