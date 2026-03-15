@@ -7,27 +7,6 @@
  * Public exports for AI functionality
  */
 
-export {
-  AIContextManager,
-  contextManager,
-  type UnifiedContext,
-  type WeatherContext,
-  type PrecipitationContext,
-  type SpaceWeatherContext,
-  type AviationContext,
-  type EarthquakeContext,
-  type VolcanoContext,
-  type QueryParams,
-  type ContextType,
-} from './context-manager';
+export { weatherTools, geocodeLocation } from './tools';
 
 export type { AviationAlert } from '@/lib/services/aviation-service';
-
-export {
-  analyzeQuery,
-  extractLocation,
-  extractFlightInfo,
-  isAuroraQuery,
-  isCurrentConditionsQuery,
-  isForecastQuery,
-} from './query-analyzer';
