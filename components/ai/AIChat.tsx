@@ -198,12 +198,13 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
                 {msg.parts?.map((part, i) => {
                   // Tool parts in AI SDK v6 have type like "tool-get_current_weather"
                   if (part.type.startsWith('tool-')) {
-                    const toolPart = part as { type: string; toolCallId: string; state: string };
+                    const toolPart = part as { type: string; toolCallId: string; state: string; errorText?: string };
                     const toolName = part.type
                       .replace(/^tool-/, '')
                       .replace(/_/g, ' ')
                       .replace(/^get /, '');
-                    const isRunning = toolPart.state === 'input-streaming' || toolPart.state === 'call';
+                    // AI SDK v6 states: input-streaming, input-available, output-available, output-error
+                    const isRunning = toolPart.state === 'input-streaming' || toolPart.state === 'input-available';
 
                     if (isRunning) {
                       return (
@@ -223,7 +224,25 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
                       );
                     }
 
-                    // Tool completed — don't render result directly, AI synthesizes it
+                    // Show error indicator for failed tool calls
+                    if (toolPart.state === 'output-error') {
+                      return (
+                        <div
+                          key={`tool-${i}`}
+                          className={cn(
+                            'flex items-center gap-2 text-xs py-1 mb-1',
+                            'text-red-400 opacity-80'
+                          )}
+                        >
+                          <AlertCircle className="w-3 h-3" />
+                          <span className="font-mono uppercase">
+                            Failed to fetch {toolName}
+                          </span>
+                        </div>
+                      );
+                    }
+
+                    // Tool completed (output-available) — don't render, AI synthesizes it
                     return null;
                   }
 

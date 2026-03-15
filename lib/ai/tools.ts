@@ -26,6 +26,21 @@ import { getSpaceWeatherContext } from '@/lib/services/space-weather-service';
 
 const OWM_KEY = () => process.env.OPENWEATHER_API_KEY ?? '';
 
+/** Safe fetch wrapper that returns structured error instead of throwing on network failures. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function safeFetch(url: string, errorLabel: string): Promise<{ data: any | null; error: string | null }> {
+    try {
+        const res = await fetch(url);
+        if (!res.ok) return { data: null, error: `${errorLabel} (HTTP ${res.status})` };
+        const data = await res.json();
+        return { data, error: null };
+    } catch (err) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        console.error(`[AI Tools] ${errorLabel}:`, err);
+        return { data: null, error: `${errorLabel}: ${message}` };
+    }
+}
+
 /** Geocode a city / ZIP / "City, ST" string → { lat, lon, name }. */
 export async function geocodeLocation(
     location: string
@@ -34,16 +49,18 @@ export async function geocodeLocation(
     if (!apiKey) return null;
 
     try {
-        // Try with US bias first, then without
-        const locationWithUS = location.includes(',') ? location : `${location},US`;
-        let url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(locationWithUS)}&limit=1&appid=${apiKey}`;
+        // Try raw location first (supports international cities like "Paris", "London")
+        let url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(location)}&limit=1&appid=${apiKey}`;
         let res = await fetch(url);
-        let data = res.ok ? await res.json() : [];
+        if (!res.ok) throw new Error(`Geocoding API returned ${res.status}`);
+        let data = await res.json();
 
-        if (!data?.length) {
-            url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(location)}&limit=1&appid=${apiKey}`;
+        // If no results and no comma (bare city name), try with US bias as fallback
+        if (!data?.length && !location.includes(',')) {
+            url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(`${location},US`)}&limit=1&appid=${apiKey}`;
             res = await fetch(url);
-            data = res.ok ? await res.json() : [];
+            if (!res.ok) throw new Error(`Geocoding API returned ${res.status}`);
+            data = await res.json();
         }
 
         if (!data?.length) return null;
@@ -81,9 +98,8 @@ export const weatherTools = {
 
             const apiKey = OWM_KEY();
             const url = `https://api.openweathermap.org/data/2.5/weather?lat=${coords.lat}&lon=${coords.lon}&units=imperial&appid=${apiKey}`;
-            const res = await fetch(url);
-            if (!res.ok) return { error: 'Weather data unavailable' };
-            const d = await res.json();
+            const { data: d, error } = await safeFetch(url, 'Weather data unavailable');
+            if (error || !d) return { error: error ?? 'Weather data unavailable' };
 
             return {
                 location: coords.name,
@@ -122,9 +138,11 @@ export const weatherTools = {
 
             const apiKey = OWM_KEY();
             const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${coords.lat}&lon=${coords.lon}&units=imperial&exclude=minutely,hourly,alerts&appid=${apiKey}`;
-            const res = await fetch(url);
-            if (!res.ok) return { error: 'Forecast data unavailable' };
-            const d = await res.json();
+            const { data: d, error } = await safeFetch(url, 'Forecast data unavailable');
+            if (error || !d) return { error: error ?? 'Forecast data unavailable' };
+
+            // Use timezone from API response for location-correct date formatting
+            const tz = (d.timezone as string) || undefined;
 
             const forecast = (d.daily ?? []).slice(0, days).map((day: Record<string, unknown>) => {
                 const dt = day.dt as number;
@@ -132,7 +150,7 @@ export const weatherTools = {
                 const weather = (day.weather as Array<{ main: string; description: string }>)?.[0];
                 const date = new Date(dt * 1000);
                 return {
-                    date: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+                    date: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: tz }),
                     high: Math.round(temp?.max ?? 0),
                     low: Math.round(temp?.min ?? 0),
                     condition: weather?.main ?? 'Clear',
@@ -167,17 +185,18 @@ export const weatherTools = {
 
             const apiKey = OWM_KEY();
             const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${coords.lat}&lon=${coords.lon}&units=imperial&exclude=daily,minutely,alerts&appid=${apiKey}`;
-            const res = await fetch(url);
-            if (!res.ok) return { error: 'Hourly forecast unavailable' };
-            const d = await res.json();
+            const { data: d, error } = await safeFetch(url, 'Hourly forecast unavailable');
+            if (error || !d) return { error: error ?? 'Hourly forecast unavailable' };
+
+            const tz = (d.timezone as string) || undefined;
 
             const hourly = (d.hourly ?? []).slice(0, hours).map((h: Record<string, unknown>) => {
                 const dt = h.dt as number;
                 const weather = (h.weather as Array<{ main: string; description: string }>)?.[0];
                 const time = new Date(dt * 1000);
                 return {
-                    time: time.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true }),
-                    date: time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+                    time: time.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true, timeZone: tz }),
+                    date: time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: tz }),
                     temp: Math.round(h.temp as number),
                     feelsLike: Math.round(h.feels_like as number),
                     condition: weather?.description ?? '',
@@ -204,9 +223,8 @@ export const weatherTools = {
 
             const apiKey = OWM_KEY();
             const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${coords.lat}&lon=${coords.lon}&units=imperial&exclude=daily,hourly,alerts&appid=${apiKey}`;
-            const res = await fetch(url);
-            if (!res.ok) return { error: 'Precipitation data unavailable' };
-            const d = await res.json();
+            const { data: d, error } = await safeFetch(url, 'Precipitation data unavailable');
+            if (error || !d) return { error: error ?? 'Precipitation data unavailable' };
 
             if (!d.minutely?.length) {
                 return {
@@ -217,8 +235,9 @@ export const weatherTools = {
             }
 
             // Summarize: find transitions (dry→rain, rain→dry)
+            const tz = (d.timezone as string) || undefined;
             const minutes = d.minutely.map((m: { dt: number; precipitation: number }) => ({
-                time: new Date(m.dt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+                time: new Date(m.dt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: tz }),
                 precipitation_mm: m.precipitation,
             }));
 
@@ -265,9 +284,8 @@ export const weatherTools = {
 
             const apiKey = OWM_KEY();
             const url = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${coords.lat}&lon=${coords.lon}&appid=${apiKey}`;
-            const res = await fetch(url);
-            if (!res.ok) return { error: 'Air quality data unavailable' };
-            const d = await res.json();
+            const { data: d, error } = await safeFetch(url, 'Air quality data unavailable');
+            if (error || !d) return { error: error ?? 'Air quality data unavailable' };
 
             const item = d.list?.[0];
             if (!item) return { error: 'No air quality data' };
@@ -445,9 +463,8 @@ export const weatherTools = {
             const apiKey = OWM_KEY();
             const fetchWeather = async (lat: number, lon: number) => {
                 const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=imperial&exclude=minutely&appid=${apiKey}`;
-                const res = await fetch(url);
-                if (!res.ok) return null;
-                return res.json();
+                const { data } = await safeFetch(url, 'Weather data unavailable');
+                return data;
             };
 
             const [originData, destData, aviationData] = await Promise.all([
