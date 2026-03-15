@@ -27,7 +27,6 @@ import { getSpaceWeatherContext } from '@/lib/services/space-weather-service';
 const OWM_KEY = () => process.env.OPENWEATHER_API_KEY ?? '';
 
 /** Safe fetch wrapper that returns structured error instead of throwing on network failures. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function safeFetch(url: string, errorLabel: string): Promise<{ data: any | null; error: string | null }> {
     try {
         const res = await fetch(url);
@@ -197,12 +196,12 @@ export const weatherTools = {
                 return {
                     time: time.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true, timeZone: tz }),
                     date: time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: tz }),
-                    temp: Math.round(h.temp as number),
-                    feelsLike: Math.round(h.feels_like as number),
+                    temp: Math.round((h.temp as number) ?? 0),
+                    feelsLike: Math.round((h.feels_like as number) ?? 0),
                     condition: weather?.description ?? '',
                     pop: Math.round(((h.pop as number) ?? 0) * 100),
-                    humidity: h.humidity as number,
-                    wind_mph: Math.round(h.wind_speed as number),
+                    humidity: (h.humidity as number) ?? 0,
+                    wind_mph: Math.round((h.wind_speed as number) ?? 0),
                 };
             });
 
@@ -470,7 +469,10 @@ export const weatherTools = {
             const [originData, destData, aviationData] = await Promise.all([
                 fetchWeather(originCoords.lat, originCoords.lon),
                 fetchWeather(destCoords.lat, destCoords.lon),
-                getAviationContext(),
+                getAviationContext().catch((err) => {
+                    console.error('[AI Tools] Aviation context error:', err);
+                    return null;
+                }),
             ]);
 
             const summarizeWeather = (name: string, data: Record<string, unknown> | null) => {
