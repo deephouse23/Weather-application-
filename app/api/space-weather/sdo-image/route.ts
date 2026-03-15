@@ -86,12 +86,13 @@ export async function GET(request: NextRequest) {
       if (!response.ok) continue;
 
       const imageData = await response.arrayBuffer();
+      const upstreamHost = new URL(url).hostname;
 
       return new NextResponse(imageData, {
         headers: {
           'Content-Type': config.contentType,
           'Cache-Control': 'public, max-age=300',
-          'X-Source': url.includes('swpc.noaa.gov') ? 'NOAA SWPC SUVI' : 'NASA SDO',
+          'X-Source': upstreamHost === 'services.swpc.noaa.gov' ? 'NOAA SWPC SUVI' : 'NASA SDO',
         },
       });
     } catch {
