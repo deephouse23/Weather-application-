@@ -28,30 +28,34 @@ export const runtime = 'edge';
 const WAVELENGTH_CONFIG: Record<string, {
   primary: string;
   fallback: string;
-  contentType: string;
 }> = {
   '0304': {
     primary: 'https://services.swpc.noaa.gov/images/animations/suvi/primary/304/latest.png',
     fallback: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0304.jpg',
-    contentType: 'image/png',
   },
   '0193': {
     // SUVI 195 is the closest match to AIA 193 (both Fe XII coronal line)
     primary: 'https://services.swpc.noaa.gov/images/animations/suvi/primary/195/latest.png',
     fallback: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0193.jpg',
-    contentType: 'image/png',
   },
   '0171': {
     primary: 'https://services.swpc.noaa.gov/images/animations/suvi/primary/171/latest.png',
     fallback: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0171.jpg',
-    contentType: 'image/png',
   },
   'HMIIF': {
     primary: 'https://services.swpc.noaa.gov/images/animations/sdo-hmii/latest.jpg',
     fallback: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_HMIIF.jpg',
-    contentType: 'image/jpeg',
   },
 };
+
+/** Derive Content-Type from the upstream response or URL extension. */
+function getContentType(response: Response, url: string): string {
+  const upstream = response.headers.get('Content-Type');
+  if (upstream && upstream.startsWith('image/')) return upstream;
+  if (url.endsWith('.png')) return 'image/png';
+  if (url.endsWith('.jpg') || url.endsWith('.jpeg')) return 'image/jpeg';
+  return 'application/octet-stream';
+}
 
 /**
  * GET /api/space-weather/sdo-image?wavelength=0304
@@ -83,20 +87,23 @@ export async function GET(request: NextRequest) {
         signal: AbortSignal.timeout(8000),
       });
 
-      if (!response.ok) continue;
+      if (!response.ok) {
+        console.warn(`[sdo-image] ${url} returned ${response.status}`);
+        continue;
+      }
 
       const imageData = await response.arrayBuffer();
       const upstreamHost = new URL(url).hostname;
 
       return new NextResponse(imageData, {
         headers: {
-          'Content-Type': config.contentType,
+          'Content-Type': getContentType(response, url),
           'Cache-Control': 'public, max-age=300',
           'X-Source': upstreamHost === 'services.swpc.noaa.gov' ? 'NOAA SWPC SUVI' : 'NASA SDO',
         },
       });
-    } catch {
-      // Try next source
+    } catch (error) {
+      console.warn(`[sdo-image] ${url} failed:`, error);
       continue;
     }
   }
