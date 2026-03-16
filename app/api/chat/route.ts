@@ -1,41 +1,26 @@
 /**
- * 16-Bit Weather Platform - v1.0.0
- * 
- * AI Chat API Route with Vercel AI SDK
- * Handles streaming chat requests with rate limiting, authentication, and real-time weather data
+ * 16-Bit Weather Platform - AI Chat API Route
+ *
+ * Rewritten for Vercel AI SDK tool calling. The AI decides what data to
+ * fetch on-demand via tools — no more pre-fetch-everything pattern.
+ *
+ * Supports multi-turn conversations with history loaded from Supabase.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { streamText } from 'ai';
+import { streamText, stepCountIs } from 'ai';
+import type { ModelMessage } from '@ai-sdk/provider-utils';
 import { anthropic } from '@ai-sdk/anthropic';
-import {
-    buildSystemPrompt,
-    isSimpleLocationSearch,
-    type AIPersonality,
-    type WeatherContext,
-    type EarthSciencesContext
-} from '@/lib/services/ai-config';
+import { buildSystemPrompt, type AIPersonality } from '@/lib/services/ai-config';
 import { checkRateLimit, getRateLimitStatus } from '@/lib/services/chat-rate-limiter';
-import { saveMessage } from '@/lib/services/chat-history-service';
-import {
-    fetchRecentEarthquakes,
-    formatEarthquakeContextBlock,
-    type EarthquakeResponse
-} from '@/lib/services/usgs-earthquake';
-import {
-    fetchElevatedVolcanoes,
-    formatVolcanoContextBlock
-} from '@/lib/services/volcano-service';
-import {
-    getAviationContext
-} from '@/lib/services/aviation-service';
-import {
-    getSpaceWeatherContext,
-    isSpaceWeatherQuery
-} from '@/lib/services/space-weather-service';
+import { saveMessage, getRecentMessages } from '@/lib/services/chat-history-service';
+import { weatherTools } from '@/lib/ai/tools';
 
-// Get user from request
+// ---------------------------------------------------------------------------
+// Auth helper (unchanged)
+// ---------------------------------------------------------------------------
+
 async function getAuthenticatedUser(request: NextRequest) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -61,416 +46,13 @@ async function getAuthenticatedUser(request: NextRequest) {
     return user;
 }
 
-// Extract location from user message using simple patterns
-function extractLocationFromMessage(message: string): string | null {
-    const safeMessage = message.slice(0, 200);
-    const timeWords = ['today', 'tomorrow', 'this', 'next', 'right', 'currently', 'two', 'three', 'four', 'five', 'six', 'seven', 'few', 'couple', 'thursday', 'friday', 'saturday', 'sunday', 'monday', 'tuesday', 'wednesday'];
-    const excludeWords = ['the', 'a', 'an', 'what', 'how', 'when', 'will', 'is', 'are', 'do', 'does', 'can', 'should', 'it', 'be', 'going', 'to', 'on', 'i'];
-
-    // Helper to capitalize location names
-    const capitalizeLocation = (loc: string): string => {
-        return loc.split(' ').map(word =>
-            word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-        ).join(' ');
-    };
-
-    // Match "in/for/at [location]" - case insensitive
-    const prepMatch = safeMessage.match(/\b(?:in|for|at)\s+([a-zA-Z][a-zA-Z.'\- ]+?)(?:\s+(?:on|today|tomorrow|this|next|thursday|friday|saturday|sunday|monday|tuesday|wednesday)\b|[?.,]|$)/i);
-    if (prepMatch?.[1]) {
-        const loc = prepMatch[1].trim();
-        const firstWord = loc.split(' ')[0].toLowerCase();
-        if (loc.length > 2 && !timeWords.includes(firstWord) && !excludeWords.includes(firstWord)) {
-            return capitalizeLocation(loc);
-        }
-    }
-
-    // Match "City, ST" pattern - case insensitive
-    const cityStateMatch = safeMessage.match(/\b([a-zA-Z][a-zA-Z.'\- ]+),\s*([a-zA-Z]{2})\b/i);
-    if (cityStateMatch) {
-        const city = capitalizeLocation(cityStateMatch[1].trim());
-        const state = cityStateMatch[2].toUpperCase();
-        return `${city}, ${state}`;
-    }
-
-    // Match "[location] weather" - case insensitive
-    const weatherMatch = safeMessage.match(/\b([a-zA-Z][a-zA-Z.'\- ]+)\s+weather\b/i);
-    if (weatherMatch?.[1]) {
-        const loc = weatherMatch[1].trim();
-        const firstWord = loc.split(' ')[0].toLowerCase();
-        if (!excludeWords.includes(firstWord)) {
-            return capitalizeLocation(loc);
-        }
-    }
-
-    // Match multi-word location names (2-4 words starting with letter, case insensitive)
-    const multiWordMatch = safeMessage.match(/\b([a-zA-Z][a-zA-Z'\-]+(?:\s+[a-zA-Z][a-zA-Z'\-]+){1,3})\b/gi);
-    if (multiWordMatch) {
-        for (const match of multiWordMatch) {
-            const loc = match.trim();
-            const words = loc.toLowerCase().split(' ');
-            // Skip if any word is a time/exclude word
-            if (words.some(w => timeWords.includes(w) || excludeWords.includes(w))) {
-                continue;
-            }
-            // Skip if too short
-            if (loc.length < 5) continue;
-            return capitalizeLocation(loc);
-        }
-    }
-
-    return null;
-}
-
-// Geocode a location using OpenWeatherMap
-async function geocodeLocation(location: string): Promise<{ lat: number; lon: number; name: string } | null> {
-    const apiKey = process.env.OPENWEATHER_API_KEY;
-    if (!apiKey) {
-        console.error('[Chat API] No OpenWeather API key');
-        return null;
-    }
-
-    try {
-        const locationWithUS = location.includes(',') ? location : `${location},US`;
-        const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(locationWithUS)}&limit=1&appid=${apiKey}`;
-
-        let response = await fetch(url);
-        let data = response.ok ? await response.json() : [];
-
-        if (!data || data.length === 0) {
-            const fallbackUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(location)}&limit=1&appid=${apiKey}`;
-            response = await fetch(fallbackUrl);
-            data = response.ok ? await response.json() : [];
-        }
-
-        if (!data || data.length === 0) {
-            return null;
-        }
-
-        const result = {
-            lat: data[0].lat,
-            lon: data[0].lon,
-            name: data[0].state ? `${data[0].name}, ${data[0].state}` : data[0].name
-        };
-        return result;
-    } catch (error) {
-        console.error('[Chat API] Geocoding error:', error);
-        return null;
-    }
-}
-
-// Fetch current weather from OpenWeatherMap
-async function fetchCurrentWeather(lat: number, lon: number): Promise<{
-    temperature: number;
-    condition: string;
-    humidity: number;
-    wind: string;
-    feelsLike: number;
-    snow1h?: number;
-    snow3h?: number;
-    rain1h?: number;
-    rain3h?: number;
-} | null> {
-    const apiKey = process.env.OPENWEATHER_API_KEY;
-    if (!apiKey) return null;
-
-    try {
-        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`;
-
-        const response = await fetch(url);
-        if (!response.ok) {
-            console.error(`[Chat API] Weather fetch failed: ${response.status}`);
-            return null;
-        }
-
-        const data = await response.json();
-        const result = {
-            temperature: Math.round(data.main?.temp || 0),
-            condition: data.weather?.[0]?.description || 'unknown',
-            humidity: data.main?.humidity || 0,
-            wind: `${Math.round(data.wind?.speed || 0)} mph`,
-            feelsLike: Math.round(data.main?.feels_like || 0),
-            // Snow data (in mm, convert to inches for US users)
-            snow1h: data.snow?.['1h'] ? Math.round(data.snow['1h'] / 25.4 * 10) / 10 : undefined,
-            snow3h: data.snow?.['3h'] ? Math.round(data.snow['3h'] / 25.4 * 10) / 10 : undefined,
-            // Rain data (in mm, convert to inches)
-            rain1h: data.rain?.['1h'] ? Math.round(data.rain['1h'] / 25.4 * 100) / 100 : undefined,
-            rain3h: data.rain?.['3h'] ? Math.round(data.rain['3h'] / 25.4 * 100) / 100 : undefined
-        };
-        return result;
-    } catch (error) {
-        console.error('[Chat API] Weather fetch error:', error);
-        return null;
-    }
-}
-
-// Fetch 8-day forecast from OpenWeatherMap One Call 3.0 API
-async function fetchForecast(lat: number, lon: number): Promise<string | null> {
-    const apiKey = process.env.OPENWEATHER_API_KEY;
-    if (!apiKey) return null;
-
-    try {
-        const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=imperial&exclude=minutely,hourly,alerts&appid=${apiKey}`;
-        const response = await fetch(url);
-        if (!response.ok) {
-            return await fetchForecast5Day(lat, lon);
-        }
-
-        const data = await response.json();
-        const forecastLines: string[] = [];
-        for (const day of (data.daily || []).slice(0, 8)) {
-            const date = new Date(day.dt * 1000);
-            const dayKey = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-            const high = Math.round(day.temp?.max || 0);
-            const low = Math.round(day.temp?.min || 0);
-            const condition = day.weather?.[0]?.main || 'Clear';
-
-            // Include snow and rain data if available (convert mm to inches)
-            let precipInfo = '';
-            if (day.snow) {
-                const snowInches = Math.round(day.snow / 25.4 * 10) / 10;
-                precipInfo += `, Snow: ${snowInches}"`;
-            }
-            if (day.rain) {
-                const rainInches = Math.round(day.rain / 25.4 * 100) / 100;
-                precipInfo += `, Rain: ${rainInches}"`;
-            }
-
-            forecastLines.push(`${dayKey}: ${high}°F/${low}°F, ${condition}${precipInfo}`);
-        }
-
-        return forecastLines.join(' | ');
-    } catch (error) {
-        console.error('[Chat API] Forecast fetch error:', error);
-        return null;
-    }
-}
-
-// Fallback 5-day forecast from free tier
-async function fetchForecast5Day(lat: number, lon: number): Promise<string | null> {
-    const apiKey = process.env.OPENWEATHER_API_KEY;
-    if (!apiKey) return null;
-
-    try {
-        const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`;
-        const response = await fetch(url);
-        if (!response.ok) return null;
-
-        const data = await response.json();
-        const dailyForecasts: Map<string, {
-            high: number;
-            low: number;
-            condition: string;
-            snowMm: number;
-            rainMm: number;
-        }> = new Map();
-
-        for (const item of data.list || []) {
-            const date = new Date(item.dt * 1000);
-            const dayKey = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-            const existing = dailyForecasts.get(dayKey);
-            const temp = Math.round(item.main?.temp || 0);
-            const condition = item.weather?.[0]?.main || 'Clear';
-            const snow3h = item.snow?.['3h'] || 0;
-            const rain3h = item.rain?.['3h'] || 0;
-
-            if (!existing) {
-                dailyForecasts.set(dayKey, {
-                    high: temp,
-                    low: temp,
-                    condition,
-                    snowMm: snow3h,
-                    rainMm: rain3h
-                });
-            } else {
-                dailyForecasts.set(dayKey, {
-                    high: Math.max(existing.high, temp),
-                    low: Math.min(existing.low, temp),
-                    condition: existing.condition,
-                    snowMm: existing.snowMm + snow3h,
-                    rainMm: existing.rainMm + rain3h
-                });
-            }
-        }
-
-        const forecastLines: string[] = [];
-        let count = 0;
-        for (const [day, forecast] of dailyForecasts) {
-            if (count >= 5) break;
-
-            let precipInfo = '';
-            if (forecast.snowMm > 0) {
-                const snowInches = Math.round(forecast.snowMm / 25.4 * 10) / 10;
-                precipInfo += `, Snow: ${snowInches}"`;
-            }
-            if (forecast.rainMm > 0) {
-                const rainInches = Math.round(forecast.rainMm / 25.4 * 100) / 100;
-                precipInfo += `, Rain: ${rainInches}"`;
-            }
-
-            forecastLines.push(`${day}: ${forecast.high}°F/${forecast.low}°F, ${forecast.condition}${precipInfo}`);
-            count++;
-        }
-
-        return forecastLines.join(' | ');
-    } catch {
-        return null;
-    }
-}
-
-// Fetch 24h precipitation history (for authenticated users)
-async function fetch24hPrecipitation(lat: number, lon: number): Promise<{
-    snow24h: number;
-    rain24h: number;
-} | null> {
-    const apiKey = process.env.OPENWEATHER_API_KEY;
-    if (!apiKey) return null;
-
-    const now = Math.floor(Date.now() / 1000);
-    let totalSnowMm = 0;
-    let totalRainMm = 0;
-    
-    // Track processed hours to prevent double-counting from overlapping API responses
-    const processedHours = new Set<number>();
-
-    // Fetch data for the past 24 hours using timemachine
-    // Use 3 calls (24h, 16h, 8h ago) to match precipitation-history endpoint
-    const timestamps = [
-        now - (24 * 60 * 60), // 24 hours ago
-        now - (16 * 60 * 60), // 16 hours ago
-        now - (8 * 60 * 60),  // 8 hours ago
-    ];
-
-    for (const dt of timestamps) {
-        try {
-            const url = `https://api.openweathermap.org/data/3.0/onecall/timemachine?lat=${lat}&lon=${lon}&dt=${dt}&units=imperial&appid=${apiKey}`;
-            const response = await fetch(url);
-
-            if (!response.ok) continue;
-
-            const data = await response.json();
-
-            if (data.data && Array.isArray(data.data)) {
-                for (const hour of data.data) {
-                    // Skip if already processed or outside 24h window
-                    if (processedHours.has(hour.dt)) continue;
-                    if (hour.dt < now - (24 * 60 * 60) || hour.dt > now) continue;
-                    
-                    processedHours.add(hour.dt);
-                    
-                    // Sum raw mm values, convert only at the end
-                    if (hour.snow?.['1h']) {
-                        totalSnowMm += hour.snow['1h'];
-                    }
-                    if (hour.rain?.['1h']) {
-                        totalRainMm += hour.rain['1h'];
-                    }
-                }
-            }
-        } catch {
-            // Continue with partial data
-        }
-    }
-
-    // Convert mm to inches only after summing all values
-    return {
-        snow24h: Math.round((totalSnowMm / 25.4) * 10) / 10,
-        rain24h: Math.round((totalRainMm / 25.4) * 100) / 100,
-    };
-}
-
-// Fetch real weather data for a location (now returns EarthSciencesContext with coordinates)
-async function fetchWeatherForLocation(location: string, isAuthenticated: boolean = false): Promise<EarthSciencesContext | null> {
-    const coords = await geocodeLocation(location);
-    if (!coords) return null;
-
-    // Fetch current weather and forecast in parallel
-    const promises: [
-        Promise<Awaited<ReturnType<typeof fetchCurrentWeather>>>,
-        Promise<string | null>,
-        Promise<{ snow24h: number; rain24h: number } | null>
-    ] = [
-        fetchCurrentWeather(coords.lat, coords.lon),
-        fetchForecast(coords.lat, coords.lon),
-        isAuthenticated ? fetch24hPrecipitation(coords.lat, coords.lon) : Promise.resolve(null)
-    ];
-
-    const [weather, forecast, precip24h] = await Promise.all(promises);
-
-    if (!weather) return null;
-
-    return {
-        location: coords.name,
-        temperature: weather.temperature,
-        condition: weather.condition,
-        humidity: weather.humidity,
-        wind: weather.wind,
-        feelsLike: weather.feelsLike,
-        forecast: forecast || undefined,
-        // Snow and precipitation data
-        snow1h: weather.snow1h,
-        snow3h: weather.snow3h,
-        rain1h: weather.rain1h,
-        rain3h: weather.rain3h,
-        // 24h totals (authenticated users only)
-        snow24h: precip24h?.snow24h,
-        rain24h: precip24h?.rain24h,
-        // Coordinates for earthquake lookups
-        lat: coords.lat,
-        lon: coords.lon,
-    };
-}
-
-// Fetch earthquake data for a location
-async function fetchEarthquakeContext(lat: number, lon: number): Promise<EarthSciencesContext['earthquakes'] | undefined> {
-    try {
-        const earthquakeData = await fetchRecentEarthquakes(lat, lon, 250, 7);
-
-        if (earthquakeData.error) {
-            console.error('[Chat API] Earthquake fetch error:', earthquakeData.error);
-            return undefined;
-        }
-
-        return {
-            contextBlock: formatEarthquakeContextBlock(earthquakeData, 250, 7),
-            hasRecentActivity: earthquakeData.recent.length > 0,
-            significantNearby: earthquakeData.significantNearby
-        };
-    } catch (error) {
-        console.error('[Chat API] Earthquake fetch error:', error);
-        return undefined;
-    }
-}
-
-// Fetch volcano data (global elevated alerts - doesn't need coordinates)
-async function fetchVolcanoContext(): Promise<EarthSciencesContext['volcanoes'] | undefined> {
-    try {
-        const volcanoData = await fetchElevatedVolcanoes();
-
-        if (volcanoData.error) {
-            // Don't log error - volcano API is a stretch goal, graceful fallback to AI knowledge
-            return undefined;
-        }
-
-        // Only return context if there are elevated volcanoes
-        const contextBlock = formatVolcanoContextBlock(volcanoData);
-        if (!contextBlock) {
-            return undefined;
-        }
-
-        return {
-            contextBlock,
-            hasElevatedActivity: volcanoData.hasElevatedActivity
-        };
-    } catch (error) {
-        // Graceful fallback - volcano API is optional
-        console.error('[Chat API] Volcano fetch error:', error);
-        return undefined;
-    }
-}
+// ---------------------------------------------------------------------------
+// POST — streaming chat with tool calling
+// ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest) {
     try {
-        // Check authentication
+        // Authenticate
         const user = await getAuthenticatedUser(request);
 
         if (!user) {
@@ -480,134 +62,62 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Parse request body
+        // Parse request body — Vercel AI SDK useChat sends { messages, ... }
         const body = await request.json();
-        const { message, weatherContext: providedContext, personality = 'storm' } = body;
-        const aiPersonality: AIPersonality = ['storm', 'sass', 'chill'].includes(personality) ? personality : 'storm';
+        const {
+            messages: incomingMessages,
+            personality = 'storm',
+        } = body as {
+            messages: ModelMessage[];
+            personality?: string;
+        };
 
-        if (!message || typeof message !== 'string') {
+        const aiPersonality: AIPersonality =
+            ['storm', 'sass', 'chill'].includes(personality)
+                ? (personality as AIPersonality)
+                : 'storm';
+
+        if (!incomingMessages?.length) {
             return NextResponse.json(
-                { error: 'Message is required' },
+                { error: 'Messages array is required' },
                 { status: 400 }
             );
         }
 
-        // Validate message length to prevent API abuse and excessive costs
-        const MAX_MESSAGE_LENGTH = 4000;
-        if (message.length > MAX_MESSAGE_LENGTH) {
+        // Validate last user message length
+        const lastUserMsg = [...incomingMessages]
+            .reverse()
+            .find(m => m.role === 'user');
+        if (
+            lastUserMsg &&
+            typeof lastUserMsg.content === 'string' &&
+            lastUserMsg.content.length > 4000
+        ) {
             return NextResponse.json(
-                { error: `Message exceeds maximum length of ${MAX_MESSAGE_LENGTH} characters` },
+                { error: 'Message exceeds maximum length of 4000 characters' },
                 { status: 400 }
             );
-        }
-
-        // Check if this is a simple location search (bypass AI)
-        if (isSimpleLocationSearch(message)) {
-            return NextResponse.json({
-                isSimpleSearch: true,
-                location: message.trim()
-            });
         }
 
         // Check rate limit
         const rateLimit = await checkRateLimit(user.id);
-
         if (!rateLimit.allowed) {
             return NextResponse.json(
                 {
                     error: 'Rate limit exceeded',
                     resetAt: rateLimit.resetAt.toISOString(),
-                    remaining: 0
+                    remaining: 0,
                 },
                 { status: 429 }
             );
         }
 
-        // Try to extract location from message and fetch real weather data
-        let earthSciencesContext: EarthSciencesContext | undefined = providedContext;
+        // Client-side useWeatherChat already seeds history via GET ?history=true
+        // and sends the full conversation in incomingMessages. No server-side
+        // history prepend needed — avoids duplicate messages.
+        const allMessages: ModelMessage[] = incomingMessages;
 
-        const extractedLocation = extractLocationFromMessage(message);
-
-        // Priority logic for weather context:
-        // 1. If user mentions a specific location, fetch fresh data for that location
-        // 2. If we have provided context with real weather data (has temperature), use it
-        // 3. If we have provided context with just location name, fetch real data for it
-        if (extractedLocation) {
-            // User mentioned a location - check if different from provided context
-            const providedLocationLower = providedContext?.location?.toLowerCase() || '';
-            const extractedLower = extractedLocation.toLowerCase();
-            const isDifferentLocation = !providedLocationLower.includes(extractedLower) &&
-                !extractedLower.includes(providedLocationLower.split(',')[0]);
-
-            if (isDifferentLocation || providedContext?.temperature === undefined) {
-                const realWeather = await fetchWeatherForLocation(extractedLocation, true);
-                if (realWeather) {
-                    earthSciencesContext = realWeather;
-                }
-            }
-        } else if (providedContext?.location && providedContext?.temperature === undefined) {
-            // No location in message, but we have a location name without weather data - fetch it
-            const realWeather = await fetchWeatherForLocation(providedContext.location, true);
-            if (realWeather) {
-                earthSciencesContext = realWeather;
-            }
-        }
-
-        // If we have weather context but no coordinates, geocode the location for earthquake lookups
-        // This handles the case when client provides cached weather data without lat/lon
-        if (earthSciencesContext?.location && earthSciencesContext?.lat === undefined) {
-            const coords = await geocodeLocation(earthSciencesContext.location);
-            if (coords) {
-                earthSciencesContext = {
-                    ...earthSciencesContext,
-                    lat: coords.lat,
-                    lon: coords.lon,
-                };
-            }
-        }
-
-        // Fetch earthquake data if we have coordinates (in parallel with saving message)
-        // This runs for all queries where we have a location - earthquake data adds context
-        const earthquakePromise = (earthSciencesContext?.lat !== undefined && earthSciencesContext?.lon !== undefined)
-            ? fetchEarthquakeContext(earthSciencesContext.lat, earthSciencesContext.lon)
-            : Promise.resolve(undefined);
-
-        // Fetch volcano data (global - doesn't need coordinates)
-        // Only included if there are elevated volcanoes
-        const volcanoPromise = fetchVolcanoContext();
-
-        // Fetch aviation data (global - SIGMETs/AIRMETs for aviation questions)
-        const aviationPromise = getAviationContext();
-
-        // Fetch space weather data if the query is about space weather, aurora, etc.
-        const spaceWeatherPromise = isSpaceWeatherQuery(message)
-            ? getSpaceWeatherContext()
-            : Promise.resolve(null);
-
-        // Save user message to history and fetch earth sciences data in parallel
-        const [, earthquakeData, volcanoData, aviationData, spaceWeatherData] = await Promise.all([
-            saveMessage(user.id, {
-                role: 'user',
-                content: message
-            }),
-            earthquakePromise,
-            volcanoPromise,
-            aviationPromise,
-            spaceWeatherPromise
-        ]);
-
-        // Merge earthquake, volcano, aviation, and space weather data into context
-        if (earthquakeData || volcanoData || aviationData?.hasActiveAlerts || spaceWeatherData) {
-            earthSciencesContext = {
-                ...earthSciencesContext,
-                ...(earthquakeData && { earthquakes: earthquakeData }),
-                ...(volcanoData && { volcanoes: volcanoData }),
-                ...(aviationData?.hasActiveAlerts && { aviation: aviationData }),
-                ...(spaceWeatherData && { spaceWeather: spaceWeatherData })
-            };
-        }
-
-        // Build system prompt with current datetime
+        // Build system prompt (no more data injection — tools handle data)
         const currentDatetime = new Date().toLocaleString('en-US', {
             weekday: 'long',
             year: 'numeric',
@@ -615,46 +125,53 @@ export async function POST(request: NextRequest) {
             day: 'numeric',
             hour: 'numeric',
             minute: '2-digit',
-            timeZoneName: 'short'
+            timeZoneName: 'short',
         });
 
-        const systemPrompt = buildSystemPrompt(currentDatetime, aiPersonality, earthSciencesContext);
+        const systemPrompt = buildSystemPrompt(currentDatetime, aiPersonality);
 
-        // Use Vercel AI SDK streamText with Anthropic
+        // Save the latest user message to Supabase (fire and forget)
+        if (lastUserMsg && typeof lastUserMsg.content === 'string') {
+            saveMessage(user.id, {
+                role: 'user',
+                content: lastUserMsg.content,
+            }).catch(err =>
+                console.error('[Chat API] Failed to save user message:', err)
+            );
+        }
+
+        // Stream with tool calling
         const result = streamText({
             model: anthropic('claude-sonnet-4-20250514'),
             system: systemPrompt,
-            messages: [
-                { role: 'user', content: message }
-            ],
-            maxOutputTokens: 1024,
+            messages: allMessages,
+            tools: weatherTools,
+            stopWhen: stepCountIs(5),
+            maxOutputTokens: 4096,
             onFinish: async ({ text }) => {
                 // Save assistant response to history
-                try {
-                    await saveMessage(user.id, {
-                        role: 'assistant',
-                        content: text
-                    });
-                } catch (saveError) {
-                    console.error('[Chat API] Failed to save assistant message:', {
-                        userId: user.id,
-                        role: 'assistant',
-                        error: saveError
-                    });
+                if (text) {
+                    try {
+                        await saveMessage(user.id, {
+                            role: 'assistant',
+                            content: text,
+                        });
+                    } catch (saveError) {
+                        console.error('[Chat API] Failed to save assistant message:', saveError);
+                    }
                 }
-            }
+            },
         });
 
-        // Return streaming response with rate limit headers
-        return result.toTextStreamResponse({
+        // Return UI message stream (required for useChat tool calling)
+        return result.toUIMessageStreamResponse({
             headers: {
                 'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-                'X-RateLimit-Reset': rateLimit.resetAt.toISOString()
-            }
+                'X-RateLimit-Reset': rateLimit.resetAt.toISOString(),
+            },
         });
-
     } catch (error) {
-        console.error('Chat API error:', error);
+        console.error('[Chat API] Error:', error);
         return NextResponse.json(
             { error: 'Failed to process chat request' },
             { status: 500 }
@@ -662,7 +179,10 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// GET endpoint for rate limit status and chat history
+// ---------------------------------------------------------------------------
+// GET — rate limit status + conversation history
+// ---------------------------------------------------------------------------
+
 export async function GET(request: NextRequest) {
     try {
         const user = await getAuthenticatedUser(request);
@@ -674,18 +194,31 @@ export async function GET(request: NextRequest) {
             );
         }
 
+        // Check if client wants history
+        const { searchParams } = new URL(request.url);
+        const wantsHistory = searchParams.get('history') === 'true';
+
+        if (wantsHistory) {
+            try {
+                const messages = await getRecentMessages(user.id, 10);
+                return NextResponse.json({ messages });
+            } catch (err) {
+                console.error('[Chat API] Failed to fetch history:', err);
+                return NextResponse.json({ messages: [] });
+            }
+        }
+
         // Default: return rate limit status
         const rateLimit = await getRateLimitStatus(user.id);
         return NextResponse.json({
             rateLimit: {
                 remaining: rateLimit.remaining,
                 resetAt: rateLimit.resetAt.toISOString(),
-                limit: 30
-            }
+                limit: 30,
+            },
         });
-
     } catch (error) {
-        console.error('Chat API GET error:', error);
+        console.error('[Chat API] GET error:', error);
         return NextResponse.json(
             { error: 'Failed to fetch data' },
             { status: 500 }

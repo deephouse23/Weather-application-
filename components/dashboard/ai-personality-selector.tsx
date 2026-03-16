@@ -3,8 +3,7 @@
 import { Bot, Zap, Coffee, Sparkles } from 'lucide-react'
 import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
-import { useAIChat } from '@/hooks/useAIChat'
-import { type AIPersonality } from '@/lib/services/ai-config'
+import { useWeatherChat, type AIPersonality } from '@/hooks/useWeatherChat'
 import { cn } from '@/lib/utils'
 
 const personalities = [
@@ -40,7 +39,7 @@ const personalities = [
 export default function AIPersonalitySelector() {
     const { theme } = useTheme()
     const themeClasses = getComponentStyles(theme as ThemeType, 'dashboard')
-    const { personality, setPersonality, isAuthenticated } = useAIChat()
+    const { personality, setPersonality, isAuthenticated } = useWeatherChat()
 
     if (!isAuthenticated) {
         return null

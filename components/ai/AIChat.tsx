@@ -4,20 +4,20 @@
  * Copyright (C) 2025 16-Bit Weather
  * Licensed under Fair Source License, Version 0.9
  *
- * Full-featured AI chat interface for the dedicated AI page
+ * Full-featured AI chat interface with tool-calling support.
+ * The AI fetches weather/seismic/aviation data on-demand via tools.
  */
 
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Bot, User, Send, Trash2, AlertCircle } from 'lucide-react';
+import React, { useRef, useEffect } from 'react';
+import { Bot, User, Send, Trash2, AlertCircle, Loader2 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/loading-state';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import { Button } from '@/components/ui/button';
-import { useAIChat, type ChatMessage, type AIPersonality } from '@/hooks/useAIChat';
-import { parseAIResponse } from '@/lib/services/ai-config';
+import { useWeatherChat, type AIPersonality } from '@/hooks/useWeatherChat';
 
 interface AIChatProps {
   onSendMessage?: (message: string) => void;
@@ -33,14 +33,17 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
     isLoading,
     error,
     rateLimit,
+    messages,
     personality,
     setPersonality,
+    handleSubmit,
+    handleInputChange,
     sendMessage,
-    clearResponse,
-    messages
-  } = useAIChat();
+    clearChat,
+    setInput,
+    input,
+  } = useWeatherChat();
 
-  const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -54,21 +57,13 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
     if (initialPrompt && isAuthenticated) {
       setInput(initialPrompt);
     }
-  }, [initialPrompt, isAuthenticated]);
+  }, [initialPrompt, isAuthenticated, setInput]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim() || isLoading || !isAuthenticated) return;
-
-    const messageText = input.trim();
-    setInput('');
-
-    try {
-      await sendMessage(messageText);
-      onSendMessage?.(messageText);
-    } catch (err) {
-      console.error('Failed to send message:', err);
-    }
+    onSendMessage?.(input.trim());
+    handleSubmit(e);
   };
 
   const handlePromptClick = (prompt: string) => {
@@ -77,9 +72,9 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
   };
 
   const personalities: { id: AIPersonality; label: string; emoji: string }[] = [
-    { id: 'storm', label: 'Storm', emoji: '⛈️' },
-    { id: 'sass', label: 'Sass', emoji: '💅' },
-    { id: 'chill', label: 'Chill', emoji: '😎' }
+    { id: 'storm', label: 'Storm', emoji: '\u26C8\uFE0F' },
+    { id: 'sass', label: 'Sass', emoji: '\uD83D\uDC85' },
+    { id: 'chill', label: 'Chill', emoji: '\uD83D\uDE0E' },
   ];
 
   if (!isAuthenticated) {
@@ -154,7 +149,7 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={clearResponse}
+              onClick={clearChat}
               className="p-1"
               title="Clear chat"
             >
@@ -174,52 +169,114 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
             </p>
           </div>
         ) : (
-          messages.map((msg) => {
-            const parsedContent = msg.role === 'assistant'
-              ? parseAIResponse(msg.content)
-              : { message: msg.content };
+          messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={cn(
+                'flex gap-3',
+                msg.role === 'user' ? 'justify-end' : 'justify-start'
+              )}
+            >
+              {msg.role === 'assistant' && (
+                <div className={cn(
+                  'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
+                  themeClasses.accentBg
+                )}>
+                  <Bot className="w-4 h-4 text-black" />
+                </div>
+              )}
 
-            return (
               <div
-                key={msg.id}
                 className={cn(
-                  'flex gap-3',
-                  msg.role === 'user' ? 'justify-end' : 'justify-start'
+                  'max-w-[80%] p-3 rounded font-mono text-sm container-nested',
+                  msg.role === 'user'
+                    ? 'bg-gray-800'
+                    : themeClasses.background
                 )}
               >
-                {msg.role === 'assistant' && (
-                  <div className={cn(
-                    'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
-                    themeClasses.accentBg
-                  )}>
-                    <Bot className="w-4 h-4 text-black" />
-                  </div>
-                )}
+                {/* Show tool invocations as status indicators */}
+                {msg.parts?.map((part, i) => {
+                  // Tool parts in AI SDK v6 have type like "tool-get_current_weather"
+                  if (part.type.startsWith('tool-')) {
+                    const toolPart = part as { type: string; toolCallId: string; state: string; errorText?: string };
+                    const toolName = part.type
+                      .replace(/^tool-/, '')
+                      .replace(/_/g, ' ')
+                      .replace(/^get /, '');
+                    // AI SDK v6 states: input-streaming, input-available, output-available, output-error
+                    const isRunning = toolPart.state === 'input-streaming' || toolPart.state === 'input-available';
 
-                <div
-                  className={cn(
-                    'max-w-[80%] p-3 rounded font-mono text-sm container-nested',
-                    msg.role === 'user'
-                      ? 'bg-gray-800'
-                      : themeClasses.background
-                  )}
-                >
+                    if (isRunning) {
+                      return (
+                        <div
+                          key={`tool-${i}`}
+                          className={cn(
+                            'flex items-center gap-2 text-xs py-1 mb-1',
+                            themeClasses.text,
+                            'opacity-70'
+                          )}
+                        >
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span className="font-mono uppercase">
+                            Fetching {toolName}...
+                          </span>
+                        </div>
+                      );
+                    }
+
+                    // Show error indicator for failed tool calls
+                    if (toolPart.state === 'output-error') {
+                      return (
+                        <div
+                          key={`tool-${i}`}
+                          className={cn(
+                            'flex items-center gap-2 text-xs py-1 mb-1',
+                            'text-red-400 opacity-80'
+                          )}
+                        >
+                          <AlertCircle className="w-3 h-3" />
+                          <span className="font-mono uppercase">
+                            Failed to fetch {toolName}
+                          </span>
+                        </div>
+                      );
+                    }
+
+                    // Tool completed (output-available) — don't render, AI synthesizes it
+                    return null;
+                  }
+
+                  if (part.type === 'text' && 'text' in part) {
+                    const textPart = part as { type: 'text'; text: string };
+                    if (!textPart.text) return null;
+                    return (
+                      <p key={`text-${i}`} className={cn('whitespace-pre-wrap', themeClasses.text)}>
+                        {textPart.text}
+                      </p>
+                    );
+                  }
+
+                  return null;
+                })}
+
+                {/* Fallback for messages without parts (e.g. history messages) */}
+                {(!msg.parts || msg.parts.length === 0) && (msg as unknown as { content?: string }).content && (
                   <p className={cn('whitespace-pre-wrap', themeClasses.text)}>
-                    {parsedContent.message}
+                    {(msg as unknown as { content?: string }).content}
                   </p>
-                </div>
-
-                {msg.role === 'user' && (
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-                    <User className="w-4 h-4" />
-                  </div>
                 )}
               </div>
-            );
-          })
+
+              {msg.role === 'user' && (
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
+                  <User className="w-4 h-4" />
+                </div>
+              )}
+            </div>
+          ))
         )}
 
-        {isLoading && (
+        {isLoading && messages[messages.length - 1]?.role === 'user' && (
           <div className="flex gap-3 justify-start">
             <div className={cn(
               'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
@@ -248,7 +305,7 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
 
       {/* Input Area */}
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleFormSubmit}
         className="p-3 border-t border-subtle"
       >
         <div className="flex gap-2">
@@ -256,7 +313,7 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
             ref={inputRef}
             type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             placeholder="Ask about weather, aviation, or turbulence..."
             disabled={isLoading}
             className={cn(

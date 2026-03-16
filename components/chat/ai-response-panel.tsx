@@ -12,7 +12,6 @@ import { X, Bot, User } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/loading-state';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { parseAIResponse, type ChatAction } from '@/lib/services/ai-config';
 
 export interface AIResponseAction {
     type: 'load_weather' | 'navigate_radar' | 'none';
@@ -127,13 +126,8 @@ export function AIResponsePanel({
                     className="p-3 overflow-y-auto max-h-[340px] space-y-3 scroll-smooth"
                 >
                     {displayMessages.map((msg, index) => {
-                        // Parse action from assistant messages
-                        const parsedContent = msg.role === 'assistant'
-                            ? parseAIResponse(msg.content)
-                            : { message: msg.content, action: msg.action };
-
-                        const displayContent = parsedContent.message;
-                        const msgAction = parsedContent.action || msg.action;
+                        const displayContent = msg.content;
+                        const msgAction = msg.action;
                         const isCurrentlyStreaming = isLastMessageStreaming && index === displayMessages.length - 1;
 
                         return (

@@ -12,9 +12,8 @@
 
 
 import { useState, useEffect, useRef } from "react"
-import { Search, MapPin, X, Sparkles } from "lucide-react"
+import { Search, MapPin, X } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-state"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import CityAutocomplete from "./city-autocomplete"
@@ -22,24 +21,6 @@ import { type CityData } from "@/lib/city-database"
 import { useLocationContext } from "./location-context"
 import { useTheme } from "./theme-provider"
 import { Input } from "@/components/ui/input"
-import { useAIChat } from "@/hooks/useAIChat"
-import dynamic from "next/dynamic"
-
-// PERFORMANCE: Lazy load AI panel - only needed for authenticated users with active chat
-const AIResponsePanel = dynamic(
-  () => import("@/components/chat/ai-response-panel").then(mod => ({ default: mod.AIResponsePanel })),
-  { ssr: false, loading: () => null }
-)
-
-interface WeatherContext {
-  location?: string;
-  temperature?: number;
-  condition?: string;
-  humidity?: number;
-  wind?: string;
-  feelsLike?: number;
-  forecast?: string;
-}
 
 interface WeatherSearchProps {
   onSearch: (location: string) => void;
@@ -50,7 +31,6 @@ interface WeatherSearchProps {
   rateLimitError?: string;
   hideLocationButton?: boolean;
   isAutoDetecting?: boolean;
-  weatherContext?: WeatherContext;
 }
 
 export default function WeatherSearch({
@@ -61,30 +41,14 @@ export default function WeatherSearch({
   isDisabled = false,
   rateLimitError,
   hideLocationButton = false,
-  isAutoDetecting = false,
-  weatherContext
+  isAutoDetecting = false
 }: WeatherSearchProps) {
-  const router = useRouter()
   const { locationInput, setLocationInput, clearLocationState } = useLocationContext()
   const { theme } = useTheme()
   const [searchTerm, setSearchTerm] = useState(locationInput || "")
   const [showAutocomplete, setShowAutocomplete] = useState(false)
   const isTypingRef = useRef(false)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // AI Chat hook with streaming support
-  const {
-    isAuthenticated,
-    isLoading: isAILoading,
-    response: aiResponse,
-    error: aiError,
-    rateLimit,
-    sendMessage,
-    clearResponse,
-    isSimpleSearch,
-    messages,
-    lastAction
-  } = useAIChat()
 
   // Sync context -> local state without fighting user input.
   useEffect(() => {
@@ -98,16 +62,6 @@ export default function WeatherSearch({
     }
   }, [locationInput, searchTerm])
 
-  // Handle AI action when it finishes
-  useEffect(() => {
-    if (lastAction && lastAction.type !== 'none' && lastAction.location) {
-      if (lastAction.type === 'load_weather') {
-        onSearch(lastAction.location);
-      } else if (lastAction.type === 'navigate_radar') {
-        router.push(`/radar?location=${encodeURIComponent(lastAction.location)}`);
-      }
-    }
-  }, [lastAction, onSearch, router]);
 
   // Semantic dark theme classes using CSS variables
   const themeClasses = {
@@ -135,33 +89,14 @@ export default function WeatherSearch({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!searchTerm.trim() || isLoading || isDisabled || isAILoading) {
+    if (!searchTerm.trim() || isLoading || isDisabled) {
       return;
     }
 
     setShowAutocomplete(false)
+    onSearch(searchTerm.trim())
 
-    // If user is authenticated, try AI processing
-    if (isAuthenticated) {
-      try {
-        const result = await sendMessage(searchTerm.trim(), weatherContext);
-
-        if (result.isSimpleSearch) {
-          // Simple location search - bypass AI
-          onSearch(result.location || searchTerm.trim());
-        }
-        // For AI responses, the lastAction effect will handle navigation
-      } catch (err) {
-        console.error('[WeatherSearch] AI error, falling back to simple search:', err);
-        // Fallback to simple search on AI error
-        onSearch(searchTerm.trim());
-      }
-    } else {
-      // Not authenticated - do simple search
-      onSearch(searchTerm.trim());
-    }
-
-    // Clear input after successful submission (ChatGPT-like behavior)
+    // Clear input after successful submission
     setSearchTerm("")
     setLocationInput("")
   }
@@ -219,39 +154,17 @@ export default function WeatherSearch({
     }
   }
 
-  const controlsDisabled = isLoading || isDisabled || isAILoading
-
-  // Handle AI action clicks from the panel
-  const handleAIAction = (action: { type: string; location?: string }) => {
-    if (action.type === 'load_weather' && action.location) {
-      onSearch(action.location);
-    } else if (action.type === 'navigate_radar' && action.location) {
-      router.push(`/radar?location=${encodeURIComponent(action.location)}`);
-    }
-  }
+  const controlsDisabled = isLoading || isDisabled
 
   return (
     <div className="mb-4 sm:mb-6 w-full max-w-2xl mx-auto">
       {/* Format hints with AI indicator for logged-in users */}
       <div className="mb-2 sm:mb-3 text-center px-2">
         <div className={`text-xs sm:text-sm ${themeClasses.secondaryText} uppercase tracking-wider break-words`}>
-          {isAuthenticated ? (
-            <>
-              <span className="hidden sm:inline">
-                <Sparkles className="w-3 h-3 inline mr-1 text-weather-primary" />
-                ASK: "SHOULD I WEAR A COAT IN NYC?" OR SEARCH: 90210
-              </span>
-              <span className="sm:hidden">
-                <Sparkles className="w-3 h-3 inline mr-1 text-weather-primary" />
-                ASK OR SEARCH
-              </span>
-            </>
-          ) : (
-            <>
-              <span className="hidden sm:inline">► 90210 • NEW YORK, NY • LONDON, UK ◄</span>
-              <span className="sm:hidden">► ZIP • CITY, STATE • CITY, COUNTRY ◄</span>
-            </>
-          )}
+          <>
+            <span className="hidden sm:inline">► 90210 • NEW YORK, NY • LONDON, UK ◄</span>
+            <span className="sm:hidden">► ZIP • CITY, STATE • CITY, COUNTRY ◄</span>
+          </>
         </div>
       </div>
 
@@ -265,7 +178,7 @@ export default function WeatherSearch({
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={handleInputKeyDown}
             onFocus={() => searchTerm.length >= 2 && setShowAutocomplete(true)}
-            placeholder={isDisabled ? "Rate limit reached..." : isAuthenticated ? "Ask about weather or search a location..." : "ZIP, City+State, or City+Country..."}
+            placeholder={isDisabled ? "Rate limit reached..." : "ZIP, City+State, or City+Country..."}
             disabled={controlsDisabled}
             aria-label="Search location"
             className={`w-full pr-10 sm:pr-12 ${themeClasses.cardBg} border-0 ${themeClasses.text} ${themeClasses.placeholderText}
@@ -310,9 +223,9 @@ export default function WeatherSearch({
                 "hover:text-terminal-accent-warning",
                 themeClasses.glow
               )}
-              aria-label={isLoading || isAILoading ? "Searching..." : "Search for weather"}
+              aria-label={isLoading ? "Searching..." : "Search for weather"}
             >
-              {isLoading || isAILoading ? (
+              {isLoading ? (
                 <LoadingSpinner size="sm" label="Searching" />
               ) : (
                 <Search className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
@@ -354,28 +267,13 @@ export default function WeatherSearch({
         </div>
       )}
 
-      {/* AI Response Panel - Shows streaming AI responses */}
-      {isAuthenticated && (messages.length > 0 || isAILoading) && (
-        <AIResponsePanel
-          message={aiResponse?.message || null}
-          action={aiResponse?.action}
-          isLoading={isAILoading}
-          isStreaming={isAILoading && messages.length > 0}
-          onDismiss={clearResponse}
-          onActionClick={handleAIAction}
-          rateLimit={rateLimit ? { remaining: rateLimit.remaining, resetAt: rateLimit.resetAt } : undefined}
-          theme={theme}
-          messages={messages}
-        />
-      )}
-
       {/* Error Display - Mobile responsive */}
-      {(error || rateLimitError || aiError) && (
+      {(error || rateLimitError) && (
         <div className={`p-3 sm:p-4 mx-2 sm:mx-0 ${themeClasses.errorBg} border ${themeClasses.errorText}
                       text-xs sm:text-sm text-center pixel-font ${themeClasses.specialBorder}`}>
           <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
             <span>!</span>
-            <span className="uppercase tracking-wider break-words">{error || rateLimitError || aiError}</span>
+            <span className="uppercase tracking-wider break-words">{error || rateLimitError}</span>
           </div>
 
           {/* Interactive suggestions based on error type */}
