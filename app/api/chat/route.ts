@@ -9,8 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { streamText, stepCountIs } from 'ai';
-import type { ModelMessage } from '@ai-sdk/provider-utils';
+import { streamText, stepCountIs, convertToModelMessages } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { buildSystemPrompt, type AIPersonality } from '@/lib/services/ai-config';
 import { checkRateLimit, getRateLimitStatus } from '@/lib/services/chat-rate-limiter';
@@ -62,13 +61,17 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Parse request body — Vercel AI SDK useChat sends { messages, ... }
+        // Parse request body — Vercel AI SDK v6 useChat sends UIMessage[] (parts format)
         const body = await request.json();
         const {
             messages: incomingMessages,
             personality = 'storm',
         } = body as {
-            messages: ModelMessage[];
+            messages: Array<{
+                role: string;
+                parts?: Array<{ type: string; text?: string }>;
+                content?: string;
+            }>;
             personality?: string;
         };
 
@@ -84,15 +87,17 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Validate last user message length
+        // Extract text from last user message (UIMessage has parts, not content)
         const lastUserMsg = [...incomingMessages]
             .reverse()
             .find(m => m.role === 'user');
-        if (
-            lastUserMsg &&
-            typeof lastUserMsg.content === 'string' &&
-            lastUserMsg.content.length > 4000
-        ) {
+        const lastUserText = lastUserMsg?.parts
+            ?.filter(p => p.type === 'text')
+            .map(p => p.text ?? '')
+            .join('')
+            ?? (lastUserMsg?.content as string ?? '');
+
+        if (lastUserText.length > 4000) {
             return NextResponse.json(
                 { error: 'Message exceeds maximum length of 4000 characters' },
                 { status: 400 }
@@ -112,10 +117,12 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Client-side useWeatherChat already seeds history via GET ?history=true
-        // and sends the full conversation in incomingMessages. No server-side
-        // history prepend needed — avoids duplicate messages.
-        const allMessages: ModelMessage[] = incomingMessages;
+        // Convert UIMessage[] (from useChat) → ModelMessage[] (for streamText)
+        // AI SDK v6 useChat sends parts format; streamText expects content format.
+        const allMessages = await convertToModelMessages(
+            incomingMessages as Parameters<typeof convertToModelMessages>[0],
+            { tools: weatherTools }
+        );
 
         // Build system prompt (no more data injection — tools handle data)
         const currentDatetime = new Date().toLocaleString('en-US', {
@@ -131,10 +138,10 @@ export async function POST(request: NextRequest) {
         const systemPrompt = buildSystemPrompt(currentDatetime, aiPersonality);
 
         // Save the latest user message to Supabase (fire and forget)
-        if (lastUserMsg && typeof lastUserMsg.content === 'string') {
+        if (lastUserText) {
             saveMessage(user.id, {
                 role: 'user',
-                content: lastUserMsg.content,
+                content: lastUserText,
             }).catch(err =>
                 console.error('[Chat API] Failed to save user message:', err)
             );
