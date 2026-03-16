@@ -55,16 +55,14 @@ export async function geocodeLocation(
     try {
         // Try raw location first (supports international cities like "Paris", "London")
         let url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(location)}&limit=1&appid=${apiKey}`;
-        let res = await fetch(url);
-        if (!res.ok) throw new Error(`Geocoding API returned ${res.status}`);
-        let data = await res.json();
+        let { data, error } = await safeFetch(url, 'Geocoding failed');
+        if (error) throw new Error(error);
 
         // If no results and no comma (bare city name), try with US bias as fallback
         if (!data?.length && !location.includes(',')) {
             url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(`${location},US`)}&limit=1&appid=${apiKey}`;
-            res = await fetch(url);
-            if (!res.ok) throw new Error(`Geocoding API returned ${res.status}`);
-            data = await res.json();
+            ({ data, error } = await safeFetch(url, 'Geocoding failed'));
+            if (error) throw new Error(error);
         }
 
         if (!data?.length) return null;
