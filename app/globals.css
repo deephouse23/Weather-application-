@@ -16,6 +16,7 @@
   }
   body {
     @apply bg-background text-foreground;
+
     font-family: var(--font-body, var(--font-ui), ui-sans-serif, system-ui, sans-serif);
     font-weight: 400;
   }

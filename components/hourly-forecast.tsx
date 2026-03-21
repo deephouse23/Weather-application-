@@ -15,10 +15,10 @@
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { Droplets } from "lucide-react"
-import { ThemeType } from "@/lib/theme-config" // Ensure using shared type or just remove if not needed for logic
+import type { ThemeType } from "@/lib/theme-config"
 import WeatherIconModern from "./weather-icon-modern"
 
 export interface HourlyForecastData {
@@ -47,16 +47,21 @@ export default function HourlyForecast({
   tempUnit = '°F'
 }: HourlyForecastProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  /** Client-only clock so server and client agree on first paint (no hydration mismatch for "NOW"). */
+  const [now, setNow] = useState<number | null>(null);
 
-  // Auto-scroll to current hour on mount
   useEffect(() => {
-    if (scrollContainerRef.current) {
-      const currentHourCard = scrollContainerRef.current.querySelector('.current-hour');
-      if (currentHourCard) {
-        currentHourCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
-      }
-    }
+    setNow(Date.now());
   }, []);
+
+  // Auto-scroll to current hour once client time is known
+  useEffect(() => {
+    if (now === null || !scrollContainerRef.current) return;
+    const currentHourCard = scrollContainerRef.current.querySelector('.current-hour');
+    if (currentHourCard) {
+      currentHourCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+    }
+  }, [now]);
 
   if (!hourly || hourly.length === 0) {
     return null;
@@ -64,7 +69,6 @@ export default function HourlyForecast({
 
   // Take first 24 hours for a cleaner view (user can scroll)
   const displayHours = hourly.slice(0, 24);
-  const now = Date.now();
 
   return (
     <Card className="p-3 sm:p-4 lg:p-6 border-0 rounded-xl dashboard-surface backdrop-blur-md bg-card/55 animate-slide-in">
@@ -86,7 +90,8 @@ export default function HourlyForecast({
           <div className="flex gap-3 sm:gap-4 pb-2 w-max mx-auto sm:mx-0">
             {displayHours.map((hour) => {
               const hourTime = new Date(hour.dt * 1000);
-              const isCurrentHour = Math.abs(hourTime.getTime() - now) < 1800000; // Within 30 min
+              const isCurrentHour =
+                now !== null && Math.abs(hourTime.getTime() - now) < 1800000; // Within 30 min
               const isMidnight = hourTime.getHours() === 0;
 
               return (
