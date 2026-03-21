@@ -10,13 +10,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import type { User } from '@supabase/supabase-js';
+import { z } from 'zod';
 import { isPlaywrightTestModeRequest } from '@/lib/playwright-test-mode';
 import { streamText, stepCountIs, convertToModelMessages } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
-import { buildSystemPrompt, type AIPersonality } from '@/lib/services/ai-config';
+import { buildSystemPrompt, type AIPersonality, type AIUserContext } from '@/lib/services/ai-config';
 import { checkRateLimit, getRateLimitStatus } from '@/lib/services/chat-rate-limiter';
-import { saveMessage, getRecentMessages } from '@/lib/services/chat-history-service';
+import { saveMessage, getRecentMessages, clearChatHistory } from '@/lib/services/chat-history-service';
 import { weatherTools } from '@/lib/ai/tools';
+
+const userContextSchema = z.object({
+    primaryLocation: z.string().max(200).nullable().optional(),
+    preferredUnits: z.enum(['metric', 'imperial']).nullable().optional(),
+    timezone: z.string().max(120).nullable().optional(),
+    displayName: z.string().max(120).nullable().optional(),
+});
 
 // ---------------------------------------------------------------------------
 // Auth helper (unchanged)
@@ -86,6 +94,7 @@ export async function POST(request: NextRequest) {
         const {
             messages: incomingMessages,
             personality = 'storm',
+            userContext: rawUserContext,
         } = body as {
             messages: Array<{
                 role: string;
@@ -93,7 +102,16 @@ export async function POST(request: NextRequest) {
                 content?: string;
             }>;
             personality?: string;
+            userContext?: unknown;
         };
+
+        let userContext: AIUserContext | null = null;
+        if (rawUserContext != null) {
+            const parsed = userContextSchema.safeParse(rawUserContext);
+            if (parsed.success) {
+                userContext = parsed.data;
+            }
+        }
 
         const aiPersonality: AIPersonality =
             ['storm', 'sass', 'chill'].includes(personality)
@@ -155,7 +173,7 @@ export async function POST(request: NextRequest) {
             timeZoneName: 'short',
         });
 
-        const systemPrompt = buildSystemPrompt(currentDatetime, aiPersonality);
+        const systemPrompt = buildSystemPrompt(currentDatetime, aiPersonality, userContext);
 
         // Save the latest user message to Supabase (fire and forget)
         if (lastUserText) {
@@ -201,6 +219,32 @@ export async function POST(request: NextRequest) {
         console.error('[Chat API] Error:', error);
         return NextResponse.json(
             { error: 'Failed to process chat request' },
+            { status: 500 }
+        );
+    }
+}
+
+// ---------------------------------------------------------------------------
+// DELETE — clear persisted chat history for this user
+// ---------------------------------------------------------------------------
+
+export async function DELETE(request: NextRequest) {
+    try {
+        const user = await getAuthenticatedUser(request);
+
+        if (!user) {
+            return NextResponse.json(
+                { error: 'Authentication required' },
+                { status: 401 }
+            );
+        }
+
+        await clearChatHistory(user.id);
+        return NextResponse.json({ ok: true });
+    } catch (error) {
+        console.error('[Chat API] DELETE error:', error);
+        return NextResponse.json(
+            { error: 'Failed to clear chat history' },
             { status: 500 }
         );
     }

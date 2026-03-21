@@ -18,13 +18,22 @@ import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import { Button } from '@/components/ui/button';
 import { useWeatherChat, type AIPersonality } from '@/hooks/useWeatherChat';
+import { AssistantMarkdown } from '@/components/ai/assistant-markdown';
 
 interface AIChatProps {
   onSendMessage?: (message: string) => void;
   initialPrompt?: string;
+  /** When set, sends this message once (e.g. quick actions). Parent should clear via onPendingSendConsumed after send starts. */
+  pendingSend?: string | null;
+  onPendingSendConsumed?: () => void;
 }
 
-export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
+export default function AIChat({
+  onSendMessage,
+  initialPrompt,
+  pendingSend,
+  onPendingSendConsumed,
+}: AIChatProps) {
   const { theme } = useTheme();
   const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
 
@@ -45,19 +54,28 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
   } = useWeatherChat();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Handle initial prompt
+  // Handle initial prompt (prefill only — URL auto-send is handled on the page via pendingSend)
   useEffect(() => {
     if (initialPrompt && isAuthenticated) {
       setInput(initialPrompt);
     }
   }, [initialPrompt, isAuthenticated, setInput]);
+
+  // One-shot send from parent (quick actions, suggested prompts, ?prompt=)
+  useEffect(() => {
+    if (!pendingSend?.trim() || !isAuthenticated || isLoading) return;
+    const sent = sendMessage(pendingSend.trim());
+    if (sent) {
+      onPendingSendConsumed?.();
+    }
+  }, [pendingSend, isAuthenticated, isLoading, sendMessage, onPendingSendConsumed]);
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -103,7 +121,7 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
 
   return (
     <div className={cn(
-      'container-primary flex flex-col h-[600px] max-h-[70vh]',
+      'container-primary flex flex-col min-h-[min(720px,85vh)] h-[min(720px,85vh)]',
       themeClasses.background
     )}>
       {/* Header */}
@@ -149,7 +167,7 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={clearChat}
+              onClick={() => void clearChat()}
               className="p-1"
               title="Clear chat"
             >
@@ -188,10 +206,10 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
 
               <div
                 className={cn(
-                  'max-w-[80%] p-3 rounded font-mono text-sm container-nested',
+                  'max-w-[85%] p-3 rounded text-sm container-nested',
                   msg.role === 'user'
-                    ? 'bg-gray-800'
-                    : themeClasses.background
+                    ? 'bg-gray-800 font-mono'
+                    : cn(themeClasses.background, 'font-sans')
                 )}
               >
                 {/* Show tool invocations as status indicators */}
@@ -249,10 +267,22 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
                   if (part.type === 'text' && 'text' in part) {
                     const textPart = part as { type: 'text'; text: string };
                     if (!textPart.text) return null;
+                    if (msg.role === 'user') {
+                      return (
+                        <p
+                          key={`text-${i}`}
+                          className={cn('whitespace-pre-wrap', themeClasses.text)}
+                        >
+                          {textPart.text}
+                        </p>
+                      );
+                    }
                     return (
-                      <p key={`text-${i}`} className={cn('whitespace-pre-wrap', themeClasses.text)}>
-                        {textPart.text}
-                      </p>
+                      <AssistantMarkdown
+                        key={`text-${i}`}
+                        text={textPart.text}
+                        className={themeClasses.text}
+                      />
                     );
                   }
 
@@ -261,9 +291,16 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
 
                 {/* Fallback for messages without parts (e.g. history messages) */}
                 {(!msg.parts || msg.parts.length === 0) && (msg as unknown as { content?: string }).content && (
-                  <p className={cn('whitespace-pre-wrap', themeClasses.text)}>
-                    {(msg as unknown as { content?: string }).content}
-                  </p>
+                  msg.role === 'user' ? (
+                    <p className={cn('whitespace-pre-wrap', themeClasses.text)}>
+                      {(msg as unknown as { content?: string }).content}
+                    </p>
+                  ) : (
+                    <AssistantMarkdown
+                      text={(msg as unknown as { content?: string }).content ?? ''}
+                      className={themeClasses.text}
+                    />
+                  )
                 )}
               </div>
 
@@ -285,7 +322,7 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
               <Bot className="w-4 h-4 text-black" />
             </div>
             <div className={cn(
-              'p-3 rounded font-mono text-sm container-nested',
+              'p-3 rounded text-sm container-nested font-sans',
               themeClasses.background
             )}>
               <LoadingSpinner size="sm" label="AI is thinking" className={themeClasses.accentText} />
@@ -308,16 +345,22 @@ export default function AIChat({ onSendMessage, initialPrompt }: AIChatProps) {
         onSubmit={handleFormSubmit}
         className="p-3 border-t border-subtle"
       >
-        <div className="flex gap-2">
-          <input
+        <div className="flex gap-2 items-end">
+          <textarea
             ref={inputRef}
-            type="text"
+            rows={2}
             value={input}
             onChange={handleInputChange}
-            placeholder="Ask about weather, aviation, or turbulence..."
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                e.currentTarget.form?.requestSubmit();
+              }
+            }}
+            placeholder="Ask about weather, aviation, or turbulence... (Shift+Enter for newline)"
             disabled={isLoading}
             className={cn(
-              'flex-1 px-3 py-2 font-mono text-sm border rounded',
+              'flex-1 min-h-[44px] max-h-40 resize-y px-3 py-2 font-mono text-sm border rounded',
               'bg-transparent focus:outline-none border-subtle focus:border-medium',
               themeClasses.text,
               isLoading && 'opacity-50'

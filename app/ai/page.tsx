@@ -9,7 +9,7 @@
 
 'use client';
 
-import React, { useState, Suspense, lazy } from 'react';
+import React, { useState, Suspense, lazy, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
@@ -25,15 +25,23 @@ function AIPageContent() {
   const { theme } = useTheme();
   const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
   const searchParams = useSearchParams();
-  const initialPrompt = searchParams.get('prompt');
-  const [chatInput, setChatInput] = useState('');
+  const promptFromUrl = searchParams.get('prompt');
+  const [pendingSend, setPendingSend] = useState<string | null>(null);
+  const urlPromptConsumedRef = useRef(false);
+
+  useEffect(() => {
+    const p = promptFromUrl?.trim();
+    if (!p || urlPromptConsumedRef.current) return;
+    urlPromptConsumedRef.current = true;
+    setPendingSend(p);
+  }, [promptFromUrl]);
 
   const handleQuickAction = (prompt: string) => {
-    setChatInput(prompt);
+    setPendingSend(prompt);
   };
 
   const handleSuggestedPrompt = (prompt: string) => {
-    setChatInput(prompt);
+    setPendingSend(prompt);
   };
 
   return (
@@ -60,7 +68,7 @@ function AIPageContent() {
           {/* Main Chat Area */}
           <div className="lg:col-span-2">
             <Suspense fallback={
-              <div className={cn('border-4 flex flex-col h-[600px] max-h-[70vh]', themeClasses.borderColor, themeClasses.background)}>
+              <div className={cn('border-4 flex flex-col min-h-[min(720px,85vh)] h-[min(720px,85vh)]', themeClasses.borderColor, themeClasses.background)}>
                 <div className={cn('flex items-center justify-between p-3 border-b-2', themeClasses.borderColor)}>
                   <div className="flex items-center gap-2">
                     <div className={cn('w-5 h-5 rounded', themeClasses.accentBg)} />
@@ -75,7 +83,10 @@ function AIPageContent() {
                 </div>
               </div>
             }>
-              <AIChat initialPrompt={initialPrompt || chatInput} />
+              <AIChat
+                pendingSend={pendingSend}
+                onPendingSendConsumed={() => setPendingSend(null)}
+              />
             </Suspense>
           </div>
 
@@ -102,7 +113,7 @@ function AIPageContent() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className={themeClasses.text}>Volcanic Activity</span>
-                    <span className="text-green-500">LIVE</span>
+                    <span className="text-amber-500/90">Soon</span>
                   </div>
                 </div>
               </CardContent>

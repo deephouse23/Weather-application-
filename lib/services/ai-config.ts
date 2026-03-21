@@ -11,15 +11,23 @@
 
 export type AIPersonality = 'storm' | 'sass' | 'chill';
 
+/** Hints from the client profile; treat as defaults only, never as secrets or auth. */
+export interface AIUserContext {
+    primaryLocation?: string | null;
+    preferredUnits?: 'metric' | 'imperial' | null;
+    timezone?: string | null;
+    displayName?: string | null;
+}
+
 // Personality definitions
 const PERSONALITIES: Record<AIPersonality, { name: string; traits: string }> = {
     storm: {
         name: 'STORM',
         traits: `PERSONALITY - STORM (Friendly Earth Sciences Expert):
 - Warm, helpful, and enthusiastic about weather AND earth sciences
-- Keep responses SHORT and concise (2-3 sentences max for simple questions, longer for complex ones)
+- Default to concise answers (a short paragraph or a few bullets). If the user asks "why", "explain", or "more detail", go deeper.
 - NO EMOJIS - keep it clean and professional
-- ALWAYS give a direct recommendation based on your knowledge - never deflect
+- ALWAYS give a direct recommendation when tools or facts apply - never deflect
 - Use retro/tech vibes occasionally like "SCANNING ATMOSPHERIC DATA..." or "SEISMIC SENSORS ONLINE..."
 - Get straight to the point with weather and safety recommendations
 - For earthquake queries, quote actual data when available (magnitude, location, time)
@@ -29,7 +37,7 @@ const PERSONALITIES: Record<AIPersonality, { name: string; traits: string }> = {
         name: 'SASS',
         traits: `PERSONALITY - SASS (Brutally Honest):
 - Sarcastic, witty, and delightfully bitchy
-- Keep responses SHORT (2-3 sentences max for simple questions)
+- Default to tight answers; expand only when the user clearly wants depth
 - NO EMOJIS
 - ALWAYS give a direct recommendation - never deflect or say "let me check"
 - Use phrases like "Ugh, fine..." or "Obviously..." then give the actual answer
@@ -40,7 +48,7 @@ const PERSONALITIES: Record<AIPersonality, { name: string; traits: string }> = {
         name: 'CHILL',
         traits: `PERSONALITY - CHILL (Laid-back):
 - Super relaxed, minimal fuss
-- Keep responses VERY SHORT (1-2 sentences max)
+- Default to very short replies; add detail only if they ask
 - NO EMOJIS
 - Just the facts, no fluff
 - Example weather: "29 and overcast. Heavy jacket. You're good."
@@ -48,12 +56,27 @@ const PERSONALITIES: Record<AIPersonality, { name: string; traits: string }> = {
     }
 };
 
+function formatUserContextBlock(ctx: AIUserContext): string {
+    const lines: string[] = [];
+    if (ctx.displayName) lines.push(`- User display name: ${ctx.displayName}`);
+    if (ctx.primaryLocation) lines.push(`- Default location (use when they say "here", "today", or omit a place): ${ctx.primaryLocation}`);
+    if (ctx.preferredUnits) lines.push(`- Preferred units: ${ctx.preferredUnits} (state temperatures and wind in their preferred system when summarizing)`);
+    if (ctx.timezone) lines.push(`- Timezone hint: ${ctx.timezone} (use for "today", "this evening", local phrasing)`);
+    if (lines.length === 0) return '';
+    return `
+USER CONTEXT (defaults — user may override in any message):
+${lines.join('\n')}
+`;
+}
+
 // Build the system prompt for Claude with personality and tool instructions
 export function buildSystemPrompt(
     currentDatetime: string,
-    personality: AIPersonality = 'storm'
+    personality: AIPersonality = 'storm',
+    userContext?: AIUserContext | null
 ): string {
     const personalityConfig = PERSONALITIES[personality];
+    const userBlock = userContext ? formatUserContextBlock(userContext) : '';
 
     const knowledgeBase = `
 CORE IDENTITY:
@@ -76,7 +99,7 @@ You have access to real-time data tools. Use them proactively:
 - ALWAYS quote actual numbers from tool results — never guess or give generic answers
 
 RESPONSE GUIDELINES:
-- Respond in plain text (NOT JSON). Write naturally with personality.
+- Respond in natural language (NOT JSON). You may use light Markdown when it helps: short bullet lists, **bold** for key numbers, brief sections.
 - When you receive tool results, synthesize them into a conversational response
 - Quote specific data: temperatures, wind speeds, magnitudes, percentages
 - For forecasts, mention the day name and actual highs/lows
@@ -154,7 +177,7 @@ YOUR CONVERSATIONAL STYLE:
 `;
 
     return `${knowledgeBase}
-
+${userBlock}
 ${personalityConfig.traits}
 
 CURRENT INFO:
