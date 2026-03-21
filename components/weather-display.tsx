@@ -89,11 +89,11 @@ export function WeatherDisplay({
     : 0
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-5 sm:space-y-7">
       {/* 1. Location Header with Large Temperature */}
       <div className="text-center mb-4">
         <div className="flex items-center justify-center gap-3 mb-2">
-          <h1 className={cn("text-xl sm:text-2xl font-extrabold tracking-wider uppercase", themeClasses.headerText, themeClasses.glow)} style={{
+          <h1 className={cn("text-xl sm:text-2xl font-extrabold tracking-wider uppercase text-primary font-sans", themeClasses.glow)} style={{
             fontSize: "clamp(18px, 3.5vw, 28px)"
           }}>
             {weather.location} WEATHER
@@ -112,12 +112,12 @@ export function WeatherDisplay({
             />
           )}
         </div>
-        <p data-testid="temperature-value" className={cn("text-6xl sm:text-8xl font-bold my-2", themeClasses.text)} style={{
+        <p data-testid="temperature-value" className={cn("text-6xl sm:text-8xl font-bold my-2 tabular-nums tracking-tight font-mono", themeClasses.text)} style={{
           fontSize: "clamp(48px, 12vw, 96px)"
         }}>
           {weather?.temperature ?? 'N/A'}{weather?.temperature != null ? '°' : ''}
         </p>
-        <p className={cn("text-base sm:text-lg", themeClasses.secondaryText)}>
+        <p className="text-base sm:text-lg text-muted-foreground/90 leading-relaxed">
           {weather?.condition || 'Unknown'} - {weather?.description || 'No description available'}
         </p>
       </div>
@@ -132,7 +132,7 @@ export function WeatherDisplay({
       )}
 
       {/* 3. Two-column layout: 5-Day Forecast + AQI (left) / Radar (right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6 pt-1">
         {/* LEFT: 5-Day Forecast + AQI stacked */}
         <div className="space-y-4">
           {weather?.forecast && weather.forecast.length > 0 ? (
@@ -162,19 +162,19 @@ export function WeatherDisplay({
 
         {/* RIGHT: Weather Radar only */}
         {showRadar && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          <div className="space-y-3 rounded-xl dashboard-surface bg-card/40 p-3 sm:p-4">
+            <div className="flex items-center justify-between gap-2">
               <h2 className="text-lg font-semibold text-terminal-text-primary">
                 Weather Radar
               </h2>
               <Link
                 href="/radar"
-                className="px-2 py-1 border-0 rounded-md font-mono text-xs font-bold transition-colors hover:scale-105 text-terminal-text-primary hover:text-white"
+                className="px-2 py-1 border-0 rounded-md text-xs font-semibold transition-colors hover:text-primary text-muted-foreground hover:text-foreground"
               >
                 VIEW FULL →
               </Link>
             </div>
-            <div className="h-[400px] rounded-lg overflow-visible">
+            <div className="h-[400px] rounded-lg overflow-visible ring-1 ring-[var(--border-invisible)]">
               <LazyWeatherMap
                 latitude={weather?.coordinates?.lat}
                 longitude={weather?.coordinates?.lon}

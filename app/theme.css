@@ -62,6 +62,8 @@
 
     /* Feature toggles / UI logic */
     --theme-font: var(--font-inconsolata), 'Inconsolata', monospace;
+    /* Nord: clean UI sans; use font-mono / Inconsolata for numeric “terminal” blocks */
+    --font-body: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
   }
 
   /* 
@@ -113,6 +115,7 @@
     --card-bg-hover: rgba(var(--theme-accent-rgb), 0.08);
 
     --theme-font: var(--font-vt323), 'VT323', monospace;
+    --font-body: var(--theme-font), ui-monospace, monospace;
   }
 
   /* 
@@ -164,6 +167,7 @@
     --card-bg-hover: rgba(var(--theme-accent-rgb), 0.08);
 
     --theme-font: var(--font-inconsolata), 'Inconsolata', monospace;
+    --font-body: var(--theme-font), ui-monospace, monospace;
   }
 
   /* 
@@ -215,6 +219,7 @@
     --card-bg-hover: rgba(var(--theme-accent-rgb), 0.08);
 
     --theme-font: var(--font-inconsolata), 'Inconsolata', monospace;
+    --font-body: var(--theme-font), ui-monospace, monospace;
   }
 
   /* 
@@ -266,5 +271,6 @@
     --card-bg-hover: rgba(var(--theme-accent-rgb), 0.08);
 
     --theme-font: var(--font-vt323), 'VT323', monospace;
+    --font-body: var(--theme-font), ui-monospace, monospace;
   }
 }

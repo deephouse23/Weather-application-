@@ -28,7 +28,7 @@ export default function Forecast({ forecast, onDayClick, selectedDay }: Forecast
     : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5";
 
   return (
-    <Card className="p-3 sm:p-4 lg:p-6 border-0 shadow-md hover:shadow-lg transition-all duration-300 animate-slide-in">
+    <Card className="p-3 sm:p-4 lg:p-6 border-0 rounded-xl dashboard-surface bg-card/55 backdrop-blur-md transition-shadow duration-300 animate-slide-in">
       <CardHeader className="p-0 mb-3 sm:mb-4">
         <CardTitle className="text-center text-base sm:text-lg lg:text-xl font-extrabold uppercase tracking-wider text-primary glow">
           {title}
@@ -87,10 +87,11 @@ function ForecastCard({ day, index, onDayClick, isSelected }: {
   return (
     <Card
       className={cn(
-        "cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-lg hover:border-primary/50 card-interactive",
+        "cursor-pointer transition-all duration-200 hover:-translate-y-0.5 card-interactive",
         "flex flex-col justify-between min-h-[120px] sm:min-h-[140px] lg:min-h-[160px]",
-        "backdrop-blur-sm bg-card/80",
-        isSelected && "ring-2 ring-primary ring-opacity-80 scale-105 shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+        "backdrop-blur-sm bg-card/70 border border-[var(--border-invisible)] shadow-[0_10px_28px_-14px_rgba(0,0,0,0.55)]",
+        "hover:border-[var(--border-subtle)] hover:shadow-[0_14px_36px_-14px_rgba(0,0,0,0.55)]",
+        isSelected && "ring-2 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_22px_rgba(var(--theme-accent-rgb),0.32)]"
       )}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
@@ -104,7 +105,7 @@ function ForecastCard({ day, index, onDayClick, isSelected }: {
         <div className="text-xs sm:text-sm font-bold text-primary mb-1 uppercase tracking-wider glow text-center">
           <span className="sm:hidden">{day.day.substring(0, 3)}</span>
           <span className="hidden sm:inline">{day.day}</span>
-          <div className="text-[10px] text-muted-foreground mt-1">
+          <div className="text-xs text-muted-foreground/90 mt-1 tabular-nums">
             {formattedDate}
           </div>
         </div>
@@ -120,16 +121,19 @@ function ForecastCard({ day, index, onDayClick, isSelected }: {
 
         {/* Temp */}
         <div className="space-y-1 text-center">
-          <div className="text-sm sm:text-base lg:text-lg font-bold text-foreground pixel-glow">
+          <div className="text-sm sm:text-base lg:text-lg font-bold text-foreground tabular-nums font-mono tracking-tight">
             {Math.round(day.highTemp)}{tempUnit}
           </div>
-          <div className="text-xs sm:text-sm text-muted-foreground font-medium">
+          <div className="text-xs sm:text-sm text-muted-foreground/90 font-medium tabular-nums font-mono">
             {Math.round(day.lowTemp)}{tempUnit}
           </div>
         </div>
 
         {/* Description - Mobile responsive */}
-        <div className="text-[10px] text-primary/80 capitalize mt-2 text-center w-full truncate leading-tight">
+        <div
+          className="text-xs text-primary/85 capitalize mt-2 text-center w-full line-clamp-2 leading-snug min-h-[2.25rem]"
+          title={day.description}
+        >
           <span className="sm:hidden">
             {day.description.length > 12 ? `${day.description.substring(0, 10)}...` : day.description}
           </span>

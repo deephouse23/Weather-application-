@@ -15,7 +15,7 @@
 import type React from "react"
 import "./globals.css"
 import type { Metadata } from "next"
-import { Inconsolata, VT323 } from "next/font/google"
+import { IBM_Plex_Sans, Inconsolata, VT323 } from "next/font/google"
 // PERFORMANCE: Analytics lazy loaded via client component wrapper
 import AnalyticsWrapper from "@/components/analytics-wrapper"
 import AppThemeProvider from "@/app/providers/ThemeProvider"
@@ -27,6 +27,13 @@ import AuthDebug from "@/components/auth/auth-debug"
 
 // PERFORMANCE: Use next/font for non-blocking font loading
 // Include all weights used in codebase (400, 500, 600, 700, 800)
+const ibmPlexSans = IBM_Plex_Sans({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-ui",
+  weight: ["400", "500", "600", "700"],
+})
+
 const inconsolata = Inconsolata({
   subsets: ["latin"],
   display: 'swap',
@@ -158,7 +165,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://pollen.googleapis.com" />
         <link rel="dns-prefetch" href="https://www.google.com" />
       </head>
-      <body className={`${inconsolata.variable} ${vt323.variable} min-h-screen font-sans`} style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
+      <body className={`${ibmPlexSans.variable} ${inconsolata.variable} ${vt323.variable} min-h-screen font-sans antialiased`} style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
         <ErrorBoundaryWrapper>
           <AuthProvider>
             <AppThemeProvider>

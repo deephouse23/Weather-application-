@@ -45,7 +45,7 @@ export function AirQualityDisplay({ aqi, theme, className, minimal = false }: Ai
         border: 'border-white/20'
       }
     : {
-        container: 'bg-card border-primary glow-subtle',
+        container: 'bg-card/80 dashboard-surface rounded-xl glow-subtle',
         header: 'text-primary',
         text: 'text-foreground',
         border: 'border-primary/40'
@@ -96,7 +96,7 @@ export function AirQualityDisplay({ aqi, theme, className, minimal = false }: Ai
 
         {/* AQI Scale Labels */}
         {!minimal && (
-          <div className="flex justify-between text-xs text-gray-400 mt-1 px-1">
+          <div className="flex justify-between text-xs text-muted-foreground/90 mt-1 px-1">
             {AQI_SCALE_LABELS.map((label, index) => (
               <span key={index}>{label}</span>
             ))}

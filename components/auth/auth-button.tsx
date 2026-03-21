@@ -48,7 +48,7 @@ export default function AuthButton() {
         href="/auth/login"
         className={cn(
           buttonVariants({ variant: "default", size: "default" }),
-          "min-w-[80px] font-bold shadow-md bg-emerald-600 hover:bg-emerald-500 text-white border-2 border-white/20"
+          "min-w-[80px] font-bold shadow-md shadow-glow-subtle border border-primary/25"
         )}
       >
         <LogIn className="w-3 h-3 mr-1" />

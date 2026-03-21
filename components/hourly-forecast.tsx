@@ -67,7 +67,7 @@ export default function HourlyForecast({
   const now = Date.now();
 
   return (
-    <Card className="p-3 sm:p-4 lg:p-6 border-0 shadow-xl backdrop-blur-md bg-card/40 animate-slide-in">
+    <Card className="p-3 sm:p-4 lg:p-6 border-0 rounded-xl dashboard-surface backdrop-blur-md bg-card/55 animate-slide-in">
       <CardHeader className="p-0 mb-3 sm:mb-4">
         <CardTitle className="text-center text-base sm:text-lg lg:text-xl font-bold uppercase tracking-wider text-primary glow">
           HOURLY FORECAST
@@ -77,7 +77,7 @@ export default function HourlyForecast({
       <CardContent className="p-0">
         <div
           ref={scrollContainerRef}
-          className="overflow-x-auto overflow-y-hidden py-4 px-2 scrollbar-hide"
+          className="overflow-x-auto overflow-y-hidden py-4 px-2 scrollbar-hide scroll-smooth snap-x snap-mandatory"
           style={{
             scrollbarWidth: 'thin',
             scrollbarColor: 'hsl(var(--primary)) transparent'
@@ -103,7 +103,7 @@ export default function HourlyForecast({
         </div>
 
         {/* Scroll hint for mobile */}
-        <div className="text-center mt-2 text-xs opacity-70 text-muted-foreground">
+        <div className="text-center mt-2 text-xs text-muted-foreground/90">
           ← Scroll for more hours →
         </div>
       </CardContent>
@@ -125,13 +125,14 @@ function HourlyCard({
   return (
     <Card
       className={cn(
-        "flex-shrink-0 flex flex-col items-center justify-between",
+        "flex-shrink-0 flex flex-col items-center justify-between snap-start",
         "rounded-xl p-3 sm:p-4 min-w-[100px] sm:min-w-[110px]",
-        "transition-all duration-300 hover:scale-105 hover:-translate-y-1",
-        "backdrop-blur-md",
+        "transition-all duration-200 hover:-translate-y-0.5",
+        "backdrop-blur-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "shadow-[0_10px_28px_-14px_rgba(0,0,0,0.55)]",
         isCurrentHour
-          ? "bg-primary/10 border-0 shadow-[0_0_15px_rgba(var(--primary),0.3)] current-hour"
-          : "bg-card/50 hover:bg-card/80 border-0",
+          ? "bg-primary/12 border border-primary/25 shadow-[0_0_20px_rgba(var(--theme-accent-rgb),0.28)] current-hour"
+          : "bg-card/55 hover:bg-card/75 border border-[var(--border-invisible)] hover:border-[var(--border-subtle)] hover:shadow-[0_12px_32px_-14px_rgba(0,0,0,0.5)]",
         isMidnight && "border-l-0"
       )}
     >
@@ -145,7 +146,7 @@ function HourlyCard({
 
       {/* Day marker for midnight */}
       {isMidnight && !isCurrentHour && (
-        <div className="text-[10px] mb-1 font-bold uppercase tracking-widest opacity-80 text-primary">
+        <div className="text-xs mb-1 font-bold uppercase tracking-widest text-primary/90">
           {new Date(hour.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' })}
         </div>
       )}
@@ -162,14 +163,14 @@ function HourlyCard({
 
       {/* Temperature */}
       <div className={cn(
-        "text-lg sm:text-xl font-bold mb-2 pixel-glow text-primary",
-        isCurrentHour && "scale-110"
+        "text-lg sm:text-xl font-bold mb-2 tabular-nums tracking-tight text-primary font-mono",
+        isCurrentHour && "glow"
       )}>
         {Math.round(hour.temp)}{tempUnit}
       </div>
 
       {/* Stats Row */}
-      <div className="flex items-center gap-3 w-full justify-center text-[10px] sm:text-xs opacity-80 text-muted-foreground">
+      <div className="flex items-center gap-3 w-full justify-center text-xs text-muted-foreground/90">
         {/* Precip */}
         <div className={cn(
           "flex items-center gap-0.5",
