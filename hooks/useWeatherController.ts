@@ -351,12 +351,15 @@ export function useWeatherController() {
 
     // Auto-location effect
     useEffect(() => {
-        if (!isClient || autoLocationAttempted || authLoading) return
+        if (!isClient || autoLocationAttempted) return
 
+        // E2E: must not wait on Supabase auth — cache restore is gated on autoLocationAttempted
         if (process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true') {
             setAutoLocationAttempted(true)
             return
         }
+
+        if (authLoading) return
 
         const tryAutoLocation = async () => {
             try {
