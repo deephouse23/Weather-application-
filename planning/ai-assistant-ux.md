@@ -20,7 +20,7 @@ Branch: `feat/ai-assistant-ux`
 | Quick actions / Try asking | One-shot send via `pendingSend` from `/ai`. |
 | `?prompt=` | Auto-sends once (ref-guarded). |
 | Sidebar | Volcanic row shows **Soon** until a tool exists. |
-| Prompts | Personalities aligned with concise default, deeper on request. |
+| Prompts | Personalities aligned with concise default, deeper on request; system prompt allows light Markdown. |
 | Throttle | `experimental_throttle: 50` on `useChat` for smoother stream updates. |
 
 ## Follow-ups
