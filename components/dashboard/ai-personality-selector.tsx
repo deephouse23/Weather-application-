@@ -58,8 +58,11 @@ export default function AIPersonalitySelector() {
 
                     return (
                         <button
+                            type="button"
                             key={p.id}
                             onClick={() => setPersonality(p.id)}
+                            aria-pressed={isSelected}
+                            aria-label={`${p.name}: ${p.description}`}
                             className={cn(
                                 "p-4 border-0 rounded-lg transition-all duration-200 text-left",
                                 "bg-black/40 hover:bg-black/60",

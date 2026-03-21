@@ -92,7 +92,7 @@ function HomePageShell() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 py-6">
-        {/* Large header - this is the LCP element with fetchpriority for performance */}
+        {/* Large header — LCP element; fetchPriority is not valid on h1 and has no effect here */}
         <h1
           className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-center mb-8 text-primary glow"
           style={{
@@ -100,8 +100,6 @@ function HomePageShell() {
             contentVisibility: 'auto',
             containIntrinsicSize: '0 80px'
           }}
-          // @ts-expect-error - fetchpriority is valid HTML attribute
-          fetchpriority="high"
         >
           16 BIT WEATHER
         </h1>

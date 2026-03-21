@@ -9,6 +9,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import type { User } from '@supabase/supabase-js';
+import { isPlaywrightTestModeRequest } from '@/lib/playwright-test-mode';
 import { streamText, stepCountIs, convertToModelMessages } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { buildSystemPrompt, type AIPersonality } from '@/lib/services/ai-config';
@@ -20,7 +22,25 @@ import { weatherTools } from '@/lib/ai/tools';
 // Auth helper (unchanged)
 // ---------------------------------------------------------------------------
 
+const PLAYWRIGHT_TEST_USER_ID = '00000000-0000-0000-0000-000000000000';
+
+function getPlaywrightTestUser(): User {
+    return {
+        id: PLAYWRIGHT_TEST_USER_ID,
+        aud: 'authenticated',
+        role: 'authenticated',
+        email: 'playwright-test@example.com',
+        app_metadata: {},
+        user_metadata: {},
+        created_at: new Date().toISOString(),
+    } as User;
+}
+
 async function getAuthenticatedUser(request: NextRequest) {
+    if (isPlaywrightTestModeRequest(request)) {
+        return getPlaywrightTestUser();
+    }
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
