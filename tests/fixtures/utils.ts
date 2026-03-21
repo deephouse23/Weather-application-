@@ -126,7 +126,9 @@ export async function stubWeatherApis(page: Page, opts: StubOptions = {}): Promi
   const nowIso = new Date().toISOString();
   const forecastDay = nowIso.split('T')[0];
 
-  await page.route('**/api/weather/precipitation-history**', (route) => route.fulfill({
+  // Regex (not globs): `**/precipitation**` matches `.../precipitation-history` because ** spans `-history`;
+  // Playwright checks routes last-registered-first, so the wrong stub could win without exact paths.
+  await page.route(/.*\/api\/weather\/precipitation-history(?:\?.*)?$/, (route) => route.fulfill({
     status: 200,
     contentType: 'application/json',
     body: JSON.stringify({
@@ -145,7 +147,7 @@ export async function stubWeatherApis(page: Page, opts: StubOptions = {}): Promi
     }),
   }));
 
-  await page.route('**/api/weather/precipitation**', (route) => route.fulfill({
+  await page.route(/.*\/api\/weather\/precipitation(?:\?.*)?$/, (route) => route.fulfill({
     status: 200,
     contentType: 'application/json',
     body: JSON.stringify({
