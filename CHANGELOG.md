@@ -2,6 +2,27 @@
 
 All notable changes to 16-Bit Weather are documented in this file.
 
+## [1.512.0] - 2026-03-21
+
+### Added
+
+- **Supabase `user_ai_memory`**: Per-user rows for assistant notes and recent locations, with RLS and service-role access from API routes; atomic append RPCs limit growth (`20260321_user_ai_memory.sql`, `20260322_user_ai_memory_atomic_rpc.sql`).
+- **AI memory tools**: Assistant can record facts, locations, and scoped clears via dedicated tools (`lib/ai/memory-tools.ts`, `lib/services/ai-memory-service.ts`).
+- **AI tool surface**: Structured tools for weather lookups, aviation context, USGS earthquakes, and space weather (`lib/ai/tools.ts`), replacing broad pre-fetch where practical.
+
+### Changed
+
+- **News and RSS**: Earthquake and volcano feeds from USGS (and related sources) integrated in the feed catalog (`lib/services/rss/feedSources.ts`).
+- **Theme provider**: Sign-out handling uses a live theme reference so premium themes reset correctly; Playwright test mode avoids forcing free themes when the suite sets a premium theme for persistence tests (`components/theme-provider.tsx`).
+- **Weather controller**: Playwright test mode can restore cached weather without waiting on the full auto-location gate (`hooks/useWeatherController.ts`).
+- **Profile E2E**: `data-testid="profile-edit-button"` and `navigateToProfile` wait for that control with `domcontentloaded` instead of `networkidle` (`app/profile/page.tsx`, `tests/fixtures/utils.ts`, `tests/e2e/profile.spec.ts`).
+
+### Documentation
+
+- **README**: Version 1.512, stack bumped to Next.js 16, highlights for AI memory, earth-science feeds, and testing hardening.
+
+---
+
 ## [1.0.1] - 2026-03-12
 
 ### Codebase Cleanup

@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-16-Bit Weather is a retro-styled weather education platform built with Next.js 15 (App Router) and React 19. It combines real-time weather data with 16-bit pixel art aesthetics, featuring educational content, interactive games, and global weather tracking. Live at 16bitweather.co, deployed on Vercel.
+16-Bit Weather is a retro-styled weather education platform built with Next.js 16 (App Router) and React 19. It combines real-time weather data with pixel-influenced visuals, educational content, interactive games, global weather tracking, tool-backed AI (earth science and aviation aware), and Supabase-backed user AI memory. Live at 16bitweather.co, deployed on Vercel.
 
 ## Common Commands
 
@@ -52,7 +52,7 @@ Config: `.git/hooks/pre-push` and `lighthouserc.js`
 
 ### Next.js App Router Structure
 
-- **`app/`** - Routes using Next.js 15 App Router conventions
+- **`app/`** - Routes using Next.js 16 App Router conventions
   - Server Components by default, `"use client"` for interactivity
   - `api/` - API routes that proxy external services (keeps API keys server-side)
   - Dynamic routes: `weather/[city]`, `games/[slug]`, `gfs-model/[region]/[run]`

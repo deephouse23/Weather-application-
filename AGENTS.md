@@ -4,7 +4,7 @@ This document provides guidelines for AI agents working on the 16-Bit Weather co
 
 ## Project Overview
 
-A retro-styled weather education platform built with Next.js 15 (App Router) and React 19. Features real-time weather data, pixel art aesthetics, educational content, interactive games, and global weather tracking.
+Retro-styled weather education platform built with Next.js 16 (App Router) and React 19. Features real-time weather data, pixel-influenced UI, educational content, interactive games, global weather tracking, tool-backed AI assistance, and Supabase-backed user AI memory.
 
 ## Build/Test/Lint Commands
 
