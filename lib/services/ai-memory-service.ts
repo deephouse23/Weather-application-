@@ -6,9 +6,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const MAX_NOTES_CHARS = 10_000;
-const MAX_FACT_LINE = 400;
-const MAX_RECENT_LOCATIONS = 20;
-const MAX_LOCATION_LEN = 200;
+/** Fact line / location caps are enforced in Postgres RPCs (`20260322_user_ai_memory_atomic_rpc.sql`). */
 
 export interface UserAIMemory {
     memoryNotes: string;
@@ -26,6 +24,7 @@ function getSupabaseAdmin() {
     return createClient(supabaseUrl, supabaseServiceKey);
 }
 
+/** Keeps the most recently appended text when over budget (drops oldest lines). Matches SQL `right(..., MAX_NOTES_CHARS)`. */
 function trimNotes(text: string): string {
     if (text.length <= MAX_NOTES_CHARS) return text;
     return text.slice(text.length - MAX_NOTES_CHARS);
@@ -83,26 +82,27 @@ async function upsertRow(
 }
 
 export async function appendMemoryFact(userId: string, fact: string): Promise<void> {
-    const line = fact.trim().slice(0, MAX_FACT_LINE);
-    if (!line) return;
-
-    const current = await getUserAIMemory(userId);
-    const prefix = current.memoryNotes.trim() ? `${current.memoryNotes.trim()}\n` : '';
-    const next = trimNotes(`${prefix}- ${line}`);
-    await upsertRow(userId, { memory_notes: next });
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase.rpc('append_user_ai_memory_fact', {
+        p_user_id: userId,
+        p_fact: fact,
+    });
+    if (error) {
+        console.error('[ai-memory] appendMemoryFact:', error);
+        throw new Error('Failed to save AI memory');
+    }
 }
 
 export async function addRecentLocation(userId: string, location: string): Promise<void> {
-    const normalized = location.trim().slice(0, MAX_LOCATION_LEN);
-    if (!normalized) return;
-
-    const current = await getUserAIMemory(userId);
-    const lower = normalized.toLowerCase();
-    const filtered = current.recentLocations.filter(
-        (l) => l.toLowerCase() !== lower
-    );
-    const next = [normalized, ...filtered].slice(0, MAX_RECENT_LOCATIONS);
-    await upsertRow(userId, { recent_locations: next });
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase.rpc('add_user_ai_memory_location', {
+        p_user_id: userId,
+        p_location: location,
+    });
+    if (error) {
+        console.error('[ai-memory] addRecentLocation:', error);
+        throw new Error('Failed to save AI memory');
+    }
 }
 
 export async function replaceMemoryNotes(userId: string, notes: string): Promise<void> {

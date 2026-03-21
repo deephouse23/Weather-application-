@@ -24,9 +24,12 @@ Branch: `feat/ai-assistant-ux`
 | Throttle | `experimental_throttle: 50` on `useChat` for smoother stream updates. |
 | **Supabase AI memory** | Table `user_ai_memory` (notes + `recent_locations` JSON array). Loaded each request into the system prompt. Tools: `save_user_memory_fact`, `save_user_location_interest`, `replace_user_memory_notes`, `clear_user_ai_memory`. |
 
-### Apply the `user_ai_memory` migration
+### Apply the `user_ai_memory` migrations
 
-Run `supabase/migrations/20260321_user_ai_memory.sql` in the Supabase SQL editor (or your migration pipeline). Requires `SUPABASE_SERVICE_ROLE_KEY` on the API (same as chat history).
+1. Run `supabase/migrations/20260321_user_ai_memory.sql` (table + RLS).
+2. Run `supabase/migrations/20260322_user_ai_memory_atomic_rpc.sql` (atomic append/location RPCs used by the API).
+
+Requires `SUPABASE_SERVICE_ROLE_KEY` on the API (same as chat history).
 
 **Note:** Clearing chat history (`DELETE /api/chat`) does **not** wipe long-term memory; the model can clear memory via `clear_user_ai_memory` when the user asks.
 

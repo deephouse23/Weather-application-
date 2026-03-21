@@ -68,7 +68,8 @@ export default function AIChat({
     }
   }, [initialPrompt, isAuthenticated, setInput]);
 
-  // One-shot send from parent (quick actions, suggested prompts, ?prompt=)
+  // One-shot send from parent (quick actions, suggested prompts, ?prompt=).
+  // When isLoading is true we bail; when it flips false this effect runs again and retries with the same pendingSend.
   useEffect(() => {
     if (!pendingSend?.trim() || !isAuthenticated || isLoading) return;
     const sent = sendMessage(pendingSend.trim());

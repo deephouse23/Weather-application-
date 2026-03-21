@@ -28,6 +28,22 @@ const userContextSchema = z.object({
     displayName: z.string().max(120).nullable().optional(),
 });
 
+/** Minimal shape check; extra keys preserved for convertToModelMessages / tool parts. */
+const chatUiMessageSchema = z
+    .object({
+        role: z.string(),
+        id: z.string().optional(),
+        parts: z.array(z.unknown()).optional(),
+        content: z.unknown().optional(),
+    })
+    .passthrough();
+
+const chatPostBodySchema = z.object({
+    messages: z.array(chatUiMessageSchema).min(1),
+    personality: z.string().max(32).optional(),
+    userContext: z.unknown().optional(),
+});
+
 // ---------------------------------------------------------------------------
 // Auth helper (unchanged)
 // ---------------------------------------------------------------------------
@@ -91,21 +107,23 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Parse request body — Vercel AI SDK v6 useChat sends UIMessage[] (parts format)
-        const body = await request.json();
+        let rawBody: unknown;
+        try {
+            rawBody = await request.json();
+        } catch {
+            return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+        }
+
+        const parsedBody = chatPostBodySchema.safeParse(rawBody);
+        if (!parsedBody.success) {
+            return NextResponse.json({ error: 'Invalid request payload' }, { status: 400 });
+        }
+
         const {
             messages: incomingMessages,
             personality = 'storm',
             userContext: rawUserContext,
-        } = body as {
-            messages: Array<{
-                role: string;
-                parts?: Array<{ type: string; text?: string }>;
-                content?: string;
-            }>;
-            personality?: string;
-            userContext?: unknown;
-        };
+        } = parsedBody.data;
 
         let userContext: AIUserContext | null = null;
         if (rawUserContext != null) {
@@ -131,11 +149,14 @@ export async function POST(request: NextRequest) {
         const lastUserMsg = [...incomingMessages]
             .reverse()
             .find(m => m.role === 'user');
-        const lastUserText = lastUserMsg?.parts
-            ?.filter(p => p.type === 'text')
-            .map(p => p.text ?? '')
-            .join('')
-            ?? (lastUserMsg?.content as string ?? '');
+        type TextPart = { type: string; text?: string };
+        const lastUserParts = lastUserMsg?.parts as TextPart[] | undefined;
+        const lastUserText =
+            lastUserParts
+                ?.filter(p => p.type === 'text')
+                .map(p => p.text ?? '')
+                .join('') ??
+            (typeof lastUserMsg?.content === 'string' ? lastUserMsg.content : '');
 
         if (lastUserText.length > 4000) {
             return NextResponse.json(
