@@ -1,13 +1,14 @@
 import { redirect } from 'next/navigation';
 
 type MapRedirectPageProps = {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default function MapRedirectPage({ searchParams }: MapRedirectPageProps) {
+export default async function MapRedirectPage({ searchParams }: MapRedirectPageProps) {
   const params = new URLSearchParams();
+  const resolved = searchParams ? await searchParams : {};
 
-  Object.entries(searchParams || {}).forEach(([key, value]) => {
+  Object.entries(resolved).forEach(([key, value]) => {
     if (Array.isArray(value)) {
       value.forEach((entry) => {
         if (entry !== undefined) {

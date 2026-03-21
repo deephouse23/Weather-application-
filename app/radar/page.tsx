@@ -227,12 +227,16 @@ export default function MapPage() {
 
         {/* Share Button */}
         <button
+          type="button"
           onClick={handleShare}
           className="inline-flex items-center gap-2 text-xs font-mono px-3 py-1.5 border-2 border-gray-600 hover:bg-gray-700 transition-colors rounded"
           title="Share this radar map"
+          aria-label={shareSuccess ? 'Radar link copied to clipboard' : 'Share this radar map'}
         >
-          <Share2 className="w-3 h-3" />
-          {shareSuccess ? 'COPIED!' : 'SHARE'}
+          <Share2 className="w-3 h-3" aria-hidden />
+          <span role="status" aria-live="polite" className="inline">
+            {shareSuccess ? 'COPIED!' : 'SHARE'}
+          </span>
         </button>
       </div>
 

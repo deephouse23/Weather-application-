@@ -121,6 +121,59 @@ export async function stubWeatherApis(page: Page, opts: StubOptions = {}): Promi
     contentType: 'application/json',
     body: JSON.stringify({ aqi: 30, category: 'Good' })
   }));
+
+  const precipLocation = `${o.cityName}, ${o.country}`;
+  const nowIso = new Date().toISOString();
+  const forecastDay = nowIso.split('T')[0];
+
+  // Regex (not globs): `**/precipitation**` matches `.../precipitation-history` because ** spans `-history`;
+  // Playwright checks routes last-registered-first, so the wrong stub could win without exact paths.
+  await page.route(/.*\/api\/weather\/precipitation-history(?:\?.*)?$/, (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      currentRain: 0,
+      currentSnow: 0,
+      rain24h: 0.12,
+      snow24h: 0,
+      todayRain: 0.08,
+      yesterdayRain: 0.04,
+      todaySnow: 0,
+      yesterdaySnow: 0,
+      lastUpdated: nowIso,
+      dataSource: 'day_summary',
+      dataAvailable: true,
+      dataQuality: 'full',
+    }),
+  }));
+
+  await page.route(/.*\/api\/weather\/precipitation(?:\?.*)?$/, (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      location: precipLocation,
+      coordinates: { lat: o.lat, lon: o.lon },
+      current: {
+        snowDepth: 0,
+        snowfall24h: 0,
+        snowfall48h: 0,
+        snowfall7d: 0,
+        rainfall24h: 0.12,
+        rainfall48h: 0.2,
+        rainfall7d: 0.45,
+      },
+      forecast: [
+        {
+          date: forecastDay,
+          expectedSnow: 0,
+          expectedRain: 0.05,
+          probability: 20,
+        },
+      ],
+      source: 'e2e-stub',
+      timestamp: nowIso,
+    }),
+  }));
 }
 
 export async function seedFreshWeatherCache(page: Page, opts: StubOptions = {}): Promise<void> {

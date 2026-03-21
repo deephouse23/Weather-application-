@@ -407,15 +407,18 @@ export default function ShareWeatherModal({
                 themeClasses.text,
                 themeClasses.hoverBg
               )}
+              aria-label={copied ? 'Weather link copied' : 'Copy weather share link'}
             >
               {copied ? (
                 <>
-                  <Check className="w-4 h-4 mr-2" />
-                  Copied!
+                  <Check className="w-4 h-4 mr-2" aria-hidden />
+                  <span role="status" aria-live="polite">
+                    Copied!
+                  </span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-4 h-4 mr-2" />
+                  <Copy className="w-4 h-4 mr-2" aria-hidden />
                   Copy Link
                 </>
               )}
