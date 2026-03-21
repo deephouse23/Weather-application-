@@ -52,7 +52,7 @@ test.describe('Profile Settings', () => {
     await page.waitForTimeout(2000); // Wait for auth and profile to load
     
     // Find and click Edit Profile button
-    const editButton = page.locator('button').filter({ hasText: /edit profile/i }).first();
+    const editButton = page.getByTestId('profile-edit-button');
     await expect(editButton).toBeVisible({ timeout: 10000 });
     await editButton.click();
     
@@ -77,7 +77,7 @@ test.describe('Profile Settings', () => {
     await page.waitForTimeout(2000);
     
     // Enter edit mode
-    const editButton = page.locator('button').filter({ hasText: /edit profile/i }).first();
+    const editButton = page.getByTestId('profile-edit-button');
     await expect(editButton).toBeVisible({ timeout: 10000 });
     await editButton.click();
     
@@ -101,7 +101,7 @@ test.describe('Profile Settings', () => {
     await page.waitForTimeout(2000);
     
     // Enter edit mode
-    const editButton = page.locator('button').filter({ hasText: /edit profile/i }).first();
+    const editButton = page.getByTestId('profile-edit-button');
     await expect(editButton).toBeVisible({ timeout: 10000 });
     await editButton.click();
     
@@ -132,7 +132,7 @@ test.describe('Profile Settings', () => {
     await navigateToProfile(page);
     await page.waitForTimeout(2000);
     
-    const editButton = page.locator('button').filter({ hasText: /edit profile/i }).first();
+    const editButton = page.getByTestId('profile-edit-button');
     await expect(editButton).toBeVisible({ timeout: 10000 });
     await editButton.click();
     

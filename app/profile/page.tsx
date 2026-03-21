@@ -308,6 +308,7 @@ function ProfileContent() {
             <div className="flex space-x-4 pt-4">
               {!editing ? (
                 <Button
+                  data-testid="profile-edit-button"
                   onClick={() => setEditing(true)}
                   className={`w-full font-mono font-bold uppercase tracking-wider ${themeClasses.accentBg} text-black hover:opacity-90`}
                 >
