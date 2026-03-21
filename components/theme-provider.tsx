@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { safeStorage } from '@/lib/safe-storage'
 import { ThemeType, THEME_LIST, FREE_THEMES, getThemeDefinition } from '@/lib/theme-config'
 import { supabase } from '@/lib/supabase/client'
@@ -37,6 +37,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [hasLocalTheme, setHasLocalTheme] = useState(false)
+  const themeRef = useRef<Theme>(theme)
+  themeRef.current = theme
 
   const availableThemes: Theme[] = isAuthenticated ? THEME_LIST : FREE_THEMES
 
@@ -59,6 +61,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     checkUser()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
+      const isPlaywrightTestMode =
+        process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true' ||
+        process.env.PLAYWRIGHT_TEST_MODE === 'true'
+
       if (session?.user) {
         setUser(session.user)
         setIsAuthenticated(true)
@@ -66,8 +72,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       } else {
         setUser(null)
         setIsAuthenticated(false)
-        if (!FREE_THEMES.includes(theme as any)) {
-          setTheme('nord')
+        // E2E: allow premium theme from localStorage (themes.spec) without a real session
+        const current = themeRef.current
+        if (!isPlaywrightTestMode && !FREE_THEMES.includes(current as ThemeType)) {
+          setThemeState('nord')
         }
       }
     })

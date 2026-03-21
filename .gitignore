@@ -1,4 +1,4 @@
-﻿# Archive
+# Archive
 _archive/debugging/
 docs/archive/
 
@@ -120,6 +120,7 @@ tests/e2e/.kernel-browser-state.json
 .vercel
 
 # Lighthouse reports
+.lighthouseci/
 docs/lh-*.json
 docs/lighthouse-*.json
 lighthouse.json

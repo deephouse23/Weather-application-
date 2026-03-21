@@ -745,8 +745,8 @@ export async function navigateToProfile(page: Page): Promise<void> {
   // Note: setupMockAuth() MUST be called BEFORE calling this function
   // It should be called in beforeEach or before navigation
 
-  // Navigate to profile page
-  await page.goto('/profile', { waitUntil: 'networkidle' });
+  // Avoid networkidle — dev server / analytics keep connections open in CI and starve the test
+  await page.goto('/profile', { waitUntil: 'domcontentloaded' });
 
   // Wait for any redirects or auth checks to complete
   await page.waitForTimeout(500);
@@ -768,8 +768,8 @@ export async function navigateToProfile(page: Page): Promise<void> {
     }
   }
 
-  // Wait for profile page to fully load (auth context initialization)
-  await page.waitForTimeout(1000);
+  // Wait for profile UI (mounted + not stuck on middleware login)
+  await expect(page.getByTestId('profile-edit-button')).toBeVisible({ timeout: 20000 });
 }
 
 export async function fillProfileForm(page: Page, fields: { username?: string; fullName?: string; defaultLocation?: string }): Promise<void> {

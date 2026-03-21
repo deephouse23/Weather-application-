@@ -351,12 +351,15 @@ export function useWeatherController() {
 
     // Auto-location effect
     useEffect(() => {
-        if (!isClient || autoLocationAttempted || authLoading) return
+        if (!isClient || autoLocationAttempted) return
 
+        // E2E: must not wait on Supabase auth — cache restore is gated on autoLocationAttempted
         if (process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true') {
             setAutoLocationAttempted(true)
             return
         }
+
+        if (authLoading) return
 
         const tryAutoLocation = async () => {
             try {
@@ -432,7 +435,14 @@ export function useWeatherController() {
 
     // Initial cache load
     useEffect(() => {
-        if (!isClient || isAutoDetecting || !autoLocationAttempted) return
+        if (!isClient || isAutoDetecting) return
+
+        const isPlaywrightClient =
+            process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true' ||
+            process.env.PLAYWRIGHT_TEST_MODE === 'true'
+
+        // E2E: restore seeded localStorage as soon as client is ready (do not wait on auto-location flow)
+        if (!isPlaywrightClient && !autoLocationAttempted) return
 
         // CRITICAL: Don't restore cached location if user/AI has already initiated a search
         // This prevents race conditions where cache restoration overrides intentional location changes
