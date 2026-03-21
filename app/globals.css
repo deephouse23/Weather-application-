@@ -16,7 +16,8 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--theme-font, 'Inconsolata'), monospace;
+
+    font-family: var(--font-body, var(--font-ui), ui-sans-serif, system-ui, sans-serif);
     font-weight: 400;
   }
 }
@@ -430,6 +431,15 @@ body {
     background: var(--card-bg-hover);
   }
 
+  /* Weather dashboard: lifted panels (inset highlight + soft ambient shadow + accent hairline) */
+  .dashboard-surface {
+    border: 1px solid var(--border-invisible);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.055) inset,
+      0 14px 44px -22px rgba(0, 0, 0, 0.72),
+      0 0 0 1px rgba(var(--theme-accent-rgb), 0.1);
+  }
+
   /* Interactive card styles with accessibility */
   .card-interactive {
     transition: all 0.2s ease;
@@ -510,7 +520,7 @@ button {
 @media (max-width: 640px) {
   body {
     font-size: 14px;
-    line-height: 1.4;
+    line-height: 1.5;
   }
 
   .space-y-6> :not([hidden])~ :not([hidden]) {

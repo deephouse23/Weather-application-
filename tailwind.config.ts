@@ -151,9 +151,9 @@ const config: Config = {
 				'slide-in': 'slideIn 0.5s ease-out forwards'
 			},
 			fontFamily: {
-				sans: ['Inconsolata', 'monospace'],
-				mono: ['Inconsolata', 'monospace'],
-				display: ['VT323', 'monospace'],
+				sans: ['var(--font-body)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+				mono: ['var(--font-inconsolata)', 'ui-monospace', 'monospace'],
+				display: ['var(--font-vt323)', 'VT323', 'monospace'],
 			},
 			fontWeight: {
 				light: '300',
