@@ -19,6 +19,30 @@ export interface AIUserContext {
     displayName?: string | null;
 }
 
+/** Loaded from Supabase `user_ai_memory` and injected into the system prompt. */
+export interface AIPersistentMemory {
+    memoryNotes: string;
+    recentLocations: string[];
+}
+
+export function formatPersistentMemoryForPrompt(mem: AIPersistentMemory): string {
+    const notes = mem.memoryNotes.trim();
+    const locs = mem.recentLocations.filter(Boolean);
+    if (!notes && locs.length === 0) return '';
+
+    let block = `
+LONG-TERM MEMORY (saved for this user across sessions — may be updated via your memory tools):
+`;
+    if (notes) {
+        block += `${notes}\n`;
+    }
+    if (locs.length > 0) {
+        block += `Places they often care about: ${locs.join('; ')}\n`;
+    }
+    block += `Use this to personalize and skip redundant questions. If the user's current message conflicts, trust the current message.\n`;
+    return block;
+}
+
 // Personality definitions
 const PERSONALITIES: Record<AIPersonality, { name: string; traits: string }> = {
     storm: {
@@ -73,10 +97,15 @@ ${lines.join('\n')}
 export function buildSystemPrompt(
     currentDatetime: string,
     personality: AIPersonality = 'storm',
-    userContext?: AIUserContext | null
+    userContext?: AIUserContext | null,
+    persistentMemory?: AIPersistentMemory | null
 ): string {
     const personalityConfig = PERSONALITIES[personality];
     const userBlock = userContext ? formatUserContextBlock(userContext) : '';
+    const memoryBlock =
+        persistentMemory && (persistentMemory.memoryNotes.trim() || persistentMemory.recentLocations.length > 0)
+            ? formatPersistentMemoryForPrompt(persistentMemory)
+            : '';
 
     const knowledgeBase = `
 CORE IDENTITY:
@@ -97,6 +126,12 @@ You have access to real-time data tools. Use them proactively:
 - You can call MULTIPLE tools in sequence to build a complete answer
 - If a user asks a follow-up about the same location, remember the location from context and call tools again
 - ALWAYS quote actual numbers from tool results — never guess or give generic answers
+
+MEMORY TOOLS (per-user database — use when appropriate):
+- If the user asks you to remember something, states a stable preference, home base, commute, or recurring concern, call save_user_memory_fact with one short neutral line
+- If they clearly care about specific cities/regions over time, call save_user_location_interest with the place name (you can still use weather tools as usual)
+- If they ask to fix or shrink what you stored, call replace_user_memory_notes with a revised full notes block (or empty string to clear notes)
+- If they ask to forget everything you remembered, call clear_user_ai_memory with scope "all", or "notes" / "locations" for partial wipes
 
 RESPONSE GUIDELINES:
 - Respond in natural language (NOT JSON). You may use light Markdown when it helps: short bullet lists, **bold** for key numbers, brief sections.
@@ -177,7 +212,7 @@ YOUR CONVERSATIONAL STYLE:
 `;
 
     return `${knowledgeBase}
-${userBlock}
+${userBlock}${memoryBlock}
 ${personalityConfig.traits}
 
 CURRENT INFO:

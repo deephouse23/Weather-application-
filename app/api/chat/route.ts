@@ -17,7 +17,9 @@ import { anthropic } from '@ai-sdk/anthropic';
 import { buildSystemPrompt, type AIPersonality, type AIUserContext } from '@/lib/services/ai-config';
 import { checkRateLimit, getRateLimitStatus } from '@/lib/services/chat-rate-limiter';
 import { saveMessage, getRecentMessages, clearChatHistory } from '@/lib/services/chat-history-service';
+import { getUserAIMemory } from '@/lib/services/ai-memory-service';
 import { weatherTools } from '@/lib/ai/tools';
+import { createUserMemoryTools } from '@/lib/ai/memory-tools';
 
 const userContextSchema = z.object({
     primaryLocation: z.string().max(200).nullable().optional(),
@@ -155,11 +157,21 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        const persistentMemory = await getUserAIMemory(user.id).catch((err) => {
+            console.error('[Chat API] Failed to load user AI memory:', err);
+            return { memoryNotes: '', recentLocations: [] as string[] };
+        });
+
+        const chatTools = {
+            ...weatherTools,
+            ...createUserMemoryTools(user.id),
+        };
+
         // Convert UIMessage[] (from useChat) → ModelMessage[] (for streamText)
         // AI SDK v6 useChat sends parts format; streamText expects content format.
         const allMessages = await convertToModelMessages(
             incomingMessages as Parameters<typeof convertToModelMessages>[0],
-            { tools: weatherTools }
+            { tools: chatTools }
         );
 
         // Build system prompt (no more data injection — tools handle data)
@@ -173,7 +185,12 @@ export async function POST(request: NextRequest) {
             timeZoneName: 'short',
         });
 
-        const systemPrompt = buildSystemPrompt(currentDatetime, aiPersonality, userContext);
+        const systemPrompt = buildSystemPrompt(
+            currentDatetime,
+            aiPersonality,
+            userContext,
+            persistentMemory
+        );
 
         // Save the latest user message to Supabase (fire and forget)
         if (lastUserText) {
@@ -190,8 +207,8 @@ export async function POST(request: NextRequest) {
             model: anthropic('claude-sonnet-4-20250514'),
             system: systemPrompt,
             messages: allMessages,
-            tools: weatherTools,
-            stopWhen: stepCountIs(5),
+            tools: chatTools,
+            stopWhen: stepCountIs(8),
             maxOutputTokens: 4096,
             onFinish: async ({ text }) => {
                 // Save assistant response to history

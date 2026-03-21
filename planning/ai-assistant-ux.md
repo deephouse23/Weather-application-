@@ -22,9 +22,17 @@ Branch: `feat/ai-assistant-ux`
 | Sidebar | Volcanic row shows **Soon** until a tool exists. |
 | Prompts | Personalities aligned with concise default, deeper on request; system prompt allows light Markdown. |
 | Throttle | `experimental_throttle: 50` on `useChat` for smoother stream updates. |
+| **Supabase AI memory** | Table `user_ai_memory` (notes + `recent_locations` JSON array). Loaded each request into the system prompt. Tools: `save_user_memory_fact`, `save_user_location_interest`, `replace_user_memory_notes`, `clear_user_ai_memory`. |
+
+### Apply the `user_ai_memory` migration
+
+Run `supabase/migrations/20260321_user_ai_memory.sql` in the Supabase SQL editor (or your migration pipeline). Requires `SUPABASE_SERVICE_ROLE_KEY` on the API (same as chat history).
+
+**Note:** Clearing chat history (`DELETE /api/chat`) does **not** wipe long-term memory; the model can clear memory via `clear_user_ai_memory` when the user asks.
 
 ## Follow-ups
 
+- Optional: background summarization of threads into memory (extra model call on `onFinish`).
 - `@tailwindcss/typography` for richer markdown defaults.
 - Geolocation “near me” with explicit permission UX.
 - Personality-only hook on dashboard (avoid full `useChat` there).

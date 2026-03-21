@@ -147,6 +147,29 @@ export interface Database {
           updated_at?: string
         }
       }
+      user_ai_memory: {
+        Row: {
+          user_id: string
+          memory_notes: string
+          recent_locations: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          memory_notes?: string
+          recent_locations?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          memory_notes?: string
+          recent_locations?: Json
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -175,3 +198,5 @@ export type SavedLocationUpdate = Database['public']['Tables']['saved_locations'
 export type UserPreferences = Database['public']['Tables']['user_preferences']['Row']
 export type UserPreferencesInsert = Database['public']['Tables']['user_preferences']['Insert']
 export type UserPreferencesUpdate = Database['public']['Tables']['user_preferences']['Update']
+
+export type UserAIMemoryRow = Database['public']['Tables']['user_ai_memory']['Row']
