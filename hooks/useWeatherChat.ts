@@ -12,6 +12,8 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useAuth } from '@/lib/auth';
+import { APP_CONSTANTS, safeLocalStorage } from '@/lib/utils';
+import type { AIUserContext } from '@/lib/services/ai-config';
 
 export type AIPersonality = 'storm' | 'sass' | 'chill';
 
@@ -24,13 +26,38 @@ export interface RateLimitInfo {
 }
 
 export function useWeatherChat() {
-    const { user, session } = useAuth();
+    const { user, session, profile } = useAuth();
     const [personality, setPersonalityState] = useState<AIPersonality>('storm');
     const [rateLimit, setRateLimit] = useState<RateLimitInfo | null>(null);
     const [historyLoaded, setHistoryLoaded] = useState(false);
     const [input, setInput] = useState('');
 
     const isAuthenticated = !!user && !!session;
+
+    const userContext = useMemo((): AIUserContext | null => {
+        if (!isAuthenticated) return null;
+        const storedCity = safeLocalStorage.get(APP_CONSTANTS.STORAGE_KEYS.WEATHER_CITY);
+        const primary =
+            profile?.default_location?.trim() ||
+            storedCity?.trim() ||
+            null;
+        return {
+            primaryLocation: primary,
+            preferredUnits: profile?.preferred_units ?? null,
+            timezone: profile?.timezone?.trim() || null,
+            displayName:
+                profile?.full_name?.trim() ||
+                profile?.username?.trim() ||
+                null,
+        };
+    }, [
+        isAuthenticated,
+        profile?.default_location,
+        profile?.preferred_units,
+        profile?.timezone,
+        profile?.full_name,
+        profile?.username,
+    ]);
 
     // Load personality from localStorage
     useEffect(() => {
@@ -54,13 +81,32 @@ export function useWeatherChat() {
         () =>
             new DefaultChatTransport({
                 api: '/api/chat',
-                body: { personality },
+                body: { personality, userContext },
                 headers: session?.access_token
                     ? { Authorization: `Bearer ${session.access_token}` }
                     : undefined,
             }),
-        [personality, session?.access_token]
+        [personality, session?.access_token, userContext]
     );
+
+    const refreshRateLimit = useCallback(async () => {
+        if (!session?.access_token) return;
+        try {
+            const res = await fetch('/api/chat', {
+                headers: {
+                    Authorization: `Bearer ${session.access_token}`,
+                },
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.rateLimit) {
+                    setRateLimit(data.rateLimit);
+                }
+            }
+        } catch (err) {
+            console.error('[useWeatherChat] Failed to refresh rate limit:', err);
+        }
+    }, [session?.access_token]);
 
     // Vercel AI SDK v6 useChat
     const {
@@ -71,8 +117,12 @@ export function useWeatherChat() {
         sendMessage: sdkSendMessage,
     } = useChat({
         transport,
+        experimental_throttle: 50,
         onError: (err) => {
             console.error('[useWeatherChat] Error:', err);
+        },
+        onFinish: () => {
+            void refreshRateLimit();
         },
     });
 
@@ -137,14 +187,29 @@ export function useWeatherChat() {
         fetchRateLimit();
     }, [isAuthenticated, session?.access_token]);
 
-    // Clear chat
-    const clearChat = useCallback(() => {
+    // Clear chat (server history + local UI)
+    const clearChat = useCallback(async () => {
+        if (session?.access_token) {
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'DELETE',
+                    headers: {
+                        Authorization: `Bearer ${session.access_token}`,
+                    },
+                });
+                if (!res.ok) {
+                    console.error('[useWeatherChat] Failed to clear server chat history');
+                }
+            } catch (err) {
+                console.error('[useWeatherChat] Clear history request failed:', err);
+            }
+        }
         setMessages([]);
-    }, [setMessages]);
+    }, [setMessages, session?.access_token]);
 
     // Handle input changes (for controlled input)
     const handleInputChange = useCallback(
-        (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        (e: React.ChangeEvent<HTMLTextAreaElement>) => {
             setInput(e.target.value);
         },
         []
@@ -163,9 +228,10 @@ export function useWeatherChat() {
 
     // Send a message programmatically (for quick actions / suggested prompts)
     const sendMessage = useCallback(
-        (text: string) => {
-            if (!isAuthenticated || !text.trim() || isLoading) return;
+        (text: string): boolean => {
+            if (!isAuthenticated || !text.trim() || isLoading) return false;
             sdkSendMessage({ text: text.trim() });
+            return true;
         },
         [isAuthenticated, isLoading, sdkSendMessage]
     );

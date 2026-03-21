@@ -6,5 +6,6 @@
  */
 
 export { default as AIChat } from './AIChat';
+export { AssistantMarkdown } from './assistant-markdown';
 export { default as QuickActions } from './QuickActions';
 export { default as SuggestedPrompts } from './SuggestedPrompts';

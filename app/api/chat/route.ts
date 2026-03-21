@@ -10,13 +10,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import type { User } from '@supabase/supabase-js';
+import { z } from 'zod';
 import { isPlaywrightTestModeRequest } from '@/lib/playwright-test-mode';
 import { streamText, stepCountIs, convertToModelMessages } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
-import { buildSystemPrompt, type AIPersonality } from '@/lib/services/ai-config';
+import { buildSystemPrompt, type AIPersonality, type AIUserContext } from '@/lib/services/ai-config';
 import { checkRateLimit, getRateLimitStatus } from '@/lib/services/chat-rate-limiter';
-import { saveMessage, getRecentMessages } from '@/lib/services/chat-history-service';
+import { saveMessage, getRecentMessages, clearChatHistory } from '@/lib/services/chat-history-service';
+import { getUserAIMemory } from '@/lib/services/ai-memory-service';
 import { weatherTools } from '@/lib/ai/tools';
+import { createUserMemoryTools } from '@/lib/ai/memory-tools';
+
+const userContextSchema = z.object({
+    primaryLocation: z.string().max(200).nullable().optional(),
+    preferredUnits: z.enum(['metric', 'imperial']).nullable().optional(),
+    timezone: z.string().max(120).nullable().optional(),
+    displayName: z.string().max(120).nullable().optional(),
+});
+
+/** Minimal shape check; extra keys preserved for convertToModelMessages / tool parts. */
+const chatUiMessageSchema = z
+    .object({
+        role: z.string(),
+        id: z.string().optional(),
+        parts: z.array(z.unknown()).optional(),
+        content: z.unknown().optional(),
+    })
+    .passthrough();
+
+const chatPostBodySchema = z.object({
+    messages: z.array(chatUiMessageSchema).min(1),
+    personality: z.string().max(32).optional(),
+    userContext: z.unknown().optional(),
+});
 
 // ---------------------------------------------------------------------------
 // Auth helper (unchanged)
@@ -81,19 +107,31 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Parse request body — Vercel AI SDK v6 useChat sends UIMessage[] (parts format)
-        const body = await request.json();
+        let rawBody: unknown;
+        try {
+            rawBody = await request.json();
+        } catch {
+            return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+        }
+
+        const parsedBody = chatPostBodySchema.safeParse(rawBody);
+        if (!parsedBody.success) {
+            return NextResponse.json({ error: 'Invalid request payload' }, { status: 400 });
+        }
+
         const {
             messages: incomingMessages,
             personality = 'storm',
-        } = body as {
-            messages: Array<{
-                role: string;
-                parts?: Array<{ type: string; text?: string }>;
-                content?: string;
-            }>;
-            personality?: string;
-        };
+            userContext: rawUserContext,
+        } = parsedBody.data;
+
+        let userContext: AIUserContext | null = null;
+        if (rawUserContext != null) {
+            const parsed = userContextSchema.safeParse(rawUserContext);
+            if (parsed.success) {
+                userContext = parsed.data;
+            }
+        }
 
         const aiPersonality: AIPersonality =
             ['storm', 'sass', 'chill'].includes(personality)
@@ -111,11 +149,14 @@ export async function POST(request: NextRequest) {
         const lastUserMsg = [...incomingMessages]
             .reverse()
             .find(m => m.role === 'user');
-        const lastUserText = lastUserMsg?.parts
-            ?.filter(p => p.type === 'text')
-            .map(p => p.text ?? '')
-            .join('')
-            ?? (lastUserMsg?.content as string ?? '');
+        type TextPart = { type: string; text?: string };
+        const lastUserParts = lastUserMsg?.parts as TextPart[] | undefined;
+        const lastUserText =
+            lastUserParts
+                ?.filter(p => p.type === 'text')
+                .map(p => p.text ?? '')
+                .join('') ??
+            (typeof lastUserMsg?.content === 'string' ? lastUserMsg.content : '');
 
         if (lastUserText.length > 4000) {
             return NextResponse.json(
@@ -137,11 +178,21 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        const persistentMemory = await getUserAIMemory(user.id).catch((err) => {
+            console.error('[Chat API] Failed to load user AI memory:', err);
+            return { memoryNotes: '', recentLocations: [] as string[] };
+        });
+
+        const chatTools = {
+            ...weatherTools,
+            ...createUserMemoryTools(user.id),
+        };
+
         // Convert UIMessage[] (from useChat) → ModelMessage[] (for streamText)
         // AI SDK v6 useChat sends parts format; streamText expects content format.
         const allMessages = await convertToModelMessages(
             incomingMessages as Parameters<typeof convertToModelMessages>[0],
-            { tools: weatherTools }
+            { tools: chatTools }
         );
 
         // Build system prompt (no more data injection — tools handle data)
@@ -155,7 +206,12 @@ export async function POST(request: NextRequest) {
             timeZoneName: 'short',
         });
 
-        const systemPrompt = buildSystemPrompt(currentDatetime, aiPersonality);
+        const systemPrompt = buildSystemPrompt(
+            currentDatetime,
+            aiPersonality,
+            userContext,
+            persistentMemory
+        );
 
         // Save the latest user message to Supabase (fire and forget)
         if (lastUserText) {
@@ -172,8 +228,8 @@ export async function POST(request: NextRequest) {
             model: anthropic('claude-sonnet-4-20250514'),
             system: systemPrompt,
             messages: allMessages,
-            tools: weatherTools,
-            stopWhen: stepCountIs(5),
+            tools: chatTools,
+            stopWhen: stepCountIs(8),
             maxOutputTokens: 4096,
             onFinish: async ({ text }) => {
                 // Save assistant response to history
@@ -201,6 +257,32 @@ export async function POST(request: NextRequest) {
         console.error('[Chat API] Error:', error);
         return NextResponse.json(
             { error: 'Failed to process chat request' },
+            { status: 500 }
+        );
+    }
+}
+
+// ---------------------------------------------------------------------------
+// DELETE — clear persisted chat history for this user
+// ---------------------------------------------------------------------------
+
+export async function DELETE(request: NextRequest) {
+    try {
+        const user = await getAuthenticatedUser(request);
+
+        if (!user) {
+            return NextResponse.json(
+                { error: 'Authentication required' },
+                { status: 401 }
+            );
+        }
+
+        await clearChatHistory(user.id);
+        return NextResponse.json({ ok: true });
+    } catch (error) {
+        console.error('[Chat API] DELETE error:', error);
+        return NextResponse.json(
+            { error: 'Failed to clear chat history' },
             { status: 500 }
         );
     }
