@@ -5,16 +5,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { fetchActiveAlerts, getWISScore } from '@/lib/services/nws-alerts-service'
+import { fetchActiveAlerts, countsFromAlerts, calculateWIS } from '@/lib/services/nws-alerts-service'
 
 export async function GET(request: NextRequest) {
   try {
     const area = request.nextUrl.searchParams.get('area') ?? undefined
 
-    const [alerts, wis] = await Promise.all([
-      fetchActiveAlerts(),
-      getWISScore(),
-    ])
+    const alerts = await fetchActiveAlerts()
+    const wis = calculateWIS(countsFromAlerts(alerts))
 
     // If area filter provided, filter client-side (NWS API area param can be flaky)
     const filtered = area

@@ -147,5 +147,24 @@ describe('Weather Intensity Score (WIS)', () => {
       expect(result[0]).toHaveProperty('severity', 'Extreme');
       expect(result[0]).toHaveProperty('areaDesc', 'Oklahoma County, OK');
     });
+
+    it('should default unknown severity values to Minor', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          features: [{
+            properties: {
+              id: '1', headline: '', event: '',
+              severity: 'Unknown',
+              urgency: '', expires: '', areaDesc: '',
+            }
+          }]
+        }),
+      });
+
+      const result = await fetchActiveAlerts();
+
+      expect(result[0]).toHaveProperty('severity', 'Minor');
+    });
   });
 });

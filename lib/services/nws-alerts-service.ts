@@ -42,7 +42,7 @@ export async function fetchActiveAlerts(): Promise<NWSAlert[]> {
       id: f.properties.id ?? '',
       headline: f.properties.headline ?? '',
       event: f.properties.event ?? '',
-      severity: f.properties.severity as NWSAlert['severity'],
+      severity: (['Minor', 'Moderate', 'Severe', 'Extreme'] as const).includes(f.properties.severity as any) ? f.properties.severity as NWSAlert['severity'] : 'Minor',
       urgency: f.properties.urgency ?? '',
       expires: f.properties.expires ?? '',
       areaDesc: f.properties.areaDesc ?? '',
@@ -55,18 +55,7 @@ export async function fetchActiveAlerts(): Promise<NWSAlert[]> {
 export async function fetchAlertCounts(): Promise<AlertCounts> {
   try {
     const alerts = await fetchActiveAlerts()
-    const counts: AlertCounts = {
-      total: alerts.length,
-      severity: { extreme: 0, severe: 0, moderate: 0, minor: 0 },
-      urgency: { immediate: 0, expected: 0, future: 0 },
-    }
-    for (const alert of alerts) {
-      const sev = alert.severity?.toLowerCase() as 'extreme' | 'severe' | 'moderate' | 'minor'
-      if (sev in counts.severity) counts.severity[sev]++
-      const urg = alert.urgency?.toLowerCase() as 'immediate' | 'expected' | 'future'
-      if (urg in counts.urgency) counts.urgency[urg]++
-    }
-    return counts
+    return countsFromAlerts(alerts)
   } catch {
     return { total: 0, severity: { extreme: 0, severe: 0, moderate: 0, minor: 0 }, urgency: { immediate: 0, expected: 0, future: 0 } }
   }
@@ -75,6 +64,21 @@ export async function fetchAlertCounts(): Promise<AlertCounts> {
 export async function getWISScore(): Promise<WISScore> {
   const counts = await fetchAlertCounts()
   return calculateWIS(counts)
+}
+
+export function countsFromAlerts(alerts: NWSAlert[]): AlertCounts {
+  const counts: AlertCounts = {
+    total: alerts.length,
+    severity: { extreme: 0, severe: 0, moderate: 0, minor: 0 },
+    urgency: { immediate: 0, expected: 0, future: 0 },
+  }
+  for (const alert of alerts) {
+    const sev = alert.severity?.toLowerCase() as 'extreme' | 'severe' | 'moderate' | 'minor'
+    if (sev in counts.severity) counts.severity[sev]++
+    const urg = alert.urgency?.toLowerCase() as 'immediate' | 'expected' | 'future'
+    if (urg in counts.urgency) counts.urgency[urg]++
+  }
+  return counts
 }
 
 export function calculateWIS(counts: AlertCounts): WISScore {
