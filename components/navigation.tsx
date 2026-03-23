@@ -24,6 +24,7 @@ import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
 import AuthButton from "@/components/auth/auth-button"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import WISBadge from "@/components/wis-badge"
 
 interface NavigationProps {
   weatherLocation?: string;
@@ -149,6 +150,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
               ) : ''}
             </h1>
           </div>
+            <WISBadge />
 
           {/* Main Navigation Links - TOP CENTER */}
           <div className="flex items-center space-x-1">
@@ -195,6 +197,9 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
               )}
             </h1>
           </div>
+
+          <WISBadge />
+
 
           {/* Mobile Menu Button */}
           <Button
