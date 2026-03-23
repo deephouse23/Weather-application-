@@ -150,7 +150,6 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
               ) : ''}
             </h1>
           </div>
-            <WISBadge />
 
           {/* Main Navigation Links - TOP CENTER */}
           <div className="flex items-center space-x-1">
@@ -178,8 +177,9 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
             })}
           </div>
 
-          {/* Auth Button - TOP RIGHT */}
-          <div className="flex items-center space-x-2">
+          {/* Auth Button + WIS Badge - TOP RIGHT */}
+          <div className="flex items-center space-x-3">
+            <WISBadge />
             <AuthButton />
           </div>
         </div>
