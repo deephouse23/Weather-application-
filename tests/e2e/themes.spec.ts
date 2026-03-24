@@ -41,11 +41,13 @@ test.describe('Theme System', () => {
 
   test('theme persists across page reloads', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
-    await setTheme(page, 'synthwave84');
+    // Use nord (free theme) since premium themes require auth and get
+    // reset to nord on reload when PLAYWRIGHT_TEST_MODE is not set
+    await setTheme(page, 'nord');
 
     // Verify theme is set
     let currentTheme = await getCurrentTheme(page);
-    expect(currentTheme).toBe('synthwave84');
+    expect(currentTheme).toBe('nord');
 
     // Wait a bit for localStorage to be written
     await page.waitForTimeout(300);
@@ -58,7 +60,7 @@ test.describe('Theme System', () => {
 
     // Verify theme persisted
     currentTheme = await getCurrentTheme(page);
-    expect(currentTheme).toBe('synthwave84');
+    expect(currentTheme).toBe('nord');
   });
 
   test('radar remains visible in synthwave theme', async ({ page }) => {
