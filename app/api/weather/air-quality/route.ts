@@ -90,13 +90,8 @@ export async function GET(request: NextRequest) {
   } catch (error: unknown) {
     console.error('[air-quality] Open-Meteo API error:', error);
     return NextResponse.json(
-      { 
-        aqi: 0,
-        category: 'No Data',
-        source: 'error',
-        error: 'Air quality service temporarily unavailable'
-      },
-      { status: 200 }
+      { error: 'Air quality service temporarily unavailable' },
+      { status: 502 }
     )
   }
 }

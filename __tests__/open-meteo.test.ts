@@ -5,8 +5,13 @@
 import { fetchOpenMeteoForecast, fetchOpenMeteoAirQuality } from '@/lib/open-meteo';
 
 // Mock global fetch
+const originalFetch = global.fetch;
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
+
+afterAll(() => {
+  global.fetch = originalFetch;
+});
 
 describe('fetchOpenMeteoForecast', () => {
   beforeEach(() => {

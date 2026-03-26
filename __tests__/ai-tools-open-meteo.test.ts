@@ -39,8 +39,13 @@ jest.mock('@/lib/open-meteo', () => ({
 }));
 
 // Mock geocodeLocation via global fetch (it uses OWM geocoding internally)
+const originalFetch = global.fetch;
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
+
+afterAll(() => {
+  global.fetch = originalFetch;
+});
 
 import { weatherTools, geocodeLocation } from '@/lib/ai/tools';
 
