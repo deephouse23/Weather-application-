@@ -58,7 +58,15 @@ export async function GET(request: NextRequest) {
     const data = await fetchOpenMeteoAirQuality(latitude, longitude)
     const current = data.current
 
-    const aqiValue = current.us_aqi ?? 0
+    if (current.us_aqi == null) {
+      console.error('[air-quality] Open-Meteo returned no us_aqi value')
+      return NextResponse.json(
+        { error: 'Upstream air quality data incomplete' },
+        { status: 502 }
+      )
+    }
+
+    const aqiValue = current.us_aqi
     const category = getAQICategory(aqiValue)
 
     return NextResponse.json({
