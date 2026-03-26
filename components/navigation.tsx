@@ -25,7 +25,6 @@ import AuthButton from "@/components/auth/auth-button"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import WISBadge from "@/components/wis-badge"
-import OpenMeteoAttribution from "@/components/open-meteo-attribution"
 
 interface NavigationProps {
   weatherLocation?: string;
@@ -295,7 +294,6 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
           {/* Auth Button + WIS Badge - TOP RIGHT */}
           <div className="flex items-center space-x-3">
             <WISBadge />
-            <OpenMeteoAttribution />
             <AuthButton />
           </div>
         </div>
@@ -315,7 +313,6 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
           </div>
 
           <WISBadge />
-            <OpenMeteoAttribution />
 
 
           {/* Mobile Menu Button */}

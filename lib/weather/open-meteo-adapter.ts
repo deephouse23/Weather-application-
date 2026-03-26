@@ -5,7 +5,7 @@
  */
 
 import type { WeatherData } from '../types';
-import { fetchOpenMeteoForecast, fetchOpenMeteoAirQuality } from '../open-meteo';
+import { getApiUrl } from './weather-utils';
 import { getWMODescription, getWMOCondition } from '../wmo-codes';
 import {
   formatPressureByRegion,
@@ -59,16 +59,17 @@ export async function buildWeatherDataFromOpenMeteo(
   const windSpeedUnit = unitSystem === 'metric' ? 'kmh' as const : 'mph' as const;
   const precipitationUnit = unitSystem === 'metric' ? 'mm' as const : 'inch' as const;
 
-  const [forecast, airQualityResponse, pollenData] = await Promise.all([
-    fetchOpenMeteoForecast(lat, lon, {
-      forecastDays: 7,
-      temperatureUnit,
-      windSpeedUnit,
-      precipitationUnit,
-    }),
-    fetchOpenMeteoAirQuality(lat, lon).catch(() => null),
+  const [forecastRes, airQualityRes, pollenData] = await Promise.all([
+    fetch(getApiUrl(`/api/open-meteo/forecast?lat=${lat}&lon=${lon}&days=7`)),
+    fetch(getApiUrl(`/api/open-meteo/air-quality?lat=${lat}&lon=${lon}`)).catch(() => null),
     fetchPollenData(lat, lon),
   ]);
+
+  if (!forecastRes.ok) {
+    throw new Error(`Open-Meteo proxy error: ${forecastRes.status}`);
+  }
+  const forecast = await forecastRes.json();
+  const airQualityResponse = airQualityRes?.ok ? await airQualityRes.json() : null;
 
   const current = forecast.current;
   const daily = forecast.daily;

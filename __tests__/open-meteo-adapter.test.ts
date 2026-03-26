@@ -2,11 +2,6 @@
  * Unit tests for Open-Meteo adapter
  */
 
-jest.mock('@/lib/open-meteo', () => ({
-  fetchOpenMeteoForecast: jest.fn(),
-  fetchOpenMeteoAirQuality: jest.fn(),
-}));
-
 jest.mock('@/lib/weather/weather-forecast', () => ({
   fetchPollenData: jest.fn().mockResolvedValue({
     tree: { 'Tree': 'No Data' },
@@ -16,11 +11,15 @@ jest.mock('@/lib/weather/weather-forecast', () => ({
 }));
 
 import { buildWeatherDataFromOpenMeteo } from '@/lib/weather/open-meteo-adapter';
-import { fetchOpenMeteoForecast, fetchOpenMeteoAirQuality } from '@/lib/open-meteo';
 import type { OpenMeteoForecastResponse } from '@/lib/open-meteo-types';
 
-const mockForecast = fetchOpenMeteoForecast as jest.MockedFunction<typeof fetchOpenMeteoForecast>;
-const mockAirQuality = fetchOpenMeteoAirQuality as jest.MockedFunction<typeof fetchOpenMeteoAirQuality>;
+const originalFetch = global.fetch;
+const mockFetch = jest.fn();
+global.fetch = mockFetch;
+
+afterAll(() => {
+  global.fetch = originalFetch;
+});
 
 function makeForecastResponse(): OpenMeteoForecastResponse {
   return {
@@ -76,17 +75,27 @@ function makeForecastResponse(): OpenMeteoForecastResponse {
   };
 }
 
+const mockAirQualityData = {
+  latitude: 40.71, longitude: -74.01, generationtime_ms: 0.3,
+  utc_offset_seconds: -18000, timezone: 'America/New_York', timezone_abbreviation: 'EST',
+  current: {
+    time: '2025-03-25T14:00', interval: 3600, us_aqi: 42,
+    pm10: 15, pm2_5: 8, carbon_monoxide: 200, nitrogen_dioxide: 12,
+    sulphur_dioxide: 5, ozone: 60, dust: 3, uv_index: 4.2,
+  },
+};
+
 beforeEach(() => {
   jest.clearAllMocks();
   jest.spyOn(Date, 'now').mockReturnValue(new Date('2025-03-25T14:00:00Z').getTime());
-  mockAirQuality.mockResolvedValue({
-    latitude: 40.71, longitude: -74.01, generationtime_ms: 0.3,
-    utc_offset_seconds: -18000, timezone: 'America/New_York', timezone_abbreviation: 'EST',
-    current: {
-      time: '2025-03-25T14:00', interval: 3600, us_aqi: 42,
-      pm10: 15, pm2_5: 8, carbon_monoxide: 200, nitrogen_dioxide: 12,
-      sulphur_dioxide: 5, ozone: 60, dust: 3, uv_index: 4.2,
-    },
+  mockFetch.mockImplementation((url: string) => {
+    if (url.includes('/api/open-meteo/forecast')) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(makeForecastResponse()) });
+    }
+    if (url.includes('/api/open-meteo/air-quality')) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(mockAirQualityData) });
+    }
+    return Promise.resolve({ ok: false, status: 404 });
   });
 });
 
@@ -96,8 +105,6 @@ afterEach(() => {
 
 describe('buildWeatherDataFromOpenMeteo', () => {
   it('should return WeatherData with correct current conditions', async () => {
-    mockForecast.mockResolvedValue(makeForecastResponse());
-
     const result = await buildWeatherDataFromOpenMeteo(
       40.71, -74.01, 'New York', 'imperial', 'US'
     );
@@ -112,8 +119,6 @@ describe('buildWeatherDataFromOpenMeteo', () => {
   });
 
   it('should format wind data correctly', async () => {
-    mockForecast.mockResolvedValue(makeForecastResponse());
-
     const result = await buildWeatherDataFromOpenMeteo(
       40.71, -74.01, 'New York', 'imperial', 'US'
     );
@@ -124,8 +129,6 @@ describe('buildWeatherDataFromOpenMeteo', () => {
   });
 
   it('should format sunrise and sunset from ISO strings', async () => {
-    mockForecast.mockResolvedValue(makeForecastResponse());
-
     const result = await buildWeatherDataFromOpenMeteo(
       40.71, -74.01, 'New York', 'imperial', 'US'
     );
@@ -135,8 +138,6 @@ describe('buildWeatherDataFromOpenMeteo', () => {
   });
 
   it('should produce exactly 5 forecast days with correct temps', async () => {
-    mockForecast.mockResolvedValue(makeForecastResponse());
-
     const result = await buildWeatherDataFromOpenMeteo(
       40.71, -74.01, 'New York', 'imperial', 'US'
     );
@@ -147,8 +148,6 @@ describe('buildWeatherDataFromOpenMeteo', () => {
   });
 
   it('should include AQI from air quality API', async () => {
-    mockForecast.mockResolvedValue(makeForecastResponse());
-
     const result = await buildWeatherDataFromOpenMeteo(
       40.71, -74.01, 'New York', 'imperial', 'US'
     );
@@ -158,8 +157,6 @@ describe('buildWeatherDataFromOpenMeteo', () => {
   });
 
   it('should provide feelsLike in first hourly entry from apparent_temperature', async () => {
-    mockForecast.mockResolvedValue(makeForecastResponse());
-
     const result = await buildWeatherDataFromOpenMeteo(
       40.71, -74.01, 'New York', 'imperial', 'US'
     );
