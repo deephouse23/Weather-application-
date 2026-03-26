@@ -86,9 +86,11 @@ export function calculateVibeScore(input: VibeInput): VibeResult {
     clouds * 0.05
   )
 
+  const clampedScore = Math.min(100, Math.max(0, score))
+
   return {
-    score: Math.min(100, Math.max(0, score)),
-    category: getVibeCategory(score),
+    score: clampedScore,
+    category: getVibeCategory(clampedScore),
     breakdown: {
       temperature: Math.round(temperature),
       humidity: Math.round(humidity),

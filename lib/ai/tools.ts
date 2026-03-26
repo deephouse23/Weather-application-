@@ -522,7 +522,7 @@ export const weatherTools = {
             const apiKey = OWM_KEY();
             const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${coords.lat}&lon=${coords.lon}&units=imperial&exclude=minutely,alerts&appid=${apiKey}`;
             const { data, error } = await safeFetch(url, 'Weather data unavailable');
-            if (error || !data) return { error };
+            if (error || !data) return { error: error || 'Weather data unavailable' };
 
             const current = data.current as Record<string, unknown>;
             const hourly = data.hourly as Array<Record<string, unknown>>;
