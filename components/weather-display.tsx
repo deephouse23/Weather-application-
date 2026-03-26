@@ -85,7 +85,7 @@ export function WeatherDisplay({
     ? Math.round(weather.hourlyForecast[0].feelsLike)
     : weather?.temperature ?? null
   const feelsLikeDelta = feelsLike != null && weather?.temperature != null
-    ? feelsLike - weather.temperature
+    ? Math.round((feelsLike - weather.temperature) * 10) / 10
     : 0
 
   return (
@@ -157,6 +157,7 @@ export function WeatherDisplay({
           <AirQualityDisplay
             aqi={weather.aqi}
             theme={(theme || 'nord') as import('@/lib/theme-config').ThemeType}
+            pollutants={weather.pollutants}
           />
         </div>
 

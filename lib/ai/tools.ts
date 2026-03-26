@@ -12,6 +12,8 @@
 import { tool } from 'ai';
 import { calculateVibeScore, type VibeInput } from '@/lib/services/vibe-check';
 import { z } from 'zod';
+import { fetchOpenMeteoForecast, fetchOpenMeteoAirQuality } from '@/lib/open-meteo';
+import { getWMODescription } from '@/lib/wmo-codes';
 import {
     fetchRecentEarthquakes,
     formatEarthquakeContextBlock,
@@ -86,7 +88,7 @@ export async function geocodeLocation(
 // ---------------------------------------------------------------------------
 
 export const weatherTools = {
-    // 1. Current weather
+    // 1. Current weather (Open-Meteo)
     get_current_weather: tool({
         description:
             'Get current weather conditions for a location. Use for questions like "What\'s the weather in NYC?" or "Is it cold outside?"',
@@ -99,29 +101,55 @@ export const weatherTools = {
             const coords = await geocodeLocation(location);
             if (!coords) return { error: `Could not find location: ${location}` };
 
-            const apiKey = OWM_KEY();
-            const url = `https://api.openweathermap.org/data/2.5/weather?lat=${coords.lat}&lon=${coords.lon}&units=imperial&appid=${apiKey}`;
-            const { data: d, error } = await safeFetch(url, 'Weather data unavailable');
-            if (error || !d) return { error: error ?? 'Weather data unavailable' };
+            // --- OLD OWM implementation (kept for reference) ---
+            // const apiKey = OWM_KEY();
+            // const url = `https://api.openweathermap.org/data/2.5/weather?lat=${coords.lat}&lon=${coords.lon}&units=imperial&appid=${apiKey}`;
+            // const { data: d, error } = await safeFetch(url, 'Weather data unavailable');
+            // if (error || !d) return { error: error ?? 'Weather data unavailable' };
+            // return { location: coords.name, temperature: Math.round(d.main?.temp ?? 0), ... };
+            // --- END OLD OWM implementation ---
 
-            return {
-                location: coords.name,
-                temperature: Math.round(d.main?.temp ?? 0),
-                feelsLike: Math.round(d.main?.feels_like ?? 0),
-                condition: d.weather?.[0]?.description ?? 'unknown',
-                humidity: d.main?.humidity ?? 0,
-                wind_mph: Math.round(d.wind?.speed ?? 0),
-                wind_direction: d.wind?.deg ?? 0,
-                pressure_hPa: d.main?.pressure ?? 0,
-                visibility_miles: d.visibility == null ? null : Math.round(d.visibility / 1609),
-                clouds_pct: d.clouds?.all ?? 0,
-                rain_1h_in: d.rain?.['1h'] ? Math.round((d.rain['1h'] / 25.4) * 100) / 100 : 0,
-                snow_1h_in: d.snow?.['1h'] ? Math.round((d.snow['1h'] / 25.4) * 10) / 10 : 0,
-            };
+            try {
+                const d = await fetchOpenMeteoForecast(coords.lat, coords.lon, {
+                    forecastDays: 1,
+                    extraCurrentVars: ['dewpoint_2m', 'cape'],
+                });
+
+                const c = d.current;
+                if (!c) return { error: 'Weather data unavailable' };
+
+                // Visibility: grab first hourly value (meters → miles)
+                const visMeters = d.hourly?.visibility?.[0];
+                const visMiles = visMeters != null ? Math.round(visMeters / 1609) : null;
+
+                return {
+                    location: coords.name,
+                    temperature: Math.round(c.temperature_2m ?? 0),
+                    feelsLike: Math.round(c.apparent_temperature ?? 0),
+                    condition: getWMODescription(c.weather_code),
+                    humidity: c.relative_humidity_2m ?? 0,
+                    wind_mph: Math.round(c.wind_speed_10m ?? 0),
+                    wind_direction: c.wind_direction_10m ?? 0,
+                    wind_gusts_mph: Math.round(c.wind_gusts_10m ?? 0),
+                    pressure_hPa: Math.round(c.surface_pressure ?? 0),
+                    visibility_miles: visMiles,
+                    clouds_pct: c.cloud_cover ?? 0,
+                    uv_index: c.uv_index ?? 0,
+                    rain_1h_in: c.precipitation ?? 0,
+                    snow_1h_in: 0,
+                    // Enriched context for AI
+                    dewpoint_f: (c as unknown as Record<string, unknown>).dewpoint_2m as number ?? null,
+                    cape: (c as unknown as Record<string, unknown>).cape as number ?? null,
+                    cloud_cover: c.cloud_cover ?? 0,
+                };
+            } catch (err) {
+                console.error('[AI Tools] Current weather error:', err);
+                return { error: 'Weather data unavailable' };
+            }
         },
     }),
 
-    // 2. Multi-day forecast
+    // 2. Multi-day forecast (Open-Meteo)
     get_forecast: tool({
         description:
             'Get daily weather forecast (up to 8 days). Use for "What\'s the weather this week?" or "Will it rain tomorrow?"',
@@ -139,36 +167,42 @@ export const weatherTools = {
             const coords = await geocodeLocation(location);
             if (!coords) return { error: `Could not find location: ${location}` };
 
-            const apiKey = OWM_KEY();
-            const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${coords.lat}&lon=${coords.lon}&units=imperial&exclude=minutely,hourly,alerts&appid=${apiKey}`;
-            const { data: d, error } = await safeFetch(url, 'Forecast data unavailable');
-            if (error || !d) return { error: error ?? 'Forecast data unavailable' };
+            // --- OLD OWM implementation (kept for reference) ---
+            // const apiKey = OWM_KEY();
+            // const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${coords.lat}&lon=${coords.lon}&units=imperial&exclude=minutely,hourly,alerts&appid=${apiKey}`;
+            // const { data: d, error } = await safeFetch(url, 'Forecast data unavailable');
+            // --- END OLD OWM implementation ---
 
-            // Use timezone from API response for location-correct date formatting
-            const tz = (d.timezone as string) || undefined;
+            try {
+                const d = await fetchOpenMeteoForecast(coords.lat, coords.lon, {
+                    forecastDays: Math.min(days, 8),
+                });
 
-            const forecast = (d.daily ?? []).slice(0, days).map((day: Record<string, unknown>) => {
-                const dt = day.dt as number;
-                const temp = day.temp as { max: number; min: number };
-                const weather = (day.weather as Array<{ main: string; description: string }>)?.[0];
-                const date = new Date(dt * 1000);
-                return {
-                    date: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: tz }),
-                    high: Math.round(temp?.max ?? 0),
-                    low: Math.round(temp?.min ?? 0),
-                    condition: weather?.main ?? 'Clear',
-                    description: weather?.description ?? '',
-                    pop: Math.round(((day.pop as number) ?? 0) * 100),
-                    rain_in: day.rain ? Math.round(((day.rain as number) / 25.4) * 100) / 100 : 0,
-                    snow_in: day.snow ? Math.round(((day.snow as number) / 25.4) * 10) / 10 : 0,
-                };
-            });
+                const daily = d.daily;
+                if (!daily) return { error: 'Forecast data unavailable' };
 
-            return { location: coords.name, forecast };
+                const forecast = daily.time.slice(0, days).map((dateStr, i) => {
+                    const date = new Date(dateStr + 'T12:00:00');
+                    return {
+                        date: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+                        high: Math.round(daily.temperature_2m_max[i] ?? 0),
+                        low: Math.round(daily.temperature_2m_min[i] ?? 0),
+                        condition: getWMODescription(daily.weather_code[i]),
+                        description: getWMODescription(daily.weather_code[i]).toLowerCase(),
+                        pop: Math.round(daily.precipitation_probability_max[i] ?? 0),
+                        precipitation_sum_in: Math.round((daily.precipitation_sum[i] ?? 0) * 100) / 100,
+                    };
+                });
+
+                return { location: coords.name, forecast };
+            } catch (err) {
+                console.error('[AI Tools] Forecast error:', err);
+                return { error: 'Forecast data unavailable' };
+            }
         },
     }),
 
-    // 3. Hourly forecast (48 hours)
+    // 3. Hourly forecast (48 hours, Open-Meteo)
     get_hourly_forecast: tool({
         description:
             'Get hourly weather forecast for the next 48 hours. Use for precise timing questions like "When will it rain?" or "What will it be like at 3pm?"',
@@ -186,37 +220,53 @@ export const weatherTools = {
             const coords = await geocodeLocation(location);
             if (!coords) return { error: `Could not find location: ${location}` };
 
-            const apiKey = OWM_KEY();
-            const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${coords.lat}&lon=${coords.lon}&units=imperial&exclude=daily,minutely,alerts&appid=${apiKey}`;
-            const { data: d, error } = await safeFetch(url, 'Hourly forecast unavailable');
-            if (error || !d) return { error: error ?? 'Hourly forecast unavailable' };
+            // --- OLD OWM implementation (kept for reference) ---
+            // const apiKey = OWM_KEY();
+            // const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${coords.lat}&lon=${coords.lon}&units=imperial&exclude=daily,minutely,alerts&appid=${apiKey}`;
+            // --- END OLD OWM implementation ---
 
-            const tz = (d.timezone as string) || undefined;
+            try {
+                const d = await fetchOpenMeteoForecast(coords.lat, coords.lon, {
+                    forecastDays: 2,
+                    extraHourlyVars: [
+                        'temperature_2m',
+                        'apparent_temperature',
+                        'weather_code',
+                        'relative_humidity_2m',
+                        'wind_speed_10m',
+                    ],
+                });
 
-            const hourly = (d.hourly ?? []).slice(0, hours).map((h: Record<string, unknown>) => {
-                const dt = h.dt as number;
-                const weather = (h.weather as Array<{ main: string; description: string }>)?.[0];
-                const time = new Date(dt * 1000);
-                return {
-                    time: time.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true, timeZone: tz }),
-                    date: time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: tz }),
-                    temp: Math.round((h.temp as number) ?? 0),
-                    feelsLike: Math.round((h.feels_like as number) ?? 0),
-                    condition: weather?.description ?? '',
-                    pop: Math.round(((h.pop as number) ?? 0) * 100),
-                    humidity: (h.humidity as number) ?? 0,
-                    wind_mph: Math.round((h.wind_speed as number) ?? 0),
-                };
-            });
+                const h = d.hourly;
+                if (!h?.time?.length) return { error: 'Hourly forecast unavailable' };
 
-            return { location: coords.name, hourly };
+                const hourly = h.time.slice(0, hours).map((timeStr, i) => {
+                    const time = new Date(timeStr);
+                    const hrData = h as unknown as Record<string, number[]>;
+                    return {
+                        time: time.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true }),
+                        date: time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+                        temp: Math.round(hrData.temperature_2m?.[i] ?? 0),
+                        feelsLike: Math.round(hrData.apparent_temperature?.[i] ?? 0),
+                        condition: getWMODescription(hrData.weather_code?.[i] ?? 0),
+                        pop: Math.round(hrData.precipitation_probability?.[i] ?? 0),
+                        humidity: hrData.relative_humidity_2m?.[i] ?? 0,
+                        wind_mph: Math.round(hrData.wind_speed_10m?.[i] ?? 0),
+                    };
+                });
+
+                return { location: coords.name, hourly };
+            } catch (err) {
+                console.error('[AI Tools] Hourly forecast error:', err);
+                return { error: 'Hourly forecast unavailable' };
+            }
         },
     }),
 
-    // 4. Minute-by-minute precipitation (next 60 min)
+    // 4. Precipitation timing (Open-Meteo hourly probability)
     get_precipitation_timing: tool({
         description:
-            'Get minute-by-minute rainfall predictions for the next 60 minutes. Use for "When exactly will it start raining?" or "Is the rain going to stop soon?"',
+            'Get hourly precipitation probability for the next several hours. Use for "When will it rain?" or "Is the rain going to stop soon?" Shows hourly probability rather than minute-by-minute.',
         inputSchema: z.object({
             location: z.string().describe('City name, ZIP, or "City, State"'),
         }),
@@ -224,60 +274,72 @@ export const weatherTools = {
             const coords = await geocodeLocation(location);
             if (!coords) return { error: `Could not find location: ${location}` };
 
-            const apiKey = OWM_KEY();
-            const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${coords.lat}&lon=${coords.lon}&units=imperial&exclude=daily,hourly,alerts&appid=${apiKey}`;
-            const { data: d, error } = await safeFetch(url, 'Precipitation data unavailable');
-            if (error || !d) return { error: error ?? 'Precipitation data unavailable' };
+            // --- OLD OWM implementation (kept for reference) ---
+            // Used OWM One Call minutely precipitation data (not available in Open-Meteo).
+            // const url = `https://api.openweathermap.org/data/3.0/onecall?...&exclude=daily,hourly,alerts`;
+            // --- END OLD OWM implementation ---
 
-            if (!d.minutely?.length) {
+            try {
+                const d = await fetchOpenMeteoForecast(coords.lat, coords.lon, {
+                    forecastDays: 1,
+                });
+
+                const h = d.hourly;
+                if (!h?.time?.length) return { error: 'Precipitation data unavailable' };
+
+                // Find current hour index
+                const now = new Date(d.current?.time ?? h.time[0]);
+                const currentHourStr = now.toISOString().slice(0, 13);
+                let startIdx = h.time.findIndex(t => t.startsWith(currentHourStr));
+                if (startIdx < 0) startIdx = 0;
+
+                // Next 6 hours of precipitation data
+                const HOURS_AHEAD = 6;
+                const hours = h.time.slice(startIdx, startIdx + HOURS_AHEAD).map((timeStr, i) => {
+                    const idx = startIdx + i;
+                    const time = new Date(timeStr);
+                    return {
+                        time: time.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true }),
+                        precipitation_probability: h.precipitation_probability[idx] ?? 0,
+                        precipitation_in: Math.round((h.precipitation[idx] ?? 0) * 100) / 100,
+                    };
+                });
+
+                // Build summary
+                const isCurrentlyRaining = (d.current?.precipitation ?? 0) > 0;
+                const firstRainHour = hours.find(hr => hr.precipitation_probability >= 50);
+                const firstDryHour = isCurrentlyRaining
+                    ? hours.find(hr => hr.precipitation_probability < 30)
+                    : null;
+
+                let summary: string;
+                if (isCurrentlyRaining && firstDryHour) {
+                    summary = `Rain may ease up around ${firstDryHour.time}`;
+                } else if (isCurrentlyRaining) {
+                    summary = 'Rain is expected to continue for the next several hours';
+                } else if (firstRainHour) {
+                    summary = `Rain likely around ${firstRainHour.time} (${firstRainHour.precipitation_probability}% chance)`;
+                } else {
+                    summary = 'No significant rain expected in the next several hours';
+                }
+
                 return {
                     location: coords.name,
-                    message: 'No minute-by-minute precipitation data available for this location (usually only available in supported regions).',
-                    current_rain: d.current?.rain?.['1h'] ? `${Math.round((d.current.rain['1h'] / 25.4) * 100) / 100}" in the last hour` : 'None',
+                    currently_raining: isCurrentlyRaining,
+                    hours,
+                    summary,
                 };
+            } catch (err) {
+                console.error('[AI Tools] Precipitation timing error:', err);
+                return { error: 'Precipitation data unavailable' };
             }
-
-            // Summarize: find transitions (dry→rain, rain→dry)
-            const tz = (d.timezone as string) || undefined;
-            const minutes = d.minutely.map((m: { dt: number; precipitation: number }) => ({
-                time: new Date(m.dt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: tz }),
-                precipitation_mm: m.precipitation,
-            }));
-
-            const isCurrentlyRaining = minutes[0]?.precipitation_mm > 0;
-            let transitionMinute: number | null = null;
-            for (let i = 1; i < minutes.length; i++) {
-                const wasRaining = minutes[i - 1].precipitation_mm > 0;
-                const isRaining = minutes[i].precipitation_mm > 0;
-                if (wasRaining !== isRaining) {
-                    transitionMinute = i;
-                    break;
-                }
-            }
-
-            return {
-                location: coords.name,
-                currently_raining: isCurrentlyRaining,
-                transition: transitionMinute
-                    ? {
-                        in_minutes: transitionMinute,
-                        at_time: minutes[transitionMinute].time,
-                        type: isCurrentlyRaining ? 'rain_stops' : 'rain_starts',
-                    }
-                    : null,
-                summary: transitionMinute
-                    ? `${isCurrentlyRaining ? 'Rain expected to stop' : 'Rain expected to start'} around ${minutes[transitionMinute].time} (in ~${transitionMinute} minutes)`
-                    : isCurrentlyRaining
-                        ? 'Rain is expected to continue for at least the next hour'
-                        : 'No rain expected in the next hour',
-            };
         },
     }),
 
-    // 5. Air quality
+    // 5. Air quality (Open-Meteo)
     get_air_quality: tool({
         description:
-            'Get air quality index (AQI) and pollutant levels. Use for "Is the air quality good?" or "Is it safe to exercise outside?"',
+            'Get air quality index (AQI) and pollutant levels. Uses US EPA AQI scale (0-500). Use for "Is the air quality good?" or "Is it safe to exercise outside?"',
         inputSchema: z.object({
             location: z.string().describe('City name, ZIP, or "City, State"'),
         }),
@@ -285,35 +347,44 @@ export const weatherTools = {
             const coords = await geocodeLocation(location);
             if (!coords) return { error: `Could not find location: ${location}` };
 
-            const apiKey = OWM_KEY();
-            const url = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${coords.lat}&lon=${coords.lon}&appid=${apiKey}`;
-            const { data: d, error } = await safeFetch(url, 'Air quality data unavailable');
-            if (error || !d) return { error: error ?? 'Air quality data unavailable' };
+            // --- OLD OWM implementation (kept for reference) ---
+            // const apiKey = OWM_KEY();
+            // const url = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${coords.lat}&lon=${coords.lon}&appid=${apiKey}`;
+            // const { data: d, error } = await safeFetch(url, 'Air quality data unavailable');
+            // --- END OLD OWM implementation ---
 
-            const item = d.list?.[0];
-            if (!item) return { error: 'No air quality data' };
+            try {
+                const d = await fetchOpenMeteoAirQuality(coords.lat, coords.lon);
+                const c = d.current;
+                if (!c) return { error: 'No air quality data' };
 
-            const aqiLabels: Record<number, string> = {
-                1: 'Good',
-                2: 'Fair',
-                3: 'Moderate',
-                4: 'Poor',
-                5: 'Very Poor',
-            };
+                // EPA AQI category labels
+                const getAqiCategory = (aqi: number): string => {
+                    if (aqi <= 50) return 'Good';
+                    if (aqi <= 100) return 'Moderate';
+                    if (aqi <= 150) return 'Unhealthy for Sensitive Groups';
+                    if (aqi <= 200) return 'Unhealthy';
+                    if (aqi <= 300) return 'Very Unhealthy';
+                    return 'Hazardous';
+                };
 
-            return {
-                location: coords.name,
-                aqi: item.main?.aqi ?? 0,
-                category: aqiLabels[item.main?.aqi] ?? 'Unknown',
-                pollutants: {
-                    pm2_5: item.components?.pm2_5,
-                    pm10: item.components?.pm10,
-                    o3: item.components?.o3,
-                    no2: item.components?.no2,
-                    so2: item.components?.so2,
-                    co: item.components?.co,
-                },
-            };
+                return {
+                    location: coords.name,
+                    aqi: c.us_aqi ?? 0,
+                    category: getAqiCategory(c.us_aqi ?? 0),
+                    pollutants: {
+                        pm2_5: c.pm2_5,
+                        pm10: c.pm10,
+                        o3: c.ozone,
+                        no2: c.nitrogen_dioxide,
+                        so2: c.sulphur_dioxide,
+                        co: c.carbon_monoxide,
+                    },
+                };
+            } catch (err) {
+                console.error('[AI Tools] Air quality error:', err);
+                return { error: 'Air quality data unavailable' };
+            }
         },
     }),
 
@@ -443,7 +514,7 @@ export const weatherTools = {
         },
     }),
 
-    // 10. Travel route weather
+    // 10. Travel route weather (Open-Meteo)
     get_travel_route_weather: tool({
         description:
             'Get weather comparison for a travel route (origin and destination). Use for "Flying from SFO to Chicago, what should I expect?" or "Road trip from LA to Vegas weather."',
@@ -460,55 +531,56 @@ export const weatherTools = {
             if (!originCoords) return { error: `Could not find origin: ${origin}` };
             if (!destCoords) return { error: `Could not find destination: ${destination}` };
 
-            const apiKey = OWM_KEY();
-            const fetchWeather = async (lat: number, lon: number) => {
-                const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=imperial&exclude=minutely&appid=${apiKey}`;
-                const { data } = await safeFetch(url, 'Weather data unavailable');
-                return data;
-            };
+            // --- OLD OWM implementation (kept for reference) ---
+            // const fetchWeather = async (lat, lon) => {
+            //     const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=imperial&exclude=minutely&appid=${apiKey}`;
+            //     ...
+            // };
+            // --- END OLD OWM implementation ---
 
-            const [originData, destData, aviationData] = await Promise.all([
-                fetchWeather(originCoords.lat, originCoords.lon),
-                fetchWeather(destCoords.lat, destCoords.lon),
-                getAviationContext().catch((err) => {
-                    console.error('[AI Tools] Aviation context error:', err);
-                    return null;
-                }),
-            ]);
+            try {
+                const [originData, destData, aviationData] = await Promise.all([
+                    fetchOpenMeteoForecast(originCoords.lat, originCoords.lon, { forecastDays: 1 }),
+                    fetchOpenMeteoForecast(destCoords.lat, destCoords.lon, { forecastDays: 1 }),
+                    getAviationContext().catch((err) => {
+                        console.error('[AI Tools] Aviation context error:', err);
+                        return null;
+                    }),
+                ]);
 
-            const summarizeWeather = (name: string, data: Record<string, unknown> | null) => {
-                if (!data) return { location: name, error: 'Data unavailable' };
-                const current = data.current as Record<string, unknown>;
-                const weather = (current?.weather as Array<{ description: string }>)?.[0];
-                const daily = (data.daily as Array<Record<string, unknown>>)?.[0];
-                const temp = daily?.temp as { max: number; min: number };
-                const alerts = data.alerts as Array<{ event: string; description: string }> | undefined;
+                const summarizeWeather = (name: string, d: typeof originData | null) => {
+                    if (!d?.current) return { location: name, error: 'Data unavailable' };
+                    const c = d.current;
+                    const daily = d.daily;
+
+                    return {
+                        location: name,
+                        current_temp: Math.round(c.temperature_2m ?? 0),
+                        feels_like: Math.round(c.apparent_temperature ?? 0),
+                        condition: getWMODescription(c.weather_code),
+                        wind_mph: Math.round(c.wind_speed_10m ?? 0),
+                        humidity: c.relative_humidity_2m ?? 0,
+                        today_high: daily ? Math.round(daily.temperature_2m_max[0] ?? 0) : null,
+                        today_low: daily ? Math.round(daily.temperature_2m_min[0] ?? 0) : null,
+                    };
+                };
 
                 return {
-                    location: name,
-                    current_temp: Math.round((current?.temp as number) ?? 0),
-                    feels_like: Math.round((current?.feels_like as number) ?? 0),
-                    condition: weather?.description ?? 'unknown',
-                    wind_mph: Math.round((current?.wind_speed as number) ?? 0),
-                    humidity: (current?.humidity as number) ?? 0,
-                    today_high: Math.round(temp?.max ?? 0),
-                    today_low: Math.round(temp?.min ?? 0),
-                    alerts: alerts?.map(a => a.event) ?? [],
+                    origin: summarizeWeather(originCoords.name, originData),
+                    destination: summarizeWeather(destCoords.name, destData),
+                    aviation_alerts: aviationData?.hasActiveAlerts
+                        ? { count: aviationData.alertCount, details: aviationData.contextBlock }
+                        : { count: 0, message: 'No active aviation advisories' },
                 };
-            };
-
-            return {
-                origin: summarizeWeather(originCoords.name, originData),
-                destination: summarizeWeather(destCoords.name, destData),
-                aviation_alerts: aviationData?.hasActiveAlerts
-                    ? { count: aviationData.alertCount, details: aviationData.contextBlock }
-                    : { count: 0, message: 'No active aviation advisories' },
-            };
+            } catch (err) {
+                console.error('[AI Tools] Travel route weather error:', err);
+                return { error: 'Travel route weather data unavailable' };
+            }
         },
     }),
 
 
-    // 11. Vibe check / comfort score
+    // 11. Vibe check / comfort score (Open-Meteo)
     get_vibe_check: tool({
         description:
             'Get the outdoor comfort "vibe check" score for a location. Returns a 0-100 score with category (Rough/Meh/Decent/Vibin/Immaculate) and component breakdown. Use when someone asks "how nice is it outside?" or "is it a good day to go out?" or "whats the vibe?"',
@@ -519,39 +591,49 @@ export const weatherTools = {
             const coords = await geocodeLocation(location);
             if (!coords) return { error: `Could not find location: ${location}` };
 
-            const apiKey = OWM_KEY();
-            const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${coords.lat}&lon=${coords.lon}&units=imperial&exclude=minutely,alerts&appid=${apiKey}`;
-            const { data, error } = await safeFetch(url, 'Weather data unavailable');
-            if (error || !data) return { error: error || 'Weather data unavailable' };
+            // --- OLD OWM implementation (kept for reference) ---
+            // const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${coords.lat}&lon=${coords.lon}&units=imperial&exclude=minutely,alerts&appid=${apiKey}`;
+            // --- END OLD OWM implementation ---
 
-            const current = data.current as Record<string, unknown>;
-            const hourly = data.hourly as Array<Record<string, unknown>>;
+            try {
+                const d = await fetchOpenMeteoForecast(coords.lat, coords.lon, {
+                    forecastDays: 1,
+                });
 
-            const input: VibeInput = {
-                tempF: (current?.temp as number) ?? 72,
-                humidity: (current?.humidity as number) ?? 50,
-                windMph: (current?.wind_speed as number) ?? 5,
-                precipChance: ((hourly?.[0]?.pop as number) ?? 0) * 100,
-                uvIndex: (current?.uvi as number) ?? 3,
-                cloudCover: (current?.clouds as number) ?? 20,
-            };
+                const c = d.current;
+                if (!c) return { error: 'Weather data unavailable' };
 
-            const vibe = calculateVibeScore(input);
+                const firstPrecipProb = d.hourly?.precipitation_probability?.[0] ?? 0;
 
-            return {
-                location: coords.name,
-                score: vibe.score,
-                category: vibe.category,
-                breakdown: vibe.breakdown,
-                conditions: {
-                    temp: Math.round((current?.temp as number) ?? 0),
-                    feels_like: Math.round((current?.feels_like as number) ?? 0),
-                    humidity: (current?.humidity as number) ?? 0,
-                    wind_mph: Math.round((current?.wind_speed as number) ?? 0),
-                    uv_index: (current?.uvi as number) ?? 0,
-                    cloud_cover: (current?.clouds as number) ?? 0,
-                },
-            };
+                const input: VibeInput = {
+                    tempF: c.temperature_2m ?? 72,
+                    humidity: c.relative_humidity_2m ?? 50,
+                    windMph: c.wind_speed_10m ?? 5,
+                    precipChance: firstPrecipProb,
+                    uvIndex: c.uv_index ?? 3,
+                    cloudCover: c.cloud_cover ?? 20,
+                };
+
+                const vibe = calculateVibeScore(input);
+
+                return {
+                    location: coords.name,
+                    score: vibe.score,
+                    category: vibe.category,
+                    breakdown: vibe.breakdown,
+                    conditions: {
+                        temp: Math.round(c.temperature_2m ?? 0),
+                        feels_like: Math.round(c.apparent_temperature ?? 0),
+                        humidity: c.relative_humidity_2m ?? 0,
+                        wind_mph: Math.round(c.wind_speed_10m ?? 0),
+                        uv_index: c.uv_index ?? 0,
+                        cloud_cover: c.cloud_cover ?? 0,
+                    },
+                };
+            } catch (err) {
+                console.error('[AI Tools] Vibe check error:', err);
+                return { error: 'Weather data unavailable' };
+            }
         },
     }),
 };

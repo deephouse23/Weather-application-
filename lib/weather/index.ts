@@ -34,13 +34,15 @@ export {
 
 export {
   processDailyForecast,
+  processDailyForecastFromOpenMeteo,
   processHourlyForecast,
   fetchUVIndex,
   fetchPollenData,
   fetchAirQualityData,
   ensureFiveDays,
   type OpenWeatherMapForecastResponse,
-  type DailyForecast
+  type DailyForecast,
+  type AirQualityPollutants
 } from './weather-forecast';
 
 // ============================================================================

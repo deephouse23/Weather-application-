@@ -65,6 +65,7 @@ export function EnvironmentalDisplay({ weather, theme, className, minimal = fals
       <AirQualityDisplay 
         aqi={weather.aqi} 
         theme={theme}
+        pollutants={weather.pollutants}
       />
       <PollenDisplay 
         pollen={weather.pollen} 

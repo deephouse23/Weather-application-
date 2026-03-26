@@ -28,6 +28,7 @@ import {
   ensureFiveDays,
   OpenWeatherMapForecastResponse
 } from './weather-forecast';
+import { buildWeatherDataFromOpenMeteo } from './open-meteo-adapter';
 
 // ============================================================================
 // Types
@@ -81,16 +82,18 @@ export const fetchWeatherData = async (
       return await fetchWeatherLegacyEndpoints(lat, lon, displayName, unitSystem);
     }
 
-    // Fetch One Call 3.0 aggregation using internal API
-    const oneCallResponse = await fetch(
-      getApiUrl(`/api/weather/onecall?lat=${lat}&lon=${lon}&units=${unitSystem}`)
-    );
-    if (!oneCallResponse.ok) {
-      throw new Error(`One Call API call failed: ${oneCallResponse.status}`);
-    }
-    const oneCall = await oneCallResponse.json();
+    // Phase 2: Use Open-Meteo instead of OWM One Call
+    return buildWeatherDataFromOpenMeteo(lat, lon, displayName, unitSystem, country);
 
-    return buildWeatherDataFromOneCall(oneCall, displayName, lat, lon, unitSystem, country);
+    // [OWM ROLLBACK] Previous One Call 3.0 path — kept for rollback
+    // const oneCallResponse = await fetch(
+    //   getApiUrl(`/api/weather/onecall?lat=${lat}&lon=${lon}&units=${unitSystem}`)
+    // );
+    // if (!oneCallResponse.ok) {
+    //   throw new Error(`One Call API call failed: ${oneCallResponse.status}`);
+    // }
+    // const oneCall = await oneCallResponse.json();
+    // return buildWeatherDataFromOneCall(oneCall, displayName, lat, lon, unitSystem, country);
   } catch (error) {
     console.error('Error fetching weather data:', error);
     throw error;
@@ -122,15 +125,7 @@ export const fetchWeatherByLocation = async (
       );
     }
 
-    // Fetch One Call 3.0 aggregation using internal API
-    const oneCallResponse = await fetch(
-      getApiUrl(`/api/weather/onecall?lat=${latitude}&lon=${longitude}&units=${unitSystem}`)
-    );
-    if (!oneCallResponse.ok) {
-      throw new Error(`One Call API call failed: ${oneCallResponse.status}`);
-    }
-    const oneCall = await oneCallResponse.json();
-
+    // Resolve display name and country via reverse geocoding
     let countryCode: string | undefined;
     let resolvedDisplayName = locationName;
 
@@ -144,8 +139,20 @@ export const fetchWeatherByLocation = async (
       console.warn('Reverse geocoding failed for coordinates:', error);
     }
 
-    const displayName = resolvedDisplayName || `${oneCall?.timezone || 'Selected Location'}`;
-    return buildWeatherDataFromOneCall(oneCall, displayName, latitude, longitude, unitSystem, countryCode);
+    const displayName = resolvedDisplayName || 'Selected Location';
+
+    // Phase 2: Use Open-Meteo instead of OWM One Call
+    return buildWeatherDataFromOpenMeteo(latitude, longitude, displayName, unitSystem, countryCode);
+
+    // [OWM ROLLBACK] Previous One Call 3.0 path — kept for rollback
+    // const oneCallResponse = await fetch(
+    //   getApiUrl(`/api/weather/onecall?lat=${latitude}&lon=${longitude}&units=${unitSystem}`)
+    // );
+    // if (!oneCallResponse.ok) {
+    //   throw new Error(`One Call API call failed: ${oneCallResponse.status}`);
+    // }
+    // const oneCall = await oneCallResponse.json();
+    // return buildWeatherDataFromOneCall(oneCall, displayName, latitude, longitude, unitSystem, countryCode);
   } catch (error) {
     console.error('Error fetching weather data:', error);
     throw error;
@@ -338,6 +345,7 @@ async function buildWeatherDataFromOneCall(
     uvIndex,
     aqi: airQualityData.aqi,
     aqiCategory: airQualityData.category,
+    pollutants: airQualityData.pollutants,
     pollen: pollenData,
     coordinates: { lat, lon },
     hourlyForecast: hourlyForecast
@@ -391,7 +399,8 @@ async function fetchWeatherLegacyEndpoints(
   } as { tree: Record<string, string>; grass: Record<string, string>; weed: Record<string, string> }));
   const airQualityData = await fetchAirQualityData(lat, lon, displayName).catch(() => ({
     aqi: 0,
-    category: 'Unknown'
+    category: 'Unknown',
+    pollutants: undefined,
   }));
 
   return {
@@ -419,6 +428,7 @@ async function fetchWeatherLegacyEndpoints(
     uvIndex,
     aqi: airQualityData.aqi,
     aqiCategory: airQualityData.category,
+    pollutants: airQualityData.pollutants,
     pollen: pollenData,
     coordinates: { lat, lon },
     hourlyForecast: [],

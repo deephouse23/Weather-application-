@@ -1,0 +1,189 @@
+/**
+ * Open-Meteo Adapter
+ *
+ * Transforms Open-Meteo API responses into the app's WeatherData interface.
+ */
+
+import type { WeatherData } from '../types';
+import { fetchOpenMeteoForecast, fetchOpenMeteoAirQuality } from '../open-meteo';
+import { getWMODescription, getWMOCondition } from '../wmo-codes';
+import {
+  formatPressureByRegion,
+  getCompassDirection,
+  calculateMoonPhase,
+} from './weather-utils';
+import { fetchPollenData } from './weather-forecast';
+
+function wmoCodeToOWMCondition(code: number): string {
+  const condition = getWMOCondition(code);
+  switch (condition) {
+    case 'sunny': return 'Clear';
+    case 'cloudy': return 'Clouds';
+    case 'rainy': return 'Rain';
+    case 'snowy': return 'Snow';
+    default: return 'Clear';
+  }
+}
+
+function getAQICategory(aqi: number): string {
+  if (aqi <= 50) return 'Good';
+  if (aqi <= 100) return 'Moderate';
+  if (aqi <= 150) return 'Unhealthy for Sensitive Groups';
+  if (aqi <= 200) return 'Unhealthy';
+  if (aqi <= 300) return 'Very Unhealthy';
+  return 'Hazardous';
+}
+
+function formatISOTimeToDisplay(isoString: string): string {
+  const timePart = isoString.split('T')[1];
+  if (!timePart) return 'N/A';
+  const [hoursStr, minutesStr] = timePart.split(':');
+  const hours = parseInt(hoursStr, 10);
+  const minutes = parseInt(minutesStr, 10);
+  if (isNaN(hours) || isNaN(minutes)) return 'N/A';
+  const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+  const ampm = hours >= 12 ? 'pm' : 'am';
+  const paddedMinutes = minutes.toString().padStart(2, '0');
+  return `${displayHours}:${paddedMinutes} ${ampm}`;
+}
+
+export async function buildWeatherDataFromOpenMeteo(
+  lat: number,
+  lon: number,
+  displayName: string,
+  unitSystem: 'metric' | 'imperial',
+  countryCode?: string
+): Promise<WeatherData> {
+  const resolvedCountry = countryCode || 'US';
+  const temperatureUnit = unitSystem === 'metric' ? 'celsius' as const : 'fahrenheit' as const;
+  const windSpeedUnit = unitSystem === 'metric' ? 'kmh' as const : 'mph' as const;
+  const precipitationUnit = unitSystem === 'metric' ? 'mm' as const : 'inch' as const;
+
+  const [forecast, airQualityResponse, pollenData] = await Promise.all([
+    fetchOpenMeteoForecast(lat, lon, {
+      forecastDays: 7,
+      temperatureUnit,
+      windSpeedUnit,
+      precipitationUnit,
+    }),
+    fetchOpenMeteoAirQuality(lat, lon).catch(() => null),
+    fetchPollenData(lat, lon),
+  ]);
+
+  const current = forecast.current;
+  const daily = forecast.daily;
+
+  const temperature = Math.round(current?.temperature_2m ?? 0);
+  const unit = unitSystem === 'imperial' ? '°F' : '°C';
+  const weatherCode = current?.weather_code ?? 0;
+  const condition = wmoCodeToOWMCondition(weatherCode);
+  const description = getWMODescription(weatherCode).toLowerCase();
+
+  const windSpeed = current?.wind_speed_10m ?? 0;
+  const windDirection = current?.wind_direction_10m != null
+    ? getCompassDirection(current.wind_direction_10m)
+    : undefined;
+  const windGust = current?.wind_gusts_10m;
+
+  const pressureHPa = current?.surface_pressure ?? 1013;
+  const pressure = formatPressureByRegion(pressureHPa, resolvedCountry);
+
+  const sunrise = daily?.sunrise?.[0]
+    ? formatISOTimeToDisplay(daily.sunrise[0])
+    : 'N/A';
+  const sunset = daily?.sunset?.[0]
+    ? formatISOTimeToDisplay(daily.sunset[0])
+    : 'N/A';
+
+  const uvIndex = Math.round(current?.uv_index ?? 0);
+  const aqi = airQualityResponse?.current?.us_aqi ?? 0;
+  const aqiCategory = getAQICategory(aqi);
+  const moonPhase = calculateMoonPhase();
+
+  // Build 5-day forecast
+  const forecastDays: WeatherData['forecast'] = [];
+  if (daily?.time) {
+    const count = Math.min(daily.time.length, 5);
+    for (let i = 0; i < count; i++) {
+      const dayDate = new Date(daily.time[i] + 'T12:00:00');
+      const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'long' });
+      const dayWeatherCode = daily.weather_code?.[i] ?? 0;
+      forecastDays.push({
+        day: dayName,
+        highTemp: Math.round(daily.temperature_2m_max?.[i] ?? 0),
+        lowTemp: Math.round(daily.temperature_2m_min?.[i] ?? 0),
+        condition: wmoCodeToOWMCondition(dayWeatherCode),
+        description: getWMODescription(dayWeatherCode).toLowerCase(),
+        details: {
+          humidity: 0,
+          windSpeed: Math.round(daily.wind_speed_10m_max?.[i] ?? 0),
+          windDirection: undefined,
+          pressure: `${Math.round(pressureHPa)} hPa`,
+          cloudCover: 0,
+          precipitationChance: daily.precipitation_probability_max?.[i] ?? 0,
+          visibility: undefined,
+          uvIndex: Math.round(daily.uv_index_max?.[i] ?? 0),
+        },
+        hourlyForecast: [],
+      });
+    }
+  }
+  while (forecastDays.length < 5) {
+    const offset = forecastDays.length;
+    const futureDate = new Date(Date.now() + offset * 86400000);
+    forecastDays.push({
+      day: futureDate.toLocaleDateString('en-US', { weekday: 'long' }),
+      highTemp: 0, lowTemp: 0,
+      condition: 'Clear', description: 'No data',
+      details: {
+        humidity: 0, windSpeed: 0, windDirection: undefined,
+        pressure: '1013 hPa', cloudCover: 0, precipitationChance: 0,
+        visibility: undefined, uvIndex: 0,
+      },
+      hourlyForecast: [],
+    });
+  }
+
+  // Build hourly forecast with current conditions as first entry
+  const hourlyForecast: WeatherData['hourlyForecast'] = [];
+  if (current) {
+    hourlyForecast.push({
+      dt: Math.floor(Date.now() / 1000),
+      time: 'Now',
+      temp: temperature,
+      feelsLike: current.apparent_temperature ?? temperature,
+      condition,
+      description,
+      precipChance: 0,
+      windSpeed,
+      windDirection: current.wind_direction_10m != null
+        ? getCompassDirection(current.wind_direction_10m)
+        : undefined,
+      humidity: current.relative_humidity_2m ?? 0,
+      uvIndex,
+      icon: undefined,
+    });
+  }
+
+  return {
+    location: displayName,
+    country: resolvedCountry,
+    temperature,
+    unit,
+    condition,
+    description,
+    humidity: current?.relative_humidity_2m ?? 0,
+    wind: { speed: windSpeed, direction: windDirection, gust: windGust },
+    pressure,
+    sunrise,
+    sunset,
+    coordinates: { lat, lon },
+    forecast: forecastDays,
+    moonPhase,
+    uvIndex,
+    aqi,
+    aqiCategory,
+    pollen: pollenData,
+    hourlyForecast,
+  };
+}

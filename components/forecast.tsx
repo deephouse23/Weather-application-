@@ -130,6 +130,13 @@ function ForecastCard({ day, index, onDayClick, isSelected }: {
           </div>
         </div>
 
+        {/* Precipitation chance */}
+        {(day.details?.precipitationChance ?? 0) > 0 && (
+          <div className="text-xs text-blue-400/90 font-medium tabular-nums mt-1">
+            <span aria-label="Precipitation chance">&#x1F4A7;</span> {day.details?.precipitationChance}%
+          </div>
+        )}
+
         {/* Description - Mobile responsive */}
         <div
           className="text-xs text-primary/85 capitalize mt-2 text-center w-full line-clamp-2 leading-snug min-h-[2.25rem]"
