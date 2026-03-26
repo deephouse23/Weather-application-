@@ -18,7 +18,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, Home, Map, Plane, GraduationCap, Gamepad2, Newspaper, Sparkles, Sun } from "lucide-react"
+import { Menu, X, Home, Map, Plane, GraduationCap, Gamepad2, Newspaper, Sparkles, Sun, Thermometer, ChevronDown, Cloud, Wrench, AlertTriangle, CloudLightning, Snowflake, CloudRain, Route, Info } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
 import AuthButton from "@/components/auth/auth-button"
@@ -40,6 +40,8 @@ interface NavigationProps {
  */
 export default function Navigation({ weatherLocation, weatherTemperature, weatherUnit }: NavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [weatherMenuOpen, setWeatherMenuOpen] = useState(false)
+  const [toolsMenuOpen, setToolsMenuOpen] = useState(false)
   const pathname = usePathname()
   const { theme } = useTheme()
 
@@ -118,16 +120,45 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
   };
 
 
-  const mainNavItems = [
+  const topNavItems = [
     { href: "/", label: "HOME", icon: Home },
+  ]
+
+  const weatherItems = [
     { href: "/radar", label: "RADAR", icon: Map },
+    { href: "/situation", label: "SITUATION", icon: AlertTriangle },
+    { href: "/severe", label: "SEVERE", icon: CloudLightning },
+    { href: "/winter", label: "WINTER", icon: Snowflake },
+    { href: "/tropical", label: "TROPICAL", icon: CloudRain },
+    { href: "/travel", label: "TRAVEL", icon: Route },
     { href: "/aviation", label: "AVIATION", icon: Plane },
     { href: "/space-weather", label: "SPACE", icon: Sun },
+    { href: "/vibe-check", label: "VIBE CHECK", icon: Thermometer },
+  ]
+
+  const toolsItems = [
     { href: "/education", label: "EDUCATION", icon: GraduationCap },
     { href: "/games", label: "GAMES", icon: Gamepad2 },
-    { href: "/news", label: "NEWS", icon: Newspaper },
-    { href: "/ai", label: "AI", icon: Sparkles }
   ]
+
+  const rightNavItems = [
+    { href: "/news", label: "NEWS", icon: Newspaper },
+    { href: "/ai", label: "AI", icon: Sparkles },
+    { href: "/about", label: "ABOUT", icon: Info },
+  ]
+
+  // All items flat for mobile menu
+  const allNavItems = [
+    ...topNavItems,
+    ...weatherItems,
+    ...toolsItems,
+    ...rightNavItems,
+  ]
+
+  const weatherPaths = weatherItems.map(i => i.href)
+  const toolsPaths = toolsItems.map(i => i.href)
+  const isWeatherActive = weatherPaths.includes(pathname)
+  const isToolsActive = toolsPaths.includes(pathname)
 
   return (
     <>
@@ -153,24 +184,101 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
 
           {/* Main Navigation Links - TOP CENTER */}
           <div className="flex items-center space-x-1">
-            {mainNavItems.map((item) => {
+            {/* Home */}
+            {topNavItems.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
-
               return (
-                <Button
-                  key={item.href}
-                  variant={isActive ? "secondary" : "ghost"}
-                  size="sm"
-                  asChild
-                  className={cn(
-                    "font-semibold transition-all duration-200",
-                    isActive && "font-bold shadow-sm"
-                  )}
-                >
+                <Button key={item.href} variant={isActive ? "secondary" : "ghost"} size="sm" asChild
+                  className={cn("font-semibold transition-all duration-200", isActive && "font-bold shadow-sm")}>
                   <Link href={item.href} className="flex items-center gap-2">
-                    <Icon className="w-4 h-4" />
-                    <span>{item.label}</span>
+                    <Icon className="w-4 h-4" /><span>{item.label}</span>
+                  </Link>
+                </Button>
+              )
+            })}
+
+            {/* Weather Dropdown */}
+            <div className="relative"
+              onMouseEnter={() => setWeatherMenuOpen(true)}
+              onMouseLeave={() => setWeatherMenuOpen(false)}
+            >
+              <Button
+                variant={isWeatherActive ? "secondary" : "ghost"}
+                size="sm"
+                className={cn("font-semibold transition-all duration-200 gap-1", isWeatherActive && "font-bold shadow-sm")}
+                onClick={() => setWeatherMenuOpen(!weatherMenuOpen)}
+              >
+                <Cloud className="w-4 h-4" />
+                <span>Weather</span>
+                <ChevronDown className={cn("w-3 h-3 transition-transform", weatherMenuOpen && "rotate-180")} />
+              </Button>
+              {weatherMenuOpen && (
+                <div className="absolute top-full left-0 mt-1 w-48 rounded-lg border border-border bg-background/95 backdrop-blur-lg shadow-xl animate-in slide-in-from-top-2 z-50 py-1">
+                  {weatherItems.map((item) => {
+                    const Icon = item.icon
+                    const isActive = pathname === item.href
+                    return (
+                      <Link key={item.href} href={item.href}
+                        className={cn(
+                          "flex items-center gap-3 px-4 py-2.5 text-sm font-semibold transition-colors",
+                          isActive ? "bg-secondary text-secondary-foreground" : "text-foreground hover:bg-muted"
+                        )}
+                        onClick={() => setWeatherMenuOpen(false)}
+                      >
+                        <Icon className="w-4 h-4" />{item.label}
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Tools Dropdown */}
+            <div className="relative"
+              onMouseEnter={() => setToolsMenuOpen(true)}
+              onMouseLeave={() => setToolsMenuOpen(false)}
+            >
+              <Button
+                variant={isToolsActive ? "secondary" : "ghost"}
+                size="sm"
+                className={cn("font-semibold transition-all duration-200 gap-1", isToolsActive && "font-bold shadow-sm")}
+                onClick={() => setToolsMenuOpen(!toolsMenuOpen)}
+              >
+                <Wrench className="w-4 h-4" />
+                <span>Tools</span>
+                <ChevronDown className={cn("w-3 h-3 transition-transform", toolsMenuOpen && "rotate-180")} />
+              </Button>
+              {toolsMenuOpen && (
+                <div className="absolute top-full left-0 mt-1 w-48 rounded-lg border border-border bg-background/95 backdrop-blur-lg shadow-xl animate-in slide-in-from-top-2 z-50 py-1">
+                  {toolsItems.map((item) => {
+                    const Icon = item.icon
+                    const isActive = pathname === item.href
+                    return (
+                      <Link key={item.href} href={item.href}
+                        className={cn(
+                          "flex items-center gap-3 px-4 py-2.5 text-sm font-semibold transition-colors",
+                          isActive ? "bg-secondary text-secondary-foreground" : "text-foreground hover:bg-muted"
+                        )}
+                        onClick={() => setToolsMenuOpen(false)}
+                      >
+                        <Icon className="w-4 h-4" />{item.label}
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* News, AI */}
+            {rightNavItems.map((item) => {
+              const Icon = item.icon
+              const isActive = pathname === item.href
+              return (
+                <Button key={item.href} variant={isActive ? "secondary" : "ghost"} size="sm" asChild
+                  className={cn("font-semibold transition-all duration-200", isActive && "font-bold shadow-sm")}>
+                  <Link href={item.href} className="flex items-center gap-2">
+                    <Icon className="w-4 h-4" /><span>{item.label}</span>
                   </Link>
                 </Button>
               )
@@ -229,7 +337,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
           >
             <div className="p-4 space-y-2">
               {/* All main nav items */}
-              {mainNavItems.map((item) => {
+              {allNavItems.map((item) => {
                 const Icon = item.icon
                 const isActive = pathname === item.href
 

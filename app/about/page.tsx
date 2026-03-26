@@ -1,167 +1,239 @@
-import { Github, Twitter, Terminal, Gamepad2, Cpu, Zap, CloudLightning } from 'lucide-react'
-import Link from 'next/link'
-import Navigation from '@/components/navigation'
+'use client';
+
+/**
+ * 16-Bit Weather Platform - About Page
+ *
+ * Platform overview, creator story, tech stack, and available modules.
+ */
+
+import React, { useState } from 'react';
+import Link from 'next/link';
+import {
+  Github, Twitter, Terminal, Cpu, Zap, CloudLightning, Map, Plane, Sun,
+  Gamepad2, Newspaper, Sparkles, Thermometer, AlertTriangle, ChevronDown,
+  Globe, Database, Shield, Gauge
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useTheme } from '@/components/theme-provider';
+import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
+import PageWrapper from '@/components/page-wrapper';
+
+function Accordion({ title, icon: Icon, children, defaultOpen = false }: {
+  title: string;
+  icon: React.ElementType;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  return (
+    <div className="border border-border rounded-lg overflow-hidden">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-5 bg-card/50 hover:bg-card/80 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <Icon className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-bold font-mono tracking-wider uppercase">{title}</h2>
+        </div>
+        <ChevronDown className={cn("w-5 h-5 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
+      </button>
+      {isOpen && (
+        <div className="p-6 border-t border-border animate-in slide-in-from-top-2 duration-200">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const modules = [
+  { href: "/radar", label: "Radar", desc: "Real-time NOAA MRMS radar with animated playback", icon: Map },
+  { href: "/situation", label: "Current Situation", desc: "Live NWS alerts dashboard with Weather Intensity Score", icon: AlertTriangle },
+  { href: "/severe", label: "Severe Weather", desc: "Active tornado, thunderstorm, and flood warnings", icon: CloudLightning },
+  { href: "/aviation", label: "Aviation", desc: "METARs, PIREPs, SIGMETs, and flight conditions", icon: Plane },
+  { href: "/space-weather", label: "Space Weather", desc: "Solar flares, Kp index, aurora forecast, and coronagraph", icon: Sun },
+  { href: "/vibe-check", label: "Vibe Check", desc: "Outdoor comfort scoring — is it a good day to go out?", icon: Thermometer },
+  { href: "/games", label: "Retro Games", desc: "Weather-themed arcade games with leaderboards", icon: Gamepad2 },
+  { href: "/news", label: "News Feed", desc: "Aggregated weather news from NOAA, NASA, and USGS", icon: Newspaper },
+  { href: "/ai", label: "AI Chat", desc: "Claude-powered weather assistant with tool calling", icon: Sparkles },
+];
 
 export default function AboutPage() {
+  const { theme } = useTheme();
+  const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
+
   return (
-    <div className="min-h-screen bg-terminal-bg-primary text-terminal-text-primary selection:bg-terminal-accent selection:text-black overflow-x-hidden">
-      <div className="relative z-50">
-        <Navigation />
-      </div>
-
-      {/* Grid Background Effect */}
-      <div className="fixed inset-0 z-0 pointer-events-none opacity-20"
-        style={{
-          backgroundImage: 'linear-gradient(to right, var(--terminal-border) 1px, transparent 1px), linear-gradient(to bottom, var(--terminal-border) 1px, transparent 1px)',
-          backgroundSize: '40px 40px'
-        }}
-      />
-
-      <div className="container mx-auto px-4 py-16 relative z-10">
-
-        {/* HERO SECTION */}
-        <div className="max-w-4xl mx-auto text-center mb-20 space-y-6">
-          <div className="inline-block px-4 py-1 border-0 text-terminal-accent font-mono text-sm mb-4 bg-terminal-accent/10 rounded-full animate-pulse">
-            SYSTEM_STATUS: ONLINE
-          </div>
-          <h1 className="text-5xl md:text-7xl font-black tracking-tighter uppercase font-mono bg-clip-text text-transparent bg-gradient-to-r from-terminal-accent via-white to-terminal-accent-secondary drop-shadow-[0_0_10px_rgba(0,212,255,0.5)]">
-            Retro Soul.<br />
-            Modern Intelligence.
+    <PageWrapper>
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+        {/* Hero */}
+        <div className="text-center space-y-3">
+          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight font-mono uppercase">
+            Mission Status:{' '}
+            <span className="text-primary">About 16-Bit Weather</span>
           </h1>
-          <p className="text-xl md:text-2xl text-terminal-text-muted font-mono max-w-2xl mx-auto leading-relaxed">
-            Weather data doesn't have to be boring. Use the terminal. <br />Check the radar. Play the game.
+          <p className="text-sm font-mono text-muted-foreground tracking-wider">
+            // RETRO SOUL // MODERN INTELLIGENCE // WEATHER EDUCATION
           </p>
         </div>
 
-        {/* MAIN CONTENT GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto mb-20">
+        {/* Accordion Sections */}
+        <div className="space-y-4">
 
-          {/* THE STORY CARD */}
-          <div className="group relative">
-            <div className="absolute -inset-1 bg-gradient-to-r from-terminal-accent-secondary to-terminal-accent opacity-75 blur group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-            <div className="relative h-full bg-terminal-bg-elevated border-0 p-8 md:p-10 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center space-x-3 mb-6">
-                  <Terminal className="w-8 h-8 text-terminal-accent-secondary" />
-                  <h2 className="text-2xl font-bold font-mono tracking-wider uppercase text-terminal-accent-secondary">The Source Code</h2>
-                </div>
-                <div className="space-y-4 text-terminal-text-secondary font-mono leading-relaxed">
-                  <p>
-                    I've had an interest in weather since I can remember.
-                  </p>
-                  <p>
-                    But this project isn't just about meteorology. It's about the <span className="text-terminal-text-primary font-bold">craft</span>.
-                    I find it incredibly fun to create "shitty websites" as a proxy to learn software development, explore CI/CD pipelines, and push the boundaries of what a web app can be.
-                  </p>
-                  <p>
-                    16-Bit Weather is where <span className="text-terminal-accent">Nostalgia</span> meets a <span className="text-terminal-accent-secondary">Tron-like aesthetic</span>.
-                    It's powered by modern tech agents, but feels like it belongs in an arcade cabinet from 1985.
-                  </p>
-                </div>
-              </div>
+          {/* The Source Code - Justin's Story */}
+          <Accordion title="The Source Code" icon={Terminal} defaultOpen={true}>
+            <div className="space-y-4 font-mono text-sm leading-relaxed text-muted-foreground">
+              <p>
+                I&apos;ve had an interest in weather since I can remember. Growing up watching storms
+                roll in, checking radar obsessively, and trying to understand why the atmosphere does
+                what it does — that curiosity never went away.
+              </p>
+              <p>
+                But this project isn&apos;t just about meteorology. It&apos;s about the{' '}
+                <span className="text-foreground font-bold">craft</span>. I find it incredibly fun
+                to build ambitious web apps as a way to learn software development, explore CI/CD
+                pipelines, and push the boundaries of what a weather platform can be.
+              </p>
+              <p>
+                16-Bit Weather is where{' '}
+                <span className="text-primary">nostalgia</span> meets{' '}
+                <span className="text-primary">modern intelligence</span>.
+                It&apos;s powered by AI agents, real-time government data feeds, and cutting-edge web tech
+                — but feels like it belongs in an arcade cabinet from 1985.
+              </p>
+              <p>
+                Every feature you see here was built with curiosity, late nights, and a belief that
+                weather data doesn&apos;t have to be boring. Use the terminal. Check the radar. Play the game.
+              </p>
             </div>
-          </div>
+          </Accordion>
 
-          {/* TECH STACK CARD */}
-          <div className="group relative">
-            <div className="absolute -inset-1 bg-gradient-to-r from-terminal-accent to-terminal-accent-success opacity-75 blur group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-            <div className="relative h-full bg-terminal-bg-elevated border-0 p-8 md:p-10">
-              <div className="flex items-center space-x-3 mb-6">
-                <Cpu className="w-8 h-8 text-terminal-accent" />
-                <h2 className="text-2xl font-bold font-mono tracking-wider uppercase text-terminal-accent">Under the Hood</h2>
-              </div>
+          {/* System Architecture */}
+          <Accordion title="System Architecture" icon={Globe}>
+            <div className="space-y-6">
+              <p className="font-mono text-sm text-muted-foreground">
+                16-Bit Weather is a retro-styled weather education platform that combines real-time
+                weather data with pixel-influenced visuals, educational content, interactive games,
+                and tool-backed AI. It monitors weather across the United States through multiple
+                government data sources, updated in real-time.
+              </p>
 
-              <div className="space-y-6">
-                <p className="text-terminal-text-secondary font-mono">
-                  Don't let the pixels fool you. This machine is running on high-octane modern infrastructure.
+              <div className="border border-primary/30 rounded-lg p-5 bg-primary/5">
+                <h3 className="font-mono font-bold text-sm mb-2 flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-primary" />
+                  REAL-TIME INTELLIGENCE
+                </h3>
+                <p className="font-mono text-sm text-muted-foreground">
+                  The platform features a{' '}
+                  <Link href="/situation" className="text-primary underline underline-offset-4 hover:text-primary/80">
+                    Weather Intensity Score (WIS)
+                  </Link>
+                  {' '}— a scoring algorithm that monitors weather severity across the United States in
+                  real-time. Updated every 5 minutes from NWS active alerts, the WIS provides immediate
+                  insight into current weather conditions nationwide.
                 </p>
+              </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center p-3 border-0 hover:border-terminal-accent transition-colors bg-terminal-bg-secondary">
-                    <Zap className="w-6 h-6 text-terminal-accent-warning mr-4" />
-                    <div>
-                      <div className="font-bold font-mono text-terminal-text-primary">THE ENGINE</div>
-                      <div className="text-sm text-terminal-text-muted font-mono">Next.js 15 (App Router)</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center p-3 border-0 hover:border-terminal-accent-success transition-colors bg-terminal-bg-secondary">
-                    <CloudLightning className="w-6 h-6 text-terminal-accent-success mr-4" />
-                    <div>
-                      <div className="font-bold font-mono text-terminal-text-primary">LIVE DATA</div>
-                      <div className="text-sm text-terminal-text-muted font-mono">OpenWeatherMap API + Supabase</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center p-3 border-0 hover:border-terminal-accent-secondary transition-colors bg-terminal-bg-secondary">
-                    <Gamepad2 className="w-6 h-6 text-terminal-accent-secondary mr-4" />
-                    <div>
-                      <div className="font-bold font-mono text-terminal-text-primary">THE AESTHETIC</div>
-                      <div className="text-sm text-terminal-text-muted font-mono">TailwindCSS + Framer Motion</div>
-                    </div>
-                  </div>
-                </div>
+              <div className="border border-border rounded-lg p-5 bg-card/30">
+                <h3 className="font-mono font-bold text-sm mb-2 flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-muted-foreground" />
+                  ADVISORY
+                </h3>
+                <p className="font-mono text-xs text-muted-foreground">
+                  While these tools provide valuable weather insights, always follow official warnings
+                  from the National Weather Service and local authorities for safety decisions.
+                </p>
               </div>
             </div>
+          </Accordion>
+
+          {/* Under the Hood */}
+          <Accordion title="Under the Hood" icon={Cpu}>
+            <div className="space-y-4">
+              <p className="font-mono text-sm text-muted-foreground">
+                Don&apos;t let the pixels fool you. This machine is running on high-octane modern infrastructure.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[
+                  { icon: Zap, label: "THE ENGINE", value: "Next.js 16 (App Router) + React 19" },
+                  { icon: Database, label: "DATA LAYER", value: "Supabase PostgreSQL + Row-Level Security" },
+                  { icon: CloudLightning, label: "WEATHER DATA", value: "OpenWeatherMap + NOAA + NWS + USGS + NASA" },
+                  { icon: Sparkles, label: "AI ENGINE", value: "Vercel AI SDK + Claude (Anthropic)" },
+                  { icon: Globe, label: "RADAR", value: "NOAA MRMS + Iowa NEXRAD via OpenLayers" },
+                  { icon: Gauge, label: "MONITORING", value: "Sentry + Lighthouse CI (score >= 85)" },
+                  { icon: Gamepad2, label: "AESTHETIC", value: "Tailwind CSS v4 + 5 retro themes" },
+                  { icon: Shield, label: "DEPLOYMENT", value: "Vercel Edge + GitHub Actions CI/CD" },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-3 p-3 border border-border rounded bg-card/30">
+                    <item.icon className="w-5 h-5 text-primary shrink-0" />
+                    <div>
+                      <div className="font-mono font-bold text-xs">{item.label}</div>
+                      <div className="font-mono text-xs text-muted-foreground">{item.value}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Accordion>
+        </div>
+
+        {/* Available Modules Grid */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold font-mono tracking-wider uppercase flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-primary" />
+            Available Modules
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {modules.map((mod) => (
+              <Link
+                key={mod.href}
+                href={mod.href}
+                className="border border-border rounded-lg p-4 bg-card/30 hover:bg-card/60 transition-colors group"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <mod.icon className="w-4 h-4 text-primary" />
+                  <h3 className="font-mono font-bold text-sm text-primary group-hover:underline underline-offset-4">
+                    {mod.label.toUpperCase()}
+                  </h3>
+                </div>
+                <p className="font-mono text-xs text-muted-foreground">{mod.desc}</p>
+              </Link>
+            ))}
           </div>
         </div>
 
-        {/* CONNECT / PLAYER 1 SECTION */}
-        <div className="max-w-3xl mx-auto">
-          <div className="border-0 bg-terminal-bg-primary p-2">
-            <div className="border-0 p-8 text-center relative overflow-hidden">
-              {/* Scanline effect */}
-              <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-0 pointer-events-none bg-[length:100%_4px,3px_100%]"></div>
+        {/* Connect / Player 1 */}
+        <div className="border border-border rounded-lg p-8 text-center bg-card/30">
+          <div className="w-20 h-20 mx-auto bg-primary/20 border-2 border-primary rounded-full mb-4 flex items-center justify-center">
+            <Terminal className="w-8 h-8 text-primary" />
+          </div>
+          <h3 className="text-xl font-bold font-mono mb-1">PLAYER 1</h3>
+          <p className="text-sm font-mono text-muted-foreground tracking-widest uppercase mb-6">Justin Elrod</p>
 
-              <div className="relative z-10">
-                <div className="w-24 h-24 mx-auto bg-terminal-accent rounded-full mb-6 flex items-center justify-center p-1 cursor-pointer hover:scale-110 transition-transform">
-                  <img
-                    src="https://api.dicebear.com/9.x/avataaars/svg?seed=Felix&top=shortHairSides&accessories=prescription02"
-                    alt="Player 1"
-                    className="w-full h-full rounded-full bg-black"
-                  />
-                </div>
-
-                <h3 className="text-2xl font-bold font-mono text-terminal-text-primary mb-2">PLAYER 1</h3>
-                <p className="text-terminal-accent font-mono text-sm tracking-widest uppercase mb-8">Ready to Connect</p>
-
-                <div className="flex justify-center gap-6">
-                  <a href="https://github.com/deephouse23" target="_blank" rel="noopener noreferrer"
-                    className="group flex flex-col items-center space-y-2">
-                    <div className="w-12 h-12 bg-terminal-bg-secondary border-0 flex items-center justify-center group-hover:border-terminal-text-primary group-hover:bg-terminal-text-primary group-hover:text-terminal-bg-primary transition-all duration-300">
-                      <Github className="w-6 h-6" />
-                    </div>
-                    <span className="text-xs font-mono text-terminal-text-muted group-hover:text-terminal-text-primary">GITHUB</span>
-                  </a>
-
-                  <a href="https://x.com/Justin_Elrod" target="_blank" rel="noopener noreferrer"
-                    className="group flex flex-col items-center space-y-2">
-                    <div className="w-12 h-12 bg-terminal-bg-secondary border-0 flex items-center justify-center group-hover:border-terminal-text-primary group-hover:bg-terminal-text-primary group-hover:text-terminal-bg-primary transition-all duration-300">
-                      <Twitter className="w-6 h-6" />
-                    </div>
-                    <span className="text-xs font-mono text-terminal-text-muted group-hover:text-terminal-text-primary">X</span>
-                  </a>
-
-                  <Link href="/dashboard" className="group flex flex-col items-center space-y-2">
-                    <div className="w-12 h-12 bg-terminal-bg-secondary border-0 flex items-center justify-center group-hover:border-terminal-accent group-hover:bg-terminal-accent group-hover:text-terminal-bg-primary transition-all duration-300">
-                      <Terminal className="w-6 h-6" />
-                    </div>
-                    <span className="text-xs font-mono text-terminal-text-muted group-hover:text-terminal-accent">DASHBOARD</span>
-                  </Link>
-
-                  <Link href="/" className="group flex flex-col items-center space-y-2">
-                    <div className="w-12 h-12 bg-terminal-bg-secondary border-0 flex items-center justify-center group-hover:border-terminal-accent-secondary group-hover:bg-terminal-accent-secondary group-hover:text-terminal-bg-primary transition-all duration-300">
-                      <CloudLightning className="w-6 h-6" />
-                    </div>
-                    <span className="text-xs font-mono text-terminal-text-muted group-hover:text-terminal-accent-secondary">WEATHER</span>
-                  </Link>
-                </div>
+          <div className="flex justify-center gap-6">
+            <a href="https://github.com/deephouse23" target="_blank" rel="noopener noreferrer"
+              className="group flex flex-col items-center gap-2">
+              <div className="w-12 h-12 border border-border rounded-lg flex items-center justify-center group-hover:border-primary group-hover:bg-primary/10 transition-colors">
+                <Github className="w-5 h-5" />
               </div>
-            </div>
+              <span className="text-xs font-mono text-muted-foreground group-hover:text-primary">GITHUB</span>
+            </a>
+            <a href="https://x.com/Justin_Elrod" target="_blank" rel="noopener noreferrer"
+              className="group flex flex-col items-center gap-2">
+              <div className="w-12 h-12 border border-border rounded-lg flex items-center justify-center group-hover:border-primary group-hover:bg-primary/10 transition-colors">
+                <Twitter className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-mono text-muted-foreground group-hover:text-primary">X</span>
+            </a>
+            <Link href="/dashboard" className="group flex flex-col items-center gap-2">
+              <div className="w-12 h-12 border border-border rounded-lg flex items-center justify-center group-hover:border-primary group-hover:bg-primary/10 transition-colors">
+                <Terminal className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-mono text-muted-foreground group-hover:text-primary">DASHBOARD</span>
+            </Link>
           </div>
         </div>
 
       </div>
-    </div>
-  )
+    </PageWrapper>
+  );
 }

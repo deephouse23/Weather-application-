@@ -10,6 +10,7 @@
  */
 
 import { tool } from 'ai';
+import { calculateVibeScore, type VibeInput } from '@/lib/services/vibe-check';
 import { z } from 'zod';
 import {
     fetchRecentEarthquakes,
@@ -502,6 +503,54 @@ export const weatherTools = {
                 aviation_alerts: aviationData?.hasActiveAlerts
                     ? { count: aviationData.alertCount, details: aviationData.contextBlock }
                     : { count: 0, message: 'No active aviation advisories' },
+            };
+        },
+    }),
+
+
+    // 11. Vibe check / comfort score
+    get_vibe_check: tool({
+        description:
+            'Get the outdoor comfort "vibe check" score for a location. Returns a 0-100 score with category (Rough/Meh/Decent/Vibin/Immaculate) and component breakdown. Use when someone asks "how nice is it outside?" or "is it a good day to go out?" or "whats the vibe?"',
+        inputSchema: z.object({
+            location: z.string().describe('City name, ZIP code, or "City, State" format'),
+        }),
+        execute: async ({ location }) => {
+            const coords = await geocodeLocation(location);
+            if (!coords) return { error: `Could not find location: ${location}` };
+
+            const apiKey = OWM_KEY();
+            const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${coords.lat}&lon=${coords.lon}&units=imperial&exclude=minutely,alerts&appid=${apiKey}`;
+            const { data, error } = await safeFetch(url, 'Weather data unavailable');
+            if (error || !data) return { error };
+
+            const current = data.current as Record<string, unknown>;
+            const hourly = data.hourly as Array<Record<string, unknown>>;
+
+            const input: VibeInput = {
+                tempF: (current?.temp as number) ?? 72,
+                humidity: (current?.humidity as number) ?? 50,
+                windMph: (current?.wind_speed as number) ?? 5,
+                precipChance: ((hourly?.[0]?.pop as number) ?? 0) * 100,
+                uvIndex: (current?.uvi as number) ?? 3,
+                cloudCover: (current?.clouds as number) ?? 20,
+            };
+
+            const vibe = calculateVibeScore(input);
+
+            return {
+                location: coords.name,
+                score: vibe.score,
+                category: vibe.category,
+                breakdown: vibe.breakdown,
+                conditions: {
+                    temp: Math.round((current?.temp as number) ?? 0),
+                    feels_like: Math.round((current?.feels_like as number) ?? 0),
+                    humidity: (current?.humidity as number) ?? 0,
+                    wind_mph: Math.round((current?.wind_speed as number) ?? 0),
+                    uv_index: (current?.uvi as number) ?? 0,
+                    cloud_cover: (current?.clouds as number) ?? 0,
+                },
             };
         },
     }),
