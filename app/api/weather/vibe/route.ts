@@ -24,6 +24,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required parameters: lat, lon' }, { status: 400 })
     }
 
+    const latNum = parseFloat(lat)
+    const lonNum = parseFloat(lon)
+    if (!Number.isFinite(latNum) || !Number.isFinite(lonNum) || latNum < -90 || latNum > 90 || lonNum < -180 || lonNum > 180) {
+      return NextResponse.json({ error: 'Invalid coordinates: lat must be -90..90, lon must be -180..180' }, { status: 400 })
+    }
+
     // Use internal onecall route
     const baseUrl = getBaseUrl()
     const url = `${baseUrl}/api/weather/onecall?lat=${lat}&lon=${lon}&units=imperial&exclude=minutely,alerts`
@@ -58,7 +64,7 @@ export async function GET(request: NextRequest) {
       clouds: number
       weather: Array<{ main: string; description: string; icon: string }>
     }) => {
-      const avgTemp = (day.temp.max + day.temp.min) / 2
+      const avgTemp = ((day.temp?.max ?? 72) + (day.temp?.min ?? 72)) / 2
       const input: VibeInput = {
         tempF: avgTemp,
         humidity: day.humidity ?? 50,
@@ -70,8 +76,8 @@ export async function GET(request: NextRequest) {
       const vibe = calculateVibeScore(input)
       return {
         dt: day.dt,
-        highTemp: Math.round(day.temp.max),
-        lowTemp: Math.round(day.temp.min),
+        highTemp: Math.round(day.temp?.max ?? 72),
+        lowTemp: Math.round(day.temp?.min ?? 72),
         condition: day.weather?.[0]?.main ?? 'Clear',
         icon: day.weather?.[0]?.icon ?? '01d',
         ...vibe,

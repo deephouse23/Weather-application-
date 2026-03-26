@@ -42,6 +42,8 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [weatherMenuOpen, setWeatherMenuOpen] = useState(false)
   const [toolsMenuOpen, setToolsMenuOpen] = useState(false)
+  const toggleWeatherMenu = () => { setWeatherMenuOpen(prev => !prev); setToolsMenuOpen(false) }
+  const toggleToolsMenu = () => { setToolsMenuOpen(prev => !prev); setWeatherMenuOpen(false) }
   const pathname = usePathname()
   const { theme } = useTheme()
 
@@ -200,14 +202,14 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
 
             {/* Weather Dropdown */}
             <div className="relative"
-              onMouseEnter={() => setWeatherMenuOpen(true)}
+              onMouseEnter={() => { setWeatherMenuOpen(true); setToolsMenuOpen(false) }}
               onMouseLeave={() => setWeatherMenuOpen(false)}
             >
               <Button
                 variant={isWeatherActive ? "secondary" : "ghost"}
                 size="sm"
                 className={cn("font-semibold transition-all duration-200 gap-1", isWeatherActive && "font-bold shadow-sm")}
-                onClick={() => setWeatherMenuOpen(!weatherMenuOpen)}
+                onClick={() => toggleWeatherMenu()}
               >
                 <Cloud className="w-4 h-4" />
                 <span>Weather</span>
@@ -236,14 +238,14 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
 
             {/* Tools Dropdown */}
             <div className="relative"
-              onMouseEnter={() => setToolsMenuOpen(true)}
+              onMouseEnter={() => { setToolsMenuOpen(true); setWeatherMenuOpen(false) }}
               onMouseLeave={() => setToolsMenuOpen(false)}
             >
               <Button
                 variant={isToolsActive ? "secondary" : "ghost"}
                 size="sm"
                 className={cn("font-semibold transition-all duration-200 gap-1", isToolsActive && "font-bold shadow-sm")}
-                onClick={() => setToolsMenuOpen(!toolsMenuOpen)}
+                onClick={() => toggleToolsMenu()}
               >
                 <Wrench className="w-4 h-4" />
                 <span>Tools</span>

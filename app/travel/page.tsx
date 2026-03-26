@@ -39,7 +39,7 @@ export default function TravelPage() {
       if (!geoRes.ok) return null;
       const geoData = await geoRes.json();
       const loc = geoData[0] || geoData;
-      if (!loc?.lat && !loc?.latitude) return null;
+      if (loc?.lat == null && loc?.latitude == null) return null;
 
       const lat = loc.lat ?? loc.latitude;
       const lon = loc.lon ?? loc.longitude;
@@ -64,6 +64,7 @@ export default function TravelPage() {
   }
 
   async function handleCompare() {
+    if (isLoading) return;
     if (!origin.trim() || !destination.trim()) return;
     setIsLoading(true);
     setError('');

@@ -52,6 +52,18 @@ describe('Vibe Check', () => {
       expect(result.score).toBeGreaterThanOrEqual(0);
       expect(result.score).toBeLessThanOrEqual(100);
     });
+
+    it('should use clamped score for category', () => {
+      const extreme: VibeInput = {
+        tempF: -50, humidity: 100, windMph: 100,
+        precipChance: 100, uvIndex: 15, cloudCover: 100,
+      };
+
+      const result = calculateVibeScore(extreme);
+
+      // Category must match the clamped score, not the raw score
+      expect(result.category).toBe(getVibeCategory(result.score));
+    });
   });
 
   describe('getVibeCategory', () => {
