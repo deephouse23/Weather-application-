@@ -12,6 +12,9 @@ if (process.env.ANALYZE === 'true') {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Allow 127.0.0.1 in dev mode (Playwright E2E tests connect via this origin)
+  allowedDevOrigins: ['http://127.0.0.1:3000', '127.0.0.1'],
+
   // Note: ESLint config moved to eslint.config.mjs (Next.js 16+)
   // To ignore during builds, use: ESLINT_NO_DEV_ERRORS=true or run lint separately
   typescript: {
