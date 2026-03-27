@@ -9,6 +9,7 @@
 
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { safeStorage } from '@/lib/safe-storage';
 
 import 'ol/ol.css';
 import OLMap from 'ol/Map';
@@ -30,9 +31,33 @@ const CARTO_DARK_URL = 'https://{a-d}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}
 const CONUS_CENTER: [number, number] = [-98.5795, 39.8283];
 const CONUS_ZOOM = 4;
 
+const SPC_CACHE_PREFIX = 'bitweather_spc_';
+const SPC_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
 interface SPCOutlookMapProps {
   day: SPCOutlookDay;
   type: SPCOutlookType;
+}
+
+function getCachedOutlook(day: SPCOutlookDay, type: SPCOutlookType) {
+  try {
+    const cached = safeStorage.getItem(`${SPC_CACHE_PREFIX}${day}_${type}`);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Date.now() < parsed.expiresAt) return parsed.data;
+      safeStorage.removeItem(`${SPC_CACHE_PREFIX}${day}_${type}`);
+    }
+  } catch { /* ignore */ }
+  return null;
+}
+
+function setCachedOutlook(day: SPCOutlookDay, type: SPCOutlookType, data: unknown) {
+  try {
+    safeStorage.setItem(`${SPC_CACHE_PREFIX}${day}_${type}`, JSON.stringify({
+      data,
+      expiresAt: Date.now() + SPC_CACHE_TTL,
+    }));
+  } catch { /* ignore */ }
 }
 
 export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
@@ -137,9 +162,15 @@ export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
     }
 
     try {
-      const res = await fetch(`/api/weather/spc-outlook?day=${day}&type=${type}`);
-      if (!res.ok) throw new Error('Failed to fetch outlook');
-      const geojson = await res.json();
+      // Check client-side cache first
+      let geojson = getCachedOutlook(day, type);
+
+      if (!geojson) {
+        const res = await fetch(`/api/weather/spc-outlook?day=${day}&type=${type}`);
+        if (!res.ok) throw new Error('Failed to fetch outlook');
+        geojson = await res.json();
+        setCachedOutlook(day, type, geojson);
+      }
 
       // Ignore stale responses
       if (requestId !== requestIdRef.current || !mapInstanceRef.current) return;
