@@ -9,7 +9,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import {
-  Github, Twitter, Terminal, Cpu, Zap, CloudLightning, Map, Plane, Sun,
+  Code, MessageCircle, Terminal, Cpu, Zap, CloudLightning, Map, Plane, Sun,
   Gamepad2, Newspaper, Sparkles, Thermometer, AlertTriangle, ChevronDown,
   Globe, Database, Shield, Gauge
 } from 'lucide-react';
@@ -213,14 +213,14 @@ export default function AboutPage() {
             <a href="https://github.com/deephouse23" target="_blank" rel="noopener noreferrer"
               className="group flex flex-col items-center gap-2">
               <div className="w-12 h-12 border border-border rounded-lg flex items-center justify-center group-hover:border-primary group-hover:bg-primary/10 transition-colors">
-                <Github className="w-5 h-5" />
+                <Code className="w-5 h-5" />
               </div>
               <span className="text-xs font-mono text-muted-foreground group-hover:text-primary">GITHUB</span>
             </a>
             <a href="https://x.com/Justin_Elrod" target="_blank" rel="noopener noreferrer"
               className="group flex flex-col items-center gap-2">
               <div className="w-12 h-12 border border-border rounded-lg flex items-center justify-center group-hover:border-primary group-hover:bg-primary/10 transition-colors">
-                <Twitter className="w-5 h-5" />
+                <MessageCircle className="w-5 h-5" />
               </div>
               <span className="text-xs font-mono text-muted-foreground group-hover:text-primary">X</span>
             </a>

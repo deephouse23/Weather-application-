@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, EyeOff, Mail, Lock, User, Github, Chrome } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, User, Globe, Code } from 'lucide-react'
 import { signIn, signUp, signInWithProvider } from '@/lib/supabase/auth'
 import { useTheme } from '@/components/theme-provider'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
@@ -118,7 +118,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
               disabled={loading}
               className={`w-full font-mono font-bold uppercase tracking-wider border-2 h-12 ${themeClasses.borderColor} ${themeClasses.text} hover:${themeClasses.accentBg} hover:text-black`}
             >
-              <Chrome className="w-4 h-4 mr-2" />
+              <Globe className="w-4 h-4 mr-2" />
               Continue with Google
             </Button>
 
@@ -128,7 +128,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
               disabled={loading}
               className={`w-full font-mono font-bold uppercase tracking-wider border-2 h-12 ${themeClasses.borderColor} ${themeClasses.text} hover:${themeClasses.accentBg} hover:text-black`}
             >
-              <Github className="w-4 h-4 mr-2" />
+              <Code className="w-4 h-4 mr-2" />
               Continue with GitHub
             </Button>
           </div>
