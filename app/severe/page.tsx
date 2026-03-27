@@ -3,8 +3,8 @@
 /**
  * 16-Bit Weather Platform - Severe Weather Page
  *
- * Filtered view of NWS alerts for severe thunderstorm,
- * tornado, wind, hail, and flood warnings.
+ * SPC convective outlook maps + filtered NWS alerts for severe
+ * thunderstorm, tornado, wind, hail, and flood warnings.
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import PageWrapper from '@/components/page-wrapper';
+import SPCOutlookTabs from '@/components/severe/SPCOutlookTabs';
 import type { NWSAlert } from '@/lib/services/nws-alerts-service';
 
 const SEVERE_KEYWORDS = ['tornado', 'thunderstorm', 'wind', 'hail', 'flood'];
@@ -61,8 +62,11 @@ export default function SeverePage() {
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
         <div className="text-center space-y-2">
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight font-mono uppercase">Severe Weather</h1>
-          <p className="text-sm font-mono text-muted-foreground tracking-wider">// ACTIVE TORNADO, THUNDERSTORM, WIND, HAIL &amp; FLOOD WARNINGS</p>
+          <p className="text-sm font-mono text-muted-foreground tracking-wider">// SPC STORM OUTLOOKS // ACTIVE WARNINGS</p>
         </div>
+
+        {/* SPC Convective Outlook Map */}
+        <SPCOutlookTabs />
 
         {isLoading && <p className="text-center text-lg font-mono text-muted-foreground animate-pulse py-12">SCANNING FOR SEVERE WEATHER...</p>}
 
