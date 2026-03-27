@@ -32,6 +32,7 @@ export default function DailyOutlookImages() {
         {DAYS.map((day, i) => (
           <button
             key={i}
+            type="button"
             onClick={() => setSelectedDay(i)}
             className={cn(
               'px-4 py-2 rounded-lg font-mono text-sm font-bold transition-colors',

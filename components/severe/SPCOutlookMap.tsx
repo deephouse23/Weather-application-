@@ -10,7 +10,6 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
 
-// OpenLayers imports
 import 'ol/ol.css';
 import OLMap from 'ol/Map';
 import View from 'ol/View';
@@ -42,6 +41,7 @@ export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
   const vectorLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const popupOverlayRef = useRef<Overlay | null>(null);
+  const requestIdRef = useRef(0);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +71,6 @@ export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
 
     mapInstanceRef.current = map;
 
-    // Create popup overlay
     if (popupRef.current) {
       const overlay = new Overlay({
         element: popupRef.current,
@@ -83,7 +82,6 @@ export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
       popupOverlayRef.current = overlay;
     }
 
-    // Handle map click
     map.on('click', (evt) => {
       const feature = map.forEachFeatureAtPixel(evt.pixel, (f) => f);
       if (feature) {
@@ -102,13 +100,11 @@ export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
       }
     });
 
-    // Cursor on hover
     map.on('pointermove', (evt) => {
       const hit = map.forEachFeatureAtPixel(evt.pixel, () => true);
       map.getTargetElement().style.cursor = hit ? 'pointer' : '';
     });
 
-    // Handle resize
     const updateMapSize = () => mapInstanceRef.current?.updateSize();
     setTimeout(updateMapSize, 0);
     setTimeout(updateMapSize, 100);
@@ -125,8 +121,8 @@ export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
     };
   }, []);
 
-  // Fetch and render outlook data when day/type changes
   const fetchOutlook = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     if (!mapInstanceRef.current) return;
 
     setIsLoading(true);
@@ -134,17 +130,21 @@ export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
     setPopupContent(null);
     popupOverlayRef.current?.setPosition(undefined);
 
+    // Remove existing layer immediately
+    if (vectorLayerRef.current && mapInstanceRef.current) {
+      mapInstanceRef.current.removeLayer(vectorLayerRef.current);
+      vectorLayerRef.current = null;
+    }
+
     try {
       const res = await fetch(`/api/weather/spc-outlook?day=${day}&type=${type}`);
       if (!res.ok) throw new Error('Failed to fetch outlook');
       const geojson = await res.json();
 
-      const map = mapInstanceRef.current;
+      // Ignore stale responses
+      if (requestId !== requestIdRef.current || !mapInstanceRef.current) return;
 
-      // Remove existing vector layer
-      if (vectorLayerRef.current) {
-        map.removeLayer(vectorLayerRef.current);
-      }
+      const map = mapInstanceRef.current;
 
       if (!geojson.features || geojson.features.length === 0) {
         vectorLayerRef.current = null;
@@ -173,16 +173,18 @@ export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
       map.addLayer(vectorLayer);
       vectorLayerRef.current = vectorLayer;
 
-      // Fit view to features extent
       const extent = vectorSource.getExtent();
       if (extent && isFinite(extent[0])) {
         map.getView().fit(extent, { padding: [40, 40, 40, 40], maxZoom: 7, duration: 500 });
       }
     } catch (err) {
+      if (requestId !== requestIdRef.current) return;
       console.error('[SPC Outlook Map]', err);
       setError('Unable to load SPC outlook data');
     } finally {
-      setIsLoading(false);
+      if (requestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
     }
   }, [day, type]);
 
@@ -212,7 +214,6 @@ export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
         </div>
       )}
 
-      {/* Popup */}
       <div ref={popupRef} className={cn('absolute', !popupContent && 'hidden')}>
         {popupContent && (
           <div className="bg-card border border-border rounded-lg p-3 shadow-lg min-w-[180px]">
@@ -224,14 +225,13 @@ export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
                 />
                 <span className="font-mono font-bold text-sm">{popupContent.label}</span>
               </div>
-              <button onClick={closePopup} className="text-muted-foreground hover:text-foreground text-xs">✕</button>
+              <button type="button" onClick={closePopup} className="text-muted-foreground hover:text-foreground text-xs">✕</button>
             </div>
             <p className="text-xs font-mono text-muted-foreground">{popupContent.label2}</p>
           </div>
         )}
       </div>
 
-      {/* Legend */}
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-mono text-muted-foreground">
         <span className="text-foreground font-bold">SPC OUTLOOK</span>
         {type === 'cat' ? (

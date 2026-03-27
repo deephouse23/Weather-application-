@@ -22,9 +22,18 @@ jest.mock('next/server', () => ({
   },
 }));
 
+import { GET } from '@/app/api/travel/corridors/route';
+import { NextRequest } from 'next/server';
+
 describe('Travel Corridors API Route', () => {
   it('should export a GET handler', async () => {
     const mod = await import('@/app/api/travel/corridors/route');
     expect(typeof mod.GET).toBe('function');
+  });
+
+  it('should return 400 for invalid day param', async () => {
+    const req = new NextRequest('http://localhost:3000/api/travel/corridors?day=5');
+    const res = await GET(req);
+    expect(res.status).toBe(400);
   });
 });

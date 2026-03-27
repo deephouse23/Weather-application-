@@ -7,7 +7,7 @@
  * worst corridors ranking, and WPC daily outlook images.
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
@@ -51,6 +51,7 @@ export default function TravelPage() {
   const [data, setData] = useState<CorridorsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const requestIdRef = useRef(0);
 
   const { ref, inView } = useInView({
     triggerOnce: true,
@@ -59,18 +60,24 @@ export default function TravelPage() {
   });
 
   const fetchCorridors = useCallback(async (forecastDay: number) => {
+    const requestId = ++requestIdRef.current;
     setIsLoading(true);
     setError(null);
+    setData(null);
     try {
       const res = await fetch(`/api/travel/corridors?day=${forecastDay}`);
       if (!res.ok) throw new Error('Failed to fetch corridor data');
       const result: CorridorsResponse = await res.json();
+      if (requestId !== requestIdRef.current) return;
       setData(result);
     } catch (err) {
+      if (requestId !== requestIdRef.current) return;
       console.error('[Travel]', err);
       setError('Unable to load travel corridor data');
     } finally {
-      setIsLoading(false);
+      if (requestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
@@ -91,6 +98,7 @@ export default function TravelPage() {
           {DAY_LABELS.map((label, i) => (
             <button
               key={i}
+              type="button"
               onClick={() => setDay(i)}
               className={cn(
                 'px-5 py-2 rounded-lg font-mono text-sm font-bold transition-colors',
@@ -122,16 +130,17 @@ export default function TravelPage() {
           )}
         </div>
 
-        {/* Worst Corridors */}
-        <WorstCorridors
-          corridors={data?.worstCorridors ?? []}
-          isLoading={isLoading}
-        />
+        {/* Worst Corridors - hidden during error state */}
+        {!error && (
+          <WorstCorridors
+            corridors={data?.worstCorridors ?? []}
+            isLoading={isLoading}
+          />
+        )}
 
         {/* Daily Outlook Images */}
         <DailyOutlookImages />
 
-        {/* Fetch timestamp */}
         {data?.fetchedAt && (
           <p className="text-center text-xs font-mono text-muted-foreground">
             Last updated: {new Date(data.fetchedAt).toLocaleTimeString()}

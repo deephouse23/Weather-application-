@@ -12,34 +12,44 @@ export interface WeatherConditions {
   freezingLevel: number;  // meters above ground
 }
 
+/** Sanitize a numeric value, defaulting non-finite to a fallback. */
+function sanitize(value: number, fallback: number): number {
+  return Number.isFinite(value) ? Math.max(0, value) : fallback;
+}
+
 /**
  * Score weather severity on a 0-100 scale.
  * 0 = clear, 25 = caution, 50 = hazardous, 75+ = dangerous
  */
 export function scoreWeatherSeverity(conditions: WeatherConditions): number {
+  const precipitation = sanitize(conditions.precipitation, 0);
+  const snowfall = sanitize(conditions.snowfall, 0);
+  const windGusts = sanitize(conditions.windGusts, 0);
+  const visibility = Number.isFinite(conditions.visibility) ? Math.max(0, conditions.visibility) : 10000;
+
   let score = 0;
 
   // Precipitation (rain): 0-25 points
-  if (conditions.precipitation > 0) {
-    score += Math.min(25, conditions.precipitation * 5);
+  if (precipitation > 0) {
+    score += Math.min(25, precipitation * 5);
   }
 
   // Snowfall: 0-30 points (more dangerous than rain)
-  if (conditions.snowfall > 0) {
-    score += Math.min(30, conditions.snowfall * 15);
+  if (snowfall > 0) {
+    score += Math.min(30, snowfall * 15);
   }
 
   // Wind gusts: 0-20 points (starts impacting at 40 km/h)
-  if (conditions.windGusts > 40) {
-    score += Math.min(20, (conditions.windGusts - 40) * 0.5);
+  if (windGusts > 40) {
+    score += Math.min(20, (windGusts - 40) * 0.5);
   }
 
   // Visibility: 0-25 points (under 5000m is concerning)
-  if (conditions.visibility < 5000) {
-    score += Math.min(25, ((5000 - conditions.visibility) / 5000) * 25);
+  if (visibility < 5000) {
+    score += Math.min(25, ((5000 - visibility) / 5000) * 25);
   }
 
-  return Math.min(100, Math.round(score));
+  return Number.isFinite(score) ? Math.min(100, Math.round(score)) : 0;
 }
 
 export type SeverityLevel = 'green' | 'yellow' | 'orange' | 'red';
@@ -51,11 +61,12 @@ export function getSeverityLevel(score: number): SeverityLevel {
   return 'green';
 }
 
-export const SEVERITY_COLORS: Record<SeverityLevel, string> = {
+export const SEVERITY_COLORS: Record<string, string> = {
   green: '#22c55e',
   yellow: '#eab308',
   orange: '#f97316',
   red: '#ef4444',
+  unknown: '#6b7280',
 };
 
 export interface CorridorSegment {
@@ -76,9 +87,11 @@ export interface CorridorResult {
 }
 
 export function getWorstCorridors(corridors: CorridorResult[], limit: number): CorridorResult[] {
+  const safeLimit = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : 0;
   return [...corridors]
+    .filter(c => c.hazard !== 'Data unavailable')
     .sort((a, b) => b.score - a.score)
-    .slice(0, limit);
+    .slice(0, safeLimit);
 }
 
 export function getHazardDescription(conditions: WeatherConditions): string {

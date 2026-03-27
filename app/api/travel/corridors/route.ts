@@ -113,7 +113,10 @@ async function fetchWeatherForWaypoints(
 export async function GET(request: NextRequest) {
   try {
     const dayParam = request.nextUrl.searchParams.get('day') ?? '0';
-    const forecastDay = Math.min(2, Math.max(0, parseInt(dayParam, 10) || 0));
+    if (!/^[012]$/.test(dayParam)) {
+      return NextResponse.json({ error: 'day must be 0, 1, or 2' }, { status: 400 });
+    }
+    const forecastDay = Number(dayParam);
 
     const corridors = (interstateData as { corridors: InterstateCorridorData[] }).corridors;
 
@@ -166,9 +169,9 @@ export async function GET(request: NextRequest) {
             console.error(`[Travel Corridors] Error fetching ${corridor.name}:`, err);
             return {
               name: corridor.name,
-              score: 0,
-              level: 'green' as const,
-              color: SEVERITY_COLORS.green,
+              score: -1,
+              level: 'green' as const,  // excluded from worstCorridors by score -1
+              color: SEVERITY_COLORS.unknown || '#6b7280',
               hazard: 'Data unavailable',
               segments: [],
               path: corridor.path,

@@ -53,4 +53,11 @@ describe('SPC Outlook API Route', () => {
 
     expect(res.status).toBe(400);
   });
+
+  it('should return 400 for partially numeric day like 1foo', async () => {
+    const req = new NextRequest('http://localhost:3000/api/weather/spc-outlook?day=1foo&type=cat');
+    const res = await GET(req);
+
+    expect(res.status).toBe(400);
+  });
 });

@@ -28,6 +28,11 @@ describe('Travel Corridor Service', () => {
       const score = scoreWeatherSeverity({ precipitation: 20, snowfall: 10, windGusts: 120, visibility: 100, freezingLevel: 0 });
       expect(score).toBe(100);
     });
+
+    it('should return 0 for NaN or Infinity inputs', () => {
+      const score = scoreWeatherSeverity({ precipitation: NaN, snowfall: Infinity, windGusts: NaN, visibility: NaN, freezingLevel: 0 });
+      expect(score).toBe(0);
+    });
   });
 
   describe('getSeverityLevel', () => {
