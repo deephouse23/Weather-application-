@@ -56,6 +56,13 @@ export async function fetchOpenMeteoForecast(
   ];
 
   const hourlyVars = [
+    'temperature_2m',
+    'apparent_temperature',
+    'relative_humidity_2m',
+    'weather_code',
+    'wind_speed_10m',
+    'wind_direction_10m',
+    'uv_index',
     'visibility',
     'precipitation',
     'precipitation_probability',

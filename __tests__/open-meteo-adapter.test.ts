@@ -68,6 +68,13 @@ function makeForecastResponse(): OpenMeteoForecastResponse {
         d.setHours(d.getHours() + i);
         return d.toISOString().slice(0, 16);
       }),
+      temperature_2m: Array.from({ length: 168 }, (_, i) => 50 + Math.round(10 * Math.sin(i / 24 * Math.PI))),
+      apparent_temperature: Array.from({ length: 168 }, (_, i) => 48 + Math.round(10 * Math.sin(i / 24 * Math.PI))),
+      relative_humidity_2m: Array.from({ length: 168 }, () => 65),
+      weather_code: Array.from({ length: 168 }, () => 2),
+      wind_speed_10m: Array.from({ length: 168 }, () => 8),
+      wind_direction_10m: Array.from({ length: 168 }, () => 225),
+      uv_index: Array.from({ length: 168 }, () => 3),
       visibility: Array.from({ length: 168 }, () => 10000),
       precipitation: Array.from({ length: 168 }, () => 0),
       precipitation_probability: Array.from({ length: 168 }, () => 10),
@@ -156,13 +163,16 @@ describe('buildWeatherDataFromOpenMeteo', () => {
     expect(result.aqiCategory).toBe('Good');
   });
 
-  it('should provide feelsLike in first hourly entry from apparent_temperature', async () => {
+  it('should build 48 hourly entries with temperature and conditions', async () => {
     const result = await buildWeatherDataFromOpenMeteo(
       40.71, -74.01, 'New York', 'imperial', 'US'
     );
 
     expect(result.hourlyForecast).toBeDefined();
-    expect(result.hourlyForecast!.length).toBeGreaterThan(0);
-    expect(result.hourlyForecast![0].feelsLike).toBe(52.1);
+    expect(result.hourlyForecast!.length).toBe(48);
+    expect(result.hourlyForecast![0].temp).toBeDefined();
+    expect(result.hourlyForecast![0].condition).toBe('Clouds');
+    expect(result.hourlyForecast![0].precipChance).toBe(10);
+    expect(result.hourlyForecast![0].windDirection).toBe('SW');
   });
 });

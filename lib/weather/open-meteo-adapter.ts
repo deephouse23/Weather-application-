@@ -145,25 +145,41 @@ export async function buildWeatherDataFromOpenMeteo(
     });
   }
 
-  // Build hourly forecast with current conditions as first entry
+  // Build hourly forecast (48 hours) from Open-Meteo hourly parallel arrays
   const hourlyForecast: WeatherData['hourlyForecast'] = [];
-  if (current) {
-    hourlyForecast.push({
-      dt: Math.floor(Date.now() / 1000),
-      time: 'Now',
-      temp: temperature,
-      feelsLike: current.apparent_temperature ?? temperature,
-      condition,
-      description,
-      precipChance: 0,
-      windSpeed,
-      windDirection: current.wind_direction_10m != null
-        ? getCompassDirection(current.wind_direction_10m)
-        : undefined,
-      humidity: current.relative_humidity_2m ?? 0,
-      uvIndex,
-      icon: undefined,
-    });
+  const hourly = forecast.hourly;
+  if (hourly?.time && hourly.time.length > 0) {
+    const hourlyCount = Math.min(hourly.time.length, 48);
+    for (let i = 0; i < hourlyCount; i++) {
+      const hourTime = hourly.time[i];
+      const dt = Math.floor(new Date(hourTime).getTime() / 1000);
+
+      // Format time display (e.g., "2 PM")
+      const hourDate = new Date(hourTime);
+      const h = hourDate.getHours();
+      const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const timeString = `${h12} ${ampm}`;
+
+      const hourWeatherCode = hourly.weather_code?.[i] ?? 0;
+
+      hourlyForecast.push({
+        dt,
+        time: timeString,
+        temp: Math.round(hourly.temperature_2m?.[i] ?? 0),
+        feelsLike: hourly.apparent_temperature?.[i],
+        condition: wmoCodeToOWMCondition(hourWeatherCode),
+        description: getWMODescription(hourWeatherCode).toLowerCase(),
+        precipChance: Math.round(hourly.precipitation_probability?.[i] ?? 0),
+        windSpeed: hourly.wind_speed_10m?.[i],
+        windDirection: hourly.wind_direction_10m?.[i] != null
+          ? getCompassDirection(hourly.wind_direction_10m[i])
+          : undefined,
+        humidity: hourly.relative_humidity_2m?.[i],
+        uvIndex: hourly.uv_index?.[i] != null ? Math.round(hourly.uv_index[i]) : undefined,
+        icon: undefined,
+      });
+    }
   }
 
   return {
