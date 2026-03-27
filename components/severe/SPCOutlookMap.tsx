@@ -5,6 +5,7 @@
  *
  * Renders SPC outlook GeoJSON polygons on an OpenLayers map.
  * Shows categorical, tornado, hail, and wind risk areas.
+ * Handles empty geometries (no risk) gracefully via server-side filtering.
  */
 
 import React, { useEffect, useRef, useCallback, useState } from 'react';
@@ -24,15 +25,15 @@ import { Style, Fill, Stroke } from 'ol/style';
 import Overlay from 'ol/Overlay';
 import type { FeatureLike } from 'ol/Feature';
 
-import { RISK_LABELS } from '@/lib/services/spc-outlook-service';
+import { RISK_LABELS, OUTLOOK_TYPE_LABELS } from '@/lib/services/spc-outlook-service';
 import type { SPCOutlookDay, SPCOutlookType } from '@/lib/services/spc-outlook-service';
 
-const CARTO_DARK_URL = 'https://{a-d}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png';
+const CARTO_VOYAGER_URL = 'https://{a-d}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png';
 const CONUS_CENTER: [number, number] = [-98.5795, 39.8283];
 const CONUS_ZOOM = 4;
 
 const SPC_CACHE_PREFIX = 'bitweather_spc_';
-const SPC_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const SPC_CACHE_TTL = 10 * 60 * 1000;
 
 interface SPCOutlookMapProps {
   day: SPCOutlookDay;
@@ -70,19 +71,18 @@ export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [noRiskLabel, setNoRiskLabel] = useState<string | null>(null);
   const [popupContent, setPopupContent] = useState<{ label: string; label2: string; fill: string } | null>(null);
 
-  // Initialize map
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
     const baseLayer = new TileLayer({
       source: new XYZ({
-        url: CARTO_DARK_URL,
+        url: CARTO_VOYAGER_URL,
         attributions: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
         crossOrigin: 'anonymous',
       }),
-      opacity: 0.9,
     });
 
     const map = new OLMap({
@@ -152,39 +152,39 @@ export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
 
     setIsLoading(true);
     setError(null);
+    setNoRiskLabel(null);
     setPopupContent(null);
     popupOverlayRef.current?.setPosition(undefined);
 
-    // Remove existing layer immediately
     if (vectorLayerRef.current && mapInstanceRef.current) {
       mapInstanceRef.current.removeLayer(vectorLayerRef.current);
       vectorLayerRef.current = null;
     }
 
     try {
-      // Check client-side cache first
-      let geojson = getCachedOutlook(day, type);
+      let data = getCachedOutlook(day, type);
 
-      if (!geojson) {
+      if (!data) {
         const res = await fetch(`/api/weather/spc-outlook?day=${day}&type=${type}`);
         if (!res.ok) throw new Error('Failed to fetch outlook');
-        geojson = await res.json();
-        setCachedOutlook(day, type, geojson);
+        data = await res.json();
+        setCachedOutlook(day, type, data);
       }
 
-      // Ignore stale responses
       if (requestId !== requestIdRef.current || !mapInstanceRef.current) return;
 
       const map = mapInstanceRef.current;
 
-      if (!geojson.features || geojson.features.length === 0) {
+      // API strips empty GeometryCollections and provides noRiskLabel
+      if (!data.features || data.features.length === 0) {
         vectorLayerRef.current = null;
-        setIsLoading(false);
+        setNoRiskLabel(data.noRiskLabel || `No ${OUTLOOK_TYPE_LABELS[type]} risk in current outlook`);
+        map.getView().animate({ center: fromLonLat(CONUS_CENTER), zoom: CONUS_ZOOM, duration: 500 });
         return;
       }
 
       const vectorSource = new VectorSource({
-        features: new GeoJSON().readFeatures(geojson, {
+        features: new GeoJSON().readFeatures(data, {
           featureProjection: 'EPSG:3857',
         }),
       });
@@ -234,14 +234,23 @@ export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
       <div ref={mapRef} className="w-full h-[500px] rounded-lg overflow-hidden border border-border" />
 
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
           <p className="text-sm font-mono text-muted-foreground animate-pulse">LOADING SPC OUTLOOK...</p>
         </div>
       )}
 
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
           <p className="text-sm font-mono text-orange-400">{error}</p>
+        </div>
+      )}
+
+      {noRiskLabel && !isLoading && !error && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="bg-card/90 border border-green-500/30 rounded-lg p-6 text-center pointer-events-auto">
+            <p className="text-lg font-mono text-green-400 font-bold">NO SIGNIFICANT RISK</p>
+            <p className="text-sm font-mono text-muted-foreground mt-1">{noRiskLabel}</p>
+          </div>
         </div>
       )}
 
@@ -250,10 +259,7 @@ export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
           <div className="bg-card border border-border rounded-lg p-3 shadow-lg min-w-[180px]">
             <div className="flex items-center justify-between gap-3 mb-1">
               <div className="flex items-center gap-2">
-                <span
-                  className="w-3 h-3 rounded-sm border border-white/30"
-                  style={{ backgroundColor: popupContent.fill }}
-                />
+                <span className="w-3 h-3 rounded-sm border border-white/30" style={{ backgroundColor: popupContent.fill }} />
                 <span className="font-mono font-bold text-sm">{popupContent.label}</span>
               </div>
               <button type="button" onClick={closePopup} className="text-muted-foreground hover:text-foreground text-xs">✕</button>

@@ -52,8 +52,9 @@ export interface SPCOutlookGeoJSON {
   features: Array<{
     type: 'Feature';
     geometry: {
-      type: 'MultiPolygon' | 'Polygon';
+      type: 'MultiPolygon' | 'Polygon' | 'GeometryCollection';
       coordinates: number[][][][] | number[][][];
+      geometries?: unknown[];
     };
     properties: SPCOutlookFeatureProperties;
   }>;
@@ -76,6 +77,10 @@ export async function fetchSPCOutlook(
         Accept: 'application/geo+json',
       },
     });
+
+    if (response.status === 404) {
+      return { type: 'FeatureCollection', features: [] } as SPCOutlookGeoJSON;
+    }
 
     if (!response.ok) {
       throw new Error(`SPC outlook fetch failed: ${response.status}`);

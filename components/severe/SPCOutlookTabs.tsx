@@ -4,8 +4,8 @@
  * SPC Outlook Tabs
  *
  * Manages day and outlook type selection for the SPC outlook map.
- * Sub-category tabs: Categorical | Tornado | Hail | Wind
- * Day tabs: Day 1 | Day 2 | Day 3
+ * Day 3 only supports categorical (SPC doesn't publish individual hazard
+ * outlooks for Day 3).
  */
 
 import React, { useState } from 'react';
@@ -27,7 +27,8 @@ const DAY_LABELS: Record<SPCOutlookDay, string> = {
   3: 'Day 3',
 };
 
-const OUTLOOK_TYPES: SPCOutlookType[] = ['cat', 'torn', 'hail', 'wind'];
+const ALL_OUTLOOK_TYPES: SPCOutlookType[] = ['cat', 'torn', 'hail', 'wind'];
+const DAY3_OUTLOOK_TYPES: SPCOutlookType[] = ['cat'];
 const DAYS: SPCOutlookDay[] = [1, 2, 3];
 
 export default function SPCOutlookTabs() {
@@ -40,6 +41,16 @@ export default function SPCOutlookTabs() {
     threshold: 0,
   });
 
+  const handleDayChange = (d: SPCOutlookDay) => {
+    setDay(d);
+    // Day 3 only supports categorical - reset type immediately
+    if (d === 3 && type !== 'cat') {
+      setType('cat');
+    }
+  };
+
+  const availableTypes = day === 3 ? DAY3_OUTLOOK_TYPES : ALL_OUTLOOK_TYPES;
+
   return (
     <div ref={ref} className="space-y-4">
       <div className="flex items-center justify-between">
@@ -47,12 +58,12 @@ export default function SPCOutlookTabs() {
         <span className="text-xs font-mono text-muted-foreground">Storm Prediction Center</span>
       </div>
 
-      {/* Day Tabs */}
       <div className="flex gap-2">
         {DAYS.map((d) => (
           <button
             key={d}
-            onClick={() => setDay(d)}
+            type="button"
+            onClick={() => handleDayChange(d)}
             className={cn(
               'px-4 py-2 rounded-lg font-mono text-sm font-bold transition-colors',
               day === d
@@ -65,11 +76,11 @@ export default function SPCOutlookTabs() {
         ))}
       </div>
 
-      {/* Type Tabs */}
       <div className="flex gap-2">
-        {OUTLOOK_TYPES.map((t) => (
+        {availableTypes.map((t) => (
           <button
             key={t}
+            type="button"
             onClick={() => setType(t)}
             className={cn(
               'px-4 py-2 rounded-lg font-mono text-xs font-bold transition-colors',
@@ -81,9 +92,13 @@ export default function SPCOutlookTabs() {
             {OUTLOOK_TYPE_LABELS[t]}
           </button>
         ))}
+        {day === 3 && (
+          <span className="flex items-center text-xs font-mono text-muted-foreground/60 pl-2">
+            Day 3 only has categorical outlook
+          </span>
+        )}
       </div>
 
-      {/* Map */}
       <div style={{ minHeight: '500px', contain: 'layout style paint' }}>
         {inView ? (
           <SPCOutlookMap day={day} type={type} />

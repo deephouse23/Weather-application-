@@ -72,5 +72,12 @@ describe('SPC Outlook Service', () => {
       mockFetch.mockResolvedValueOnce({ ok: false, status: 503 });
       await expect(fetchSPCOutlook(1, 'cat')).rejects.toThrow('SPC outlook fetch failed: 503');
     });
+
+    it('should return empty FeatureCollection on 404 instead of throwing', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 404 });
+      const result = await fetchSPCOutlook(3, 'torn');
+      expect(result.type).toBe('FeatureCollection');
+      expect(result.features).toHaveLength(0);
+    });
   });
 });

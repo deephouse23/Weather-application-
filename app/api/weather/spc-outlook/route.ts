@@ -3,9 +3,38 @@ import {
   fetchSPCOutlook,
   type SPCOutlookDay,
   type SPCOutlookType,
+  type SPCOutlookGeoJSON,
 } from '@/lib/services/spc-outlook-service';
 
 const VALID_TYPES = new Set(['cat', 'torn', 'hail', 'wind']);
+
+/**
+ * Filter out features with empty GeometryCollections.
+ * SPC returns these for "no risk" outlooks (e.g., "Less Than 2% All Areas").
+ * OpenLayers crashes on empty GeometryCollections, so we strip them server-side
+ * and pass the "no risk" label as metadata.
+ */
+function filterEmptyGeometries(geojson: SPCOutlookGeoJSON) {
+  const validFeatures: typeof geojson.features = [];
+  let noRiskLabel: string | null = null;
+
+  for (const feature of geojson.features) {
+    const geom = feature.geometry;
+    if (geom.type === 'GeometryCollection' && (!('geometries' in geom) || (geom as { geometries?: unknown[] }).geometries?.length === 0)) {
+      // Capture the "no risk" label
+      if (!noRiskLabel && feature.properties.LABEL) {
+        noRiskLabel = feature.properties.LABEL;
+      }
+      continue;
+    }
+    validFeatures.push(feature);
+  }
+
+  return {
+    geojson: { ...geojson, features: validFeatures },
+    noRiskLabel,
+  };
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,9 +50,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'type must be cat, torn, hail, or wind' }, { status: 400 });
     }
 
-    const geojson = await fetchSPCOutlook(day, typeParam as SPCOutlookType);
+    const rawGeojson = await fetchSPCOutlook(day, typeParam as SPCOutlookType);
+    const { geojson, noRiskLabel } = filterEmptyGeometries(rawGeojson);
 
-    return NextResponse.json(geojson, {
+    return NextResponse.json({ ...geojson, noRiskLabel }, {
       headers: {
         'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=300',
       },
