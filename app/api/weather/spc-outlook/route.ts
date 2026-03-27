@@ -14,14 +14,13 @@ const VALID_TYPES = new Set(['cat', 'torn', 'hail', 'wind']);
  * OpenLayers crashes on empty GeometryCollections, so we strip them server-side
  * and pass the "no risk" label as metadata.
  */
-function filterEmptyGeometries(geojson: SPCOutlookGeoJSON) {
+export function filterEmptyGeometries(geojson: SPCOutlookGeoJSON) {
   const validFeatures: typeof geojson.features = [];
   let noRiskLabel: string | null = null;
 
   for (const feature of geojson.features) {
     const geom = feature.geometry;
-    if (geom.type === 'GeometryCollection' && (!('geometries' in geom) || (geom as { geometries?: unknown[] }).geometries?.length === 0)) {
-      // Capture the "no risk" label
+    if (geom.type === 'GeometryCollection' && (!geom.geometries || geom.geometries.length === 0)) {
       if (!noRiskLabel && feature.properties.LABEL) {
         noRiskLabel = feature.properties.LABEL;
       }
