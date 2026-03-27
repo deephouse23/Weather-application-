@@ -145,12 +145,25 @@ export async function buildWeatherDataFromOpenMeteo(
     });
   }
 
-  // Build hourly forecast (48 hours) from Open-Meteo hourly parallel arrays
+  // Build hourly forecast (48 hours forward from now) from Open-Meteo hourly arrays
+  // Open-Meteo returns hourly data starting at midnight — find the current hour first
   const hourlyForecast: WeatherData['hourlyForecast'] = [];
   const hourly = forecast.hourly;
   if (hourly?.time && hourly.time.length > 0) {
-    const hourlyCount = Math.min(hourly.time.length, 48);
-    for (let i = 0; i < hourlyCount; i++) {
+    const nowMs = Date.now();
+
+    // Find the first hourly entry at or after the current time
+    let startIdx = 0;
+    for (let i = 0; i < hourly.time.length; i++) {
+      if (new Date(hourly.time[i]).getTime() >= nowMs - 30 * 60 * 1000) {
+        startIdx = i;
+        break;
+      }
+    }
+
+    const hourlyCount = Math.min(hourly.time.length - startIdx, 48);
+    for (let j = 0; j < hourlyCount; j++) {
+      const i = startIdx + j;
       const hourTime = hourly.time[i];
       const dt = Math.floor(new Date(hourTime).getTime() / 1000);
 
