@@ -46,6 +46,7 @@ import {
   Navigation,
   ArrowDown,
   ArrowUp,
+  Sunset,
 } from "lucide-react"
 
 interface WeatherDisplayProps {
@@ -85,7 +86,7 @@ export function WeatherDisplay({
     ? Math.round(weather.hourlyForecast[0].feelsLike)
     : weather?.temperature ?? null
   const feelsLikeDelta = feelsLike != null && weather?.temperature != null
-    ? feelsLike - weather.temperature
+    ? Math.round((feelsLike - weather.temperature) * 10) / 10
     : 0
 
   return (
@@ -157,6 +158,7 @@ export function WeatherDisplay({
           <AirQualityDisplay
             aqi={weather.aqi}
             theme={(theme || 'nord') as import('@/lib/theme-config').ThemeType}
+            pollutants={weather.pollutants}
           />
         </div>
 
@@ -311,21 +313,26 @@ export function WeatherDisplay({
           <MetricInfoTooltip metricId="sun-times" />
           <CardHeader className="pb-2 pt-4 px-4 text-center">
             <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1.5">
-              <Sunrise size={14} className="text-primary group-hover:text-accent transition-colors" />
+              <Sun size={14} className="text-primary group-hover:text-accent transition-colors" />
               Sun Times
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-center pt-2 px-4 pb-4">
-            <div className="space-y-3">
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Sunrise</p>
-                <p className={cn("text-xl font-bold tabular-nums", themeClasses.text)}>
+          <CardContent className="pt-2 px-4 pb-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-center flex-1">
+                <Sunrise size={20} className="mx-auto mb-1 text-amber-500" />
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Rise</p>
+                <p className={cn("text-lg font-bold tabular-nums", themeClasses.text)}>
                   {weather?.sunrise || 'N/A'}
                 </p>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Sunset</p>
-                <p className={cn("text-xl font-bold tabular-nums", themeClasses.text)}>
+              <div className="flex flex-col items-center px-1">
+                <div className="w-12 h-[2px] bg-gradient-to-r from-amber-500 via-yellow-300 to-orange-500 rounded-full" />
+              </div>
+              <div className="text-center flex-1">
+                <Sunset size={20} className="mx-auto mb-1 text-orange-500" />
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Set</p>
+                <p className={cn("text-lg font-bold tabular-nums", themeClasses.text)}>
                   {weather?.sunset || 'N/A'}
                 </p>
               </div>

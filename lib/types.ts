@@ -19,6 +19,16 @@ export interface ForecastDay {
   condition: string;
   description: string;
   country?: string;
+  details?: {
+    precipitationChance?: number;
+    humidity?: number;
+    windSpeed?: number;
+    windDirection?: string;
+    pressure?: string;
+    cloudCover?: number;
+    visibility?: number;
+    uvIndex?: number;
+  };
 }
 
 export interface HourlyForecast {
@@ -96,6 +106,14 @@ export interface WeatherData {
   uvIndex: number;
   aqi: number;
   aqiCategory?: string;
+  pollutants?: {
+    pm2_5?: number;
+    pm10?: number;
+    ozone?: number;
+    nitrogen_dioxide?: number;
+    sulphur_dioxide?: number;
+    carbon_monoxide?: number;
+  };
   pollen: {
     tree: Record<string, string>;
     grass: Record<string, string>;

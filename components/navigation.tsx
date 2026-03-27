@@ -216,7 +216,8 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
                 <ChevronDown className={cn("w-3 h-3 transition-transform", weatherMenuOpen && "rotate-180")} />
               </Button>
               {weatherMenuOpen && (
-                <div className="absolute top-full left-0 mt-1 w-48 rounded-lg border border-border bg-background/95 backdrop-blur-lg shadow-xl animate-in slide-in-from-top-2 z-50 py-1">
+                <div className="absolute top-full left-0 w-48 pt-2 z-50">
+                  <div className="rounded-lg border border-border bg-background/95 backdrop-blur-lg shadow-xl animate-in slide-in-from-top-2 py-1">
                   {weatherItems.map((item) => {
                     const Icon = item.icon
                     const isActive = pathname === item.href
@@ -232,6 +233,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
                       </Link>
                     )
                   })}
+                </div>
                 </div>
               )}
             </div>
@@ -252,7 +254,8 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
                 <ChevronDown className={cn("w-3 h-3 transition-transform", toolsMenuOpen && "rotate-180")} />
               </Button>
               {toolsMenuOpen && (
-                <div className="absolute top-full left-0 mt-1 w-48 rounded-lg border border-border bg-background/95 backdrop-blur-lg shadow-xl animate-in slide-in-from-top-2 z-50 py-1">
+                <div className="absolute top-full left-0 w-48 pt-2 z-50">
+                  <div className="rounded-lg border border-border bg-background/95 backdrop-blur-lg shadow-xl animate-in slide-in-from-top-2 py-1">
                   {toolsItems.map((item) => {
                     const Icon = item.icon
                     const isActive = pathname === item.href
@@ -268,6 +271,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
                       </Link>
                     )
                   })}
+                </div>
                 </div>
               )}
             </div>

@@ -1,5 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
+import { fetchOpenMeteoForecast } from '@/lib/open-meteo'
+import { getWMODescription } from '@/lib/wmo-codes'
+
+/**
+ * Map WMO weather code + is_day to an OWM-style icon code
+ * so getWeatherIcon() in lib/dashboard-weather.ts returns the correct emoji.
+ */
+function wmoToOWMIcon(code: number, isDay: number): string {
+  const d = isDay ? 'd' : 'n';
+  if (code === 0) return `01${d}`;                          // clear
+  if (code === 1) return `02${d}`;                          // mainly clear
+  if (code === 2) return `03${d}`;                          // partly cloudy
+  if (code === 3) return `04${d}`;                          // overcast
+  if (code === 45 || code === 48) return `50${d}`;          // fog
+  if (code >= 51 && code <= 57) return `09${d}`;            // drizzle
+  if (code >= 61 && code <= 67) return `10${d}`;            // rain
+  if (code >= 71 && code <= 77) return `13${d}`;            // snow
+  if (code >= 80 && code <= 82) return `09${d}`;            // rain showers
+  if (code >= 85 && code <= 86) return `13${d}`;            // snow showers
+  if (code >= 95) return `11${d}`;                          // thunderstorm
+  return `02${d}`;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,42 +37,57 @@ export async function GET(request: NextRequest) {
     if (!lat || !lon) {
       return NextResponse.json({ error: 'Latitude and longitude are required' }, { status: 400 })
     }
-    
-    const apiKey = process.env.OPENWEATHER_API_KEY
-    if (!apiKey) {
-      console.error('OPENWEATHER_API_KEY is not configured')
-      return NextResponse.json({ error: 'Weather API not configured' }, { status: 500 })
+
+    const latitude = parseFloat(lat)
+    const longitude = parseFloat(lon)
+
+    if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+      return NextResponse.json({ error: 'Invalid coordinates' }, { status: 400 })
     }
-    
-    // Fetch weather data from OpenWeatherMap
-    const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`
-    
-    const response = await fetch(weatherUrl, {
-      next: { revalidate: 600 }, // Cache for 10 minutes
+
+    // Phase 2: Use Open-Meteo instead of OpenWeatherMap
+    const forecast = await fetchOpenMeteoForecast(latitude, longitude, {
+      forecastDays: 1,
+      temperatureUnit: 'fahrenheit',
+      windSpeedUnit: 'mph',
+      precipitationUnit: 'inch',
     })
-    
-    if (!response.ok) {
-      throw new Error(`Weather API error: ${response.status}`)
+
+    const current = forecast.current
+    const hourly = forecast.hourly
+
+    // Find current hour's visibility
+    const now = new Date()
+    let visibilityKm = 10
+    if (hourly?.time && hourly?.visibility) {
+      for (let i = 0; i < hourly.time.length; i++) {
+        if (new Date(hourly.time[i]) >= now) {
+          // visibility is in meters from Open-Meteo
+          visibilityKm = Math.round((hourly.visibility[i] ?? 10000) / 1000)
+          break
+        }
+      }
     }
-    
-    const data = await response.json()
-    
-    // Transform to dashboard format
+
+    // Transform to dashboard format (same shape as before)
     const dashboardWeather = {
-      temperature: Math.round(data.main.temp),
-      description: data.weather[0].description,
-      humidity: data.main.humidity,
-      windSpeed: Math.round(data.wind.speed),
-      icon: data.weather[0].icon,
-      feelsLike: Math.round(data.main.feels_like),
-      pressure: data.main.pressure,
-      visibility: data.visibility ? Math.round(data.visibility / 1000) : 10
+      temperature: Math.round(current?.temperature_2m ?? 0),
+      description: getWMODescription(current?.weather_code ?? 0).toLowerCase(),
+      humidity: current?.relative_humidity_2m ?? 0,
+      windSpeed: Math.round(current?.wind_speed_10m ?? 0),
+      icon: wmoToOWMIcon(current?.weather_code ?? 0, current?.is_day ?? 1),
+      feelsLike: Math.round(current?.apparent_temperature ?? 0),
+      pressure: Math.round(current?.surface_pressure ?? 1013),
+      visibility: visibilityKm
     }
-    
+
     return NextResponse.json(dashboardWeather, {
-      headers: rateLimit.headers,
+      headers: {
+        'Cache-Control': 'public, max-age=600, s-maxage=600',
+        ...rateLimit.headers,
+      },
     })
-    
+
   } catch (error) {
     console.error('Dashboard weather API error:', error)
     return NextResponse.json(
@@ -59,3 +96,19 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
+// [OWM ROLLBACK] Previous OpenWeatherMap implementation:
+// const apiKey = process.env.OPENWEATHER_API_KEY
+// const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`
+// const response = await fetch(weatherUrl, { next: { revalidate: 600 } })
+// const data = await response.json()
+// dashboardWeather = {
+//   temperature: Math.round(data.main.temp),
+//   description: data.weather[0].description,
+//   humidity: data.main.humidity,
+//   windSpeed: Math.round(data.wind.speed),
+//   icon: data.weather[0].icon,
+//   feelsLike: Math.round(data.main.feels_like),
+//   pressure: data.main.pressure,
+//   visibility: data.visibility ? Math.round(data.visibility / 1000) : 10
+// }
