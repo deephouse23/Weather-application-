@@ -7,8 +7,7 @@
  * driving weather severity (green/yellow/orange/red).
  */
 
-import React, { useEffect, useRef, useCallback, useState } from 'react';
-import { cn } from '@/lib/utils';
+import React, { useEffect, useRef, useState } from 'react';
 
 import 'ol/ol.css';
 import OLMap from 'ol/Map';
@@ -21,8 +20,6 @@ import { fromLonLat } from 'ol/proj';
 import { Style, Stroke } from 'ol/style';
 import Feature from 'ol/Feature';
 import LineString from 'ol/geom/LineString';
-import Overlay from 'ol/Overlay';
-import type { FeatureLike } from 'ol/Feature';
 
 import { SEVERITY_COLORS, type SeverityLevel } from '@/lib/services/travel-corridor-service';
 
@@ -49,10 +46,8 @@ export default function TravelCorridorMap({ corridors, isLoading }: TravelCorrid
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<OLMap | null>(null);
   const vectorLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
-  const popupRef = useRef<HTMLDivElement>(null);
-  const popupOverlayRef = useRef<Overlay | null>(null);
 
-  const [popupContent, setPopupContent] = useState<{ name: string; score: number; level: string; hazard: string; color: string } | null>(null);
+  const [clickedCorridor, setClickedCorridor] = useState<{ name: string; score: number; level: string; hazard: string; color: string; x: number; y: number } | null>(null);
 
   // Initialize map
   useEffect(() => {
@@ -78,34 +73,24 @@ export default function TravelCorridorMap({ corridors, isLoading }: TravelCorrid
 
     mapInstanceRef.current = map;
 
-    if (popupRef.current) {
-      const overlay = new Overlay({
-        element: popupRef.current,
-        autoPan: { animation: { duration: 250 } },
-        positioning: 'bottom-center',
-        offset: [0, -10],
-      });
-      map.addOverlay(overlay);
-      popupOverlayRef.current = overlay;
-    }
-
+    // Use pixel-based popup positioning instead of OL Overlay
     map.on('click', (evt) => {
       const feature = map.forEachFeatureAtPixel(evt.pixel, (f) => f);
       if (feature) {
         const props = feature.getProperties();
         if (props.corridorName) {
-          setPopupContent({
+          setClickedCorridor({
             name: props.corridorName,
             score: props.corridorScore,
             level: props.corridorLevel,
             hazard: props.corridorHazard,
             color: props.corridorColor,
+            x: evt.pixel[0],
+            y: evt.pixel[1],
           });
-          popupOverlayRef.current?.setPosition(evt.coordinate);
         }
       } else {
-        setPopupContent(null);
-        popupOverlayRef.current?.setPosition(undefined);
+        setClickedCorridor(null);
       }
     });
 
@@ -176,37 +161,35 @@ export default function TravelCorridorMap({ corridors, isLoading }: TravelCorrid
     vectorLayerRef.current = vectorLayer;
   }, [corridors]);
 
-  const closePopup = useCallback(() => {
-    setPopupContent(null);
-    popupOverlayRef.current?.setPosition(undefined);
-  }, []);
-
   return (
     <div className="relative">
       <div ref={mapRef} className="w-full h-[500px] rounded-lg overflow-hidden border border-border" />
 
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg pointer-events-none">
           <p className="text-sm font-mono text-muted-foreground animate-pulse">LOADING CORRIDOR DATA...</p>
         </div>
       )}
 
-      {/* Popup */}
-      <div ref={popupRef} className={cn('absolute', !popupContent && 'hidden')}>
-        {popupContent && (
+      {/* Pixel-positioned popup */}
+      {clickedCorridor && (
+        <div
+          className="absolute z-50 pointer-events-auto"
+          style={{ left: clickedCorridor.x, top: clickedCorridor.y - 10, transform: 'translate(-50%, -100%)' }}
+        >
           <div className="bg-card border border-border rounded-lg p-3 shadow-lg min-w-[200px]">
             <div className="flex items-center justify-between gap-3 mb-1">
-              <span className="font-mono font-bold text-sm">{popupContent.name}</span>
-              <button onClick={closePopup} className="text-muted-foreground hover:text-foreground text-xs">✕</button>
+              <span className="font-mono font-bold text-sm">{clickedCorridor.name}</span>
+              <button type="button" onClick={() => setClickedCorridor(null)} className="text-muted-foreground hover:text-foreground text-xs">✕</button>
             </div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: popupContent.color }} />
-              <span className="text-xs font-mono text-muted-foreground uppercase">{popupContent.level} - Score {popupContent.score}</span>
+              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: clickedCorridor.color }} />
+              <span className="text-xs font-mono text-muted-foreground uppercase">{clickedCorridor.level} - Score {clickedCorridor.score}</span>
             </div>
-            <p className="text-xs font-mono text-muted-foreground">{popupContent.hazard}</p>
+            <p className="text-xs font-mono text-muted-foreground">{clickedCorridor.hazard}</p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Legend */}
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-mono text-muted-foreground">
