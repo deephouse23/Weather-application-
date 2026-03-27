@@ -9,7 +9,6 @@
  */
 
 import React, { useEffect, useRef, useCallback, useState } from 'react';
-import { cn } from '@/lib/utils';
 import { safeStorage } from '@/lib/safe-storage';
 
 import 'ol/ol.css';
@@ -22,7 +21,6 @@ import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
 import { fromLonLat } from 'ol/proj';
 import { Style, Fill, Stroke } from 'ol/style';
-import Overlay from 'ol/Overlay';
 import type { FeatureLike } from 'ol/Feature';
 
 import { RISK_LABELS, OUTLOOK_TYPE_LABELS } from '@/lib/services/spc-outlook-service';
@@ -65,14 +63,12 @@ export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<OLMap | null>(null);
   const vectorLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
-  const popupRef = useRef<HTMLDivElement>(null);
-  const popupOverlayRef = useRef<Overlay | null>(null);
   const requestIdRef = useRef(0);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [noRiskLabel, setNoRiskLabel] = useState<string | null>(null);
-  const [popupContent, setPopupContent] = useState<{ label: string; label2: string; fill: string } | null>(null);
+  const [clickedFeature, setClickedFeature] = useState<{ label: string; label2: string; fill: string; x: number; y: number } | null>(null);
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -96,32 +92,23 @@ export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
 
     mapInstanceRef.current = map;
 
-    if (popupRef.current) {
-      const overlay = new Overlay({
-        element: popupRef.current,
-        autoPan: { animation: { duration: 250 } },
-        positioning: 'bottom-center',
-        offset: [0, -10],
-      });
-      map.addOverlay(overlay);
-      popupOverlayRef.current = overlay;
-    }
-
+    // Use pixel-based popup positioning instead of OL Overlay to avoid
+    // React DOM conflicts (OL Overlay reparents elements, breaking React reconciliation)
     map.on('click', (evt) => {
       const feature = map.forEachFeatureAtPixel(evt.pixel, (f) => f);
       if (feature) {
         const props = feature.getProperties();
         if (props.LABEL) {
-          setPopupContent({
+          setClickedFeature({
             label: props.LABEL,
             label2: props.LABEL2 || RISK_LABELS[props.LABEL] || props.LABEL,
             fill: props.fill || '#888',
+            x: evt.pixel[0],
+            y: evt.pixel[1],
           });
-          popupOverlayRef.current?.setPosition(evt.coordinate);
         }
       } else {
-        setPopupContent(null);
-        popupOverlayRef.current?.setPosition(undefined);
+        setClickedFeature(null);
       }
     });
 
@@ -153,8 +140,7 @@ export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
     setIsLoading(true);
     setError(null);
     setNoRiskLabel(null);
-    setPopupContent(null);
-    popupOverlayRef.current?.setPosition(undefined);
+    setClickedFeature(null);
 
     if (vectorLayerRef.current && mapInstanceRef.current) {
       mapInstanceRef.current.removeLayer(vectorLayerRef.current);
@@ -175,7 +161,6 @@ export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
 
       const map = mapInstanceRef.current;
 
-      // API strips empty GeometryCollections and provides noRiskLabel
       if (!data.features || data.features.length === 0) {
         vectorLayerRef.current = null;
         setNoRiskLabel(data.noRiskLabel || `No ${OUTLOOK_TYPE_LABELS[type]} risk in current outlook`);
@@ -224,50 +209,49 @@ export default function SPCOutlookMap({ day, type }: SPCOutlookMapProps) {
     return () => clearTimeout(timer);
   }, [fetchOutlook]);
 
-  const closePopup = useCallback(() => {
-    setPopupContent(null);
-    popupOverlayRef.current?.setPosition(undefined);
-  }, []);
-
   return (
     <div className="relative">
       <div ref={mapRef} className="w-full h-[500px] rounded-lg overflow-hidden border border-border" />
 
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg pointer-events-none">
           <p className="text-sm font-mono text-muted-foreground animate-pulse">LOADING SPC OUTLOOK...</p>
         </div>
       )}
 
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg pointer-events-none">
           <p className="text-sm font-mono text-orange-400">{error}</p>
         </div>
       )}
 
       {noRiskLabel && !isLoading && !error && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="bg-card/90 border border-green-500/30 rounded-lg p-6 text-center pointer-events-auto">
+          <div className="bg-card/90 border border-green-500/30 rounded-lg p-6 text-center">
             <p className="text-lg font-mono text-green-400 font-bold">NO SIGNIFICANT RISK</p>
             <p className="text-sm font-mono text-muted-foreground mt-1">{noRiskLabel}</p>
           </div>
         </div>
       )}
 
-      <div ref={popupRef} className={cn('absolute', !popupContent && 'hidden')}>
-        {popupContent && (
+      {/* Pixel-positioned popup - NOT an OL Overlay, avoids React DOM conflicts */}
+      {clickedFeature && (
+        <div
+          className="absolute z-50 pointer-events-auto"
+          style={{ left: clickedFeature.x, top: clickedFeature.y - 10, transform: 'translate(-50%, -100%)' }}
+        >
           <div className="bg-card border border-border rounded-lg p-3 shadow-lg min-w-[180px]">
             <div className="flex items-center justify-between gap-3 mb-1">
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-sm border border-white/30" style={{ backgroundColor: popupContent.fill }} />
-                <span className="font-mono font-bold text-sm">{popupContent.label}</span>
+                <span className="w-3 h-3 rounded-sm border border-white/30" style={{ backgroundColor: clickedFeature.fill }} />
+                <span className="font-mono font-bold text-sm">{clickedFeature.label}</span>
               </div>
-              <button type="button" onClick={closePopup} className="text-muted-foreground hover:text-foreground text-xs">✕</button>
+              <button type="button" onClick={() => setClickedFeature(null)} className="text-muted-foreground hover:text-foreground text-xs">✕</button>
             </div>
-            <p className="text-xs font-mono text-muted-foreground">{popupContent.label2}</p>
+            <p className="text-xs font-mono text-muted-foreground">{clickedFeature.label2}</p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-mono text-muted-foreground">
         <span className="text-foreground font-bold">SPC OUTLOOK</span>
