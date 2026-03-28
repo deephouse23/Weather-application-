@@ -152,6 +152,16 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: '/learn/glossary',
+        destination: '/education/glossary',
+        permanent: true,
+      },
+      {
+        source: '/learn',
+        destination: '/education',
+        permanent: true,
+      },
+      {
         source: '/sitemap.xml',
         destination: '/sitemap',
         permanent: true,
