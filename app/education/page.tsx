@@ -35,14 +35,14 @@ export default function EducationPage() {
       icon: Cloud,
       title: 'Cloud Atlas',
       description: 'Comprehensive cloud database covering genera, species, varieties, and rare formations with altitude data.',
-      itemCount: 13
+      itemCount: 35
     },
     {
       href: '/fun-facts',
       icon: BookOpen,
       title: '16-Bit Takes',
       description: 'The science behind the strange. From Ball Lightning to Thundersnow, explore rare weather phenomena.',
-      itemCount: 12
+      itemCount: 25
     },
     {
       href: '/extremes',

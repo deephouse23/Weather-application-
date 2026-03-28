@@ -58,14 +58,14 @@ export default function GlossaryPage() {
       <div className={cn("container mx-auto px-4 py-8", themeClasses.background)}>
         {/* Back link */}
         <Link
-          href="/learn"
+          href="/education"
           className={cn(
             "inline-flex items-center gap-1.5 text-sm font-mono mb-6 hover:underline transition-colors",
             themeClasses.accentText
           )}
         >
           <ArrowLeft size={14} />
-          Back to Weather Guide
+          Back to Education Hub
         </Link>
 
         {/* Header */}
