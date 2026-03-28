@@ -5,13 +5,12 @@
  * Licensed under Fair Source License, Version 0.9
  *
  * Consolidated hub for all educational weather content
- * Combines: Weather Systems, Cloud Types, Extremes, 16-Bit Takes, News
  */
 
 'use client';
 
 import React from 'react';
-import { Cloud, Zap, BookOpen, Thermometer, Newspaper } from 'lucide-react';
+import { Cloud, Zap, BookOpen, Thermometer, BookMarked } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
@@ -34,16 +33,16 @@ export default function EducationPage() {
     {
       href: '/cloud-types',
       icon: Cloud,
-      title: 'Cloud Types',
-      description: 'Master 10 distinct cloud formations with Latin etymology, altitude classifications, and 16-bit visualizations.',
-      itemCount: 10
+      title: 'Cloud Atlas',
+      description: 'Comprehensive cloud database covering genera, species, varieties, and rare formations with altitude data.',
+      itemCount: 35
     },
     {
       href: '/fun-facts',
       icon: BookOpen,
       title: '16-Bit Takes',
-      description: 'The science behind the strange. From Ball Lightning to Thundersnow, explore rare phenomena.',
-      itemCount: 12
+      description: 'The science behind the strange. From Ball Lightning to Thundersnow, explore rare weather phenomena.',
+      itemCount: 25
     },
     {
       href: '/extremes',
@@ -53,18 +52,17 @@ export default function EducationPage() {
       itemCount: undefined
     },
     {
-      href: '/news',
-      icon: Newspaper,
-      title: 'News',
-      description: 'Latest weather stories, NASA updates, and Reddit discussions. Stay informed on atmospheric events.',
-      itemCount: undefined
-    }
+      href: '/education/glossary',
+      icon: BookMarked,
+      title: 'Weather Glossary',
+      description: 'In-depth definitions of weather metrics. UV index, pressure, humidity, wind, and more explained.',
+      itemCount: 10
+    },
   ];
 
   return (
     <PageWrapper>
       <div className={cn('container mx-auto px-4 py-8', themeClasses.background)}>
-        {/* Header Section */}
         <div className="mb-10">
           <h1
             className={cn(
@@ -81,7 +79,6 @@ export default function EducationPage() {
           </p>
         </div>
 
-        {/* Stats Bar */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
           <Card className={cn('container-nested', themeClasses.background)}>
             <CardContent className="p-4 text-center">
@@ -92,7 +89,7 @@ export default function EducationPage() {
           <Card className={cn('container-nested', themeClasses.background)}>
             <CardContent className="p-4 text-center">
               <div className={cn('text-3xl font-bold font-mono', themeClasses.accentText)}>50+</div>
-              <div className={cn('text-xs font-mono uppercase', themeClasses.text)}>Articles</div>
+              <div className={cn('text-xs font-mono uppercase', themeClasses.text)}>Items</div>
             </CardContent>
           </Card>
           <Card className={cn('container-nested', themeClasses.background)}>
@@ -109,14 +106,12 @@ export default function EducationPage() {
           </Card>
         </div>
 
-        {/* Education Topics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
           {educationTopics.map((topic) => (
             <LearningCard key={topic.href} {...topic} />
           ))}
         </div>
 
-        {/* Call to Action */}
         <Card className={cn('container-primary text-center', themeClasses.background)}>
           <CardContent className="p-8">
             <h2 className={cn('text-2xl font-bold font-mono mb-3', themeClasses.headerText)}>
@@ -126,7 +121,7 @@ export default function EducationPage() {
               Explore our comprehensive weather education resources. New content added regularly.
             </p>
             <div className={cn('inline-block px-4 py-2 text-xs font-mono font-bold rounded', themeClasses.accentBg)}>
-              LAST UPDATED: JANUARY 2026
+              LAST UPDATED: MARCH 2026
             </div>
           </CardContent>
         </Card>
