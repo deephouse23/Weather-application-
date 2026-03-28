@@ -88,6 +88,10 @@ export default function TravelPage() {
     fetchCorridors(day);
   }, [day, fetchCorridors]);
 
+  useEffect(() => {
+    return () => abortRef.current?.abort();
+  }, []);
+
   return (
     <PageWrapper>
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">

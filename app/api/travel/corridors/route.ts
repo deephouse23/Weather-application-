@@ -29,7 +29,8 @@ interface InterstateCorridorData {
 
 async function fetchWeatherForWaypoints(
   waypoints: number[][],
-  forecastDay: number
+  forecastDay: number,
+  requestSignal?: AbortSignal,
 ): Promise<WeatherConditions[]> {
   const lats = waypoints.map(w => w[0]).join(',');
   const lons = waypoints.map(w => w[1]).join(',');
@@ -48,6 +49,8 @@ async function fetchWeatherForWaypoints(
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
+  const onRequestAbort = () => controller.abort();
+  requestSignal?.addEventListener('abort', onRequestAbort);
 
   try {
     const response = await fetch(url.toString(), {
@@ -91,6 +94,7 @@ async function fetchWeatherForWaypoints(
     });
   } finally {
     clearTimeout(timeout);
+    requestSignal?.removeEventListener('abort', onRequestAbort);
   }
 }
 
@@ -108,7 +112,7 @@ export async function GET(request: NextRequest) {
     const results = await Promise.all(
       corridors.map(async (corridor): Promise<CorridorResult & { path: number[][] }> => {
         try {
-          const weatherData = await fetchWeatherForWaypoints(corridor.waypoints, forecastDay);
+          const weatherData = await fetchWeatherForWaypoints(corridor.waypoints, forecastDay, request.signal);
 
           const segments: CorridorSegment[] = corridor.waypoints.map((wp, idx) => {
             const conditions = weatherData[idx] || DEFAULT_WEATHER_CONDITIONS;
@@ -148,7 +152,7 @@ export async function GET(request: NextRequest) {
             name: corridor.name,
             score: -1,
             level: 'green' as const,
-            color: SEVERITY_COLORS.unknown || '#6b7280',
+            color: SEVERITY_COLORS.unknown,
             hazard: 'Data unavailable',
             segments: [],
             path: corridor.path,
