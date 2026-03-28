@@ -80,8 +80,8 @@ describe('SpaceWeatherCharts', () => {
       { time_tag: now, speed: 400, density: 5.2, temperature: 120000, bz_gsm: -3.1, bx_gsm: 1.2, by_gsm: -0.5, bt: 4.5 },
     ];
     const protonData = [{ time_tag: now, flux: 0.5 }];
-    const magnetometerData = [{ time_tag: now, Hp: 45.2 }];
-    const xrayData = [{ time_tag: now, flux: 1.2e-6 }];
+    const magnetometerData = [{ time: now, hp: 45.2 }];
+    const xrayData = { data: { recent: [{ timeTag: now, flux: 1.2e-6 }] } };
 
     mockFetch.mockImplementation((url: string) => {
       if (url.includes('plasma')) return Promise.resolve({ ok: true, json: () => Promise.resolve(plasmaData) });
@@ -130,7 +130,7 @@ describe('SpaceWeatherCharts', () => {
 
     // Verify the plasma endpoint was called with the new range
     const plasmaCalls = mockFetch.mock.calls.filter((c: string[]) => c[0].includes('plasma'));
-    expect(plasmaCalls[1][0]).toContain('range=6H');
+    expect(plasmaCalls[1][0]).toContain('range=6h');
   });
 
   it('should show error state when all fetches fail', async () => {

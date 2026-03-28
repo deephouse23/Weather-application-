@@ -36,12 +36,13 @@ interface EnlilFrame {
 }
 
 interface EnlilApiResponse {
-  success: boolean;
   data: {
-    frames: EnlilFrame[];
-    latestImage: string;
+    frames: string[];
+    latest: string;
+    fallback: string;
     frameCount: number;
   };
+  source: string;
 }
 
 type PlaybackSpeed = 0.5 | 1 | 2 | 4;
@@ -73,9 +74,13 @@ export default function EnlilModelViewer({ className }: EnlilModelViewerProps) {
       const response = await fetch('/api/space-weather/enlil');
       const data: EnlilApiResponse = await response.json();
 
-      if (data.success && data.data) {
-        setFrames(data.data.frames || []);
-        setLatestImage(data.data.latestImage || '');
+      if (data.data) {
+        const frameObjects = (data.data.frames || []).map((url: string, i: number) => ({
+          timestamp: `Frame ${i + 1}`,
+          url,
+        }));
+        setFrames(frameObjects);
+        setLatestImage(data.data.latest || data.data.fallback || '');
         setCurrentFrameIndex(0);
       } else {
         setFrames([]);

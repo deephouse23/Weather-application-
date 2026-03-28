@@ -189,7 +189,7 @@ function filterByRange(
   const minutes = getMinutesForRange(range);
   const cutoff = Date.now() - minutes * 60 * 1000;
   return data.filter((d) => {
-    const tag = d.time_tag as string | undefined;
+    const tag = d.time as string | undefined;
     return tag ? new Date(tag).getTime() >= cutoff : false;
   });
 }
@@ -203,7 +203,7 @@ function extractTimeSeries(
   return filtered.map((d) => {
     const raw = d[fieldPath];
     const val = typeof raw === 'number' ? raw : typeof raw === 'string' ? parseFloat(raw) : null;
-    const time = new Date(d.time_tag as string);
+    const time = new Date(d.time as string);
     return {
       time: time.toISOString(),
       timestamp: time.getTime(),
@@ -414,7 +414,7 @@ export default function SpaceWeatherCharts() {
 
     try {
       const results = await Promise.allSettled([
-        fetch(`/api/space-weather/plasma?range=${selectedRange}`).then((r) => {
+        fetch(`/api/space-weather/plasma?range=${selectedRange.toLowerCase()}`).then((r) => {
           if (!r.ok) throw new Error(`Plasma fetch failed: ${r.status}`);
           return r.json();
         }),
@@ -444,10 +444,10 @@ export default function SpaceWeatherCharts() {
         results[2].status === 'fulfilled' && Array.isArray(results[2].value)
           ? results[2].value
           : [];
-      const xrayData =
-        results[3].status === 'fulfilled' && Array.isArray(results[3].value)
-          ? results[3].value
-          : [];
+      const xrayRaw = results[3].status === 'fulfilled' ? results[3].value : null;
+      const xrayData = xrayRaw
+        ? (Array.isArray(xrayRaw) ? xrayRaw : (xrayRaw.data?.recent || []).map((d: Record<string, unknown>) => ({ time: d.timeTag, flux: d.flux })))
+        : [];
 
       setDatasets({
         plasma: plasmaData,
