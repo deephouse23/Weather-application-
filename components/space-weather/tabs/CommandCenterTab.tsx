@@ -86,7 +86,9 @@ export default function CommandCenterTab({
         {/* Sun Image - left column on desktop */}
         <Card className={cn('container-primary', themeClasses.background)}>
           <CardContent className="p-4">
-            <SunImageViewer className="max-h-[350px]" />
+            <div className="overflow-hidden max-h-[420px]">
+              <SunImageViewer />
+            </div>
           </CardContent>
         </Card>
 
@@ -162,12 +164,8 @@ export default function CommandCenterTab({
         </Card>
       )}
 
-      {/* Compact NOAA Space Weather Scales */}
-      <Card className={cn('container-primary', themeClasses.background)}>
-        <CardContent className="p-4">
-          <SpaceWeatherScales scales={scales} isLoading={isLoading} />
-        </CardContent>
-      </Card>
+      {/* NOAA Space Weather Scales */}
+      <SpaceWeatherScales scales={scales} isLoading={isLoading} />
     </div>
   );
 }

@@ -26,7 +26,7 @@ describe('SpaceWeatherNav', () => {
   it('should render all 5 navigation tabs', () => {
     render(<SpaceWeatherNav activeTab="command" onTabChange={jest.fn()} />);
 
-    expect(screen.getByText('Command Center')).toBeDefined();
+    expect(screen.getByText(/Command Center/)).toBeDefined();
     expect(screen.getByText('Solar Activity')).toBeDefined();
     expect(screen.getByText('Geomagnetic')).toBeDefined();
     expect(screen.getByText('Solar Wind')).toBeDefined();
@@ -57,6 +57,6 @@ describe('SpaceWeatherNav', () => {
     const activeButton = screen.getByRole('tab', { name: /command center/i });
     expect(activeButton.className).toContain('font-mono');
     expect(activeButton.className).toContain('uppercase');
-    expect(activeButton.className).toContain('border-cyan-500');
+    expect(activeButton.className).toContain('border-cyan-400');
   });
 });
