@@ -12,6 +12,7 @@ import {
   getHazardDescription,
   getWorstCorridors,
   SEVERITY_COLORS,
+  DEFAULT_WEATHER_CONDITIONS,
   type WeatherConditions,
   type CorridorResult,
   type CorridorSegment,
@@ -26,27 +27,13 @@ interface InterstateCorridorData {
   path: number[][];
 }
 
-interface OpenMeteoMultiResponse {
-  latitude: number;
-  longitude: number;
-  current?: {
-    precipitation?: number;
-    snowfall?: number;
-    wind_gusts_10m?: number;
-    visibility?: number;
-    freezing_level_height?: number;
-  };
-}
-
 async function fetchWeatherForWaypoints(
   waypoints: number[][],
-  forecastDay: number
+  forecastDay: number,
+  requestSignal?: AbortSignal,
 ): Promise<WeatherConditions[]> {
-  // Build multi-location request
   const lats = waypoints.map(w => w[0]).join(',');
   const lons = waypoints.map(w => w[1]).join(',');
-
-  const hourlyVars = 'precipitation,snowfall,wind_gusts_10m,visibility';
 
   const url = new URL(OPEN_METEO_BASE);
   url.searchParams.set('latitude', lats);
@@ -55,13 +42,15 @@ async function fetchWeatherForWaypoints(
   if (forecastDay === 0) {
     url.searchParams.set('current', 'precipitation,snowfall,wind_gusts_10m,visibility');
   } else {
-    url.searchParams.set('hourly', hourlyVars);
+    url.searchParams.set('hourly', 'precipitation,snowfall,wind_gusts_10m,visibility');
     url.searchParams.set('forecast_days', String(forecastDay + 1));
   }
   url.searchParams.set('timezone', 'auto');
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
+  const onRequestAbort = () => controller.abort();
+  requestSignal?.addEventListener('abort', onRequestAbort);
 
   try {
     const response = await fetch(url.toString(), {
@@ -74,25 +63,23 @@ async function fetchWeatherForWaypoints(
     }
 
     const data = await response.json();
+    const locations = Array.isArray(data) ? data : [data];
 
-    // Open-Meteo returns array for multi-location, single object for one location
-    const locations: OpenMeteoMultiResponse[] = Array.isArray(data) ? data : [data];
-
-    return locations.map((loc) => {
-      if (forecastDay === 0 && loc.current) {
+    return locations.map((loc: Record<string, unknown>) => {
+      const current = loc.current as Record<string, number> | undefined;
+      if (forecastDay === 0 && current) {
         return {
-          precipitation: loc.current.precipitation ?? 0,
-          snowfall: loc.current.snowfall ?? 0,
-          windGusts: loc.current.wind_gusts_10m ?? 0,
-          visibility: loc.current.visibility ?? 10000,
-          freezingLevel: loc.current.freezing_level_height ?? 3000,
+          precipitation: current.precipitation ?? 0,
+          snowfall: current.snowfall ?? 0,
+          windGusts: current.wind_gusts_10m ?? 0,
+          visibility: current.visibility ?? 10000,
+          freezingLevel: 3000,
         };
       }
 
-      // For future days, grab noon hour of the target day
-      const hourly = (loc as unknown as Record<string, unknown>).hourly as Record<string, number[]> | undefined;
+      const hourly = loc.hourly as Record<string, number[]> | undefined;
       if (hourly) {
-        const targetHour = forecastDay * 24 + 12; // noon of target day
+        const targetHour = forecastDay * 24 + 12;
         const idx = Math.min(targetHour, (hourly.precipitation?.length ?? 1) - 1);
         return {
           precipitation: hourly.precipitation?.[idx] ?? 0,
@@ -103,10 +90,11 @@ async function fetchWeatherForWaypoints(
         };
       }
 
-      return { precipitation: 0, snowfall: 0, windGusts: 0, visibility: 10000, freezingLevel: 3000 };
+      return { ...DEFAULT_WEATHER_CONDITIONS };
     });
   } finally {
     clearTimeout(timeout);
+    requestSignal?.removeEventListener('abort', onRequestAbort);
   }
 }
 
@@ -120,67 +108,58 @@ export async function GET(request: NextRequest) {
 
     const corridors = (interstateData as { corridors: InterstateCorridorData[] }).corridors;
 
-    // Fetch weather for all corridors in parallel (batched to avoid rate limits)
-    const BATCH_SIZE = 5;
-    const results: CorridorResult[] = [];
+    // Fetch all corridors in parallel — 19 requests is well within Open-Meteo's rate limits
+    const results = await Promise.all(
+      corridors.map(async (corridor): Promise<CorridorResult & { path: number[][] }> => {
+        try {
+          const weatherData = await fetchWeatherForWaypoints(corridor.waypoints, forecastDay, request.signal);
 
-    for (let i = 0; i < corridors.length; i += BATCH_SIZE) {
-      const batch = corridors.slice(i, i + BATCH_SIZE);
-      const batchResults = await Promise.all(
-        batch.map(async (corridor) => {
-          try {
-            const weatherData = await fetchWeatherForWaypoints(corridor.waypoints, forecastDay);
-
-            const segments: CorridorSegment[] = corridor.waypoints.map((wp, idx) => {
-              const conditions = weatherData[idx] || { precipitation: 0, snowfall: 0, windGusts: 0, visibility: 10000, freezingLevel: 3000 };
-              const segScore = scoreWeatherSeverity(conditions);
-              const segLevel = getSeverityLevel(segScore);
-              return {
-                lat: wp[0],
-                lon: wp[1],
-                score: segScore,
-                level: segLevel,
-                color: SEVERITY_COLORS[segLevel],
-              };
-            });
-
-            // Overall corridor score = average of segment scores
-            const avgScore = segments.length > 0
-              ? Math.round(segments.reduce((sum, s) => sum + s.score, 0) / segments.length)
-              : 0;
-
-            const worstSegment = segments.reduce((worst, s) => s.score > worst.score ? s : worst, segments[0]);
-            const worstConditions = weatherData[corridor.waypoints.indexOf(
-              corridor.waypoints.find((_, idx) => segments[idx] === worstSegment) || corridor.waypoints[0]
-            )] || { precipitation: 0, snowfall: 0, windGusts: 0, visibility: 10000, freezingLevel: 3000 };
-
-            const level = getSeverityLevel(avgScore);
-
+          const segments: CorridorSegment[] = corridor.waypoints.map((wp, idx) => {
+            const conditions = weatherData[idx] || DEFAULT_WEATHER_CONDITIONS;
+            const segScore = scoreWeatherSeverity(conditions);
+            const segLevel = getSeverityLevel(segScore);
             return {
-              name: corridor.name,
-              score: avgScore,
-              level,
-              color: SEVERITY_COLORS[level],
-              hazard: getHazardDescription(worstConditions),
-              segments,
-              path: corridor.path,
-            } as CorridorResult & { path: number[][] };
-          } catch (err) {
-            console.error(`[Travel Corridors] Error fetching ${corridor.name}:`, err);
-            return {
-              name: corridor.name,
-              score: -1,
-              level: 'green' as const,  // excluded from worstCorridors by score -1
-              color: SEVERITY_COLORS.unknown || '#6b7280',
-              hazard: 'Data unavailable',
-              segments: [],
-              path: corridor.path,
+              lat: wp[0],
+              lon: wp[1],
+              score: segScore,
+              level: segLevel,
+              color: SEVERITY_COLORS[segLevel],
             };
-          }
-        })
-      );
-      results.push(...batchResults);
-    }
+          });
+
+          const avgScore = segments.length > 0
+            ? Math.round(segments.reduce((sum, s) => sum + s.score, 0) / segments.length)
+            : 0;
+
+          let worstIdx = 0;
+          segments.forEach((s, i) => { if (s.score > segments[worstIdx].score) worstIdx = i; });
+          const worstConditions = weatherData[worstIdx] || DEFAULT_WEATHER_CONDITIONS;
+
+          const level = getSeverityLevel(avgScore);
+
+          return {
+            name: corridor.name,
+            score: avgScore,
+            level,
+            color: SEVERITY_COLORS[level],
+            hazard: getHazardDescription(worstConditions),
+            segments,
+            path: corridor.path,
+          };
+        } catch (err) {
+          console.error(`[Travel Corridors] Error fetching ${corridor.name}:`, err);
+          return {
+            name: corridor.name,
+            score: -1,
+            level: 'green' as const,
+            color: SEVERITY_COLORS.unknown,
+            hazard: 'Data unavailable',
+            segments: [],
+            path: corridor.path,
+          };
+        }
+      })
+    );
 
     const worstCorridors = getWorstCorridors(results, 5);
 

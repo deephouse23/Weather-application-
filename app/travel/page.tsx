@@ -51,7 +51,7 @@ export default function TravelPage() {
   const [data, setData] = useState<CorridorsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const requestIdRef = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
 
   const { ref, inView } = useInView({
     triggerOnce: true,
@@ -60,22 +60,25 @@ export default function TravelPage() {
   });
 
   const fetchCorridors = useCallback(async (forecastDay: number) => {
-    const requestId = ++requestIdRef.current;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    
     setIsLoading(true);
     setError(null);
     setData(null);
     try {
-      const res = await fetch(`/api/travel/corridors?day=${forecastDay}`);
+      const res = await fetch(`/api/travel/corridors?day=${forecastDay}`, { signal: controller.signal });
       if (!res.ok) throw new Error('Failed to fetch corridor data');
       const result: CorridorsResponse = await res.json();
-      if (requestId !== requestIdRef.current) return;
+      if (controller.signal.aborted) return;
       setData(result);
     } catch (err) {
-      if (requestId !== requestIdRef.current) return;
+      if (controller.signal.aborted) return;
       console.error('[Travel]', err);
       setError('Unable to load travel corridor data');
     } finally {
-      if (requestId === requestIdRef.current) {
+      if (!controller.signal.aborted) {
         setIsLoading(false);
       }
     }
@@ -84,6 +87,10 @@ export default function TravelPage() {
   useEffect(() => {
     fetchCorridors(day);
   }, [day, fetchCorridors]);
+
+  useEffect(() => {
+    return () => abortRef.current?.abort();
+  }, []);
 
   return (
     <PageWrapper>

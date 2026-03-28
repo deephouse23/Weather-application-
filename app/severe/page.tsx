@@ -17,6 +17,8 @@ import type { NWSAlert } from '@/lib/services/nws-alerts-service';
 
 const SEVERE_KEYWORDS = ['tornado', 'thunderstorm', 'wind', 'hail', 'flood'];
 
+const SEVERITY_ORDER: Record<string, number> = { Extreme: 0, Severe: 1, Moderate: 2, Minor: 3 };
+
 const severityBadge: Record<string, string> = {
   Extreme: 'bg-red-500/20 text-red-400 border-red-500/50',
   Severe: 'bg-orange-500/20 text-orange-400 border-orange-500/50',
@@ -47,8 +49,8 @@ export default function SeverePage() {
         SEVERE_KEYWORDS.some(kw => a.event.toLowerCase().includes(kw))
       );
       filtered.sort((a: NWSAlert, b: NWSAlert) => {
-        const order: Record<string, number> = { Extreme: 0, Severe: 1, Moderate: 2, Minor: 3 };
-        return (order[a.severity] ?? 4) - (order[b.severity] ?? 4);
+        
+        return (SEVERITY_ORDER[a.severity] ?? 4) - (SEVERITY_ORDER[b.severity] ?? 4);
       });
       setAlerts(filtered);
     } catch (e) { console.error('[Severe]', e); }

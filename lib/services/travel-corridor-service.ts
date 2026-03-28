@@ -5,14 +5,21 @@
  */
 
 export interface WeatherConditions {
-  precipitation: number;  // mm/h
-  snowfall: number;       // cm/h
-  windGusts: number;      // km/h
-  visibility: number;     // meters
-  freezingLevel: number;  // meters above ground
+  precipitation: number;
+  snowfall: number;
+  windGusts: number;
+  visibility: number;
+  freezingLevel: number;
 }
 
-/** Sanitize a numeric value, defaulting non-finite to a fallback. */
+export const DEFAULT_WEATHER_CONDITIONS: WeatherConditions = {
+  precipitation: 0,
+  snowfall: 0,
+  windGusts: 0,
+  visibility: 10000,
+  freezingLevel: 3000,
+};
+
 function sanitize(value: number, fallback: number): number {
   return Number.isFinite(value) ? Math.max(0, value) : fallback;
 }
@@ -29,25 +36,10 @@ export function scoreWeatherSeverity(conditions: WeatherConditions): number {
 
   let score = 0;
 
-  // Precipitation (rain): 0-25 points
-  if (precipitation > 0) {
-    score += Math.min(25, precipitation * 5);
-  }
-
-  // Snowfall: 0-30 points (more dangerous than rain)
-  if (snowfall > 0) {
-    score += Math.min(30, snowfall * 15);
-  }
-
-  // Wind gusts: 0-20 points (starts impacting at 40 km/h)
-  if (windGusts > 40) {
-    score += Math.min(20, (windGusts - 40) * 0.5);
-  }
-
-  // Visibility: 0-25 points (under 5000m is concerning)
-  if (visibility < 5000) {
-    score += Math.min(25, ((5000 - visibility) / 5000) * 25);
-  }
+  if (precipitation > 0) score += Math.min(25, precipitation * 5);
+  if (snowfall > 0) score += Math.min(30, snowfall * 15);
+  if (windGusts > 40) score += Math.min(20, (windGusts - 40) * 0.5);
+  if (visibility < 5000) score += Math.min(25, ((5000 - visibility) / 5000) * 25);
 
   return Number.isFinite(score) ? Math.min(100, Math.round(score)) : 0;
 }
@@ -61,7 +53,7 @@ export function getSeverityLevel(score: number): SeverityLevel {
   return 'green';
 }
 
-export const SEVERITY_COLORS: Record<string, string> = {
+export const SEVERITY_COLORS: Record<SeverityLevel | 'unknown', string> = {
   green: '#22c55e',
   yellow: '#eab308',
   orange: '#f97316',
