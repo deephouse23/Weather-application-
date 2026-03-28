@@ -1,98 +1,56 @@
 /**
- * 16-Bit Weather Platform - Solar Command Terminal Component
+ * 16-Bit Weather Platform - Solar Command Terminal
  *
  * Copyright (C) 2025 16-Bit Weather
  * Licensed under Fair Source License, Version 0.9
  *
- * Main space weather display container with retro terminal styling
+ * Main space weather dashboard with tabbed navigation.
+ * Organizes 13 space weather components into 5 themed tabs.
  */
 
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Sun, Activity, AlertTriangle, Clock, Radio, ChevronDown, ChevronUp, Zap, Wind, Sparkles, Satellite } from 'lucide-react';
+import { Sun, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import dynamic from 'next/dynamic';
+import SpaceWeatherNav, { type SpaceWeatherTabId } from './SpaceWeatherNav';
 
-// Lazy load components for better performance
-const SpaceWeatherScales = dynamic(() => import('./SpaceWeatherScales'), {
-  loading: () => <LoadingSkeleton height="200px" />,
-  ssr: false
+// Lazy load tab panels
+const CommandCenterTab = dynamic(() => import('./tabs/CommandCenterTab'), {
+  loading: () => <TabSkeleton />,
+  ssr: false,
+});
+const SolarActivityTab = dynamic(() => import('./tabs/SolarActivityTab'), {
+  loading: () => <TabSkeleton />,
+  ssr: false,
+});
+const GeomagneticTab = dynamic(() => import('./tabs/GeomagneticTab'), {
+  loading: () => <TabSkeleton />,
+  ssr: false,
+});
+const SolarWindTab = dynamic(() => import('./tabs/SolarWindTab'), {
+  loading: () => <TabSkeleton />,
+  ssr: false,
+});
+const AlertsForecastTab = dynamic(() => import('./tabs/AlertsForecastTab'), {
+  loading: () => <TabSkeleton />,
+  ssr: false,
 });
 
-const SunImageViewer = dynamic(() => import('./SunImageViewer'), {
-  loading: () => <LoadingSkeleton height="400px" />,
-  ssr: false
-});
-
-const SpaceWeatherAlertTicker = dynamic(() => import('./SpaceWeatherAlertTicker'), {
-  loading: () => <LoadingSkeleton height="150px" />,
-  ssr: false
-});
-
-const KpIndexGauge = dynamic(() => import('./KpIndexGauge'), {
-  loading: () => <LoadingSkeleton height="250px" />,
-  ssr: false
-});
-
-const SolarWindStats = dynamic(() => import('./SolarWindStats'), {
-  loading: () => <LoadingSkeleton height="250px" />,
-  ssr: false
-});
-
-const SunspotDisplay = dynamic(() => import('./SunspotDisplay'), {
-  loading: () => <LoadingSkeleton height="200px" />,
-  ssr: false
-});
-
-const XRayFluxChart = dynamic(() => import('./XRayFluxChart'), {
-  loading: () => <LoadingSkeleton height="300px" />,
-  ssr: false
-});
-
-const CoronagraphAnimation = dynamic(() => import('./CoronagraphAnimation'), {
-  loading: () => <LoadingSkeleton height="400px" />,
-  ssr: false
-});
-
-const AuroraForecastMap = dynamic(() => import('./AuroraForecastMap'), {
-  loading: () => <LoadingSkeleton height="400px" />,
-  ssr: false
-});
-
-const SpaceWeatherCharts = dynamic(() => import('./SpaceWeatherCharts'), {
-  loading: () => <LoadingSkeleton height="600px" />,
-  ssr: false
-});
-
-const EnlilModelViewer = dynamic(() => import('./EnlilModelViewer'), {
-  loading: () => <LoadingSkeleton height="500px" />,
-  ssr: false
-});
-
-const SolarFlareTimeline = dynamic(() => import('./SolarFlareTimeline'), {
-  loading: () => <LoadingSkeleton height="300px" />,
-  ssr: false
-});
-
-// Loading skeleton component
-function LoadingSkeleton({ height = '200px' }: { height?: string }) {
+function TabSkeleton() {
   return (
-    <div
-      className="flex items-center justify-center bg-gray-900 border-2 border-dashed border-gray-600 rounded"
-      style={{ height }}
-    >
-      <div className="text-center text-gray-400 font-mono text-sm">
-        <div className="animate-pulse">Loading...</div>
+    <div className="flex items-center justify-center bg-gray-900/50 border border-dashed border-gray-700 rounded min-h-[400px]">
+      <div className="text-center text-gray-400 font-mono text-sm animate-pulse">
+        LOADING MODULE...
       </div>
     </div>
   );
 }
 
-// Type imports for data
 import type { SpaceWeatherAlert } from './SpaceWeatherAlertTicker';
 import type { KpIndexData } from './KpIndexGauge';
 import type { SolarWindData } from './SolarWindStats';
@@ -120,42 +78,22 @@ export default function SolarCommandTerminal({
   sunspots,
   xrayFlux,
   auroraForecast,
-  isLoading = false
+  isLoading = false,
 }: SolarCommandTerminalProps) {
   const { theme } = useTheme();
   const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
-  // Initialize to null to avoid hydration mismatch, set on client mount
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['scales', 'sun', 'kp']));
+  const [activeTab, setActiveTab] = useState<SpaceWeatherTabId>('command');
 
-  // Set time on client mount and update every 10 seconds
   useEffect(() => {
     setCurrentTime(new Date());
     const timer = setInterval(() => setCurrentTime(new Date()), 10000);
     return () => clearInterval(timer);
   }, []);
 
-  const formatZuluTime = (date: Date) => {
-    return date.toISOString().slice(11, 19) + 'Z';
-  };
+  const formatZuluTime = (date: Date) => date.toISOString().slice(11, 19) + 'Z';
+  const formatLocalTime = (date: Date) => date.toLocaleTimeString('en-US', { hour12: false });
 
-  const formatLocalTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', { hour12: false });
-  };
-
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(section)) {
-        newSet.delete(section);
-      } else {
-        newSet.add(section);
-      }
-      return newSet;
-    });
-  };
-
-  // Calculate status summary
   const getOverallStatus = () => {
     const kp = kpIndex?.current?.value ?? 0;
     const rScale = scales?.R?.scale ?? 0;
@@ -172,11 +110,18 @@ export default function SolarCommandTerminal({
 
   const status = getOverallStatus();
 
+  const scaleColor = (val: number) => {
+    if (val >= 4) return 'text-red-500';
+    if (val >= 3) return 'text-orange-500';
+    if (val >= 1) return 'text-yellow-500';
+    return 'text-green-500';
+  };
+
   return (
     <div className={cn('space-y-4', themeClasses.background)}>
-      {/* Terminal Header */}
+      {/* Terminal Header + Status Bar */}
       <Card className={cn('container-primary', themeClasses.background)}>
-        <CardHeader className={cn('border-b border-subtle py-3')}>
+        <CardHeader className="border-b border-subtle py-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <CardTitle className={cn('text-xl font-mono font-bold flex items-center gap-2', themeClasses.headerText)}>
               <Sun className="w-6 h-6 text-yellow-500" />
@@ -197,449 +142,92 @@ export default function SolarCommandTerminal({
           </div>
         </CardHeader>
 
-        {/* Quick Status Bar */}
         <CardContent className="py-3">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className={cn('text-center p-2 container-nested')}>
-              <div className={cn('text-2xl font-bold font-mono', themeClasses.accentText)}>
-                {kpIndex?.current?.value?.toFixed(0) ?? '—'}
-              </div>
-              <div className={cn('text-xs font-mono uppercase', themeClasses.text)}>
-                Kp Index
-              </div>
-            </div>
-            <div className={cn('text-center p-2 container-nested')}>
-              <div className="text-2xl font-bold font-mono text-yellow-500">
-                {sunspots?.current?.sunspotNumber ?? '—'}
-              </div>
-              <div className={cn('text-xs font-mono uppercase', themeClasses.text)}>
-                Sunspots
-              </div>
-            </div>
-            <div className={cn('text-center p-2 container-nested')}>
-              <div className="text-2xl font-bold font-mono text-cyan-500">
-                {solarWind?.current?.speed ?? '—'}
-              </div>
-              <div className={cn('text-xs font-mono uppercase', themeClasses.text)}>
-                Wind km/s
-              </div>
-            </div>
-            <div className={cn('text-center p-2 container-nested')}>
-              <div className={cn(
-                'text-2xl font-bold font-mono',
-                alerts.length > 0 ? 'text-orange-500' : 'text-green-500'
-              )}>
-                {alerts.length > 0 ? alerts.length : 'OK'}
-              </div>
-              <div className={cn('text-xs font-mono uppercase', themeClasses.text)}>
-                Alerts
-              </div>
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+            <StatusCell label="Kp Index" value={kpIndex?.current?.value?.toFixed(0) ?? '—'} color={themeClasses.accentText} />
+            <StatusCell label="Sunspots" value={sunspots?.current?.sunspotNumber?.toString() ?? '—'} color="text-yellow-500" />
+            <StatusCell label="Wind km/s" value={solarWind?.current?.speed?.toString() ?? '—'} color="text-cyan-500" />
+            <StatusCell label="Alerts" value={alerts.length > 0 ? alerts.length.toString() : 'OK'} color={alerts.length > 0 ? 'text-orange-500' : 'text-green-500'} />
+            <StatusCell label="R Scale" value={scales?.R?.scale?.toString() ?? '—'} color={scaleColor(scales?.R?.scale ?? 0)} />
+            <StatusCell label="S Scale" value={scales?.S?.scale?.toString() ?? '—'} color={scaleColor(scales?.S?.scale ?? 0)} />
+            <StatusCell label="G Scale" value={scales?.G?.scale?.toString() ?? '—'} color={scaleColor(scales?.G?.scale ?? 0)} />
           </div>
         </CardContent>
       </Card>
 
-      {/* Space Weather Scales Section */}
-      <Card className={cn('container-primary', themeClasses.background)}>
-        <button
-          onClick={() => toggleSection('scales')}
-          className={cn(
-            'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'
-          )}
-          aria-expanded={expandedSections.has('scales')}
-          aria-controls="section-scales-content"
-          aria-label="Toggle NOAA Space Weather Scales section"
-        >
-          <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-cyan-500" aria-hidden="true" />
-            <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
-              NOAA Space Weather Scales (R-S-G)
-            </span>
+      {/* Tab Navigation */}
+      <SpaceWeatherNav activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab)} />
+
+      {/* Tab Content */}
+      <div className="min-h-[500px]">
+        {activeTab === 'command' && (
+          <div id="panel-command" role="tabpanel" aria-labelledby="tab-command">
+            <CommandCenterTab
+              scales={scales}
+              alerts={alerts}
+              kpIndex={kpIndex}
+              solarWind={solarWind}
+              sunspots={sunspots}
+              xrayFlux={xrayFlux}
+              auroraForecast={auroraForecast}
+              isLoading={isLoading}
+            />
           </div>
-          {expandedSections.has('scales') ? (
-            <ChevronUp className="w-4 h-4" aria-hidden="true" />
-          ) : (
-            <ChevronDown className="w-4 h-4" aria-hidden="true" />
-          )}
-        </button>
-        {expandedSections.has('scales') && (
-          <CardContent id="section-scales-content" className="p-4">
-            <SpaceWeatherScales scales={scales} isLoading={isLoading} />
-          </CardContent>
         )}
-      </Card>
-
-      {/* Alerts Section */}
-      {alerts.length > 0 && (
-        <Card className={cn('container-primary', themeClasses.background)}>
-          <button
-            onClick={() => toggleSection('alerts')}
-            className="w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors"
-            aria-expanded={expandedSections.has('alerts')}
-            aria-controls="section-alerts-content"
-            aria-label={`Toggle Space Weather Alerts section, ${alerts.length} alerts`}
-          >
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-yellow-500" aria-hidden="true" />
-              <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
-                Space Weather Alerts ({alerts.length})
-              </span>
-            </div>
-            {expandedSections.has('alerts') ? (
-              <ChevronUp className="w-4 h-4" aria-hidden="true" />
-            ) : (
-              <ChevronDown className="w-4 h-4" aria-hidden="true" />
-            )}
-          </button>
-          {expandedSections.has('alerts') && (
-            <CardContent id="section-alerts-content" className="p-0">
-              <SpaceWeatherAlertTicker alerts={alerts} isLoading={isLoading} />
-            </CardContent>
-          )}
-        </Card>
-      )}
-
-      {/* Sun Imagery Section */}
-      <Card className={cn('container-primary', themeClasses.background)}>
-        <button
-          onClick={() => toggleSection('sun')}
-          className={cn(
-            'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'
-          )}
-          aria-expanded={expandedSections.has('sun')}
-          aria-controls="section-sun-content"
-          aria-label="Toggle Live Sun Imagery section"
-        >
-          <div className="flex items-center gap-2">
-            <Sun className="w-4 h-4 text-yellow-500" aria-hidden="true" />
-            <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
-              Live Sun Imagery (NASA SDO)
-            </span>
+        {activeTab === 'solar' && (
+          <div id="panel-solar" role="tabpanel" aria-labelledby="tab-solar">
+            <SolarActivityTab
+              xrayFlux={xrayFlux}
+              sunspots={sunspots}
+              isLoading={isLoading}
+            />
           </div>
-          {expandedSections.has('sun') ? (
-            <ChevronUp className="w-4 h-4" aria-hidden="true" />
-          ) : (
-            <ChevronDown className="w-4 h-4" aria-hidden="true" />
-          )}
-        </button>
-        {expandedSections.has('sun') && (
-          <CardContent id="section-sun-content" className="p-4">
-            <SunImageViewer />
-          </CardContent>
         )}
-      </Card>
-
-      {/* Kp Index & Solar Wind Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className={cn('container-primary', themeClasses.background)}>
-          <button
-            onClick={() => toggleSection('kp')}
-            className="w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors"
-            aria-expanded={expandedSections.has('kp')}
-            aria-controls="section-kp-content"
-            aria-label="Toggle Kp Geomagnetic Index section"
-          >
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-green-500" aria-hidden="true" />
-              <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
-                Kp Geomagnetic Index
-              </span>
-            </div>
-            {expandedSections.has('kp') ? (
-              <ChevronUp className="w-4 h-4" aria-hidden="true" />
-            ) : (
-              <ChevronDown className="w-4 h-4" aria-hidden="true" />
-            )}
-          </button>
-          {expandedSections.has('kp') && (
-            <CardContent id="section-kp-content" className="p-4">
-              <KpIndexGauge data={kpIndex} isLoading={isLoading} />
-            </CardContent>
-          )}
-        </Card>
-
-        <Card className={cn('container-primary', themeClasses.background)}>
-          <button
-            onClick={() => toggleSection('wind')}
-            className="w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors"
-            aria-expanded={expandedSections.has('wind')}
-            aria-controls="section-wind-content"
-            aria-label="Toggle Real-Time Solar Wind section"
-          >
-            <div className="flex items-center gap-2">
-              <Wind className="w-4 h-4 text-cyan-500" aria-hidden="true" />
-              <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
-                Real-Time Solar Wind
-              </span>
-            </div>
-            {expandedSections.has('wind') ? (
-              <ChevronUp className="w-4 h-4" aria-hidden="true" />
-            ) : (
-              <ChevronDown className="w-4 h-4" aria-hidden="true" />
-            )}
-          </button>
-          {expandedSections.has('wind') && (
-            <CardContent id="section-wind-content" className="p-4">
-              <SolarWindStats data={solarWind} isLoading={isLoading} />
-            </CardContent>
-          )}
-        </Card>
-      </div>
-
-      {/* X-Ray Flux & Sunspots Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className={cn('container-primary', themeClasses.background)}>
-          <button
-            onClick={() => toggleSection('xray')}
-            className="w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors"
-            aria-expanded={expandedSections.has('xray')}
-            aria-controls="section-xray-content"
-            aria-label="Toggle X-Ray Flux and Solar Flares section"
-          >
-            <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-yellow-500" aria-hidden="true" />
-              <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
-                X-Ray Flux / Solar Flares
-              </span>
-            </div>
-            {expandedSections.has('xray') ? (
-              <ChevronUp className="w-4 h-4" aria-hidden="true" />
-            ) : (
-              <ChevronDown className="w-4 h-4" aria-hidden="true" />
-            )}
-          </button>
-          {expandedSections.has('xray') && (
-            <CardContent id="section-xray-content" className="p-4">
-              <XRayFluxChart data={xrayFlux} isLoading={isLoading} />
-            </CardContent>
-          )}
-        </Card>
-
-        <Card className={cn('container-primary', themeClasses.background)}>
-          <button
-            onClick={() => toggleSection('sunspots')}
-            className="w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors"
-            aria-expanded={expandedSections.has('sunspots')}
-            aria-controls="section-sunspots-content"
-            aria-label="Toggle Sunspot Activity section"
-          >
-            <div className="flex items-center gap-2">
-              <Sun className="w-4 h-4 text-orange-500" aria-hidden="true" />
-              <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
-                Sunspot Activity
-              </span>
-            </div>
-            {expandedSections.has('sunspots') ? (
-              <ChevronUp className="w-4 h-4" aria-hidden="true" />
-            ) : (
-              <ChevronDown className="w-4 h-4" aria-hidden="true" />
-            )}
-          </button>
-          {expandedSections.has('sunspots') && (
-            <CardContent id="section-sunspots-content" className="p-4">
-              <SunspotDisplay data={sunspots} isLoading={isLoading} />
-            </CardContent>
-          )}
-        </Card>
-      </div>
-
-      {/* Coronagraph & Aurora Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className={cn('container-primary', themeClasses.background)}>
-          <button
-            onClick={() => toggleSection('coronagraph')}
-            className="w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors"
-            aria-expanded={expandedSections.has('coronagraph')}
-            aria-controls="section-coronagraph-content"
-            aria-label="Toggle SOHO Coronagraph CME Watch section"
-          >
-            <div className="flex items-center gap-2">
-              <Satellite className="w-4 h-4 text-purple-500" aria-hidden="true" />
-              <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
-                SOHO Coronagraph (CME Watch)
-              </span>
-            </div>
-            {expandedSections.has('coronagraph') ? (
-              <ChevronUp className="w-4 h-4" aria-hidden="true" />
-            ) : (
-              <ChevronDown className="w-4 h-4" aria-hidden="true" />
-            )}
-          </button>
-          {expandedSections.has('coronagraph') && (
-            <CardContent id="section-coronagraph-content" className="p-4">
-              <CoronagraphAnimation />
-            </CardContent>
-          )}
-        </Card>
-
-        <Card className={cn('container-primary', themeClasses.background)}>
-          <button
-            onClick={() => toggleSection('aurora')}
-            className="w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors"
-            aria-expanded={expandedSections.has('aurora')}
-            aria-controls="section-aurora-content"
-            aria-label="Toggle Aurora Forecast section"
-          >
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-green-400" aria-hidden="true" />
-              <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
-                Aurora Forecast
-              </span>
-            </div>
-            {expandedSections.has('aurora') ? (
-              <ChevronUp className="w-4 h-4" aria-hidden="true" />
-            ) : (
-              <ChevronDown className="w-4 h-4" aria-hidden="true" />
-            )}
-          </button>
-          {expandedSections.has('aurora') && (
-            <CardContent id="section-aurora-content" className="p-4">
-              <AuroraForecastMap data={auroraForecast} isLoading={isLoading} />
-            </CardContent>
-          )}
-        </Card>
-      </div>
-
-      {/* WSA-ENLIL Solar Wind Model */}
-      <Card className={cn('container-primary', themeClasses.background)}>
-          <button
-            onClick={() => toggleSection('enlil')}
-            className={cn(
-              'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'
-            )}
-            aria-expanded={expandedSections.has('enlil')}
-            aria-controls="section-enlil-content"
-          >
-            <div className="flex items-center gap-2">
-              <Satellite className="w-4 h-4 text-blue-400" aria-hidden="true" />
-              <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
-                WSA-ENLIL Solar Wind Model
-              </span>
-            </div>
-            {expandedSections.has('enlil') ? (
-              <ChevronUp className="w-4 h-4" aria-hidden="true" />
-            ) : (
-              <ChevronDown className="w-4 h-4" aria-hidden="true" />
-            )}
-          </button>
-          {expandedSections.has('enlil') && (
-            <CardContent id="section-enlil-content" className="p-4">
-              <EnlilModelViewer />
-            </CardContent>
-          )}
-        </Card>
-
-      {/* Time Series Charts */}
-      <Card className={cn('container-primary', themeClasses.background)}>
-          <button
-            onClick={() => toggleSection('charts')}
-            className={cn(
-              'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'
-            )}
-            aria-expanded={expandedSections.has('charts')}
-            aria-controls="section-charts-content"
-          >
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-cyan-400" aria-hidden="true" />
-              <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
-                Time Series Data
-              </span>
-            </div>
-            {expandedSections.has('charts') ? (
-              <ChevronUp className="w-4 h-4" aria-hidden="true" />
-            ) : (
-              <ChevronDown className="w-4 h-4" aria-hidden="true" />
-            )}
-          </button>
-          {expandedSections.has('charts') && (
-            <CardContent id="section-charts-content" className="p-4">
-              <SpaceWeatherCharts />
-            </CardContent>
-          )}
-        </Card>
-
-      {/* Recent Solar Flares */}
-      <Card className={cn('container-primary', themeClasses.background)}>
-          <button
-            onClick={() => toggleSection('flares')}
-            className={cn(
-              'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'
-            )}
-            aria-expanded={expandedSections.has('flares')}
-            aria-controls="section-flares-content"
-          >
-            <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-yellow-400" aria-hidden="true" />
-              <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
-                Recent Solar Flares
-              </span>
-            </div>
-            {expandedSections.has('flares') ? (
-              <ChevronUp className="w-4 h-4" aria-hidden="true" />
-            ) : (
-              <ChevronDown className="w-4 h-4" aria-hidden="true" />
-            )}
-          </button>
-          {expandedSections.has('flares') && (
-            <CardContent id="section-flares-content" className="p-4">
-              <SolarFlareTimeline />
-            </CardContent>
-          )}
-        </Card>
-
-      {/* Data Sources Section */}
-      <Card className={cn('container-primary', themeClasses.background)}>
-        <button
-          onClick={() => toggleSection('sources')}
-          className={cn(
-            'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'
-          )}
-          aria-expanded={expandedSections.has('sources')}
-          aria-controls="section-sources-content"
-          aria-label="Toggle Data Sources section"
-        >
-          <div className="flex items-center gap-2">
-            <Radio className="w-4 h-4 text-green-500" aria-hidden="true" />
-            <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
-              Data Sources
-            </span>
+        {activeTab === 'geomagnetic' && (
+          <div id="panel-geomagnetic" role="tabpanel" aria-labelledby="tab-geomagnetic">
+            <GeomagneticTab
+              kpIndex={kpIndex}
+              auroraForecast={auroraForecast}
+              isLoading={isLoading}
+            />
           </div>
-          {expandedSections.has('sources') ? (
-            <ChevronUp className="w-4 h-4" aria-hidden="true" />
-          ) : (
-            <ChevronDown className="w-4 h-4" aria-hidden="true" />
-          )}
-        </button>
-        {expandedSections.has('sources') && (
-          <CardContent id="section-sources-content" className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
-              <div className={cn('p-3 container-nested')}>
-                <div className={cn('font-bold mb-1', themeClasses.accentText)}>NOAA SWPC</div>
-                <div className={cn(themeClasses.text)}>Space Weather Prediction Center</div>
-                <div className="text-green-500 mt-1">STATUS: ONLINE</div>
-              </div>
-              <div className={cn('p-3 container-nested')}>
-                <div className={cn('font-bold mb-1', themeClasses.accentText)}>NASA SDO</div>
-                <div className={cn(themeClasses.text)}>Solar Dynamics Observatory</div>
-                <div className="text-green-500 mt-1">STATUS: ONLINE</div>
-              </div>
-              <div className={cn('p-3 container-nested')}>
-                <div className={cn('font-bold mb-1', themeClasses.accentText)}>SOHO/LASCO</div>
-                <div className={cn(themeClasses.text)}>ESA/NASA Solar Observatory</div>
-                <div className="text-green-500 mt-1">STATUS: ONLINE</div>
-              </div>
-            </div>
-          </CardContent>
         )}
-      </Card>
+        {activeTab === 'wind' && (
+          <div id="panel-wind" role="tabpanel" aria-labelledby="tab-wind">
+            <SolarWindTab
+              solarWind={solarWind}
+              isLoading={isLoading}
+            />
+          </div>
+        )}
+        {activeTab === 'alerts' && (
+          <div id="panel-alerts" role="tabpanel" aria-labelledby="tab-alerts">
+            <AlertsForecastTab
+              scales={scales}
+              alerts={alerts}
+              kpIndex={kpIndex}
+              isLoading={isLoading}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Footer */}
       <div className={cn(
         'text-center text-xs font-mono py-3 border-t border-subtle',
         themeClasses.text
       )}>
-        DATA PROVIDED BY NOAA SWPC, NASA SDO, ESA/NASA SOHO • FOR EDUCATIONAL USE • CHECK OFFICIAL SOURCES FOR CRITICAL DECISIONS
+        DATA PROVIDED BY NOAA SWPC, NASA SDO, ESA/NASA SOHO // FOR EDUCATIONAL USE // CHECK OFFICIAL SOURCES FOR CRITICAL DECISIONS
       </div>
+    </div>
+  );
+}
+
+function StatusCell({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div className="text-center p-2 container-nested">
+      <div className={cn('text-xl font-bold font-mono', color)}>{value}</div>
+      <div className="text-xs font-mono uppercase text-muted-foreground">{label}</div>
     </div>
   );
 }
