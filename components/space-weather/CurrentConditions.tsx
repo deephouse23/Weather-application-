@@ -80,7 +80,8 @@ export default function CurrentConditions({
   const subClass = xrayFlux?.current?.subClass ?? 0;
   const sunspotCount = sunspots?.current?.sunspotNumber ?? 0;
   const cyclePhase = sunspots?.solarCycle?.phase ?? 'unknown';
-  const viewLatitude = auroraForecast?.viewline?.latitude ?? 0;
+  const viewLatitude = auroraForecast?.viewline?.latitude;
+  const hemisphere = auroraForecast?.hemisphere === 'south' ? 'S' : 'N';
   const viewDescription = auroraForecast?.viewline?.description ?? 'N/A';
 
   return (
@@ -178,7 +179,7 @@ export default function CurrentConditions({
         </div>
         <div className="flex items-baseline gap-2">
           <span className={cn('text-2xl font-bold font-mono text-green-400')}>
-            {viewLatitude}°N
+            {viewLatitude != null ? `${viewLatitude}°${hemisphere}` : '--'}
           </span>
         </div>
         <div className={cn('text-xs font-mono mt-0.5', themeClasses.text, 'opacity-80')}>

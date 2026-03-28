@@ -48,6 +48,7 @@ export default function SpaceWeatherNav({ activeTab, onTabChange }: SpaceWeather
               key={id}
               role="tab"
               type="button"
+              id={`tab-${id}`}
               aria-selected={isActive}
               aria-controls={`panel-${id}`}
               onClick={() => onTabChange(id)}

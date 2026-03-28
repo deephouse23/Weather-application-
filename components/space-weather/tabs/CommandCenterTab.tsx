@@ -17,7 +17,7 @@ import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import { Card, CardContent } from '@/components/ui/card';
 import dynamic from 'next/dynamic';
 
-import type { SpaceWeatherScalesData } from '../SpaceWeatherScales';
+import type { SpaceWeatherScalesData } from '../SpaceWeatherScales'; // used by CompactScales prop type
 import type { SpaceWeatherAlert } from '../SpaceWeatherAlertTicker';
 import type { KpIndexData } from '../KpIndexGauge';
 import type { SolarWindData } from '../SolarWindStats';
@@ -50,8 +50,8 @@ const SpaceWeatherAlertTicker = dynamic(() => import('../SpaceWeatherAlertTicker
   ssr: false
 });
 
-const SpaceWeatherScales = dynamic(() => import('../SpaceWeatherScales'), {
-  loading: () => <LoadingSkeleton height="200px" />,
+const CompactScales = dynamic(() => import('../CompactScales'), {
+  loading: () => <LoadingSkeleton height="60px" />,
   ssr: false
 });
 
@@ -164,8 +164,8 @@ export default function CommandCenterTab({
         </Card>
       )}
 
-      {/* NOAA Space Weather Scales */}
-      <SpaceWeatherScales scales={scales} isLoading={isLoading} />
+      {/* Compact NOAA Scales */}
+      <CompactScales data={scales} />
     </div>
   );
 }

@@ -161,44 +161,54 @@ export default function SolarCommandTerminal({
       {/* Tab Content */}
       <div className="min-h-[500px]">
         {activeTab === 'command' && (
-          <CommandCenterTab
-            scales={scales}
-            alerts={alerts}
-            kpIndex={kpIndex}
-            solarWind={solarWind}
-            sunspots={sunspots}
-            xrayFlux={xrayFlux}
-            auroraForecast={auroraForecast}
-            isLoading={isLoading}
-          />
+          <div id="panel-command" role="tabpanel" aria-labelledby="tab-command">
+            <CommandCenterTab
+              scales={scales}
+              alerts={alerts}
+              kpIndex={kpIndex}
+              solarWind={solarWind}
+              sunspots={sunspots}
+              xrayFlux={xrayFlux}
+              auroraForecast={auroraForecast}
+              isLoading={isLoading}
+            />
+          </div>
         )}
         {activeTab === 'solar' && (
-          <SolarActivityTab
-            xrayFlux={xrayFlux}
-            sunspots={sunspots}
-            isLoading={isLoading}
-          />
+          <div id="panel-solar" role="tabpanel" aria-labelledby="tab-solar">
+            <SolarActivityTab
+              xrayFlux={xrayFlux}
+              sunspots={sunspots}
+              isLoading={isLoading}
+            />
+          </div>
         )}
         {activeTab === 'geomagnetic' && (
-          <GeomagneticTab
-            kpIndex={kpIndex}
-            auroraForecast={auroraForecast}
-            isLoading={isLoading}
-          />
+          <div id="panel-geomagnetic" role="tabpanel" aria-labelledby="tab-geomagnetic">
+            <GeomagneticTab
+              kpIndex={kpIndex}
+              auroraForecast={auroraForecast}
+              isLoading={isLoading}
+            />
+          </div>
         )}
         {activeTab === 'wind' && (
-          <SolarWindTab
-            solarWind={solarWind}
-            isLoading={isLoading}
-          />
+          <div id="panel-wind" role="tabpanel" aria-labelledby="tab-wind">
+            <SolarWindTab
+              solarWind={solarWind}
+              isLoading={isLoading}
+            />
+          </div>
         )}
         {activeTab === 'alerts' && (
-          <AlertsForecastTab
-            scales={scales}
-            alerts={alerts}
-            kpIndex={kpIndex}
-            isLoading={isLoading}
-          />
+          <div id="panel-alerts" role="tabpanel" aria-labelledby="tab-alerts">
+            <AlertsForecastTab
+              scales={scales}
+              alerts={alerts}
+              kpIndex={kpIndex}
+              isLoading={isLoading}
+            />
+          </div>
         )}
       </div>
 
