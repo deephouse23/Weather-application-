@@ -17,6 +17,9 @@ export { default as SunspotDisplay } from './SunspotDisplay';
 export { default as CoronagraphAnimation } from './CoronagraphAnimation';
 export { default as AuroraForecastMap } from './AuroraForecastMap';
 export { default as XRayFluxChart } from './XRayFluxChart';
+export { default as SpaceWeatherCharts } from './SpaceWeatherCharts';
+export { default as EnlilModelViewer } from './EnlilModelViewer';
+export { default as SolarFlareTimeline } from './SolarFlareTimeline';
 
 // Type exports
 export type { SpaceWeatherAlert } from './SpaceWeatherAlertTicker';
