@@ -20,6 +20,8 @@ export { default as XRayFluxChart } from './XRayFluxChart';
 export { default as SpaceWeatherCharts } from './SpaceWeatherCharts';
 export { default as EnlilModelViewer } from './EnlilModelViewer';
 export { default as SolarFlareTimeline } from './SolarFlareTimeline';
+export { default as SpaceWeatherNav } from './SpaceWeatherNav';
+export { default as CompactScales } from './CompactScales';
 
 // Type exports
 export type { SpaceWeatherAlert } from './SpaceWeatherAlertTicker';
