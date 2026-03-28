@@ -49,7 +49,6 @@ export default function TravelCorridorMap({ corridors, isLoading }: TravelCorrid
 
   const [clickedCorridor, setClickedCorridor] = useState<{ name: string; score: number; level: string; hazard: string; color: string; x: number; y: number } | null>(null);
 
-  // Initialize map
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
@@ -115,7 +114,6 @@ export default function TravelCorridorMap({ corridors, isLoading }: TravelCorrid
     };
   }, []);
 
-  // Update corridors on map
   useEffect(() => {
     if (!mapInstanceRef.current || corridors.length === 0) return;
     const map = mapInstanceRef.current;
