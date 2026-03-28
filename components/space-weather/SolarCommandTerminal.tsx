@@ -63,6 +63,21 @@ const AuroraForecastMap = dynamic(() => import('./AuroraForecastMap'), {
   ssr: false
 });
 
+const SpaceWeatherCharts = dynamic(() => import('./SpaceWeatherCharts'), {
+  loading: () => <LoadingSkeleton height="600px" />,
+  ssr: false
+});
+
+const EnlilModelViewer = dynamic(() => import('./EnlilModelViewer'), {
+  loading: () => <LoadingSkeleton height="500px" />,
+  ssr: false
+});
+
+const SolarFlareTimeline = dynamic(() => import('./SolarFlareTimeline'), {
+  loading: () => <LoadingSkeleton height="300px" />,
+  ssr: false
+});
+
 // Loading skeleton component
 function LoadingSkeleton({ height = '200px' }: { height?: string }) {
   return (
@@ -484,6 +499,93 @@ export default function SolarCommandTerminal({
           )}
         </Card>
       </div>
+
+      {/* WSA-ENLIL Solar Wind Model */}
+      <Card className={cn('container-primary', themeClasses.background)}>
+          <button
+            onClick={() => toggleSection('enlil')}
+            className={cn(
+              'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'
+            )}
+            aria-expanded={expandedSections.has('enlil')}
+            aria-controls="section-enlil-content"
+          >
+            <div className="flex items-center gap-2">
+              <Satellite className="w-4 h-4 text-blue-400" aria-hidden="true" />
+              <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
+                WSA-ENLIL Solar Wind Model
+              </span>
+            </div>
+            {expandedSections.has('enlil') ? (
+              <ChevronUp className="w-4 h-4" aria-hidden="true" />
+            ) : (
+              <ChevronDown className="w-4 h-4" aria-hidden="true" />
+            )}
+          </button>
+          {expandedSections.has('enlil') && (
+            <CardContent id="section-enlil-content" className="p-4">
+              <EnlilModelViewer />
+            </CardContent>
+          )}
+        </Card>
+
+      {/* Time Series Charts */}
+      <Card className={cn('container-primary', themeClasses.background)}>
+          <button
+            onClick={() => toggleSection('charts')}
+            className={cn(
+              'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'
+            )}
+            aria-expanded={expandedSections.has('charts')}
+            aria-controls="section-charts-content"
+          >
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-cyan-400" aria-hidden="true" />
+              <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
+                Time Series Data
+              </span>
+            </div>
+            {expandedSections.has('charts') ? (
+              <ChevronUp className="w-4 h-4" aria-hidden="true" />
+            ) : (
+              <ChevronDown className="w-4 h-4" aria-hidden="true" />
+            )}
+          </button>
+          {expandedSections.has('charts') && (
+            <CardContent id="section-charts-content" className="p-4">
+              <SpaceWeatherCharts />
+            </CardContent>
+          )}
+        </Card>
+
+      {/* Recent Solar Flares */}
+      <Card className={cn('container-primary', themeClasses.background)}>
+          <button
+            onClick={() => toggleSection('flares')}
+            className={cn(
+              'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'
+            )}
+            aria-expanded={expandedSections.has('flares')}
+            aria-controls="section-flares-content"
+          >
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-yellow-400" aria-hidden="true" />
+              <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
+                Recent Solar Flares
+              </span>
+            </div>
+            {expandedSections.has('flares') ? (
+              <ChevronUp className="w-4 h-4" aria-hidden="true" />
+            ) : (
+              <ChevronDown className="w-4 h-4" aria-hidden="true" />
+            )}
+          </button>
+          {expandedSections.has('flares') && (
+            <CardContent id="section-flares-content" className="p-4">
+              <SolarFlareTimeline />
+            </CardContent>
+          )}
+        </Card>
 
       {/* Data Sources Section */}
       <Card className={cn('container-primary', themeClasses.background)}>

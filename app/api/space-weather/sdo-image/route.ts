@@ -46,6 +46,26 @@ const WAVELENGTH_CONFIG: Record<string, {
     primary: 'https://services.swpc.noaa.gov/images/animations/sdo-hmii/latest.jpg',
     fallback: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_HMIIF.jpg',
   },
+  '0131': {
+    primary: 'https://services.swpc.noaa.gov/images/animations/suvi/primary/131/latest.png',
+    fallback: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0131.jpg',
+  },
+  '0284': {
+    primary: 'https://services.swpc.noaa.gov/images/animations/suvi/primary/284/latest.png',
+    fallback: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0284.jpg',
+  },
+  '0094': {
+    primary: 'https://services.swpc.noaa.gov/images/animations/suvi/primary/094/latest.png',
+    fallback: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0094.jpg',
+  },
+  'LASCOC2': {
+    primary: 'https://soho.nascom.nasa.gov/data/realtime/c2/512/latest.jpg',
+    fallback: 'https://soho.nascom.nasa.gov/data/realtime/c2/1024/latest.jpg',
+  },
+  'LASCOC3': {
+    primary: 'https://soho.nascom.nasa.gov/data/realtime/c3/512/latest.jpg',
+    fallback: 'https://soho.nascom.nasa.gov/data/realtime/c3/1024/latest.jpg',
+  },
 };
 
 /** Derive Content-Type from the upstream response or URL extension. */

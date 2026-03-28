@@ -30,20 +30,6 @@ interface Wavelength {
 
 const WAVELENGTHS: Wavelength[] = [
   {
-    id: '304',
-    name: '304 Å',
-    description: 'Chromosphere (50,000K)',
-    color: 'text-orange-500',
-    wavelengthParam: '0304',
-  },
-  {
-    id: '195',
-    name: '195 Å',
-    description: 'Corona (1.2M K)',
-    color: 'text-green-500',
-    wavelengthParam: '0193',
-  },
-  {
     id: '171',
     name: '171 Å',
     description: 'Corona (600,000K)',
@@ -51,11 +37,60 @@ const WAVELENGTHS: Wavelength[] = [
     wavelengthParam: '0171',
   },
   {
+    id: '195',
+    name: '195 Å',
+    description: 'Corona / Flare (1.2M K)',
+    color: 'text-green-500',
+    wavelengthParam: '0193',
+  },
+  {
+    id: '304',
+    name: '304 Å',
+    description: 'Chromosphere (50,000K)',
+    color: 'text-orange-500',
+    wavelengthParam: '0304',
+  },
+  {
+    id: '131',
+    name: '131 Å',
+    description: 'Flare (10 MK)',
+    color: 'text-teal-400',
+    wavelengthParam: '0131',
+  },
+  {
+    id: '284',
+    name: '284 Å',
+    description: 'Active Regions',
+    color: 'text-blue-500',
+    wavelengthParam: '0284',
+  },
+  {
+    id: '094',
+    name: '094 Å',
+    description: 'Hot Corona (6 MK)',
+    color: 'text-emerald-400',
+    wavelengthParam: '0094',
+  },
+  {
     id: 'HMI',
     name: 'HMI',
     description: 'Sunspots (Visible)',
     color: 'text-gray-300',
     wavelengthParam: 'HMIIF',
+  },
+  {
+    id: 'LASCOC2',
+    name: 'LASCO C2',
+    description: 'Inner Corona (1.5-6 R☉)',
+    color: 'text-red-400',
+    wavelengthParam: 'LASCOC2',
+  },
+  {
+    id: 'LASCOC3',
+    name: 'LASCO C3',
+    description: 'Outer Corona (3.5-30 R☉)',
+    color: 'text-indigo-400',
+    wavelengthParam: 'LASCOC3',
   },
 ];
 
