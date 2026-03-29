@@ -53,4 +53,13 @@ describe('generateMetadata', () => {
     expect(metadata.description).toContain('Clear')
     expect(mockCaptureError).not.toHaveBeenCalled()
   })
+
+  it('should call captureError for non-401 metadata fetch failures', async () => {
+    mockFetchWeatherData.mockRejectedValue(new Error('Upstream timeout'))
+
+    const metadata = await generateMetadata({ params: makeParams('reno-nv') })
+
+    expect(metadata.title).toContain('Reno Nv')
+    expect(mockCaptureError).toHaveBeenCalled()
+  })
 })
