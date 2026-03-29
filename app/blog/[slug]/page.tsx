@@ -14,6 +14,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const ogImage = `/api/og/blog?title=${encodeURIComponent(post.title)}&subtitle=16bitbot+Weekly+Dispatch`
 
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    description: post.summary,
+    datePublished: post.date,
+    dateModified: post.date,
+    author: { '@type': 'Person', name: post.author },
+    publisher: { '@type': 'Organization', name: '16 Bit Weather', url: 'https://www.16bitweather.co' },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `https://www.16bitweather.co/blog/${post.slug}` },
+    keywords: post.tags.join(', '),
+    articleSection: 'Weather',
+  }
+
   return {
     title: `${post.title} | 16 Bit Weather Blog`,
     description: post.summary,
@@ -38,6 +52,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     },
     alternates: {
       canonical: `https://www.16bitweather.co/blog/${post.slug}`,
+    },
+    other: {
+      'application/ld+json': JSON.stringify(structuredData),
     },
   }
 }

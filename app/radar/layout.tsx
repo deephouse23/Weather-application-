@@ -8,6 +8,21 @@ import type { Metadata } from 'next'
 // Force dynamic rendering to avoid edge function size limits
 export const dynamic = 'force-dynamic'
 
+const radarJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Live Weather Radar",
+  "description": "Real-time NOAA MRMS weather radar with precipitation overlays.",
+  "url": "https://www.16bitweather.co/radar",
+  "applicationCategory": "WeatherApplication",
+  "operatingSystem": "Any",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+
 export const metadata: Metadata = {
   title: 'Live Weather Radar Map - NOAA MRMS Radar | 16 Bit Weather',
   description: 'Real-time NOAA MRMS weather radar with high-resolution precipitation tracking. View live rain, snow, and storm data across the United States in retro terminal style.',
@@ -36,6 +51,9 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: 'https://www.16bitweather.co/radar',
+  },
+  other: {
+    'application/ld+json': JSON.stringify(radarJsonLd),
   },
 }
 
