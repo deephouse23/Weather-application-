@@ -125,6 +125,15 @@ docs/lh-*.json
 docs/lighthouse-*.json
 lighthouse.json
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
+.claude/tdd-guard/
+.claude/commands/create-pr.md
+
+# Root-level screenshots (dev artifacts)
+/*.png
+/*.jpg
+/*.jpeg
+/*.gif
 
 # Documentation and PRD files (keep local only)
 *.prd

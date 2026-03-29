@@ -1,3 +1,7 @@
+---
+model: opus
+---
+
 # Review PR Bot Comments
 
 Review the current PR's automated review comments from CodeRabbit, BugBot, and any other bots.
