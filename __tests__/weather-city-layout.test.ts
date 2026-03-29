@@ -54,6 +54,15 @@ describe('generateMetadata', () => {
     expect(mockCaptureError).not.toHaveBeenCalled()
   })
 
+  it('should not call captureError for authentication error messages without status code', async () => {
+    mockFetchWeatherData.mockRejectedValue(new Error('OpenWeatherMap API authentication error'))
+
+    const metadata = await generateMetadata({ params: makeParams('reno-nv') })
+
+    expect(metadata.title).toContain('Reno Nv')
+    expect(mockCaptureError).not.toHaveBeenCalled()
+  })
+
   it('should call captureError for non-401 metadata fetch failures', async () => {
     mockFetchWeatherData.mockRejectedValue(new Error('Upstream timeout'))
 

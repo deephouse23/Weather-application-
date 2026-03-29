@@ -41,7 +41,8 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
     weatherData = await fetchWeatherData(searchTerm)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    if (message.includes('401')) {
+    const isExpectedAuthFailure = /401|unauthorized|authentication error/i.test(message)
+    if (isExpectedAuthFailure) {
       console.warn('[metadata-fetch] Weather data unavailable for enhanced metadata:', searchTerm)
     } else {
       captureError(error, 'metadata-fetch', { city: searchTerm })
