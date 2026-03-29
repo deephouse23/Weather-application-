@@ -15,6 +15,7 @@ import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import PageWrapper from '@/components/page-wrapper';
 import type { AviationAlert } from '@/components/aviation';
+import { ShareButtons } from '@/components/share-buttons';
 
 // Lazy load the heavy terminal component
 const FlightConditionsTerminal = lazy(() => import('@/components/aviation/FlightConditionsTerminal'));

@@ -17,6 +17,7 @@ import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import PageWrapper from '@/components/page-wrapper';
 import LearningCard from '@/components/learn/LearningCard';
 import { Card, CardContent } from '@/components/ui/card';
+import { ShareButtons } from '@/components/share-buttons';
 
 export default function EducationPage() {
   const { theme } = useTheme();

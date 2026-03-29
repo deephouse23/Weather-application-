@@ -12,6 +12,7 @@ import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import PageWrapper from '@/components/page-wrapper';
 import { ExternalLink } from 'lucide-react';
+import { ShareButtons } from '@/components/share-buttons';
 
 const NHC_BASE = 'https://www.nhc.noaa.gov';
 
@@ -52,6 +53,14 @@ export default function TropicalPage() {
         <div className="text-center space-y-2">
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight font-mono uppercase">Tropical Tracker</h1>
           <p className="text-sm font-mono text-muted-foreground tracking-wider">// NHC OUTLOOKS // ATLANTIC BASIN // SATELLITE IMAGERY</p>
+          <ShareButtons
+            config={{
+              title: 'Tropical Weather',
+              text: 'Tropical weather -- NHC outlooks and satellite imagery at 16bitweather.co',
+              url: 'https://www.16bitweather.co/tropical',
+            }}
+            className="mt-3 justify-center"
+          />
         </div>
 
         {/* NHC Graphics Grid */}

@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
   // Default metadata
   const title = `${cityName} Weather Forecast | 16-Bit Retro Weather Terminal`
   const description = `Get ${cityName} weather in nostalgic 16-bit style. Real-time conditions, 7-day forecast, and atmospheric data for ${searchTerm}.`
-  const canonical = `https://16-bit-weather.vercel.app/weather/${city}`
+  const canonical = `https://www.16bitweather.co/weather/${city}`
   
   // Try to fetch weather data for enhanced metadata
   let weatherData = null
@@ -81,7 +81,7 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
     "isPartOf": {
       "@type": "WebSite",
       "name": "16-Bit Weather Education Platform",
-      "url": "https://16-bit-weather.vercel.app"
+      "url": "https://www.16bitweather.co"
     }
   }
 
@@ -103,7 +103,7 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
       "provider": {
         "@type": "Organization",
         "name": "16-Bit Weather Platform",
-        "url": "https://16-bit-weather.vercel.app"
+        "url": "https://www.16bitweather.co"
       },
       "dayOfWeek": weatherData.forecast.slice(0, 5).map((day, index) => {
         const date = new Date()
@@ -131,7 +131,7 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
       address: false,
       telephone: false,
     },
-    metadataBase: new URL('https://16-bit-weather.vercel.app'),
+    metadataBase: new URL('https://www.16bitweather.co'),
     alternates: {
       canonical,
     },
@@ -142,7 +142,7 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
       siteName: '16-Bit Weather Education',
       images: [
         {
-          url: '/og-image.png',
+          url: `/api/og?title=${encodeURIComponent(cityName)}+Weather&subtitle=16-Bit+Retro+Forecast`,
           width: 1200,
           height: 630,
           alt: `${cityName} Weather Forecast - 16-Bit Style`,
@@ -155,7 +155,7 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
       card: 'summary_large_image',
       title,
       description: enhancedDescription,
-      images: ['/og-image.png'],
+      images: [`/api/og?title=${encodeURIComponent(cityName)}+Weather&subtitle=16-Bit+Retro+Forecast`],
       creator: '@weather16bit',
     },
     robots: {

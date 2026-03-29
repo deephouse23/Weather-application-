@@ -21,6 +21,7 @@ import type { SunspotData } from '@/components/space-weather/SunspotDisplay';
 import type { XRayFluxData } from '@/components/space-weather/XRayFluxChart';
 import type { AuroraForecastData } from '@/components/space-weather/AuroraForecastMap';
 import type { SpaceWeatherScalesData } from '@/components/space-weather/SpaceWeatherScales';
+import { ShareButtons } from '@/components/share-buttons';
 
 // Lazy load the heavy terminal component
 const SolarCommandTerminal = lazy(() => import('@/components/space-weather/SolarCommandTerminal'));
@@ -158,6 +159,14 @@ export default function SpaceWeatherPage() {
             and ESA/NASA SOHO.
           </p>
         </div>
+          <ShareButtons
+            config={{
+              title: 'Space Weather Monitor',
+              text: 'Real-time space weather -- solar activity, Kp index, and aurora forecast at 16bitweather.co',
+              url: 'https://www.16bitweather.co/space-weather',
+            }}
+            className="mt-3"
+          />
 
         {/* Error Display */}
         {error && (

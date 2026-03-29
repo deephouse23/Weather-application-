@@ -71,4 +71,19 @@ describe('generateMetadata', () => {
     expect(metadata.title).toContain('Reno Nv')
     expect(mockCaptureError).toHaveBeenCalled()
   })
+
+  it('should use 16bitweather.co URLs and dynamic OG images in metadata', async () => {
+    mockFetchWeatherData.mockResolvedValue({
+      temperature: 72,
+      unit: '\u00b0F',
+      condition: 'Clear',
+      forecast: [{ highTemp: 75, lowTemp: 58, day: 'Mon', condition: 'Clear' }],
+    } as never)
+
+    const metadata = await generateMetadata({ params: makeParams('reno-nv') })
+
+    const metaStr = JSON.stringify(metadata)
+    expect(metaStr).not.toContain('16-bit-weather.vercel.app')
+    expect(metaStr).not.toContain('og-image.png')
+  })
 })
