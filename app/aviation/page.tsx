@@ -74,6 +74,14 @@ export default function AviationPage() {
             Real-time aviation weather intelligence. Monitor SIGMETs, AIRMETs, and turbulence
             forecasts with our retro terminal interface. Not for operational flight planning.
           </p>
+          <ShareButtons
+            config={{
+              title: 'Aviation Weather',
+              text: 'Aviation weather -- SIGMETs, turbulence, and flight conditions at 16bitweather.co',
+              url: 'https://www.16bitweather.co/aviation',
+            }}
+            className="mt-3"
+          />
         </div>
 
         {/* Error Display */}

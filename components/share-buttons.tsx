@@ -59,7 +59,8 @@ export function ShareButtons({ config, className }: ShareButtonsProps) {
         duration: 3000,
       })
       setTimeout(() => setCopied(false), 2000)
-    } catch {
+    } catch (error) {
+      console.error('[share-buttons] clipboard copy failed', error)
       toast({
         title: 'COPY FAILED',
         description: 'Could not copy to clipboard',
@@ -91,6 +92,7 @@ export function ShareButtons({ config, className }: ShareButtonsProps) {
         </a>
       ))}
       <button
+        type="button"
         onClick={handleCopy}
         aria-label={copied ? 'Copied' : 'Copy link'}
         className={cn(
