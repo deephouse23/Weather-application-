@@ -15,6 +15,7 @@ import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import PageWrapper from '@/components/page-wrapper';
 import type { AviationAlert } from '@/components/aviation';
+import { ShareButtons } from '@/components/share-buttons';
 
 // Lazy load the heavy terminal component
 const FlightConditionsTerminal = lazy(() => import('@/components/aviation/FlightConditionsTerminal'));
@@ -73,6 +74,14 @@ export default function AviationPage() {
             Real-time aviation weather intelligence. Monitor SIGMETs, AIRMETs, and turbulence
             forecasts with our retro terminal interface. Not for operational flight planning.
           </p>
+          <ShareButtons
+            config={{
+              title: 'Aviation Weather',
+              text: 'Aviation weather -- SIGMETs, turbulence, and flight conditions at 16bitweather.co',
+              url: 'https://www.16bitweather.co/aviation',
+            }}
+            className="mt-3"
+          />
         </div>
 
         {/* Error Display */}

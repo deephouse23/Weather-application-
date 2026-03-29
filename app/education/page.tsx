@@ -17,6 +17,7 @@ import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import PageWrapper from '@/components/page-wrapper';
 import LearningCard from '@/components/learn/LearningCard';
 import { Card, CardContent } from '@/components/ui/card';
+import { ShareButtons } from '@/components/share-buttons';
 
 export default function EducationPage() {
   const { theme } = useTheme();
@@ -77,6 +78,14 @@ export default function EducationPage() {
             Your portal to weather knowledge. From cloud identification to extreme events,
             expand your meteorological expertise with our retro-styled learning platform.
           </p>
+          <ShareButtons
+            config={{
+              title: 'Weather Education Hub',
+              text: 'Learn meteorology with interactive weather lessons at 16bitweather.co',
+              url: 'https://www.16bitweather.co/education',
+            }}
+            className="mt-3"
+          />
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">

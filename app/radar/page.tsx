@@ -21,6 +21,7 @@ import { WeatherData } from '@/lib/types'
 import { useTheme } from '@/components/theme-provider'
 import { fetchWeatherData } from '@/lib/weather'
 import Navigation from '@/components/navigation'
+import { ShareButtons } from '@/components/share-buttons';
 
 const WeatherMap = dynamicImport(() => import('@/components/weather-map'), {
   ssr: false,
@@ -225,19 +226,14 @@ export default function MapPage() {
           )}
         </div>
 
-        {/* Share Button */}
-        <button
-          type="button"
-          onClick={handleShare}
-          className="inline-flex items-center gap-2 text-xs font-mono px-3 py-1.5 border-2 border-gray-600 hover:bg-gray-700 transition-colors rounded"
-          title="Share this radar map"
-          aria-label={shareSuccess ? 'Radar link copied to clipboard' : 'Share this radar map'}
-        >
-          <Share2 className="w-3 h-3" aria-hidden />
-          <span role="status" aria-live="polite" className="inline">
-            {shareSuccess ? 'COPIED!' : 'SHARE'}
-          </span>
-        </button>
+        {/* Share Buttons */}
+        <ShareButtons
+          config={{
+            title: 'Live Weather Radar',
+            text: 'Live NOAA MRMS weather radar at 16bitweather.co',
+            url: 'https://www.16bitweather.co/radar',
+          }}
+        />
       </div>
 
       {/* Map Container - explicit height for full-screen map page */}

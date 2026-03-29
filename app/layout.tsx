@@ -73,7 +73,7 @@ export const metadata: Metadata = {
     siteName: '16 Bit Weather',
     images: [
       {
-        url: '/og-image.png',
+        url: '/api/og?title=16+Bit+Weather&subtitle=Retro+Terminal+Weather+Forecast',
         width: 1200,
         height: 630,
         alt: '16 Bit Weather Terminal Interface',
@@ -86,7 +86,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: '16 Bit Weather - Retro Terminal Weather',
     description: 'Real-time weather forecasts with authentic 16-bit terminal aesthetics.',
-    images: ['/og-image.png'],
+    images: ['/api/og?title=16+Bit+Weather&subtitle=Retro+Terminal+Weather+Forecast'],
     creator: '@16bitweather',
   },
   robots: {

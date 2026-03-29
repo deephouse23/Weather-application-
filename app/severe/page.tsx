@@ -14,6 +14,7 @@ import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import PageWrapper from '@/components/page-wrapper';
 import SPCOutlookTabs from '@/components/severe/SPCOutlookTabs';
 import type { NWSAlert } from '@/lib/services/nws-alerts-service';
+import { ShareButtons } from '@/components/share-buttons';
 
 const SEVERE_KEYWORDS = ['tornado', 'thunderstorm', 'wind', 'hail', 'flood'];
 
@@ -65,6 +66,14 @@ export default function SeverePage() {
         <div className="text-center space-y-2">
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight font-mono uppercase">Severe Weather</h1>
           <p className="text-sm font-mono text-muted-foreground tracking-wider">// SPC STORM OUTLOOKS // ACTIVE WARNINGS</p>
+          <ShareButtons
+            config={{
+              title: 'Severe Weather Outlook',
+              text: 'Severe weather outlook -- SPC convective outlooks and NWS alerts at 16bitweather.co',
+              url: 'https://www.16bitweather.co/severe',
+            }}
+            className="mt-3 justify-center"
+          />
         </div>
 
         {/* SPC Convective Outlook Map */}

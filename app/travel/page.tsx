@@ -18,6 +18,7 @@ import { useInView } from 'react-intersection-observer';
 import WorstCorridors from '@/components/travel/WorstCorridors';
 import DailyOutlookImages from '@/components/travel/DailyOutlookImages';
 import type { SeverityLevel } from '@/lib/services/travel-corridor-service';
+import { ShareButtons } from '@/components/share-buttons';
 
 const TravelCorridorMap = dynamic(() => import('@/components/travel/TravelCorridorMap'), {
   ssr: false,
@@ -98,6 +99,14 @@ export default function TravelPage() {
         <div className="text-center space-y-2">
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight font-mono uppercase">Travel Weather</h1>
           <p className="text-sm font-mono text-muted-foreground tracking-wider">// INTERSTATE DRIVING CONDITIONS &amp; OUTLOOKS</p>
+          <ShareButtons
+            config={{
+              title: 'Travel Weather',
+              text: 'Interstate corridor weather forecasts for travel planning at 16bitweather.co',
+              url: 'https://www.16bitweather.co/travel',
+            }}
+            className="mt-3 justify-center"
+          />
         </div>
 
         {/* Day Tabs */}
