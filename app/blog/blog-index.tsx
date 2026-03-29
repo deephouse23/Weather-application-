@@ -101,7 +101,7 @@ export function BlogIndex({ posts, tags }: BlogIndexProps) {
         <div className="space-y-6">
           {paginated.map((post, i) => (
             <Link
-              key={post.slug}
+              key={i}
               href={`/blog/${encodeURIComponent(post.slug)}`}
               className={cn(
                 'block rounded-lg border p-6 transition-all duration-200',

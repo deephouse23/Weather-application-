@@ -126,8 +126,8 @@ export function BlogArticle({ post, relatedPosts }: BlogArticleProps) {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {relatedPosts.map(related => (
                 <Link
-                  key={related.slug}
-                  href={`/blog/${related.slug}`}
+                  key={related.slug.replace(/[^a-z0-9-]/g, '')}
+                  href={`/blog/${encodeURIComponent(related.slug)}`}
                   className={cn(
                     'block rounded-lg border p-4 transition-all duration-200',
                     'hover:border-[hsl(var(--primary))] hover:shadow-[0_0_10px_hsl(var(--primary)/0.1)]',
