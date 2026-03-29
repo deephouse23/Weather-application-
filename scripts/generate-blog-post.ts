@@ -211,11 +211,11 @@ Generate the blog post now.`
   const heroImage = `/api/og/blog?title=${encodeURIComponent(post.title)}&type=${theme.includes('space') ? 'space' : theme.includes('severe') || theme.includes('week') ? 'severe' : theme.includes('record') || theme.includes('extreme') ? 'record' : 'dispatch'}`
 
   const frontmatter = `---
-title: "${post.title.replace(/"/g, '\\"')}"
+title: "${post.title.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"
 slug: "${post.slug}"
 date: "${new Date().toISOString()}"
 author: "16bitbot"
-summary: "${post.summary.replace(/"/g, '\\"')}"
+summary: "${post.summary.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"
 tags: ${JSON.stringify(post.tags)}
 heroImage: "${heroImage}"
 readTime: ${post.readTime}

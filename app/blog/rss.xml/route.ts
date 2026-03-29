@@ -7,12 +7,12 @@ export async function GET() {
   const rssItems = posts.map(post => `
     <item>
       <title><![CDATA[${post.title}]]></title>
-      <link>${siteUrl}/blog/${post.slug}</link>
-      <guid isPermaLink="true">${siteUrl}/blog/${post.slug}</guid>
+      <link>${siteUrl}/blog/${encodeURIComponent(post.slug)}</link>
+      <guid isPermaLink="true">${siteUrl}/blog/${encodeURIComponent(post.slug)}</guid>
       <description><![CDATA[${post.summary}]]></description>
       <pubDate>${new Date(post.date).toUTCString()}</pubDate>
-      <author>16bitbot@16bitweather.co (${post.author})</author>
-      ${post.tags.map(tag => `<category>${tag}</category>`).join('\n      ')}
+      <author><![CDATA[16bitbot@16bitweather.co (${post.author})]]></author>
+      ${post.tags.map(tag => `<category><![CDATA[${tag}]]></category>`).join('\n      ')}
     </item>`).join('')
 
   const rss = `<?xml version="1.0" encoding="UTF-8"?>

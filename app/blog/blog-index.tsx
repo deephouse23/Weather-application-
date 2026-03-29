@@ -102,7 +102,7 @@ export function BlogIndex({ posts, tags }: BlogIndexProps) {
           {paginated.map((post, i) => (
             <Link
               key={post.slug}
-              href={`/blog/${post.slug}`}
+              href={`/blog/${encodeURIComponent(post.slug)}`}
               className={cn(
                 'block rounded-lg border p-6 transition-all duration-200',
                 'hover:border-[hsl(var(--primary))] hover:shadow-[0_0_15px_hsl(var(--primary)/0.15)]',
