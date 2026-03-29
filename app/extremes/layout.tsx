@@ -5,6 +5,19 @@
 
 import type { Metadata } from 'next'
 
+const extremesJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "name": "Global Weather Extremes",
+  "description": "Live tracking of the hottest and coldest locations on Earth.",
+  "url": "https://www.16bitweather.co/extremes",
+  "creator": {
+    "@type": "Organization",
+    "name": "16 Bit Weather"
+  },
+  "temporalCoverage": "2026/.."
+}
+
 export const metadata: Metadata = {
   title: 'Global Temperature Extremes - Hottest & Coldest Places | 16 Bit Weather',
   description: 'Live tracking of the hottest and coldest places on Earth right now. Real-time global temperature extremes with location data and weather conditions.',
@@ -33,6 +46,9 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: 'https://www.16bitweather.co/extremes',
+  },
+  other: {
+    'application/ld+json': JSON.stringify(extremesJsonLd),
   },
 }
 

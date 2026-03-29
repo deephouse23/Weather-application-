@@ -5,6 +5,19 @@
 
 import type { Metadata } from 'next'
 
+const newsJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Weather News",
+  "description": "Multi-source weather news aggregation including earth science and space categories.",
+  "url": "https://www.16bitweather.co/news",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "16 Bit Weather",
+    "url": "https://www.16bitweather.co"
+  }
+}
+
 export const metadata: Metadata = {
   title: 'Weather News - Earthquakes, Volcanoes, Climate Updates | 16 Bit Weather',
   description: 'Live weather news aggregated from USGS, NASA, and NOAA. Track earthquakes, volcanic activity, severe weather alerts, space weather, and climate updates in retro terminal style.',
@@ -33,6 +46,9 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: 'https://www.16bitweather.co/news',
+  },
+  other: {
+    'application/ld+json': JSON.stringify(newsJsonLd),
   },
 }
 
