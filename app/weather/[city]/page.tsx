@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
   }
 
   const pageTitle = `${city.name}, ${city.state} Weather Forecast - 16 Bit Weather`;
-  const description = `Get the latest real-time weather forecast for ${city.name}, ${city.state}. See temperature, precipitation, wind, and more with a retro terminal aesthetic.`;
+  const description = `Get the latest 7-day weather forecast for ${city.name}, ${city.state}. Real-time temperature, precipitation, wind, and hourly conditions with a retro terminal aesthetic.`;
 
   return {
     title: pageTitle,
