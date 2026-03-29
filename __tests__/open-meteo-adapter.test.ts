@@ -144,12 +144,12 @@ describe('buildWeatherDataFromOpenMeteo', () => {
     expect(result.sunset).toBe('7:15 pm');
   });
 
-  it('should produce exactly 5 forecast days with correct temps', async () => {
+  it('should produce exactly 7 forecast days with correct temps', async () => {
     const result = await buildWeatherDataFromOpenMeteo(
       40.71, -74.01, 'New York', 'imperial', 'US'
     );
 
-    expect(result.forecast).toHaveLength(5);
+    expect(result.forecast).toHaveLength(7);
     expect(result.forecast[0].highTemp).toBe(60);
     expect(result.forecast[0].lowTemp).toBe(42);
   });

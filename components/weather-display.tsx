@@ -132,37 +132,28 @@ export function WeatherDisplay({
         />
       )}
 
-      {/* 3. Two-column layout: 5-Day Forecast + AQI (left) / Radar (right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6 pt-1">
-        {/* LEFT: 5-Day Forecast + AQI stacked */}
-        <div className="space-y-4">
-          {weather?.forecast && weather.forecast.length > 0 ? (
-            <LazyForecast
-              forecast={weather.forecast.map((day) => ({
-                ...day,
-                country: weather?.country || 'US'
-              }))}
-              theme={(theme || 'nord') as ThemeType}
-              onDayClick={onDayClick}
-              selectedDay={selectedDay}
-            />
-          ) : (
-            <div className="bg-terminal-bg-secondary p-4 rounded-lg border-0 border-terminal-border text-center">
-              <p className="text-terminal-text-primary font-mono">
-                No forecast data available
-              </p>
-            </div>
-          )}
-
-          {/* Air Quality */}
-          <AirQualityDisplay
-            aqi={weather.aqi}
-            theme={(theme || 'nord') as import('@/lib/theme-config').ThemeType}
-            pollutants={weather.pollutants}
-          />
+      {/* 3. Full-width 7-Day Forecast */}
+      {weather?.forecast && weather.forecast.length > 0 ? (
+        <LazyForecast
+          forecast={weather.forecast.map((day) => ({
+            ...day,
+            country: weather?.country || 'US'
+          }))}
+          theme={(theme || 'nord') as ThemeType}
+          onDayClick={onDayClick}
+          selectedDay={selectedDay}
+        />
+      ) : (
+        <div className="bg-terminal-bg-secondary p-4 rounded-lg border-0 border-terminal-border text-center">
+          <p className="text-terminal-text-primary font-mono">
+            No forecast data available
+          </p>
         </div>
+      )}
 
-        {/* RIGHT: Weather Radar only */}
+      {/* 4. Two-column layout: Radar (left) / AQI (right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6">
+        {/* Radar */}
         {showRadar && (
           <div className="space-y-3 rounded-xl dashboard-surface bg-card/40 p-3 sm:p-4">
             <div className="flex items-center justify-between gap-2">
@@ -187,6 +178,15 @@ export function WeatherDisplay({
             </div>
           </div>
         )}
+
+        {/* Air Quality */}
+        <div className="space-y-4">
+          <AirQualityDisplay
+            aqi={weather.aqi}
+            theme={(theme || 'nord') as import('@/lib/theme-config').ThemeType}
+            pollutants={weather.pollutants}
+          />
+        </div>
       </div>
 
       {/* Expandable Forecast Details Section */}

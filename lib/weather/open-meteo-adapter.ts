@@ -101,10 +101,10 @@ export async function buildWeatherDataFromOpenMeteo(
   const aqiCategory = getAQICategory(aqi);
   const moonPhase = calculateMoonPhase();
 
-  // Build 5-day forecast
+  // Build 7-day forecast
   const forecastDays: WeatherData['forecast'] = [];
   if (daily?.time) {
-    const count = Math.min(daily.time.length, 5);
+    const count = Math.min(daily.time.length, 7);
     for (let i = 0; i < count; i++) {
       const dayDate = new Date(daily.time[i] + 'T12:00:00');
       const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'long' });
@@ -129,7 +129,7 @@ export async function buildWeatherDataFromOpenMeteo(
       });
     }
   }
-  while (forecastDays.length < 5) {
+  while (forecastDays.length < 7) {
     const offset = forecastDays.length;
     const futureDate = new Date(Date.now() + offset * 86400000);
     forecastDays.push({

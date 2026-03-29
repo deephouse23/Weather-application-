@@ -64,7 +64,7 @@ export function WeatherCardsSkeleton() {
         ))}
       </div>
 
-      {/* 5-day forecast skeleton */}
+      {/* 7-day forecast skeleton */}
       <div className="p-4 rounded-md border-2 bg-gray-800/50 border-gray-700 animate-pulse">
         <div className="h-6 rounded w-32 mb-4 bg-gray-600/50" />
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
