@@ -8,6 +8,7 @@
  */
 
 import { XMLParser } from 'fast-xml-parser';
+import { decodeHtmlEntities } from './rss/html-utils';
 
 export interface ParsedFeedItem {
   id: string;
@@ -380,16 +381,7 @@ function extractCategoriesAtom(entry: XMLElement): string[] {
  * Clean text by removing HTML tags and extra whitespace
  */
 function cleanText(text: string): string {
-  return text
-    .replace(/<[^>]*>/g, '') // Remove HTML tags
-    .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
-    .replace(/&amp;/g, '&') // Replace &amp; with &
-    .replace(/&lt;/g, '<') // Replace &lt; with <
-    .replace(/&gt;/g, '>') // Replace &gt; with >
-    .replace(/&quot;/g, '"') // Replace &quot; with "
-    .replace(/&#039;/g, "'") // Replace &#039; with '
-    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-    .trim();
+  return decodeHtmlEntities(text);
 }
 
 /**

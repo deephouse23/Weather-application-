@@ -1,8 +1,9 @@
+import { isValidSentryDsn } from "@/lib/sentry-utils";
 import * as Sentry from "@sentry/nextjs";
 
 const sentryDsn = process.env.SENTRY_DSN;
 
-if (sentryDsn && sentryDsn.includes('sentry.io')) {
+if (sentryDsn && isValidSentryDsn(sentryDsn)) {
   Sentry.init({
     dsn: sentryDsn,
 
