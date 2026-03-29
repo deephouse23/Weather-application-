@@ -2,6 +2,32 @@
 
 All notable changes to 16-Bit Weather are documented in this file.
 
+## [1.600.0] - 2026-03-29
+
+### Added
+
+- **Space weather redesign**: Tabbed dashboard with interactive Kp index, solar wind, and X-ray flux charts; ENLIL solar wind model viewer; coronal mass ejection tracker; aurora forecast maps.
+- **SPC convective outlooks**: Day 1-3 Storm Prediction Center outlook maps on the severe weather page.
+- **Travel corridor weather**: Interstate driving condition scoring with hazard maps and WPC daily outlooks.
+- **Social sharing**: Reusable `ShareButtons` component on 7 feature pages (space weather, severe, radar, travel, tropical, aviation, education) with contextual share text.
+- **OG metadata layouts**: Dynamic Open Graph images and Twitter cards for space weather, severe, travel, tropical, aviation, and education pages.
+- **Shared social icons**: Extracted `XIcon`, `FacebookIcon`, `LinkedInIcon` into `components/icons/social.tsx`.
+
+### Changed
+
+- **Education hub overhaul**: Consolidated learning pages under one hub with expanded content and navigation.
+- **OG image fix**: Root layout and city layout now use dynamic `/api/og` endpoint instead of non-existent static `/og-image.png`.
+- **City layout URLs**: Standardized from `16-bit-weather.vercel.app` to `www.16bitweather.co`.
+- **Radar page sharing**: Replaced inline `navigator.share` with full `ShareButtons` component.
+
+### Fixed
+
+- **Supabase RLS**: Added policies to `user_ai_memory` (was inaccessible), fixed `auth.uid()` initplan performance across 17 policies on 7 tables, removed 5 duplicate permissive policies, fixed `games` admin policy initplan.
+- **Supabase indexes**: Added missing foreign key index on `daily_challenges.game_id`.
+- **Sentry noise**: Filtered geocoding 401 auth errors from metadata generation (6,000+ events silenced); broadened detection to catch `OpenWeatherMap API authentication error` messages.
+
+---
+
 ## [1.512.0] - 2026-03-21
 
 ### Added
