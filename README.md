@@ -2,17 +2,18 @@
 
 Retro-styled weather education platform that pairs live environmental data with a pixel-influenced interface and structured learning paths.
 
-**Version 1.512** | [Live Site](https://www.16bitweather.co)
+**Version 1.600** | [Live Site](https://www.16bitweather.co)
 
-## Version 1.512 highlights
+## Version 1.600 highlights
 
-Work in this line focused on earth-science depth, smarter assistance, durable preferences on the server, and more reliable automated testing.
+This release expands earth-science coverage, fixes social sharing, and hardens the database layer.
 
-- **AI tools**: The in-app assistant uses tool calling (Vercel AI SDK, Anthropic) so it can pull weather, aviation context, USGS earthquake summaries, and space weather when the question needs them, instead of prefetching large fixed bundles.
-- **User AI memory**: Supabase holds per-user memory rows (notes and recent locations) for the assistant. Row level security keeps direct client access off; the app uses service-role API paths, and SQL RPCs cap how much text and how many locations accumulate.
-- **Earth science in the feed layer**: RSS and news aggregation includes USGS earthquake and volcano alert sources alongside existing space and NASA-style channels.
-- **USGS and volcanoes in services**: Server modules query USGS event APIs for nearby or significant quakes; volcano activity data is wired for dashboards and future assistant tools.
-- **E2E stability**: Playwright runs use explicit profile controls, calmer navigation to `/profile`, theme handling when test mode is on, and weather cache restore rules so local Chromium runs align better with preview deployments.
+- **Space weather redesign**: Tabbed dashboard with interactive Kp index, solar wind, and X-ray flux charts. ENLIL solar wind model viewer, coronal mass ejection tracker, and aurora forecast maps powered by NOAA SWPC and NASA SDO.
+- **Social sharing overhaul**: Fixed blank OG preview images on X, Facebook, and LinkedIn. Reusable share buttons now appear on space weather, severe weather, radar, travel, tropical, aviation, and education pages with contextual share text and dynamic OG images.
+- **SPC convective outlooks and travel corridors**: Severe weather page displays Storm Prediction Center Day 1-3 outlook maps. Travel weather page scores interstate corridor driving conditions with hazard maps and WPC daily outlooks.
+- **Education hub overhaul**: Consolidated learning pages under one hub with expanded content for cloud types, weather systems, fun facts, extremes, and a glossary.
+- **Supabase hardening**: RLS policies added to user_ai_memory, initplan performance fixes across 17+ policies, duplicate policy cleanup, and missing foreign key indexes.
+- **Sentry noise reduction**: Geocoding 401 auth errors filtered out of Sentry in metadata generation, broadened to catch all OWM authentication failure patterns.
 
 Earlier baseline features remain: real-time weather and forecasts, Learn Hub, radar, global extremes, themes, games, accounts, and aggregated news.
 
@@ -23,14 +24,20 @@ The site targets learners and hobbyists who want accurate data without a generic
 ## Features
 
 - **Real-time weather**: Current conditions, forecasts, air quality, pollen, and related environmental metrics
-- **Learn Hub**: Cloud types, weather systems, and extreme phenomena
-- **Interactive radar**: Map-based radar with overlay options
-- **Global extremes**: Hot and cold location tracking
-- **Custom themes**: Twelve themes with persistence for signed-in users and sensible behavior in test environments
+- **Space weather**: Solar activity monitoring with Kp index, solar wind, aurora forecast, flare tracking, and ENLIL model visualization
+- **Severe weather**: SPC convective outlook maps (Day 1-3) and active NWS alerts filtered by tornado, thunderstorm, wind, hail, and flood
+- **Travel weather**: Interstate corridor driving conditions with hazard scoring and WPC daily outlook maps
+- **Tropical tracker**: NHC 2-day and 7-day outlooks, Atlantic satellite imagery, and sea surface temperature analysis
+- **Aviation weather**: SIGMETs, AIRMETs, turbulence maps, and real-time flight conditions in a terminal-style interface
+- **Learn Hub**: Cloud types, weather systems, extreme phenomena, fun facts, and a weather glossary
+- **Interactive radar**: Map-based NOAA MRMS radar with precipitation overlays
+- **Global extremes**: Hot and cold location tracking with live data
+- **Custom themes**: Twelve themes with persistence for signed-in users
 - **Weather Arcade**: Educational games with score tracking
 - **User accounts**: Saved locations and preferences via Supabase
-- **AI assistant**: Tool-backed answers spanning meteorology, aviation conditions, seismic activity, and space weather where data is available
+- **AI assistant**: Tool-backed answers spanning meteorology, aviation conditions, seismic activity, and space weather
 - **News and feeds**: Multi-source RSS including earth science and space categories
+- **Social sharing**: Share buttons on every major page with dynamic OG preview images
 
 ## Tech stack
 
@@ -38,9 +45,10 @@ The site targets learners and hobbyists who want accurate data without a generic
 - **Styling**: Tailwind CSS v4, shadcn-style UI primitives
 - **Language**: TypeScript
 - **Database**: Supabase (PostgreSQL, Auth, RLS)
-- **APIs**: OpenWeatherMap, USGS, NASA and other integrated providers behind server routes
+- **APIs**: OpenWeatherMap, NOAA SWPC, USGS, NASA, NHC, SPC, and other providers behind server routes
 - **AI**: Anthropic via Vercel AI SDK
-- **Testing**: Jest, Playwright
+- **Monitoring**: Sentry error tracking
+- **Testing**: Jest (unit), Playwright (E2E), Lighthouse CI (performance gate)
 - **Deployment**: Vercel
 
 ## Getting started
@@ -55,7 +63,7 @@ The site targets learners and hobbyists who want accurate data without a generic
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/deephouse23/Weather-application-.git
+   git clone https://github.com/jelrod27/Weather-application-.git
    cd Weather-application-
    ```
 
@@ -90,11 +98,11 @@ The site targets learners and hobbyists who want accurate data without a generic
 | `npm test` | Run Jest unit tests |
 | `npm run test:ci` | Jest in CI mode |
 | `npx playwright test` | Run end-to-end tests |
-| `npm run validate:pr` | Build, Playwright, and Lighthouse gate (also used by hooks in some setups) |
+| `npm run validate:pr` | Build, Playwright, and Lighthouse gate |
 
 ## Documentation
 
-The `docs` folder is the home for deeper references when present (API notes, architecture, deployment, testing). If a file is missing in your checkout, it may still be on the default branch or pending documentation passes.
+The `docs` folder contains deeper references when present (API notes, architecture, deployment, testing).
 
 ## License
 
