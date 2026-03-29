@@ -151,9 +151,9 @@ export function WeatherDisplay({
         </div>
       )}
 
-      {/* 4. Two-column layout: Radar (left) / AQI (right) */}
+      {/* 4. Two-column layout: Radar (left) / AQI + Moon Phase stacked (right) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6">
-        {/* Radar */}
+        {/* LEFT: Radar */}
         {showRadar && (
           <div className="space-y-3 rounded-xl dashboard-surface bg-card/40 p-3 sm:p-4">
             <div className="flex items-center justify-between gap-2">
@@ -167,7 +167,7 @@ export function WeatherDisplay({
                 VIEW FULL →
               </Link>
             </div>
-            <div className="h-[400px] rounded-lg overflow-visible ring-1 ring-[var(--border-invisible)]">
+            <div className="h-[350px] rounded-lg overflow-hidden ring-1 ring-[var(--border-invisible)]">
               <LazyWeatherMap
                 latitude={weather?.coordinates?.lat}
                 longitude={weather?.coordinates?.lon}
@@ -179,13 +179,53 @@ export function WeatherDisplay({
           </div>
         )}
 
-        {/* Air Quality */}
+        {/* RIGHT: AQI + Moon Phase stacked */}
         <div className="space-y-4">
           <AirQualityDisplay
             aqi={weather.aqi}
             theme={(theme || 'nord') as import('@/lib/theme-config').ThemeType}
             pollutants={weather.pollutants}
           />
+
+          {/* Moon Phase (compact) */}
+          <Card className={cn(HERO_CARD, "relative")} style={{ animationDelay: '0ms' }}>
+            <MetricInfoTooltip metricId="moon-phase" />
+            <CardHeader className="pb-2 px-4 pt-4">
+              <CardTitle className={cn("text-sm font-bold tracking-wide uppercase flex items-center gap-2", "text-terminal-text-primary")}>
+                <Moon size={14} className="text-primary" />
+                Moon Phase
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-1 px-4 pb-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="space-y-1 flex-1 min-w-0">
+                  <p className={cn("text-base font-semibold", themeClasses.text)}>{weather?.moonPhase?.phase || 'Unknown'}</p>
+                  <p className={cn("text-xs", themeClasses.secondaryText)}>
+                    {weather?.moonPhase?.illumination || 0}% illuminated
+                  </p>
+                  <Progress
+                    value={weather?.moonPhase?.illumination || 0}
+                    className="h-1.5 mt-1"
+                    indicatorColor="#EBCB8B"
+                  />
+                  <div className="flex gap-3 mt-1">
+                    <p className={cn("text-xs", themeClasses.secondaryText)}>
+                      Moonset: {weather?.moonPhase?.nextMoonset || 'N/A'}
+                    </p>
+                    <p className={cn("text-xs", themeClasses.secondaryText)}>
+                      Full: {weather?.moonPhase?.nextFullMoon || 'N/A'}
+                    </p>
+                  </div>
+                </div>
+                <MoonPhaseIcon
+                  phase={weather?.moonPhase?.phase || 'new moon'}
+                  illumination={weather?.moonPhase?.illumination || 0}
+                  size={48}
+                  className="flex-shrink-0"
+                />
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
@@ -207,45 +247,7 @@ export function WeatherDisplay({
         }}
       />
 
-      {/* 4. Hero Card: Moon Phase */}
-      <Card className={cn(HERO_CARD, "relative")} style={{ animationDelay: '0ms' }}>
-        <MetricInfoTooltip metricId="moon-phase" />
-        <CardHeader className="pb-3 px-5 pt-5">
-          <CardTitle className={cn("text-lg font-bold tracking-wide uppercase flex items-center gap-2", "text-terminal-text-primary")}>
-            <Moon size={18} className="text-primary" />
-            Moon Phase
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-3 px-5 pb-5">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1.5 flex-1">
-              <p className={cn("text-lg font-semibold", themeClasses.text)}>{weather?.moonPhase?.phase || 'Unknown'}</p>
-              <p className={cn("text-sm", themeClasses.secondaryText)}>
-                {weather?.moonPhase?.illumination || 0}% illuminated
-              </p>
-              <Progress
-                value={weather?.moonPhase?.illumination || 0}
-                className="h-2 mt-2"
-                indicatorColor="#EBCB8B"
-              />
-              <div className="flex gap-4 mt-2">
-                <p className={cn("text-sm", themeClasses.secondaryText)}>
-                  Moonset: {weather?.moonPhase?.nextMoonset || 'N/A'}
-                </p>
-                <p className={cn("text-sm", themeClasses.secondaryText)}>
-                  Full Moon: {weather?.moonPhase?.nextFullMoon || 'N/A'}
-                </p>
-              </div>
-            </div>
-            <MoonPhaseIcon
-              phase={weather?.moonPhase?.phase || 'new moon'}
-              illumination={weather?.moonPhase?.illumination || 0}
-              size={64}
-              className="flex-shrink-0"
-            />
-          </div>
-        </CardContent>
-      </Card>
+
 
       {/* 5. Three-column grid Row A: UV Index, Feels Like, Sun Times */}
       <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">
