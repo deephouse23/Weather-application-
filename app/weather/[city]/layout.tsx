@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { fetchWeatherData } from '@/lib/weather'
 import { captureError } from '@/lib/error-utils'
-
 type Props = {
   params: Promise<{ city: string }>
   children: React.ReactNode
@@ -41,7 +40,13 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
   try {
     weatherData = await fetchWeatherData(searchTerm)
   } catch (error) {
-    captureError(error, 'metadata-fetch', { city: searchTerm })
+    const message = error instanceof Error ? error.message : String(error)
+    const isExpectedAuthFailure = /401|unauthorized|authentication error/i.test(message)
+    if (isExpectedAuthFailure) {
+      console.warn('[metadata-fetch] Weather data unavailable for enhanced metadata:', searchTerm)
+    } else {
+      captureError(error, 'metadata-fetch', { city: searchTerm })
+    }
   }
 
   // Enhanced description with current weather if available
