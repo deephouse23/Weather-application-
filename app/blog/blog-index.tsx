@@ -15,10 +15,11 @@ const POSTS_PER_PAGE = 10
 interface BlogIndexProps {
   posts: BlogPost[]
   tags: string[]
+  initialTag: string | null
 }
 
-export function BlogIndex({ posts, tags }: BlogIndexProps) {
-  const [selectedTag, setSelectedTag] = useState<string | null>(null)
+export function BlogIndex({ posts, tags, initialTag }: BlogIndexProps) {
+  const [selectedTag, setSelectedTag] = useState<string | null>(initialTag)
   const [page, setPage] = useState(1)
   const { theme } = useTheme()
   const themeClasses = getComponentStyles(theme as ThemeType, 'card')
@@ -108,7 +109,7 @@ export function BlogIndex({ posts, tags }: BlogIndexProps) {
                 'hover:border-[hsl(var(--primary))] hover:shadow-[0_0_15px_hsl(var(--primary)/0.15)]',
                 'border-[hsl(var(--border))]',
                 'bg-[hsl(var(--card))]',
-                i === 0 && 'border-[hsl(var(--primary)/0.5)]'
+                page === 1 && page === 1 && i === 0 && 'border-[hsl(var(--primary)/0.5)]'
               )}
             >
               {post.heroImage && i === 0 && (
@@ -121,8 +122,8 @@ export function BlogIndex({ posts, tags }: BlogIndexProps) {
                 </div>
               )}
               <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground tracking-wider mb-2">
-                {i === 0 && <span className="text-[hsl(var(--primary))]">FEATURED</span>}
-                {i === 0 && <span>|</span>}
+                {page === 1 && i === 0 && <span className="text-[hsl(var(--primary))]">FEATURED</span>}
+                {page === 1 && i === 0 && <span>|</span>}
                 <span>{new Date(post.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()}</span>
                 <span>|</span>
                 <span>{post.readTime} MIN READ</span>

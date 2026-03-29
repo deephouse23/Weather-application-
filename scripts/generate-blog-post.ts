@@ -165,7 +165,13 @@ ${weatherContext}
 Today's date for the slug: ${today}
 Generate the blog post now.`
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 60_000)
+
+  let response: Response
+  try {
+    response = await fetch('https://api.anthropic.com/v1/messages', {
+      signal: controller.signal,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -179,6 +185,10 @@ Generate the blog post now.`
       messages: [{ role: 'user', content: userPrompt }],
     }),
   })
+
+  } finally {
+    clearTimeout(timeout)
+  }
 
   if (!response.ok) {
     const error = await response.text()
@@ -207,22 +217,32 @@ Generate the blog post now.`
     }
   }
 
+
+  // Validate and sanitize model output before writing
+  const safeSlug = (post.slug || '').replace(/[^a-z0-9-]/g, '-').replace(/^-+|-+$/g, '').slice(0, 100)
+  if (!safeSlug) {
+    console.error('[generate-blog-post] Invalid slug in Claude response:', post.slug)
+    process.exit(1)
+  }
+  const safeTags = Array.isArray(post.tags) ? post.tags.map(t => String(t).slice(0, 50)) : []
+  const safeReadTime = typeof post.readTime === 'number' && post.readTime > 0 ? Math.min(post.readTime, 60) : Math.ceil((post.content || '').split(/\s+/).length / 200)
+
   // Build the markdown file
-  const heroImage = `/api/og/blog?title=${encodeURIComponent(post.title)}&type=${theme.includes('space') ? 'space' : theme.includes('severe') || theme.includes('week') ? 'severe' : theme.includes('record') || theme.includes('extreme') ? 'record' : 'dispatch'}`
+  const heroImage = `/api/og/blog?title=${encodeURIComponent(post.title)}&type=${theme.includes('space') ? 'space' : theme.includes('severe') || theme.includes('week') ? 'severe' : theme.includes('record') || theme.includes('extreme') ? 'record' : theme.includes('phenomena') ? 'education' : 'dispatch'}`
 
   const frontmatter = `---
 title: "${post.title.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"
-slug: "${post.slug}"
+slug: "${safeSlug}"
 date: "${new Date().toISOString()}"
 author: "16bitbot"
 summary: "${post.summary.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"
-tags: ${JSON.stringify(post.tags)}
+tags: ${JSON.stringify(safeTags)}
 heroImage: "${heroImage}"
-readTime: ${post.readTime}
+readTime: ${safeReadTime}
 ---`
 
   const fileContent = `${frontmatter}\n\n${post.content}\n`
-  const filename = `${post.slug}.md`
+  const filename = `${safeSlug}.md`
   const filePath = path.join(BLOG_DIR, filename)
 
   // Ensure directory exists

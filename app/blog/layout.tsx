@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     siteName: '16 Bit Weather',
     images: [
       {
-        url: '/api/og?title=Weather+Blog&subtitle=Weekly+Dispatches+from+16bitbot',
+        url: '/api/og/blog?title=Weather+Blog&subtitle=Weekly+Dispatches+from+16bitbot',
         width: 1200,
         height: 630,
         alt: '16 Bit Weather Blog',
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Weather Blog - 16 Bit Weather',
     description: 'Weekly weather intelligence from 16bitbot.',
-    images: ['/api/og?title=Weather+Blog&subtitle=Weekly+Dispatches+from+16bitbot'],
+    images: ['/api/og/blog?title=Weather+Blog&subtitle=Weekly+Dispatches+from+16bitbot'],
   },
   alternates: {
     canonical: 'https://www.16bitweather.co/blog',

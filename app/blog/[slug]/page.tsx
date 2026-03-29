@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const post = getPostBySlug(slug)
   if (!post) return { title: 'Post Not Found' }
 
-  const ogImage = `/api/og?title=${encodeURIComponent(post.title)}&subtitle=16bitbot+Weekly+Dispatch`
+  const ogImage = `/api/og/blog?title=${encodeURIComponent(post.title)}&subtitle=16bitbot+Weekly+Dispatch`
 
   return {
     title: `${post.title} | 16 Bit Weather Blog`,

@@ -1,5 +1,17 @@
 import { getAllPosts } from '@/lib/blog'
 
+
+function escapeXml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+    // Guard against CDATA injection
+    .replace(/]]>/g, ']]&gt;')
+}
+
 export async function GET() {
   const posts = getAllPosts()
   const siteUrl = 'https://www.16bitweather.co'
@@ -11,8 +23,8 @@ export async function GET() {
       <guid isPermaLink="true">${siteUrl}/blog/${encodeURIComponent(post.slug)}</guid>
       <description><![CDATA[${post.summary}]]></description>
       <pubDate>${new Date(post.date).toUTCString()}</pubDate>
-      <author><![CDATA[16bitbot@16bitweather.co (${post.author})]]></author>
-      ${post.tags.map(tag => `<category><![CDATA[${tag}]]></category>`).join('\n      ')}
+      <author>${escapeXml(`16bitbot@16bitweather.co (${post.author})`)}</author>
+      ${post.tags.map(tag => `<category>${escapeXml(tag)}</category>`).join('\n      ')}
     </item>`).join('')
 
   const rss = `<?xml version="1.0" encoding="UTF-8"?>

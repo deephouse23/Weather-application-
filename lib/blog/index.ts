@@ -67,7 +67,7 @@ export function getRelatedPosts(currentSlug: string, limit = 3): BlogPost[] {
   // Score by shared tags
   const scored = others.map(post => ({
     post,
-    score: post.tags.filter(t => current.tags.includes(t)).length,
+    score: post.tags.filter(t => current.tags.some(ct => ct.toLowerCase() === t.toLowerCase())).length,
   }))
   
   scored.sort((a, b) => b.score - a.score)
