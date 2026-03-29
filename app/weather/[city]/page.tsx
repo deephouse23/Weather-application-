@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
   }
 
   const pageTitle = `${city.name}, ${city.state} Weather Forecast - 16 Bit Weather`;
-  const description = `Get the latest real-time weather forecast for ${city.name}, ${city.state}. See temperature, precipitation, wind, and more with a retro terminal aesthetic.`;
+  const description = `Get the latest 7-day weather forecast for ${city.name}, ${city.state}. Real-time temperature, precipitation, wind, and hourly conditions with a retro terminal aesthetic.`;
 
   return {
     title: pageTitle,
@@ -89,7 +89,7 @@ export default async function CityWeatherPage({ params }: PageParams) {
     state: '',
     searchTerm: citySlugToSearchTerm(citySlug),
     title: `${formatCityName(citySlug)} Weather Forecast - 16 Bit Weather`,
-    description: `Current weather conditions and 5-day forecast for ${formatCityName(citySlug)}. Real-time weather data with retro terminal aesthetics.`,
+    description: `Current weather conditions and 7-day forecast for ${formatCityName(citySlug)}. Real-time weather data with retro terminal aesthetics.`,
     content: {
       intro: `Weather information for ${formatCityName(citySlug)}.`,
       climate: 'Real-time weather data and forecasts available.',
@@ -214,7 +214,7 @@ const cityData: {
     state: 'NY',
     searchTerm: 'New York, NY',
     title: 'New York Weather Forecast - 16 Bit Weather',
-    description: 'Current weather conditions and 5-day forecast for New York, NY. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
+    description: 'Current weather conditions and 7-day forecast for New York, NY. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
     content: {
       intro: 'New York City experiences a humid subtropical climate with four distinct seasons. Located in the northeastern United States, the city\'s weather is influenced by its coastal position and urban heat island effect.',
       climate: 'Summers in NYC are typically hot and humid with average highs in the mid-80s°F (29°C), while winters are cold with temperatures often dropping below freezing. The city receives about 50 inches of precipitation annually, distributed fairly evenly throughout the year.',
@@ -226,7 +226,7 @@ const cityData: {
     state: 'CA',
     searchTerm: 'Los Angeles, CA',
     title: 'Los Angeles Weather Forecast - 16 Bit Weather',
-    description: 'Current weather conditions and 5-day forecast for Los Angeles, CA. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
+    description: 'Current weather conditions and 7-day forecast for Los Angeles, CA. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
     content: {
       intro: 'Los Angeles enjoys a Mediterranean climate characterized by warm, dry summers and mild, wet winters. The city\'s location along the Pacific coast and surrounded by mountains creates diverse microclimates throughout the region.',
       climate: 'Summer temperatures typically range from the mid-70s to mid-80s°F (24-29°C) with very low humidity and minimal rainfall. Winters are mild with highs in the 60s-70s°F (15-21°C) and most of the year\'s 15 inches of rainfall occurring between November and March.',
@@ -238,7 +238,7 @@ const cityData: {
     state: 'IL',
     searchTerm: 'Chicago, IL',
     title: 'Chicago Weather Forecast - 16 Bit Weather',
-    description: 'Current weather conditions and 5-day forecast for Chicago, IL. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
+    description: 'Current weather conditions and 7-day forecast for Chicago, IL. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
     content: {
       intro: 'Chicago experiences a continental climate with hot, humid summers and cold, snowy winters. The city\'s location on Lake Michigan significantly influences its weather patterns, moderating temperatures and increasing precipitation.',
       climate: 'Summer highs average in the low 80s°F (27°C) with high humidity, while winter temperatures often drop below freezing with average lows around 20°F (-7°C). The city receives about 38 inches of precipitation annually, including significant snowfall in winter.',
@@ -250,7 +250,7 @@ const cityData: {
     state: 'TX',
     searchTerm: 'Houston, TX',
     title: 'Houston Weather Forecast - 16 Bit Weather',
-    description: 'Current weather conditions and 5-day forecast for Houston, TX. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
+    description: 'Current weather conditions and 7-day forecast for Houston, TX. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
     content: {
       intro: 'Houston has a humid subtropical climate with hot, humid summers and mild winters. Located near the Gulf of Mexico, the city experiences high humidity year-round and is prone to tropical weather systems.',
       climate: 'Summer temperatures regularly reach the 90s°F (32-37°C) with very high humidity making it feel even hotter. Winters are mild with highs in the 60s-70s°F (15-21°C). The city receives about 50 inches of rain annually, much of it from thunderstorms and tropical systems.',
@@ -262,7 +262,7 @@ const cityData: {
     state: 'AZ',
     searchTerm: 'Phoenix, AZ',
     title: 'Phoenix Weather Forecast - 16 Bit Weather',
-    description: 'Current weather conditions and 5-day forecast for Phoenix, AZ. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
+    description: 'Current weather conditions and 7-day forecast for Phoenix, AZ. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
     content: {
       intro: 'Phoenix has a hot desert climate with extremely hot summers and mild winters. Located in the Sonoran Desert, the city experiences low humidity year-round and abundant sunshine with minimal precipitation.',
       climate: 'Summer temperatures routinely exceed 110°F (43°C) from May through September, making Phoenix one of the hottest major cities in the US. Winters are pleasant with highs in the 70s°F (21°C). Annual rainfall is only about 8 inches, mostly from winter storms and summer monsoons.',
@@ -274,7 +274,7 @@ const cityData: {
     state: 'PA',
     searchTerm: 'Philadelphia, PA',
     title: 'Philadelphia Weather Forecast - 16 Bit Weather',
-    description: 'Current weather conditions and 5-day forecast for Philadelphia, PA. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
+    description: 'Current weather conditions and 7-day forecast for Philadelphia, PA. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
     content: {
       intro: 'Philadelphia has a humid subtropical climate with hot, humid summers and cool to cold winters. Located in southeastern Pennsylvania, the city experiences four distinct seasons with moderate precipitation throughout the year.',
       climate: 'Summer highs average in the mid-80s°F (29°C) with high humidity, while winter temperatures typically range from the 20s to 40s°F (-7 to 4°C). The city receives about 42 inches of precipitation annually, including snow in winter months.',
@@ -286,7 +286,7 @@ const cityData: {
     state: 'TX',
     searchTerm: 'San Antonio, TX',
     title: 'San Antonio Weather Forecast - 16 Bit Weather',
-    description: 'Current weather conditions and 5-day forecast for San Antonio, TX. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
+    description: 'Current weather conditions and 7-day forecast for San Antonio, TX. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
     content: {
       intro: 'San Antonio has a humid subtropical climate with hot summers and mild winters. Located in south-central Texas, the city experiences warm weather year-round with moderate to high humidity.',
       climate: 'Summer temperatures regularly reach the 90s-100s°F (32-38°C) with moderate humidity. Winters are mild with highs typically in the 60s°F (15°C) and lows rarely dropping below freezing. Annual precipitation is about 30 inches, with most rainfall occurring in late spring and early fall.',
@@ -298,7 +298,7 @@ const cityData: {
     state: 'CA',
     searchTerm: 'San Diego, CA',
     title: 'San Diego Weather Forecast - 16 Bit Weather',
-    description: 'Current weather conditions and 5-day forecast for San Diego, CA. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
+    description: 'Current weather conditions and 7-day forecast for San Diego, CA. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
     content: {
       intro: 'San Diego boasts a semi-arid Mediterranean climate with mild temperatures year-round. Located on the Pacific coast of Southern California, the city enjoys one of the most stable and pleasant climates in the United States.',
       climate: 'Temperatures are remarkably consistent, with summer highs in the mid-70s°F (24°C) and winter highs in the mid-60s°F (18°C). Humidity is generally low, and the city receives only about 10 inches of rain annually, mostly during winter months.',
@@ -310,7 +310,7 @@ const cityData: {
     state: 'TX',
     searchTerm: 'Dallas, TX',
     title: 'Dallas Weather Forecast - 16 Bit Weather',
-    description: 'Current weather conditions and 5-day forecast for Dallas, TX. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
+    description: 'Current weather conditions and 7-day forecast for Dallas, TX. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
     content: {
       intro: 'Dallas has a humid subtropical climate with hot summers and mild winters. Located in north-central Texas, the city experiences a continental climate influence with variable weather patterns and moderate precipitation.',
       climate: 'Summer temperatures frequently reach the 90s-100s°F (32-38°C) with moderate to high humidity. Winters are generally mild with highs in the 50s-60s°F (10-15°C), though occasional cold fronts can bring freezing temperatures. Annual precipitation is about 37 inches.',
@@ -322,7 +322,7 @@ const cityData: {
     state: 'TX',
     searchTerm: 'Austin, TX',
     title: 'Austin Weather Forecast - 16 Bit Weather',
-    description: 'Current weather conditions and 5-day forecast for Austin, TX. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
+    description: 'Current weather conditions and 7-day forecast for Austin, TX. Real-time weather data with retro terminal aesthetics. Check temperature, humidity, wind, and more.',
     content: {
       intro: 'Austin has a humid subtropical climate with hot summers and mild winters. Located in central Texas, the city experiences warm weather most of the year with distinct wet and dry seasons.',
       climate: 'Summer temperatures regularly exceed 95°F (35°C) with moderate humidity, while winters are mild with highs in the 60s°F (15°C) and lows rarely below freezing. The city receives about 34 inches of rain annually, with peak rainfall in spring and fall.',

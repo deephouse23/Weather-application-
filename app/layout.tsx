@@ -50,8 +50,8 @@ const vt323 = VT323({
 
 export const metadata: Metadata = {
   title: "16 Bit Weather - Retro Terminal Weather Forecast",
-  description: "Real-time weather forecasts with authentic 16-bit terminal aesthetics. Check current conditions, 5-day forecasts, and weather data for any city worldwide. Dark Terminal, Miami Vice, and Tron Grid themes available.",
-  keywords: "16-bit weather, terminal weather, retro weather forecast, pixel weather, weather app, real-time weather, 5-day forecast, weather data, weather conditions, meteorology education, cloud types, weather systems",
+  description: "Real-time weather forecasts with authentic 16-bit terminal aesthetics. Check current conditions, 7-day forecasts, and weather data for any city worldwide. Dark Terminal, Miami Vice, and Tron Grid themes available.",
+  keywords: "16-bit weather, terminal weather, retro weather forecast, pixel weather, weather app, real-time weather, 7-day forecast, weather data, weather conditions, meteorology education, cloud types, weather systems",
   generator: 'Next.js',
   applicationName: '16 Bit Weather',
   authors: [{ name: '16 Bit Weather' }],

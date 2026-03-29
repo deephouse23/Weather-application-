@@ -318,11 +318,11 @@ export default function DetailedWeatherModal({ location, isOpen, onClose }: Deta
               </div>
             )}
 
-            {/* 5-Day Forecast */}
+            {/* 7-Day Forecast */}
             {weatherData.forecast && weatherData.forecast.length > 0 && (
               <div className={`p-4 border-0 ${themeClasses.background}`}>
                 <h3 className={`text-lg font-bold font-mono uppercase mb-4 ${themeClasses.text}`}>
-                  5-Day Forecast
+                  7-Day Forecast
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                   {weatherData.forecast.slice(0, 5).map((day, index) => (
