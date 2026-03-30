@@ -148,7 +148,7 @@ const nextConfig = {
     ]
   },
 
-  // Redirect old sitemap.xml to new dynamic sitemap
+  // Redirects for old routes (do NOT redirect /sitemap.xml — Next.js serves it from app/sitemap.ts)
   async redirects() {
     return [
       {
@@ -159,11 +159,6 @@ const nextConfig = {
       {
         source: '/learn',
         destination: '/education',
-        permanent: true,
-      },
-      {
-        source: '/sitemap.xml',
-        destination: '/sitemap',
         permanent: true,
       },
     ]
