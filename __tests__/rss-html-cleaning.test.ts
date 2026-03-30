@@ -20,4 +20,12 @@ describe('RSS HTML cleaning - double escaping prevention', () => {
     expect(result).not.toContain('>');
     expect(result).toBe('scriptalert(1)/script');
   });
+
+  it('should handle nested/overlapping tag patterns like <<script>script>', () => {
+    // All angle brackets removed, tag content text remains, no injectable HTML
+    const result = decodeHtmlEntities('<<script>script>alert(1)');
+    expect(result).not.toContain('<');
+    expect(result).not.toContain('>');
+    expect(result).toBe('scriptalert(1)');
+  });
 });

@@ -2,13 +2,15 @@
  * Decode HTML entities in text for plain text display.
  * Angle bracket entities (&lt; &gt;) are stripped rather than decoded
  * to prevent creating injectable HTML from encoded content.
+ * All angle brackets are removed to prevent any HTML injection.
  * Decodes &amp; last to prevent double-escaping.
  */
 export function decodeHtmlEntities(text: string): string {
   return text
-    .replace(/<[^>]+>/g, '') // Strip raw HTML tags
-    .replace(/&lt;/g, '')    // Remove encoded angle brackets (don't decode to <)
-    .replace(/&gt;/g, '')    // Remove encoded angle brackets (don't decode to >)
+    .replace(/<[^>]*>/g, '') // Strip HTML tags
+    .replace(/[<>]/g, '')    // Remove any remaining angle brackets
+    .replace(/&lt;/g, '')    // Remove encoded angle brackets
+    .replace(/&gt;/g, '')    // Remove encoded angle brackets
     .replace(/&quot;/g, '"')
     .replace(/&#039;/g, "'")
     .replace(/&nbsp;/g, ' ')
