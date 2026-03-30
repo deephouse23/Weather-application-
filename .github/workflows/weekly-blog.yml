@@ -45,7 +45,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BRANCH_DATE=$(date -u +%Y-%m-%d)
-          BRANCH_NAME="blog/weekly-${BRANCH_DATE}"
+          BRANCH_NAME="blog/weekly-${BRANCH_DATE}-${GITHUB_RUN_ID}"
 
           git config user.name "16bitbot"
           git config user.email "16bitbot@16bitweather.co"
