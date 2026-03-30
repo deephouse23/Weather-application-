@@ -70,7 +70,7 @@ const req = https.request(options, (res) => {
           console.log('---');
           console.log('AQI Summary:');
           jsonData.indexes.forEach(index => {
-            console.log(`- ${index.displayName}: ${index.aqi} (${index.category})`);
+            console.log(`- ${String(index.displayName)}: ${String(index.aqi)} (${String(index.category)})`);
           });
         }
       } else {
@@ -78,8 +78,8 @@ const req = https.request(options, (res) => {
         console.log('---');
         
         if (jsonData.error) {
-          console.log('Error Message:', jsonData.error.message);
-          console.log('Error Code:', jsonData.error.code);
+          console.log('Error Message:', String(jsonData.error.message).replace(/[\r\n]/g, ' '));
+          console.log('Error Code:', String(jsonData.error.code).replace(/[\r\n]/g, ' '));
           
           if (jsonData.error.message.includes('API key not valid')) {
             console.log('\n⚠️  Your API key is not valid for the Air Quality API.');

@@ -1,3 +1,4 @@
+import { sanitizeLogValue } from "@/lib/sanitize-log"
 /**
  * 16-Bit Weather Platform - v1.0.0
  *
@@ -227,7 +228,7 @@ export function captureDbError(
   error: { message?: string; code?: string; details?: string; hint?: string },
   extra?: Record<string, unknown>
 ): void {
-  Sentry.captureMessage(`Database error in ${operation}`, {
+  Sentry.captureMessage(`Database error in ${sanitizeLogValue(operation)}`, {
     level: 'error',
     tags: {
       context: 'database',
@@ -235,7 +236,7 @@ export function captureDbError(
       errorCode: error.code || 'unknown',
     },
     extra: {
-      message: error.message,
+      message: typeof error.message === "string" ? sanitizeLogValue(error.message) : error.message,
       code: error.code,
       details: error.details,
       hint: error.hint,

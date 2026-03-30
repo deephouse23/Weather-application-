@@ -8,6 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { sanitizeLogValue } from "@/lib/sanitize-log";
 
 // Cache configuration - Increased to reduce API calls
 const CACHE_DURATION = 15 * 60; // 15 minutes
@@ -142,7 +143,7 @@ export async function GET(request: NextRequest) {
     if (endpoint === 'everything') {
       // For search queries
       if (q) apiUrl += `q=${encodeURIComponent(q)}&`;
-      if (domains) apiUrl += `domains=${domains}&`;
+      if (domains) apiUrl += `domains=${domains.replace(/[^a-zA-Z0-9.,-]/g, '')}&`;
       apiUrl += `language=${language}&`;
       apiUrl += `sortBy=publishedAt&`;
     } else {
@@ -172,7 +173,7 @@ export async function GET(request: NextRequest) {
     clearTimeout(timeout);
 
     if (!response.ok) {
-      console.error(`[NEWS API] Error: ${response.status} ${response.statusText}`);
+      console.error(`[NEWS API] Error: ${response.status} ${sanitizeLogValue(response.statusText)}`);
       
       // Handle specific NewsAPI errors gracefully
       if (response.status === 426) {
@@ -245,9 +246,9 @@ export async function GET(request: NextRequest) {
     if (error instanceof Error && error.name === 'AbortError') {
       console.error(`[NEWS API] Request timeout after ${errorTime}ms`);
     } else if (error instanceof Error) {
-      console.error(`[NEWS API] Error after ${errorTime}ms:`, error.message);
+      console.error(`[NEWS API] Error after ${errorTime}ms:`, sanitizeLogValue(error.message));
     } else {
-      console.error(`[NEWS API] Unknown error after ${errorTime}ms:`, error);
+      console.error(`[NEWS API] Unknown error after ${errorTime}ms:`, error instanceof Error ? error.message : sanitizeLogValue(error));
     }
     
     // Always return graceful degradation to prevent UI breaks
