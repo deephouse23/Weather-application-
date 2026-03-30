@@ -8,6 +8,7 @@
  */
 
 import { FEED_SOURCES, FeedSource, FeedCategory, CATEGORY_CONFIG } from './feedSources';
+import { decodeHtmlEntities } from './html-utils';
 
 export interface RSSItem {
   id: string;
@@ -249,16 +250,7 @@ function extractAttribute(xml: string, tagName: string, attrName: string): strin
  * Clean HTML tags and decode entities
  */
 function cleanHtml(html: string): string {
-  return html
-    .replace(/<[^>]+>/g, '') // Remove HTML tags
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'")
-    .replace(/&nbsp;/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return decodeHtmlEntities(html);
 }
 
 /**
