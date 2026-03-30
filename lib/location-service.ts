@@ -315,14 +315,15 @@ export class LocationService {
     try {
       let latitude: number, longitude: number, city: string, region: string, country: string;
 
-      if (serviceUrl.includes('ipapi.co')) {
+      const hostname = (() => { try { return new URL(serviceUrl).hostname; } catch { return ''; } })();
+      if (hostname === 'ipapi.co') {
         const ipapiData = data as IPApiCoResponse;
         latitude = parseFloat(ipapiData.latitude.toString());
         longitude = parseFloat(ipapiData.longitude.toString());
         city = ipapiData.city || 'Unknown City';
         region = ipapiData.region || '';
         country = ipapiData.country_name || ipapiData.country || 'Unknown Country';
-      } else if (serviceUrl.includes('ipinfo.io')) {
+      } else if (hostname === 'ipinfo.io') {
         const ipinfoData = data as IPInfoResponse;
         const [lat, lon] = (ipinfoData.loc || '0,0').split(',').map(parseFloat);
         latitude = lat;
@@ -330,7 +331,7 @@ export class LocationService {
         city = ipinfoData.city || 'Unknown City';
         region = ipinfoData.region || '';
         country = ipinfoData.country || 'Unknown Country';
-      } else if (serviceUrl.includes('ipgeolocation.io')) {
+      } else if (hostname === 'ipgeolocation.io') {
         const ipgeoData = data as IPGeolocationResponse;
         latitude = parseFloat(ipgeoData.latitude.toString());
         longitude = parseFloat(ipgeoData.longitude.toString());

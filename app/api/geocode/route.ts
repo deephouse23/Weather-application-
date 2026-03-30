@@ -1,3 +1,4 @@
+import { sanitizeLogValue } from "@/lib/sanitize-log"
 /**
  * 16-Bit Weather Platform - v1.0.0
  * 
@@ -146,7 +147,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(geocodingData)
 
   } catch (error) {
-    console.error('Dashboard geocoding API error:', error)
+    console.error('Dashboard geocoding API error:', error instanceof Error ? error.message : sanitizeLogValue(error))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

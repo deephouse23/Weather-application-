@@ -1,3 +1,4 @@
+import { sanitizeLogValue } from "@/lib/sanitize-log"
 /**
  * 16-Bit Weather Platform - v1.0.0
  * 
@@ -39,7 +40,7 @@ const tryGeocoding = async (queries: string[], apiKey: string, limit: string): P
       // Track the error for potential propagation
       // 401/403 errors indicate API key issues and should be reported
       if (response.status === 401 || response.status === 403) {
-        console.error(`OpenWeatherMap API auth error: ${response.status} for query "${query}"`)
+        console.error(`OpenWeatherMap API auth error: ${response.status} for query "${sanitizeLogValue(query)}"`)
         lastError = { status: response.status, message: 'OpenWeatherMap API authentication error' }
         // Don't try more queries for auth errors - they'll all fail
         break
@@ -156,7 +157,7 @@ export async function GET(request: NextRequest) {
 
       if (!response.ok) {
         const errorData = await response.text()
-        console.error('OpenWeatherMap reverse geocoding API error:', response.status, errorData)
+        console.error('OpenWeatherMap reverse geocoding API error:', response.status, sanitizeLogValue(errorData))
 
         return NextResponse.json(
           { error: 'Reverse geocoding failed' },
@@ -176,7 +177,7 @@ export async function GET(request: NextRequest) {
       
       if (!response.ok) {
         const errorData = await response.text()
-        console.error('OpenWeatherMap ZIP geocoding API error:', response.status, errorData)
+        console.error('OpenWeatherMap ZIP geocoding API error:', response.status, sanitizeLogValue(errorData))
         
         return NextResponse.json(
           { error: 'ZIP code not found' },
@@ -221,7 +222,7 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Geocoding API error:', error)
+    console.error('Geocoding API error:', error instanceof Error ? error.message : sanitizeLogValue(error))
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
