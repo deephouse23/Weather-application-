@@ -13,8 +13,11 @@ describe('RSS HTML cleaning - double escaping prevention', () => {
     expect(decodeHtmlEntities('Hello &amp; World')).toBe('Hello & World');
   });
 
-  it('should strip tags created by decoding &lt;script&gt; entities', () => {
-    // &lt;script&gt; decodes to <script> which must be stripped in a second pass
-    expect(decodeHtmlEntities('&lt;script&gt;alert(1)&lt;/script&gt;')).toBe('alert(1)');
+  it('should safely handle encoded tags without creating injectable HTML', () => {
+    // &lt;script&gt; must NOT produce angle brackets — entities are stripped, not decoded
+    const result = decodeHtmlEntities('&lt;script&gt;alert(1)&lt;/script&gt;');
+    expect(result).not.toContain('<');
+    expect(result).not.toContain('>');
+    expect(result).toBe('scriptalert(1)/script');
   });
 });
