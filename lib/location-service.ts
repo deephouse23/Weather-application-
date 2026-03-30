@@ -331,7 +331,7 @@ export class LocationService {
         city = ipinfoData.city || 'Unknown City';
         region = ipinfoData.region || '';
         country = ipinfoData.country || 'Unknown Country';
-      } else if (hostname === 'ipgeolocation.io') {
+      } else if (hostname === 'ipgeolocation.io' || hostname.endsWith('.ipgeolocation.io')) {
         const ipgeoData = data as IPGeolocationResponse;
         latitude = parseFloat(ipgeoData.latitude.toString());
         longitude = parseFloat(ipgeoData.longitude.toString());

@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
     if (endpoint === 'everything') {
       // For search queries
       if (q) apiUrl += `q=${encodeURIComponent(q)}&`;
-      if (domains) apiUrl += `domains=${encodeURIComponent(domains)}&`;
+      if (domains) apiUrl += `domains=${domains.replace(/[^a-zA-Z0-9.,-]/g, '')}&`;
       apiUrl += `language=${language}&`;
       apiUrl += `sortBy=publishedAt&`;
     } else {
