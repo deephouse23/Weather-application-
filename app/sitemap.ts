@@ -32,6 +32,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       { url: `${baseUrl}/cloud-types`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
       { url: `${baseUrl}/weather-systems`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
       { url: `${baseUrl}/fun-facts`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 },
+      { url: `${baseUrl}/education/glossary`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.7 },
       
       // Interactive
       { url: `${baseUrl}/games`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.6 },

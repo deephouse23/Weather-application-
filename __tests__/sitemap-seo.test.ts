@@ -39,4 +39,27 @@ describe('Sitemap SEO', () => {
       expect(sitemapPaths).not.toContain(redirectSource)
     }
   })
+
+  it('dev/utility pages should have noindex metadata', async () => {
+    const devPages = [
+      { path: '../app/test-sentry/layout', name: 'test-sentry' },
+      { path: '../app/radar-diagnostic/layout', name: 'radar-diagnostic' },
+      { path: '../app/gfs-model/layout', name: 'gfs-model' },
+    ]
+
+    for (const page of devPages) {
+      const mod = await import(page.path)
+      expect(mod.metadata?.robots?.index).toBe(false)
+    }
+  })
+
+  it('sitemap should include /education/glossary', async () => {
+    const { default: sitemap } = await import('../app/sitemap')
+    const entries = sitemap()
+    const sitemapPaths = entries.map((e: { url: string }) => {
+      try { return new URL(e.url).pathname } catch { return e.url }
+    })
+
+    expect(sitemapPaths).toContain('/education/glossary')
+  })
 })

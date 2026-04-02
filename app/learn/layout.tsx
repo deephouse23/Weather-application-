@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Weather Education Hub - 16 Bit Weather',
     description: 'Master meteorology with our comprehensive weather education hub. Interactive learning with retro aesthetics.',
-    url: 'https://www.16bitweather.co/learn',
+    url: 'https://www.16bitweather.co/education',
     siteName: '16 Bit Weather',
     images: [
       {
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     images: ['/api/og?title=Learn+Weather&subtitle=Educational+Hub'],
   },
   alternates: {
-    canonical: 'https://www.16bitweather.co/learn',
+    canonical: 'https://www.16bitweather.co/education',
   },
 }
 
@@ -92,7 +92,7 @@ const learnSchema = {
       position: 7,
       name: 'Weather Glossary',
       description: 'In-depth definitions of every weather metric',
-      url: 'https://www.16bitweather.co/learn/glossary',
+      url: 'https://www.16bitweather.co/education/glossary',
     },
   ],
 }
