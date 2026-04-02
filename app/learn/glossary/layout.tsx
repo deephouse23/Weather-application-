@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Weather Glossary - 16 Bit Weather',
     description: 'In-depth definitions of every weather metric. UV Index, humidity, pressure, wind, and more explained with practical tips.',
-    url: 'https://www.16bitweather.co/learn/glossary',
+    url: 'https://www.16bitweather.co/education/glossary',
     siteName: '16 Bit Weather',
     images: [
       {
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     images: ['/api/og?title=Weather+Glossary&subtitle=Metric+Definitions'],
   },
   alternates: {
-    canonical: 'https://www.16bitweather.co/learn/glossary',
+    canonical: 'https://www.16bitweather.co/education/glossary',
   },
 }
 

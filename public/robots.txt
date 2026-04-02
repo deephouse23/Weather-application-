@@ -18,6 +18,13 @@ Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
 
+# Dev/utility pages
+Disallow: /test-sentry
+Disallow: /radar-diagnostic
+
+# Dynamic tool pages (unbounded URL space, not indexable)
+Disallow: /gfs-model/
+
 # Sitemap location
 Sitemap: https://www.16bitweather.co/sitemap.xml
 
