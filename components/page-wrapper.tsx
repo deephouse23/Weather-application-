@@ -16,6 +16,7 @@
 
 
 import Navigation from "./navigation"
+import Link from "next/link"
 
 interface PageWrapperProps {
   children: React.ReactNode
@@ -50,46 +51,46 @@ export default function PageWrapper({ children, weatherLocation, weatherTemperat
             <div>
               <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Weather</h3>
               <nav className="flex flex-col gap-1.5">
-                <a href="/radar" className="text-muted-foreground hover:text-foreground transition-colors">Radar</a>
-                <a href="/severe" className="text-muted-foreground hover:text-foreground transition-colors">Severe Weather</a>
-                <a href="/aviation" className="text-muted-foreground hover:text-foreground transition-colors">Aviation</a>
-                <a href="/space-weather" className="text-muted-foreground hover:text-foreground transition-colors">Space Weather</a>
-                <a href="/tropical" className="text-muted-foreground hover:text-foreground transition-colors">Tropical</a>
-                <a href="/winter" className="text-muted-foreground hover:text-foreground transition-colors">Winter</a>
+                <Link href="/radar" className="text-muted-foreground hover:text-foreground transition-colors">Radar</Link>
+                <Link href="/severe" className="text-muted-foreground hover:text-foreground transition-colors">Severe Weather</Link>
+                <Link href="/aviation" className="text-muted-foreground hover:text-foreground transition-colors">Aviation</Link>
+                <Link href="/space-weather" className="text-muted-foreground hover:text-foreground transition-colors">Space Weather</Link>
+                <Link href="/tropical" className="text-muted-foreground hover:text-foreground transition-colors">Tropical</Link>
+                <Link href="/winter" className="text-muted-foreground hover:text-foreground transition-colors">Winter</Link>
               </nav>
             </div>
             <div>
               <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Tools</h3>
               <nav className="flex flex-col gap-1.5">
-                <a href="/situation" className="text-muted-foreground hover:text-foreground transition-colors">Situation</a>
-                <a href="/extremes" className="text-muted-foreground hover:text-foreground transition-colors">Extremes</a>
-                <a href="/hourly" className="text-muted-foreground hover:text-foreground transition-colors">Hourly</a>
-                <a href="/travel" className="text-muted-foreground hover:text-foreground transition-colors">Travel</a>
-                <a href="/vibe-check" className="text-muted-foreground hover:text-foreground transition-colors">Vibe Check</a>
-                <a href="/map" className="text-muted-foreground hover:text-foreground transition-colors">Map</a>
+                <Link href="/situation" className="text-muted-foreground hover:text-foreground transition-colors">Situation</Link>
+                <Link href="/extremes" className="text-muted-foreground hover:text-foreground transition-colors">Extremes</Link>
+                <Link href="/hourly" className="text-muted-foreground hover:text-foreground transition-colors">Hourly</Link>
+                <Link href="/travel" className="text-muted-foreground hover:text-foreground transition-colors">Travel</Link>
+                <Link href="/vibe-check" className="text-muted-foreground hover:text-foreground transition-colors">Vibe Check</Link>
+                <Link href="/map" className="text-muted-foreground hover:text-foreground transition-colors">Map</Link>
               </nav>
             </div>
             <div>
               <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Learn</h3>
               <nav className="flex flex-col gap-1.5">
-                <a href="/education" className="text-muted-foreground hover:text-foreground transition-colors">Education</a>
-                <a href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">Blog</a>
-                <a href="/news" className="text-muted-foreground hover:text-foreground transition-colors">News</a>
-                <a href="/games" className="text-muted-foreground hover:text-foreground transition-colors">Games</a>
-                <a href="/cloud-types" className="text-muted-foreground hover:text-foreground transition-colors">Cloud Types</a>
-                <a href="/fun-facts" className="text-muted-foreground hover:text-foreground transition-colors">Fun Facts</a>
+                <Link href="/education" className="text-muted-foreground hover:text-foreground transition-colors">Education</Link>
+                <Link href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">Blog</Link>
+                <Link href="/news" className="text-muted-foreground hover:text-foreground transition-colors">News</Link>
+                <Link href="/games" className="text-muted-foreground hover:text-foreground transition-colors">Games</Link>
+                <Link href="/cloud-types" className="text-muted-foreground hover:text-foreground transition-colors">Cloud Types</Link>
+                <Link href="/fun-facts" className="text-muted-foreground hover:text-foreground transition-colors">Fun Facts</Link>
               </nav>
             </div>
             <div>
               <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Site</h3>
               <nav className="flex flex-col gap-1.5">
-                <a href="/about" className="text-muted-foreground hover:text-foreground transition-colors">About</a>
-                <a href="/weather-systems" className="text-muted-foreground hover:text-foreground transition-colors">Weather Systems</a>
+                <Link href="/about" className="text-muted-foreground hover:text-foreground transition-colors">About</Link>
+                <Link href="/weather-systems" className="text-muted-foreground hover:text-foreground transition-colors">Weather Systems</Link>
               </nav>
             </div>
           </div>
           <div className="mt-8 pt-6 border-t border-border/30 text-center text-xs font-mono text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} 16-Bit Weather. All rights reserved.</p>
+            <p>&copy; <span suppressHydrationWarning>{new Date().getFullYear()}</span> 16-Bit Weather. All rights reserved.</p>
           </div>
         </div>
       </footer>
