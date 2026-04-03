@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next'
-import { CITY_DATA } from '@/lib/city-data'
+import { cityData as cityMetadata } from '@/lib/city-metadata'
 import { getAllPosts } from '@/lib/blog'
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -36,11 +36,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       
       // Interactive
       { url: `${baseUrl}/games`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.6 },
-      { url: `${baseUrl}/ai`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
     ]
   
     // Dynamic city pages
-    const cityPages: MetadataRoute.Sitemap = Object.keys(CITY_DATA || {}).map(citySlug => ({
+    const cityPages: MetadataRoute.Sitemap = Object.keys(cityMetadata || {}).map(citySlug => ({
       url: `${baseUrl}/weather/${citySlug}`,
       lastModified: new Date(),
       changeFrequency: 'hourly' as const,
