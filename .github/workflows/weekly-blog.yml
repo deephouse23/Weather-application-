@@ -1,8 +1,9 @@
-name: Weekly Blog Post
+name: Blog Post Generator
 
 on:
   schedule:
     - cron: '0 12 * * 0'  # Every Sunday at noon UTC
+    - cron: '0 12 * * 3'  # Every Wednesday at noon UTC
   workflow_dispatch: {}     # Manual trigger
 
 jobs:
