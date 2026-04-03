@@ -77,8 +77,8 @@ test('responsive layout on mobile', async ({ page }) => {
 });
 
 test('navigation links work correctly', async ({ page }) => {
-  // Test About page link if exists
-  const aboutLink = page.locator('a[href="/about"]');
+  // Test About page link if exists (use .first() to target nav link, not footer)
+  const aboutLink = page.locator('a[href="/about"]').first();
   if (await aboutLink.count() > 0) {
     await aboutLink.click();
     await expect(page).toHaveURL('/about');

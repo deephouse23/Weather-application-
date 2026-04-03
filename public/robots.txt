@@ -1,53 +1,46 @@
+# 16 Bit Weather - robots.txt
+# Updated: April 2026
+
 User-agent: *
 Allow: /
-
-# Weather data is dynamic and should be crawled frequently
-Allow: /weather/*
-
-# Allow all crawling for educational content
+Allow: /weather/
+Allow: /blog
+Allow: /news
+Allow: /education
+Allow: /games
+Allow: /aviation
+Allow: /severe
+Allow: /tropical
+Allow: /winter
+Allow: /radar
+Allow: /space-weather
+Allow: /situation
+Allow: /travel
+Allow: /extremes
+Allow: /hourly
 Allow: /about
 Allow: /cloud-types
 Allow: /weather-systems
 Allow: /fun-facts
-Allow: /games
+Allow: /vibe-check
+Allow: /map
 
-# API routes should not be crawled
+# API and internal routes
 Disallow: /api/
-
-# Private or admin areas (if any)
 Disallow: /_next/
 Disallow: /admin/
 
-# Dev/utility pages
+# Dev/utility pages (noindex)
 Disallow: /test-sentry
 Disallow: /radar-diagnostic
-
-# Dynamic tool pages (unbounded URL space, not indexable)
 Disallow: /gfs-model/
 
-# Sitemap location
+# Private user pages
+Disallow: /dashboard
+Disallow: /profile
+
+# Sitemap
 Sitemap: https://www.16bitweather.co/sitemap.xml
-
-# Additional bot instructions for courtesy
-Crawl-delay: 1
-
-# Specific instructions for major search engines
-User-agent: Googlebot
-Crawl-delay: 0.5
-Allow: /weather/*
-Allow: /about
-Allow: /cloud-types
-Allow: /weather-systems
-
-User-agent: Bingbot
-Crawl-delay: 1
-Allow: /weather/*
-Allow: /about
-Allow: /cloud-types
-Allow: /weather-systems
-
-User-agent: Slurp
-Crawl-delay: 1
 
 # Social media crawlers
 User-agent: facebookexternalhit
@@ -56,18 +49,7 @@ Allow: /
 User-agent: Twitterbot
 Allow: /
 
-# Archive and research crawlers
-User-agent: ia_archiver
-Crawl-delay: 2
-
-# Block problematic or aggressive crawlers (optional)
-User-agent: AhrefsBot
-Crawl-delay: 10
-
-User-agent: SemrushBot
-Crawl-delay: 10
-
-# Block AI training bots (prevent content scraping for AI training)
+# Block AI training bots
 User-agent: GPTBot
 Disallow: /
 
@@ -82,5 +64,3 @@ Disallow: /
 
 User-agent: Claude-Web
 Disallow: /
-
-# Updated: January 2025

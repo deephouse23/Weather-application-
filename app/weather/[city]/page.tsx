@@ -191,8 +191,8 @@ function citySlugToSearchTerm(slug: string): string {
   return formatCityName(slug)
 }
 
-// Force dynamic rendering to prevent build-time API calls  
-export const dynamic = 'force-dynamic'
+// ISR: revalidate every 10 minutes for fast cached responses (SEO) with fresh weather data
+export const revalidate = 600
 
 // City data for SEO and functionality
 const cityData: {
