@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
     // Revisit this if the deployment platform changes.
     const realIp = request.headers.get('x-real-ip');
     const forwardedFor = request.headers.get('x-forwarded-for');
-    const clientId = realIp || forwardedFor?.split(',')[0] || 'default';
+    const clientId = realIp?.trim() || forwardedFor?.split(',')[0]?.trim() || 'default';
 
     // Check rate limit
     const rateLimit = checkRateLimit(clientId);

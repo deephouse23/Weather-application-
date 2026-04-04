@@ -79,8 +79,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Enforce admin role — this endpoint is admin-only
-    if (user.user_metadata?.role !== 'admin') {
+    // Enforce admin role — must match RLS policy: auth.jwt() ->> 'role' = 'admin'
+    // In Supabase, JWT 'role' claim is sourced from app_metadata
+    if (user.app_metadata?.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

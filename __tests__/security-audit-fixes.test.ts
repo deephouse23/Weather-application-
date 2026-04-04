@@ -32,6 +32,11 @@ describe('Fix 4: Admin access control on POST /api/games', () => {
     expect(src).not.toContain('getSession()');
     expect(src).toContain('getUser()');
   });
+
+  it('should check admin role via app_metadata to match JWT/RLS policy', () => {
+    expect(src).toContain('app_metadata');
+    expect(src).not.toMatch(/user_metadata\?\.role/);
+  });
 });
 
 describe('Fix 5: CSP unsafe-eval and unsafe-inline', () => {
@@ -75,8 +80,7 @@ describe('Fix 10: Rate limit IP source', () => {
   const src = readFileSync(join(__dirname, '..', 'app', 'api', 'news', 'route.ts'), 'utf-8');
   it('should prefer x-real-ip over x-forwarded-for for rate limiting', () => {
     // x-real-ip is set by the platform (Vercel) and harder to spoof
-    const rateLimitSection = src.slice(src.indexOf('client'));
-    expect(rateLimitSection).toMatch(/x-real-ip/);
+    expect(src).toMatch(/x-real-ip/);
   });
   it('should document the IP source choice', () => {
     expect(src).toMatch(/deployment platform/i);

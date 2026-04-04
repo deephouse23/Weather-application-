@@ -7,7 +7,8 @@ import { PLACEHOLDER_URL, PLACEHOLDER_ANON_KEY, warnIfPlaceholder } from './cons
 export async function middleware(request: NextRequest) {
   // Skip auth checks in Playwright test mode (E2E tests)
   // SECURITY: Only allow bypass on localhost, when explicitly enabled via env var, AND not in production
-  const isLocalhost = request.headers.get('host')?.startsWith('localhost')
+  const host = request.headers.get('host') ?? ''
+  const isLocalhost = /^(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i.test(host)
   const isPlaywrightTestMode =
     isLocalhost &&
     process.env.PLAYWRIGHT_TEST_MODE === 'true' &&
