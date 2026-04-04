@@ -39,9 +39,11 @@ describe('Fix 4: Admin access control on POST /api/games', () => {
   });
 });
 
-describe('Fix 5: CSP unsafe-eval and unsafe-inline', () => {
+describe('Fix 5: CSP unsafe-eval removed', () => {
   const src = readFileSync(join(__dirname, '..', 'next.config.mjs'), 'utf-8');
   it('should not contain unsafe-eval in script-src', () => {
+    // unsafe-eval allows arbitrary code execution via eval() — must be removed
+    // unsafe-inline is kept because Next.js requires it for inline hydration scripts
     expect(src).not.toContain("'unsafe-eval'");
   });
 });
