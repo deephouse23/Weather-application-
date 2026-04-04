@@ -47,6 +47,9 @@ export default function GameDetailPage() {
   // Listen for score submissions from game iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      // Security: only accept messages from our own origin
+      if (event.origin !== window.location.origin) return;
+
       if (event.data.type === 'GAME_SCORE_SUBMIT') {
         setGameScore({
           score: event.data.score,

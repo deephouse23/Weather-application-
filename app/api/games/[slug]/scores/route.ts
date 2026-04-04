@@ -106,13 +106,14 @@ export async function POST(
       );
     }
 
-    // Check if user is authenticated
+    // Verify user identity server-side (getUser validates the JWT)
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-    const is_guest = !session;
-    const user_id = session?.user?.id || null;
+    const is_guest = !user || !!authError;
+    const user_id = user?.id || null;
 
     // Rate limiting for guests (check IP)
     if (is_guest) {
