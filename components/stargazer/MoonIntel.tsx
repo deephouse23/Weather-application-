@@ -38,75 +38,75 @@ export default function MoonIntel({ moon }: MoonIntelProps) {
   return (
     <div
       className={cn(
-        'border-4 border-[hsl(var(--border))] bg-[hsl(var(--bg))] p-4 font-mono',
+        'container-primary p-4 font-mono',
         styles
       )}
     >
-      <h2 className="mb-3 text-sm uppercase tracking-wider text-[hsl(var(--muted))]">
+      <h2 className="border-b border-subtle py-3 mb-3 text-xs font-mono uppercase text-muted-foreground">
         Moon Intel
       </h2>
 
       <div className="grid grid-cols-2 gap-3 text-xs">
         <div>
-          <p className="uppercase tracking-wider text-[hsl(var(--muted))]">Phase</p>
-          <p className="text-lg font-bold text-[hsl(var(--primary))]">
+          <p className="text-xs font-mono uppercase text-muted-foreground">Phase</p>
+          <p className="text-xl font-bold font-mono">
             {moon.phaseName}
           </p>
         </div>
         <div>
-          <p className="uppercase tracking-wider text-[hsl(var(--muted))]">
+          <p className="text-xs font-mono uppercase text-muted-foreground">
             Illumination
           </p>
-          <p className="text-lg font-bold text-[hsl(var(--text))]">
+          <p className="text-xl font-bold font-mono">
             {Math.round(moon.illumination)}%
           </p>
         </div>
 
         <div>
-          <p className="uppercase tracking-wider text-[hsl(var(--muted))]">Moonrise</p>
-          <p className="text-[hsl(var(--text))]">{formatTime(moon.rise)}</p>
+          <p className="text-xs font-mono uppercase text-muted-foreground">Moonrise</p>
+          <p className="font-mono">{formatTime(moon.rise)}</p>
         </div>
         <div>
-          <p className="uppercase tracking-wider text-[hsl(var(--muted))]">Moonset</p>
-          <p className="text-[hsl(var(--text))]">{formatTime(moon.set)}</p>
+          <p className="text-xs font-mono uppercase text-muted-foreground">Moonset</p>
+          <p className="font-mono">{formatTime(moon.set)}</p>
         </div>
 
-        <div className="col-span-2 border-t-2 border-[hsl(var(--border))] pt-2">
-          <p className="uppercase tracking-wider text-[hsl(var(--muted))]">
+        <div className="col-span-2 border-t border-subtle pt-2">
+          <p className="text-xs font-mono uppercase text-muted-foreground">
             Dark Window
           </p>
           {moon.darkWindowStart && moon.darkWindowEnd ? (
-            <p className="text-[hsl(var(--primary))]">
+            <p className="text-cyan-400">
               {formatTime(moon.darkWindowStart)} &ndash;{' '}
               {formatTime(moon.darkWindowEnd)}
             </p>
           ) : (
-            <p className="text-[hsl(var(--text))]">No dark window tonight</p>
+            <p className="font-mono">No dark window tonight</p>
           )}
-          <p className="mt-1 text-[hsl(var(--muted))]">
+          <p className="mt-1 text-muted-foreground">
             Moon up during dark window:{' '}
             {Math.round(moon.moonUpDuringDarkWindowPercent)}%
           </p>
         </div>
 
         <div>
-          <p className="uppercase tracking-wider text-[hsl(var(--muted))]">
+          <p className="text-xs font-mono uppercase text-muted-foreground">
             Next New Moon
           </p>
-          <p className="text-[hsl(var(--text))]">
+          <p className="font-mono">
             {formatDate(moon.nextNewMoon)}{' '}
-            <span className="text-[hsl(var(--muted))]">
+            <span className="text-muted-foreground">
               ({daysUntil(moon.nextNewMoon)}d)
             </span>
           </p>
         </div>
         <div>
-          <p className="uppercase tracking-wider text-[hsl(var(--muted))]">
+          <p className="text-xs font-mono uppercase text-muted-foreground">
             Next Full Moon
           </p>
-          <p className="text-[hsl(var(--text))]">
+          <p className="font-mono">
             {formatDate(moon.nextFullMoon)}{' '}
-            <span className="text-[hsl(var(--muted))]">
+            <span className="text-muted-foreground">
               ({daysUntil(moon.nextFullMoon)}d)
             </span>
           </p>

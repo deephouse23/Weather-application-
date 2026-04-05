@@ -29,33 +29,33 @@ export default function StargazerCard({
     <Link href="/stargazer" className="block">
       <div
         className={cn(
-          'border-4 border-[hsl(var(--border))] bg-[hsl(var(--bg))] p-4 font-mono transition-colors hover:border-[hsl(var(--primary))]',
+          'container-primary p-4 font-mono transition-colors hover:border-cyan-400/50',
           styles
         )}
       >
-        <h2 className="mb-2 text-sm uppercase tracking-wider text-[hsl(var(--muted))]">
+        <h2 className="mb-2 text-sm uppercase tracking-wider text-muted-foreground">
           Stargazer Forecast
         </h2>
 
         <div className="flex items-center gap-3">
           <div
-            className="flex h-14 w-14 shrink-0 items-center justify-center border-2 border-[hsl(var(--border))]"
+            className="flex h-14 w-14 shrink-0 items-center justify-center border border-subtle"
             style={{ backgroundColor: color }}
           >
             <span className="text-2xl font-bold text-white">{score}</span>
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold uppercase tracking-wider text-[hsl(var(--primary))]">
+            <p className="text-sm font-bold uppercase tracking-wider text-cyan-400">
               {label}
             </p>
-            <p className="text-[10px] text-[hsl(var(--muted))]">
+            <p className="text-[10px] text-muted-foreground">
               {phaseName} &middot; {Math.round(moonIllumination)}% illuminated
             </p>
           </div>
         </div>
 
-        <p className="mt-2 truncate text-xs text-[hsl(var(--text))]">
+        <p className="mt-2 truncate text-xs font-mono">
           {summary}
         </p>
       </div>

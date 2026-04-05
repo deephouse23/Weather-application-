@@ -40,14 +40,14 @@ export default function DeepSkyHighlights({
     return (
       <div
         className={cn(
-          'border-4 border-[hsl(var(--border))] bg-[hsl(var(--bg))] p-4 font-mono',
+          'container-primary p-4 font-mono',
           styles
         )}
       >
-        <h2 className="text-sm uppercase tracking-wider text-[hsl(var(--muted))]">
+        <h2 className="text-xs font-mono uppercase text-muted-foreground">
           Deep Sky Highlights
         </h2>
-        <p className="mt-2 text-xs text-[hsl(var(--text))]">
+        <p className="mt-2 text-xs font-mono">
           No deep sky objects visible tonight.
         </p>
       </div>
@@ -59,11 +59,11 @@ export default function DeepSkyHighlights({
   return (
     <div
       className={cn(
-        'border-4 border-[hsl(var(--border))] bg-[hsl(var(--bg))] p-4 font-mono',
+        'container-primary p-4 font-mono',
         styles
       )}
     >
-      <h2 className="mb-3 text-sm uppercase tracking-wider text-[hsl(var(--muted))]">
+      <h2 className="border-b border-subtle py-3 mb-3 text-xs font-mono uppercase text-muted-foreground">
         Deep Sky Highlights
       </h2>
 
@@ -71,10 +71,10 @@ export default function DeepSkyHighlights({
         {top8.map((obj) => (
           <div
             key={obj.id}
-            className="border-2 border-[hsl(var(--border))] bg-[hsl(var(--bg))] p-3"
+            className="card-inner p-3 rounded"
           >
             <div className="mb-1 flex items-start justify-between gap-2">
-              <h3 className="text-sm font-bold text-[hsl(var(--primary))]">
+              <h3 className="text-sm font-bold text-cyan-400">
                 {obj.name}
               </h3>
               <span
@@ -87,32 +87,32 @@ export default function DeepSkyHighlights({
               </span>
             </div>
 
-            <p className="text-[10px] uppercase tracking-wider text-[hsl(var(--muted))]">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
               {formatType(obj.type)} &middot; {obj.constellation}
             </p>
 
             <div className="mt-2 grid grid-cols-3 gap-1 text-[10px]">
               <div>
-                <span className="text-[hsl(var(--muted))]">Mag</span>
-                <p className="text-[hsl(var(--text))]">
+                <span className="text-muted-foreground">Mag</span>
+                <p className="font-mono">
                   {obj.magnitude.toFixed(1)}
                 </p>
               </div>
               <div>
-                <span className="text-[hsl(var(--muted))]">Alt</span>
-                <p className="text-[hsl(var(--text))]">
+                <span className="text-muted-foreground">Alt</span>
+                <p className="font-mono">
                   {Math.round(obj.maxAltitude)}&deg;
                 </p>
               </div>
               <div>
-                <span className="text-[hsl(var(--muted))]">Transit</span>
-                <p className="text-[hsl(var(--text))]">
+                <span className="text-muted-foreground">Transit</span>
+                <p className="font-mono">
                   {formatTime(obj.transitTime)}
                 </p>
               </div>
             </div>
 
-            <p className="mt-2 text-[10px] leading-relaxed text-[hsl(var(--muted))]">
+            <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
               {obj.description}
             </p>
           </div>

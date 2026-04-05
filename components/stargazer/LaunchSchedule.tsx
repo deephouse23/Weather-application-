@@ -23,39 +23,39 @@ export default function LaunchSchedule({ launches }: LaunchScheduleProps) {
   return (
     <div
       className={cn(
-        'border-4 border-[hsl(var(--border))] bg-[hsl(var(--bg))] p-4 font-mono',
+        'container-primary p-4 font-mono',
         styles
       )}
     >
-      <h2 className="mb-3 text-sm uppercase tracking-wider text-[hsl(var(--muted))]">
+      <h2 className="border-b border-subtle py-3 mb-3 text-xs font-mono uppercase text-muted-foreground">
         Upcoming Launches
       </h2>
 
       {!launches || launches.length === 0 ? (
-        <p className="text-xs text-[hsl(var(--text))]">
+        <p className="text-xs font-mono">
           No upcoming launches scheduled.
         </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b-2 border-[hsl(var(--border))]">
-                <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+              <tr className="border-b border-subtle">
+                <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                   Date
                 </th>
-                <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+                <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                   Mission
                 </th>
-                <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+                <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                   Vehicle
                 </th>
-                <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+                <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                   Provider
                 </th>
-                <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+                <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                   Site
                 </th>
-                <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+                <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                   Status
                 </th>
               </tr>
@@ -64,12 +64,12 @@ export default function LaunchSchedule({ launches }: LaunchScheduleProps) {
               {launches.map((launch) => (
                 <tr
                   key={launch.id}
-                  className="border-b border-[hsl(var(--border))]"
+                  className="border-b border-subtle"
                 >
-                  <td className="px-2 py-1 text-[hsl(var(--text))]">
+                  <td className="px-2 py-1 font-mono">
                     {formatDate(launch.net)}
                   </td>
-                  <td className="px-2 py-1 text-[hsl(var(--primary))]">
+                  <td className="px-2 py-1 text-cyan-400">
                     <span className="flex items-center gap-1">
                       {launch.missionName || launch.name}
                       {launch.isCrewed && (
@@ -79,16 +79,16 @@ export default function LaunchSchedule({ launches }: LaunchScheduleProps) {
                       )}
                     </span>
                   </td>
-                  <td className="px-2 py-1 text-[hsl(var(--text))]">
+                  <td className="px-2 py-1 font-mono">
                     {launch.vehicle}
                   </td>
-                  <td className="px-2 py-1 text-[hsl(var(--muted))]">
+                  <td className="px-2 py-1 text-muted-foreground">
                     {launch.provider}
                   </td>
-                  <td className="px-2 py-1 text-[hsl(var(--muted))]">
+                  <td className="px-2 py-1 text-muted-foreground">
                     {launch.padLocation}
                   </td>
-                  <td className="px-2 py-1 text-[hsl(var(--text))]">
+                  <td className="px-2 py-1 font-mono">
                     {launch.status}
                   </td>
                 </tr>

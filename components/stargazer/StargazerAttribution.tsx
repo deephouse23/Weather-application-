@@ -18,18 +18,18 @@ export default function StargazerAttribution() {
   return (
     <div
       className={cn(
-        'border-2 border-[hsl(var(--border))] bg-[hsl(var(--bg))] p-3 font-mono',
+        'container-primary p-3 font-mono',
         styles
       )}
     >
-      <h3 className="mb-2 text-[10px] uppercase tracking-wider text-[hsl(var(--muted))]">
+      <h3 className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
         Data Sources
       </h3>
       <ul className="space-y-1">
         {attributions.map((text, i) => (
           <li
             key={i}
-            className="text-[10px] text-[hsl(var(--muted))]"
+            className="text-[10px] text-muted-foreground"
           >
             {text}
           </li>

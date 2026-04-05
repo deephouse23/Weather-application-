@@ -45,14 +45,14 @@ export default function SkyEvents({ events }: SkyEventsProps) {
     return (
       <div
         className={cn(
-          'border-4 border-[hsl(var(--border))] bg-[hsl(var(--bg))] p-4 font-mono',
+          'container-primary p-4 font-mono',
           styles
         )}
       >
-        <h2 className="text-sm uppercase tracking-wider text-[hsl(var(--muted))]">
+        <h2 className="text-xs font-mono uppercase text-muted-foreground">
           Upcoming Sky Events
         </h2>
-        <p className="mt-2 text-xs text-[hsl(var(--text))]">
+        <p className="mt-2 text-xs font-mono">
           No upcoming sky events.
         </p>
       </div>
@@ -62,11 +62,11 @@ export default function SkyEvents({ events }: SkyEventsProps) {
   return (
     <div
       className={cn(
-        'border-4 border-[hsl(var(--border))] bg-[hsl(var(--bg))] p-4 font-mono',
+        'container-primary p-4 font-mono',
         styles
       )}
     >
-      <h2 className="mb-3 text-sm uppercase tracking-wider text-[hsl(var(--muted))]">
+      <h2 className="border-b border-subtle py-3 mb-3 text-xs font-mono uppercase text-muted-foreground">
         Upcoming Sky Events
       </h2>
 
@@ -74,10 +74,10 @@ export default function SkyEvents({ events }: SkyEventsProps) {
         {events.map((event, i) => (
           <div
             key={i}
-            className="flex gap-3 border-b border-[hsl(var(--border))] pb-3 last:border-b-0 last:pb-0"
+            className="flex gap-3 border-b border-subtle pb-3 last:border-b-0 last:pb-0"
           >
             <div className="shrink-0 text-right">
-              <p className="text-xs text-[hsl(var(--text))]">
+              <p className="text-xs font-mono">
                 {formatDate(event.date)}
               </p>
             </div>
@@ -92,17 +92,17 @@ export default function SkyEvents({ events }: SkyEventsProps) {
                 >
                   {eventTypeLabels[event.type] ?? event.type}
                 </span>
-                <h3 className="text-xs font-bold text-[hsl(var(--primary))]">
+                <h3 className="text-xs font-bold text-cyan-400">
                   {event.title}
                 </h3>
               </div>
 
-              <p className="text-[10px] text-[hsl(var(--text))]">
+              <p className="text-[10px] font-mono">
                 {event.description}
               </p>
 
               {event.moonInterference && (
-                <p className="mt-1 text-[10px] text-[hsl(var(--muted))]">
+                <p className="mt-1 text-[10px] text-muted-foreground">
                   Moon interference: {event.moonInterference}
                 </p>
               )}

@@ -1,11 +1,11 @@
 'use client';
 
 /**
- * 16-Bit Weather Platform - Stargazer Page
+ * 16-Bit Weather Platform - Stargazer Command Center
  *
- * Astrophotography forecast: tonight's conditions including seeing,
- * transparency, moon phase, planet visibility, deep sky targets,
- * ISS passes, and upcoming launches.
+ * Tabbed command center layout for astrophotography forecasting.
+ * Matches space weather page patterns with persistent header card,
+ * tab navigation, and organized content sections.
  */
 
 import React, { useEffect, useState, useCallback, startTransition } from 'react';
@@ -15,18 +15,26 @@ import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import PageWrapper from '@/components/page-wrapper';
 import { ShareButtons } from '@/components/share-buttons';
 import type { StargazerData } from '@/lib/stargazer/types';
+import StargazerNav, { type StargazerTabId } from '@/components/stargazer/StargazerNav';
 import FullHourlyTimeline from '@/components/stargazer/HourlyTimeline';
+import MoonIntel from '@/components/stargazer/MoonIntel';
+import PlanetTable from '@/components/stargazer/PlanetTable';
+import DeepSkyHighlights from '@/components/stargazer/DeepSkyHighlights';
+import SkyEvents from '@/components/stargazer/SkyEvents';
+import ISSPasses from '@/components/stargazer/ISSPasses';
+import LaunchSchedule from '@/components/stargazer/LaunchSchedule';
+import StargazerAttribution from '@/components/stargazer/StargazerAttribution';
 
 // ============================================================================
 // Score color helpers
 // ============================================================================
 
 function scoreColor(score: number): string {
-  if (score >= 80) return 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10';
-  if (score >= 60) return 'text-green-400 border-green-500/40 bg-green-500/10';
-  if (score >= 40) return 'text-yellow-400 border-yellow-500/40 bg-yellow-500/10';
-  if (score >= 20) return 'text-orange-400 border-orange-500/40 bg-orange-500/10';
-  return 'text-red-400 border-red-500/40 bg-red-500/10';
+  if (score >= 80) return 'text-emerald-400';
+  if (score >= 60) return 'text-green-400';
+  if (score >= 40) return 'text-yellow-400';
+  if (score >= 20) return 'text-orange-400';
+  return 'text-red-400';
 }
 
 function scoreBarColor(score: number): string {
@@ -43,28 +51,25 @@ function formatTime(date: Date | string | null): string {
   return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
-function formatDate(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
+// ============================================================================
+// Tab hash helpers
+// ============================================================================
 
-function formatDateTime(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
+const VALID_TABS: StargazerTabId[] = ['conditions', 'targets', 'events', 'launches'];
+
+function getTabFromHash(): StargazerTabId {
+  if (typeof window === 'undefined') return 'conditions';
+  const hash = window.location.hash.replace('#', '') as StargazerTabId;
+  return VALID_TABS.includes(hash) ? hash : 'conditions';
 }
 
 // ============================================================================
-// Sub-components
+// Loading skeleton
 // ============================================================================
 
 function SkeletonCard({ rows = 3 }: { rows?: number }) {
   return (
-    <div className="border-2 border-border/40 bg-black/20 p-4 animate-pulse">
+    <div className="container-primary p-4 animate-pulse">
       <div className="h-5 w-1/3 bg-white/10 rounded mb-4" />
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="h-4 w-full bg-white/10 rounded mb-2" />
@@ -73,76 +78,105 @@ function SkeletonCard({ rows = 3 }: { rows?: number }) {
   );
 }
 
-function SectionCard({
-  title,
-  children,
-  className,
-}: {
-  title: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={cn('border-2 border-border/40 bg-black/20 p-4 sm:p-6', className)}>
-      <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4 font-mono">
-        {title}
-      </h2>
-      {children}
-    </div>
-  );
-}
+// ============================================================================
+// Persistent Header Card
+// ============================================================================
 
-// 1. Hero - StargazerScore
-function StargazerScoreHero({ data }: { data: StargazerData }) {
-  const { score, darkWindow, location } = data;
-  return (
-    <div className={cn('border-4 p-6 sm:p-8 text-center', scoreColor(score.overall))}>
-      <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-2">
-        Tonight&apos;s Stargazing Forecast
-        {location.name ? ` -- ${location.name}` : ''}
-      </p>
-      <div className="text-7xl sm:text-8xl font-extrabold font-mono tabular-nums leading-none mb-2">
-        {Math.round(score.overall)}
-      </div>
-      <div className="text-xl sm:text-2xl font-bold font-mono mb-3">{score.label}</div>
-      <p className="text-sm font-mono max-w-xl mx-auto text-muted-foreground mb-4">
-        {score.summary}
-      </p>
+function PersistentHeader({ data }: { data: StargazerData }) {
+  const { score, darkWindow, moon, location } = data;
 
-      {/* Sub-scores */}
-      <div className="grid grid-cols-5 gap-2 max-w-lg mx-auto text-xs font-mono">
-        {Object.entries(score.subScores).map(([key, val]) => (
-          <div key={key} className="flex flex-col items-center gap-1">
-            <span className="uppercase text-muted-foreground">{key}</span>
-            <div className="w-full h-2 bg-white/10 rounded overflow-hidden">
-              <div className={cn('h-full rounded', scoreBarColor(val))} style={{ width: `${val}%` }} />
-            </div>
-            <span>{Math.round(val)}</span>
+  return (
+    <div className="container-primary p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row gap-6">
+        {/* Left: Moon phase icon area */}
+        <div className="flex flex-col items-center justify-center shrink-0">
+          <div className="w-24 h-24 rounded-full border-2 border-subtle bg-black/30 flex items-center justify-center relative overflow-hidden">
+            <div
+              className="absolute inset-0 bg-white/80 rounded-full"
+              style={{
+                clipPath: `inset(0 ${100 - Math.round(moon.illumination)}% 0 0)`,
+              }}
+            />
+            <span className="relative z-10 text-2xl font-bold font-mono text-white drop-shadow-lg">
+              {Math.round(moon.illumination)}%
+            </span>
           </div>
-        ))}
-      </div>
+          <span className="mt-2 text-xs font-mono uppercase text-muted-foreground">
+            {moon.phaseName}
+          </span>
+        </div>
 
-      {/* Dark window */}
-      {darkWindow && (
-        <p className="mt-4 text-xs font-mono text-muted-foreground">
-          Dark window: {formatTime(darkWindow.astronomicalDusk)} &ndash;{' '}
-          {formatTime(darkWindow.astronomicalDawn)}
-        </p>
-      )}
+        {/* Right: Score, label, summary, times */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-3 mb-1">
+            <span className={cn('text-4xl sm:text-5xl font-extrabold font-mono tabular-nums', scoreColor(score.overall))}>
+              {Math.round(score.overall)}
+            </span>
+            <span className={cn('text-xl font-bold font-mono uppercase', scoreColor(score.overall))}>
+              {score.label}
+            </span>
+          </div>
+
+          {location.name && (
+            <p className="text-xs font-mono text-muted-foreground mb-1">
+              {location.name}
+            </p>
+          )}
+
+          <p className="text-sm font-mono text-muted-foreground mb-3 max-w-xl">
+            {score.summary}
+          </p>
+
+          <div className="flex flex-wrap gap-4 text-xs font-mono mb-4">
+            {darkWindow && (
+              <div>
+                <span className="text-xs font-mono uppercase text-muted-foreground block">Dark Window</span>
+                <span className="font-bold">
+                  {formatTime(darkWindow.astronomicalDusk)} &ndash; {formatTime(darkWindow.astronomicalDawn)}
+                </span>
+              </div>
+            )}
+            {moon.set && (
+              <div>
+                <span className="text-xs font-mono uppercase text-muted-foreground block">Moon Set</span>
+                <span className="font-bold">{formatTime(moon.set)}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Sub-score mini-bars */}
+          <div className="grid grid-cols-5 gap-2 max-w-md text-xs font-mono">
+            {Object.entries(score.subScores).map(([key, val]) => (
+              <div key={key} className="flex flex-col items-center gap-1">
+                <span className="text-xs font-mono uppercase text-muted-foreground">{key}</span>
+                <div className="w-full h-2 bg-white/10 rounded overflow-hidden">
+                  <div
+                    className={cn('h-full rounded', scoreBarColor(val))}
+                    style={{ width: `${val}%` }}
+                  />
+                </div>
+                <span className="font-bold font-mono">{Math.round(val)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-// 2. HourlyTimeline - uses full component from components/stargazer/
-function HourlyTimeline({ data }: { data: StargazerData }) {
-  const { hourlyConditions, darkWindow } = data;
-  if (!hourlyConditions || hourlyConditions.length === 0) return null;
+// ============================================================================
+// Tab Content Panels
+// ============================================================================
+
+function ConditionsPanel({ data }: { data: StargazerData }) {
+  const { hourlyConditions, darkWindow, moon } = data;
 
   // Rehydrate dates from JSON serialization
-  const conditions = hourlyConditions.map((h) => ({
+  const conditions = hourlyConditions?.map((h) => ({
     ...h,
     time: typeof h.time === 'string' ? new Date(h.time) : h.time,
-  }));
+  })) ?? [];
 
   const rehydratedDarkWindow = {
     sunset: typeof darkWindow.sunset === 'string' ? new Date(darkWindow.sunset) : darkWindow.sunset,
@@ -151,304 +185,75 @@ function HourlyTimeline({ data }: { data: StargazerData }) {
     astronomicalDawn: typeof darkWindow.astronomicalDawn === 'string' ? new Date(darkWindow.astronomicalDawn) : darkWindow.astronomicalDawn,
   };
 
-  return <FullHourlyTimeline conditions={conditions} darkWindow={rehydratedDarkWindow} />;
-}
-
-// 3. MoonIntel
-function MoonIntel({ data }: { data: StargazerData }) {
-  const { moon } = data;
-  if (!moon) return null;
-
   return (
-    <SectionCard title="Moon Intel">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm font-mono">
-        <div>
-          <span className="text-muted-foreground block text-xs">Phase</span>
-          <span className="font-bold">{moon.phaseName}</span>
-        </div>
-        <div>
-          <span className="text-muted-foreground block text-xs">Illumination</span>
-          <span className="font-bold">{Math.round(moon.illumination)}%</span>
-        </div>
-        <div>
-          <span className="text-muted-foreground block text-xs">Rise</span>
-          <span>{formatTime(moon.rise)}</span>
-        </div>
-        <div>
-          <span className="text-muted-foreground block text-xs">Set</span>
-          <span>{formatTime(moon.set)}</span>
-        </div>
-        <div>
-          <span className="text-muted-foreground block text-xs">Moon Up (Dark Window)</span>
-          <span>{Math.round(moon.moonUpDuringDarkWindowPercent)}%</span>
-        </div>
-        <div>
-          <span className="text-muted-foreground block text-xs">Next New Moon</span>
-          <span>{formatDate(moon.nextNewMoon)}</span>
-        </div>
-        <div>
-          <span className="text-muted-foreground block text-xs">Next Full Moon</span>
-          <span>{formatDate(moon.nextFullMoon)}</span>
-        </div>
-      </div>
-    </SectionCard>
-  );
-}
-
-// 4. PlanetTable
-function PlanetTable({ data }: { data: StargazerData }) {
-  const { planets } = data;
-  if (!planets || planets.length === 0) return null;
-
-  return (
-    <SectionCard title="Planet Visibility">
-      <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6">
-        <table className="w-full text-xs font-mono min-w-[500px]">
-          <thead>
-            <tr className="text-muted-foreground border-b border-border/40">
-              <th className="text-left py-2 pr-3">Planet</th>
-              <th className="text-left py-2 pr-3">Rise</th>
-              <th className="text-left py-2 pr-3">Set</th>
-              <th className="text-right py-2 pr-3">Peak Alt</th>
-              <th className="text-right py-2 pr-3">Mag</th>
-              <th className="text-left py-2">Constellation</th>
-            </tr>
-          </thead>
-          <tbody>
-            {planets.map((p) => (
-              <tr key={p.name} className="border-b border-border/20">
-                <td className="py-2 pr-3 font-bold">{p.name}</td>
-                <td className="py-2 pr-3">{formatTime(p.rise)}</td>
-                <td className="py-2 pr-3">{formatTime(p.set)}</td>
-                <td className="py-2 pr-3 text-right">{Math.round(p.peakAltitude)}&deg;</td>
-                <td className="py-2 pr-3 text-right">{p.magnitude.toFixed(1)}</td>
-                <td className="py-2">{p.constellation}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {planets.some((p) => p.notes) && (
-        <div className="mt-3 text-xs font-mono text-muted-foreground space-y-1">
-          {planets
-            .filter((p) => p.notes)
-            .map((p) => (
-              <p key={p.name}>
-                <span className="font-bold">{p.name}:</span> {p.notes}
-              </p>
-            ))}
-        </div>
+    <div className="space-y-6">
+      {conditions.length > 0 && (
+        <FullHourlyTimeline conditions={conditions} darkWindow={rehydratedDarkWindow} />
       )}
-    </SectionCard>
-  );
-}
-
-// 5. DeepSkyHighlights
-function DeepSkyHighlights({ data }: { data: StargazerData }) {
-  const { deepSkyHighlights } = data;
-  if (!deepSkyHighlights || deepSkyHighlights.length === 0) return null;
-
-  const difficultyColor: Record<string, string> = {
-    beginner: 'text-green-400',
-    intermediate: 'text-yellow-400',
-    advanced: 'text-orange-400',
-  };
-
-  return (
-    <SectionCard title="Deep Sky Highlights">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {deepSkyHighlights.map((obj) => (
-          <div key={obj.id} className="border border-border/30 bg-black/10 p-3">
-            <div className="flex items-start justify-between mb-1">
-              <div>
-                <span className="text-sm font-bold font-mono">{obj.name}</span>
-                {obj.altNames.length > 0 && (
-                  <span className="text-xs text-muted-foreground ml-2">
-                    {obj.altNames[0]}
-                  </span>
-                )}
-              </div>
-              <span
-                className={cn(
-                  'text-[10px] uppercase font-mono',
-                  difficultyColor[obj.difficulty] || 'text-muted-foreground'
-                )}
-              >
-                {obj.difficulty}
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground font-mono mb-2">
-              {obj.type.replace(/_/g, ' ')} in {obj.constellation}
-            </p>
-            <div className="grid grid-cols-3 gap-1 text-[10px] font-mono text-muted-foreground">
-              <div>Mag {obj.magnitude.toFixed(1)}</div>
-              <div>Alt {Math.round(obj.maxAltitude)}&deg;</div>
-              <div>Transit {formatTime(obj.transitTime)}</div>
-            </div>
-            <p className="mt-2 text-xs font-mono text-muted-foreground leading-relaxed">
-              {obj.description}
-            </p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <MoonIntel moon={moon} />
+        {/* Ground conditions summary */}
+        <div className="container-primary p-4 font-mono">
+          <h2 className="border-b border-subtle py-3 mb-3 text-xs font-mono uppercase text-muted-foreground">
+            Ground Conditions
+          </h2>
+          <div className="grid grid-cols-2 gap-4">
+            {conditions.length > 0 && (
+              <>
+                <div>
+                  <span className="text-xs font-mono uppercase text-muted-foreground block">Temperature</span>
+                  <span className="text-xl font-bold font-mono">{Math.round(conditions[0].temperature)}&deg;C</span>
+                </div>
+                <div>
+                  <span className="text-xs font-mono uppercase text-muted-foreground block">Humidity</span>
+                  <span className="text-xl font-bold font-mono">{Math.round(conditions[0].humidity)}%</span>
+                </div>
+                <div>
+                  <span className="text-xs font-mono uppercase text-muted-foreground block">Wind Speed</span>
+                  <span className="text-xl font-bold font-mono">{Math.round(conditions[0].windSpeed)} km/h</span>
+                </div>
+                <div>
+                  <span className="text-xs font-mono uppercase text-muted-foreground block">Cloud Cover</span>
+                  <span className="text-xl font-bold font-mono">{Math.round(conditions[0].cloudCover)}%</span>
+                </div>
+                <div>
+                  <span className="text-xs font-mono uppercase text-muted-foreground block">Dew Risk</span>
+                  <span className="text-xl font-bold font-mono capitalize">{String(conditions[0].dewRisk)}</span>
+                </div>
+                <div>
+                  <span className="text-xs font-mono uppercase text-muted-foreground block">Seeing</span>
+                  <span className="text-xl font-bold font-mono">{conditions[0].seeing}/8</span>
+                </div>
+              </>
+            )}
           </div>
-        ))}
+        </div>
       </div>
-    </SectionCard>
-  );
-}
-
-// 6. SkyEvents
-function SkyEvents({ data }: { data: StargazerData }) {
-  const { skyEvents, meteorShowers } = data;
-  const hasEvents = (skyEvents && skyEvents.length > 0) || (meteorShowers && meteorShowers.length > 0);
-  if (!hasEvents) return null;
-
-  const typeIcon: Record<string, string> = {
-    meteor_shower: '☄',
-    conjunction: '☍',
-    opposition: '☍',
-    lunar_eclipse: '🌑',
-    solar_eclipse: '🌒',
-    equinox: '⚖',
-    solstice: '☀',
-  };
-
-  return (
-    <SectionCard title="Sky Events">
-      <div className="space-y-3">
-        {/* Meteor showers first */}
-        {meteorShowers &&
-          meteorShowers.map((ms) => (
-            <div key={ms.name} className="border border-border/30 bg-black/10 p-3 text-xs font-mono">
-              <div className="flex items-center gap-2 mb-1">
-                <span>☄</span>
-                <span className="font-bold">{ms.name}</span>
-                <span className="text-muted-foreground">Peak: {ms.peak}</span>
-              </div>
-              <p className="text-muted-foreground">{ms.description}</p>
-              <div className="flex gap-4 mt-1 text-muted-foreground">
-                <span>ZHR: {ms.zhr}</span>
-                <span>Speed: {ms.speed} km/s</span>
-                <span>Moon: {ms.moonInterference}</span>
-              </div>
-            </div>
-          ))}
-        {/* Other sky events */}
-        {skyEvents &&
-          skyEvents.map((evt, i) => (
-            <div key={i} className="border border-border/30 bg-black/10 p-3 text-xs font-mono">
-              <div className="flex items-center gap-2 mb-1">
-                <span>{typeIcon[evt.type] || '★'}</span>
-                <span className="font-bold">{evt.title}</span>
-                <span className="text-muted-foreground">{formatDate(evt.date)}</span>
-              </div>
-              <p className="text-muted-foreground">{evt.description}</p>
-            </div>
-          ))}
-      </div>
-    </SectionCard>
-  );
-}
-
-// 7. ISSPasses
-function ISSPasses({ data }: { data: StargazerData }) {
-  const { issPasses } = data;
-  if (!issPasses || issPasses.length === 0) return null;
-
-  return (
-    <SectionCard title="ISS Passes">
-      <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6">
-        <table className="w-full text-xs font-mono min-w-[450px]">
-          <thead>
-            <tr className="text-muted-foreground border-b border-border/40">
-              <th className="text-left py-2 pr-3">Date</th>
-              <th className="text-left py-2 pr-3">Rise</th>
-              <th className="text-right py-2 pr-3">Max El</th>
-              <th className="text-left py-2 pr-3">Set</th>
-              <th className="text-right py-2">Mag</th>
-            </tr>
-          </thead>
-          <tbody>
-            {issPasses.map((pass, i) => (
-              <tr key={i} className="border-b border-border/20">
-                <td className="py-2 pr-3">{formatDate(pass.date)}</td>
-                <td className="py-2 pr-3">
-                  {formatTime(pass.riseTime)} {pass.riseDirection}
-                </td>
-                <td className="py-2 pr-3 text-right">{Math.round(pass.maxElevation)}&deg;</td>
-                <td className="py-2 pr-3">
-                  {formatTime(pass.setTime)} {pass.setDirection}
-                </td>
-                <td className="py-2 text-right">{pass.brightness.toFixed(1)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </SectionCard>
-  );
-}
-
-// 8. LaunchSchedule
-function LaunchSchedule({ data }: { data: StargazerData }) {
-  const { launches } = data;
-  if (!launches || launches.length === 0) return null;
-
-  return (
-    <SectionCard title="Upcoming Launches">
-      <div className="space-y-3">
-        {launches.map((launch) => (
-          <div key={launch.id} className="border border-border/30 bg-black/10 p-3 text-xs font-mono">
-            <div className="flex items-start justify-between mb-1">
-              <span className="font-bold">{launch.name}</span>
-              <span className="text-muted-foreground shrink-0 ml-2">
-                {formatDateTime(launch.net)}
-              </span>
-            </div>
-            <div className="text-muted-foreground space-y-0.5">
-              <p>
-                {launch.provider} -- {launch.vehicle}
-              </p>
-              <p>{launch.padLocation}</p>
-              {launch.missionDescription && (
-                <p className="mt-1">{launch.missionDescription}</p>
-              )}
-            </div>
-            <div className="flex gap-3 mt-1">
-              <span
-                className={cn(
-                  'text-[10px] uppercase px-1.5 py-0.5 border',
-                  launch.status === 'Go'
-                    ? 'text-green-400 border-green-500/40'
-                    : 'text-yellow-400 border-yellow-500/40'
-                )}
-              >
-                {launch.status}
-              </span>
-              {launch.isCrewed && (
-                <span className="text-[10px] uppercase px-1.5 py-0.5 border text-cyan-400 border-cyan-500/40">
-                  Crewed
-                </span>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </SectionCard>
-  );
-}
-
-// 9. Attribution
-function StargazerAttribution() {
-  return (
-    <div className="text-[10px] font-mono text-muted-foreground mt-8 border-t border-border/30 pt-4 space-y-1">
-      <p>
-        Data sources: 7Timer (astro forecasts), Astronomy Engine (celestial mechanics),
-        CelesTrak (ISS TLE), Launch Library 2 (launches).
-      </p>
-      <p>
-        Forecast accuracy depends on atmospheric models and may vary from actual conditions.
-        Always verify conditions before planning observation sessions.
-      </p>
     </div>
+  );
+}
+
+function TargetsPanel({ data }: { data: StargazerData }) {
+  return (
+    <div className="space-y-6">
+      <PlanetTable planets={data.planets} />
+      <DeepSkyHighlights highlights={data.deepSkyHighlights} />
+    </div>
+  );
+}
+
+function EventsPanel({ data }: { data: StargazerData }) {
+  return (
+    <div className="space-y-6">
+      <SkyEvents events={data.skyEvents} />
+      <ISSPasses passes={data.issPasses} />
+    </div>
+  );
+}
+
+function LaunchesPanel({ data }: { data: StargazerData }) {
+  return (
+    <LaunchSchedule launches={data.launches} />
   );
 }
 
@@ -462,13 +267,28 @@ export default function StargazerPage() {
   const [data, setData] = useState<StargazerData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<StargazerTabId>('conditions');
+
+  // Read hash on mount
+  useEffect(() => {
+    setActiveTab(getTabFromHash());
+
+    const handleHashChange = () => setActiveTab(getTabFromHash());
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Update hash on tab change
+  const handleTabChange = useCallback((tab: StargazerTabId) => {
+    setActiveTab(tab);
+    window.location.hash = tab;
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      // Get user location via browser geolocation
       let latitude: number;
       let longitude: number;
       let usedFallback = false;
@@ -480,7 +300,6 @@ export default function StargazerPage() {
         latitude = pos.coords.latitude;
         longitude = pos.coords.longitude;
       } catch {
-        // Geolocation failed -- fall back to NYC
         latitude = 40.7128;
         longitude = -74.006;
         usedFallback = true;
@@ -521,7 +340,7 @@ export default function StargazerPage() {
   return (
     <PageWrapper>
       <div className={cn('container mx-auto px-4 py-8', themeClasses.background)}>
-        {/* Header */}
+        {/* Page Title */}
         <div className="mb-8">
           <h1
             className={cn(
@@ -530,13 +349,14 @@ export default function StargazerPage() {
               themeClasses.glow
             )}
           >
-            STARGAZER
+            STARGAZER COMMAND CENTER
           </h1>
           <p className={cn('text-base sm:text-lg font-mono max-w-3xl', themeClasses.text)}>
             Tonight&apos;s astrophotography forecast. Seeing, transparency, moon phase, planet
             visibility, deep sky targets, ISS passes, and upcoming launches -- all in one place.
           </p>
         </div>
+
         <ShareButtons
           config={{
             title: 'Stargazer - Astrophotography Forecast',
@@ -548,11 +368,7 @@ export default function StargazerPage() {
 
         {/* Error */}
         {error && (
-          <div
-            className={cn(
-              'mb-6 p-4 border-4 border-red-500 bg-red-500/10 font-mono text-sm text-red-500'
-            )}
-          >
+          <div className="mb-6 p-4 container-primary border-red-500/40 font-mono text-sm text-red-400">
             {error}
           </div>
         )}
@@ -561,42 +377,36 @@ export default function StargazerPage() {
         {isLoading && (
           <div className="space-y-4">
             <SkeletonCard rows={5} />
+            <SkeletonCard rows={2} />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <SkeletonCard rows={4} />
               <SkeletonCard rows={4} />
             </div>
-            <SkeletonCard rows={6} />
           </div>
         )}
 
         {/* Content */}
         {data && !isLoading && (
           <div className="space-y-6">
-            {/* 1. Hero Score */}
-            <StargazerScoreHero data={data} />
+            {/* Persistent Header Card */}
+            <PersistentHeader data={data} />
 
-            {/* 2. Hourly Timeline */}
-            <HourlyTimeline data={data} />
+            {/* Tab Navigation */}
+            <StargazerNav activeTab={activeTab} onTabChange={handleTabChange} />
 
-            {/* 3-4. Moon and Planets side by side on desktop */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <MoonIntel data={data} />
-              <PlanetTable data={data} />
+            {/* Tab Content */}
+            <div
+              role="tabpanel"
+              id={`panel-${activeTab}`}
+              aria-labelledby={`tab-${activeTab}`}
+            >
+              {activeTab === 'conditions' && <ConditionsPanel data={data} />}
+              {activeTab === 'targets' && <TargetsPanel data={data} />}
+              {activeTab === 'events' && <EventsPanel data={data} />}
+              {activeTab === 'launches' && <LaunchesPanel data={data} />}
             </div>
 
-            {/* 5. Deep Sky */}
-            <DeepSkyHighlights data={data} />
-
-            {/* 6. Sky Events */}
-            <SkyEvents data={data} />
-
-            {/* 7-8. ISS and Launches side by side */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <ISSPasses data={data} />
-              <LaunchSchedule data={data} />
-            </div>
-
-            {/* 9. Attribution */}
+            {/* Attribution */}
             <StargazerAttribution />
           </div>
         )}

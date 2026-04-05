@@ -30,16 +30,16 @@ function ScoreBar({ label, value }: { label: string; value: number }) {
 
   return (
     <div className="flex items-center gap-2 font-mono text-xs">
-      <span className="w-32 shrink-0 uppercase tracking-wider text-[hsl(var(--muted))]">
+      <span className="w-32 shrink-0 uppercase tracking-wider text-muted-foreground">
         {label}
       </span>
-      <div className="h-3 flex-1 border-2 border-[hsl(var(--border))] bg-[hsl(var(--bg))]">
+      <div className="h-3 flex-1 border border-subtle bg-[hsl(var(--bg))]">
         <div
           className={cn('h-full transition-all duration-500', barColor)}
           style={{ width: `${clamped}%` }}
         />
       </div>
-      <span className="w-8 text-right text-[hsl(var(--text))]">{clamped}</span>
+      <span className="w-8 text-right font-mono">{clamped}</span>
     </div>
   );
 }
@@ -51,26 +51,26 @@ export default function StargazerScore({ score }: StargazerScoreProps) {
   return (
     <div
       className={cn(
-        'border-4 border-[hsl(var(--border))] bg-[hsl(var(--bg))] p-4 font-mono',
+        'container-primary p-4 font-mono',
         styles
       )}
     >
-      <h2 className="mb-3 text-sm uppercase tracking-wider text-[hsl(var(--muted))]">
+      <h2 className="mb-3 text-sm uppercase tracking-wider text-muted-foreground">
         Stargazing Score
       </h2>
 
       <div className="mb-4 flex items-center gap-4">
         <div
-          className="flex h-20 w-20 shrink-0 items-center justify-center border-4 border-[hsl(var(--border))]"
+          className="flex h-20 w-20 shrink-0 items-center justify-center border-2 border-subtle"
           style={{ backgroundColor: score.color }}
         >
           <span className="text-3xl font-bold text-white">{score.overall}</span>
         </div>
         <div>
-          <p className="text-lg font-bold uppercase tracking-wider text-[hsl(var(--primary))]">
+          <p className="text-lg font-bold uppercase tracking-wider text-cyan-400">
             {score.label}
           </p>
-          <p className="text-xs text-[hsl(var(--text))]">{score.summary}</p>
+          <p className="text-xs font-mono">{score.summary}</p>
         </div>
       </div>
 

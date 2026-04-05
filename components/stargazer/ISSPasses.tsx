@@ -31,45 +31,45 @@ export default function ISSPasses({ passes }: ISSPassesProps) {
   return (
     <div
       className={cn(
-        'border-4 border-[hsl(var(--border))] bg-[hsl(var(--bg))] p-4 font-mono',
+        'container-primary p-4 font-mono',
         styles
       )}
     >
-      <h2 className="mb-3 text-sm uppercase tracking-wider text-[hsl(var(--muted))]">
+      <h2 className="border-b border-subtle py-3 mb-3 text-xs font-mono uppercase text-muted-foreground">
         ISS Passes
       </h2>
 
       {!passes || passes.length === 0 ? (
-        <p className="text-xs text-[hsl(var(--text))]">
+        <p className="text-xs font-mono">
           No visible ISS passes in the next few days.
         </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b-2 border-[hsl(var(--border))]">
-                <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+              <tr className="border-b border-subtle">
+                <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                   Date
                 </th>
-                <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+                <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                   Rise
                 </th>
-                <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+                <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                   Dir
                 </th>
-                <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+                <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                   Max Elev
                 </th>
-                <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+                <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                   Max Time
                 </th>
-                <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+                <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                   Set Dir
                 </th>
-                <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+                <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                   Set
                 </th>
-                <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+                <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                   Bright
                 </th>
               </tr>
@@ -78,30 +78,30 @@ export default function ISSPasses({ passes }: ISSPassesProps) {
               {passes.map((pass, i) => (
                 <tr
                   key={i}
-                  className="border-b border-[hsl(var(--border))]"
+                  className="border-b border-subtle"
                 >
-                  <td className="px-2 py-1 text-[hsl(var(--text))]">
+                  <td className="px-2 py-1 font-mono">
                     {formatDate(pass.date)}
                   </td>
-                  <td className="px-2 py-1 text-[hsl(var(--text))]">
+                  <td className="px-2 py-1 font-mono">
                     {formatTime(pass.riseTime)}
                   </td>
-                  <td className="px-2 py-1 text-[hsl(var(--muted))]">
+                  <td className="px-2 py-1 text-muted-foreground">
                     {pass.riseDirection}
                   </td>
-                  <td className="px-2 py-1 font-bold text-[hsl(var(--primary))]">
+                  <td className="px-2 py-1 font-bold text-cyan-400">
                     {Math.round(pass.maxElevation)}&deg;
                   </td>
-                  <td className="px-2 py-1 text-[hsl(var(--text))]">
+                  <td className="px-2 py-1 font-mono">
                     {formatTime(pass.maxTime)}
                   </td>
-                  <td className="px-2 py-1 text-[hsl(var(--muted))]">
+                  <td className="px-2 py-1 text-muted-foreground">
                     {pass.setDirection}
                   </td>
-                  <td className="px-2 py-1 text-[hsl(var(--text))]">
+                  <td className="px-2 py-1 font-mono">
                     {formatTime(pass.setTime)}
                   </td>
-                  <td className="px-2 py-1 text-[hsl(var(--text))]">
+                  <td className="px-2 py-1 font-mono">
                     {pass.brightness.toFixed(1)}
                   </td>
                 </tr>

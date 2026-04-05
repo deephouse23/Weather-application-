@@ -27,37 +27,37 @@ export default function PlanetTable({ planets }: PlanetTableProps) {
   return (
     <div
       className={cn(
-        'border-4 border-[hsl(var(--border))] bg-[hsl(var(--bg))] p-4 font-mono',
+        'container-primary p-4 font-mono',
         styles
       )}
     >
-      <h2 className="mb-3 text-sm uppercase tracking-wider text-[hsl(var(--muted))]">
+      <h2 className="border-b border-subtle py-3 mb-3 text-xs font-mono uppercase text-muted-foreground">
         Planet Visibility
       </h2>
 
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b-2 border-[hsl(var(--border))]">
-              <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+            <tr className="border-b border-subtle">
+              <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                 Planet
               </th>
-              <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+              <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                 Rise
               </th>
-              <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+              <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                 Set
               </th>
-              <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+              <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                 Peak Alt
               </th>
-              <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+              <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                 Peak Time
               </th>
-              <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+              <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                 Mag
               </th>
-              <th className="px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+              <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                 Notes
               </th>
             </tr>
@@ -66,27 +66,27 @@ export default function PlanetTable({ planets }: PlanetTableProps) {
             {planets.map((planet) => (
               <tr
                 key={planet.name}
-                className="border-b border-[hsl(var(--border))]"
+                className="border-b border-subtle"
               >
-                <td className="px-2 py-1 font-bold text-[hsl(var(--primary))]">
+                <td className="px-2 py-1 font-bold text-cyan-400">
                   {planet.name}
                 </td>
-                <td className="px-2 py-1 text-[hsl(var(--text))]">
+                <td className="px-2 py-1 font-mono">
                   {formatTime(planet.rise)}
                 </td>
-                <td className="px-2 py-1 text-[hsl(var(--text))]">
+                <td className="px-2 py-1 font-mono">
                   {formatTime(planet.set)}
                 </td>
-                <td className="px-2 py-1 text-[hsl(var(--text))]">
+                <td className="px-2 py-1 font-mono">
                   {Math.round(planet.peakAltitude)}&deg;
                 </td>
-                <td className="px-2 py-1 text-[hsl(var(--text))]">
+                <td className="px-2 py-1 font-mono">
                   {formatTime(planet.peakTime)}
                 </td>
-                <td className="px-2 py-1 text-[hsl(var(--text))]">
+                <td className="px-2 py-1 font-mono">
                   {planet.magnitude.toFixed(1)}
                 </td>
-                <td className="px-2 py-1 text-[hsl(var(--muted))]">
+                <td className="px-2 py-1 text-muted-foreground">
                   {planet.notes || '--'}
                 </td>
               </tr>

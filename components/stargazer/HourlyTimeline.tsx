@@ -120,14 +120,14 @@ export default function HourlyTimeline({
     return (
       <div
         className={cn(
-          'border-4 border-[hsl(var(--border))] bg-[hsl(var(--bg))] p-4 font-mono',
+          'container-primary p-4 font-mono',
           styles
         )}
       >
-        <h2 className="text-sm uppercase tracking-wider text-[hsl(var(--muted))]">
+        <h2 className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
           Hourly Forecast
         </h2>
-        <p className="mt-2 text-xs text-[hsl(var(--text))]">
+        <p className="mt-2 text-xs font-mono text-muted-foreground">
           No hourly data available.
         </p>
       </div>
@@ -137,14 +137,14 @@ export default function HourlyTimeline({
   return (
     <div
       className={cn(
-        'border-4 border-[hsl(var(--border))] bg-[hsl(var(--bg))] p-4 font-mono',
+        'container-primary p-4 font-mono',
         styles
       )}
     >
-      <h2 className="mb-1 text-sm uppercase tracking-wider text-[hsl(var(--muted))]">
+      <h2 className="mb-1 text-xs font-mono uppercase tracking-wider text-muted-foreground">
         Hourly Forecast
       </h2>
-      <p className="mb-3 text-xs text-[hsl(var(--text))]">
+      <p className="mb-3 text-xs font-mono text-muted-foreground">
         Dark window: {formatTime(darkWindow.sunset)} &ndash;{' '}
         {formatTime(darkWindow.sunrise)}
       </p>
@@ -153,13 +153,13 @@ export default function HourlyTimeline({
         <table className="w-full text-xs">
           <thead>
             <tr>
-              <th className="sticky left-0 bg-[hsl(var(--bg))] px-2 py-1 text-left uppercase tracking-wider text-[hsl(var(--muted))]">
+              <th className="sticky left-0 bg-inherit px-2 py-1 text-left text-xs font-mono uppercase tracking-wider text-muted-foreground">
                 Metric
               </th>
               {conditions.map((c, i) => (
                 <th
                   key={i}
-                  className="min-w-[3rem] px-1 py-1 text-center text-[hsl(var(--text))]"
+                  className="min-w-[3rem] px-1 py-1 text-center text-xs font-mono text-muted-foreground"
                 >
                   {formatTime(c.time)}
                 </th>
@@ -169,7 +169,7 @@ export default function HourlyTimeline({
           <tbody>
             {metrics.map((metric) => (
               <tr key={metric}>
-                <td className="sticky left-0 bg-[hsl(var(--bg))] px-2 py-1 uppercase tracking-wider text-[hsl(var(--muted))]">
+                <td className="sticky left-0 bg-inherit px-2 py-1 text-xs font-mono uppercase tracking-wider text-muted-foreground">
                   {metricLabels[metric]}
                 </td>
                 {conditions.map((c, i) => {
@@ -180,7 +180,7 @@ export default function HourlyTimeline({
                     <td
                       key={i}
                       className={cn(
-                        'border border-[hsl(var(--border))] px-1 py-1 text-center text-white',
+                        'border border-subtle px-1 py-1 text-center text-white text-xs font-mono',
                         getCellColor(metric, value as number | string)
                       )}
                     >
