@@ -400,7 +400,7 @@ export async function getFeaturedItem(): Promise<RSSItem | null> {
 /**
  * Clear the cache
  */
-export function clearCache(): void {
+function clearCache(): void {
   cache.clear();
 }
 

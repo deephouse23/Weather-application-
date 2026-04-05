@@ -211,7 +211,7 @@ export async function fetchRecentEarthquakes(
  * For "any big earthquakes lately?" type queries
  * @param days Number of days to look back (default: 7)
  */
-export async function fetchSignificantEarthquakes(days: number = 7): Promise<EarthquakeResponse> {
+async function fetchSignificantEarthquakes(days: number = 7): Promise<EarthquakeResponse> {
     const cacheKey = `significant_global_${days}`;
 
     // Check cache

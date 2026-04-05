@@ -34,4 +34,3 @@ export function MapSkeleton({
   )
 }
 
-export default MapSkeleton

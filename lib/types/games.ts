@@ -59,7 +59,7 @@ export interface UserGameStats {
   updated_at: string;
 }
 
-export interface DailyChallenge {
+interface DailyChallenge {
   id: string;
   game_id: string;
   challenge_date: string;
@@ -80,7 +80,7 @@ export interface ScoreSubmission {
   metadata?: Record<string, any>;
 }
 
-export interface LeaderboardFilters {
+interface LeaderboardFilters {
   period?: LeaderboardPeriod;
   limit?: number;
   offset?: number;
@@ -93,7 +93,7 @@ export interface GamesFilters {
   search?: string;
 }
 
-export interface GameWithStats extends Game {
+interface GameWithStats extends Game {
   user_stats?: UserGameStats;
   top_score?: number;
   recent_scores_count?: number;

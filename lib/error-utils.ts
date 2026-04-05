@@ -116,7 +116,7 @@ export function parseWeatherError(error: unknown): WeatherError {
 /**
  * Parse geolocation errors
  */
-export function parseGeolocationError(error: GeolocationPositionError): WeatherError {
+function parseGeolocationError(error: GeolocationPositionError): WeatherError {
   switch (error.code) {
     case error.PERMISSION_DENIED:
       return {
@@ -180,7 +180,7 @@ export function logWeatherError(error: WeatherError, context?: string) {
 /**
  * Enhanced error handler for async operations
  */
-export async function handleAsyncWeatherOperation<T>(
+async function handleAsyncWeatherOperation<T>(
   operation: () => Promise<T>,
   context: string,
   fallback?: T
@@ -248,7 +248,7 @@ export function captureDbError(
 /**
  * Capture an API error with structured context
  */
-export function captureApiError(
+function captureApiError(
   endpoint: string,
   statusCode: number,
   message: string,

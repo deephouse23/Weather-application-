@@ -44,7 +44,7 @@ export const useAuth = () => {
 }
 
 // Hook to get user profile
-export const useProfile = () => {
+const useProfile = () => {
   const { user, loading: authLoading } = useAuth()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -140,7 +140,7 @@ export const useSavedLocations = () => {
 }
 
 // Hook to get user preferences
-export const useUserPreferences = () => {
+const useUserPreferences = () => {
   const { user, loading: authLoading } = useAuth()
   const [preferences, setPreferences] = useState<UserPreferences | null>(null)
   const [loading, setLoading] = useState(true)

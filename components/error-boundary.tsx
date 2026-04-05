@@ -168,7 +168,7 @@ export class ErrorBoundary extends Component<Props, State> {
 }
 
 // Higher-order component for easy wrapping
-export function withErrorBoundary<P extends object>(
+function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
   errorBoundaryProps?: Omit<Props, 'children'>
 ) {
@@ -183,7 +183,7 @@ export function withErrorBoundary<P extends object>(
 }
 
 // Safe render component for conditional rendering
-export function SafeRender({ 
+function SafeRender({ 
   children, 
   fallback = null, 
   condition = true 

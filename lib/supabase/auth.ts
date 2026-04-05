@@ -78,7 +78,7 @@ export const signInWithProvider = async (
 }
 
 // Sign out user
-export const signOut = async () => {
+const signOut = async () => {
   const { error } = await supabase.auth.signOut()
   return { error }
 }
@@ -93,7 +93,7 @@ export const resetPassword = async (email: string) => {
 }
 
 // Update password
-export const updatePassword = async (password: string) => {
+const updatePassword = async (password: string) => {
   const { data, error } = await supabase.auth.updateUser({
     password
   })
@@ -105,7 +105,7 @@ export const updatePassword = async (password: string) => {
 }
 
 // Update user profile
-export const updateAuthProfile = async (updates: {
+const updateAuthProfile = async (updates: {
   username?: string
   full_name?: string
   avatar_url?: string
@@ -121,7 +121,7 @@ export const updateAuthProfile = async (updates: {
 }
 
 // Check if username is available
-export const checkUsernameAvailable = async (username: string): Promise<boolean> => {
+const checkUsernameAvailable = async (username: string): Promise<boolean> => {
   const { data, error } = await supabase
     .from('profiles')
     .select('username')

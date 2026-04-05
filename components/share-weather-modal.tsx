@@ -47,7 +47,7 @@ interface SharePlatform {
   getShareUrl: (text: string, url: string) => string;
 }
 
-export default function ShareWeatherModal({
+function ShareWeatherModal({
   isOpen,
   onClose,
   weatherData,

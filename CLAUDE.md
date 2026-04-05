@@ -37,6 +37,10 @@ npx playwright test tests/e2e/weather-app.spec.ts    # Single test file
 
 # PR Validation
 npm run validate:pr      # Build + E2E + Lighthouse CI (runs on pre-push hook)
+
+# Dead Code Detection (Knip)
+npm run knip             # Find unused files, dependencies, and exports
+npm run knip:fix         # Auto-remove unused exports and dependencies
 npm run lighthouse       # Lighthouse CI only
 ```
 
@@ -180,6 +184,11 @@ Use the GitHub CLI (`gh`). Always create descriptive titles. Never include emoji
 - Write rules for yourself that prevent the same mistake
 - Ruthlessly iterate on these lessons until mistake rate drops
 - Review lessons at session start for relevant project
+
+### Dead Code Hygiene
+- Before completing a feature or ending a session, run `npm run knip` to check for orphaned exports, unused files, and dead dependencies left behind by refactoring
+- Remove anything flagged as unused, but ask for confirmation before deleting files
+- Config: `knip.json` at project root; scripts/, tempest/, public/ are excluded
 
 ### Verification Before Done
 - Never mark a task complete without proving it works

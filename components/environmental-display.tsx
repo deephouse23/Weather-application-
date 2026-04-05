@@ -29,7 +29,7 @@ interface EnvironmentalDisplayProps {
   minimal?: boolean
 }
 
-export function EnvironmentalDisplay({ weather, theme, className, minimal = false }: EnvironmentalDisplayProps) {
+function EnvironmentalDisplay({ weather, theme, className, minimal = false }: EnvironmentalDisplayProps) {
   // If minimal, render a consolidated view
   if (minimal) {
     // We'll create a shared container style based on theme (can be extracted to a helper)

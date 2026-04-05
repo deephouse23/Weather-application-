@@ -190,7 +190,7 @@ export async function fetchAllRedditWeatherNews(maxItems: number = 30): Promise<
 /**
  * Fetch only trending weather posts (high upvotes)
  */
-export async function fetchTrendingRedditWeather(maxItems: number = 10): Promise<NewsItem[]> {
+async function fetchTrendingRedditWeather(maxItems: number = 10): Promise<NewsItem[]> {
   try {
     const [weather, tropicalWeather] = await Promise.allSettled([
       fetchRedditPosts(WEATHER_SUBREDDITS.weather, 10, 200),
@@ -282,7 +282,7 @@ function truncateText(text: string, maxLength: number): string {
 /**
  * Search Reddit for specific weather events
  */
-export async function searchRedditWeather(
+async function searchRedditWeather(
   query: string,
   maxItems: number = 10
 ): Promise<NewsItem[]> {

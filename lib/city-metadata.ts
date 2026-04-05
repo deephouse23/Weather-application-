@@ -562,4 +562,3 @@ export const cityData: { [key: string]: {
   }
 }
 
-export default cityData

@@ -75,7 +75,7 @@ export function LazyForecastDetails(props: {
   )
 }
 
-export function LazyEnvironmentalDisplay(props: { 
+function LazyEnvironmentalDisplay(props: { 
   weather: WeatherData;
   theme: ThemeType;
   className?: string;

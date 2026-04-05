@@ -195,7 +195,7 @@ export interface Database {
 
 // Helper types for easier usage
 export type Profile = Database['public']['Tables']['profiles']['Row']
-export type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
+type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
 export type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
 
 export type SavedLocation = Database['public']['Tables']['saved_locations']['Row']
@@ -203,7 +203,7 @@ export type SavedLocationInsert = Database['public']['Tables']['saved_locations'
 export type SavedLocationUpdate = Database['public']['Tables']['saved_locations']['Update']
 
 export type UserPreferences = Database['public']['Tables']['user_preferences']['Row']
-export type UserPreferencesInsert = Database['public']['Tables']['user_preferences']['Insert']
+type UserPreferencesInsert = Database['public']['Tables']['user_preferences']['Insert']
 export type UserPreferencesUpdate = Database['public']['Tables']['user_preferences']['Update']
 
-export type UserAIMemoryRow = Database['public']['Tables']['user_ai_memory']['Row']
+type UserAIMemoryRow = Database['public']['Tables']['user_ai_memory']['Row']

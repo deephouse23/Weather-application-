@@ -11,8 +11,7 @@
 
 export {
   fetchWeatherData,
-  fetchWeatherByLocation,
-  fetchMinutelyNowcast
+  fetchWeatherByLocation
 } from './weather-current';
 
 // ============================================================================
@@ -50,11 +49,6 @@ export {
 // ============================================================================
 
 export {
-  // Constants
-  BASE_URL,
-  BASE_URL_V3,
-  GEO_URL,
-
   // API URL Helper
   getApiUrl,
 
@@ -73,19 +67,15 @@ export {
   // Wind Functions
   getCompassDirection,
   getWindDirection,
-  formatWindDisplay,
 
   // Time Functions
   formatTime,
 
   // Pressure Functions
-  getPressureUnit,
-  formatPressureValue,
   formatPressureByRegion,
 
   // UV Index Functions
   getUVDescription,
-  estimateCurrentUVFromDailyMax,
 
   // Moon Phase Functions
   calculateMoonPhase,

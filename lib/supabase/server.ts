@@ -50,7 +50,7 @@ export const getServerUser = async () => {
 }
 
 // Helper function to get session on server
-export const getServerSession = async () => {
+const getServerSession = async () => {
   const supabase = await createServerSupabaseClient()
   const { data: { session }, error } = await supabase.auth.getSession()
 

@@ -39,7 +39,7 @@ interface LoadingOverlayProps {
   size?: SpinnerSize;
 }
 
-export function LoadingOverlay({
+function LoadingOverlay({
   message = "Loading...",
   className,
   size = "lg",
@@ -68,7 +68,7 @@ interface SkeletonCardProps {
   showHeader?: boolean;
 }
 
-export function SkeletonCard({
+function SkeletonCard({
   className,
   lines = 3,
   showHeader = true,
@@ -95,7 +95,7 @@ export function SkeletonCard({
   );
 }
 
-export function WeatherCardSkeleton({ className }: { className?: string }) {
+function WeatherCardSkeleton({ className }: { className?: string }) {
   return (
     <div
       role="status"

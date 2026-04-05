@@ -71,7 +71,7 @@ export const updateUserPreferencesAPI = async (updates: UserPreferencesUpdate): 
 }
 
 // Create initial user preferences
-export const createUserPreferences = async (
+const createUserPreferences = async (
   initialPrefs: { theme?: string; units?: string } = {}
 ): Promise<UserPreferences | null> => {
   try {
@@ -97,7 +97,7 @@ export const createUserPreferences = async (
 }
 
 // Update theme preference specifically
-export const updateThemePreference = async (theme: string): Promise<boolean> => {
+const updateThemePreference = async (theme: string): Promise<boolean> => {
   try {
     const updatedPrefs = await updateUserPreferencesAPI({ theme })
     return !!updatedPrefs

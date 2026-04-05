@@ -114,7 +114,7 @@ export function validateEnv(): void {
 /**
  * Get environment variable with fallback
  */
-export function getEnv(key: string, fallback?: string): string {
+function getEnv(key: string, fallback?: string): string {
   const value = process.env[key];
   if (!value && fallback) {
     return fallback;
@@ -128,7 +128,7 @@ export function getEnv(key: string, fallback?: string): string {
 /**
  * Get optional environment variable
  */
-export function getOptionalEnv(key: string, fallback?: string): string | undefined {
+function getOptionalEnv(key: string, fallback?: string): string | undefined {
   return process.env[key] || fallback;
 }
 

@@ -33,9 +33,9 @@ export interface WindData {
 // Constants
 // ============================================================================
 
-export const BASE_URL = 'https://api.openweathermap.org/data/2.5';
-export const BASE_URL_V3 = 'https://api.openweathermap.org/data/3.0';
-export const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
+const BASE_URL = 'https://api.openweathermap.org/data/2.5';
+const BASE_URL_V3 = 'https://api.openweathermap.org/data/3.0';
+const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
 
 // ============================================================================
 // API URL Helper
@@ -183,7 +183,7 @@ export const getWindDirection = (degrees: number): string => {
 /**
  * Enhanced wind display formatting with proper unit handling
  */
-export const formatWindDisplay = (
+const formatWindDisplay = (
   speed: number,
   direction?: number,
   gust?: number,
@@ -239,7 +239,7 @@ export const formatTime = (timestamp: number, timezoneOffset?: number): string =
 // Pressure Functions
 // ============================================================================
 
-export const getPressureUnit = (
+const getPressureUnit = (
   countryCode: string,
   userPreference?: 'hPa' | 'inHg'
 ): 'hPa' | 'inHg' => {
@@ -247,7 +247,7 @@ export const getPressureUnit = (
   return shouldUseInchesOfMercury(countryCode) ? 'inHg' : 'hPa';
 };
 
-export const formatPressureValue = (
+const formatPressureValue = (
   pressureHPa: number,
   unit: 'hPa' | 'inHg'
 ): { value: number; display: string } => {
@@ -299,7 +299,7 @@ export const getUVDescription = (uvIndex: number): string => {
 /**
  * Estimate current UV from daily maximum based on time of day
  */
-export const estimateCurrentUVFromDailyMax = (dailyMaxUV: number, hour: number): number => {
+const estimateCurrentUVFromDailyMax = (dailyMaxUV: number, hour: number): number => {
   if (hour < 6 || hour > 18) return 0;
 
   const peakHour = 13;

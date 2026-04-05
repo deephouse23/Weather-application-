@@ -46,8 +46,8 @@ export const createPreferencesSchema = z.object({
 }).strict()
 
 // Type exports for use in route handlers
-export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>
-export type CreatePreferencesInput = z.infer<typeof createPreferencesSchema>
+type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>
+type CreatePreferencesInput = z.infer<typeof createPreferencesSchema>
 
 /**
  * Helper to format Zod errors into a user-friendly structure

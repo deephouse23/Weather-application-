@@ -54,7 +54,7 @@ export function getAllTags(): string[] {
   return Array.from(tagSet).sort()
 }
 
-export function getPostsByTag(tag: string): BlogPost[] {
+function getPostsByTag(tag: string): BlogPost[] {
   return getAllPosts().filter(p => p.tags.some(t => t.toLowerCase() === tag.toLowerCase()))
 }
 

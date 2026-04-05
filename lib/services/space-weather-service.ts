@@ -249,7 +249,7 @@ export async function getSpaceWeatherContext(): Promise<SpaceWeatherContext | nu
 /**
  * Check if a message contains space weather related queries
  */
-export function isSpaceWeatherQuery(message: string): boolean {
+function isSpaceWeatherQuery(message: string): boolean {
   const patterns = [
     /aurora/i,
     /northern\s*lights/i,

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "entry": [
+    "app/**/*.{ts,tsx}",
+    "sentry.*.config.ts",
+    "lighthouserc.js",
+    "run-lh.js"
+  ],
+  "project": [
+    "app/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "hooks/**/*.{ts,tsx}",
+    "lib/**/*.{ts,tsx}",
+    "__tests__/**/*.{ts,tsx}"
+  ],
+  "ignore": [
+    "scripts/**",
+    "tempest/**",
+    "public/**",
+    "tests/__mocks__/**",
+    "supabase/**",
+    "content/**",
+    "planning/**",
+    "docs/**",
+    "tasks/**",
+    "lib/supabase/middleware.ts"
+  ],
+  "ignoreDependencies": [
+    "autoprefixer",
+    "critters",
+    "cross-env",
+    "ts-jest",
+    "@jest/globals",
+    "@eslint/eslintrc",
+    "eslint-config-next",
+    "eslint-plugin-react",
+    "eslint-plugin-react-hooks",
+    "postcss-load-config"
+  ],
+  "ignoreExportsUsedInFile": true
+}

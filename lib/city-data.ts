@@ -169,4 +169,3 @@ export const CITY_DATA = {
 }
 
 // Export for use in other files
-export default CITY_DATA

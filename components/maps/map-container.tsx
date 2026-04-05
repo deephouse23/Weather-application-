@@ -72,4 +72,3 @@ export function MapContainer({
   )
 }
 
-export default MapContainer
