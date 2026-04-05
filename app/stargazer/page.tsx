@@ -244,13 +244,19 @@ function TargetsPanel({ data }: { data: StargazerData }) {
 
 function EventsPanel({ data }: { data: StargazerData }) {
   // Merge meteor shower events with sky events so they appear in the timeline
-  const meteorShowerEvents = (data.meteorShowers ?? []).map(s => ({
-    date: new Date(new Date().getFullYear(), s.peakMonth - 1, s.peakDay),
+  const meteorShowerEvents = (data.meteorShowers ?? []).map(s => {
+    const now = new Date();
+    let year = now.getFullYear();
+    const peakDate = new Date(year, s.peakMonth - 1, s.peakDay);
+    if (peakDate.getTime() < now.getTime()) year++;
+    return {
+    date: new Date(year, s.peakMonth - 1, s.peakDay),
     type: 'meteor_shower' as const,
     title: `${s.name} Meteor Shower Peak`,
     description: `ZHR: ${s.zhr} | Speed: ${s.speed} km/s | Parent: ${s.parentBody}`,
     moonInterference: s.moonInterference === 'none' ? undefined : `Moon: ${s.moonIlluminationAtPeak}% illuminated`,
-  }));
+  };
+  });
   const combinedEvents = [...(data.skyEvents ?? []), ...meteorShowerEvents]
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 

@@ -121,9 +121,23 @@ export function calculateDarkWindow(
   // for the previous sunset/dusk. This handles the case where the
   // current time is already past sunset (e.g., 10pm).
   const sunriseResult = SearchRiseSet(Body.Sun, observer, +1, astroTime, 2);
-  const sunriseDate = sunriseResult
-    ? sunriseResult.date
-    : new Date(date.getTime() + 86400000);
+  if (!sunriseResult) {
+    // No sunrise found within 2 days — polar night or polar day
+    // Check sun altitude to determine which
+    const sunEq = Equator(Body.Sun, astroTime, observer, true, true);
+    const sunHor = Horizon(astroTime, observer, sunEq.ra, sunEq.dec, 'normal');
+    if (sunHor.altitude < -18) {
+      // Polar night: it's dark all day — return full 24hr dark window
+      const start = new Date(date);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(start.getTime() + 86400000);
+      return { sunset: start, sunrise: end, astronomicalDusk: start, astronomicalDawn: end };
+    }
+    // Polar day: sun never sets — no dark window
+    const now = new Date(date);
+    return { sunset: now, sunrise: now, astronomicalDusk: now, astronomicalDawn: now };
+  }
+  const sunriseDate = sunriseResult.date;
 
   // Search backward from sunrise for the previous sunset
   const sunriseAstro = MakeTime(sunriseDate);
@@ -200,7 +214,16 @@ export function calculateMoonInfo(
   const illumination = illumInfo.phase_fraction * 100;
 
   // Moon rise and set near dark window
-  const moonRise = SearchRiseSet(Body.Moon, observer, +1, MakeTime(darkWindow.sunset), 1);
+  // Check if moon is already above horizon at sunset to choose correct search direction
+  const moonEqAtSunset = Equator(Body.Moon, MakeTime(darkWindow.sunset), observer, true, true);
+  const moonHorAtSunset = Horizon(MakeTime(darkWindow.sunset), observer, moonEqAtSunset.ra, moonEqAtSunset.dec, 'normal');
+  const moonAlreadyUp = moonHorAtSunset.altitude > 0;
+
+  // If moon is already up, search forward for set and backward for the preceding rise
+  // If moon is down, search forward for rise and forward for next set
+  const moonRise = moonAlreadyUp
+    ? SearchRiseSet(Body.Moon, observer, +1, MakeTime(new Date(darkWindow.sunset.getTime() - 86400000)), 2)
+    : SearchRiseSet(Body.Moon, observer, +1, MakeTime(darkWindow.sunset), 1);
   const moonSet = SearchRiseSet(Body.Moon, observer, -1, MakeTime(darkWindow.sunset), 1);
 
   // Calculate what percentage of the dark window the moon is above horizon
@@ -393,16 +416,21 @@ export function catalogObjectAltAz(
   const decRad = (dec_degrees * Math.PI) / 180;
 
   // Calculate altitude
-  const sinAlt =
+  const rawSinAlt =
     Math.sin(latRad) * Math.sin(decRad) +
     Math.cos(latRad) * Math.cos(decRad) * Math.cos(haRad);
+  const sinAlt = Math.max(-1, Math.min(1, rawSinAlt));
   const altitude = (Math.asin(sinAlt) * 180) / Math.PI;
 
   // Calculate azimuth
-  const cosAz =
-    (Math.sin(decRad) - Math.sin(latRad) * sinAlt) /
-    (Math.cos(latRad) * Math.cos(Math.asin(sinAlt)));
-  let azimuth = (Math.acos(Math.max(-1, Math.min(1, cosAz))) * 180) / Math.PI;
+  const denom = Math.cos(latRad) * Math.cos(Math.asin(sinAlt));
+  if (Math.abs(denom) < 1e-12) {
+    return { altitude: Math.round(altitude * 100) / 100, azimuth: 0 };
+  }
+  const cosAz = Math.max(-1, Math.min(1,
+    (Math.sin(decRad) - Math.sin(latRad) * sinAlt) / denom
+  ));
+  let azimuth = (Math.acos(cosAz) * 180) / Math.PI;
 
   // Correct azimuth quadrant: if hour angle is positive, azimuth is west (> 180)
   if (Math.sin(haRad) > 0) {
