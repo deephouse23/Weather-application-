@@ -9,6 +9,7 @@ on:
 jobs:
   generate-blog-post:
     runs-on: ubuntu-latest
+    environment: production
     permissions:
       contents: write
       pull-requests: write
