@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import type { MoonInfo } from '@/lib/stargazer/types';
+import { moonScore, getSubScoreLabel } from '@/lib/stargazer/score';
 
 interface MoonIntelProps {
   moon: MoonInfo;
@@ -34,6 +35,9 @@ function daysUntil(target: Date): number {
 export default function MoonIntel({ moon }: MoonIntelProps) {
   const { theme } = useTheme();
   const styles = getComponentStyles((theme || 'nord') as ThemeType, 'card');
+  const impactScore = moonScore(moon.illumination, moon.moonUpDuringDarkWindowPercent);
+  const impactLabel = getSubScoreLabel('moon', impactScore);
+  const impactColor = impactScore >= 75 ? 'text-green-500' : impactScore >= 50 ? 'text-yellow-500' : impactScore >= 25 ? 'text-orange-500' : 'text-red-500';
 
   return (
     <div
@@ -59,6 +63,9 @@ export default function MoonIntel({ moon }: MoonIntelProps) {
           </p>
           <p className="text-xl font-bold font-mono">
             {Math.round(moon.illumination)}%
+          </p>
+          <p className={cn('mt-1 text-xs font-mono', impactColor)}>
+            Impact: {impactLabel}
           </p>
         </div>
 

@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
@@ -16,9 +17,23 @@ function formatDate(date: Date): string {
   });
 }
 
+function ExternalLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1 border border-cyan-400/30 px-2 py-1 text-[10px] uppercase tracking-wider text-cyan-400 hover:bg-cyan-400/10 transition-colors"
+    >
+      {children} <span aria-hidden>{'\u2197'}</span>
+    </a>
+  );
+}
+
 export default function LaunchSchedule({ launches }: LaunchScheduleProps) {
   const { theme } = useTheme();
   const styles = getComponentStyles((theme || 'nord') as ThemeType, 'card');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
     <div
@@ -40,6 +55,7 @@ export default function LaunchSchedule({ launches }: LaunchScheduleProps) {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-subtle">
+                <th className="w-6 px-1 py-1" />
                 <th className="px-2 py-1 text-left uppercase tracking-wider text-muted-foreground">
                   Date
                 </th>
@@ -61,38 +77,78 @@ export default function LaunchSchedule({ launches }: LaunchScheduleProps) {
               </tr>
             </thead>
             <tbody>
-              {launches.map((launch) => (
-                <tr
-                  key={launch.id}
-                  className="border-b border-subtle"
-                >
-                  <td className="px-2 py-1 font-mono">
-                    {formatDate(launch.net)}
-                  </td>
-                  <td className="px-2 py-1 text-cyan-400">
-                    <span className="flex items-center gap-1">
-                      {launch.missionName || launch.name}
-                      {launch.isCrewed && (
-                        <span className="bg-yellow-600 px-1 py-0.5 text-[9px] uppercase tracking-wider text-white">
-                          Crewed
+              {launches.map((launch) => {
+                const isExpanded = expandedId === launch.id;
+                return (
+                  <React.Fragment key={launch.id}>
+                    <tr
+                      className="border-b border-subtle cursor-pointer hover:bg-white/5 transition-colors"
+                      onClick={() => setExpandedId(isExpanded ? null : launch.id)}
+                    >
+                      <td className="px-1 py-1 text-muted-foreground">
+                        <span className={cn('inline-block transition-transform', isExpanded && 'rotate-90')}>
+                          {'\u25B6'}
                         </span>
-                      )}
-                    </span>
-                  </td>
-                  <td className="px-2 py-1 font-mono">
-                    {launch.vehicle}
-                  </td>
-                  <td className="px-2 py-1 text-muted-foreground">
-                    {launch.provider}
-                  </td>
-                  <td className="px-2 py-1 text-muted-foreground">
-                    {launch.padLocation}
-                  </td>
-                  <td className="px-2 py-1 font-mono">
-                    {launch.status}
-                  </td>
-                </tr>
-              ))}
+                      </td>
+                      <td className="px-2 py-1 font-mono">
+                        {formatDate(launch.net)}
+                      </td>
+                      <td className="px-2 py-1 text-cyan-400">
+                        <span className="flex items-center gap-1">
+                          {launch.missionName || launch.name}
+                          {launch.isCrewed && (
+                            <span className="bg-yellow-600 px-1 py-0.5 text-[9px] uppercase tracking-wider text-white">
+                              Crewed
+                            </span>
+                          )}
+                        </span>
+                      </td>
+                      <td className="px-2 py-1 font-mono">
+                        {launch.vehicle}
+                      </td>
+                      <td className="px-2 py-1 text-muted-foreground">
+                        {launch.provider}
+                      </td>
+                      <td className="px-2 py-1 text-muted-foreground">
+                        {launch.padLocation}
+                      </td>
+                      <td className="px-2 py-1 font-mono">
+                        {launch.status}
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr>
+                        <td colSpan={7} className="px-4 py-3 border-b border-subtle">
+                          <div className="border-l-2 border-cyan-400/40 pl-4 space-y-3">
+                            {launch.missionDescription && (
+                              <p className="text-xs leading-relaxed text-muted-foreground max-w-xl">
+                                {launch.missionDescription}
+                              </p>
+                            )}
+                            <div className="flex flex-wrap gap-2">
+                              {launch.videoUrls.length > 0 && (
+                                <ExternalLink href={launch.videoUrls[0]}>
+                                  Watch Live
+                                </ExternalLink>
+                              )}
+                              {launch.padMapUrl && (
+                                <ExternalLink href={launch.padMapUrl}>
+                                  Launch Site
+                                </ExternalLink>
+                              )}
+                              {launch.slug && (
+                                <ExternalLink href={`https://www.spacelaunchnow.me/launch/${launch.slug}`}>
+                                  More Info
+                                </ExternalLink>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>

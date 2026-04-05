@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
@@ -74,9 +75,11 @@ export default function DeepSkyHighlights({
             className="card-inner p-3 rounded"
           >
             <div className="mb-1 flex items-start justify-between gap-2">
-              <h3 className="text-sm font-bold text-cyan-400">
-                {obj.name}
-              </h3>
+              <Link href={`/stargazer/objects/${obj.id}`} className="hover:underline">
+                <h3 className="text-sm font-bold text-cyan-400">
+                  {obj.id} - {obj.name}
+                </h3>
+              </Link>
               <span
                 className={cn(
                   'shrink-0 px-1.5 py-0.5 text-[10px] uppercase tracking-wider',

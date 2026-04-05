@@ -119,6 +119,27 @@ export function getScoreColor(label: ScoreLabel): string {
   return SCORE_COLORS[label];
 }
 
+const SUB_SCORE_LABELS: Record<string, [string, string, string, string, string]> = {
+  cloud:        ['Overcast',            'Mostly cloudy',      'Partly cloudy',        'Mostly clear',         'Clear skies'],
+  moon:         ['Severe interference', 'Heavy interference', 'Moderate interference', 'Minimal interference', 'No interference'],
+  seeing:       ['Bad',                'Poor',                'Fair',                  'Good',                 'Excellent'],
+  transparency: ['Opaque',             'Poor',                'Hazy',                  'Good',                 'Crystal clear'],
+  ground:       ['Dangerous',          'Windy/dew risk',      'Breezy/humid',          'Good',                 'Calm conditions'],
+};
+
+/** Descriptive text label for a sub-score value (0-100). */
+export function getSubScoreLabel(key: string, value: number): string {
+  const labels = SUB_SCORE_LABELS[key];
+  if (!labels) return '';
+  const clamped = Math.max(0, Math.min(100, value));
+  if (clamped >= 90) return labels[4];
+  if (clamped >= 75) return labels[3];
+  if (clamped >= 50) return labels[2];
+  if (clamped >= 25) return labels[1];
+  return labels[0];
+}
+
+
 // ============================================================================
 // Summary Generation
 // ============================================================================
