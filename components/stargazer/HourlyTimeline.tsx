@@ -43,10 +43,11 @@ function getCellColor(metric: MetricKey, value: number | string): string {
   }
 
   if (metric === 'seeing' || metric === 'transparency') {
+    // 7Timer: 1 = best, 8 = worst -- lower is better
     const v = value as number;
-    if (v >= 4) return 'bg-green-600';
-    if (v >= 3) return 'bg-yellow-600';
-    if (v >= 2) return 'bg-orange-600';
+    if (v <= 2) return 'bg-green-600';
+    if (v <= 3) return 'bg-yellow-600';
+    if (v <= 4) return 'bg-orange-600';
     return 'bg-red-600';
   }
 

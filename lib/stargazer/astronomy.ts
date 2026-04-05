@@ -117,38 +117,61 @@ export function calculateDarkWindow(
   const observer = new Observer(lat, lon, 0);
   const astroTime = MakeTime(date);
 
-  // Search for sunset (direction = -1 means setting)
-  const sunsetResult = SearchRiseSet(Body.Sun, observer, -1, astroTime, 1);
-  // Search for sunrise the next morning (direction = +1 means rising)
+  // Strategy: find next sunrise first, then search backward from it
+  // for the previous sunset/dusk. This handles the case where the
+  // current time is already past sunset (e.g., 10pm).
   const sunriseResult = SearchRiseSet(Body.Sun, observer, +1, astroTime, 2);
+  const sunriseDate = sunriseResult
+    ? sunriseResult.date
+    : new Date(date.getTime() + 86400000);
 
-  // Astronomical dusk: sun crosses -18 degrees going down
-  // Search after sunset for when sun reaches -18 deg
+  // Search backward from sunrise for the previous sunset
+  const sunriseAstro = MakeTime(sunriseDate);
+  const sunsetResult = SearchRiseSet(Body.Sun, observer, -1, sunriseAstro, -1);
+
+  // Astronomical dusk: sun crosses -18 degrees going down before sunrise
   const duskResult = SearchAltitude(
     Body.Sun,
     observer,
     -1, // setting direction
-    astroTime,
-    2, // search up to 2 days ahead
+    sunriseAstro,
+    -1, // search backward up to 1 day
     -18 // altitude threshold
   );
 
-  // Astronomical dawn: sun crosses -18 degrees going up
-  // Search for the next morning
+  // Astronomical dawn: sun crosses -18 degrees going up before sunrise
   const dawnResult = SearchAltitude(
     Body.Sun,
     observer,
     +1, // rising direction
-    astroTime,
-    2,
+    sunriseAstro,
+    -1, // search backward up to 1 day
     -18
   );
 
+  // Dawn should be AFTER dusk and BEFORE sunrise
+  // If backward search found a dawn before dusk, search forward from dusk instead
+  let finalDawn = dawnResult ? dawnResult.date : sunriseDate;
+  const finalDusk = duskResult ? duskResult.date : (sunsetResult ? sunsetResult.date : date);
+
+  if (finalDawn.getTime() < finalDusk.getTime()) {
+    // Dawn found was before dusk -- search forward from dusk instead
+    const dawnForward = SearchAltitude(
+      Body.Sun,
+      observer,
+      +1,
+      MakeTime(finalDusk),
+      1,
+      -18
+    );
+    finalDawn = dawnForward ? dawnForward.date : sunriseDate;
+  }
+
   return {
     sunset: sunsetResult ? sunsetResult.date : date,
-    sunrise: sunriseResult ? sunriseResult.date : new Date(date.getTime() + 86400000),
-    astronomicalDusk: duskResult ? duskResult.date : date,
-    astronomicalDawn: dawnResult ? dawnResult.date : new Date(date.getTime() + 86400000),
+    sunrise: sunriseDate,
+    astronomicalDusk: finalDusk,
+    astronomicalDawn: finalDawn,
   };
 }
 

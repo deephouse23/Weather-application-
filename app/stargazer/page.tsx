@@ -15,6 +15,7 @@ import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import PageWrapper from '@/components/page-wrapper';
 import { ShareButtons } from '@/components/share-buttons';
 import type { StargazerData } from '@/lib/stargazer/types';
+import FullHourlyTimeline from '@/components/stargazer/HourlyTimeline';
 
 // ============================================================================
 // Score color helpers
@@ -132,39 +133,25 @@ function StargazerScoreHero({ data }: { data: StargazerData }) {
   );
 }
 
-// 2. HourlyTimeline
+// 2. HourlyTimeline - uses full component from components/stargazer/
 function HourlyTimeline({ data }: { data: StargazerData }) {
-  const { hourlyConditions } = data;
+  const { hourlyConditions, darkWindow } = data;
   if (!hourlyConditions || hourlyConditions.length === 0) return null;
 
-  // Show up to 12 hours
-  const hours = hourlyConditions.slice(0, 12);
+  // Rehydrate dates from JSON serialization
+  const conditions = hourlyConditions.map((h) => ({
+    ...h,
+    time: typeof h.time === 'string' ? new Date(h.time) : h.time,
+  }));
 
-  return (
-    <SectionCard title="Hourly Conditions">
-      <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6">
-        <div className="flex gap-3 min-w-max pb-2">
-          {hours.map((h, i) => (
-            <div
-              key={i}
-              className="flex flex-col items-center gap-1 text-xs font-mono w-16 shrink-0"
-            >
-              <span className="text-muted-foreground">{formatTime(h.time)}</span>
-              <div className="w-10 h-10 border border-border/40 flex items-center justify-center text-lg">
-                {h.cloudCover <= 20 ? '☀' : h.cloudCover <= 60 ? '⛅' : '☁'}
-              </div>
-              <span>
-                {Math.round(h.cloudCover)}%
-              </span>
-              <span className="text-muted-foreground">see {h.seeing}</span>
-              <span className="text-muted-foreground">trn {h.transparency}</span>
-              <span className="text-muted-foreground">{Math.round(h.temperature)}&deg;</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </SectionCard>
-  );
+  const rehydratedDarkWindow = {
+    sunset: typeof darkWindow.sunset === 'string' ? new Date(darkWindow.sunset) : darkWindow.sunset,
+    sunrise: typeof darkWindow.sunrise === 'string' ? new Date(darkWindow.sunrise) : darkWindow.sunrise,
+    astronomicalDusk: typeof darkWindow.astronomicalDusk === 'string' ? new Date(darkWindow.astronomicalDusk) : darkWindow.astronomicalDusk,
+    astronomicalDawn: typeof darkWindow.astronomicalDawn === 'string' ? new Date(darkWindow.astronomicalDawn) : darkWindow.astronomicalDawn,
+  };
+
+  return <FullHourlyTimeline conditions={conditions} darkWindow={rehydratedDarkWindow} />;
 }
 
 // 3. MoonIntel
@@ -482,11 +469,23 @@ export default function StargazerPage() {
       setError(null);
 
       // Get user location via browser geolocation
-      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
-      });
+      let latitude: number;
+      let longitude: number;
+      let usedFallback = false;
 
-      const { latitude, longitude } = pos.coords;
+      try {
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
+        });
+        latitude = pos.coords.latitude;
+        longitude = pos.coords.longitude;
+      } catch {
+        // Geolocation failed -- fall back to NYC
+        latitude = 40.7128;
+        longitude = -74.006;
+        usedFallback = true;
+      }
+
       const response = await fetch(
         `/api/stargazer?lat=${latitude}&lon=${longitude}`
       );
@@ -497,24 +496,16 @@ export default function StargazerPage() {
 
       const json = await response.json();
       setData(json);
+
+      if (usedFallback) {
+        setError(
+          'Could not determine your location. Showing forecast for New York City. Enable location access for personalized forecasts.'
+        );
+      }
     } catch (err) {
       console.error('[Stargazer]', err);
-
-      // Fallback: try NYC coordinates if geolocation fails
-      try {
-        const fallbackRes = await fetch('/api/stargazer?lat=40.7128&lon=-74.006');
-        if (fallbackRes.ok) {
-          const fallbackJson = await fallbackRes.json();
-          setData(fallbackJson);
-          setError(null);
-          return;
-        }
-      } catch {
-        // Ignore fallback failure
-      }
-
       setError(
-        'Could not determine your location. Enable location access for personalized forecasts.'
+        'Failed to load stargazer forecast. Please try again later.'
       );
     } finally {
       setIsLoading(false);

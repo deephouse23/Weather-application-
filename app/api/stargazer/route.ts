@@ -56,6 +56,7 @@ interface OpenMeteoHourly {
 
 interface OpenMeteoResponse {
   hourly: OpenMeteoHourly;
+  utc_offset_seconds: number;
 }
 
 // ============================================================================
@@ -129,6 +130,15 @@ export async function GET(request: NextRequest) {
     const openMeteo = (await openMeteoRes.json()) as OpenMeteoResponse;
     const hourly = openMeteo.hourly;
 
+    // Open-Meteo returns times like "2026-04-05T20:00" without timezone.
+    // Append the UTC offset so `new Date()` interprets them correctly.
+    const utcOffsetSec = openMeteo.utc_offset_seconds ?? 0;
+    const offsetSign = utcOffsetSec >= 0 ? '+' : '-';
+    const absOffset = Math.abs(utcOffsetSec);
+    const offsetHH = String(Math.floor(absOffset / 3600)).padStart(2, '0');
+    const offsetMM = String(Math.floor((absOffset % 3600) / 60)).padStart(2, '0');
+    const tzSuffix = `${offsetSign}${offsetHH}:${offsetMM}`;
+
     // ---- Astronomy calculations ----
     const now = new Date();
     const darkWindow = calculateDarkWindow(lat, lon, now);
@@ -143,26 +153,25 @@ export async function GET(request: NextRequest) {
     );
 
     const highlights: DeepSkyHighlight[] = [];
+    const sampleMs = 30 * 60 * 1000;
     for (const obj of catalog) {
-      const { altitude } = catalogObjectAltAz(obj.ra, obj.dec, lat, lon, darkMidpoint);
-      if (altitude > 30) {
-        // Check transit time (highest point) by sampling across the dark window
-        let maxAlt = altitude;
-        let transitTime = darkMidpoint;
-        const sampleMs = 30 * 60 * 1000;
-        for (
-          let t = darkWindow.astronomicalDusk.getTime();
-          t <= darkWindow.astronomicalDawn.getTime();
-          t += sampleMs
-        ) {
-          const sampleDate = new Date(t);
-          const pos = catalogObjectAltAz(obj.ra, obj.dec, lat, lon, sampleDate);
-          if (pos.altitude > maxAlt) {
-            maxAlt = pos.altitude;
-            transitTime = sampleDate;
-          }
+      // Sample every 30 minutes across the full dark window to find maxAltitude
+      let maxAlt = -90;
+      let transitTime = darkMidpoint;
+      for (
+        let t = darkWindow.astronomicalDusk.getTime();
+        t <= darkWindow.astronomicalDawn.getTime();
+        t += sampleMs
+      ) {
+        const sampleDate = new Date(t);
+        const pos = catalogObjectAltAz(obj.ra, obj.dec, lat, lon, sampleDate);
+        if (pos.altitude > maxAlt) {
+          maxAlt = pos.altitude;
+          transitTime = sampleDate;
         }
+      }
 
+      if (maxAlt > 30) {
         const transitsDuringDarkWindow =
           transitTime.getTime() >= darkWindow.astronomicalDusk.getTime() &&
           transitTime.getTime() <= darkWindow.astronomicalDawn.getTime();
@@ -192,7 +201,7 @@ export async function GET(request: NextRequest) {
     const hourlyConditions: HourlyCondition[] = [];
 
     for (let i = 0; i < hourly.time.length; i++) {
-      const t = new Date(hourly.time[i]);
+      const t = new Date(hourly.time[i] + tzSuffix);
       const tMs = t.getTime();
 
       if (tMs < sunsetMs || tMs > sunriseMs) continue;
@@ -289,7 +298,14 @@ export async function GET(request: NextRequest) {
         return daysUntilPeak >= -7 && daysUntilPeak <= 60;
       })
       .map((s) => {
-        const moonIllumPct = moonInfo.illumination * 100;
+        // Compute moon illumination at each shower's actual peak date
+        const peakDate = new Date(now.getFullYear(), s.peakMonth - 1, s.peakDay);
+        if (peakDate.getTime() < now.getTime() - 30 * 86400000) {
+          peakDate.setFullYear(peakDate.getFullYear() + 1);
+        }
+        const peakMoon = calculateMoonInfo(lat, lon, calculateDarkWindow(lat, lon, peakDate));
+        const moonIllumPct = peakMoon.illumination * 100;
+
         let moonInterference: MeteorShowerEvent['moonInterference'];
         if (moonIllumPct < 15) {
           moonInterference = 'none';
