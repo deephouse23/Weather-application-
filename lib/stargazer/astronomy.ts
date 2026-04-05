@@ -197,7 +197,7 @@ export function calculateMoonInfo(
 
   // Moon illumination
   const illumInfo = Illumination(Body.Moon, darkStartTime);
-  const illumination = illumInfo.phase_fraction;
+  const illumination = illumInfo.phase_fraction * 100;
 
   // Moon rise and set near dark window
   const moonRise = SearchRiseSet(Body.Moon, observer, +1, MakeTime(darkWindow.sunset), 1);

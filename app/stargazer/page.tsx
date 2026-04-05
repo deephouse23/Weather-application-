@@ -178,16 +178,16 @@ function ConditionsPanel({ data }: { data: StargazerData }) {
     time: typeof h.time === 'string' ? new Date(h.time) : h.time,
   })) ?? [];
 
-  const rehydratedDarkWindow = {
+  const rehydratedDarkWindow = darkWindow ? {
     sunset: typeof darkWindow.sunset === 'string' ? new Date(darkWindow.sunset) : darkWindow.sunset,
     sunrise: typeof darkWindow.sunrise === 'string' ? new Date(darkWindow.sunrise) : darkWindow.sunrise,
     astronomicalDusk: typeof darkWindow.astronomicalDusk === 'string' ? new Date(darkWindow.astronomicalDusk) : darkWindow.astronomicalDusk,
     astronomicalDawn: typeof darkWindow.astronomicalDawn === 'string' ? new Date(darkWindow.astronomicalDawn) : darkWindow.astronomicalDawn,
-  };
+  } : undefined;
 
   return (
     <div className="space-y-6">
-      {conditions.length > 0 && (
+      {conditions.length > 0 && rehydratedDarkWindow && (
         <FullHourlyTimeline conditions={conditions} darkWindow={rehydratedDarkWindow} />
       )}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -243,9 +243,20 @@ function TargetsPanel({ data }: { data: StargazerData }) {
 }
 
 function EventsPanel({ data }: { data: StargazerData }) {
+  // Merge meteor shower events with sky events so they appear in the timeline
+  const meteorShowerEvents = (data.meteorShowers ?? []).map(s => ({
+    date: new Date(new Date().getFullYear(), s.peakMonth - 1, s.peakDay),
+    type: 'meteor_shower' as const,
+    title: `${s.name} Meteor Shower Peak`,
+    description: `ZHR: ${s.zhr} | Speed: ${s.speed} km/s | Parent: ${s.parentBody}`,
+    moonInterference: s.moonInterference === 'none' ? undefined : `Moon: ${s.moonIlluminationAtPeak}% illuminated`,
+  }));
+  const combinedEvents = [...(data.skyEvents ?? []), ...meteorShowerEvents]
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
   return (
     <div className="space-y-6">
-      <SkyEvents events={data.skyEvents} />
+      <SkyEvents events={combinedEvents} />
       <ISSPasses passes={data.issPasses} />
     </div>
   );

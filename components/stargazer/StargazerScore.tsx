@@ -52,7 +52,7 @@ export default function StargazerScore({ score }: StargazerScoreProps) {
     <div
       className={cn(
         'container-primary p-4 font-mono',
-        styles
+        styles.background
       )}
     >
       <h2 className="mb-3 text-sm uppercase tracking-wider text-muted-foreground">
