@@ -23,7 +23,7 @@ import { LocationProvider } from "@/components/location-context"
 import { AuthProvider } from "@/lib/auth"
 import { Toaster } from "@/components/ui/toaster"
 import ErrorBoundaryWrapper from "@/components/error-boundary"
-import AuthDebug from "@/components/auth/auth-debug"
+// AuthDebug removed — dev-only panel was cluttering the UI
 
 // PERFORMANCE: Use next/font for non-blocking font loading
 // Include all weights used in codebase (400, 500, 600, 700, 800)
@@ -174,7 +174,6 @@ export default function RootLayout({
                   {children}
                 </div>
                 <Toaster />
-                <AuthDebug />
               </LocationProvider>
             </AppThemeProvider>
           </AuthProvider>

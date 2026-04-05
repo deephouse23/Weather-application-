@@ -254,6 +254,9 @@ export interface StargazerData {
     lat: number;
     lon: number;
     name?: string;
+    displayName?: string;
+    bortle?: number;
+    bortleLabel?: string;
   };
   generatedAt: string;
 }
