@@ -136,6 +136,7 @@ Your job is to write a weekly weather blog post. The site has a terminal/pixel a
 
 Rules:
 - No emojis ever
+- Include 1-2 inline images to break up the text and add visual interest. Use Unsplash source URLs in this format: ![descriptive alt text](https://images.unsplash.com/photo-{PHOTO_ID}?w=800&q=80). Pick real Unsplash photo IDs that match the topic (storms, clouds, aurora, earthquakes, satellites, etc). Place images between sections, not at the very top or bottom.
 - Write 400-800 words
 - Use markdown headers (## for main sections, ### for subsections)
 - End every post with a "## Bottom Line" section with 2-3 actionable takeaways

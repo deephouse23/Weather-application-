@@ -118,6 +118,9 @@ export function BlogArticle({ post, relatedPosts }: BlogArticleProps) {
               pre: ({ children }) => (
                 <pre className="mb-4 overflow-x-auto rounded bg-black/30 p-3 font-mono text-xs">{children}</pre>
               ),
+              img: ({ src, alt }) => (
+                <img src={src} alt={alt || ''} className="w-full rounded-lg my-6 border border-[hsl(var(--border))]" loading="lazy" />
+              ),
             }}
           >
             {post.content}
