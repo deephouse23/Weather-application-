@@ -72,9 +72,11 @@ export async function GET(request: NextRequest) {
   
   try {
     // Get client identifier for rate limiting
-    const forwardedFor = request.headers.get('x-forwarded-for');
+    // Prefer x-real-ip (set by Vercel/reverse proxy, harder to spoof) over x-forwarded-for.
+    // Revisit this if the deployment platform changes.
     const realIp = request.headers.get('x-real-ip');
-    const clientId = forwardedFor?.split(',')[0] || realIp || 'default';
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const clientId = realIp?.trim() || forwardedFor?.split(',')[0]?.trim() || 'default';
 
     // Check rate limit
     const rateLimit = checkRateLimit(clientId);

@@ -38,8 +38,8 @@ export async function GET(request: NextRequest) {
   if (error) {
     console.error('[cron/keep-alive] Database ping failed:', error.message)
     return Response.json(
-      { success: false, error: error.message, timestamp: new Date().toISOString() },
-      { status: 500 }
+      { error: 'Service unavailable' },
+      { status: 503 }
     )
   }
 

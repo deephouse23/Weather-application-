@@ -1,5 +1,8 @@
 "use client"
 
+import ReactMarkdown from 'react-markdown'
+import rehypeSanitize from 'rehype-sanitize'
+import remarkGfm from 'remark-gfm'
 import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
@@ -12,28 +15,6 @@ import type { BlogPost } from '@/lib/blog'
 interface BlogArticleProps {
   post: BlogPost
   relatedPosts: BlogPost[]
-}
-
-// Simple markdown-to-HTML for blog content (handles headers, paragraphs, bold, italic, lists)
-function renderMarkdown(content: string): string {
-  return content
-    .split('\n\n')
-    .map(block => {
-      const trimmed = block.trim()
-      if (!trimmed) return ''
-      if (trimmed.startsWith('### ')) return `<h3 class="text-lg font-bold font-mono uppercase tracking-wider mt-8 mb-3 text-[hsl(var(--primary))]">${trimmed.slice(4)}</h3>`
-      if (trimmed.startsWith('## ')) return `<h2 class="text-xl font-bold font-mono uppercase tracking-wider mt-10 mb-4 text-[hsl(var(--primary))]">${trimmed.slice(3)}</h2>`
-      if (trimmed.startsWith('- ')) {
-        const items = trimmed.split('\n').map(line => `<li class="ml-4">${line.replace(/^- /, '')}</li>`).join('')
-        return `<ul class="list-disc space-y-1 my-4 font-mono text-sm">${items}</ul>`
-      }
-      // Bold and italic inline
-      let html = trimmed
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      return `<p class="font-mono text-sm leading-relaxed mb-4">${html}</p>`
-    })
-    .join('\n')
 }
 
 export function BlogArticle({ post, relatedPosts }: BlogArticleProps) {
@@ -106,10 +87,42 @@ export function BlogArticle({ post, relatedPosts }: BlogArticleProps) {
         </div>
 
         {/* Body */}
-        <div
-          className="prose-terminal"
-          dangerouslySetInnerHTML={{ __html: renderMarkdown(post.content) }}
-        />
+        <div className="prose-terminal">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeSanitize]}
+            components={{
+              h2: ({ children }) => (
+                <h2 className="text-xl font-bold font-mono uppercase tracking-wider mt-10 mb-4 text-[hsl(var(--primary))]">{children}</h2>
+              ),
+              h3: ({ children }) => (
+                <h3 className="text-lg font-bold font-mono uppercase tracking-wider mt-8 mb-3 text-[hsl(var(--primary))]">{children}</h3>
+              ),
+              p: ({ children }) => (
+                <p className="font-mono text-sm leading-relaxed mb-4">{children}</p>
+              ),
+              ul: ({ children }) => (
+                <ul className="list-disc space-y-1 my-4 font-mono text-sm">{children}</ul>
+              ),
+              li: ({ children }) => (
+                <li className="ml-4">{children}</li>
+              ),
+              strong: ({ children }) => <strong>{children}</strong>,
+              em: ({ children }) => <em>{children}</em>,
+              a: ({ href, children }) => (
+                <a href={href} className="underline text-[hsl(var(--primary))]" target="_blank" rel="noopener noreferrer">{children}</a>
+              ),
+              code: ({ children }) => (
+                <code className="rounded bg-black/25 px-1 py-0.5 font-mono text-[0.85em]">{children}</code>
+              ),
+              pre: ({ children }) => (
+                <pre className="mb-4 overflow-x-auto rounded bg-black/30 p-3 font-mono text-xs">{children}</pre>
+              ),
+            }}
+          >
+            {post.content}
+          </ReactMarkdown>
+        </div>
 
         {/* Bottom share */}
         <div className="flex items-center gap-3 mt-8 pt-6 border-t border-[hsl(var(--border))]">

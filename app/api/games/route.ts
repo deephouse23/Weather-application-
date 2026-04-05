@@ -40,7 +40,9 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+      // Escape PostgREST filter special characters to prevent query injection
+      const sanitized = search.replace(/[%_,().\\]/g, c => '\\' + c);
+      query = query.or(`title.ilike.%${sanitized}%,description.ilike.%${sanitized}%`);
     }
 
     const { data, error } = await query;
@@ -67,13 +69,20 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient();
 
-    // Check if user is authenticated
+    // Verify user identity server-side (getUser validates the JWT)
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-    if (!session) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Enforce admin role — must match RLS policy: auth.jwt() ->> 'role' = 'admin'
+    // In Supabase, JWT 'role' claim is sourced from app_metadata
+    if (user.app_metadata?.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const body = await request.json();

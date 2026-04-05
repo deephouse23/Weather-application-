@@ -20,10 +20,12 @@ export async function GET(request: NextRequest) {
     const noaaBaseUrl = 'https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer'
     const noaaUrl = new URL(noaaBaseUrl)
     
-    // Copy all query parameters from the request
-    searchParams.forEach((value, key) => {
-      noaaUrl.searchParams.set(key, value)
-    })
+    // Whitelist allowed WMS parameters — do not forward arbitrary params
+    const ALLOWED_PARAMS = ['REQUEST', 'SERVICE', 'VERSION', 'LAYERS', 'WIDTH', 'HEIGHT', 'CRS', 'BBOX', 'TIME', 'STYLES', 'FORMAT']
+    for (const key of ALLOWED_PARAMS) {
+      const val = searchParams.get(key)
+      if (val) noaaUrl.searchParams.set(key, val)
+    }
 
     const response = await fetch(noaaUrl.toString(), {
       headers: {
