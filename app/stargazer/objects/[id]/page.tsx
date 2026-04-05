@@ -9,7 +9,7 @@ interface PageProps {
 }
 
 function getCatalogObject(id: string): DeepSkyObject | undefined {
-  return (catalog as DeepSkyObject[]).find((obj) => obj.id === id);
+  return (catalog as DeepSkyObject[]).find((obj) => obj.id.toLowerCase() === id.toLowerCase());
 }
 
 export function generateStaticParams() {

@@ -20,7 +20,13 @@ function formatType(type: string): string {
 
 function formatMonths(months: number[]): string {
   const names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  if (months.length === 0) return 'Year-round';
+  if (months.length === 0 || months.length === 12) return 'Year-round';
+  if (months.length === 1) return names[months[0] - 1];
+  const sorted = [...months].sort((a, b) => a - b);
+  const isContiguous = sorted.every((m, i) =>
+    i === 0 || sorted[i] - sorted[i - 1] === 1
+  );
+  if (!isContiguous) return sorted.map((m) => names[m - 1]).join(', ');
   return `${names[months[0] - 1]}-${names[months[months.length - 1] - 1]}`;
 }
 
@@ -91,8 +97,8 @@ export default function ObjectDetail({ object: obj }: ObjectDetailProps) {
             <div className="border-t border-subtle pt-2">
               <dt className="text-muted-foreground">Viewing</dt>
               <dd className="mt-1 space-y-1">
-                <p>Naked Eye: {obj.nakedEyeVisible ? 'Yes' : 'No'}</p>
-                <p>Binoculars: {obj.binocularTarget ? 'Yes' : 'No'}</p>
+                <p>Naked Eye: {obj.nakedEyeVisible === true ? 'Yes' : obj.nakedEyeVisible === false ? 'No' : '—'}</p>
+                <p>Binoculars: {obj.binocularTarget === true ? 'Yes' : obj.binocularTarget === false ? 'No' : '—'}</p>
                 {obj.telescopeMinAperture && (
                   <p>Min Scope: {obj.telescopeMinAperture}</p>
                 )}
