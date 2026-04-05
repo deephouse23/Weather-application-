@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils"
 /**
  * Static welcome message - server rendered for fast LCP
  */
-export function WelcomeMessage() {
+function WelcomeMessage() {
   return (
     <div className="text-center mt-8 mb-8 px-2 sm:px-0">
       <div className="w-full max-w-xl mx-auto">
@@ -92,7 +92,7 @@ export function WeatherCardsSkeleton() {
 /**
  * Server-rendered search form placeholder - provides immediate interactivity appearance
  */
-export function SearchFormShell() {
+function SearchFormShell() {
   return (
     <div className="w-full max-w-2xl mx-auto mb-6">
       <div className="flex gap-2">

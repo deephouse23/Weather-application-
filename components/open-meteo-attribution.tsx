@@ -31,4 +31,3 @@ export function OpenMeteoAttribution({ className }: OpenMeteoAttributionProps) {
   )
 }
 
-export default OpenMeteoAttribution

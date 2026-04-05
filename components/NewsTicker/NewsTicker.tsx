@@ -300,4 +300,3 @@ const NewsTicker: React.FC<NewsTickerProps> = ({
   );
 };
 
-export default NewsTicker;

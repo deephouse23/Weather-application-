@@ -15,7 +15,7 @@ export const supabase = createBrowserClient<Database>(
   supabaseAnonKey
 )
 
-export const getCurrentUser = async () => {
+const getCurrentUser = async () => {
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error) {
     console.error('Error getting current user:', error)
@@ -24,7 +24,7 @@ export const getCurrentUser = async () => {
   return user
 }
 
-export const getSession = async () => {
+const getSession = async () => {
   const { data: { session }, error } = await supabase.auth.getSession()
   if (error) {
     console.error('Error getting session:', error)

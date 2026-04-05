@@ -239,4 +239,3 @@ export function MoonPhaseIcon({
   );
 }
 
-export default MoonPhaseIcon;

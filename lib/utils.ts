@@ -81,7 +81,7 @@ export const safeLocalStorage = {
 }
 
 // Validation utilities
-export const validation = {
+const validation = {
   isValidEmail: (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     return emailRegex.test(email)
@@ -98,7 +98,7 @@ export const validation = {
 }
 
 // Date and time utilities
-export const dateUtils = {
+const dateUtils = {
   formatTimestamp: (timestamp: number): string => {
     return new Date(timestamp).toLocaleString()
   },
@@ -113,7 +113,7 @@ export const dateUtils = {
 }
 
 // Error handling utilities
-export const errorUtils = {
+const errorUtils = {
   logError: (context: string, error: unknown): void => {
     console.error(`[${context}]`, error)
   },

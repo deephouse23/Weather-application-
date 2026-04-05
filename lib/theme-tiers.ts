@@ -120,7 +120,7 @@ export const getThemeConfig = (themeId: string): ThemeConfig | undefined => {
   return THEME_CONFIGS.find(theme => theme.id === themeId)
 }
 
-export const getThemesByCategory = (category: string): ThemeConfig[] => {
+const getThemesByCategory = (category: string): ThemeConfig[] => {
   return THEME_CONFIGS.filter(theme => theme.category === category)
 }
 

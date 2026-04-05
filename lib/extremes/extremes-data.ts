@@ -229,7 +229,7 @@ async function fetchLocationTemperature(
 /**
  * Fetch all extreme temperatures and return sorted data
  */
-export async function fetchExtremeTemperatures(
+async function fetchExtremeTemperatures(
   apiKey: string,
   userLat?: number,
   userLon?: number
@@ -295,7 +295,7 @@ export async function fetchExtremeTemperatures(
 const CACHE_KEY = '16bit-weather-extremes-cache';
 const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
-export function getCachedExtremes(): ExtremesData | null {
+function getCachedExtremes(): ExtremesData | null {
   if (typeof window === 'undefined') return null;
 
   try {
@@ -317,7 +317,7 @@ export function getCachedExtremes(): ExtremesData | null {
   }
 }
 
-export function setCachedExtremes(data: ExtremesData): void {
+function setCachedExtremes(data: ExtremesData): void {
   if (typeof window === 'undefined') return;
 
   try {

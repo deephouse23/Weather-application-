@@ -20,7 +20,7 @@ type ModelRun = '00z' | '06z' | '12z' | '18z';
 /**
  * Available GFS model products
  */
-export interface GFSModelProduct {
+interface GFSModelProduct {
   id: string;
   name: string;
   description: string;
@@ -271,7 +271,7 @@ export async function fetchAllGFSModelNews(): Promise<NewsItem[]> {
 /**
  * Get GFS model update schedule
  */
-export function getModelUpdateSchedule(): string[] {
+function getModelUpdateSchedule(): string[] {
   return [
     'Models update 4 times daily at:',
     '00:00 UTC (7:00 PM EST)',
@@ -284,7 +284,7 @@ export function getModelUpdateSchedule(): string[] {
 /**
  * Check if a model run is recent (within last 6 hours)
  */
-export function isRecentModelRun(modelRun: ModelRun): boolean {
+function isRecentModelRun(modelRun: ModelRun): boolean {
   const latestRun = getLatestModelRun();
   return modelRun === latestRun;
 }

@@ -9,7 +9,7 @@
 import * as Sentry from '@sentry/nextjs';
 
 // API Performance Metrics
-export function trackApiCall(
+function trackApiCall(
     apiName: string,
     responseTimeMs: number,
     success: boolean,
@@ -32,25 +32,25 @@ export function trackApiCall(
 }
 
 // User Engagement Metrics
-export function trackUserAction(
+function trackUserAction(
     action: 'search' | 'radar_view' | 'theme_change' | 'location_save' | 'ai_chat'
 ) {
     Sentry.metrics.count(`user.${action}`);
 }
 
 // Cache Metrics
-export function trackCacheEvent(hit: boolean, _cacheType: string = 'weather') {
+function trackCacheEvent(hit: boolean, _cacheType: string = 'weather') {
     const eventType = hit ? 'hit' : 'miss';
     Sentry.metrics.count(`cache.${eventType}`);
 }
 
 // Rate Limit Metrics
-export function trackRateLimitExceeded(_limitType: string = 'ai_chat') {
+function trackRateLimitExceeded(_limitType: string = 'ai_chat') {
     Sentry.metrics.count('rate_limit.exceeded');
 }
 
 // AI Chat Specific Metrics
-export function trackAIChatRequest(
+function trackAIChatRequest(
     _personality: string,
     responseTimeMs: number,
     _hasWeatherContext: boolean,
@@ -86,6 +86,6 @@ export function trackWeatherApiCall(
 }
 
 // Page View Metrics
-export function trackPageView(page: string) {
+function trackPageView(page: string) {
     Sentry.metrics.count(`page.view.${page.replace(/\//g, '_')}`);
 }

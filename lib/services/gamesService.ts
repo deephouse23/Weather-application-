@@ -42,7 +42,7 @@ export async function fetchGames(filters?: GamesFilters): Promise<Game[]> {
 /**
  * Fetch a single game by slug
  */
-export async function fetchGameBySlug(slug: string): Promise<Game> {
+async function fetchGameBySlug(slug: string): Promise<Game> {
   const response = await fetch(`${API_BASE}/${slug}`);
   if (!response.ok) {
     throw new Error('Failed to fetch game');
@@ -116,7 +116,7 @@ export async function incrementPlayCount(slug: string): Promise<void> {
 /**
  * Fetch user's game statistics (authenticated users only)
  */
-export async function fetchUserGameStats(): Promise<UserGameStats[]> {
+async function fetchUserGameStats(): Promise<UserGameStats[]> {
   const response = await fetch(`${API_BASE}/user/stats`);
   if (!response.ok) {
     throw new Error('Failed to fetch user stats');
@@ -129,13 +129,13 @@ export async function fetchUserGameStats(): Promise<UserGameStats[]> {
 /**
  * Get featured games
  */
-export async function fetchFeaturedGames(): Promise<Game[]> {
+async function fetchFeaturedGames(): Promise<Game[]> {
   return fetchGames({ featured: true });
 }
 
 /**
  * Get games by category
  */
-export async function fetchGamesByCategory(category: GameCategory): Promise<Game[]> {
+async function fetchGamesByCategory(category: GameCategory): Promise<Game[]> {
   return fetchGames({ category });
 }

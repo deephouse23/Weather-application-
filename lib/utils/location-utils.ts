@@ -43,7 +43,7 @@ export function isUSLocation(latitude: number, longitude: number): boolean {
 /**
  * Get region name for US location
  */
-export function getUSRegion(latitude: number, longitude: number): string | null {
+function getUSRegion(latitude: number, longitude: number): string | null {
   if (!isUSLocation(latitude, longitude)) return null
 
   if (latitude >= 51 && latitude <= 71.5 && longitude >= -180 && longitude <= -129) {

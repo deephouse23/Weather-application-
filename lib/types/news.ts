@@ -61,7 +61,7 @@ export type NewsSource =
 /**
  * Filter options for news
  */
-export interface NewsFilterOptions {
+interface NewsFilterOptions {
   category?: NewsCategory | 'all';
   priority?: NewsPriority | 'all';
   sources?: NewsSource[];
@@ -89,7 +89,7 @@ export interface NewsAggregationResult {
 /**
  * News source configuration
  */
-export interface NewsSourceConfig {
+interface NewsSourceConfig {
   id: NewsSource;
   name: string;
   enabled: boolean;
@@ -105,7 +105,7 @@ export interface NewsSourceConfig {
 /**
  * Category configuration
  */
-export interface CategoryConfig {
+interface CategoryConfig {
   id: NewsCategory;
   label: string;
   icon: string; // Lucide icon name
@@ -116,7 +116,7 @@ export interface CategoryConfig {
 /**
  * Priority configuration
  */
-export interface PriorityConfig {
+interface PriorityConfig {
   level: NewsPriority;
   label: string;
   icon: string;
@@ -138,7 +138,7 @@ export interface NewsFetchError {
 /**
  * News cache entry
  */
-export interface NewsCacheEntry {
+interface NewsCacheEntry {
   key: string;
   data: NewsAggregationResult;
   timestamp: number;
@@ -148,7 +148,7 @@ export interface NewsCacheEntry {
 /**
  * Stats for news dashboard
  */
-export interface NewsStats {
+interface NewsStats {
   totalArticles: number;
   byCategory: Record<NewsCategory, number>;
   byPriority: Record<NewsPriority, number>;
@@ -161,7 +161,7 @@ export interface NewsStats {
 /**
  * RSS feed metadata
  */
-export interface RSSFeedMeta {
+interface RSSFeedMeta {
   title: string;
   description?: string;
   link: string;
@@ -177,7 +177,7 @@ export interface RSSFeedMeta {
 /**
  * Reddit post metadata
  */
-export interface RedditPostMeta {
+interface RedditPostMeta {
   subreddit: string;
   upvotes: number;
   comments: number;

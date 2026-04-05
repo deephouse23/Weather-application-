@@ -222,7 +222,7 @@ Stay in character as ${personalityConfig.name}!`;
 }
 
 // Export personality list for UI
-export const AI_PERSONALITIES: { id: AIPersonality; name: string; description: string }[] = [
+const AI_PERSONALITIES: { id: AIPersonality; name: string; description: string }[] = [
     { id: 'storm', name: 'STORM', description: 'Friendly & enthusiastic' },
     { id: 'sass', name: 'SASS', description: 'Sarcastic & brutally honest' },
     { id: 'chill', name: 'CHILL', description: 'Laid-back & minimal' }

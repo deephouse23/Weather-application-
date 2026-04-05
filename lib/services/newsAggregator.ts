@@ -342,14 +342,14 @@ function saveToCache(key: string, data: AggregatedNewsResult): void {
 /**
  * Clear cache
  */
-export function clearNewsCache(): void {
+function clearNewsCache(): void {
   cache.clear();
 }
 
 /**
  * Get cache stats
  */
-export function getNewsCacheStats(): { size: number; keys: string[] } {
+function getNewsCacheStats(): { size: number; keys: string[] } {
   return {
     size: cache.size,
     keys: Array.from(cache.keys()),
@@ -359,7 +359,7 @@ export function getNewsCacheStats(): { size: number; keys: string[] } {
 /**
  * Fetch only severe/breaking weather across all sources
  */
-export async function fetchBreakingWeather(maxItems: number = 10): Promise<NewsItem[]> {
+async function fetchBreakingWeather(maxItems: number = 10): Promise<NewsItem[]> {
   const result = await aggregateNews({
     priority: 'high',
     sources: ['noaa', 'nasa'],
@@ -373,7 +373,7 @@ export async function fetchBreakingWeather(maxItems: number = 10): Promise<NewsI
 /**
  * Fetch news by specific category
  */
-export async function fetchNewsByCategory(
+async function fetchNewsByCategory(
   category: 'breaking' | 'weather' | 'local' | 'general',
   maxItems: number = 20
 ): Promise<NewsItem[]> {

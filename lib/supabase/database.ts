@@ -165,7 +165,7 @@ export const getSavedLocations = async (userId: string): Promise<SavedLocation[]
   return data || []
 }
 
-export const saveLocation = async (locationData: SavedLocationInsert): Promise<SavedLocation | null> => {
+const saveLocation = async (locationData: SavedLocationInsert): Promise<SavedLocation | null> => {
   const supabase = getSupabaseClient()
 
   const { data, error } = await supabase
@@ -182,7 +182,7 @@ export const saveLocation = async (locationData: SavedLocationInsert): Promise<S
   return data
 }
 
-export const updateSavedLocation = async (
+const updateSavedLocation = async (
   locationId: string, 
   updates: SavedLocationUpdate
 ): Promise<SavedLocation | null> => {
@@ -249,7 +249,7 @@ export const getUserPreferences = async (userId: string): Promise<UserPreference
   return data
 }
 
-export const updateUserPreferences = async (
+const updateUserPreferences = async (
   userId: string,
   updates: UserPreferencesUpdate
 ): Promise<UserPreferences | null> => {
@@ -270,7 +270,7 @@ export const updateUserPreferences = async (
 }
 
 // Utility functions for weather app integration
-export const getLocationsByUser = async (userId: string, limit: number = 10): Promise<SavedLocation[]> => {
+const getLocationsByUser = async (userId: string, limit: number = 10): Promise<SavedLocation[]> => {
   const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('saved_locations')
@@ -288,7 +288,7 @@ export const getLocationsByUser = async (userId: string, limit: number = 10): Pr
   return data || []
 }
 
-export const getFavoriteLocations = async (userId: string): Promise<SavedLocation[]> => {
+const getFavoriteLocations = async (userId: string): Promise<SavedLocation[]> => {
   const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('saved_locations')
@@ -305,7 +305,7 @@ export const getFavoriteLocations = async (userId: string): Promise<SavedLocatio
   return data || []
 }
 
-export const searchSavedLocations = async (userId: string, searchTerm: string): Promise<SavedLocation[]> => {
+const searchSavedLocations = async (userId: string, searchTerm: string): Promise<SavedLocation[]> => {
   const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('saved_locations')

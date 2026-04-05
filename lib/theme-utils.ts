@@ -110,7 +110,7 @@ export const getComponentStyles = (theme: ThemeType, variant: keyof ComponentVar
 /**
  * Get theme-specific gradient definitions (for things that still explicitly need it like OPengraph)
  */
-export const getThemeGradients = (theme?: ThemeType): { primary: string; accent: string; card: string } => {
+const getThemeGradients = (theme?: ThemeType): { primary: string; accent: string; card: string } => {
   return {
     primary: 'linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--card)) 100%)',
     accent: 'linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)',
@@ -118,7 +118,7 @@ export const getThemeGradients = (theme?: ThemeType): { primary: string; accent:
   };
 };
 
-export const BREAKPOINTS = {
+const BREAKPOINTS = {
   mobile: '(max-width: 640px)',
   tablet: '(min-width: 641px) and (max-width: 1024px)',
   desktop: '(min-width: 1025px)',
@@ -128,11 +128,11 @@ export const BREAKPOINTS = {
   xl: 'xl:'
 } as const;
 
-export const getResponsiveFontSize = (mobile: string, desktop: string, viewport = '2.5vw') => {
+const getResponsiveFontSize = (mobile: string, desktop: string, viewport = '2.5vw') => {
   return `clamp(${mobile}, ${viewport}, ${desktop})`;
 };
 
-export const COMPONENT_SIZES = {
+const COMPONENT_SIZES = {
   touchTarget: 'min-h-[44px]',
   button: {
     sm: 'h-8 px-3 text-sm',
@@ -146,23 +146,23 @@ export const COMPONENT_SIZES = {
   }
 } as const;
 
-export const ANIMATIONS = {
+const ANIMATIONS = {
   transition: 'transition-all duration-200',
   hover: 'hover:scale-105',
   glow: 'animate-pulse',
   flicker: 'animate-flicker'
 } as const;
 
-export const PIXEL_EFFECTS = {
+const PIXEL_EFFECTS = {
   border: 'pixel-border',
   glow: (theme: ThemeType) => 'pixel-glow glow',
   shadow: 'pixel-shadow',
   font: 'pixel-font font-mono'
 } as const;
 
-export const getGlowClass = (theme: ThemeType): string => 'glow';
+const getGlowClass = (theme: ThemeType): string => 'glow';
 
-export const getRetroEffects = (theme: ThemeType) => ({
+const getRetroEffects = (theme: ThemeType) => ({
   glow: 'glow',
   pixelBorder: 'pixel-border',
   pixelShadow: 'pixel-shadow',

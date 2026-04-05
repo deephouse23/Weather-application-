@@ -122,7 +122,7 @@ export interface WeatherData {
   hourlyForecast?: EnhancedHourlyForecast[]; // 48-hour forecast data
 }
 
-export interface HistoricalData {
+interface HistoricalData {
   daily: {
     time: string[];
     temperature_2m_max: number[];
@@ -163,6 +163,6 @@ export interface PrecipitationData {
 }
 
 // Extended weather data with precipitation for authenticated users
-export interface AuthenticatedWeatherData extends WeatherData {
+interface AuthenticatedWeatherData extends WeatherData {
   precipitation?: PrecipitationData;
 } 

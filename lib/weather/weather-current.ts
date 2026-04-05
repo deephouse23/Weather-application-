@@ -162,7 +162,7 @@ export const fetchWeatherByLocation = async (
 /**
  * Fetch minutely nowcast for overlays
  */
-export async function fetchMinutelyNowcast(
+async function fetchMinutelyNowcast(
   lat: number,
   lon: number,
   units: 'metric' | 'imperial'
