@@ -119,6 +119,14 @@ export interface DeepSkyObject {
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   description: string;
   imagingTips: string;
+  longDescription?: string;
+  discoveredBy?: string;
+  physicalProperties?: string;
+  notableFeatures?: string;
+  nakedEyeVisible?: boolean;
+  binocularTarget?: boolean;
+  telescopeMinAperture?: string;
+  wikipediaSlug?: string;
 }
 
 export interface DeepSkyHighlight extends DeepSkyObject {
@@ -180,10 +188,14 @@ export interface Launch {
   vehicle: string;
   padName: string;
   padLocation: string;
+  padMapUrl: string | null;
   missionName: string;
   missionDescription: string;
   missionType: string;
   isCrewed: boolean;
+  slug: string;
+  videoUrls: string[];
+  imageUrl: string | null;
 }
 
 // ============================================================================

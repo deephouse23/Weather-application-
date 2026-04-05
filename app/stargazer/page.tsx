@@ -15,6 +15,7 @@ import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import PageWrapper from '@/components/page-wrapper';
 import { ShareButtons } from '@/components/share-buttons';
 import type { StargazerData } from '@/lib/stargazer/types';
+import { getSubScoreLabel } from '@/lib/stargazer/score';
 import StargazerNav, { type StargazerTabId } from '@/components/stargazer/StargazerNav';
 import FullHourlyTimeline from '@/components/stargazer/HourlyTimeline';
 import MoonIntel from '@/components/stargazer/MoonIntel';
@@ -147,7 +148,7 @@ function PersistentHeader({ data }: { data: StargazerData }) {
           {/* Sub-score mini-bars */}
           <div className="grid grid-cols-5 gap-2 max-w-md text-xs font-mono">
             {Object.entries(score.subScores).map(([key, val]) => (
-              <div key={key} className="flex flex-col items-center gap-1">
+              <div key={key} className="flex flex-col items-center gap-1" title={getSubScoreLabel(key, val)}>
                 <span className="text-xs font-mono uppercase text-muted-foreground">{key}</span>
                 <div className="w-full h-2 bg-white/10 rounded overflow-hidden">
                   <div

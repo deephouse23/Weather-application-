@@ -13,6 +13,7 @@ import {
   getScoreColor,
   generateSummary,
   calculateStargazerScore,
+  getSubScoreLabel,
 } from '@/lib/stargazer/score';
 
 describe('Stargazer Score Algorithm', () => {
@@ -179,6 +180,39 @@ describe('Stargazer Score Algorithm', () => {
       expect(result).toHaveProperty('subScores');
       expect(result.overall).toBeGreaterThan(0);
       expect(result.overall).toBeLessThanOrEqual(100);
+    });
+  });
+
+  describe('getSubScoreLabel', () => {
+    it('returns "No interference" for moon score 90-100', () => {
+      expect(getSubScoreLabel('moon', 95)).toBe('No interference');
+    });
+
+    it('returns "Severe interference" for moon score 0-24', () => {
+      expect(getSubScoreLabel('moon', 10)).toBe('Severe interference');
+    });
+
+    it('returns "Clear skies" for cloud score 90-100', () => {
+      expect(getSubScoreLabel('cloud', 95)).toBe('Clear skies');
+    });
+
+    it('returns "Overcast" for cloud score 0-24', () => {
+      expect(getSubScoreLabel('cloud', 5)).toBe('Overcast');
+    });
+
+    it('returns labels for all sub-score keys', () => {
+      expect(getSubScoreLabel('seeing', 92)).toBe('Excellent');
+      expect(getSubScoreLabel('transparency', 95)).toBe('Crystal clear');
+      expect(getSubScoreLabel('ground', 95)).toBe('Calm conditions');
+    });
+
+    it('returns empty string for unknown key', () => {
+      expect(getSubScoreLabel('unknown', 50)).toBe('');
+    });
+
+    it('clamps values to 0-100 range', () => {
+      expect(getSubScoreLabel('moon', 150)).toBe('No interference');
+      expect(getSubScoreLabel('moon', -10)).toBe('Severe interference');
     });
   });
 

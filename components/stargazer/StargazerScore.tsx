@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import type { StargazerScore as StargazerScoreType } from '@/lib/stargazer/types';
+import { getSubScoreLabel } from '@/lib/stargazer/score';
 
 interface StargazerScoreProps {
   score: StargazerScoreType;
@@ -17,7 +18,7 @@ const subScoreLabels: Record<string, string> = {
   ground: 'Ground Conditions',
 };
 
-function ScoreBar({ label, value }: { label: string; value: number }) {
+function ScoreBar({ label, value, scoreKey }: { label: string; value: number; scoreKey: string }) {
   const clamped = Math.max(0, Math.min(100, value));
   const barColor =
     clamped >= 75
@@ -40,6 +41,9 @@ function ScoreBar({ label, value }: { label: string; value: number }) {
         />
       </div>
       <span className="w-8 text-right font-mono">{clamped}</span>
+      <span className={cn('w-36 truncate text-[10px]', barColor.replace('bg-', 'text-'))}>
+        {getSubScoreLabel(scoreKey, clamped)}
+      </span>
     </div>
   );
 }
@@ -80,6 +84,7 @@ export default function StargazerScore({ score }: StargazerScoreProps) {
             key={key}
             label={subScoreLabels[key] ?? key}
             value={value}
+            scoreKey={key}
           />
         ))}
       </div>

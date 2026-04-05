@@ -5,6 +5,7 @@ const LAUNCH_LIBRARY_BASE = 'https://ll.thespacedevs.com/2.2.0';
 interface LaunchLibraryResult {
   id: string;
   name: string;
+  slug: string;
   net: string;
   status: { name: string };
   launch_service_provider: { name: string } | null;
@@ -12,12 +13,15 @@ interface LaunchLibraryResult {
   pad: {
     name: string;
     location: { name: string };
+    map_url: string | null;
   } | null;
   mission: {
     name: string;
     description: string;
     type: string;
   } | null;
+  vid_urls: Array<{ url: string }> | null;
+  image: { thumbnail_url: string } | string | null;
 }
 
 interface LaunchLibraryResponse {
@@ -31,7 +35,7 @@ export async function fetchUpcomingLaunches(
   limit: number = 10
 ): Promise<Launch[]> {
   try {
-    const url = `${LAUNCH_LIBRARY_BASE}/launch/upcoming/?limit=${limit}&mode=list`;
+    const url = `${LAUNCH_LIBRARY_BASE}/launch/upcoming/?limit=${limit}&mode=normal`;
     const res = await fetch(url, { next: { revalidate: 1800 } });
 
     if (!res.ok) {
@@ -52,6 +56,13 @@ export async function fetchUpcomingLaunches(
         missionType.includes('Human Exploration') ||
         missionType.includes('Crew');
 
+      const imageUrl =
+        item.image && typeof item.image === 'object'
+          ? item.image.thumbnail_url
+          : typeof item.image === 'string'
+            ? item.image
+            : null;
+
       return {
         id: item.id,
         name: item.name,
@@ -61,10 +72,14 @@ export async function fetchUpcomingLaunches(
         vehicle: item.rocket?.configuration?.name ?? 'Unknown',
         padName: item.pad?.name ?? 'Unknown',
         padLocation: item.pad?.location?.name ?? 'Unknown',
+        padMapUrl: item.pad?.map_url ?? null,
         missionName: item.mission?.name ?? '',
         missionDescription: item.mission?.description ?? '',
         missionType,
         isCrewed,
+        slug: item.slug ?? '',
+        videoUrls: item.vid_urls?.map((v) => v.url) ?? [],
+        imageUrl,
       };
     });
   } catch (error) {

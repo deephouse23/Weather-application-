@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import type { MoonInfo } from '@/lib/stargazer/types';
+import { moonScore, getSubScoreLabel } from '@/lib/stargazer/score';
 
 interface MoonIntelProps {
   moon: MoonInfo;
@@ -60,6 +61,16 @@ export default function MoonIntel({ moon }: MoonIntelProps) {
           <p className="text-xl font-bold font-mono">
             {Math.round(moon.illumination)}%
           </p>
+          {(() => {
+            const score = moonScore(moon.illumination, moon.moonUpDuringDarkWindowPercent);
+            const label = getSubScoreLabel('moon', score);
+            const color = score >= 75 ? 'text-green-500' : score >= 50 ? 'text-yellow-500' : score >= 25 ? 'text-orange-500' : 'text-red-500';
+            return (
+              <p className={cn('mt-1 text-xs font-mono', color)}>
+                Impact: {label}
+              </p>
+            );
+          })()}
         </div>
 
         <div>
