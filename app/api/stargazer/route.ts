@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
     // ---- Parallel fetches ----
     const openMeteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,relative_humidity_2m,dewpoint_2m,temperature_2m,wind_speed_10m,visibility,surface_pressure&forecast_days=2&timezone=auto`;
 
-    const reverseGeoUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=10`;
+    const reverseGeoUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=10&extratags=1`;
 
     const [openMeteoRes, sevenTimerData, issTle, launches, reverseGeoRes] = await Promise.all([
       fetch(openMeteoUrl, { next: { revalidate: 900 } }),
@@ -345,6 +345,13 @@ export async function GET(request: NextRequest) {
             : locationName && country
               ? `${locationName}, ${country}`
               : locationName;
+          const popStr = geoData.extratags?.population;
+          if (popStr) {
+            const parsed = parseInt(popStr, 10);
+            if (!Number.isNaN(parsed)) {
+              population = parsed;
+            }
+          }
         }
       } catch {
         // Reverse geocoding is best-effort
@@ -364,7 +371,14 @@ export async function GET(request: NextRequest) {
       issPasses,
       launches,
       meteorShowers,
-      location: { lat, lon, name: locationName, displayName, bortle: bortleEstimate.bortle, bortleLabel: bortleEstimate.label },
+      location: {
+        lat,
+        lon,
+        name: locationName,
+        displayName,
+        bortle: bortleEstimate.bortle,
+        bortleLabel: bortleEstimate.label,
+      },
       generatedAt: new Date().toISOString(),
     };
 

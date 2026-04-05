@@ -18,10 +18,7 @@ const BORTLE_LABELS: Record<number, string> = {
 };
 
 export function estimateBortleClass(population: number | undefined): { bortle: number; label: string } {
-  if (population == null || population < 1_000) {
-    return { bortle: 4, label: BORTLE_LABELS[4] };
-  }
-  if (population < 10_000) {
+  if (population == null || population < 10_000) {
     return { bortle: 4, label: BORTLE_LABELS[4] };
   }
   if (population < 50_000) {
