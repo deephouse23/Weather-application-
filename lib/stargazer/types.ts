@@ -1,0 +1,247 @@
+/**
+ * Stargazer - Astrophotography Forecast Types
+ */
+
+// ============================================================================
+// Score Types
+// ============================================================================
+
+export interface StargazerSubScores {
+  cloud: number;
+  moon: number;
+  seeing: number;
+  transparency: number;
+  ground: number;
+}
+
+export interface StargazerScore {
+  overall: number;
+  label: ScoreLabel;
+  color: string;
+  summary: string;
+  subScores: StargazerSubScores;
+}
+
+export type ScoreLabel = 'Exceptional' | 'Excellent' | 'Good' | 'Fair' | 'Poor' | 'Bad';
+
+// ============================================================================
+// Dark Window
+// ============================================================================
+
+export interface DarkWindow {
+  astronomicalDusk: Date;
+  astronomicalDawn: Date;
+  sunset: Date;
+  sunrise: Date;
+}
+
+// ============================================================================
+// Hourly Conditions
+// ============================================================================
+
+export interface HourlyCondition {
+  time: Date;
+  cloudCover: number;
+  cloudCoverLow: number;
+  cloudCoverMid: number;
+  cloudCoverHigh: number;
+  seeing: number;
+  transparency: number;
+  windSpeed: number;
+  humidity: number;
+  temperature: number;
+  dewpoint: number;
+  dewRisk: 'low' | 'moderate' | 'high';
+}
+
+// ============================================================================
+// Moon
+// ============================================================================
+
+export interface MoonInfo {
+  phaseName: string;
+  phaseAngle: number;
+  illumination: number;
+  rise: Date | null;
+  set: Date | null;
+  moonUpDuringDarkWindowPercent: number;
+  darkWindowStart: Date | null;
+  darkWindowEnd: Date | null;
+  nextNewMoon: Date;
+  nextFullMoon: Date;
+}
+
+// ============================================================================
+// Planets
+// ============================================================================
+
+export interface PlanetVisibility {
+  name: string;
+  rise: Date | null;
+  set: Date | null;
+  peakAltitude: number;
+  peakTime: Date;
+  magnitude: number;
+  constellation: string;
+  notes: string;
+}
+
+// ============================================================================
+// Deep Sky Objects
+// ============================================================================
+
+export type DeepSkyType =
+  | 'emission_nebula'
+  | 'reflection_nebula'
+  | 'planetary_nebula'
+  | 'dark_nebula'
+  | 'supernova_remnant'
+  | 'spiral_galaxy'
+  | 'elliptical_galaxy'
+  | 'irregular_galaxy'
+  | 'galaxy_group'
+  | 'open_cluster'
+  | 'globular_cluster'
+  | 'star_forming_region';
+
+export interface DeepSkyObject {
+  id: string;
+  name: string;
+  altNames: string[];
+  type: DeepSkyType;
+  constellation: string;
+  ra: number;
+  dec: number;
+  magnitude: number;
+  size: string;
+  distance: string;
+  bestMonths: number[];
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  description: string;
+  imagingTips: string;
+}
+
+export interface DeepSkyHighlight extends DeepSkyObject {
+  maxAltitude: number;
+  transitTime: Date;
+  transitsDuringDarkWindow: boolean;
+}
+
+// ============================================================================
+// Meteor Showers
+// ============================================================================
+
+export interface MeteorShower {
+  name: string;
+  peak: string;
+  peakMonth: number;
+  peakDay: number;
+  activeStart: string;
+  activeEnd: string;
+  zhr: number;
+  speed: number;
+  radiantConstellation: string;
+  radiantRA: number;
+  radiantDec: number;
+  parentBody: string;
+  description: string;
+}
+
+export interface MeteorShowerEvent extends MeteorShower {
+  moonInterference: 'none' | 'low' | 'moderate' | 'high';
+  moonIlluminationAtPeak: number;
+}
+
+// ============================================================================
+// ISS Passes
+// ============================================================================
+
+export interface ISSPass {
+  date: Date;
+  riseTime: Date;
+  riseDirection: string;
+  maxElevation: number;
+  maxTime: Date;
+  setDirection: string;
+  setTime: Date;
+  brightness: number;
+}
+
+// ============================================================================
+// Launches
+// ============================================================================
+
+export interface Launch {
+  id: string;
+  name: string;
+  net: Date;
+  status: string;
+  provider: string;
+  vehicle: string;
+  padName: string;
+  padLocation: string;
+  missionName: string;
+  missionDescription: string;
+  missionType: string;
+  isCrewed: boolean;
+}
+
+// ============================================================================
+// Sky Events
+// ============================================================================
+
+export interface SkyEvent {
+  date: Date;
+  type: 'meteor_shower' | 'conjunction' | 'opposition' | 'lunar_eclipse' | 'solar_eclipse' | 'equinox' | 'solstice';
+  title: string;
+  description: string;
+  moonInterference?: string;
+}
+
+// ============================================================================
+// 7Timer API Response
+// ============================================================================
+
+export interface SevenTimerDataPoint {
+  timepoint: number;
+  cloudcover: number;
+  seeing: number;
+  transparency: number;
+  lifted_index: number;
+  rh2m: number;
+  wind10m: {
+    direction: string;
+    speed: number;
+  };
+  temp2m: number;
+  prec_type: string;
+}
+
+export interface SevenTimerResponse {
+  product: string;
+  init: string;
+  dataseries: SevenTimerDataPoint[];
+}
+
+// ============================================================================
+// Consolidated API Response
+// ============================================================================
+
+export interface StargazerData {
+  score: StargazerScore;
+  darkWindow: DarkWindow;
+  hourlyConditions: HourlyCondition[];
+  moon: MoonInfo;
+  planets: PlanetVisibility[];
+  deepSkyHighlights: DeepSkyHighlight[];
+  skyEvents: SkyEvent[];
+  issPasses: ISSPass[];
+  launches: Launch[];
+  meteorShowers: MeteorShowerEvent[];
+  location: {
+    lat: number;
+    lon: number;
+    name?: string;
+  };
+  generatedAt: string;
+}

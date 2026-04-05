@@ -55,6 +55,7 @@ export default function PageWrapper({ children, weatherLocation, weatherTemperat
                 <Link href="/severe" className="text-muted-foreground hover:text-foreground transition-colors">Severe Weather</Link>
                 <Link href="/aviation" className="text-muted-foreground hover:text-foreground transition-colors">Aviation</Link>
                 <Link href="/space-weather" className="text-muted-foreground hover:text-foreground transition-colors">Space Weather</Link>
+                <Link href="/stargazer" className="text-muted-foreground hover:text-foreground transition-colors">Stargazer</Link>
                 <Link href="/tropical" className="text-muted-foreground hover:text-foreground transition-colors">Tropical</Link>
                 <Link href="/winter" className="text-muted-foreground hover:text-foreground transition-colors">Winter</Link>
               </nav>
