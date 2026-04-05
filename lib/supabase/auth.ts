@@ -77,62 +77,12 @@ export const signInWithProvider = async (
   return { data, error }
 }
 
-// Sign out user
-const signOut = async () => {
-  const { error } = await supabase.auth.signOut()
-  return { error }
-}
 
-// Reset password
+// Reset password (used by app/auth/reset-password/page.tsx)
 export const resetPassword = async (email: string) => {
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/auth/reset-password`
   })
 
   return { data, error }
-}
-
-// Update password
-const updatePassword = async (password: string) => {
-  const { data, error } = await supabase.auth.updateUser({
-    password
-  })
-
-  return {
-    user: data.user,
-    error
-  }
-}
-
-// Update user profile
-const updateAuthProfile = async (updates: {
-  username?: string
-  full_name?: string
-  avatar_url?: string
-}) => {
-  const { data, error } = await supabase.auth.updateUser({
-    data: updates
-  })
-
-  return {
-    user: data.user,
-    error
-  }
-}
-
-// Check if username is available
-const checkUsernameAvailable = async (username: string): Promise<boolean> => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('username')
-    .eq('username', username)
-    .single()
-
-  if (error && error.code === 'PGRST116') {
-    // No rows returned, username is available
-    return true
-  }
-
-  // Username exists or other error
-  return false
 }

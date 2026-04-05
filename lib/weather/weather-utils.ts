@@ -29,13 +29,6 @@ export interface WindData {
   gust?: number;
 }
 
-// ============================================================================
-// Constants
-// ============================================================================
-
-const BASE_URL = 'https://api.openweathermap.org/data/2.5';
-const BASE_URL_V3 = 'https://api.openweathermap.org/data/3.0';
-const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
 
 // ============================================================================
 // API URL Helper
@@ -183,35 +176,6 @@ export const getWindDirection = (degrees: number): string => {
 /**
  * Enhanced wind display formatting with proper unit handling
  */
-const formatWindDisplay = (
-  speed: number,
-  direction?: number,
-  gust?: number,
-  countryCode?: string
-): string => {
-  const useMetric = shouldUseMetricUnits(countryCode || 'US');
-  const displaySpeed = speed;
-  const speedUnit = useMetric ? 'km/h' : 'mph';
-
-  if (displaySpeed < 1) {
-    return 'Calm';
-  }
-
-  let windString = '';
-
-  if (direction !== undefined) {
-    const compassDirection = getCompassDirection(direction);
-    windString += `${compassDirection} `;
-  }
-
-  windString += `${Math.round(displaySpeed)} ${speedUnit}`;
-
-  if (gust && gust > speed * 1.2) {
-    windString += ` (gusts ${Math.round(gust)} ${speedUnit})`;
-  }
-
-  return windString;
-};
 
 // ============================================================================
 // Time Functions
@@ -239,31 +203,7 @@ export const formatTime = (timestamp: number, timezoneOffset?: number): string =
 // Pressure Functions
 // ============================================================================
 
-const getPressureUnit = (
-  countryCode: string,
-  userPreference?: 'hPa' | 'inHg'
-): 'hPa' | 'inHg' => {
-  if (userPreference) return userPreference;
-  return shouldUseInchesOfMercury(countryCode) ? 'inHg' : 'hPa';
-};
 
-const formatPressureValue = (
-  pressureHPa: number,
-  unit: 'hPa' | 'inHg'
-): { value: number; display: string } => {
-  if (unit === 'inHg') {
-    const pressureInHg = pressureHPa * 0.02953;
-    return {
-      value: pressureInHg,
-      display: pressureInHg.toFixed(2)
-    };
-  } else {
-    return {
-      value: pressureHPa,
-      display: Math.round(pressureHPa).toString()
-    };
-  }
-};
 
 /**
  * Enhanced pressure formatting with regional support
@@ -299,19 +239,6 @@ export const getUVDescription = (uvIndex: number): string => {
 /**
  * Estimate current UV from daily maximum based on time of day
  */
-const estimateCurrentUVFromDailyMax = (dailyMaxUV: number, hour: number): number => {
-  if (hour < 6 || hour > 18) return 0;
-
-  const peakHour = 13;
-  const standardDeviation = 3;
-  const distanceFromPeak = Math.abs(hour - peakHour);
-  const uvMultiplier = Math.exp(
-    -(distanceFromPeak * distanceFromPeak) / (2 * standardDeviation * standardDeviation)
-  );
-  const estimatedUV = dailyMaxUV * uvMultiplier;
-
-  return Math.max(0, estimatedUV);
-};
 
 // ============================================================================
 // Moon Phase Functions

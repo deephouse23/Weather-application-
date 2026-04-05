@@ -261,10 +261,4 @@ export const CATEGORY_CONFIG: Record<FeedCategory, {
   },
 };
 
-function getFeedsByCategory(category: FeedCategory): FeedSource[] {
-  return FEED_SOURCES.filter(feed => feed.category === category && feed.enabled);
-}
 
-function getEnabledFeeds(): FeedSource[] {
-  return FEED_SOURCES.filter(feed => feed.enabled);
-}

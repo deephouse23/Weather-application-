@@ -45,7 +45,7 @@ export const createPreferencesSchema = z.object({
   temperature_unit: temperatureUnitSchema.default('fahrenheit'),
 }).strict()
 
-// Type exports for use in route handlers
+// Inferred types for internal use
 type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>
 type CreatePreferencesInput = z.infer<typeof createPreferencesSchema>
 
