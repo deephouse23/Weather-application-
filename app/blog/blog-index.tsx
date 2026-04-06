@@ -33,7 +33,7 @@ export function BlogIndex({ posts, tags, initialTag }: BlogIndexProps) {
 
   return (
     <PageWrapper>
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
         {/* Header */}
         <div className="text-center space-y-3">
           <p className="text-xs font-mono tracking-widest text-muted-foreground">
@@ -98,57 +98,134 @@ export function BlogIndex({ posts, tags, initialTag }: BlogIndexProps) {
           SHOWING {paginated.length} OF {filtered.length} DISPATCHES
         </p>
 
-        {/* Posts */}
-        <div className="space-y-6">
-          {paginated.map((post, i) => (
+        {/* Featured post (hero card) — page 1 only */}
+        {page === 1 && paginated[0] && (() => {
+          const feat = paginated[0]
+          return (
             <Link
-              key={i}
-              href={`/blog/${encodeURIComponent(post.slug)}`}
+              href={`/blog/${encodeURIComponent(feat.slug)}`}
               className={cn(
-                'block rounded-lg border p-6 transition-all duration-200',
-                'hover:border-[hsl(var(--primary))] hover:shadow-[0_0_15px_hsl(var(--primary)/0.15)]',
-                'border-[hsl(var(--border))]',
-                'bg-[hsl(var(--card))]',
-                page === 1 && page === 1 && i === 0 && 'border-[hsl(var(--primary)/0.5)]'
+                'block rounded-lg border overflow-hidden transition-all duration-200',
+                'hover:border-[hsl(var(--primary))] hover:shadow-[0_0_20px_hsl(var(--primary)/0.2)]',
+                'border-[hsl(var(--primary)/0.5)]',
+                'bg-[hsl(var(--card))]'
               )}
             >
-              {post.heroImage && i === 0 && (
-                <div className="relative w-full h-48 mb-4 rounded overflow-hidden">
-                  <img
-                    src={post.heroImage}
-                    alt={post.title}
-                    className="w-full h-full object-cover"
-                  />
+              {feat.heroImage ? (
+                <div className="relative w-full h-56 sm:h-72 md:h-80">
+                  <img src={feat.heroImage} alt={feat.title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-6">
+                    <span className="inline-block px-2 py-0.5 text-xs font-mono uppercase tracking-widest text-[hsl(var(--primary))] border border-[hsl(var(--primary))] rounded mb-3">
+                      FEATURED INTEL
+                    </span>
+                    <h2 className="text-2xl sm:text-3xl font-extrabold font-mono uppercase tracking-tight text-white mb-2">
+                      {feat.title}
+                    </h2>
+                    <div className="flex items-center gap-2 text-xs font-mono text-gray-300 tracking-wider">
+                      <span>{new Date(feat.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()}</span>
+                      <span>|</span>
+                      <span>{feat.readTime} MIN READ</span>
+                      <span>|</span>
+                      <span>BY {feat.author.toUpperCase()}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-6">
+                  <span className="inline-block px-2 py-0.5 text-xs font-mono uppercase tracking-widest text-[hsl(var(--primary))] border border-[hsl(var(--primary))] rounded mb-3">
+                    FEATURED INTEL
+                  </span>
+                  <h2 className={cn(
+                    'text-2xl sm:text-3xl font-extrabold font-mono uppercase tracking-tight mb-2',
+                    themeClasses.accentText
+                  )}>
+                    {feat.title}
+                  </h2>
+                  <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground tracking-wider mb-3">
+                    <span>{new Date(feat.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()}</span>
+                    <span>|</span>
+                    <span>{feat.readTime} MIN READ</span>
+                    <span>|</span>
+                    <span>BY {feat.author.toUpperCase()}</span>
+                  </div>
                 </div>
               )}
-              <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground tracking-wider mb-2">
-                {page === 1 && i === 0 && <span className="text-[hsl(var(--primary))]">FEATURED</span>}
-                {page === 1 && i === 0 && <span>|</span>}
-                <span>{new Date(post.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()}</span>
-                <span>|</span>
-                <span>{post.readTime} MIN READ</span>
-                <span>|</span>
-                <span>BY {post.author.toUpperCase()}</span>
-              </div>
-              <h2 className="text-xl font-bold font-mono uppercase tracking-tight mb-2">
-                {post.title}
-              </h2>
-              <p className="text-sm font-mono text-muted-foreground line-clamp-2 mb-3">
-                {post.summary}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {post.tags.map(tag => (
-                  <span
-                    key={tag}
-                    className="px-2 py-0.5 text-xs font-mono uppercase tracking-wider rounded bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]"
-                  >
-                    {tag}
+              <div className="p-6 pt-0">
+                <p className="text-sm font-mono text-muted-foreground mb-4 leading-relaxed">
+                  {feat.summary}
+                </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap gap-2">
+                    {feat.tags.map(tag => (
+                      <span
+                        key={tag}
+                        className="px-2 py-0.5 text-xs font-mono uppercase tracking-wider rounded bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <span className="text-xs font-mono uppercase tracking-wider text-[hsl(var(--primary))] whitespace-nowrap ml-4">
+                    ACCESS FULL REPORT &rarr;
                   </span>
-                ))}
+                </div>
               </div>
             </Link>
-          ))}
-        </div>
+          )
+        })()}
+
+        {/* Grid posts (smaller cards) */}
+        {(() => {
+          const gridPosts = page === 1 ? paginated.slice(1) : paginated
+          if (gridPosts.length === 0) return null
+          return (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {gridPosts.map((post) => (
+                <Link
+                  key={post.slug}
+                  href={`/blog/${encodeURIComponent(post.slug)}`}
+                  className={cn(
+                    'block rounded-lg border p-5 transition-all duration-200',
+                    'hover:border-[hsl(var(--primary))] hover:shadow-[0_0_15px_hsl(var(--primary)/0.15)]',
+                    'border-[hsl(var(--border))]',
+                    'bg-[hsl(var(--card))]'
+                  )}
+                >
+                  <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground tracking-wider mb-3">
+                    <span>{new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}</span>
+                    <span>|</span>
+                    <span>{post.readTime} MIN</span>
+                  </div>
+                  <h3 className="text-base font-bold font-mono uppercase tracking-tight mb-2 line-clamp-2">
+                    {post.title}
+                  </h3>
+                  <p className="text-xs font-mono text-muted-foreground line-clamp-3 mb-3">
+                    {post.summary}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {post.tags.slice(0, 3).map(tag => (
+                      <span
+                        key={tag}
+                        className="px-1.5 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                    {post.tags.length > 3 && (
+                      <span className="text-[10px] font-mono text-muted-foreground">
+                        +{post.tags.length - 3}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs font-mono uppercase tracking-wider text-[hsl(var(--primary))]">
+                    ACCESS FILE &rarr;
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )
+        })()}
 
         {/* Empty state */}
         {paginated.length === 0 && (

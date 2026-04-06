@@ -48,6 +48,29 @@ function getWeekTheme(): { theme: string; instruction: string } {
   }
 }
 
+// Curated seasonal events/festivals by month for local context
+function getSeasonalEvents(): string {
+  const month = new Date().getMonth()
+  const events: Record<number, string[]> = {
+    0: ['College Football Playoff', 'NFL Playoffs', 'CES in Las Vegas', 'ski season across the Rockies and Northeast', 'Martin Luther King Jr. Day events'],
+    1: ['Super Bowl', 'Daytona 500', 'Mardi Gras in New Orleans', 'Valentine\'s Day events', 'spring training begins in Florida and Arizona'],
+    2: ['March Madness', 'spring break travel season', 'St. Patrick\'s Day parades', 'SXSW in Austin', 'cherry blossom season in DC'],
+    3: ['Masters Tournament in Augusta', 'Coachella in Indio CA', 'Boston Marathon', 'MLB opening week', 'Easter weekend events', 'tornado season ramps up across the Plains'],
+    4: ['Kentucky Derby', 'Indianapolis 500', 'Memorial Day weekend', 'hurricane season prep begins', 'graduation ceremonies nationwide', 'Bonnaroo'],
+    5: ['Atlantic hurricane season begins', 'CMA Fest in Nashville', 'US Open golf', 'Bonnaroo Music Festival', 'summer solstice', 'county fair season kicks off'],
+    6: ['July 4th celebrations', 'MLB All-Star Game', 'San Diego Comic-Con', 'Tour de France', 'state fair season', 'monsoon season in the Southwest'],
+    7: ['Little League World Series', 'NFL preseason', 'US Open tennis', 'back-to-school season', 'peak hurricane season', 'Iowa State Fair'],
+    8: ['NFL season opener', 'Labor Day weekend', 'apple picking and fall festival season', 'Ryder Cup', 'peak Atlantic hurricane season'],
+    9: ['World Series', 'Halloween events', 'Albuquerque Balloon Fiesta', 'fall foliage season in New England', 'Oktoberfest events'],
+    10: ['Thanksgiving travel rush', 'college football rivalry week', 'Black Friday shopping', 'early ski season openings', 'Macy\'s Thanksgiving Day Parade'],
+    11: ['college football bowl season', 'New Year\'s Eve celebrations', 'holiday travel season', 'winter storm season', 'Rose Bowl prep'],
+  }
+  const monthEvents = events[month] || []
+  return monthEvents.length > 0
+    ? `## Local and Seasonal Context\nCurrent events and activities to consider tying into the post:\n${monthEvents.map(e => `- ${e}`).join('\n')}`
+    : ''
+}
+
 // Fetch weather data from public sources
 async function fetchWeatherContext(): Promise<string> {
   const sections: string[] = []
@@ -103,6 +126,12 @@ async function fetchWeatherContext(): Promise<string> {
   const now = new Date()
   sections.unshift(`## Date Context\nToday is ${now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}. Season: ${getSeasonName(now)}.`)
 
+  // Add seasonal/local event context
+  const seasonalEvents = getSeasonalEvents()
+  if (seasonalEvents) {
+    sections.push(seasonalEvents)
+  }
+
   return sections.join('\n\n')
 }
 
@@ -130,9 +159,18 @@ async function generateBlogPost(): Promise<void> {
   console.log(`[generate-blog-post] Theme: ${theme}`)
   console.log('[generate-blog-post] Calling Claude API...')
 
-  const systemPrompt = `You are 16bitbot, the weather intelligence system for 16bitweather.co -- a retro-styled weather education platform.
+  const systemPrompt = `You are 16bitbot, the weather writer for 16bitweather.co -- a retro-styled weather education platform.
 
-Your job is to write a weekly weather blog post. The site has a terminal/pixel aesthetic, so your writing should feel like a dispatch from a weather monitoring station, but be warm and conversational -- like explaining weather to a curious friend at a command center.
+Your job is to write a weekly weather blog post. The site has a terminal/pixel aesthetic, but your writing voice should be warm, conversational, and approachable -- like a knowledgeable friend breaking down what is happening with the weather over coffee.
+
+Voice and tone:
+- Write like you are talking to a neighbor, not filing a report. Be direct and friendly.
+- Use "y'all" naturally where it fits (not in every sentence -- just where it sounds right).
+- Address the reader directly: "if you're heading out to the festival", "keep your radar app handy", "you will need a sturdy umbrella instead of sunglasses".
+- Use vivid, colloquial language: "bone dry", "crash the party", "dragging its feet", "a completely different story". Avoid stiff or clinical phrasing.
+- Tie weather to real life -- local festivals, outdoor events, sports, travel plans, farming, barbecues, whatever is happening right now.
+- Mention 1-2 specific local events, festivals, or seasonal activities from the context data to ground the post in real life.
+- First person plural is fine ("we are looking at", "we could see") but mix it with direct address to the reader.
 
 Rules:
 - No emojis ever
@@ -140,9 +178,7 @@ Rules:
 - Write 400-800 words
 - Use markdown headers (## for main sections, ### for subsections)
 - End every post with a "## Bottom Line" section with 2-3 actionable takeaways
-- Tie weather to current events, sports, holidays, or pop culture when possible
-- Reference specific cities, temperatures, wind speeds, Kp index values to feel concrete
-- Use first person plural ("we tracked", "we're seeing")
+- Reference specific cities, temperatures, wind speeds, Kp index values to feel concrete and grounded
 - Tags should be lowercase, 4-6 tags mixing weather type + geography
 - The author is always "16bitbot"
 - Make the title catchy and specific, not generic
