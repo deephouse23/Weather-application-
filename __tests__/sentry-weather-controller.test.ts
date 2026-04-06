@@ -1,37 +1,11 @@
 /**
  * Test for Sentry fix: JAVASCRIPT-NEXTJS-X / JAVASCRIPT-NEXTJS-W
- * useWeatherController must not include checkRateLimit in useEffect deps
- * to avoid infinite re-render loops
+ * useWeatherController must use a ref gate to prevent infinite re-renders
+ * when checkRateLimit is in the useEffect dependency array.
  */
 
-import { renderHook } from '@testing-library/react';
-
-// Mock dependencies
-jest.mock('@/lib/location-service', () => ({
-  reverseGeocode: jest.fn(),
-}));
-jest.mock('@/components/location-context', () => ({
-  useLocation: () => ({
-    location: null,
-    setLocation: jest.fn(),
-    isLoading: false,
-  }),
-}));
-
-// Track how many times checkRateLimit executes
-let checkRateLimitCallCount = 0;
-
-jest.mock('@/lib/user-cache-service', () => ({
-  UserCacheService: {
-    getCachedWeather: jest.fn().mockReturnValue(null),
-    cacheWeather: jest.fn(),
-  },
-}));
-
 describe('useWeatherController rate limit effect (JAVASCRIPT-NEXTJS-X/W)', () => {
-  it('should not cause infinite re-renders from checkRateLimit in useEffect deps', async () => {
-    // We test this by verifying the hook stabilizes (doesn't exceed render limit)
-    // Import the actual hook source to check the dependency array
+  it('should use a ref gate to run rate limit init only once', () => {
     const fs = require('fs');
     const path = require('path');
     const hookSource = fs.readFileSync(
@@ -39,25 +13,37 @@ describe('useWeatherController rate limit effect (JAVASCRIPT-NEXTJS-X/W)', () =>
       'utf8'
     );
 
-    // The useEffect that calls checkRateLimit() and setRemainingSearches
-    // must NOT include checkRateLimit in its dependency array.
-    // We identify it by the "Update remaining searches on mount" comment
-    // or the useEffect containing both checkRateLimit() call and setRemainingSearches.
     const lines = hookSource.split('\n');
-    let inTargetEffect = false;
-    let hasUnsafeDep = false;
+
+    // Find the useEffect block that contains both isClient and checkRateLimit()
+    // Then verify it has a .current ref guard and no eslint-disable
+    let effectStart = -1;
+    let effectEnd = -1;
+
     for (let i = 0; i < lines.length; i++) {
-      if (lines[i].includes('useEffect(') || lines[i].includes('useCallback(')) {
-        inTargetEffect = false; // reset on any new hook block
+      if (lines[i].includes('useEffect(')) {
+        // Scan ahead to find the closing deps array
+        for (let j = i + 1; j < Math.min(i + 15, lines.length); j++) {
+          if (lines[j].match(/\},\s*\[/)) {
+            // Check if this effect block contains both isClient and checkRateLimit()
+            const block = lines.slice(i, j + 1).join('\n');
+            if (block.includes('checkRateLimit()') && block.includes('isClient')) {
+              effectStart = i;
+              effectEnd = j;
+            }
+            break;
+          }
+        }
       }
-      if (lines[i].includes('checkRateLimit()') && lines[i - 1]?.includes('isClient')) {
-        inTargetEffect = true;
-      }
-      if (inTargetEffect && lines[i].match(/\},\s*\[/) && lines[i].includes('checkRateLimit')) {
-        hasUnsafeDep = true;
-      }
+      if (effectStart >= 0) break;
     }
 
-    expect(hasUnsafeDep).toBe(false);
+    expect(effectStart).toBeGreaterThan(-1);
+
+    const effectBlock = lines.slice(effectStart, effectEnd + 1).join('\n');
+    // Must have a ref guard (.current)
+    expect(effectBlock).toMatch(/\.current/);
+    // Must NOT have eslint-disable
+    expect(effectBlock).not.toMatch(/eslint-disable/);
   });
 });

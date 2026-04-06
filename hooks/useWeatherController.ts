@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from \'react\'
 import { WeatherData } from '@/lib/types'
 import { fetchWeatherData, fetchWeatherByLocation } from '@/lib/weather'
 import { locationService, LocationData } from '@/lib/location-service'
@@ -27,6 +27,7 @@ export function useWeatherController() {
     } = useLocationContext()
 
     const [weather, setWeather] = useState<WeatherData | null>(null)
+    const didInitRemainingSearches = useRef(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string>("")
     const [hasSearched, setHasSearched] = useState(false)
@@ -93,11 +94,11 @@ export function useWeatherController() {
 
     // Update remaining searches on mount
     useEffect(() => {
-        if (isClient) {
-            const { remaining } = checkRateLimit()
-            setRemainingSearches(remaining)
-        }
-    }, [isClient]) // eslint-disable-line react-hooks/exhaustive-deps
+        if (!isClient || didInitRemainingSearches.current) return
+        didInitRemainingSearches.current = true
+        const { remaining } = checkRateLimit()
+        setRemainingSearches(remaining)
+    }, [isClient, checkRateLimit])
 
     const recordRequest = useCallback(() => {
         const now = Date.now()

@@ -35,8 +35,24 @@ const NULL_UUID = '00000000-0000-0000-0000-000000000000'
 export const getProfile = async (userId: string): Promise<Profile | null> => {
   // Guard: Skip database query for null UUID (used in Playwright test mode)
   // This prevents "Cannot coerce the result to a single JSON object" errors
-  if (!userId || userId === NULL_UUID) {
+  if (!userId) {
     return null
+  }
+
+  // Return mock profile for test sessions (nil UUID) to avoid DB errors
+  if (userId === NULL_UUID) {
+    return {
+      id: NULL_UUID,
+      username: updates.username ?? null,
+      full_name: updates.full_name ?? null,
+      email: null,
+      default_location: updates.default_location ?? null,
+      avatar_url: updates.avatar_url ?? null,
+      preferred_units: updates.preferred_units ?? 'imperial',
+      timezone: updates.timezone ?? 'UTC',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    } as Profile
   }
 
   const supabase = getSupabaseClient()
@@ -81,8 +97,24 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
 }
 
 export const updateProfile = async (userId: string, updates: ProfileUpdate): Promise<Profile | null> => {
-  if (!userId || userId === NULL_UUID) {
+  if (!userId) {
     return null
+  }
+
+  // Return mock profile for test sessions (nil UUID) to avoid DB errors
+  if (userId === NULL_UUID) {
+    return {
+      id: NULL_UUID,
+      username: updates.username ?? null,
+      full_name: updates.full_name ?? null,
+      email: null,
+      default_location: updates.default_location ?? null,
+      avatar_url: updates.avatar_url ?? null,
+      preferred_units: updates.preferred_units ?? 'imperial',
+      timezone: updates.timezone ?? 'UTC',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    } as Profile
   }
 
   const supabase = getSupabaseClient()
