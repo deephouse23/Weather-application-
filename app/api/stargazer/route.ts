@@ -33,6 +33,7 @@ import type {
   MeteorShowerEvent,
   MeteorShower,
 } from '@/lib/stargazer/types';
+import { estimateBortleClass } from '@/lib/stargazer/bortle';
 
 export const revalidate = 900;
 
@@ -111,11 +112,14 @@ export async function GET(request: NextRequest) {
     // ---- Parallel fetches ----
     const openMeteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,relative_humidity_2m,dewpoint_2m,temperature_2m,wind_speed_10m,visibility,surface_pressure&forecast_days=2&timezone=auto`;
 
-    const [openMeteoRes, sevenTimerData, issTle, launches] = await Promise.all([
+    const reverseGeoUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=10&extratags=1`;
+
+    const [openMeteoRes, sevenTimerData, issTle, launches, reverseGeoRes] = await Promise.all([
       fetch(openMeteoUrl, { next: { revalidate: 900 } }),
       fetchSevenTimerData(lat, lon),
       fetchISSTLE(),
       fetchUpcomingLaunches(10),
+      fetch(reverseGeoUrl, { next: { revalidate: 86400 }, headers: { 'User-Agent': '16BitWeather/1.0 (https://16bitweather.co)' } }).catch(() => null),
     ]);
 
     // ---- Parse Open-Meteo ----
@@ -324,6 +328,37 @@ export async function GET(request: NextRequest) {
         };
       });
 
+    // ---- Location name & Bortle ----
+    let locationName: string | undefined;
+    let displayName: string | undefined;
+    let population: number | undefined;
+    if (reverseGeoRes && reverseGeoRes.ok) {
+      try {
+        const geoData = await reverseGeoRes.json();
+        if (geoData && geoData.address) {
+          const addr = geoData.address;
+          locationName = addr.city || addr.town || addr.village || addr.hamlet;
+          const state = addr.state;
+          const country = addr.country_code?.toUpperCase();
+          displayName = locationName && state
+            ? `${locationName}, ${state}`
+            : locationName && country
+              ? `${locationName}, ${country}`
+              : locationName;
+          const popStr = geoData.extratags?.population;
+          if (popStr) {
+            const parsed = parseInt(popStr, 10);
+            if (!Number.isNaN(parsed)) {
+              population = parsed;
+            }
+          }
+        }
+      } catch {
+        // Reverse geocoding is best-effort
+      }
+    }
+    const bortleEstimate = estimateBortleClass(population);
+
     // ---- Build response ----
     const data: StargazerData = {
       score,
@@ -336,7 +371,14 @@ export async function GET(request: NextRequest) {
       issPasses,
       launches,
       meteorShowers,
-      location: { lat, lon },
+      location: {
+        lat,
+        lon,
+        name: locationName,
+        displayName,
+        bortle: bortleEstimate.bortle,
+        bortleLabel: bortleEstimate.label,
+      },
       generatedAt: new Date().toISOString(),
     };
 

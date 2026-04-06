@@ -16,6 +16,7 @@ import PageWrapper from '@/components/page-wrapper';
 import { ShareButtons } from '@/components/share-buttons';
 import type { StargazerData } from '@/lib/stargazer/types';
 import { getSubScoreLabel } from '@/lib/stargazer/score';
+import { formatTonightDate } from '@/lib/stargazer/bortle';
 import StargazerNav, { type StargazerTabId } from '@/components/stargazer/StargazerNav';
 import FullHourlyTimeline from '@/components/stargazer/HourlyTimeline';
 import MoonIntel from '@/components/stargazer/MoonIntel';
@@ -118,10 +119,21 @@ function PersistentHeader({ data }: { data: StargazerData }) {
             </span>
           </div>
 
-          {location.name && (
-            <p className="text-xs font-mono text-muted-foreground mb-1">
-              {location.name}
-            </p>
+          {(location.displayName || location.name) && (
+            <div className="text-xs font-mono text-muted-foreground mb-2 space-y-0.5">
+              <p className="text-sm font-bold text-foreground">
+                {location.displayName || location.name}
+              </p>
+              <p>
+                {Math.abs(location.lat).toFixed(2)}{'\u00B0'}{location.lat >= 0 ? 'N' : 'S'},{' '}
+                {Math.abs(location.lon).toFixed(2)}{'\u00B0'}{location.lon >= 0 ? 'E' : 'W'}
+                {location.bortle != null && (
+                  <span className="ml-3" title={location.bortleLabel || ''}>
+                    Bortle {location.bortle} (est.)
+                  </span>
+                )}
+              </p>
+            </div>
           )}
 
           <p className="text-sm font-mono text-muted-foreground mb-3 max-w-xl">
@@ -286,6 +298,8 @@ export default function StargazerPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<StargazerTabId>('conditions');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
 
   // Read hash on mount
   useEffect(() => {
@@ -302,7 +316,7 @@ export default function StargazerPage() {
     window.location.hash = tab;
   }, []);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (customLat?: number, customLon?: number) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -311,16 +325,21 @@ export default function StargazerPage() {
       let longitude: number;
       let usedFallback = false;
 
-      try {
-        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
-        });
-        latitude = pos.coords.latitude;
-        longitude = pos.coords.longitude;
-      } catch {
-        latitude = 40.7128;
-        longitude = -74.006;
-        usedFallback = true;
+      if (customLat != null && customLon != null) {
+        latitude = customLat;
+        longitude = customLon;
+      } else {
+        try {
+          const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
+          });
+          latitude = pos.coords.latitude;
+          longitude = pos.coords.longitude;
+        } catch {
+          latitude = 40.7128;
+          longitude = -74.006;
+          usedFallback = true;
+        }
       }
 
       const response = await fetch(
@@ -349,6 +368,32 @@ export default function StargazerPage() {
     }
   }, []);
 
+  const handleLocationSearch = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    setIsSearching(true);
+    try {
+      const geoRes = await fetch(`/api/weather/geocoding?q=${encodeURIComponent(searchQuery.trim())}&limit=1`);
+      if (!geoRes.ok) {
+        setError('Location not found. Try a different search.');
+        return;
+      }
+      const geoData = await geoRes.json();
+      const result = Array.isArray(geoData) ? geoData[0] : geoData;
+      if (result?.lat != null && result?.lon != null) {
+        setSearchQuery('');
+        await fetchData(result.lat, result.lon);
+      } else {
+        setError('Location not found. Try a different search.');
+      }
+    } catch {
+      setError('Failed to search location.');
+    } finally {
+      setIsSearching(false);
+    }
+  }, [searchQuery, fetchData]);
+
   useEffect(() => {
     startTransition(() => {
       fetchData();
@@ -373,6 +418,9 @@ export default function StargazerPage() {
             Tonight&apos;s astrophotography forecast. Seeing, transparency, moon phase, planet
             visibility, deep sky targets, ISS passes, and upcoming launches -- all in one place.
           </p>
+          <p className="text-sm font-mono text-muted-foreground mt-2">
+            Tonight: {formatTonightDate(new Date())}
+          </p>
         </div>
 
         <ShareButtons
@@ -383,6 +431,25 @@ export default function StargazerPage() {
           }}
           className="mt-3 mb-6"
         />
+
+        {/* Location Search */}
+        <form onSubmit={handleLocationSearch} className="mb-6 flex gap-2 max-w-md">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search location"
+            placeholder="Search location (city, state)"
+            className="flex-1 px-3 py-2 text-sm font-mono bg-black/20 border border-subtle rounded focus:outline-none focus:border-primary"
+          />
+          <button
+            type="submit"
+            disabled={isSearching || !searchQuery.trim()}
+            className="px-4 py-2 text-sm font-mono font-bold border border-subtle rounded hover:bg-white/10 disabled:opacity-40 transition-colors"
+          >
+            {isSearching ? '...' : 'Go'}
+          </button>
+        </form>
 
         {/* Error */}
         {error && (
