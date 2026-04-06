@@ -97,7 +97,7 @@ export function useWeatherController() {
             const { remaining } = checkRateLimit()
             setRemainingSearches(remaining)
         }
-    }, [isClient, checkRateLimit])
+    }, [isClient]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const recordRequest = useCallback(() => {
         const now = Date.now()

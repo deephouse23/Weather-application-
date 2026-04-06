@@ -81,6 +81,10 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
 }
 
 export const updateProfile = async (userId: string, updates: ProfileUpdate): Promise<Profile | null> => {
+  if (!userId || userId === NULL_UUID) {
+    return null
+  }
+
   const supabase = getSupabaseClient()
 
   // Filter out updates for columns that might not exist
