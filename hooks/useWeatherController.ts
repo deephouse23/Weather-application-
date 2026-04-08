@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from \'react\'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { WeatherData } from '@/lib/types'
 import { fetchWeatherData, fetchWeatherByLocation } from '@/lib/weather'
 import { locationService, LocationData } from '@/lib/location-service'
