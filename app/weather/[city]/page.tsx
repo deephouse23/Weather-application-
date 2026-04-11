@@ -200,7 +200,7 @@ export default async function CityWeatherPage({ params }: PageParams) {
           {/* Hero / H1 — the single authoritative heading for the page */}
           <header className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold uppercase tracking-tight text-weather-primary mb-3">
-              {fullLocation} Weather Forecast &amp; Climate Guide
+              {`${fullLocation} Weather Forecast & Climate Guide`}
             </h1>
             <p className="text-sm md:text-base text-weather-muted leading-relaxed max-w-3xl">
               {cityInfo.content.intro}
