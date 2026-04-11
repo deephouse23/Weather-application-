@@ -11,6 +11,7 @@
  */
 
 
+import type { JSX } from 'react'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { fetchWeatherData } from '@/lib/weather'
@@ -42,7 +43,7 @@ interface CityWeatherClientProps {
   isPredefinedCity?: boolean
 }
 
-export default function CityWeatherClient({ city, citySlug }: CityWeatherClientProps) {
+export default function CityWeatherClient({ city, citySlug }: CityWeatherClientProps): JSX.Element {
   const router = useRouter()
   const { theme } = useTheme()
   const { preferences } = useAuth()

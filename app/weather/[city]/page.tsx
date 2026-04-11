@@ -35,7 +35,7 @@ const BASE_URL = 'https://www.16bitweather.co'
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 // Generate static pages for better SEO
-export async function generateStaticParams() {
+export async function generateStaticParams(): Promise<Array<{ city: string }>> {
   return Object.keys(cityMetadata).map(citySlug => ({ city: citySlug }))
 }
 
@@ -44,10 +44,16 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
   const { city: citySlug } = await params
   const city = cityMetadata[citySlug]
 
+  // For non-predefined slugs, the page still renders a working client-side
+  // weather search. Emit minimal metadata with noindex so Google doesn't
+  // crawl and index every ad-hoc slug users happen to visit.
   if (!city) {
+    const displayName = formatCityName(citySlug)
     return {
-      title: 'City Not Found - 16 Bit Weather',
-      description: 'The requested city page does not exist.',
+      title: `${displayName} Weather Forecast | 16 Bit Weather`,
+      description: `Live weather conditions and forecast for ${displayName}.`,
+      robots: { index: false, follow: true },
+      alternates: { canonical: `${BASE_URL}/weather/${citySlug}` },
     }
   }
 
@@ -140,8 +146,7 @@ export default async function CityWeatherPage({ params }: PageParams) {
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
-        { '@type': 'ListItem', position: 2, name: 'Weather', item: `${BASE_URL}` },
-        { '@type': 'ListItem', position: 3, name: fullLocation, item: `${BASE_URL}/weather/${citySlug}` },
+        { '@type': 'ListItem', position: 2, name: fullLocation, item: `${BASE_URL}/weather/${citySlug}` },
       ],
     },
   }
@@ -184,10 +189,6 @@ export default async function CityWeatherPage({ params }: PageParams) {
             <ol className="flex flex-wrap items-center gap-2">
               <li>
                 <Link href="/" className="hover:text-weather-primary">Home</Link>
-              </li>
-              <li aria-hidden="true">/</li>
-              <li>
-                <Link href="/" className="hover:text-weather-primary">Weather</Link>
               </li>
               <li aria-hidden="true">/</li>
               <li className="text-weather-primary" aria-current="page">
@@ -242,8 +243,11 @@ export default async function CityWeatherPage({ params }: PageParams) {
             </section>
           )}
 
-          {/* Monthly averages table — high-value structured data */}
-          {enrichment?.monthlyHighs && enrichment?.monthlyLows && (
+          {/* Monthly averages table — high-value structured data.
+              Guard on exact length === MONTH_LABELS.length so an off-by-one
+              in future data can never silently misalign columns. */}
+          {enrichment?.monthlyHighs?.length === MONTH_LABELS.length &&
+            enrichment?.monthlyLows?.length === MONTH_LABELS.length && (
             <section className="mb-10">
               <h2 className="text-xl font-bold uppercase tracking-wider text-weather-primary mb-4">
                 {cityInfo.name} Average Monthly Temperatures
