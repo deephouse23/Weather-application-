@@ -562,3 +562,232 @@ export const cityData: { [key: string]: {
   }
 }
 
+// ==========================================================================
+// RICH SEO ENRICHMENTS
+// Optional per-city marketing content used by the server-rendered city page.
+// Cities without an entry here fall back to the intro/climate/patterns copy
+// plus auto-generated structure. Flagship cities below should rank well for
+// "<city> weather", "<city> climate", "best time to visit <city>" queries.
+// ==========================================================================
+
+export interface CitySeoEnrichment {
+  /** Climate classification (Köppen or plain-English label). */
+  climateType: string
+  /** Seasonal breakdown — each string is 1-2 sentences. */
+  seasons: {
+    spring: string
+    summer: string
+    fall: string
+    winter: string
+  }
+  /** 12 average monthly high temps in °F, Jan → Dec. */
+  monthlyHighs: number[]
+  /** 12 average monthly low temps in °F, Jan → Dec. */
+  monthlyLows: number[]
+  /** Short recommendation of when weather is most pleasant. */
+  bestTimeToVisit: string
+  /** Notable weather hazards — used as chips in the UI. */
+  severeRisks: string[]
+  /** Short factoids that differentiate this city from template copy. */
+  uniqueFacts: string[]
+  /** FAQ questions and answers — powers FAQPage JSON-LD for featured snippets. */
+  faqs: { question: string; answer: string }[]
+}
+
+export const cityEnrichments: Record<string, CitySeoEnrichment> = {
+  'new-york-ny': {
+    climateType: 'Humid subtropical (Köppen Cfa)',
+    seasons: {
+      spring: 'Spring in NYC runs cool and variable — March can still see snow, April brings cherry blossoms, and May warms quickly into the 70s°F. Expect fast-changing conditions as winter storms give way to summer patterns.',
+      summer: 'Summers are hot, humid, and sticky with average highs in the mid-80s°F and frequent heat waves pushing into the 90s. Afternoon thunderstorms roll off the Atlantic several times per month.',
+      fall: 'Fall is widely considered NYC\'s best weather season. September stays mild, October brings crisp 60°F days and vivid foliage in nearby parks, and November edges toward cold.',
+      winter: 'Winter is cold and often raw, with average highs in the 40s°F and lows in the 20s°F. The city averages 28 inches of snow per year, frequently delivered by a single nor\'easter or two.',
+    },
+    monthlyHighs: [40, 43, 51, 62, 72, 80, 85, 84, 77, 66, 55, 44],
+    monthlyLows: [27, 29, 36, 45, 55, 65, 70, 69, 62, 51, 42, 32],
+    bestTimeToVisit: 'Mid-September through late October offers the most comfortable weather — warm days, cool nights, low humidity, and fall foliage. Late April through early June is a close second.',
+    severeRisks: ['Nor\'easters', 'Heat waves', 'Hurricane remnants', 'Ice storms', 'Urban flooding'],
+    uniqueFacts: [
+      'The urban heat island effect keeps NYC several degrees warmer than surrounding suburbs, especially at night.',
+      'Central Park holds the city\'s official weather records dating back to 1869.',
+      'Coastal proximity moderates extremes — NYC rarely sees temperatures below 0°F or above 100°F.',
+    ],
+    faqs: [
+      { question: 'What is the best month to visit New York City for weather?', answer: 'October is typically the best month — average highs in the mid-60s°F, low humidity, minimal rain, and peak fall foliage. May is a close second for similar conditions before summer humidity arrives.' },
+      { question: 'Does it snow a lot in New York City?', answer: 'NYC averages about 28 inches of snow per year, mostly between December and March. Individual nor\'easters can drop 8-24 inches at a time, and the biggest blizzards have buried the city in 30+ inches.' },
+      { question: 'How humid does New York get in summer?', answer: 'July and August routinely see dewpoints above 70°F, which feels oppressive. Heat index values can push above 100°F during heat waves even when the air temperature is in the low 90s.' },
+      { question: 'When is hurricane season in New York?', answer: 'The Atlantic hurricane season runs June 1 through November 30, but NYC impacts are most likely in August and September. Direct hits are rare, but remnants of tropical systems regularly bring heavy rain and flooding.' },
+    ],
+  },
+  'los-angeles-ca': {
+    climateType: 'Mediterranean (Köppen Csb)',
+    seasons: {
+      spring: 'Spring is mild and pleasant with highs in the 60s-70s°F. May gray brings a stubborn marine layer that often hangs around until afternoon, especially along the coast.',
+      summer: 'Summers are warm, dry, and sunny — coastal LA stays in the 70s°F while inland valleys regularly push into the 90s and 100s°F. Rain is essentially nonexistent from June through September.',
+      fall: 'Fall brings LA\'s warmest weather, with September and October often hotter than July. Santa Ana winds kick up from the desert, raising fire danger and pushing temperatures into the 90s°F.',
+      winter: 'Winters are mild with highs in the 60s-70s°F. Most of LA\'s 15 inches of annual rain falls between December and March, sometimes arriving as intense atmospheric rivers.',
+    },
+    monthlyHighs: [68, 69, 70, 73, 74, 78, 83, 84, 83, 79, 73, 68],
+    monthlyLows: [49, 51, 53, 56, 59, 63, 66, 67, 65, 60, 53, 48],
+    bestTimeToVisit: 'March through May and September through November offer the best balance — warm, dry, and without the extreme summer inland heat or winter rains. October is a local favorite.',
+    severeRisks: ['Wildfires', 'Santa Ana winds', 'Atmospheric rivers', 'Drought', 'Debris flows'],
+    uniqueFacts: [
+      'LA enjoys more than 280 sunny days per year — one of the highest in the US.',
+      'Microclimates mean a 20°F difference between beach and valley on the same afternoon.',
+      'The "June Gloom" marine layer can keep coastal temperatures 15°F below inland readings.',
+    ],
+    faqs: [
+      { question: 'What is the best time of year to visit Los Angeles?', answer: 'April, May, October, and November offer the most comfortable weather — warm days in the 70s°F, cool nights, low humidity, and minimal rain. Summer is hot inland but perfect at the beach.' },
+      { question: 'Does it ever rain in Los Angeles?', answer: 'Yes, but almost exclusively between November and April. LA averages about 15 inches of rain per year, most of it delivered by a handful of atmospheric river storms in winter.' },
+      { question: 'What are Santa Ana winds?', answer: 'Santa Ana winds are hot, dry, downslope winds that blow from the Mojave Desert toward the coast, typically in fall. They dramatically lower humidity, raise temperatures, and create extreme wildfire risk.' },
+      { question: 'Why is Los Angeles so foggy in May and June?', answer: 'The cold Pacific water offshore condenses into a thick marine layer that drifts onshore overnight. "May gray" and "June gloom" can keep coastal LA cloudy until late morning for weeks at a time.' },
+    ],
+  },
+  'chicago-il': {
+    climateType: 'Humid continental (Köppen Dfa)',
+    seasons: {
+      spring: 'Spring in Chicago is famously fickle — snow in April isn\'t unusual, but so are 80°F days. Temperatures swing wildly as Arctic and Gulf air masses collide over the city.',
+      summer: 'Summers are hot and humid with highs in the low 80s°F and dewpoints pushing into the 70s. Afternoon and evening thunderstorms are frequent, some of them severe.',
+      fall: 'Fall brings crisp air, colorful trees, and some of the year\'s most stable weather. Highs drop from the 70s°F in September to the 40s°F by late November.',
+      winter: 'Winters are cold, snowy, and windy. Average highs sit in the low 30s°F, lows often drop into the teens, and Arctic outbreaks can plunge temperatures below 0°F. Lake effect and nor\'easter-style snowstorms combine for 37 inches of annual snowfall.',
+    },
+    monthlyHighs: [32, 36, 47, 59, 70, 80, 85, 83, 76, 63, 48, 36],
+    monthlyLows: [18, 22, 32, 42, 52, 62, 68, 66, 58, 46, 34, 23],
+    bestTimeToVisit: 'Late May through early October for warm weather, with September being the sweet spot — warm days, cool nights, and far less humidity than peak summer.',
+    severeRisks: ['Blizzards', 'Tornadoes', 'Lake-effect snow', 'Polar vortex outbreaks', 'Severe thunderstorms'],
+    uniqueFacts: [
+      'Chicago\'s "Windy City" nickname is actually about politicians, not weather — though 10+ mph average winds help.',
+      'Lake Michigan moderates temperatures year-round, keeping lakefront neighborhoods cooler in summer and milder in winter.',
+      'The record low in Chicago is -27°F, set during the 1985 polar vortex.',
+    ],
+    faqs: [
+      { question: 'When is the best time to visit Chicago weather-wise?', answer: 'September and early October deliver warm days in the 70s°F, cool nights, low humidity, and low rain chances. June is also excellent before summer humidity peaks.' },
+      { question: 'How cold does Chicago get in winter?', answer: 'Average winter highs are in the low 30s°F with lows in the teens. Arctic outbreaks can push wind chills below -30°F. The city averages about 37 inches of snow per winter.' },
+      { question: 'Does Chicago get tornadoes?', answer: 'Yes — Chicago sits at the northeastern edge of Tornado Alley, and the metro area averages several tornado warnings per year. Most occur between April and June.' },
+      { question: 'What is the "lake effect" in Chicago?', answer: 'Cold air passing over warmer Lake Michigan picks up moisture and dumps it as heavy snow on the downwind shore. Chicago sees lake-effect snow less often than cities like Buffalo but it can still produce intense bursts.' },
+    ],
+  },
+  'miami-fl': {
+    climateType: 'Tropical monsoon (Köppen Am)',
+    seasons: {
+      spring: 'Spring is warm, dry, and sunny — arguably Miami\'s most pleasant season. Highs climb from the upper 70s°F in March to the upper 80s°F by May with low humidity.',
+      summer: 'Summers are hot, humid, and stormy with daily afternoon thunderstorms rolling off the Everglades. Highs sit in the upper 80s to low 90s°F, and the real temperature feels well into the 100s with humidity.',
+      fall: 'Fall is still warm and humid and represents the peak of hurricane season. September and October see the highest tropical threat; weather stays summer-like through November.',
+      winter: 'Winters are warm and dry with highs in the mid-70s°F and lows in the 60s°F. Cold fronts occasionally push temperatures into the 40s°F for a night or two.',
+    },
+    monthlyHighs: [76, 78, 80, 83, 86, 89, 90, 90, 88, 85, 81, 77],
+    monthlyLows: [61, 62, 65, 68, 72, 75, 77, 77, 76, 73, 68, 63],
+    bestTimeToVisit: 'December through April — warm, dry, low humidity, minimal rain, and outside hurricane season. January and February are peak tourist months for a reason.',
+    severeRisks: ['Hurricanes', 'Tropical storms', 'Flash flooding', 'Storm surge', 'Daily lightning'],
+    uniqueFacts: [
+      'Miami has a true tropical climate — the only major US city besides Honolulu that qualifies.',
+      'The city averages 74 thunderstorm days per year, most concentrated in summer afternoons.',
+      'Sea breeze collisions between the Atlantic and Gulf fronts create intense, predictable daily storms.',
+    ],
+    faqs: [
+      { question: 'When is the best time to visit Miami?', answer: 'December through April is ideal — warm, dry, sunny, low humidity, and outside hurricane season. Expect highs in the 70s-80s°F and minimal rain.' },
+      { question: 'When is hurricane season in Miami?', answer: 'The Atlantic hurricane season runs June 1 through November 30, with the highest risk in August, September, and October. Miami is one of the most hurricane-exposed major US cities.' },
+      { question: 'Does Miami get cold in winter?', answer: 'Rarely. Winter highs average in the mid-70s°F and lows in the 60s°F. A strong cold front can briefly push temperatures into the 40s°F, but freezes are extremely rare.' },
+      { question: 'Why does it rain every afternoon in Miami?', answer: 'The daily sea breeze pulls moist air inland where it collides with warmer surfaces and triggers afternoon thunderstorms. From June through September, these storms happen nearly every day between 2-6 PM.' },
+    ],
+  },
+  'seattle-wa': {
+    climateType: 'Oceanic / marine west coast (Köppen Cfb)',
+    seasons: {
+      spring: 'Spring is cool and damp with highs slowly climbing from the 50s°F in March to the 60s°F in May. Expect frequent light rain but also longer stretches of sunshine as the season progresses.',
+      summer: 'Summers are glorious — warm, dry, and sunny with highs in the upper 70s°F and comfortable low humidity. July and August are the driest months, with almost no rain at all.',
+      fall: 'Fall starts pleasant in September and quickly turns wet. By mid-October the Pacific storm track returns, bringing the classic Seattle drizzle and increasingly short days.',
+      winter: 'Winters are mild but overcast, with highs in the 40s°F and persistent light rain. Snow is rare in the city itself but common in the nearby Cascades.',
+    },
+    monthlyHighs: [48, 50, 54, 59, 66, 71, 77, 77, 71, 60, 51, 47],
+    monthlyLows: [37, 38, 40, 43, 48, 53, 57, 58, 53, 46, 41, 36],
+    bestTimeToVisit: 'July through early September — warm, dry, long days, and some of the best summer weather in the country. Book in advance; locals are outside.',
+    severeRisks: ['Atmospheric rivers', 'Wildfire smoke', 'Windstorms', 'Ice storms', 'Landslides'],
+    uniqueFacts: [
+      'Seattle receives less annual rainfall than New York, Miami, or Atlanta — its reputation comes from drizzle frequency, not volume.',
+      'The city enjoys some of the longest summer days in the lower 48, with over 16 hours of daylight in June.',
+      'The Olympic Mountains create a rain shadow that keeps Seattle drier than the coast to the west.',
+    ],
+    faqs: [
+      { question: 'Does it really rain all the time in Seattle?', answer: 'Not really. Seattle averages 37 inches of rain per year — less than NYC, Miami, or Atlanta. But it rains often in small amounts, with 150+ cloudy days per year from October through May.' },
+      { question: 'When is the best time to visit Seattle?', answer: 'Mid-July through early September. Warm, dry, sunny weather with highs in the upper 70s°F, long daylight hours, and minimal rain. September is a quieter alternative.' },
+      { question: 'Does Seattle get snow?', answer: 'Only occasionally. The city averages about 5 inches of snow per year, usually in brief events. When snow does fall, the hilly streets make travel difficult.' },
+      { question: 'How cold does Seattle get?', answer: 'Mild by US standards — winter highs average in the upper 40s°F and lows in the upper 30s°F. Hard freezes happen a few times per year but extended deep cold is rare.' },
+    ],
+  },
+}
+
+/**
+ * Neighbor map for internal linking — each city points to 3-4 geographically
+ * or climatologically adjacent cities. Powers the "Explore nearby cities"
+ * section on every city page, which gives Googlebot a dense crawl graph.
+ */
+export const cityNeighbors: Record<string, string[]> = {
+  'new-york-ny': ['philadelphia-pa', 'boston-ma', 'baltimore-md', 'pittsburgh-pa'],
+  'los-angeles-ca': ['san-diego-ca', 'las-vegas-nv', 'san-jose-ca', 'phoenix-az'],
+  'chicago-il': ['milwaukee-wi', 'indianapolis-in', 'minneapolis-mn', 'detroit-mi'],
+  'houston-tx': ['dallas-tx', 'austin-tx', 'san-antonio-tx', 'new-orleans-la'],
+  'phoenix-az': ['tucson-az', 'las-vegas-nv', 'albuquerque-nm', 'los-angeles-ca'],
+  'philadelphia-pa': ['new-york-ny', 'baltimore-md', 'pittsburgh-pa', 'boston-ma'],
+  'san-antonio-tx': ['austin-tx', 'houston-tx', 'dallas-tx', 'fort-worth-tx'],
+  'san-diego-ca': ['los-angeles-ca', 'las-vegas-nv', 'phoenix-az', 'san-jose-ca'],
+  'dallas-tx': ['fort-worth-tx', 'austin-tx', 'houston-tx', 'san-antonio-tx'],
+  'austin-tx': ['san-antonio-tx', 'houston-tx', 'dallas-tx', 'fort-worth-tx'],
+  'miami-fl': ['orlando-fl', 'tampa-fl', 'jacksonville-fl', 'new-orleans-la'],
+  'atlanta-ga': ['nashville-tn', 'charlotte-nc', 'jacksonville-fl', 'raleigh-nc'],
+  'denver-co': ['salt-lake-city-ut', 'albuquerque-nm', 'kansas-city-mo', 'las-vegas-nv'],
+  'seattle-wa': ['portland-or', 'san-francisco-ca', 'san-jose-ca', 'anchorage-ak'],
+  'san-francisco-ca': ['san-jose-ca', 'sacramento-ca', 'portland-or', 'los-angeles-ca'],
+  'boston-ma': ['new-york-ny', 'philadelphia-pa', 'pittsburgh-pa', 'baltimore-md'],
+  'las-vegas-nv': ['phoenix-az', 'salt-lake-city-ut', 'los-angeles-ca', 'tucson-az'],
+  'portland-or': ['seattle-wa', 'san-francisco-ca', 'sacramento-ca', 'san-jose-ca'],
+  'nashville-tn': ['atlanta-ga', 'charlotte-nc', 'st-louis-mo', 'cincinnati-oh'],
+  'minneapolis-mn': ['milwaukee-wi', 'chicago-il', 'kansas-city-mo', 'detroit-mi'],
+  'orlando-fl': ['tampa-fl', 'miami-fl', 'jacksonville-fl', 'atlanta-ga'],
+  'tampa-fl': ['orlando-fl', 'miami-fl', 'jacksonville-fl', 'new-orleans-la'],
+  'detroit-mi': ['cleveland-oh', 'chicago-il', 'milwaukee-wi', 'indianapolis-in'],
+  'cleveland-oh': ['detroit-mi', 'columbus-oh', 'cincinnati-oh', 'pittsburgh-pa'],
+  'indianapolis-in': ['columbus-oh', 'cincinnati-oh', 'chicago-il', 'st-louis-mo'],
+  'columbus-oh': ['cincinnati-oh', 'cleveland-oh', 'indianapolis-in', 'pittsburgh-pa'],
+  'charlotte-nc': ['raleigh-nc', 'atlanta-ga', 'nashville-tn', 'virginia-beach-va'],
+  'baltimore-md': ['philadelphia-pa', 'new-york-ny', 'virginia-beach-va', 'pittsburgh-pa'],
+  'milwaukee-wi': ['chicago-il', 'minneapolis-mn', 'detroit-mi', 'indianapolis-in'],
+  'kansas-city-mo': ['st-louis-mo', 'minneapolis-mn', 'denver-co', 'indianapolis-in'],
+  'salt-lake-city-ut': ['denver-co', 'las-vegas-nv', 'phoenix-az', 'albuquerque-nm'],
+  'raleigh-nc': ['charlotte-nc', 'virginia-beach-va', 'atlanta-ga', 'nashville-tn'],
+  'new-orleans-la': ['houston-tx', 'jacksonville-fl', 'miami-fl', 'tampa-fl'],
+  'virginia-beach-va': ['raleigh-nc', 'baltimore-md', 'charlotte-nc', 'philadelphia-pa'],
+  'sacramento-ca': ['san-francisco-ca', 'san-jose-ca', 'portland-or', 'los-angeles-ca'],
+  'pittsburgh-pa': ['cleveland-oh', 'philadelphia-pa', 'columbus-oh', 'baltimore-md'],
+  'st-louis-mo': ['kansas-city-mo', 'indianapolis-in', 'nashville-tn', 'cincinnati-oh'],
+  'cincinnati-oh': ['columbus-oh', 'indianapolis-in', 'cleveland-oh', 'nashville-tn'],
+  'honolulu-hi': ['anchorage-ak', 'san-francisco-ca', 'san-jose-ca', 'los-angeles-ca'],
+  'anchorage-ak': ['seattle-wa', 'portland-or', 'honolulu-hi', 'san-francisco-ca'],
+  'san-jose-ca': ['san-francisco-ca', 'sacramento-ca', 'los-angeles-ca', 'portland-or'],
+  'jacksonville-fl': ['orlando-fl', 'tampa-fl', 'miami-fl', 'atlanta-ga'],
+  'fort-worth-tx': ['dallas-tx', 'austin-tx', 'houston-tx', 'san-antonio-tx'],
+  'albuquerque-nm': ['phoenix-az', 'tucson-az', 'denver-co', 'salt-lake-city-ut'],
+  'tucson-az': ['phoenix-az', 'albuquerque-nm', 'las-vegas-nv', 'san-diego-ca'],
+}
+
+/** Return rich SEO enrichment for a city, or null if not yet curated. */
+export function getCityEnrichment(slug: string): CitySeoEnrichment | null {
+  return cityEnrichments[slug] ?? null
+}
+
+/**
+ * Resolve neighbor slugs into full name/state records for link rendering.
+ * Filters out any neighbor that isn't in cityData (should never happen but
+ * protects against typos in the neighbor map).
+ */
+export function getNearbyCities(slug: string): Array<{ slug: string; name: string; state: string }> {
+  const neighbors = cityNeighbors[slug] ?? []
+  return neighbors
+    .map(neighborSlug => {
+      const data = cityData[neighborSlug]
+      if (!data) return null
+      return { slug: neighborSlug, name: data.name, state: data.state }
+    })
+    .filter((x): x is { slug: string; name: string; state: string } => x !== null)
+}
+

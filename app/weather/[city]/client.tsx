@@ -38,10 +38,11 @@ interface CityWeatherClientProps {
     }
   }
   citySlug: string
+  /** Kept for API compatibility with `page.tsx`. No longer used in rendering. */
   isPredefinedCity?: boolean
 }
 
-export default function CityWeatherClient({ city, citySlug, isPredefinedCity = false }: CityWeatherClientProps) {
+export default function CityWeatherClient({ city, citySlug }: CityWeatherClientProps) {
   const router = useRouter()
   const { theme } = useTheme()
   const { preferences } = useAuth()
@@ -199,13 +200,6 @@ export default function CityWeatherClient({ city, citySlug, isPredefinedCity = f
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-weather-bg">
         <ResponsiveContainer maxWidth="xl" padding="md">
 
-          {/* City Header */}
-          <div className="text-center mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wider font-mono mb-2 text-weather-primary">
-              {city.name}, {city.state} WEATHER
-            </h1>
-          </div>
-
           {/* Weather Search Component */}
           <WeatherSearch
             key={citySlug}
@@ -245,20 +239,12 @@ export default function CityWeatherClient({ city, citySlug, isPredefinedCity = f
             />
           )}
 
-          {/* SEO Content Section - Only show for predefined cities */}
-          {isPredefinedCity && (
-            <div className="mt-12 p-6 border-2 rounded-lg bg-weather-bg-elev border-weather-border text-weather-text">
-              <h2 className="text-xl font-bold mb-4 uppercase tracking-wider font-mono text-weather-primary">
-                About {city.name} Weather
-              </h2>
-
-              <div className="space-y-4 text-sm leading-relaxed font-mono">
-                <p>{city.content.intro}</p>
-                <p>{city.content.climate}</p>
-                <p>{city.content.patterns}</p>
-              </div>
-            </div>
-          )}
+          {/*
+            Note: SEO content (H1, climate overview, seasonal breakdown, FAQ,
+            nearby cities) is now server-rendered by `page.tsx` so it lands in
+            the initial HTML for Googlebot. This client component is purely
+            for the interactive weather widget.
+          */}
         </ResponsiveContainer>
       </div>
     </PageWrapper>
