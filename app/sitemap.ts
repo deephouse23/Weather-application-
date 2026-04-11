@@ -23,8 +23,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       { url: `${baseUrl}/hourly`, lastModified: new Date(), changeFrequency: 'hourly', priority: 0.7 },
       { url: `${baseUrl}/situation`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.7 },
       { url: `${baseUrl}/map`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.7 },
-      { url: `${baseUrl}/vibe-check`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.5 },
-      
+
       // Content and education
       { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
       { url: `${baseUrl}/news`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },

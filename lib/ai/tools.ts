@@ -10,10 +10,10 @@
  */
 
 import { tool } from 'ai';
-import { calculateVibeScore, type VibeInput } from '@/lib/services/vibe-check';
 import { z } from 'zod';
 import { fetchOpenMeteoForecast, fetchOpenMeteoAirQuality } from '@/lib/open-meteo';
 import { getWMODescription } from '@/lib/wmo-codes';
+import { toStateAbbr } from '@/lib/us-states';
 import {
     fetchRecentEarthquakes,
     formatEarthquakeContextBlock,
@@ -48,34 +48,73 @@ async function safeFetch(url: string, errorLabel: string): Promise<{ data: any |
     }
 }
 
-/** Geocode a city / ZIP / "City, ST" string → { lat, lon, name }. */
+/** Geocode a city / ZIP / "City, ST" string → { lat, lon, name }.
+ *  Uses Open-Meteo geocoding (keyless) + Zippopotam.us for US ZIPs. */
 export async function geocodeLocation(
     location: string
 ): Promise<{ lat: number; lon: number; name: string } | null> {
-    const apiKey = OWM_KEY();
-    if (!apiKey) return null;
-
     try {
-        // Try raw location first (supports international cities like "Paris", "London")
-        let url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(location)}&limit=1&appid=${apiKey}`;
-        let { data, error } = await safeFetch(url, 'Geocoding failed');
-        if (error) throw new Error(error);
+        const trimmed = location.trim();
 
-        // If no results and no comma (bare city name), try with US bias as fallback
-        if (!data?.length && !location.includes(',')) {
-            url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(`${location},US`)}&limit=1&appid=${apiKey}`;
-            ({ data, error } = await safeFetch(url, 'Geocoding failed'));
-            if (error) throw new Error(error);
+        // US ZIP fast path (5 digits, optional -4 suffix).
+        const zipMatch = trimmed.match(/^(\d{5})(-\d{4})?$/);
+        if (zipMatch) {
+            const stem = zipMatch[1];
+            const { data, error } = await safeFetch(
+                `https://api.zippopotam.us/us/${stem}`,
+                'ZIP lookup failed'
+            );
+            if (error || !data) return null;
+            const place = data.places?.[0];
+            if (!place) return null;
+            return {
+                lat: parseFloat(place.latitude),
+                lon: parseFloat(place.longitude),
+                name: `${place['place name']}, ${place['state abbreviation']}`,
+            };
         }
 
-        if (!data?.length) return null;
+        // Parse "City" | "City, ST" | "City, Country".
+        const parts = trimmed.split(',').map((s) => s.trim()).filter(Boolean);
+        const cityName = parts[0] || trimmed;
+        const filterHint = parts[1]?.toUpperCase() || null;
+
+        const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=10&language=en&format=json`;
+        const { data, error } = await safeFetch(url, 'Geocoding failed');
+        if (error) throw new Error(error);
+
+        const results: Array<{
+            name: string;
+            latitude: number;
+            longitude: number;
+            country_code?: string;
+            admin1?: string;
+        }> = data?.results || [];
+        if (results.length === 0) return null;
+
+        // Filter by state/country hint if provided.
+        let pick = results[0];
+        if (filterHint) {
+            const match = results.find((r) => {
+                const abbr = toStateAbbr(r.admin1);
+                if (abbr && abbr === filterHint) return true;
+                if (r.admin1?.toUpperCase() === filterHint) return true;
+                if (r.country_code?.toUpperCase() === filterHint) return true;
+                if (filterHint === 'UK' && r.country_code?.toUpperCase() === 'GB') return true;
+                return false;
+            });
+            if (match) pick = match;
+        }
+
+        const stateLabel =
+            pick.country_code?.toUpperCase() === 'US'
+                ? (toStateAbbr(pick.admin1) ?? pick.admin1)
+                : pick.admin1;
 
         return {
-            lat: data[0].lat,
-            lon: data[0].lon,
-            name: data[0].state
-                ? `${data[0].name}, ${data[0].state}`
-                : data[0].name,
+            lat: pick.latitude,
+            lon: pick.longitude,
+            name: stateLabel ? `${pick.name}, ${stateLabel}` : pick.name,
         };
     } catch (error) {
         console.error('[AI Tools] Geocoding error:', error);
@@ -575,64 +614,6 @@ export const weatherTools = {
             } catch (err) {
                 console.error('[AI Tools] Travel route weather error:', err);
                 return { error: 'Travel route weather data unavailable' };
-            }
-        },
-    }),
-
-
-    // 11. Vibe check / comfort score (Open-Meteo)
-    get_vibe_check: tool({
-        description:
-            'Get the outdoor comfort "vibe check" score for a location. Returns a 0-100 score with category (Rough/Meh/Decent/Vibin/Immaculate) and component breakdown. Use when someone asks "how nice is it outside?" or "is it a good day to go out?" or "whats the vibe?"',
-        inputSchema: z.object({
-            location: z.string().describe('City name, ZIP code, or "City, State" format'),
-        }),
-        execute: async ({ location }) => {
-            const coords = await geocodeLocation(location);
-            if (!coords) return { error: `Could not find location: ${location}` };
-
-            // --- OLD OWM implementation (kept for reference) ---
-            // const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${coords.lat}&lon=${coords.lon}&units=imperial&exclude=minutely,alerts&appid=${apiKey}`;
-            // --- END OLD OWM implementation ---
-
-            try {
-                const d = await fetchOpenMeteoForecast(coords.lat, coords.lon, {
-                    forecastDays: 1,
-                });
-
-                const c = d.current;
-                if (!c) return { error: 'Weather data unavailable' };
-
-                const firstPrecipProb = d.hourly?.precipitation_probability?.[0] ?? 0;
-
-                const input: VibeInput = {
-                    tempF: c.temperature_2m ?? 72,
-                    humidity: c.relative_humidity_2m ?? 50,
-                    windMph: c.wind_speed_10m ?? 5,
-                    precipChance: firstPrecipProb,
-                    uvIndex: c.uv_index ?? 3,
-                    cloudCover: c.cloud_cover ?? 20,
-                };
-
-                const vibe = calculateVibeScore(input);
-
-                return {
-                    location: coords.name,
-                    score: vibe.score,
-                    category: vibe.category,
-                    breakdown: vibe.breakdown,
-                    conditions: {
-                        temp: Math.round(c.temperature_2m ?? 0),
-                        feels_like: Math.round(c.apparent_temperature ?? 0),
-                        humidity: c.relative_humidity_2m ?? 0,
-                        wind_mph: Math.round(c.wind_speed_10m ?? 0),
-                        uv_index: c.uv_index ?? 0,
-                        cloud_cover: c.cloud_cover ?? 0,
-                    },
-                };
-            } catch (err) {
-                console.error('[AI Tools] Vibe check error:', err);
-                return { error: 'Weather data unavailable' };
             }
         },
     }),

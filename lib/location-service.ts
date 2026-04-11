@@ -14,7 +14,7 @@
 
 /**
  * Location Detection Service
- * 
+ *
  * This service provides comprehensive location detection capabilities with:
  * - Browser geolocation API with high accuracy
  * - IP-based location fallback detection
@@ -23,12 +23,15 @@
  * - Reverse geocoding to get human-readable location names
  */
 
+import { toStateAbbr } from './us-states';
+
 export interface LocationData {
   latitude: number;
   longitude: number;
   city?: string;
   region?: string;
   country?: string;
+  postcode?: string;
   displayName: string;
   source: 'geolocation' | 'ip' | 'manual';
 }
@@ -72,22 +75,6 @@ interface IPGeolocationResponse {
 }
 
 type IPLocationResponse = IPApiCoResponse | IPInfoResponse | IPGeolocationResponse;
-
-// Nominatim reverse geocoding response
-interface NominatimResponse {
-  address?: {
-    city?: string;
-    town?: string;
-    suburb?: string; // Sometimes more accurate for smaller cities
-    village?: string;
-    hamlet?: string;
-    state?: string;
-    province?: string;
-    region?: string;
-    country?: string;
-  };
-  [key: string]: unknown;
-}
 
 export class LocationService {
   private static instance: LocationService;
@@ -256,53 +243,79 @@ export class LocationService {
   }
 
   /**
-   * Reverse geocode coordinates to get human-readable location
-   * Uses Nominatim with improved zoom level for better city precision
+   * Reverse geocode coordinates to a human-readable location.
+   *
+   * IMPORTANT: this used to call Nominatim directly from the browser, but
+   * the app's CSP `connect-src` whitelist (next.config.mjs:90) does not
+   * include nominatim.openstreetmap.org, so the browser blocks the request
+   * and the catch fallback fires every time. Instead we now route through
+   * our same-origin proxy at `/api/weather/geocoding?lat=&lon=`, which
+   * proxies Nominatim from the Node runtime where there's no CSP and where
+   * we can set the User-Agent that Nominatim's policy requires.
    */
   private async reverseGeocode(latitude: number, longitude: number): Promise<LocationData> {
     try {
-      // Use zoom=18 for maximum precision (city/neighborhood level)
-      // addressdetails=1 to get detailed address components
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=en&zoom=18&addressdetails=1`,
-        {
-          headers: {
-            'User-Agent': '16BitWeather/1.0' // Required by Nominatim usage policy
-          }
-        }
+        `/api/weather/geocoding?lat=${latitude}&lon=${longitude}&limit=1`
       );
 
       if (!response.ok) {
         throw new Error(`Reverse geocoding failed: ${response.status}`);
       }
 
-      const data: NominatimResponse = await response.json();
-      const address = data.address || {};
+      // Proxy returns GeocodingResponse[]: [{ name, lat, lon, country, state?, postcode? }]
+      const results = await response.json();
+      const first = Array.isArray(results) ? results[0] : null;
+      if (!first || !first.name) {
+        throw new Error('Reverse geocoding returned no results');
+      }
 
-      // Prioritize city over town/village/hamlet for better accuracy
-      // suburb is sometimes more accurate for smaller cities
-      const city = address.city || address.town || address.suburb || address.village || address.hamlet || 'Unknown City';
-      const region = address.state || address.province || address.region || '';
-      const country = address.country || 'Unknown Country';
+      const city: string = first.name;
+      const stateAbbr: string | undefined = first.state;
+      const country: string = first.country || '';
+      const postcode: string | undefined = first.postcode;
+      const isUS = country.toUpperCase() === 'US';
+
+      // US format: "City, ST ZIP" (e.g. "San Ramon, CA 94583")
+      // Non-US: "City, ST" or "City, Country" depending on what we got back.
+      let displayName: string;
+      if (isUS) {
+        if (stateAbbr && postcode) {
+          displayName = `${city}, ${stateAbbr} ${postcode}`;
+        } else if (stateAbbr) {
+          displayName = `${city}, ${stateAbbr}`;
+        } else {
+          displayName = postcode ? `${city} ${postcode}` : city;
+        }
+      } else {
+        displayName = stateAbbr ? `${city}, ${stateAbbr}, ${country}` : `${city}, ${country}`;
+      }
 
       return {
         latitude,
         longitude,
         city,
-        region,
+        region: stateAbbr,
         country,
-        displayName: region ? `${city}, ${region}, ${country}` : `${city}, ${country}`,
+        postcode,
+        displayName,
         source: 'geolocation'
       };
 
     } catch (error) {
-      console.warn('Reverse geocoding failed, using coordinates:', error);
+      console.warn('Reverse geocoding failed:', error);
 
-      // Fallback to coordinate display
+      // IMPORTANT: do NOT use a coordinate-string as displayName here.
+      // userCacheService.saveLastLocation() persists displayName but strips
+      // lat/lon for privacy, so a "37.74, -121.95" string would be read back
+      // next session and forwarded to forward-geocoding (which fails because
+      // it's not a city). Use a benign placeholder instead — the live coords
+      // on this LocationData object still drive weather fetching for the
+      // current session via fetchWeatherByLocation.
       return {
         latitude,
         longitude,
-        displayName: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+        displayName: 'Current Location',
         source: 'geolocation'
       };
     }
@@ -347,13 +360,26 @@ export class LocationService {
         return null;
       }
 
+      // Apply the same "City, ST" formatting used by reverse geocoding so
+      // display is consistent across geolocation and IP-based fallbacks.
+      // IP services do not normally return a postcode, so we stop at "City, ST".
+      const isUS = (country || '').toLowerCase() === 'us' ||
+        (country || '').toLowerCase() === 'united states';
+      let displayName: string;
+      if (isUS) {
+        const stateAbbr = toStateAbbr(region) ?? region;
+        displayName = stateAbbr ? `${city}, ${stateAbbr}` : city;
+      } else {
+        displayName = region ? `${city}, ${region}, ${country}` : `${city}, ${country}`;
+      }
+
       return {
         latitude,
         longitude,
         city,
         region,
         country,
-        displayName: region ? `${city}, ${region}, ${country}` : `${city}, ${country}`,
+        displayName,
         source: 'geolocation'
       };
 
@@ -422,32 +448,36 @@ export class LocationService {
    * Handle geolocation API errors
    */
   private handleGeolocationError(error: GeolocationPositionError): LocationError {
+    // NOTE: messages are lowercased where substring matching matters —
+    // components/weather-search.tsx checks `error?.includes('location')`
+    // with case-sensitive .includes() to decide whether to show the
+    // "enter a ZIP below" fallback hint and auto-focus the search input.
     switch (error.code) {
       case error.PERMISSION_DENIED:
         return this.createLocationError(
           'PERMISSION_DENIED',
-          'Location access denied',
+          'Your location access was denied — enter a ZIP or city below',
           'Please allow location access in your browser settings or enter your location manually'
         );
 
       case error.POSITION_UNAVAILABLE:
         return this.createLocationError(
           'POSITION_UNAVAILABLE',
-          'Location information unavailable',
+          'Your location is unavailable — enter a ZIP or city below',
           'Please check your device location settings or enter your location manually'
         );
 
       case error.TIMEOUT:
         return this.createLocationError(
           'TIMEOUT',
-          'Location request timed out',
+          'Your location request timed out — enter a ZIP or city below',
           'Please try again or enter your location manually'
         );
 
       default:
         return this.createLocationError(
           'POSITION_UNAVAILABLE',
-          'Failed to get location',
+          'Failed to get your location — enter a ZIP or city below',
           'Please try again or enter your location manually'
         );
     }

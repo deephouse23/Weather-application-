@@ -116,7 +116,7 @@ function WeatherApp() {
           </ErrorBoundary>
 
 
-          {/* Welcome Message */}
+          {/* Welcome Message — START is a clickable affordance that triggers geolocation. */}
           {!weather && !loading && !error && (
             <div className="text-center mt-8 mb-8 px-2 sm:px-0">
               <div className="w-full max-w-xl mx-auto">
@@ -124,7 +124,17 @@ function WeatherApp() {
                   <p className="text-sm font-bold uppercase tracking-wider text-white" style={{
                     fontSize: "clamp(10px, 2.4vw, 14px)"
                   }}>
-                    ══ PRESS START TO INITIALIZE WEATHER DATA ══
+                    ══ PRESS{' '}
+                    <button
+                      type="button"
+                      onClick={handleLocationSearch}
+                      disabled={isAutoDetecting || loading}
+                      aria-label="Use my location to load weather"
+                      className="inline align-baseline font-bold uppercase tracking-wider text-weather-primary underline-offset-4 underline decoration-weather-primary/70 hover:text-white hover:decoration-white focus-visible:outline-2 focus-visible:outline-weather-primary focus-visible:outline-offset-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer animate-pulse hover:animate-none"
+                    >
+                      START
+                    </button>
+                    {' '}TO INITIALIZE WEATHER DATA ══
                   </p>
                 </div>
               </div>

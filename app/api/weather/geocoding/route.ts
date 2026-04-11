@@ -1,110 +1,228 @@
 import { sanitizeLogValue } from "@/lib/sanitize-log"
 /**
- * 16-Bit Weather Platform - v1.0.0
- * 
- * Copyright (C) 2025 16-Bit Weather
- * Licensed under Fair Source License, Version 0.9
- * 
- * Use Limitation: 5 users
- * See LICENSE file for full terms
- * 
- * BETA SOFTWARE NOTICE:
- * This software is in active development. Features may change.
- * Report issues: https://github.com/deephouse23/Weather-application-/issues
+ * 16-Bit Weather Platform - Geocoding API Route
+ *
+ * Backed by Open-Meteo (direct search), Zippopotam.us (US ZIPs),
+ * and Nominatim (international postal codes + reverse). No API key required.
+ *
+ * Response shape is preserved to match the legacy OpenWeatherMap `/geo/1.0`
+ * shape so existing callers in lib/weather/weather-geocoding.ts, the stargazer
+ * page, and the E2E fixtures do not need to change:
+ *
+ *   Direct + reverse: GeocodingResponse[] = [{ name, lat, lon, country, state? }]
+ *   ZIP:              GeocodingResponse    = { name, lat, lon, country, state? }
+ *   (yes, ZIP returns a single object — legacy OWM quirk the caller depends on.)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
+import { toStateAbbr } from '@/lib/us-states'
 import type { GeocodingResponse } from '@/lib/weather'
 
-const GEO_URL = 'https://api.openweathermap.org/geo/1.0'
+const OPEN_METEO_GEO = 'https://geocoding-api.open-meteo.com/v1/search'
+const ZIPPOPOTAM = 'https://api.zippopotam.us'
+const NOMINATIM = 'https://nominatim.openstreetmap.org'
+const USER_AGENT = '16BitWeather/1.0 (https://16bitweather.co)'
 
-// Helper function to try multiple geocoding strategies
-// Returns { data, error } to distinguish between "not found" and "API error"
-const tryGeocoding = async (queries: string[], apiKey: string, limit: string): Promise<{ data: GeocodingResponse[], error?: { status: number, message: string } }> => {
-  let lastError: { status: number, message: string } | undefined
-
-  for (const query of queries) {
-    const geocodingUrl = `${GEO_URL}/direct?q=${encodeURIComponent(query)}&limit=${limit}&appid=${apiKey}`
-
-    const response = await fetch(geocodingUrl)
-
-    if (response.ok) {
-      const data = await response.json()
-
-      if (data && data.length > 0) {
-        return { data }
-      }
-      // Empty result - try next query
-    } else {
-      // Track the error for potential propagation
-      // 401/403 errors indicate API key issues and should be reported
-      if (response.status === 401 || response.status === 403) {
-        console.error(`OpenWeatherMap API auth error: ${response.status} for query "${sanitizeLogValue(query)}"`)
-        lastError = { status: response.status, message: 'OpenWeatherMap API authentication error' }
-        // Don't try more queries for auth errors - they'll all fail
-        break
-      }
-      // For other errors (429 rate limit, 500 server error), continue trying
-      // Capture response body for enhanced debugging
-      const errorBody = await response.text().catch(() => '')
-      lastError = { status: response.status, message: `OpenWeatherMap API error: ${response.status}${errorBody ? ` - ${errorBody.slice(0, 200)}` : ''}` }
-    }
-  }
-
-  return { data: [], error: lastError }
+// Open-Meteo geocoding result shape (subset we care about).
+interface OpenMeteoGeoResult {
+  id: number
+  name: string
+  latitude: number
+  longitude: number
+  country_code?: string
+  country?: string
+  admin1?: string // state/province
+  admin2?: string // county
 }
 
-// US State mapping for fallback queries
-const US_STATE_MAPPING: Record<string, string> = {
-  'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
-  'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
-  'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
-  'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
-  'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
-  'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
-  'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
-  'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
-  'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
-  'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming',
-  'DC': 'District of Columbia'
+interface OpenMeteoGeoResponse {
+  results?: OpenMeteoGeoResult[]
 }
 
-// Generate fallback queries for US locations
-const generateFallbackQueries = (originalQuery: string): string[] => {
-  const queries = [originalQuery]
-  
-  // Parse comma-separated input
-  if (originalQuery.includes(',')) {
-    const parts = originalQuery.split(',').map(p => p.trim())
-    
-    if (parts.length === 2) {
-      const [city, stateOrCountry] = parts
-      const stateAbbrev = stateOrCountry.toUpperCase()
-      
-      // If it's a US state abbreviation, try multiple formats
-      if (US_STATE_MAPPING[stateAbbrev]) {
-        const fullStateName = US_STATE_MAPPING[stateAbbrev]
-        
-        // Try with full state name + US
-        queries.push(`${city},${fullStateName},US`)
-        // Try with just city + US
-        queries.push(`${city},US`)
-        // Try with just the city
-        queries.push(city)
-        // Try original with US at the end
-        queries.push(`${originalQuery},US`)
-      } else {
-        // Not a US state, try adding city alone as fallback
-        queries.push(city)
-      }
-    }
-  } else {
-    // Single word query, try as-is
-    // No additional fallbacks needed for simple city names
+// Zippopotam response shape (US endpoint).
+interface ZippopotamPlace {
+  'place name': string
+  longitude: string
+  latitude: string
+  state: string
+  'state abbreviation': string
+}
+
+interface ZippopotamResponse {
+  'post code': string
+  country: string
+  'country abbreviation': string
+  places: ZippopotamPlace[]
+}
+
+// Nominatim search/reverse response shape (subset).
+interface NominatimResult {
+  lat: string
+  lon: string
+  display_name?: string
+  address?: {
+    city?: string
+    town?: string
+    village?: string
+    suburb?: string
+    hamlet?: string
+    state?: string
+    country?: string
+    country_code?: string
+    postcode?: string
   }
-  
-  return queries
+}
+
+/** Map an Open-Meteo direct search result into the legacy GeocodingResponse shape. */
+const mapOpenMeteoResult = (r: OpenMeteoGeoResult): GeocodingResponse => {
+  const country = (r.country_code || '').toUpperCase() || 'XX'
+  const stateAbbr = country === 'US' ? (toStateAbbr(r.admin1) ?? r.admin1) : r.admin1
+  return {
+    name: r.name,
+    lat: r.latitude,
+    lon: r.longitude,
+    country,
+    ...(stateAbbr ? { state: stateAbbr } : {}),
+  }
+}
+
+/** Map a Zippopotam US place into the legacy GeocodingResponse shape.
+ *  Zippopotam responses are keyed on the postcode the caller queried,
+ *  which the route handler attaches via the `attachPostcode` helper. */
+const mapZippopotamPlace = (p: ZippopotamPlace, postcode?: string): GeocodingResponse => ({
+  name: p['place name'],
+  lat: parseFloat(p.latitude),
+  lon: parseFloat(p.longitude),
+  country: 'US',
+  state: p['state abbreviation'],
+  ...(postcode ? { postcode } : {}),
+})
+
+/** Map a Nominatim result into the legacy GeocodingResponse shape. */
+const mapNominatimResult = (r: NominatimResult): GeocodingResponse | null => {
+  const lat = parseFloat(r.lat)
+  const lon = parseFloat(r.lon)
+  if (Number.isNaN(lat) || Number.isNaN(lon)) return null
+
+  const addr = r.address || {}
+  const name = addr.city || addr.town || addr.village || addr.suburb || addr.hamlet || ''
+  if (!name) return null
+
+  const country = (addr.country_code || '').toUpperCase() || 'XX'
+  const state = country === 'US'
+    ? (toStateAbbr(addr.state) ?? addr.state)
+    : addr.state
+
+  return {
+    name,
+    lat,
+    lon,
+    country,
+    ...(state ? { state } : {}),
+    ...(addr.postcode ? { postcode: addr.postcode } : {}),
+  }
+}
+
+/**
+ * Direct search branch: `?q=San Ramon, CA` or `?q=London, UK` or `?q=Paris`.
+ * Uses Open-Meteo and filters by trailing comma-separated state/country hint.
+ */
+async function handleDirectSearch(q: string, limit: number): Promise<GeocodingResponse[]> {
+  // Parse the query: "City" | "City, ST" | "City, Country".
+  const parts = q.split(',').map((s) => s.trim()).filter(Boolean)
+  const cityName = parts[0] || q
+  const filterHint = parts[1]?.toUpperCase() || null
+
+  const url = `${OPEN_METEO_GEO}?name=${encodeURIComponent(cityName)}&count=10&language=en&format=json`
+  const res = await fetch(url, { next: { revalidate: 3600 } })
+
+  if (!res.ok) {
+    throw new Error(`Open-Meteo geocoding error: ${res.status}`)
+  }
+
+  const data = (await res.json()) as OpenMeteoGeoResponse
+  let results = data.results || []
+  if (results.length === 0) return []
+
+  // If a filter was provided, prefer matches against state (US) or country.
+  if (filterHint) {
+    const filtered = results.filter((r) => {
+      const stateAbbr = toStateAbbr(r.admin1)
+      if (stateAbbr && stateAbbr === filterHint) return true
+      if (r.admin1 && r.admin1.toUpperCase() === filterHint) return true
+      if (r.country_code && r.country_code.toUpperCase() === filterHint) return true
+      // Allow "UK" alias for GB.
+      if (filterHint === 'UK' && r.country_code?.toUpperCase() === 'GB') return true
+      return false
+    })
+    if (filtered.length > 0) results = filtered
+  }
+
+  return results.slice(0, limit).map(mapOpenMeteoResult)
+}
+
+/**
+ * ZIP / postal branch. US → Zippopotam.us; international → Nominatim.
+ * Returns a single object (not an array) to match legacy OWM zip shape.
+ */
+async function handleZipLookup(zipParam: string): Promise<GeocodingResponse | null> {
+  const [rawZip, rawCountry] = zipParam.split(',').map((s) => s.trim())
+  const zipCode = rawZip
+  const country = (rawCountry || 'US').toUpperCase()
+
+  if (!zipCode) return null
+
+  if (country === 'US') {
+    // Strip +4 suffix (Zippopotam only supports the 5-digit stem).
+    const stem = zipCode.split('-')[0]
+    if (!/^\d{5}$/.test(stem)) return null
+
+    const res = await fetch(`${ZIPPOPOTAM}/us/${stem}`, {
+      next: { revalidate: 86400 }, // ZIP → city is effectively immutable.
+    })
+    if (!res.ok) return null
+
+    const data = (await res.json()) as ZippopotamResponse
+    const place = data.places?.[0]
+    if (!place) return null
+    return mapZippopotamPlace(place, stem)
+  }
+
+  // International postal code via Nominatim.
+  const url = `${NOMINATIM}/search?postalcode=${encodeURIComponent(zipCode)}&country=${encodeURIComponent(country)}&format=json&addressdetails=1&limit=1`
+  const res = await fetch(url, {
+    headers: { 'User-Agent': USER_AGENT },
+    next: { revalidate: 86400 },
+  })
+  if (!res.ok) return null
+
+  const results = (await res.json()) as NominatimResult[]
+  const first = results?.[0]
+  if (!first) return null
+  return mapNominatimResult(first)
+}
+
+/**
+ * Reverse branch: lat/lon → place. Uses Nominatim.
+ * Returns an array of one result to match legacy OWM reverse shape.
+ */
+async function handleReverseLookup(lat: number, lon: number): Promise<GeocodingResponse[]> {
+  // zoom=18 returns full street-level detail including `postcode`. zoom=14
+  // tops out at the town/county level and omits the postcode, which would
+  // break the "City, ST ZIP" header format on the dashboard.
+  const url = `${NOMINATIM}/reverse?lat=${lat}&lon=${lon}&zoom=18&format=json&addressdetails=1`
+  const res = await fetch(url, {
+    headers: { 'User-Agent': USER_AGENT },
+    next: { revalidate: 3600 },
+  })
+  if (!res.ok) {
+    throw new Error(`Nominatim reverse error: ${res.status}`)
+  }
+
+  const data = (await res.json()) as NominatimResult
+  const mapped = mapNominatimResult(data)
+  return mapped ? [mapped] : []
 }
 
 export async function GET(request: NextRequest) {
@@ -115,25 +233,13 @@ export async function GET(request: NextRequest) {
       return rateLimit.response
     }
 
-    // Get API key from server-side environment
-    const apiKey = process.env.OPENWEATHER_API_KEY
-    
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'OpenWeather API key not configured' },
-        { status: 500 }
-      )
-    }
-
-    // Extract query parameters
     const searchParams = request.nextUrl.searchParams
-    const q = searchParams.get('q') // Direct geocoding query (city, state, country)
-    const zip = searchParams.get('zip') // ZIP code query
-    const lat = searchParams.get('lat') // Reverse geocoding latitude
-    const lon = searchParams.get('lon') // Reverse geocoding longitude
-    const limit = searchParams.get('limit') || '1'
+    const q = searchParams.get('q')
+    const zip = searchParams.get('zip')
+    const lat = searchParams.get('lat')
+    const lon = searchParams.get('lon')
+    const limitRaw = searchParams.get('limit') || '1'
 
-    // Validate parameters - either q, zip, or lat/lon must be provided
     if (!q && !zip && !(lat && lon)) {
       return NextResponse.json(
         { error: 'Missing required parameter: q (location query), zip (ZIP code), or lat/lon' },
@@ -144,7 +250,6 @@ export async function GET(request: NextRequest) {
     if (lat && lon) {
       const latNum = Number(lat)
       const lonNum = Number(lon)
-
       if (Number.isNaN(latNum) || Number.isNaN(lonNum)) {
         return NextResponse.json(
           { error: 'Latitude and longitude must be valid numbers' },
@@ -152,80 +257,62 @@ export async function GET(request: NextRequest) {
         )
       }
 
-      const reverseUrl = `${GEO_URL}/reverse?lat=${latNum}&lon=${lonNum}&limit=${limit}&appid=${apiKey}`
-      const response = await fetch(reverseUrl)
-
-      if (!response.ok) {
-        const errorData = await response.text()
-        console.error('OpenWeatherMap reverse geocoding API error:', response.status, sanitizeLogValue(errorData))
-
-        return NextResponse.json(
-          { error: 'Reverse geocoding failed' },
-          { status: response.status }
-        )
+      try {
+        const results = await handleReverseLookup(latNum, lonNum)
+        if (results.length === 0) {
+          return NextResponse.json({ error: 'Location not found' }, { status: 404 })
+        }
+        return NextResponse.json(results, { headers: rateLimit.headers })
+      } catch (err) {
+        console.error('Reverse geocoding error:', sanitizeLogValue(err instanceof Error ? err.message : err))
+        return NextResponse.json({ error: 'Reverse geocoding failed' }, { status: 502 })
       }
-
-      const reverseData = await response.json()
-      return NextResponse.json(reverseData, { headers: rateLimit.headers })
     }
 
     if (zip) {
-      // ZIP code geocoding - this usually works reliably
-      const geocodingUrl = `${GEO_URL}/zip?zip=${encodeURIComponent(zip)}&appid=${apiKey}`
-
-      const response = await fetch(geocodingUrl)
-      
-      if (!response.ok) {
-        const errorData = await response.text()
-        console.error('OpenWeatherMap ZIP geocoding API error:', response.status, sanitizeLogValue(errorData))
-        
-        return NextResponse.json(
-          { error: 'ZIP code not found' },
-          { status: 404 }
-        )
-      }
-
-      const geocodingData = await response.json()
-      return NextResponse.json(geocodingData, { headers: rateLimit.headers })
-    } else {
-      // Direct geocoding with fallback strategies
-      const limitNum = parseInt(limit, 10)
-      if (isNaN(limitNum) || limitNum < 1 || limitNum > 5) {
-        return NextResponse.json(
-          { error: 'Limit must be a number between 1 and 5' },
-          { status: 400 }
-        )
-      }
-      
-      // Generate fallback queries
-      const queries = generateFallbackQueries(q!)
-
-      // Try each query in sequence until one works
-      const result = await tryGeocoding(queries, apiKey, limit)
-
-      if (!result.data || result.data.length === 0) {
-        // If there was an API error (401/403/etc), propagate it
-        if (result.error) {
-          return NextResponse.json(
-            { error: result.error.message },
-            { status: result.error.status }
-          )
+      try {
+        const result = await handleZipLookup(zip)
+        if (!result) {
+          return NextResponse.json({ error: 'ZIP code not found' }, { status: 404 })
         }
-        // Otherwise it's just not found
-        return NextResponse.json(
-          { error: 'Location not found' },
-          { status: 404 }
-        )
+        return NextResponse.json(result, { headers: rateLimit.headers })
+      } catch (err) {
+        console.error('ZIP geocoding error:', sanitizeLogValue(err instanceof Error ? err.message : err))
+        return NextResponse.json({ error: 'ZIP lookup failed' }, { status: 502 })
       }
-
-      return NextResponse.json(result.data, { headers: rateLimit.headers })
     }
 
+    // Direct search branch.
+    const limit = parseInt(limitRaw, 10)
+    if (isNaN(limit) || limit < 1 || limit > 5) {
+      return NextResponse.json(
+        { error: 'Limit must be a number between 1 and 5' },
+        { status: 400 }
+      )
+    }
+
+    // Reject coordinate-shaped queries up front. Coordinates belong on
+    // ?lat=&lon= (reverse), not ?q= (direct search). Forwarding "37.74,-121.95"
+    // to Open-Meteo would 404, masking the caller's bug. Be loud instead.
+    if (/^-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?$/.test(q!.trim())) {
+      return NextResponse.json(
+        { error: 'Coordinates must be supplied via lat/lon parameters, not q' },
+        { status: 400 }
+      )
+    }
+
+    try {
+      const results = await handleDirectSearch(q!, limit)
+      if (results.length === 0) {
+        return NextResponse.json({ error: 'Location not found' }, { status: 404 })
+      }
+      return NextResponse.json(results, { headers: rateLimit.headers })
+    } catch (err) {
+      console.error('Direct geocoding error:', sanitizeLogValue(err instanceof Error ? err.message : err))
+      return NextResponse.json({ error: 'Geocoding service unavailable' }, { status: 502 })
+    }
   } catch (error) {
     console.error('Geocoding API error:', error instanceof Error ? error.message : sanitizeLogValue(error))
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
