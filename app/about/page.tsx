@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import {
   Code, MessageCircle, Terminal, Cpu, Zap, CloudLightning, Map, Plane, Sun,
-  Gamepad2, Newspaper, Sparkles, Thermometer, AlertTriangle, ChevronDown,
+  Gamepad2, Newspaper, Sparkles, AlertTriangle, ChevronDown,
   Globe, Database, Shield, Gauge
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -52,10 +52,8 @@ const modules = [
   { href: "/severe", label: "Severe Weather", desc: "Active tornado, thunderstorm, and flood warnings", icon: CloudLightning },
   { href: "/aviation", label: "Aviation", desc: "METARs, PIREPs, SIGMETs, and flight conditions", icon: Plane },
   { href: "/space-weather", label: "Space Weather", desc: "Solar flares, Kp index, aurora forecast, and coronagraph", icon: Sun },
-  { href: "/vibe-check", label: "Vibe Check", desc: "Outdoor comfort scoring — is it a good day to go out?", icon: Thermometer },
   { href: "/games", label: "Retro Games", desc: "Weather-themed arcade games with leaderboards", icon: Gamepad2 },
   { href: "/news", label: "News Feed", desc: "Aggregated weather news from NOAA, NASA, and USGS", icon: Newspaper },
-  { href: "/ai", label: "AI Chat", desc: "Claude-powered weather assistant with tool calling", icon: Sparkles },
 ];
 
 export default function AboutPage() {

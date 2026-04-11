@@ -62,6 +62,30 @@ export default function WeatherSearch({
     }
   }, [locationInput, searchTerm])
 
+  // ISS-01 fallback UX: when geolocation fails (denied / timeout / unavailable),
+  // focus the search input so the user can immediately type a ZIP or city.
+  // The geolocation error messages from lib/location-service.ts always contain
+  // "location" in lowercase, so a case-sensitive substring check is sufficient.
+  useEffect(() => {
+    if (!error) return
+    const isGeoError = error.includes('location') && (
+      error.includes('denied') ||
+      error.includes('timed out') ||
+      error.includes('unavailable') ||
+      error.includes('Failed to get')
+    )
+    if (!isGeoError) return
+
+    const input = document.querySelector<HTMLInputElement>(
+      '[data-testid="location-search-input"]'
+    )
+    if (input && !input.disabled) {
+      input.focus()
+      // Small scroll-into-view so mobile users see the input above the keyboard.
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [error])
+
 
   // Semantic dark theme classes using CSS variables
   const themeClasses = {

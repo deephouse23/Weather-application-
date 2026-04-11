@@ -388,8 +388,16 @@ export function useWeatherController() {
                 }
 
                 const lastLocation = userCacheService.getLastLocation()
-                if (lastLocation?.displayName) {
-                    await handleSearch(lastLocation.displayName, false, true)
+                // Defensive: older sessions could persist a coordinate-string
+                // displayName (e.g. "37.7497, -121.9547") if Nominatim reverse
+                // geocoding had failed. Forwarding that to handleSearch sends
+                // it to direct geocoding as if it were a city name, which 404s.
+                // Ignore poisoned cache entries and fall through to fresh
+                // geolocation below.
+                const COORDS_LIKE = /^-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?$/
+                const cachedName = lastLocation?.displayName?.trim()
+                if (cachedName && !COORDS_LIKE.test(cachedName) && cachedName !== 'Current Location') {
+                    await handleSearch(cachedName, false, true)
                     setAutoLocationAttempted(true)
                     return
                 }

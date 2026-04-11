@@ -22,14 +22,6 @@ jest.mock('@/lib/services/aviation-service', () => ({
 jest.mock('@/lib/services/space-weather-service', () => ({
   getSpaceWeatherContext: jest.fn(),
 }));
-jest.mock('@/lib/services/vibe-check', () => ({
-  calculateVibeScore: jest.fn().mockReturnValue({
-    score: 80,
-    category: 'Vibin',
-    breakdown: {},
-  }),
-}));
-
 // Mock Open-Meteo service
 const mockFetchForecast = jest.fn();
 const mockFetchAirQuality = jest.fn();
@@ -38,7 +30,7 @@ jest.mock('@/lib/open-meteo', () => ({
   fetchOpenMeteoAirQuality: (...args: unknown[]) => mockFetchAirQuality(...args),
 }));
 
-// Mock geocodeLocation via global fetch (it uses OWM geocoding internally)
+// Mock geocodeLocation via global fetch (it uses Open-Meteo geocoding internally)
 const originalFetch = global.fetch;
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
@@ -51,17 +43,21 @@ import { weatherTools, geocodeLocation } from '@/lib/ai/tools';
 
 beforeEach(() => {
   jest.clearAllMocks();
-  // geocodeLocation checks for OWM key before making any calls
-  process.env.OPENWEATHER_API_KEY = 'test-key';
-  // Mock geocoding fetch to return NYC
+  // Mock Open-Meteo geocoding API response (keyless). Tests expect the
+  // geocoder to resolve "New York" to NYC.
   mockFetch.mockResolvedValue({
     ok: true,
-    json: () => Promise.resolve([{
-      lat: 40.71,
-      lon: -74.01,
-      name: 'New York',
-      state: 'New York',
-    }]),
+    json: () => Promise.resolve({
+      results: [{
+        id: 5128581,
+        name: 'New York',
+        latitude: 40.71,
+        longitude: -74.01,
+        country_code: 'US',
+        country: 'United States',
+        admin1: 'New York',
+      }],
+    }),
   });
 });
 
@@ -103,7 +99,7 @@ describe('get_current_weather (Open-Meteo)', () => {
     );
 
     expect(result).not.toHaveProperty('error');
-    expect(result).toHaveProperty('location', 'New York, New York');
+    expect(result).toHaveProperty('location', 'New York, NY');
     expect(result).toHaveProperty('temperature', 55);
     expect(result).toHaveProperty('feelsLike', 52);
     expect(result).toHaveProperty('condition', 'Mainly Clear');
@@ -139,7 +135,7 @@ describe('get_forecast (Open-Meteo)', () => {
     );
 
     expect(result).not.toHaveProperty('error');
-    expect(result).toHaveProperty('location', 'New York, New York');
+    expect(result).toHaveProperty('location', 'New York, NY');
     expect(result).toHaveProperty('forecast');
     const forecast = (result as { forecast: Array<Record<string, unknown>> }).forecast;
     expect(forecast).toHaveLength(3);
@@ -178,7 +174,7 @@ describe('get_hourly_forecast (Open-Meteo)', () => {
     );
 
     expect(result).not.toHaveProperty('error');
-    expect(result).toHaveProperty('location', 'New York, New York');
+    expect(result).toHaveProperty('location', 'New York, NY');
     const hourly = (result as { hourly: Array<Record<string, unknown>> }).hourly;
     expect(hourly).toHaveLength(3);
     expect(hourly[0]).toHaveProperty('temp', 55);
@@ -217,7 +213,7 @@ describe('get_air_quality (Open-Meteo)', () => {
     );
 
     expect(result).not.toHaveProperty('error');
-    expect(result).toHaveProperty('location', 'New York, New York');
+    expect(result).toHaveProperty('location', 'New York, NY');
     expect(result).toHaveProperty('aqi', 42);
     expect(result).toHaveProperty('category', 'Good');
     const pollutants = (result as { pollutants: Record<string, number> }).pollutants;
@@ -255,7 +251,7 @@ describe('get_precipitation_timing (Open-Meteo)', () => {
     );
 
     expect(result).not.toHaveProperty('error');
-    expect(result).toHaveProperty('location', 'New York, New York');
+    expect(result).toHaveProperty('location', 'New York, NY');
     expect(result).toHaveProperty('hours');
     const hours = (result as { hours: Array<Record<string, unknown>> }).hours;
     expect(hours.length).toBeGreaterThan(0);
@@ -270,21 +266,26 @@ describe('get_travel_route_weather (Open-Meteo)', () => {
     let callCount = 0;
     mockFetch.mockImplementation(() => {
       callCount++;
-      // First two calls are geocoding (origin + destination)
+      // First two calls are geocoding (origin + destination) via Open-Meteo
       if (callCount <= 2) {
         const isOrigin = callCount === 1;
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve([{
-            lat: isOrigin ? 40.71 : 41.88,
-            lon: isOrigin ? -74.01 : -87.63,
-            name: isOrigin ? 'New York' : 'Chicago',
-            state: isOrigin ? 'New York' : 'Illinois',
-          }]),
+          json: () => Promise.resolve({
+            results: [{
+              id: isOrigin ? 5128581 : 4887398,
+              name: isOrigin ? 'New York' : 'Chicago',
+              latitude: isOrigin ? 40.71 : 41.88,
+              longitude: isOrigin ? -74.01 : -87.63,
+              country_code: 'US',
+              country: 'United States',
+              admin1: isOrigin ? 'New York' : 'Illinois',
+            }],
+          }),
         });
       }
       // Fallback
-      return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ results: [] }) });
     });
 
     mockFetchForecast.mockResolvedValue({
@@ -323,43 +324,3 @@ describe('get_travel_route_weather (Open-Meteo)', () => {
   });
 });
 
-describe('get_vibe_check (Open-Meteo)', () => {
-  it('should use Open-Meteo data to calculate vibe score', async () => {
-    mockFetchForecast.mockResolvedValue({
-      latitude: 40.71,
-      longitude: -74.01,
-      timezone: 'America/New_York',
-      current: {
-        time: '2026-03-25T12:00',
-        temperature_2m: 72,
-        apparent_temperature: 70,
-        weather_code: 0,
-        wind_speed_10m: 5,
-        relative_humidity_2m: 50,
-        cloud_cover: 20,
-        uv_index: 3,
-        precipitation: 0,
-      },
-      hourly: {
-        time: ['2026-03-25T12:00'],
-        precipitation_probability: [10],
-        precipitation: [0],
-        visibility: [16093],
-      },
-    });
-
-    const result = await weatherTools.get_vibe_check.execute(
-      { location: 'New York' },
-      { toolCallId: 'test', messages: [], abortSignal: undefined as unknown as AbortSignal }
-    );
-
-    expect(result).not.toHaveProperty('error');
-    expect(result).toHaveProperty('location', 'New York, New York');
-    expect(result).toHaveProperty('score', 80);
-    expect(result).toHaveProperty('category', 'Vibin');
-    // Verify Open-Meteo field names are used
-    const conditions = (result as { conditions: Record<string, unknown> }).conditions;
-    expect(conditions).toHaveProperty('temp', 72);
-    expect(conditions).toHaveProperty('wind_mph', 5);
-  });
-});

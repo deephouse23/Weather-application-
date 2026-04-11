@@ -67,7 +67,6 @@ export default function PageWrapper({ children, weatherLocation, weatherTemperat
                 <Link href="/extremes" className="text-muted-foreground hover:text-foreground transition-colors">Extremes</Link>
                 <Link href="/hourly" className="text-muted-foreground hover:text-foreground transition-colors">Hourly</Link>
                 <Link href="/travel" className="text-muted-foreground hover:text-foreground transition-colors">Travel</Link>
-                <Link href="/vibe-check" className="text-muted-foreground hover:text-foreground transition-colors">Vibe Check</Link>
                 <Link href="/map" className="text-muted-foreground hover:text-foreground transition-colors">Map</Link>
               </nav>
             </div>

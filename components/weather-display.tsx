@@ -151,6 +151,24 @@ export function WeatherDisplay({
         </div>
       )}
 
+      {/* Expandable Forecast Details Section — directly below the 5-day row */}
+      <LazyForecastDetails
+        forecast={(weather?.forecast || []).map((day) => ({
+          ...day,
+          country: weather?.country || 'US'
+        }))}
+        theme={(theme || 'nord') as ThemeType}
+        selectedDay={selectedDay}
+        currentWeatherData={{
+          humidity: weather?.humidity || 0,
+          wind: weather?.wind || { speed: 0, direction: '', gust: null },
+          pressure: weather?.pressure || '1013',
+          uvIndex: weather?.uvIndex || 0,
+          sunrise: weather?.sunrise || 'N/A',
+          sunset: weather?.sunset || 'N/A'
+        }}
+      />
+
       {/* 4. Two-column layout: Radar (left) / AQI + Moon Phase stacked (right) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6">
         {/* LEFT: Radar */}
@@ -228,26 +246,6 @@ export function WeatherDisplay({
           </Card>
         </div>
       </div>
-
-      {/* Expandable Forecast Details Section */}
-      <LazyForecastDetails
-        forecast={(weather?.forecast || []).map((day) => ({
-          ...day,
-          country: weather?.country || 'US'
-        }))}
-        theme={(theme || 'nord') as ThemeType}
-        selectedDay={selectedDay}
-        currentWeatherData={{
-          humidity: weather?.humidity || 0,
-          wind: weather?.wind || { speed: 0, direction: '', gust: null },
-          pressure: weather?.pressure || '1013',
-          uvIndex: weather?.uvIndex || 0,
-          sunrise: weather?.sunrise || 'N/A',
-          sunset: weather?.sunset || 'N/A'
-        }}
-      />
-
-
 
       {/* 5. Three-column grid Row A: UV Index, Feels Like, Sun Times */}
       <ResponsiveGrid cols={{ sm: 1, md: 3 }} className="gap-4">

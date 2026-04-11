@@ -22,7 +22,6 @@ Allow: /about
 Allow: /cloud-types
 Allow: /weather-systems
 Allow: /fun-facts
-Allow: /vibe-check
 Allow: /map
 
 # API and internal routes

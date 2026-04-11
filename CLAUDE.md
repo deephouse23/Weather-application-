@@ -87,8 +87,7 @@ Config: `.git/hooks/pre-push` and `lighthouserc.js`
 
 - **`components/`** - React components
   - `ui/` - shadcn/ui primitives
-  - `ai/` - AI chat interface (AIChat, QuickActions, SuggestedPrompts)
-  - `dashboard/` - Dashboard cards, modals, theme selector
+  - `dashboard/` - Dashboard cards, modals, theme selector (incl. AI personality selector)
   - `aviation/` - Flight conditions terminal, turbulence map
   - `space-weather/` - Aurora forecast, Kp index, solar wind, coronagraph
   - `news/` - News grid, cards, filters
