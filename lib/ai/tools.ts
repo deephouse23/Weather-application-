@@ -55,6 +55,9 @@ export async function geocodeLocation(
 ): Promise<{ lat: number; lon: number; name: string } | null> {
     try {
         const trimmed = location.trim();
+        // Fail fast on empty input — Open-Meteo would otherwise return
+        // arbitrary first-match results for an empty `name=` query.
+        if (!trimmed) return null;
 
         // US ZIP fast path (5 digits, optional -4 suffix).
         const zipMatch = trimmed.match(/^(\d{5})(-\d{4})?$/);
