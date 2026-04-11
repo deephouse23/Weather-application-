@@ -10,6 +10,7 @@ import { sanitizeLogValue } from "@/lib/sanitize-log"
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
 import { toStateAbbr } from '@/lib/us-states'
 import type { GeocodingResponse } from '@/lib/weather'
 
@@ -53,6 +54,14 @@ const mapOpenMeteoResult = (r: OpenMeteoGeoResult): GeocodingResponse => {
 
 export async function GET(request: NextRequest) {
   try {
+    // Rate limit consistently with the parallel /api/weather/geocoding route.
+    // Both surfaces are publicly accessible and proxy free third-party APIs;
+    // shared rate limiting prevents abuse via either endpoint.
+    const rateLimit = await rateLimitRequest(request)
+    if (!rateLimit.allowed) {
+      return rateLimit.response
+    }
+
     const { searchParams } = new URL(request.url)
     const query = searchParams.get('q')
     const limitRaw = searchParams.get('limit') || '1'
@@ -81,7 +90,7 @@ export async function GET(request: NextRequest) {
               country: 'US',
               state: place['state abbreviation'],
             }]
-            return NextResponse.json(result)
+            return NextResponse.json(result, { headers: rateLimit.headers })
           }
         }
       } catch (err) {
@@ -128,7 +137,7 @@ export async function GET(request: NextRequest) {
     }
 
     const mapped = results.slice(0, limit).map(mapOpenMeteoResult)
-    return NextResponse.json(mapped)
+    return NextResponse.json(mapped, { headers: rateLimit.headers })
   } catch (error) {
     console.error('Dashboard geocoding API error:', error instanceof Error ? error.message : sanitizeLogValue(error))
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
