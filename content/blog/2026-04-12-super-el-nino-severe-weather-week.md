@@ -17,6 +17,8 @@ NOAA's Climate Prediction Center currently has us in ENSO-neutral territory, but
 
 If that bears out, we are talking about Pacific sea surface temperatures running more than 2 degrees Celsius above average -- the kind of anomaly that rewrites seasonal forecasts from the US to Australia.
 
+![Tropical Pacific ocean waves](https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80)
+
 ## What a Super El Nino Means for the US
 
 For those of us watching weather across the country, here is the playbook if a strong El Nino locks in:
@@ -43,6 +45,8 @@ The engine behind this setup is a massive warm sector with mid-60s dewpoints flo
 **Wednesday, April 15** sees lingering risk across the Southern Plains through the Midwest, though coverage should start to contract.
 
 If you are anywhere from Texas to the Great Lakes this week, now is the time to review your severe weather plan.
+
+![Dramatic storm clouds over open plains](https://images.unsplash.com/photo-1527482937786-6f4e4d18bf16?w=800&q=80)
 
 ## California Gets Another Soaking
 
