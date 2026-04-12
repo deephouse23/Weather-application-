@@ -23,6 +23,7 @@ export async function fetchOpenMeteoForecast(
   lon: number,
   options?: {
     forecastDays?: number;
+    pastDays?: number;
     temperatureUnit?: 'fahrenheit' | 'celsius';
     windSpeedUnit?: 'mph' | 'kmh' | 'ms' | 'kn';
     precipitationUnit?: 'inch' | 'mm';
@@ -32,6 +33,7 @@ export async function fetchOpenMeteoForecast(
 ): Promise<OpenMeteoForecastResponse> {
   const {
     forecastDays = 7,
+    pastDays,
     temperatureUnit = 'fahrenheit',
     windSpeedUnit = 'mph',
     precipitationUnit = 'inch',
@@ -96,6 +98,9 @@ export async function fetchOpenMeteoForecast(
   url.searchParams.set('precipitation_unit', precipitationUnit);
   url.searchParams.set('timezone', 'auto');
   url.searchParams.set('forecast_days', forecastDays.toString());
+  if (pastDays != null && pastDays > 0) {
+    url.searchParams.set('past_days', pastDays.toString());
+  }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);

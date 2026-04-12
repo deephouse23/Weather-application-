@@ -12,7 +12,7 @@ import { fetchOpenMeteoForecast } from '@/lib/open-meteo';
 
 // Simple in-memory cache with 1-hour TTL
 const precipitationCache = new Map<string, { data: PrecipitationResponse; expires: number }>();
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes — precipitation changes fast during active rain
 
 interface PrecipitationResponse {
   currentRain: number;
@@ -71,16 +71,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(cached.data, {
         headers: {
           'X-Cache': 'HIT',
-          'Cache-Control': 'private, max-age=3600',
+          'Cache-Control': 'private, max-age=900',
           ...rateLimit.headers,
         },
       });
     }
 
-    // Fetch from Open-Meteo with 2 days of data (today + yesterday)
-    // Request in mm for precipitation, fahrenheit for temperature (to determine snow vs rain)
+    // Fetch from Open-Meteo with past_days=1 + forecast_days=1
+    // This gives us yesterday + today in daily/hourly arrays (chronological order)
+    // Hourly data spans yesterday midnight → today end, covering a full 24h rolling window
     const forecast = await fetchOpenMeteoForecast(latitude, longitude, {
-      forecastDays: 2,
+      pastDays: 1,
+      forecastDays: 1,
       temperatureUnit: 'fahrenheit',
       windSpeedUnit: 'mph',
       precipitationUnit: 'mm', // We convert to inches ourselves for precision
@@ -99,13 +101,14 @@ export async function GET(request: NextRequest) {
     const currentSnow = isSnow ? mmToInches(currentPrecipMm) : 0;
 
     // Daily totals from Open-Meteo daily.precipitation_sum
-    const todayPrecipMm = daily?.precipitation_sum?.[0] ?? 0;
-    const yesterdayPrecipMm = daily?.precipitation_sum?.[1] ?? 0;
+    // With past_days=1, forecast_days=1: index 0 = yesterday, index 1 = today
+    const yesterdayPrecipMm = daily?.precipitation_sum?.[0] ?? 0;
+    const todayPrecipMm = daily?.precipitation_sum?.[1] ?? 0;
 
     // Determine snow vs rain for daily totals using daily temperature
     // If max temp is <= 32F, classify as snow
-    const todayMaxF = daily?.temperature_2m_max?.[0] ?? 40;
-    const yesterdayMaxF = daily?.temperature_2m_max?.[1] ?? 40;
+    const yesterdayMaxF = daily?.temperature_2m_max?.[0] ?? 40;
+    const todayMaxF = daily?.temperature_2m_max?.[1] ?? 40;
 
     const todayIsSnow = todayMaxF <= 32;
     const yesterdayIsSnow = yesterdayMaxF <= 32;
@@ -115,44 +118,54 @@ export async function GET(request: NextRequest) {
     const yesterdayRain = yesterdayIsSnow ? 0 : mmToInches(yesterdayPrecipMm);
     const yesterdaySnow = yesterdayIsSnow ? mmToInches(yesterdayPrecipMm) : 0;
 
-    // Calculate 24h rolling total using weighted average
-    // Get current local hour from hourly data timezone
+    // Calculate true rolling 24h precipitation total from hourly data
+    // With past_days=1, hourly data spans yesterday midnight → today end
+    //
+    // TIMEZONE FIX: Open-Meteo returns local wall-clock times (no UTC offset)
+    // when timezone=auto. Parse with 'Z' suffix to treat as UTC, then subtract
+    // the location's utc_offset_seconds to get the true UTC epoch.
     const now = new Date();
-    let currentHour = now.getUTCHours();
-    if (forecast.utc_offset_seconds) {
-      currentHour = (currentHour + Math.round(forecast.utc_offset_seconds / 3600)) % 24;
-      if (currentHour < 0) currentHour += 24;
-    }
-
-    // Also sum hourly precipitation for last 24 hours if available
+    const utcOffsetMs = (forecast.utc_offset_seconds ?? 0) * 1000;
     let hourly24hPrecipMm = 0;
-    let hourlyDataAvailable = false;
+    let hourlySnow24hMm = 0;
+    let hourlySamplesInWindow = 0;
+
     if (hourly?.time && hourly?.precipitation) {
       const nowMs = now.getTime();
       const oneDayAgo = nowMs - 24 * 60 * 60 * 1000;
       for (let i = 0; i < hourly.time.length; i++) {
-        const hourMs = new Date(hourly.time[i]).getTime();
+        // Convert location-local timestamp to true UTC epoch
+        const hourMs = new Date(hourly.time[i] + 'Z').getTime() - utcOffsetMs;
         if (hourMs >= oneDayAgo && hourMs <= nowMs) {
-          hourly24hPrecipMm += hourly.precipitation[i] ?? 0;
-          hourlyDataAvailable = true;
+          const precipMm = hourly.precipitation[i] ?? 0;
+          // Per-hour snow classification using hourly temperature if available
+          const hourTempF = hourly.temperature_2m?.[i];
+          const hourIsSnow = hourTempF != null ? hourTempF <= 32 : currentTempF <= 32;
+          if (hourIsSnow) {
+            hourlySnow24hMm += precipMm;
+          } else {
+            hourly24hPrecipMm += precipMm;
+          }
+          hourlySamplesInWindow++;
         }
       }
     }
 
-    // Prefer hourly sum if available, otherwise use weighted daily
+    // Require near-full coverage (22+ of 24 hours) to trust hourly rolling sum.
+    // With past_days=1 we get 48 hours of data, so this should almost always pass.
+    const hourlyHasFullCoverage = hourlySamplesInWindow >= 22;
+
     let rain24h: number;
     let snow24h: number;
-    if (hourlyDataAvailable && hourly24hPrecipMm > 0) {
-      // Use hourly sum — more accurate
-      const avg24hTempBelow32 = currentTempF <= 32; // simplified
-      rain24h = avg24hTempBelow32 ? 0 : mmToInches(hourly24hPrecipMm);
-      snow24h = avg24hTempBelow32 ? mmToInches(hourly24hPrecipMm) : 0;
+
+    if (hourlyHasFullCoverage) {
+      // Primary path: true rolling 24h sum from hourly data
+      rain24h = mmToInches(hourly24hPrecipMm);
+      snow24h = mmToInches(hourlySnow24hMm);
     } else {
-      // Weighted daily approach
-      const todayWeight = currentHour / 24;
-      const yesterdayWeight = 1 - todayWeight;
-      rain24h = Math.round(((todayRain * todayWeight) + (yesterdayRain * yesterdayWeight)) * 100) / 100;
-      snow24h = Math.round(((todaySnow * todayWeight) + (yesterdaySnow * yesterdayWeight)) * 10) / 10;
+      // Fallback: sum daily totals (conservative — may slightly overcount)
+      rain24h = todayRain + yesterdayRain;
+      snow24h = todaySnow + yesterdaySnow;
     }
 
     const dataAvailable = daily?.time != null && daily.time.length > 0;
@@ -169,7 +182,7 @@ export async function GET(request: NextRequest) {
       lastUpdated: new Date().toISOString(),
       dataSource: 'day_summary',
       dataAvailable,
-      dataQuality: daily?.time && daily.time.length >= 2 ? 'full' : 'partial',
+      dataQuality: hourlyHasFullCoverage ? 'full' : 'partial',
     };
 
     // Only cache successful responses
@@ -191,7 +204,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(precipitationData, {
       headers: {
         'X-Cache': 'MISS',
-        'Cache-Control': 'private, max-age=3600',
+        'Cache-Control': 'private, max-age=900',
         ...rateLimit.headers,
       },
     });
