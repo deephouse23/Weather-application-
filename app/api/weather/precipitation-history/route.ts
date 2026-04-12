@@ -120,16 +120,22 @@ export async function GET(request: NextRequest) {
 
     // Calculate true rolling 24h precipitation total from hourly data
     // With past_days=1, hourly data spans yesterday midnight → today end
+    //
+    // TIMEZONE FIX: Open-Meteo returns local wall-clock times (no UTC offset)
+    // when timezone=auto. Parse with 'Z' suffix to treat as UTC, then subtract
+    // the location's utc_offset_seconds to get the true UTC epoch.
     const now = new Date();
+    const utcOffsetMs = (forecast.utc_offset_seconds ?? 0) * 1000;
     let hourly24hPrecipMm = 0;
     let hourlySnow24hMm = 0;
-    let hourlyDataAvailable = false;
+    let hourlySamplesInWindow = 0;
 
     if (hourly?.time && hourly?.precipitation) {
       const nowMs = now.getTime();
       const oneDayAgo = nowMs - 24 * 60 * 60 * 1000;
       for (let i = 0; i < hourly.time.length; i++) {
-        const hourMs = new Date(hourly.time[i]).getTime();
+        // Convert location-local timestamp to true UTC epoch
+        const hourMs = new Date(hourly.time[i] + 'Z').getTime() - utcOffsetMs;
         if (hourMs >= oneDayAgo && hourMs <= nowMs) {
           const precipMm = hourly.precipitation[i] ?? 0;
           // Per-hour snow classification using hourly temperature if available
@@ -140,15 +146,19 @@ export async function GET(request: NextRequest) {
           } else {
             hourly24hPrecipMm += precipMm;
           }
-          hourlyDataAvailable = true;
+          hourlySamplesInWindow++;
         }
       }
     }
 
+    // Require near-full coverage (22+ of 24 hours) to trust hourly rolling sum.
+    // With past_days=1 we get 48 hours of data, so this should almost always pass.
+    const hourlyHasFullCoverage = hourlySamplesInWindow >= 22;
+
     let rain24h: number;
     let snow24h: number;
 
-    if (hourlyDataAvailable) {
+    if (hourlyHasFullCoverage) {
       // Primary path: true rolling 24h sum from hourly data
       rain24h = mmToInches(hourly24hPrecipMm);
       snow24h = mmToInches(hourlySnow24hMm);
@@ -172,7 +182,7 @@ export async function GET(request: NextRequest) {
       lastUpdated: new Date().toISOString(),
       dataSource: 'day_summary',
       dataAvailable,
-      dataQuality: daily?.time && daily.time.length >= 2 ? 'full' : 'partial',
+      dataQuality: hourlyHasFullCoverage ? 'full' : 'partial',
     };
 
     // Only cache successful responses
