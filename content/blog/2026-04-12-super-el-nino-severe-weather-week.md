@@ -17,7 +17,7 @@ NOAA's Climate Prediction Center currently has us in ENSO-neutral territory, but
 
 If that bears out, we are talking about Pacific sea surface temperatures running more than 2 degrees Celsius above average -- the kind of anomaly that rewrites seasonal forecasts from the US to Australia.
 
-![Tropical Pacific ocean waves](https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80)
+![NOAA CPC sea surface temperature anomaly map showing El Nino development in the tropical Pacific](https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/figure01.gif)
 
 ## What a Super El Nino Means for the US
 
@@ -46,7 +46,7 @@ The engine behind this setup is a massive warm sector with mid-60s dewpoints flo
 
 If you are anywhere from Texas to the Great Lakes this week, now is the time to review your severe weather plan.
 
-![Dramatic storm clouds over open plains](https://images.unsplash.com/photo-1527482937786-6f4e4d18bf16?w=800&q=80)
+![Wedge tornado near Binger, Oklahoma -- Photo courtesy of NOAA NSSL](https://www.spc.noaa.gov/faq/tornado/binger.jpg)
 
 ## California Gets Another Soaking
 
