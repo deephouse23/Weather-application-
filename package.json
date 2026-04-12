@@ -1,6 +1,6 @@
 {
   "name": "16-bit-weather",
-  "version": "1.600.0",
+  "version": "1.589.0",
   "description": "Retro weather education platform with live forecasts, earth-science and space data, tool-backed AI assistant, Supabase auth and user AI memory, themes, games, and Playwright-tested flows. Next.js 16, React 19.",
   "private": true,
   "scripts": {

@@ -2,20 +2,21 @@
 
 Retro-styled weather education platform that pairs live environmental data with a pixel-influenced interface and structured learning paths.
 
-**Version 1.600** | [Live Site](https://www.16bitweather.co)
+**Version 1.589** | [Live Site](https://www.16bitweather.co)
 
-## Version 1.600 highlights
+## Version 1.589 highlights
 
-This release expands earth-science coverage, fixes social sharing, and hardens the database layer.
+Weekly blog posts with NOAA public domain imagery, precipitation history accuracy improvements, and continued SEO refinements for city pages.
 
-- **Space weather redesign**: Tabbed dashboard with interactive Kp index, solar wind, and X-ray flux charts. ENLIL solar wind model viewer, coronal mass ejection tracker, and aurora forecast maps powered by NOAA SWPC and NASA SDO.
-- **Social sharing overhaul**: Fixed blank OG preview images on X, Facebook, and LinkedIn. Reusable share buttons now appear on space weather, severe weather, radar, travel, tropical, aviation, and education pages with contextual share text and dynamic OG images.
-- **SPC convective outlooks and travel corridors**: Severe weather page displays Storm Prediction Center Day 1-3 outlook maps. Travel weather page scores interstate corridor driving conditions with hazard maps and WPC daily outlooks.
-- **Education hub overhaul**: Consolidated learning pages under one hub with expanded content for cloud types, weather systems, fun facts, extremes, and a glossary.
-- **Supabase hardening**: RLS policies added to user_ai_memory, initplan performance fixes across 17+ policies, duplicate policy cleanup, and missing foreign key indexes.
-- **Sentry noise reduction**: Geocoding 401 auth errors filtered out of Sentry in metadata generation, broadened to catch all OWM authentication failure patterns.
-
-Earlier baseline features remain: real-time weather and forecasts, Learn Hub, radar, global extremes, themes, games, accounts, and aggregated news.
+- **Weekly blog**: Super El Nino coverage and severe weather outlook with inline NOAA CPC and NSSL imagery.
+- **Precipitation accuracy**: Reworked 24-hour precipitation history endpoint for more reliable readings.
+- **SEO city pages**: Enriched metadata and restored missing H1 spacing on city weather pages.
+- **Stargazer**: Night sky observing score, education pages, and launch link integration.
+- **Space weather redesign**: Tabbed dashboard with interactive Kp index, solar wind, and X-ray flux charts. ENLIL model viewer, CME tracker, and aurora forecast maps.
+- **Social sharing**: Fixed blank OG previews. Share buttons on all major pages with dynamic OG images.
+- **SPC outlooks and travel corridors**: Day 1-3 convective outlook maps on the severe weather page. Interstate corridor driving condition scores with hazard maps.
+- **Education hub**: Consolidated learning pages with expanded cloud types, weather systems, fun facts, extremes, and glossary content.
+- **Supabase hardening**: RLS policies on user_ai_memory, initplan performance fixes, duplicate policy cleanup, and missing foreign key indexes.
 
 ## About
 
