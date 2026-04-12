@@ -139,3 +139,9 @@ lighthouse.json
 *.prd
 docs/
 tasks/
+
+# Playwright MCP snapshots (dev artifacts)
+.playwright-mcp/
+
+# Cursor config
+cursor.md
