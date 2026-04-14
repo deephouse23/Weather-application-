@@ -52,6 +52,12 @@ export interface HourlyCondition {
   temperature: number;
   dewpoint: number;
   dewRisk: 'low' | 'moderate' | 'high';
+  /** Per-hour composite score (0-100), computed during dark window */
+  hourlyScore?: number;
+  /** Per-hour sub-scores breakdown */
+  hourlySubScores?: StargazerSubScores;
+  /** True if high cloud cover is penalizing transparency */
+  cirrusWarning?: boolean;
 }
 
 // ============================================================================
@@ -236,11 +242,32 @@ export interface SevenTimerResponse {
 }
 
 // ============================================================================
+// Best Window & Limiting Factor
+// ============================================================================
+
+export interface BestWindow {
+  startTime: Date;
+  endTime: Date;
+  score: number;
+  label: ScoreLabel;
+  color: string;
+}
+
+export interface LimitingFactor {
+  category: keyof StargazerSubScores;
+  label: string;
+  detail: string;
+}
+
+// ============================================================================
 // Consolidated API Response
 // ============================================================================
 
 export interface StargazerData {
   score: StargazerScore;
+  bestWindow: BestWindow | null;
+  nightAverage: number;
+  limitingFactor: LimitingFactor | null;
   darkWindow: DarkWindow;
   hourlyConditions: HourlyCondition[];
   moon: MoonInfo;
