@@ -85,7 +85,7 @@ function SkeletonCard({ rows = 3 }: { rows?: number }) {
 // ============================================================================
 
 function PersistentHeader({ data }: { data: StargazerData }) {
-  const { score, darkWindow, moon, location } = data;
+  const { score, bestWindow, nightAverage, limitingFactor, darkWindow, moon, location } = data;
 
   return (
     <div className="container-primary p-4 sm:p-6">
@@ -117,7 +117,32 @@ function PersistentHeader({ data }: { data: StargazerData }) {
             <span className={cn('text-xl font-bold font-mono uppercase', scoreColor(score.overall))}>
               {score.label}
             </span>
+            {nightAverage != null && nightAverage !== score.overall && (
+              <span className="text-sm font-mono text-muted-foreground ml-1">
+                (night avg: {nightAverage})
+              </span>
+            )}
           </div>
+
+          {/* Best window callout */}
+          {bestWindow && (
+            <div className="mb-2 px-3 py-1.5 bg-white/5 border border-subtle rounded inline-flex items-center gap-2 text-sm font-mono">
+              <span className="text-muted-foreground">Best window:</span>
+              <span className="font-bold">
+                {formatTime(bestWindow.startTime)} &ndash; {formatTime(bestWindow.endTime)}
+              </span>
+              <span className={cn('font-bold', scoreColor(bestWindow.score))}>
+                ({bestWindow.score})
+              </span>
+            </div>
+          )}
+
+          {/* Limiting factor */}
+          {limitingFactor && (
+            <p className="text-xs font-mono text-amber-400/90 mb-2">
+              Limiting factor: <span className="capitalize">{limitingFactor.category}</span> &mdash; {limitingFactor.label.toLowerCase()}{limitingFactor.detail ? ` (${limitingFactor.detail})` : ''}
+            </p>
+          )}
 
           {(location.displayName || location.name) && (
             <div className="text-xs font-mono text-muted-foreground mb-2 space-y-0.5">
@@ -157,20 +182,26 @@ function PersistentHeader({ data }: { data: StargazerData }) {
             )}
           </div>
 
-          {/* Sub-score mini-bars */}
-          <div className="grid grid-cols-5 gap-2 max-w-md text-xs font-mono">
-            {Object.entries(score.subScores).map(([key, val]) => (
-              <div key={key} className="flex flex-col items-center gap-1" title={getSubScoreLabel(key, val)}>
-                <span className="text-xs font-mono uppercase text-muted-foreground">{key}</span>
-                <div className="w-full h-2 bg-white/10 rounded overflow-hidden">
-                  <div
-                    className={cn('h-full rounded', scoreBarColor(val))}
-                    style={{ width: `${val}%` }}
-                  />
+          {/* Sub-score mini-bars with visible labels */}
+          <div className="grid grid-cols-5 gap-2 max-w-lg text-xs font-mono">
+            {Object.entries(score.subScores).map(([key, val]) => {
+              const label = getSubScoreLabel(key, val);
+              return (
+                <div key={key} className="flex flex-col items-center gap-1" title={label}>
+                  <span className="text-xs font-mono uppercase text-muted-foreground">{key}</span>
+                  <div className="w-full h-2 bg-white/10 rounded overflow-hidden">
+                    <div
+                      className={cn('h-full rounded', scoreBarColor(val))}
+                      style={{ width: `${val}%` }}
+                    />
+                  </div>
+                  <span className="font-bold font-mono">{Math.round(val)}</span>
+                  <span className="text-[10px] font-mono text-muted-foreground text-center leading-tight truncate w-full">
+                    {label}
+                  </span>
                 </div>
-                <span className="font-bold font-mono">{Math.round(val)}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
@@ -183,7 +214,7 @@ function PersistentHeader({ data }: { data: StargazerData }) {
 // ============================================================================
 
 function ConditionsPanel({ data }: { data: StargazerData }) {
-  const { hourlyConditions, darkWindow, moon } = data;
+  const { hourlyConditions, bestWindow, darkWindow, moon } = data;
 
   // Rehydrate dates from JSON serialization
   const conditions = hourlyConditions?.map((h) => ({
@@ -198,6 +229,34 @@ function ConditionsPanel({ data }: { data: StargazerData }) {
     astronomicalDawn: typeof darkWindow.astronomicalDawn === 'string' ? new Date(darkWindow.astronomicalDawn) : darkWindow.astronomicalDawn,
   } : undefined;
 
+  // Use best-window midpoint for ground conditions, fallback to dark window midpoint
+  const groundConditions = (() => {
+    if (conditions.length === 0) return null;
+
+    let targetMs: number;
+    if (bestWindow?.startTime && bestWindow?.endTime) {
+      const start = typeof bestWindow.startTime === 'string' ? new Date(bestWindow.startTime) : bestWindow.startTime;
+      const end = typeof bestWindow.endTime === 'string' ? new Date(bestWindow.endTime) : bestWindow.endTime;
+      targetMs = (start.getTime() + end.getTime()) / 2;
+    } else if (rehydratedDarkWindow) {
+      targetMs = (rehydratedDarkWindow.astronomicalDusk.getTime() + rehydratedDarkWindow.astronomicalDawn.getTime()) / 2;
+    } else {
+      return conditions[Math.floor(conditions.length / 2)];
+    }
+
+    // Find the hour closest to the target midpoint
+    let closest = conditions[0];
+    let minDiff = Infinity;
+    for (const c of conditions) {
+      const diff = Math.abs(c.time.getTime() - targetMs);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closest = c;
+      }
+    }
+    return closest;
+  })();
+
   return (
     <div className="space-y-6">
       {conditions.length > 0 && rehydratedDarkWindow && (
@@ -209,33 +268,36 @@ function ConditionsPanel({ data }: { data: StargazerData }) {
         <div className="container-primary p-4 font-mono">
           <h2 className="border-b border-subtle py-3 mb-3 text-xs font-mono uppercase text-muted-foreground">
             Ground Conditions
+            <span className="text-muted-foreground font-normal ml-2">
+              (at {groundConditions ? formatTime(groundConditions.time) : '--:--'})
+            </span>
           </h2>
           <div className="grid grid-cols-2 gap-4">
-            {conditions.length > 0 && (
+            {groundConditions && (
               <>
                 <div>
                   <span className="text-xs font-mono uppercase text-muted-foreground block">Temperature</span>
-                  <span className="text-xl font-bold font-mono">{Math.round(conditions[0].temperature)}&deg;C</span>
+                  <span className="text-xl font-bold font-mono">{Math.round(groundConditions.temperature)}&deg;C</span>
                 </div>
                 <div>
                   <span className="text-xs font-mono uppercase text-muted-foreground block">Humidity</span>
-                  <span className="text-xl font-bold font-mono">{Math.round(conditions[0].humidity)}%</span>
+                  <span className="text-xl font-bold font-mono">{Math.round(groundConditions.humidity)}%</span>
                 </div>
                 <div>
                   <span className="text-xs font-mono uppercase text-muted-foreground block">Wind Speed</span>
-                  <span className="text-xl font-bold font-mono">{Math.round(conditions[0].windSpeed)} km/h</span>
+                  <span className="text-xl font-bold font-mono">{Math.round(groundConditions.windSpeed)} km/h</span>
                 </div>
                 <div>
                   <span className="text-xs font-mono uppercase text-muted-foreground block">Cloud Cover</span>
-                  <span className="text-xl font-bold font-mono">{Math.round(conditions[0].cloudCover)}%</span>
+                  <span className="text-xl font-bold font-mono">{Math.round(groundConditions.cloudCover)}%</span>
                 </div>
                 <div>
                   <span className="text-xs font-mono uppercase text-muted-foreground block">Dew Risk</span>
-                  <span className="text-xl font-bold font-mono capitalize">{String(conditions[0].dewRisk)}</span>
+                  <span className="text-xl font-bold font-mono capitalize">{String(groundConditions.dewRisk)}</span>
                 </div>
                 <div>
                   <span className="text-xs font-mono uppercase text-muted-foreground block">Seeing</span>
-                  <span className="text-xl font-bold font-mono">{conditions[0].seeing}/8</span>
+                  <span className="text-xl font-bold font-mono">{groundConditions.seeing}/8</span>
                 </div>
               </>
             )}

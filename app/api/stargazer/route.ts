@@ -8,12 +8,13 @@ import {
   calculateUpcomingSkyEvents,
 } from '@/lib/stargazer/astronomy';
 import {
-  cloudScore,
-  moonScore,
-  seeingScore,
-  transparencyScore,
-  groundScore,
+  scoreHour,
+  findBestWindow,
+  findLimitingFactor,
   calculateStargazerScore,
+  getScoreLabel,
+  getScoreColor,
+  getSubScoreLabel,
 } from '@/lib/stargazer/score';
 import {
   fetchSevenTimerData,
@@ -27,11 +28,14 @@ import meteorShowerData from '@/data/meteor-showers.json';
 
 import type {
   StargazerData,
+  StargazerSubScores,
   HourlyCondition,
   DeepSkyHighlight,
   DeepSkyObject,
   MeteorShowerEvent,
   MeteorShower,
+  BestWindow,
+  LimitingFactor,
 } from '@/lib/stargazer/types';
 import { estimateBortleClass } from '@/lib/stargazer/bortle';
 
@@ -234,59 +238,138 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // ---- Calculate Stargazer Score ----
-    // Use dark-window hours for averages
+    // ---- Per-Hour Scoring ----
     const darkDuskMs = darkWindow.astronomicalDusk.getTime();
     const darkDawnMs = darkWindow.astronomicalDawn.getTime();
-    const darkHours = hourlyConditions.filter(
-      (h) => h.time.getTime() >= darkDuskMs && h.time.getTime() <= darkDawnMs,
-    );
+    // moonInfo.illumination is already 0-100 (percentage)
+    const moonIllumPct = moonInfo.illumination;
+    const moonUpPct = moonInfo.moonUpDuringDarkWindowPercent;
 
-    const avgOrAll = darkHours.length > 0 ? darkHours : hourlyConditions;
+    // Score each hour in the dark window individually
+    const darkHourIndices: number[] = [];
+    for (let i = 0; i < hourlyConditions.length; i++) {
+      const h = hourlyConditions[i];
+      const tMs = h.time.getTime();
+      if (tMs >= darkDuskMs && tMs <= darkDawnMs) {
+        darkHourIndices.push(i);
+      }
 
-    const avgCloudCover =
-      avgOrAll.length > 0
-        ? avgOrAll.reduce((sum, h) => sum + h.cloudCover, 0) / avgOrAll.length
+      // Score every hour (dark window or not) for the timeline display
+      const result = scoreHour(
+        h.cloudCover,
+        moonIllumPct,
+        moonUpPct,
+        h.seeing,
+        h.transparency,
+        kmhToMph(h.windSpeed),
+        h.humidity,
+        cToF(h.temperature),
+        cToF(h.dewpoint),
+        h.cloudCoverHigh,
+        h.cloudCover,
+      );
+      hourlyConditions[i].hourlyScore = result.score;
+      hourlyConditions[i].hourlySubScores = result.subScores;
+      hourlyConditions[i].cirrusWarning = result.cirrusWarning;
+    }
+
+    // Extract dark-window hourly scores for best window calculation
+    const darkHourScores = darkHourIndices.map((i) => hourlyConditions[i].hourlyScore!);
+
+    // Find the best 3-hour contiguous block
+    const bestWindowResult = findBestWindow(darkHourScores, 3);
+
+    let bestWindow: BestWindow | null = null;
+    let headlineSubScores: StargazerSubScores;
+    let headlineScore: number;
+
+    if (bestWindowResult && darkHourIndices.length > 0) {
+      const bwStartIdx = darkHourIndices[bestWindowResult.startIndex];
+      const bwEndIdx = darkHourIndices[bestWindowResult.endIndex];
+
+      bestWindow = {
+        startTime: hourlyConditions[bwStartIdx].time,
+        endTime: hourlyConditions[bwEndIdx].time,
+        score: bestWindowResult.score,
+        label: getScoreLabel(bestWindowResult.score),
+        color: getScoreColor(getScoreLabel(bestWindowResult.score)),
+      };
+
+      // Average sub-scores across the best window for the headline breakdown
+      const bwHours = darkHourIndices
+        .slice(bestWindowResult.startIndex, bestWindowResult.endIndex + 1)
+        .map((i) => hourlyConditions[i].hourlySubScores!);
+      headlineSubScores = {
+        cloud: Math.round(bwHours.reduce((s, h) => s + h.cloud, 0) / bwHours.length),
+        moon: Math.round(bwHours.reduce((s, h) => s + h.moon, 0) / bwHours.length),
+        seeing: Math.round(bwHours.reduce((s, h) => s + h.seeing, 0) / bwHours.length),
+        transparency: Math.round(bwHours.reduce((s, h) => s + h.transparency, 0) / bwHours.length),
+        ground: Math.round(bwHours.reduce((s, h) => s + h.ground, 0) / bwHours.length),
+      };
+      headlineScore = bestWindowResult.score;
+    } else {
+      // Fallback: no dark hours, score from all available conditions
+      const fallback = hourlyConditions.length > 0
+        ? hourlyConditions.map((h) => h.hourlySubScores!)
+        : null;
+      if (fallback && fallback.length > 0) {
+        headlineSubScores = {
+          cloud: Math.round(fallback.reduce((s, h) => s + h.cloud, 0) / fallback.length),
+          moon: Math.round(fallback.reduce((s, h) => s + h.moon, 0) / fallback.length),
+          seeing: Math.round(fallback.reduce((s, h) => s + h.seeing, 0) / fallback.length),
+          transparency: Math.round(fallback.reduce((s, h) => s + h.transparency, 0) / fallback.length),
+          ground: Math.round(fallback.reduce((s, h) => s + h.ground, 0) / fallback.length),
+        };
+      } else {
+        headlineSubScores = { cloud: 50, moon: 50, seeing: 50, transparency: 50, ground: 50 };
+      }
+      headlineScore = hourlyConditions.length > 0
+        ? Math.round(hourlyConditions.reduce((s, h) => s + (h.hourlyScore ?? 0), 0) / hourlyConditions.length)
         : 50;
-    const avgSeeing =
-      avgOrAll.length > 0
-        ? avgOrAll.reduce((sum, h) => sum + h.seeing, 0) / avgOrAll.length
-        : 4;
-    const avgTransparency =
-      avgOrAll.length > 0
-        ? avgOrAll.reduce((sum, h) => sum + h.transparency, 0) / avgOrAll.length
-        : 4;
-    const avgWindKmh =
-      avgOrAll.length > 0
-        ? avgOrAll.reduce((sum, h) => sum + h.windSpeed, 0) / avgOrAll.length
-        : 0;
-    const avgHumidity =
-      avgOrAll.length > 0
-        ? avgOrAll.reduce((sum, h) => sum + h.humidity, 0) / avgOrAll.length
+    }
+
+    // Full-night average for secondary display
+    const nightAverage = darkHourScores.length > 0
+      ? Math.round(darkHourScores.reduce((s, v) => s + v, 0) / darkHourScores.length)
+      : headlineScore;
+
+    // Compute average cloud cover for summary generation
+    const avgCloudCover = darkHourIndices.length > 0
+      ? darkHourIndices.reduce((s, i) => s + hourlyConditions[i].cloudCover, 0) / darkHourIndices.length
+      : hourlyConditions.length > 0
+        ? hourlyConditions.reduce((s, h) => s + h.cloudCover, 0) / hourlyConditions.length
         : 50;
-    const avgTempC =
-      avgOrAll.length > 0
-        ? avgOrAll.reduce((sum, h) => sum + h.temperature, 0) / avgOrAll.length
-        : 15;
-    const avgDewpointC =
-      avgOrAll.length > 0
-        ? avgOrAll.reduce((sum, h) => sum + h.dewpoint, 0) / avgOrAll.length
-        : 10;
 
-    const subScores = {
-      cloud: cloudScore(avgCloudCover),
-      moon: moonScore(moonInfo.illumination * 100, moonInfo.moonUpDuringDarkWindowPercent),
-      seeing: seeingScore(Math.round(avgSeeing)),
-      transparency: transparencyScore(Math.round(avgTransparency)),
-      ground: groundScore(
-        kmhToMph(avgWindKmh),
-        avgHumidity,
-        cToF(avgTempC),
-        cToF(avgDewpointC),
-      ),
-    };
+    const score = calculateStargazerScore(headlineSubScores, moonIllumPct, avgCloudCover);
+    // Override the overall with the best-window score (calculateStargazerScore recomputes from sub-scores)
+    score.overall = headlineScore;
+    score.label = getScoreLabel(headlineScore);
+    score.color = getScoreColor(score.label);
 
-    const score = calculateStargazerScore(subScores, moonInfo.illumination * 100, avgCloudCover);
+    // ---- Limiting Factor ----
+    let limitingFactor: LimitingFactor | null = null;
+    if (headlineScore < 85) {
+      const { category, score: limitScore } = findLimitingFactor(headlineSubScores);
+      const label = getSubScoreLabel(category, limitScore);
+
+      // Generate contextual detail string
+      let detail = '';
+      if (category === 'moon' && moonInfo.rise) {
+        const moonRiseStr = new Date(moonInfo.rise).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        detail = `rises at ${moonRiseStr} with ${Math.round(moonIllumPct)}% illumination`;
+      } else if (category === 'cloud') {
+        detail = `${Math.round(avgCloudCover)}% average cloud cover`;
+      } else if (category === 'seeing') {
+        detail = 'atmospheric turbulence limiting resolution';
+      } else if (category === 'transparency') {
+        const hasCirrus = hourlyConditions.some((h) => h.cirrusWarning);
+        detail = hasCirrus ? 'high-altitude cirrus reducing clarity' : 'haze or moisture reducing clarity';
+      } else if (category === 'ground') {
+        detail = 'wind, humidity, or dew risk affecting conditions';
+      }
+
+      limitingFactor = { category, label, detail };
+    }
 
     // ---- Meteor showers with moon interference ----
     const showers = meteorShowerData as MeteorShower[];
@@ -362,6 +445,9 @@ export async function GET(request: NextRequest) {
     // ---- Build response ----
     const data: StargazerData = {
       score,
+      bestWindow,
+      nightAverage,
+      limitingFactor,
       darkWindow,
       hourlyConditions,
       moon: moonInfo,

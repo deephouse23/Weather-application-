@@ -109,6 +109,14 @@ const metrics: MetricKey[] = [
   'dewRisk',
 ];
 
+function getScoreRowColor(score: number): string {
+  if (score >= 75) return 'bg-emerald-600';
+  if (score >= 60) return 'bg-green-600';
+  if (score >= 45) return 'bg-yellow-600';
+  if (score >= 30) return 'bg-orange-600';
+  return 'bg-red-600';
+}
+
 export default function HourlyTimeline({
   conditions,
   darkWindow,
@@ -167,10 +175,30 @@ export default function HourlyTimeline({
             </tr>
           </thead>
           <tbody>
+            {/* Per-hour composite score row — guide rail at the top */}
+            <tr className="font-bold">
+              <td className="sticky left-0 bg-inherit px-2 py-1.5 text-xs font-mono font-bold uppercase tracking-wider text-foreground">
+                Score
+              </td>
+              {conditions.map((c, i) => (
+                <td
+                  key={i}
+                  className={cn(
+                    'border border-subtle px-1 py-1.5 text-center text-white text-sm font-mono font-bold',
+                    c.hourlyScore != null ? getScoreRowColor(c.hourlyScore) : 'bg-gray-600',
+                  )}
+                >
+                  {c.hourlyScore != null ? c.hourlyScore : '--'}
+                </td>
+              ))}
+            </tr>
             {metrics.map((metric) => (
               <tr key={metric}>
                 <td className="sticky left-0 bg-inherit px-2 py-1 text-xs font-mono uppercase tracking-wider text-muted-foreground">
                   {metricLabels[metric]}
+                  {metric === 'cloudCoverHigh' && conditions.some((c) => c.cirrusWarning) && (
+                    <span className="ml-1 text-amber-400" title="Cirrus penalty active">*</span>
+                  )}
                 </td>
                 {conditions.map((c, i) => {
                   const raw = c[metric as keyof HourlyCondition];
@@ -181,7 +209,8 @@ export default function HourlyTimeline({
                       key={i}
                       className={cn(
                         'border border-subtle px-1 py-1 text-center text-white text-xs font-mono',
-                        getCellColor(metric, value as number | string)
+                        getCellColor(metric, value as number | string),
+                        metric === 'cloudCoverHigh' && c.cirrusWarning && 'ring-1 ring-inset ring-amber-400/60',
                       )}
                     >
                       {formatCellValue(metric, value as number | string)}

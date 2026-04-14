@@ -120,10 +120,10 @@ describe('Stargazer Score Algorithm', () => {
       expect(stargazerScore(0, 0, 0, 0, 0)).toBe(0);
     });
 
-    it('weights cloud cover highest (35%)', () => {
+    it('weights cloud cover highest (40%)', () => {
       const withClouds = stargazerScore(0, 100, 100, 100, 100);
       const withoutClouds = stargazerScore(100, 100, 100, 100, 100);
-      expect(withoutClouds - withClouds).toBe(35);
+      expect(withoutClouds - withClouds).toBe(40);
     });
   });
 

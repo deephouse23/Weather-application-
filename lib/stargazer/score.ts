@@ -76,7 +76,7 @@ export function groundScore(
 // Composite Score
 // ============================================================================
 
-/** Weighted composite: cloud 35%, moon 25%, seeing 15%, transparency 15%, ground 10% */
+/** Weighted composite: cloud 40%, moon 25%, seeing 15%, transparency 15%, ground 5% */
 export function stargazerScore(
   cloud: number,
   moon: number,
@@ -85,12 +85,125 @@ export function stargazerScore(
   ground: number,
 ): number {
   return Math.round(
-    cloud * 0.35 +
+    cloud * 0.40 +
     moon * 0.25 +
     seeing * 0.15 +
     transparency * 0.15 +
-    ground * 0.10,
+    ground * 0.05,
   );
+}
+
+// ============================================================================
+// Cirrus Penalty
+// ============================================================================
+
+/**
+ * Apply cirrus (high cloud) penalty to a transparency sub-score.
+ * Thin cirrus reads as low total cloud cover but wrecks transparency.
+ */
+export function applyCirrusPenalty(
+  transparencySub: number,
+  cloudCoverHighPercent: number,
+  totalCloudCoverPercent: number,
+): { adjusted: number; cirrusWarning: boolean } {
+  if (cloudCoverHighPercent > 50) {
+    return { adjusted: Math.max(0, transparencySub - 25), cirrusWarning: true };
+  }
+  if (cloudCoverHighPercent > 30 && totalCloudCoverPercent < 25) {
+    return { adjusted: Math.max(0, transparencySub - 15), cirrusWarning: true };
+  }
+  return { adjusted: transparencySub, cirrusWarning: false };
+}
+
+// ============================================================================
+// Per-Hour Scoring
+// ============================================================================
+
+/** Compute composite score and sub-scores for a single hour. */
+export function scoreHour(
+  cloudCoverPercent: number,
+  moonIlluminationPercent: number,
+  moonUpDuringDarkWindowPercent: number,
+  seeing7timer: number,
+  transparency7timer: number,
+  windSpeedMph: number,
+  humidityPercent: number,
+  tempF: number,
+  dewpointF: number,
+  cloudCoverHighPercent: number,
+  totalCloudCoverPercent: number,
+): { score: number; subScores: StargazerSubScores; cirrusWarning: boolean } {
+  const cloud = cloudScore(cloudCoverPercent);
+  const moon = moonScore(moonIlluminationPercent, moonUpDuringDarkWindowPercent);
+  const seeing = seeingScore(seeing7timer);
+  const rawTransparency = transparencyScore(transparency7timer);
+  const { adjusted: transparency, cirrusWarning } = applyCirrusPenalty(
+    rawTransparency, cloudCoverHighPercent, totalCloudCoverPercent,
+  );
+  const ground = groundScore(windSpeedMph, humidityPercent, tempF, dewpointF);
+
+  const subScores: StargazerSubScores = { cloud, moon, seeing, transparency, ground };
+  const score = stargazerScore(cloud, moon, seeing, transparency, ground);
+
+  return { score, subScores, cirrusWarning };
+}
+
+// ============================================================================
+// Best Window (sliding 3-hour block)
+// ============================================================================
+
+export interface BestWindowResult {
+  startIndex: number;
+  endIndex: number;
+  score: number;
+}
+
+/** Find the highest-scoring contiguous block of `windowSize` hours. */
+export function findBestWindow(hourlyScores: number[], windowSize: number = 3): BestWindowResult | null {
+  if (hourlyScores.length === 0) return null;
+
+  const effectiveSize = Math.min(windowSize, hourlyScores.length);
+  let bestStart = 0;
+  let bestAvg = -1;
+
+  for (let i = 0; i <= hourlyScores.length - effectiveSize; i++) {
+    let sum = 0;
+    for (let j = i; j < i + effectiveSize; j++) {
+      sum += hourlyScores[j];
+    }
+    const avg = sum / effectiveSize;
+    if (avg > bestAvg) {
+      bestAvg = avg;
+      bestStart = i;
+    }
+  }
+
+  return {
+    startIndex: bestStart,
+    endIndex: bestStart + effectiveSize - 1,
+    score: Math.round(bestAvg),
+  };
+}
+
+// ============================================================================
+// Limiting Factor
+// ============================================================================
+
+/** Identify the weakest sub-score category from a set of sub-scores. */
+export function findLimitingFactor(
+  subScores: StargazerSubScores,
+): { category: keyof StargazerSubScores; score: number } {
+  let lowest = Infinity;
+  let category: keyof StargazerSubScores = 'cloud';
+
+  for (const [key, val] of Object.entries(subScores) as [keyof StargazerSubScores, number][]) {
+    if (val < lowest) {
+      lowest = val;
+      category = key;
+    }
+  }
+
+  return { category, score: lowest };
 }
 
 // ============================================================================
