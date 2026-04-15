@@ -37,7 +37,7 @@ There's a reason why tornado alley exists where it does. The Great Plains provid
 
 Spring is prime time because that's when the jet stream is most active, creating the wind shear these storms need. The contrast between warming surface temperatures and still-cold upper-level air creates instability. Add in the longer days and stronger sun angle, and you've got a recipe for explosive storm development.
 
-![Lightning illuminating storm clouds](https://images.unsplash.com/photo-1518012502829-4e0d86089b2f?w=800&q=80)
+![Supercell wall cloud illuminated by lightning (NOAA)](https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Wall_cloud_with_lightning_-_NOAA.jpg/1280px-Wall_cloud_with_lightning_-_NOAA.jpg)
 
 ## The Tornado Connection
 
