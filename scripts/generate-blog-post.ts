@@ -13,6 +13,74 @@ import path from 'path'
 const BLOG_DIR = path.join(process.cwd(), 'content/blog')
 const SITE_URL = 'https://www.16bitweather.co'
 
+// Curated catalog of public-domain images (NOAA, NASA, Wikimedia Commons PD/CC).
+// All URLs verified 200 OK when added. The model picks from this list; no
+// URL invention. Post-generation validation strips anything that 404s anyway.
+type CuratedImage = { topics: string[]; url: string; alt: string }
+
+const CURATED_IMAGES: CuratedImage[] = [
+  { topics: ['lightning', 'thunderstorm', 'storm'], url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Lightning_NOAA.jpg/1280px-Lightning_NOAA.jpg', alt: 'Lightning strike captured by NOAA' },
+  { topics: ['lightning', 'thunderstorm', 'storm'], url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Lightning_Pritzerbe_01_%28MK%29.jpg/1280px-Lightning_Pritzerbe_01_%28MK%29.jpg', alt: 'Cloud-to-ground lightning over Pritzerbe' },
+  { topics: ['lightning', 'thunderstorm'], url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Lightning_in_Arlington.jpg/1280px-Lightning_in_Arlington.jpg', alt: 'Lightning over Arlington' },
+  { topics: ['supercell', 'wall cloud', 'tornado', 'mesocyclone', 'severe weather'], url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Wall_cloud_with_lightning_-_NOAA.jpg/1280px-Wall_cloud_with_lightning_-_NOAA.jpg', alt: 'Supercell wall cloud illuminated by lightning (NOAA)' },
+  { topics: ['supercell', 'thunderstorm', 'severe weather'], url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Chaparral_Supercell_2.JPG/1280px-Chaparral_Supercell_2.JPG', alt: 'Classic supercell thunderstorm in Chaparral, NM' },
+  { topics: ['anvil', 'thunderstorm', 'cumulonimbus', 'clouds'], url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Anvil_shaped_cumulus_panorama_edit_crop.jpg/1280px-Anvil_shaped_cumulus_panorama_edit_crop.jpg', alt: 'Anvil-shaped cumulonimbus thunderstorm' },
+  { topics: ['tornado', 'severe weather', 'plains'], url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/F5_tornado_Elie_Manitoba_2007.jpg/1280px-F5_tornado_Elie_Manitoba_2007.jpg', alt: 'F5 tornado near Elie, Manitoba (2007)' },
+  { topics: ['tornado', 'severe weather', 'plains'], url: 'https://www.spc.noaa.gov/faq/tornado/binger.jpg', alt: 'Wedge tornado near Binger, Oklahoma (NOAA NSSL)' },
+  { topics: ['mesocyclone', 'supercell', 'diagram'], url: 'https://www.spc.noaa.gov/faq/tornado/mesof.gif', alt: 'Mesocyclone structure diagram (NOAA SPC)' },
+  { topics: ['aurora', 'northern lights', 'space weather'], url: 'https://upload.wikimedia.org/wikipedia/commons/c/cf/Northern_Lights_02.jpg', alt: 'Aurora borealis (northern lights)' },
+  { topics: ['aurora', 'space weather'], url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Aurora_Borealis_and_Australis_Poster.jpg/1280px-Aurora_Borealis_and_Australis_Poster.jpg', alt: 'Aurora borealis and australis from space' },
+  { topics: ['aurora', 'space weather', 'forecast'], url: 'https://services.swpc.noaa.gov/images/aurora-forecast-northern-hemisphere.jpg', alt: 'NOAA SWPC aurora forecast (northern hemisphere)' },
+  { topics: ['solar flare', 'sun', 'space weather'], url: 'https://upload.wikimedia.org/wikipedia/commons/d/da/171879main_LimbFlareJan12_lg.jpg', alt: 'Solar limb flare imaged by NASA' },
+  { topics: ['sun', 'solar corona', 'space weather'], url: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0193.jpg', alt: 'Current Sun in extreme UV 193A (NASA SDO)' },
+  { topics: ['sun', 'solar corona'], url: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0171.jpg', alt: 'Current Sun in extreme UV 171A (NASA SDO)' },
+  { topics: ['sun', 'solar chromosphere'], url: 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0304.jpg', alt: 'Current Sun in extreme UV 304A (NASA SDO)' },
+  { topics: ['hurricane', 'tropical', 'satellite'], url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Hurricane_Katrina_August_28_2005_NASA.jpg/1280px-Hurricane_Katrina_August_28_2005_NASA.jpg', alt: 'Hurricane Katrina from NASA satellite' },
+  { topics: ['satellite', 'weather', 'conus'], url: 'https://cdn.star.nesdis.noaa.gov/GOES16/ABI/CONUS/GEOCOLOR/1250x750.jpg', alt: 'GOES-16 geocolor satellite view of CONUS' },
+  { topics: ['satellite', 'infrared', 'weather'], url: 'https://cdn.star.nesdis.noaa.gov/GOES16/ABI/CONUS/13/1250x750.jpg', alt: 'GOES-16 infrared satellite view of CONUS' },
+  { topics: ['el nino', 'la nina', 'enso', 'climate', 'sst'], url: 'https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/figure01.gif', alt: 'NOAA CPC sea surface temperature anomaly map' },
+]
+
+function buildImageCatalog(): string {
+  return CURATED_IMAGES.map(img => `- Topics: ${img.topics.join(', ')}\n  URL: ${img.url}\n  Alt: ${img.alt}`).join('\n')
+}
+
+// HEAD-check every markdown image in the post. Strip any that don't return 200.
+// This is the safety net: even if the catalog changes or a source goes dark,
+// we never ship a post with a broken image.
+async function stripBrokenImages(markdown: string): Promise<string> {
+  const imageRegex = /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g
+  const matches: { full: string; url: string }[] = []
+  let match: RegExpExecArray | null
+  while ((match = imageRegex.exec(markdown)) !== null) {
+    matches.push({ full: match[0], url: match[2] })
+  }
+
+  let cleaned = markdown
+  for (const img of matches) {
+    let ok = false
+    try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 10_000)
+      const res = await fetch(img.url, {
+        method: 'HEAD',
+        signal: controller.signal,
+        redirect: 'follow',
+        headers: { 'User-Agent': '16bitweather.co blog-image-check' },
+      })
+      clearTimeout(timeout)
+      ok = res.ok
+      if (!ok) console.warn(`[generate-blog-post] Stripping broken image (${res.status}): ${img.url}`)
+    } catch (err) {
+      console.warn(`[generate-blog-post] Stripping unreachable image: ${img.url}`, err)
+    }
+    if (!ok) {
+      cleaned = cleaned.split(`${img.full}\n\n`).join('').split(`${img.full}\n`).join('').split(img.full).join('')
+    }
+  }
+  return cleaned
+}
+
 // Determine which week of the month it is for topic rotation
 function getWeekTheme(): { theme: string; instruction: string } {
   const now = new Date()
@@ -174,7 +242,10 @@ Voice and tone:
 
 Rules:
 - No emojis ever
-- Include 1-2 inline images to break up the text and add visual interest. Use Unsplash source URLs in this format: ![descriptive alt text](https://images.unsplash.com/photo-{PHOTO_ID}?w=800&q=80). Pick real Unsplash photo IDs that match the topic (storms, clouds, aurora, earthquakes, satellites, etc). Place images between sections, not at the very top or bottom.
+- Include 1-2 inline images to break up the text. You MUST pick from the curated catalog below -- never invent image URLs. Match the image topic to your post topic; if nothing in the catalog fits, omit images entirely rather than guessing. Use this exact markdown format with the URL and alt text copied verbatim from the catalog: ![alt from catalog](url from catalog). Place images between sections, not at the very top or bottom.
+
+Curated image catalog (public domain / CC; pick 1-2 that match your post topic):
+${buildImageCatalog()}
 - Write 400-800 words
 - Use markdown headers (## for main sections, ### for subsections)
 - End every post with a "## Bottom Line" section with 2-3 actionable takeaways
@@ -278,7 +349,8 @@ heroImage: "${heroImage}"
 readTime: ${safeReadTime}
 ---`
 
-  const fileContent = `${frontmatter}\n\n${post.content}\n`
+  const validatedContent = await stripBrokenImages(post.content)
+  const fileContent = `${frontmatter}\n\n${validatedContent}\n`
   const filename = `${safeSlug}.md`
   const filePath = path.join(BLOG_DIR, filename)
 
