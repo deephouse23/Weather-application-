@@ -4,6 +4,7 @@
  */
 
 import type { Metadata } from 'next'
+import { safeJsonLd } from '@/lib/utils'
 
 export const metadata: Metadata = {
   title: 'Weather Glossary - Metric Definitions | 16 Bit Weather',
@@ -65,7 +66,7 @@ export default function GlossaryLayout({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(glossarySchema) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(glossarySchema) }}
       />
       {children}
     </>

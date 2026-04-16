@@ -4,6 +4,7 @@
  */
 
 import type { Metadata } from 'next'
+import { safeJsonLd } from '@/lib/utils'
 
 export const metadata: Metadata = {
   title: 'Retro Weather Games Arcade - Free 16-Bit Games | 16 Bit Weather',
@@ -67,7 +68,7 @@ export default function GamesLayout({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(gamesSchema) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(gamesSchema) }}
       />
       {children}
     </>

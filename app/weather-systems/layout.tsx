@@ -4,6 +4,7 @@
  */
 
 import type { Metadata } from 'next'
+import { safeJsonLd } from '@/lib/utils'
 
 export const metadata: Metadata = {
   title: 'Weather Systems Guide - 16 Storm Types Explained | 16 Bit Weather',
@@ -78,7 +79,7 @@ export default function WeatherSystemsLayout({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(articleSchema) }}
       />
       {children}
     </>

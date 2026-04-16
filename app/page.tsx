@@ -11,6 +11,7 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
+import { safeJsonLd } from '@/lib/utils'
 import { WeatherCardsSkeleton } from '@/components/home-shell'
 
 // PERFORMANCE: Use next/dynamic for proper SSR streaming with fallback
@@ -138,7 +139,7 @@ export default function HomePage() {
       {/* JSON-LD structured data - safe as jsonLd is a static constant */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       {/* PERFORMANCE: Suspense boundary for streaming - shell renders server-side */}
       <Suspense fallback={<HomePageShell />}>
