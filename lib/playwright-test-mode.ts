@@ -17,5 +17,5 @@ export function isPlaywrightTestModeRequest(request: NextRequest): boolean {
     process.env.VERCEL === '1' ||
     process.env.VERCEL_ENV === 'preview';
   const isNonProd = process.env.NODE_ENV !== 'production';
-  return (isExplicitTestEnv && isNonProd) || (isCIOrPreview && hasTestIndicator);
+  return (isExplicitTestEnv && isNonProd) || (isCIOrPreview && hasTestIndicator && isNonProd);
 }

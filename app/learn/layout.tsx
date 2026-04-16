@@ -4,6 +4,7 @@
  */
 
 import type { Metadata } from 'next'
+import { safeJsonLd } from '@/lib/utils'
 
 export const metadata: Metadata = {
   title: 'Learn Weather - Educational Hub | 16 Bit Weather',
@@ -106,7 +107,7 @@ export default function LearnLayout({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(learnSchema) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(learnSchema) }}
       />
       {children}
     </>

@@ -19,6 +19,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/** Serialize an object for safe embedding inside <script type="application/ld+json">. */
+export function safeJsonLd(obj: unknown): string {
+  return JSON.stringify(obj).replace(/</g, '\\u003c').replace(/>/g, '\\u003e')
+}
+
 // Application Constants
 export const APP_CONSTANTS = {
   STORAGE_KEYS: {

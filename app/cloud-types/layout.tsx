@@ -4,6 +4,7 @@
  */
 
 import type { Metadata } from 'next'
+import { safeJsonLd } from '@/lib/utils'
 
 export const metadata: Metadata = {
   title: 'Cloud Types Guide - 13 Cloud Formations Explained | 16 Bit Weather',
@@ -93,7 +94,7 @@ export default function CloudTypesLayout({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }}
       />
       {children}
     </>
