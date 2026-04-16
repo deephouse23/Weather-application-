@@ -7,9 +7,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     // Validate required fields
-    const { user_id, location_name, city, country, latitude, longitude, is_favorite, custom_name, notes } = body
+    const { location_name, city, country, latitude, longitude, is_favorite, custom_name, notes } = body
 
-    if (!user_id || !location_name || !city || !country || latitude === undefined || longitude === undefined) {
+    if (!location_name || !city || !country || latitude === undefined || longitude === undefined) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -38,9 +38,8 @@ export async function POST(request: NextRequest) {
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-    // Create auth client to verify user's token
+    // Auth-scoped client: verifies the JWT and enforces RLS
     const authClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: {
@@ -53,7 +52,6 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Verify the user is authenticated
     const { data: { user }, error: authError } = await authClient.auth.getUser()
 
     if (authError || !user) {
@@ -64,48 +62,34 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify user_id matches the authenticated user
-    if (user.id !== user_id) {
-      return NextResponse.json(
-        { error: 'User ID mismatch' },
-        { status: 403 }
-      )
-    }
+    // Derive user_id from the verified session — never trust the client
+    const verifiedUserId = user.id
 
-    // Create service role client for database operations (bypasses RLS)
-    // This is safe because we've already verified the user owns this request
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    })
-
-    // Prepare location data matching the actual database schema
+    // Use the auth-scoped client so RLS enforces ownership end-to-end
     const locationData = {
-      user_id,
-      location_name: location_name,  // correct column name
+      user_id: verifiedUserId,
+      location_name: location_name,
       city: city || null,
       state: body.state || null,
       country,
       latitude: lat,
       longitude: lon,
       is_favorite: !!is_favorite,
-      custom_name: custom_name || null,  // correct column name
-      notes: notes || null  // notes column exists in schema
+      custom_name: custom_name || null,
+      notes: notes || null,
     }
 
     // Check if location already exists for this user
-    const { data: existingLocations, error: checkError } = await supabase
+    const { data: existingLocations, error: checkError } = await authClient
       .from('saved_locations')
       .select('id')
-      .eq('user_id', user_id)
+      .eq('user_id', verifiedUserId)
       .eq('latitude', locationData.latitude)
       .eq('longitude', locationData.longitude)
       .limit(1)
 
     if (checkError) {
-      captureDbError('locations.checkExisting', checkError, { user_id })
+      captureDbError('locations.checkExisting', checkError, { user_id: verifiedUserId })
     }
 
     if (existingLocations && existingLocations.length > 0) {
@@ -115,26 +99,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Insert the location
-    const { data, error } = await supabase
+    // Insert the location (RLS enforces user_id = auth.uid())
+    const { data, error } = await authClient
       .from('saved_locations')
       .insert(locationData)
       .select()
       .single()
 
     if (error) {
-      captureDbError('locations.insert', error, { user_id })
+      captureDbError('locations.insert', error, { user_id: verifiedUserId })
 
-      // Check for specific RLS violation
       if (error.code === '42501') {
         return NextResponse.json(
-          { error: 'Permission denied - RLS policy violation', details: error.message },
+          { error: 'Permission denied' },
           { status: 403 }
         )
       }
 
       return NextResponse.json(
-        { error: 'Failed to save location', details: error.message, code: error.code },
+        { error: 'Failed to save location' },
         { status: 500 }
       )
     }
@@ -164,9 +147,7 @@ export async function GET(request: NextRequest) {
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-    // Create auth client to verify user's token
     const authClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: {
@@ -179,7 +160,6 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Verify the user is authenticated
     const { data: { user }, error: authError } = await authClient.auth.getUser()
 
     if (authError || !user) {
@@ -190,16 +170,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Create service role client for database operations
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    })
-
-    // Get user's saved locations
-    const { data, error } = await supabase
+    // RLS enforces user_id = auth.uid() — no service-role needed
+    const { data, error } = await authClient
       .from('saved_locations')
       .select('*')
       .eq('user_id', user.id)
