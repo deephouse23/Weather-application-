@@ -90,6 +90,10 @@ export async function POST(request: NextRequest) {
 
     if (checkError) {
       captureDbError('locations.checkExisting', checkError, { user_id: verifiedUserId })
+      return NextResponse.json(
+        { error: 'Failed to verify location' },
+        { status: 500 }
+      )
     }
 
     if (existingLocations && existingLocations.length > 0) {
