@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import rehypeSanitize from 'rehype-sanitize'
 import remarkGfm from 'remark-gfm'
 import Link from 'next/link'
+import Image from 'next/image'
 
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/components/theme-provider'
@@ -30,10 +31,21 @@ export function BlogArticle({ post, relatedPosts }: BlogArticleProps) {
   return (
     <PageWrapper>
       <article className="max-w-3xl mx-auto px-4 py-8">
-        {/* Hero image */}
+        {/* Hero image — LCP candidate, priority-loaded.
+            unoptimized: heroImage is served by our own /api/og endpoint (already
+            a generated image); re-optimizing at build time would require a
+            running server and adds no benefit. */}
         {post.heroImage && (
           <div className="relative w-full h-64 sm:h-80 mb-6 rounded-lg overflow-hidden">
-            <img src={post.heroImage} alt={post.title} className="w-full h-full object-cover" />
+            <Image
+              src={post.heroImage}
+              alt={post.title}
+              fill
+              priority
+              unoptimized
+              sizes="(max-width: 768px) 100vw, 768px"
+              className="object-cover"
+            />
           </div>
         )}
 
@@ -119,7 +131,15 @@ export function BlogArticle({ post, relatedPosts }: BlogArticleProps) {
                 <pre className="mb-4 overflow-x-auto rounded bg-black/30 p-3 font-mono text-xs">{children}</pre>
               ),
               img: ({ src, alt }) => (
-                <img src={src} alt={alt || ''} className="w-full rounded-lg my-6 border border-[hsl(var(--border))]" loading="lazy" />
+                <Image
+                  src={typeof src === 'string' ? src : ''}
+                  alt={alt || ''}
+                  width={1200}
+                  height={675}
+                  unoptimized
+                  sizes="(max-width: 768px) 100vw, 768px"
+                  className="w-full h-auto rounded-lg my-6 border border-[hsl(var(--border))]"
+                />
               ),
             }}
           >
