@@ -168,13 +168,23 @@ export async function POST(request: NextRequest) {
         // Check rate limit
         const rateLimit = await checkRateLimit(user.id);
         if (!rateLimit.allowed) {
+            const retryAfter = Math.max(1, Math.ceil((rateLimit.resetAt.getTime() - Date.now()) / 1000));
             return NextResponse.json(
                 {
                     error: 'Rate limit exceeded',
                     resetAt: rateLimit.resetAt.toISOString(),
                     remaining: 0,
+                    retryAfter,
                 },
-                { status: 429 }
+                {
+                    status: 429,
+                    headers: {
+                        'Retry-After': String(retryAfter),
+                        'X-RateLimit-Limit': '30',
+                        'X-RateLimit-Remaining': '0',
+                        'X-RateLimit-Reset': String(Math.ceil(rateLimit.resetAt.getTime() / 1000)),
+                    },
+                }
             );
         }
 

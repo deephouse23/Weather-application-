@@ -11,6 +11,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { trackWeatherApiCall } from '@/lib/services/sentry-metrics'
 import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout'
+import { apiError } from '@/lib/api/error-response'
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5'
 
@@ -69,7 +71,7 @@ export async function GET(request: NextRequest) {
     // Make request to OpenWeatherMap API
     const weatherUrl = `${BASE_URL}/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=${units}`
 
-    const response = await fetch(weatherUrl)
+    const response = await fetchWithTimeout(weatherUrl)
     const responseTime = Date.now() - startTime
 
     if (!response.ok) {
@@ -79,10 +81,9 @@ export async function GET(request: NextRequest) {
       // Track failed API call
       trackWeatherApiCall('unknown', responseTime, false, 'current')
 
-      return NextResponse.json(
-        { error: `Weather service unavailable: ${response.status}` },
-        { status: response.status }
-      )
+      return apiError('UPSTREAM_ERROR', 'Weather service unavailable', {
+        details: { upstreamStatus: response.status },
+      })
     }
 
     const weatherData = await response.json()

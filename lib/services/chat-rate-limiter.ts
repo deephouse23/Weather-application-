@@ -103,16 +103,45 @@ export async function checkRateLimit(userId: string): Promise<RateLimitResult> {
         };
     }
 
-    // Increment counter
+    // Optimistic-lock increment: only succeeds if query_count is still what we
+    // just read. Prevents the TOCTOU race where two concurrent requests both
+    // see count=29 and both increment to 30 — netting 31 served requests.
     const newCount = existing.query_count + 1;
-    const { error: incrementError } = await supabase
+    const { data: updated, error: incrementError } = await supabase
         .from('chat_rate_limits')
         .update({ query_count: newCount })
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .eq('query_count', existing.query_count)
+        .select('query_count')
+        .maybeSingle();
 
     if (incrementError) {
         console.error('Rate limit increment error:', incrementError);
         throw new Error('Failed to update rate limit');
+    }
+
+    // Another concurrent request won the update. Re-read the current count
+    // and only allow if we're still strictly under the limit after their write.
+    if (!updated) {
+        const { data: refreshed } = await supabase
+            .from('chat_rate_limits')
+            .select('query_count')
+            .eq('user_id', userId)
+            .single();
+
+        const refreshedCount = refreshed?.query_count ?? RATE_LIMIT_QUERIES;
+        if (refreshedCount >= RATE_LIMIT_QUERIES) {
+            return {
+                allowed: false,
+                remaining: 0,
+                resetAt: new Date(existingWindowStart.getTime() + RATE_LIMIT_WINDOW_MS)
+            };
+        }
+        return {
+            allowed: true,
+            remaining: Math.max(0, RATE_LIMIT_QUERIES - refreshedCount),
+            resetAt: new Date(existingWindowStart.getTime() + RATE_LIMIT_WINDOW_MS)
+        };
     }
 
     return {
