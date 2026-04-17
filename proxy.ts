@@ -5,15 +5,24 @@ import { isPlaywrightTestModeRequest } from '@/lib/playwright-test-mode'
 /**
  * Build a Content-Security-Policy for this request.
  *
- * - Prod: nonce-based `script-src` with `'strict-dynamic'`. Vercel overlay
- *   scripts are excluded. Next.js picks up the `x-nonce` request header and
- *   stamps it onto framework hydration `<script>` tags automatically.
- * - Non-prod: relaxed so the Vercel overlay/toolbar and `unsafe-eval` used by
- *   dev tooling continue to work.
+ * - Prod: nonce-based `script-src`. `'self'` is kept for same-origin Next.js
+ *   chunk scripts (/_next/static/...); the nonce covers inline hydration
+ *   scripts. Vercel infrastructure hosts are explicitly allowlisted because
+ *   the Vercel toolbar, Analytics, and Live feedback run on preview + prod.
+ *
+ *   Intentionally NOT using `'strict-dynamic'`: with strict-dynamic modern
+ *   browsers ignore `'self'` and host allowlists, which blocks both Next.js
+ *   chunks and the Vercel toolbar and leaves prod in a half-hydrated state.
+ *
+ * - Non-prod: relaxed so `'unsafe-eval'` used by dev tooling continues to work.
+ *
+ * Next.js reads `x-nonce` from request headers and stamps it onto framework
+ * hydration `<script>` tags automatically, so the nonce is load-bearing even
+ * though we're no longer using strict-dynamic.
  */
 function buildCspHeader(nonce: string, isProd: boolean): string {
   const scriptSrc = isProd
-    ? `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`
+    ? `script-src 'self' 'nonce-${nonce}' https://vercel.live https://vercel.com https://va.vercel-scripts.com`
     : `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://vercel.com https://va.vercel-scripts.com`
 
   return [
@@ -22,10 +31,9 @@ function buildCspHeader(nonce: string, isProd: boolean): string {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: https: blob:",
-    "connect-src 'self' https://api.openweathermap.org https://pollen.googleapis.com https://www.google.com https://*.supabase.co https://*.sentry.io https://vitals.vercel-insights.com https://mesonet.agron.iastate.edu https://tile.openstreetmap.org" +
-      (isProd ? '' : ' https://vercel.live https://vercel.com'),
+    "connect-src 'self' https://api.openweathermap.org https://pollen.googleapis.com https://www.google.com https://*.supabase.co https://*.sentry.io https://vitals.vercel-insights.com https://mesonet.agron.iastate.edu https://tile.openstreetmap.org https://vercel.live https://vercel.com",
     "worker-src 'self' blob:",
-    "frame-src 'self'" + (isProd ? '' : ' https://vercel.live'),
+    "frame-src 'self' https://vercel.live",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
