@@ -31,7 +31,11 @@ function buildCspHeader(nonce: string, isProd: boolean): string {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: https: blob:",
-    "connect-src 'self' https://api.openweathermap.org https://pollen.googleapis.com https://www.google.com https://*.supabase.co https://*.sentry.io https://vitals.vercel-insights.com https://mesonet.agron.iastate.edu https://tile.openstreetmap.org https://vercel.live https://vercel.com",
+    // IP-based geolocation fallback (lib/location-service.ts) calls these
+    // directly from the client when the user blocks or denies navigator
+    // geolocation. Without the allowlist the weather widget's loading
+    // skeleton never resolves.
+    "connect-src 'self' https://api.openweathermap.org https://pollen.googleapis.com https://www.google.com https://*.supabase.co https://*.sentry.io https://vitals.vercel-insights.com https://mesonet.agron.iastate.edu https://tile.openstreetmap.org https://vercel.live https://vercel.com https://ipapi.co https://ipinfo.io https://api.ipgeolocation.io",
     "worker-src 'self' blob:",
     "frame-src 'self' https://vercel.live",
     "object-src 'none'",
