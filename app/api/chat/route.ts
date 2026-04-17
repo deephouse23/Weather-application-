@@ -15,7 +15,7 @@ import { isPlaywrightTestModeRequest } from '@/lib/playwright-test-mode';
 import { streamText, stepCountIs, convertToModelMessages } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { buildSystemPrompt, type AIPersonality, type AIUserContext } from '@/lib/services/ai-config';
-import { checkRateLimit, getRateLimitStatus } from '@/lib/services/chat-rate-limiter';
+import { checkRateLimit, getRateLimitStatus, RATE_LIMIT_QUERIES } from '@/lib/services/chat-rate-limiter';
 import { saveMessage, getRecentMessages, clearChatHistory } from '@/lib/services/chat-history-service';
 import { getUserAIMemory } from '@/lib/services/ai-memory-service';
 import { weatherTools } from '@/lib/ai/tools';
@@ -180,7 +180,7 @@ export async function POST(request: NextRequest) {
                     status: 429,
                     headers: {
                         'Retry-After': String(retryAfter),
-                        'X-RateLimit-Limit': '30',
+                        'X-RateLimit-Limit': String(RATE_LIMIT_QUERIES),
                         'X-RateLimit-Remaining': '0',
                         'X-RateLimit-Reset': String(Math.ceil(rateLimit.resetAt.getTime() / 1000)),
                     },
@@ -256,11 +256,14 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        // Return UI message stream (required for useChat tool calling)
+        // Return UI message stream (required for useChat tool calling).
+        // X-RateLimit-Reset uses unix seconds to match the 429 branch and the
+        // de-facto convention for this header.
         return result.toUIMessageStreamResponse({
             headers: {
+                'X-RateLimit-Limit': String(RATE_LIMIT_QUERIES),
                 'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-                'X-RateLimit-Reset': rateLimit.resetAt.toISOString(),
+                'X-RateLimit-Reset': String(Math.ceil(rateLimit.resetAt.getTime() / 1000)),
             },
         });
     } catch (error) {

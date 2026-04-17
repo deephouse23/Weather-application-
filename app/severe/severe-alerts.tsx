@@ -36,7 +36,10 @@ export default function SevereAlerts() {
   const fetchData = useCallback(async () => {
     try {
       const res = await fetch('/api/weather/alerts');
-      if (!res.ok) return;
+      if (!res.ok) {
+        console.error('[Severe] fetch failed', res.status, res.statusText);
+        return;
+      }
       const data = await res.json();
       const filtered = (data.alerts ?? []).filter((a: NWSAlert) =>
         SEVERE_KEYWORDS.some(kw => a.event.toLowerCase().includes(kw))

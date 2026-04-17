@@ -46,6 +46,9 @@ export default function GameDetailClient({ game: initialGame, slug }: GameDetail
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
+      // Same-origin messages from HMR, React DevTools, and browser extensions
+      // post non-object payloads; accessing .type on those throws.
+      if (!event.data || typeof event.data !== 'object') return;
 
       if (event.data.type === 'GAME_SCORE_SUBMIT') {
         setGameScore({

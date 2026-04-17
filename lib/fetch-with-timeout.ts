@@ -74,6 +74,8 @@ export async function fetchWithTimeout(
       return response;
     } catch (err) {
       lastError = err;
+      // Caller explicitly aborted — stop retrying so cleanup can happen fast.
+      if (externalSignal?.aborted) break;
       if (attempt >= maxRetries) break;
       await delay(backoffFor(attempt, baseBackoffMs, maxBackoffMs));
     }

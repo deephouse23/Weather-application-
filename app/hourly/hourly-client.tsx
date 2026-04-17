@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useTheme } from "@/components/theme-provider"
+import { useAuth } from "@/lib/auth"
 import { ArrowLeft, Loader2 } from "lucide-react"
 import { fetchWeatherByLocation } from "@/lib/weather"
 import HourlyForecast from "@/components/hourly-forecast"
@@ -12,6 +13,7 @@ export default function HourlyClient() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { theme } = useTheme()
+  const { preferences } = useAuth()
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -19,6 +21,8 @@ export default function HourlyClient() {
   const lat = searchParams.get('lat')
   const lon = searchParams.get('lon')
   const city = searchParams.get('city')
+  const unitSystem: 'metric' | 'imperial' =
+    preferences?.temperature_unit === 'celsius' ? 'metric' : 'imperial'
 
   useEffect(() => {
     async function loadWeather() {
@@ -30,7 +34,7 @@ export default function HourlyClient() {
 
       try {
         setLoading(true)
-        const data = await fetchWeatherByLocation(`${lat},${lon}`, 'imperial')
+        const data = await fetchWeatherByLocation(`${lat},${lon}`, unitSystem)
         setWeather(data)
         setError(null)
       } catch (err) {
@@ -42,7 +46,7 @@ export default function HourlyClient() {
     }
 
     loadWeather()
-  }, [lat, lon])
+  }, [lat, lon, unitSystem])
 
   const handleBack = () => {
     router.back()

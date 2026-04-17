@@ -7,8 +7,9 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const RATE_LIMIT_QUERIES = 30;
+export const RATE_LIMIT_QUERIES = 30;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour in milliseconds
+const MAX_CONCURRENT_RETRIES = 3;
 
 export interface RateLimitResult {
     allowed: boolean;
@@ -120,26 +121,60 @@ export async function checkRateLimit(userId: string): Promise<RateLimitResult> {
         throw new Error('Failed to update rate limit');
     }
 
-    // Another concurrent request won the update. Re-read the current count
-    // and only allow if we're still strictly under the limit after their write.
+    // Another concurrent request won the update. Retry the conditional
+    // increment in a bounded loop — just re-reading without a compensating
+    // increment would let the losing request pass without bumping the
+    // counter, which is exactly the undercount we're trying to prevent.
     if (!updated) {
-        const { data: refreshed } = await supabase
-            .from('chat_rate_limits')
-            .select('query_count')
-            .eq('user_id', userId)
-            .single();
+        for (let attempt = 0; attempt < MAX_CONCURRENT_RETRIES; attempt++) {
+            const { data: refreshed } = await supabase
+                .from('chat_rate_limits')
+                .select('query_count')
+                .eq('user_id', userId)
+                .maybeSingle();
 
-        const refreshedCount = refreshed?.query_count ?? RATE_LIMIT_QUERIES;
-        if (refreshedCount >= RATE_LIMIT_QUERIES) {
-            return {
-                allowed: false,
-                remaining: 0,
-                resetAt: new Date(existingWindowStart.getTime() + RATE_LIMIT_WINDOW_MS)
-            };
+            // Row gone (cleanup / window reset): treat as fresh window and
+            // stop retrying — we can't conditionally +1 a row that no longer
+            // exists, and the next call will insert a new one.
+            if (!refreshed) {
+                return {
+                    allowed: true,
+                    remaining: RATE_LIMIT_QUERIES - 1,
+                    resetAt: new Date(existingWindowStart.getTime() + RATE_LIMIT_WINDOW_MS)
+                };
+            }
+
+            const refreshedCount = refreshed.query_count ?? RATE_LIMIT_QUERIES;
+            if (refreshedCount >= RATE_LIMIT_QUERIES) {
+                return {
+                    allowed: false,
+                    remaining: 0,
+                    resetAt: new Date(existingWindowStart.getTime() + RATE_LIMIT_WINDOW_MS)
+                };
+            }
+
+            const retryCount = refreshedCount + 1;
+            const { data: retried } = await supabase
+                .from('chat_rate_limits')
+                .update({ query_count: retryCount })
+                .eq('user_id', userId)
+                .eq('query_count', refreshedCount)
+                .select('query_count')
+                .maybeSingle();
+
+            if (retried) {
+                return {
+                    allowed: true,
+                    remaining: RATE_LIMIT_QUERIES - retryCount,
+                    resetAt: new Date(existingWindowStart.getTime() + RATE_LIMIT_WINDOW_MS)
+                };
+            }
         }
+
+        // Too much contention — deny rather than silently under-count.
         return {
-            allowed: true,
-            remaining: Math.max(0, RATE_LIMIT_QUERIES - refreshedCount),
+            allowed: false,
+            remaining: 0,
             resetAt: new Date(existingWindowStart.getTime() + RATE_LIMIT_WINDOW_MS)
         };
     }
