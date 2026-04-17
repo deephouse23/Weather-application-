@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { rateLimitRequest } from '@/lib/services/weather-rate-limiter';
 import type { GameScore, LeaderboardEntry, ScoreSubmission } from '@/lib/types/games';
 
 export async function GET(
@@ -14,11 +15,16 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    const rateLimit = await rateLimitRequest(request);
+    if (!rateLimit.allowed) {
+      return rateLimit.response;
+    }
+
     const { slug } = await params;
     const searchParams = request.nextUrl.searchParams;
     const period = searchParams.get('period') || 'all-time';
-    const limit = parseInt(searchParams.get('limit') || '100');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = Math.max(1, Math.min(parseInt(searchParams.get('limit') || '100', 10) || 100, 100));
+    const offset = Math.max(0, Math.min(parseInt(searchParams.get('offset') || '0', 10) || 0, 10000));
 
     const supabase = await createServerSupabaseClient();
 
@@ -57,7 +63,10 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ scores: data as LeaderboardEntry[], period });
+    return NextResponse.json(
+      { scores: data as LeaderboardEntry[], period },
+      { headers: rateLimit.headers }
+    );
   } catch (error) {
     console.error('Unexpected error fetching leaderboard:', error);
     return NextResponse.json(
@@ -160,7 +169,7 @@ export async function POST(
       if (error) {
         console.error('Error submitting guest score:', error);
         return NextResponse.json(
-          { error: 'Failed to submit score', details: error.message },
+          { error: 'Failed to submit score' },
           { status: 500 }
         );
       }
@@ -187,7 +196,7 @@ export async function POST(
       if (error) {
         console.error('Error submitting user score:', error);
         return NextResponse.json(
-          { error: 'Failed to submit score', details: error.message },
+          { error: 'Failed to submit score' },
           { status: 500 }
         );
       }

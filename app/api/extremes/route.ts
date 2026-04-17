@@ -138,7 +138,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error in extremes API:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch extreme temperatures', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Failed to fetch extreme temperatures' },
       { status: 500 }
     );
   }
