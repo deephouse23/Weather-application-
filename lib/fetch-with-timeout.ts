@@ -67,6 +67,9 @@ export async function fetchWithTimeout(
             }
           }
         }
+        // Drain the discarded body so the socket can return to the pool
+        // promptly instead of waiting on GC finalization.
+        await response.body?.cancel?.().catch(() => {});
         await delay(wait);
         continue;
       }

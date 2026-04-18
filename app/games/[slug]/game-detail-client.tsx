@@ -76,10 +76,13 @@ export default function GameDetailClient({ game: initialGame, slug }: GameDetail
     }
 
     try {
+      const displayName =
+        (user.user_metadata as { display_name?: string } | null)?.display_name ||
+        (user.email ? user.email.split('@')[0] : 'Player');
       const { submitScore } = await import('@/lib/services/gamesService');
       await submitScore(game.slug, {
         game_slug: game.slug,
-        player_name: user.email || 'Player',
+        player_name: displayName,
         score: scoreData.score,
         level_reached: scoreData.level,
         time_played_seconds: scoreData.timePlayed,
