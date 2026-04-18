@@ -162,4 +162,49 @@ describe('EarthSciencesClient', () => {
     // One <circle> per quake (plus a halo on the largest) — assert at least 2 circles exist.
     expect(map.querySelectorAll('circle').length).toBeGreaterThanOrEqual(2);
   });
+
+  it('opens an info popover when an M4.5+ dot on the map is clicked', async () => {
+    const quakes: ClientEarthquake[] = [
+      quake({ id: 'big', magnitude: 5.1, location: 'Big One', latitude: 35, longitude: -120 }),
+      quake({ id: 'small', magnitude: 3.0, location: 'Small One', latitude: -10, longitude: 145 }),
+    ];
+    mockFetchWith({ earthquakes: quakes, count: 2, minMagnitude: 2.5, days: 7 });
+
+    render(<EarthSciencesClient />);
+    await waitFor(() => expect(screen.getByTestId('quake-world-map')).toBeInTheDocument());
+
+    // Only the M5.1 dot should be interactive; M3.0 should not.
+    const interactive = screen.getAllByTestId('quake-dot-interactive');
+    expect(interactive).toHaveLength(1);
+    expect(interactive[0].getAttribute('data-quake-id')).toBe('big');
+
+    expect(screen.queryByTestId('quake-popover')).not.toBeInTheDocument();
+
+    await act(async () => {
+      interactive[0].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const popover = screen.getByTestId('quake-popover');
+    expect(within(popover).getByText('Big One')).toBeInTheDocument();
+    expect(within(popover).getByText('M5.1')).toBeInTheDocument();
+  });
+
+  it('closes the popover on Escape', async () => {
+    const quakes: ClientEarthquake[] = [
+      quake({ id: 'big', magnitude: 5.5, location: 'Clickable', latitude: 35, longitude: -120 }),
+    ];
+    mockFetchWith({ earthquakes: quakes, count: 1, minMagnitude: 2.5, days: 7 });
+
+    render(<EarthSciencesClient />);
+    const dot = await screen.findByTestId('quake-dot-interactive');
+    await act(async () => {
+      dot.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(screen.getByTestId('quake-popover')).toBeInTheDocument();
+
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
+    expect(screen.queryByTestId('quake-popover')).not.toBeInTheDocument();
+  });
 });

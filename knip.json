@@ -35,7 +35,9 @@
     "eslint-config-next",
     "eslint-plugin-react",
     "eslint-plugin-react-hooks",
-    "postcss-load-config"
+    "postcss-load-config",
+    "world-atlas",
+    "topojson-client"
   ],
   "ignoreExportsUsedInFile": true
 }
