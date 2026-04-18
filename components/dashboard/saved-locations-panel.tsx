@@ -102,14 +102,15 @@ export default function SavedLocationsPanel({
                 <Plus className="w-4 h-4 mr-2" aria-hidden="true" />
                 Add Location
               </Button>
-              <Link href="/">
-                <Button
-                  variant="outline"
-                  className={`font-mono font-bold uppercase tracking-wider ${themeClasses.borderColor} ${themeClasses.text} hover:bg-white/5`}
-                >
+              <Button
+                asChild
+                variant="outline"
+                className={`font-mono font-bold uppercase tracking-wider ${themeClasses.borderColor} ${themeClasses.text} hover:bg-white/5`}
+              >
+                <Link href="/">
                   Go to Search
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           </div>
         ) : (

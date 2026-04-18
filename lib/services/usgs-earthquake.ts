@@ -290,7 +290,14 @@ export async function fetchGlobalEarthquakes(
     days: number = 7,
     limit: number = 50
 ): Promise<EarthquakeResponse> {
-    const cacheKey = `global_${minMagnitude}_${days}_${limit}`;
+    // Normalize at the boundary — callers beyond the API route can pass NaN,
+    // negatives, or huge values that would otherwise corrupt cache keys, date
+    // math, or the upstream USGS request.
+    const safeMinMag = Number.isFinite(minMagnitude) && minMagnitude >= 0 ? minMagnitude : 2.5;
+    const safeDays = Number.isFinite(days) ? Math.min(Math.max(Math.trunc(days), 1), 30) : 7;
+    const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(Math.trunc(limit), 1), 200) : 50;
+
+    const cacheKey = `global_${safeMinMag}_${safeDays}_${safeLimit}`;
 
     const cached = earthquakeCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
@@ -299,15 +306,15 @@ export async function fetchGlobalEarthquakes(
 
     try {
         const endTime = new Date();
-        const startTime = new Date(endTime.getTime() - days * 24 * 60 * 60 * 1000);
+        const startTime = new Date(endTime.getTime() - safeDays * 24 * 60 * 60 * 1000);
 
         const url = new URL('https://earthquake.usgs.gov/fdsnws/event/1/query');
         url.searchParams.set('format', 'geojson');
         url.searchParams.set('starttime', startTime.toISOString());
         url.searchParams.set('endtime', endTime.toISOString());
-        url.searchParams.set('minmagnitude', minMagnitude.toString());
+        url.searchParams.set('minmagnitude', safeMinMag.toString());
         url.searchParams.set('orderby', 'time');
-        url.searchParams.set('limit', limit.toString());
+        url.searchParams.set('limit', safeLimit.toString());
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);

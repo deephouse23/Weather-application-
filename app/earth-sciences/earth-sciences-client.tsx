@@ -16,7 +16,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import type { EarthquakesApiResponse } from '@/app/api/earth-sciences/earthquakes/route';
 
-type MagFilter = 'all' | '2.5' | '4.5' | '6';
+type MagFilter = '2.5' | '4.5' | '6';
 type SortKey = 'time' | 'magnitude';
 
 export interface ClientEarthquake {
@@ -28,8 +28,10 @@ export interface ClientEarthquake {
   url: string;
 }
 
+// USGS's minmagnitude=0 is a firehose, so M2.5 is the effective floor served
+// by the API route. The UI exposes that as the lowest tier rather than a
+// misleading "ALL".
 const FILTER_TABS: Array<{ key: MagFilter; label: string; minMag: number }> = [
-  { key: 'all', label: 'ALL', minMag: 0 },
   { key: '2.5', label: 'M2.5+', minMag: 2.5 },
   { key: '4.5', label: 'M4.5+', minMag: 4.5 },
   { key: '6', label: 'M6+', minMag: 6 },
@@ -75,11 +77,7 @@ export default function EarthSciencesClient() {
     setIsLoading(true);
     setError(null);
     try {
-      // USGS minmagnitude=0 returns a huge feed; the API route whitelists
-      // 2.5 as the safe "firehose" default, so map `all` to that and do the
-      // client-side filter ourselves. Anything >= 2.5 is passed through.
-      const apiMin = minMag < 2.5 ? 2.5 : minMag;
-      const res = await fetch(`/api/earth-sciences/earthquakes?minMagnitude=${apiMin}`);
+      const res = await fetch(`/api/earth-sciences/earthquakes?minMagnitude=${minMag}`);
       if (!res.ok) {
         throw new Error(`Request failed: ${res.status}`);
       }
@@ -155,7 +153,7 @@ export default function EarthSciencesClient() {
 
       {/* Magnitude filter tabs */}
       <div
-        role="tablist"
+        role="radiogroup"
         aria-label="Magnitude filter"
         className="flex flex-wrap gap-2 border-b border-border pb-3"
       >
@@ -165,8 +163,8 @@ export default function EarthSciencesClient() {
             <button
               key={tab.key}
               type="button"
-              role="tab"
-              aria-selected={isActive}
+              role="radio"
+              aria-checked={isActive}
               onClick={() => setFilter(tab.key)}
               className={cn(
                 'px-3 py-1.5 rounded-md border font-mono text-xs uppercase tracking-wider transition-colors',

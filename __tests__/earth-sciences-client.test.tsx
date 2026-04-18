@@ -82,7 +82,7 @@ describe('EarthSciencesClient', () => {
     expect(screen.getByText('Medium One')).toBeInTheDocument();
     expect(screen.getByText('Tiny One')).toBeInTheDocument();
 
-    const m6Tab = screen.getByRole('tab', { name: /M6\+/i });
+    const m6Tab = screen.getByRole('radio', { name: /M6\+/i });
     await act(async () => {
       m6Tab.click();
     });

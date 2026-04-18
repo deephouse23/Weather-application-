@@ -48,9 +48,7 @@ export default function PreferencesPanel({ locations }: PreferencesPanelProps) {
   }, [preferences])
 
   useEffect(() => {
-    if (profile?.default_location) {
-      setDefaultLocation(profile.default_location)
-    }
+    setDefaultLocation(profile?.default_location ?? '')
   }, [profile?.default_location])
 
   const locationOptions = useMemo(
