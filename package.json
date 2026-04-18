@@ -89,9 +89,11 @@
     "knip": "^6.3.0",
     "postcss": "^8",
     "tailwindcss": "^4.1.17",
+    "topojson-client": "^3.1.0",
     "ts-jest": "^29.4.9",
     "tsx": "^4.20.6",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "world-atlas": "^2.0.2"
   },
   "overrides": {
     "lodash": "4.18.1"
