@@ -36,7 +36,7 @@ describe('SEO Indexing Fixes', () => {
 
   it('sitemap should not include /ai route', async () => {
     const { default: sitemap } = await import('../app/sitemap')
-    const entries = sitemap()
+    const entries = await sitemap()
     const paths = entries.map((e: { url: string }) => {
       try { return new URL(e.url).pathname } catch { return e.url }
     })
@@ -46,7 +46,7 @@ describe('SEO Indexing Fixes', () => {
 
   it('sitemap should have fewer than 80 URLs to focus crawl budget', async () => {
     const { default: sitemap } = await import('../app/sitemap')
-    const entries = sitemap()
+    const entries = await sitemap()
 
     expect(entries.length).toBeLessThan(80)
   })

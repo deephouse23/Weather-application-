@@ -30,7 +30,7 @@ describe('Sitemap SEO', () => {
       .map((r: { source: string }) => r.source)
 
     const { default: sitemap } = await import('../app/sitemap')
-    const entries = sitemap()
+    const entries = await sitemap()
     const sitemapPaths = entries.map((e: { url: string }) => {
       try { return new URL(e.url).pathname } catch { return e.url }
     })
@@ -55,7 +55,7 @@ describe('Sitemap SEO', () => {
 
   it('sitemap should include /education/glossary', async () => {
     const { default: sitemap } = await import('../app/sitemap')
-    const entries = sitemap()
+    const entries = await sitemap()
     const sitemapPaths = entries.map((e: { url: string }) => {
       try { return new URL(e.url).pathname } catch { return e.url }
     })

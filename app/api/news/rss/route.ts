@@ -18,8 +18,8 @@ export async function GET(request: NextRequest) {
 
     // Parse query parameters
     const categoriesParam = searchParams.get('categories');
-    const maxItems = parseInt(searchParams.get('maxItems') || '50', 10);
-    const maxAge = parseInt(searchParams.get('maxAge') || '72', 10);
+    const maxItems = Math.max(1, Math.min(parseInt(searchParams.get('maxItems') || '50', 10) || 50, 100));
+    const maxAge = Math.max(1, Math.min(parseInt(searchParams.get('maxAge') || '72', 10) || 72, 168));
     const featured = searchParams.get('featured') === 'true';
 
     // Parse categories

@@ -1,8 +1,22 @@
 import { MetadataRoute } from 'next'
 import { cityData as cityMetadata } from '@/lib/city-metadata'
 import { getAllPosts } from '@/lib/blog'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+async function getGameSlugs(): Promise<string[]> {
+  try {
+    const supabase = await createServerSupabaseClient()
+    const { data } = await supabase
+      .from('games')
+      .select('slug')
+      .eq('is_active', true)
+    return (data || []).map((g: { slug: string }) => g.slug)
+  } catch {
+    return []
+  }
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://www.16bitweather.co'
   
   try {
@@ -57,8 +71,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     } catch {
       console.error('[sitemap] Failed to load blog posts')
     }
-    
-    return [...staticPages, ...cityPages, ...blogPosts]
+
+    // Dynamic game pages
+    const gameSlugs = await getGameSlugs()
+    const gamePages: MetadataRoute.Sitemap = gameSlugs.map(slug => ({
+      url: `${baseUrl}/games/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.6,
+    }))
+
+    return [...staticPages, ...cityPages, ...blogPosts, ...gamePages]
   } catch (error) {
     console.error('Error generating sitemap:', error)
     return [

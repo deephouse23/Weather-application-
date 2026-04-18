@@ -13,7 +13,9 @@ describe('Fix 1: XSS — blog article rendering', () => {
 });
 
 describe('Fix 2: postMessage origin validation', () => {
-  const src = readFileSync(join(__dirname, '..', 'app', 'games', '[slug]', 'page.tsx'), 'utf-8');
+  // Interactive iframe/message handling lives in the client component;
+  // page.tsx is now a pure server component for SEO.
+  const src = readFileSync(join(__dirname, '..', 'app', 'games', '[slug]', 'game-detail-client.tsx'), 'utf-8');
   it('should check event.origin before processing messages', () => {
     expect(src).toContain('event.origin');
   });

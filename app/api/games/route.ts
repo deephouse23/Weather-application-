@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Error creating game:', error);
       return NextResponse.json(
-        { error: 'Failed to create game', details: error.message },
+        { error: 'Failed to create game' },
         { status: 500 }
       );
     }
