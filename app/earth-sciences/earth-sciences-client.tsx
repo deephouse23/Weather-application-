@@ -12,7 +12,7 @@
  * current contexts.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import type { EarthquakesApiResponse } from '@/app/api/earth-sciences/earthquakes/route';
 import QuakeHeroCard from './quake-hero-card';
@@ -78,33 +78,47 @@ export default function EarthSciencesClient() {
     [filter],
   );
 
-  const fetchData = useCallback(async (minMag: number) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/earth-sciences/earthquakes?minMagnitude=${minMag}`);
-      if (!res.ok) {
-        throw new Error(`Request failed: ${res.status}`);
-      }
-      const data: EarthquakesApiResponse = await res.json();
-      if (data.error) {
-        setError(data.error);
-        setEarthquakes([]);
-        return;
-      }
-      setEarthquakes(data.earthquakes);
-    } catch (e) {
-      console.error('[EarthSciences]', e);
-      setError('Failed to load earthquake data');
-      setEarthquakes([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    fetchData(activeMinMag);
-  }, [fetchData, activeMinMag]);
+    const controller = new AbortController();
+    let cancelled = false;
+
+    const load = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(
+          `/api/earth-sciences/earthquakes?minMagnitude=${activeMinMag}`,
+          { signal: controller.signal },
+        );
+        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+        const data: EarthquakesApiResponse = await res.json();
+        if (cancelled) return;
+        if (data.error) {
+          setError(data.error);
+          setEarthquakes([]);
+          return;
+        }
+        setEarthquakes(data.earthquakes);
+      } catch (e) {
+        if ((e as Error).name === 'AbortError' || cancelled) return;
+        console.error('[EarthSciences]', e);
+        setError('Failed to load earthquake data');
+        setEarthquakes([]);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+
+    load();
+    // Honor the "refreshed every 5 minutes" promise in the UI copy.
+    const intervalId = setInterval(load, 5 * 60_000);
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+      clearInterval(intervalId);
+    };
+  }, [activeMinMag]);
 
   const visibleQuakes = useMemo(() => {
     const filtered = earthquakes.filter((q) => q.magnitude >= activeMinMag);
