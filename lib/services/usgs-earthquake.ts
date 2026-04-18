@@ -211,7 +211,7 @@ export async function fetchRecentEarthquakes(
  * For "any big earthquakes lately?" type queries
  * @param days Number of days to look back (default: 7)
  */
-async function fetchSignificantEarthquakes(days: number = 7): Promise<EarthquakeResponse> {
+export async function fetchSignificantEarthquakes(days: number = 7): Promise<EarthquakeResponse> {
     const cacheKey = `significant_global_${days}`;
 
     // Check cache
@@ -270,6 +270,80 @@ async function fetchSignificantEarthquakes(days: number = 7): Promise<Earthquake
     } catch (error) {
         const isTimeout = error instanceof Error && error.name === 'AbortError';
         console.error('[USGS API] Error fetching significant earthquakes:', isTimeout ? 'Request timed out' : error);
+        return {
+            recent: [],
+            significantNearby: false,
+            error: isTimeout ? 'Earthquake API request timed out' : 'Failed to fetch earthquake data'
+        };
+    }
+}
+
+/**
+ * Fetch global earthquakes with configurable minimum magnitude.
+ * Used by the /earth-sciences page to populate its M2.5+/M4.5+/M6+ filter tabs.
+ * @param minMagnitude Minimum magnitude (default 2.5)
+ * @param days Lookback window in days (default 7)
+ * @param limit Max results (default 50)
+ */
+export async function fetchGlobalEarthquakes(
+    minMagnitude: number = 2.5,
+    days: number = 7,
+    limit: number = 50
+): Promise<EarthquakeResponse> {
+    const cacheKey = `global_${minMagnitude}_${days}_${limit}`;
+
+    const cached = earthquakeCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+        return cached.data;
+    }
+
+    try {
+        const endTime = new Date();
+        const startTime = new Date(endTime.getTime() - days * 24 * 60 * 60 * 1000);
+
+        const url = new URL('https://earthquake.usgs.gov/fdsnws/event/1/query');
+        url.searchParams.set('format', 'geojson');
+        url.searchParams.set('starttime', startTime.toISOString());
+        url.searchParams.set('endtime', endTime.toISOString());
+        url.searchParams.set('minmagnitude', minMagnitude.toString());
+        url.searchParams.set('orderby', 'time');
+        url.searchParams.set('limit', limit.toString());
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+        let response: Response;
+        try {
+            response = await fetch(url.toString(), {
+                headers: {
+                    'Accept': 'application/json',
+                    'User-Agent': '16BitWeather/1.0'
+                },
+                signal: controller.signal
+            });
+        } finally {
+            clearTimeout(timeoutId);
+        }
+
+        if (!response.ok) {
+            throw new Error(`USGS API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const earthquakes = parseUSGSResponse(data);
+        const significantQuakes = earthquakes.filter(q => q.magnitude >= 4.5);
+
+        const result: EarthquakeResponse = {
+            recent: earthquakes,
+            significantNearby: significantQuakes.length > 0,
+            lastSignificant: significantQuakes.length > 0 ? significantQuakes[0] : undefined
+        };
+
+        earthquakeCache.set(cacheKey, { data: result, timestamp: Date.now() });
+        return result;
+    } catch (error) {
+        const isTimeout = error instanceof Error && error.name === 'AbortError';
+        console.error('[USGS API] Error fetching global earthquakes:', isTimeout ? 'Request timed out' : error);
         return {
             recent: [],
             significantNearby: false,
