@@ -5,24 +5,15 @@ import { isPlaywrightTestModeRequest } from '@/lib/playwright-test-mode'
 /**
  * Build a Content-Security-Policy for this request.
  *
- * - Prod: nonce-based `script-src`. `'self'` is kept for same-origin Next.js
- *   chunk scripts (/_next/static/...); the nonce covers inline hydration
- *   scripts. Vercel infrastructure hosts are explicitly allowlisted because
- *   the Vercel toolbar, Analytics, and Live feedback run on preview + prod.
- *
- *   Intentionally NOT using `'strict-dynamic'`: with strict-dynamic modern
- *   browsers ignore `'self'` and host allowlists, which blocks both Next.js
- *   chunks and the Vercel toolbar and leaves prod in a half-hydrated state.
- *
- * - Non-prod: relaxed so `'unsafe-eval'` used by dev tooling continues to work.
- *
- * Next.js reads `x-nonce` from request headers and stamps it onto framework
- * hydration `<script>` tags automatically, so the nonce is load-bearing even
- * though we're no longer using strict-dynamic.
+ * `'unsafe-inline'` is required in `script-src` because most pages are
+ * statically rendered (SSG) for SEO/perf — Next.js can't inject per-request
+ * nonces into pre-baked HTML, so a nonce-only policy blocks every inline
+ * hydration script and the app never boots. Non-prod additionally allows
+ * `'unsafe-eval'` for dev tooling.
  */
-function buildCspHeader(nonce: string, isProd: boolean): string {
+function buildCspHeader(isProd: boolean): string {
   const scriptSrc = isProd
-    ? `script-src 'self' 'nonce-${nonce}' https://vercel.live https://vercel.com https://va.vercel-scripts.com`
+    ? `script-src 'self' 'unsafe-inline' https://vercel.live https://vercel.com https://va.vercel-scripts.com`
     : `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://vercel.com https://va.vercel-scripts.com`
 
   return [
@@ -49,13 +40,8 @@ function buildCspHeader(nonce: string, isProd: boolean): string {
 export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers)
 
-  // Per-request CSP nonce. Next.js reads `x-nonce` from request headers and
-  // applies it to framework hydration scripts; setting it on the request
-  // headers is load-bearing.
-  const nonce = crypto.randomUUID().replace(/-/g, '')
   const isProd = process.env.NODE_ENV === 'production'
-  const csp = buildCspHeader(nonce, isProd)
-  requestHeaders.set('x-nonce', nonce)
+  const csp = buildCspHeader(isProd)
 
   const response = NextResponse.next({
     request: {
