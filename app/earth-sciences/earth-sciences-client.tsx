@@ -15,6 +15,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import type { EarthquakesApiResponse } from '@/app/api/earth-sciences/earthquakes/route';
+import QuakeHeroCard from './quake-hero-card';
+import QuakeWorldMap from './quake-world-map';
 
 type MagFilter = '2.5' | '4.5' | '6';
 type SortKey = 'time' | 'magnitude';
@@ -26,6 +28,9 @@ export interface ClientEarthquake {
   time: string; // ISO string from the API
   depth: number;
   url: string;
+  latitude: number;
+  longitude: number;
+  tsunami: boolean;
 }
 
 // USGS's minmagnitude=0 is a firehose, so M2.5 is the effective floor served
@@ -110,8 +115,14 @@ export default function EarthSciencesClient() {
     return sorted;
   }, [earthquakes, activeMinMag, sortKey]);
 
+  // Hero / map read from the visible set so they track filter changes.
+  const topQuake = useMemo(() => {
+    if (!visibleQuakes.length) return null;
+    return visibleQuakes.reduce((a, b) => (a.magnitude >= b.magnitude ? a : b));
+  }, [visibleQuakes]);
+
   return (
-    <section className="space-y-4" aria-labelledby="earthquakes-heading">
+    <section className="space-y-6" aria-labelledby="earthquakes-heading">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div>
           <h2
@@ -150,6 +161,12 @@ export default function EarthSciencesClient() {
           ))}
         </div>
       </div>
+
+      {/* Hero card — features the biggest quake when it's M4.5+ */}
+      {topQuake && <QuakeHeroCard quake={topQuake} />}
+
+      {/* World map — quake dots on a graticule */}
+      {visibleQuakes.length > 0 && <QuakeWorldMap quakes={visibleQuakes} />}
 
       {/* Magnitude filter tabs */}
       <div

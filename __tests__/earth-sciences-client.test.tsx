@@ -39,6 +39,9 @@ function quake(overrides: Partial<ClientEarthquake>): ClientEarthquake {
     time: new Date().toISOString(),
     depth: 10,
     url: 'https://example.org/q',
+    latitude: 0,
+    longitude: 0,
+    tsunami: false,
     ...overrides,
   };
 }
@@ -57,13 +60,11 @@ describe('EarthSciencesClient', () => {
 
     render(<EarthSciencesClient />);
 
-    await waitFor(() => {
-      expect(screen.getByText('10km NE of Testville')).toBeInTheDocument();
-      expect(screen.getByText('20km SW of Mockington')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('M5.2')).toBeInTheDocument();
-    expect(screen.getByText('M3.4')).toBeInTheDocument();
+    const tbody = await screen.findByTestId('earthquakes-tbody');
+    expect(within(tbody).getByText('10km NE of Testville')).toBeInTheDocument();
+    expect(within(tbody).getByText('20km SW of Mockington')).toBeInTheDocument();
+    expect(within(tbody).getByText('M5.2')).toBeInTheDocument();
+    expect(within(tbody).getByText('M3.4')).toBeInTheDocument();
   });
 
   it('filters the visible list when a higher magnitude tab is selected', async () => {
@@ -75,12 +76,12 @@ describe('EarthSciencesClient', () => {
     mockFetchWith({ earthquakes: quakes, count: quakes.length, minMagnitude: 2.5, days: 7 });
 
     render(<EarthSciencesClient />);
-    await waitFor(() => expect(screen.getByText('Big One')).toBeInTheDocument());
+    const tbody = await screen.findByTestId('earthquakes-tbody');
 
     // All three visible on the default M2.5+ tab
-    expect(screen.getByText('Big One')).toBeInTheDocument();
-    expect(screen.getByText('Medium One')).toBeInTheDocument();
-    expect(screen.getByText('Tiny One')).toBeInTheDocument();
+    expect(within(tbody).getByText('Big One')).toBeInTheDocument();
+    expect(within(tbody).getByText('Medium One')).toBeInTheDocument();
+    expect(within(tbody).getByText('Tiny One')).toBeInTheDocument();
 
     const m6Tab = screen.getByRole('radio', { name: /M6\+/i });
     await act(async () => {
@@ -88,10 +89,12 @@ describe('EarthSciencesClient', () => {
     });
 
     // Only the magnitude-6+ row should survive the client-side filter.
-    const tbody = screen.getByTestId('earthquakes-tbody');
-    expect(within(tbody).getByText('Big One')).toBeInTheDocument();
-    expect(within(tbody).queryByText('Medium One')).not.toBeInTheDocument();
-    expect(within(tbody).queryByText('Tiny One')).not.toBeInTheDocument();
+    // Re-query the tbody — it gets replaced by a skeleton during the filter
+    // refetch, so the pre-click reference would be detached.
+    const filteredBody = await screen.findByTestId('earthquakes-tbody');
+    expect(within(filteredBody).getByText('Big One')).toBeInTheDocument();
+    expect(within(filteredBody).queryByText('Medium One')).not.toBeInTheDocument();
+    expect(within(filteredBody).queryByText('Tiny One')).not.toBeInTheDocument();
   });
 
   it('renders the empty state when the service returns no earthquakes', async () => {
@@ -103,5 +106,60 @@ describe('EarthSciencesClient', () => {
       expect(screen.getByTestId('earthquakes-empty')).toBeInTheDocument(),
     );
     expect(screen.getByText('NO RECENT QUAKES')).toBeInTheDocument();
+  });
+
+  it('shows the hero card when the top visible quake is M4.5+', async () => {
+    const quakes: ClientEarthquake[] = [
+      quake({ id: 'big', magnitude: 6.1, location: 'Big One' }),
+      quake({ id: 'small', magnitude: 3.0, location: 'Tiny One' }),
+    ];
+    mockFetchWith({ earthquakes: quakes, count: quakes.length, minMagnitude: 2.5, days: 7 });
+
+    render(<EarthSciencesClient />);
+    await waitFor(() => expect(screen.getByTestId('quake-hero-card')).toBeInTheDocument());
+
+    const hero = screen.getByTestId('quake-hero-card');
+    expect(within(hero).getByText('Big One')).toBeInTheDocument();
+    expect(within(hero).getByText('6.1')).toBeInTheDocument();
+  });
+
+  it('hides the hero card when no visible quake reaches M4.5', async () => {
+    const quakes: ClientEarthquake[] = [
+      quake({ id: 'a', magnitude: 3.2, location: 'Small A' }),
+      quake({ id: 'b', magnitude: 2.8, location: 'Small B' }),
+    ];
+    mockFetchWith({ earthquakes: quakes, count: quakes.length, minMagnitude: 2.5, days: 7 });
+
+    render(<EarthSciencesClient />);
+    await waitFor(() => expect(screen.getByText('Small A')).toBeInTheDocument());
+
+    expect(screen.queryByTestId('quake-hero-card')).not.toBeInTheDocument();
+  });
+
+  it('surfaces the TSUNAMI badge on the hero when the quake triggered one', async () => {
+    const quakes: ClientEarthquake[] = [
+      quake({ id: 'tsunami-quake', magnitude: 7.2, location: 'Off coast', tsunami: true }),
+    ];
+    mockFetchWith({ earthquakes: quakes, count: 1, minMagnitude: 2.5, days: 7 });
+
+    render(<EarthSciencesClient />);
+    await waitFor(() => expect(screen.getByTestId('quake-hero-card')).toBeInTheDocument());
+
+    expect(screen.getByTestId('quake-hero-tsunami')).toBeInTheDocument();
+  });
+
+  it('renders the world map with a dot per visible quake', async () => {
+    const quakes: ClientEarthquake[] = [
+      quake({ id: 'a', magnitude: 5.1, latitude: 35, longitude: -120 }),
+      quake({ id: 'b', magnitude: 3.4, latitude: -10, longitude: 145 }),
+    ];
+    mockFetchWith({ earthquakes: quakes, count: 2, minMagnitude: 2.5, days: 7 });
+
+    render(<EarthSciencesClient />);
+    await waitFor(() => expect(screen.getByTestId('quake-world-map')).toBeInTheDocument());
+
+    const map = screen.getByTestId('quake-world-map');
+    // One <circle> per quake (plus a halo on the largest) — assert at least 2 circles exist.
+    expect(map.querySelectorAll('circle').length).toBeGreaterThanOrEqual(2);
   });
 });

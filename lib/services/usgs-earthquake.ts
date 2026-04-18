@@ -14,6 +14,9 @@ export interface EarthquakeData {
     distance?: number; // km from user (if coordinates provided)
     id: string;
     url: string;
+    latitude: number;
+    longitude: number;
+    tsunami: boolean;
 }
 
 export interface EarthquakeResponse {
@@ -90,6 +93,7 @@ function parseUSGSResponse(
                 place: string;
                 time: number;
                 url: string;
+                tsunami?: number;
             };
             geometry: {
                 coordinates: [number, number, number]; // [lon, lat, depth]
@@ -110,7 +114,10 @@ function parseUSGSResponse(
                 time: new Date(feature.properties.time),
                 depth: Math.round(depth),
                 id: feature.id,
-                url: feature.properties.url
+                url: feature.properties.url,
+                latitude: lat,
+                longitude: lon,
+                tsunami: feature.properties.tsunami === 1
             };
 
             if (userLat !== undefined && userLon !== undefined) {
