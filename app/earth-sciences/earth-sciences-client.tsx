@@ -13,10 +13,24 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
 import type { EarthquakesApiResponse } from '@/app/api/earth-sciences/earthquakes/route';
 import QuakeHeroCard from './quake-hero-card';
-import QuakeWorldMap from './quake-world-map';
+
+// The world map embeds ~70KB of SVG path data for Natural Earth continents.
+// Lazy-load it so the paths live in their own chunk and aren't pulled into
+// the page's initial bundle (which Next.js prefetches from nav links on
+// other routes like the homepage, inflating Lighthouse's transfer cost).
+const QuakeWorldMap = dynamic(() => import('./quake-world-map'), {
+  ssr: false,
+  loading: () => (
+    <div
+      aria-hidden="true"
+      className="h-64 w-full animate-pulse rounded-md border border-border bg-black/30"
+    />
+  ),
+});
 
 type MagFilter = '2.5' | '4.5' | '6';
 type SortKey = 'time' | 'magnitude';
