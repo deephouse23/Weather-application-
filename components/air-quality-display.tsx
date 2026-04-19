@@ -24,6 +24,7 @@ import {
   getAQIDescription,
   getAQIRecommendation,
   getAQIIndicatorPosition,
+  getAQISeverityChrome,
   AQI_SCALE_LABELS,
   AQI_COLOR_SEGMENTS
 } from '@/lib/air-quality-utils'
@@ -75,11 +76,17 @@ export function AirQualityDisplay({ aqi, theme, className, minimal = false, poll
   // Check if we have any pollutant data to show
   const hasPollutants = pollutants && Object.values(pollutants).some(v => v !== undefined && v !== null);
 
+  // Escalate card chrome when AQI enters actionable tiers (>100).
+  // Left-border stripe only (matches hero card pattern) — no bg wash.
+  const severity = !minimal ? getAQISeverityChrome(aqi) : null;
+
   return (
     <div
       className={cn(
-        !minimal && "p-4 rounded-lg text-center border-0",
+        !minimal && "p-4 rounded-lg text-center",
         !minimal && styles.container,
+        severity?.borderStripeClass,
+        severity?.pulse && "motion-safe:animate-pulse",
         className
       )}
     >
