@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 import WeatherIconModern from "@/components/weather-icon-modern"
 import { ShareButton } from "@/components/share-weather-modal"
 import { getHeroAccent } from "@/lib/weather/hero-utils"
-import { ArrowDown, ArrowUp, Thermometer } from "lucide-react"
+import { ArrowDown, ArrowUp, CloudRain, Droplets, Thermometer, Wind } from "lucide-react"
 
 const HERO_CARD_BASE =
   "weather-card-enter border-0 border-l-4 border-l-primary shadow-md weather-metric-glow weather-card-gradient hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300"
@@ -20,6 +20,10 @@ interface HeroWeatherCardProps {
   lowTemp?: number
   feelsLike: number | null
   feelsLikeDelta: number
+  humidity?: number
+  windSpeed?: number
+  windUnit?: string
+  precipChance?: number
   glowClass?: string
 }
 
@@ -33,6 +37,10 @@ export function HeroWeatherCard({
   lowTemp,
   feelsLike,
   feelsLikeDelta,
+  humidity,
+  windSpeed,
+  windUnit = 'mph',
+  precipChance,
   glowClass,
 }: HeroWeatherCardProps) {
   const accent = getHeroAccent(condition)
@@ -85,13 +93,13 @@ export function HeroWeatherCard({
             </p>
           </div>
 
-          {/* Right: icon + hi/lo/feels chips */}
-          <div className="flex flex-col items-center gap-3 sm:gap-4 sm:pr-2">
-            <div className="drop-shadow-[0_4px_20px_rgba(var(--theme-accent-rgb),0.25)]">
-              <WeatherIconModern condition={condition} size={88} className="sm:scale-110" />
+          {/* Right: icon + 2-row chip grid */}
+          <div className="flex flex-col items-center gap-4 sm:gap-5 sm:pr-2 sm:min-w-[280px]">
+            <div className="drop-shadow-[0_4px_28px_rgba(var(--theme-accent-rgb),0.28)]">
+              <WeatherIconModern condition={condition} size={112} className="sm:scale-110" />
             </div>
 
-            <div className="flex items-center gap-2 text-xs sm:text-sm font-mono">
+            <div className="grid grid-cols-3 gap-1.5 text-xs sm:text-sm font-mono w-full">
               {highTemp !== undefined && (
                 <HeroChip icon={<ArrowUp size={12} className="text-rose-300/90" />} label="HI" value={`${Math.round(highTemp)}°`} />
               )}
@@ -103,6 +111,27 @@ export function HeroWeatherCard({
                   icon={<Thermometer size={12} className="text-amber-300/90" />}
                   label="FEELS"
                   value={`${feelsLike}°${feelsLikeDelta !== 0 ? (feelsLikeDelta > 0 ? ' ↑' : ' ↓') : ''}`}
+                />
+              )}
+              {humidity !== undefined && (
+                <HeroChip
+                  icon={<Droplets size={12} className="text-sky-300/90" />}
+                  label="HUM"
+                  value={`${Math.round(humidity)}%`}
+                />
+              )}
+              {windSpeed !== undefined && (
+                <HeroChip
+                  icon={<Wind size={12} className="text-emerald-300/90" />}
+                  label="WIND"
+                  value={`${Math.round(windSpeed)} ${windUnit}`}
+                />
+              )}
+              {precipChance !== undefined && (
+                <HeroChip
+                  icon={<CloudRain size={12} className="text-blue-300/90" />}
+                  label="RAIN"
+                  value={`${Math.round(precipChance)}%`}
                 />
               )}
             </div>

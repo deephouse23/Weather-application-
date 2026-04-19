@@ -102,6 +102,10 @@ export function WeatherDisplay({
         lowTemp={weather.forecast?.[0]?.lowTemp}
         feelsLike={feelsLike}
         feelsLikeDelta={feelsLikeDelta}
+        humidity={weather.humidity}
+        windSpeed={weather.wind?.speed}
+        windUnit={weather.unit === '°C' ? 'km/h' : 'mph'}
+        precipChance={weather.forecast?.[0]?.details?.precipitationChance}
         glowClass={themeClasses.glow}
       />
 
