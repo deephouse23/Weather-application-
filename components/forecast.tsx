@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import type { ThemeType } from "@/lib/theme-config"
 import WeatherIconModern from "./weather-icon-modern"
 import type { ForecastDay } from "@/lib/types"
+import { getPrecipSeverity } from "@/lib/weather/precip-utils"
 
 interface ForecastProps {
   forecast: ForecastDay[];
@@ -72,6 +73,8 @@ function ForecastCard({ day, index, onDayClick, isSelected }: {
     setFormattedDate(`${month}.${date.toString().padStart(2, '0')}.${year}`);
   }, [index]);
 
+  const precip = getPrecipSeverity(day.details?.precipitationChance);
+
   const handleClick = () => {
     if (onDayClick) {
       onDayClick(index);
@@ -92,6 +95,7 @@ function ForecastCard({ day, index, onDayClick, isSelected }: {
         "flex flex-col justify-between min-h-[120px] sm:min-h-[140px] lg:min-h-[160px]",
         "backdrop-blur-sm bg-card/70 border border-[var(--border-invisible)] shadow-[0_10px_28px_-14px_rgba(0,0,0,0.55)]",
         "hover:border-[var(--border-subtle)] hover:shadow-[0_14px_36px_-14px_rgba(0,0,0,0.55)]",
+        !isSelected && precip.borderClass,
         isSelected && "ring-2 ring-primary ring-offset-2 ring-offset-background shadow-[0_0_22px_rgba(var(--theme-accent-rgb),0.32)]"
       )}
       onClick={handleClick}
@@ -132,7 +136,7 @@ function ForecastCard({ day, index, onDayClick, isSelected }: {
 
         {/* Precipitation chance */}
         {(day.details?.precipitationChance ?? 0) > 0 && (
-          <div className="text-xs text-blue-400/90 font-medium tabular-nums mt-1">
+          <div className={cn("text-xs font-medium tabular-nums mt-1", precip.chipClass)}>
             <span aria-label="Precipitation chance">&#x1F4A7;</span> {day.details?.precipitationChance}%
           </div>
         )}
