@@ -49,7 +49,8 @@ export function HeroWeatherCard({
 
   return (
     <Card className={cn(HERO_CARD_BASE, accent, "relative overflow-hidden")}>
-      <CardContent className="p-5 sm:p-7">
+      <HeroAmbientBackdrop condition={condition} />
+      <CardContent className="p-5 sm:p-7 relative z-10">
         <div className="grid gap-5 sm:gap-6 sm:grid-cols-[1fr_auto] items-center">
           {/* Left: identity + temperature */}
           <div className="min-w-0 text-center sm:text-left">
@@ -148,6 +149,51 @@ function HeroChip({ icon, label, value }: { icon: React.ReactNode; label: string
       {icon}
       <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
       <span className="tabular-nums text-foreground">{value}</span>
+    </div>
+  )
+}
+
+/**
+ * Ambient backdrop for the hero card — three layered effects:
+ *   1. Static pixel grid (ties visually to the radar card).
+ *   2. Rotating conic-gradient sweep arc (the "rotating watermark").
+ *   3. Giant condition-aware weather icon watermark at low opacity.
+ * All animations gated on motion-safe; all layers pointer-events-none.
+ */
+function HeroAmbientBackdrop({ condition }: { condition: string }) {
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+      {/* 1. Pixel grid — 16-bit texture, matches radar card */}
+      <div
+        className="absolute inset-0 opacity-[0.045]"
+        style={{
+          backgroundImage:
+            'repeating-linear-gradient(0deg, rgba(var(--theme-accent-rgb),0.8) 0 1px, transparent 1px 28px), repeating-linear-gradient(90deg, rgba(var(--theme-accent-rgb),0.8) 0 1px, transparent 1px 28px)',
+        }}
+      />
+
+      {/* 2. Rotating sweep arc — center-anchored, GPU-accelerated */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        <div
+          className="h-[700px] w-[700px] motion-safe:animate-spin"
+          style={{
+            animationDuration: '60s',
+            animationTimingFunction: 'linear',
+            background:
+              'conic-gradient(from 0deg, transparent 0deg, transparent 260deg, rgba(var(--theme-accent-rgb),0.05) 320deg, rgba(var(--theme-accent-rgb),0.12) 358deg, transparent 360deg)',
+            maskImage: 'radial-gradient(circle, black 0%, black 42%, transparent 58%)',
+            WebkitMaskImage: 'radial-gradient(circle, black 0%, black 42%, transparent 58%)',
+          }}
+        />
+      </div>
+
+      {/* 3. Giant condition icon watermark — offset toward center, pulses gently */}
+      <div
+        className="absolute top-1/2 left-[45%] -translate-y-1/2 opacity-[0.06] motion-safe:animate-pulse"
+        style={{ animationDuration: '8s' }}
+      >
+        <WeatherIconModern condition={condition} size={320} />
+      </div>
     </div>
   )
 }
