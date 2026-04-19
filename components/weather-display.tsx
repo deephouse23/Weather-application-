@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { MetricInfoTooltip } from "@/components/metric-info-tooltip"
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
-import { ShareButton } from "@/components/share-weather-modal"
+import { HeroWeatherCard } from "@/components/hero-weather-card"
 import { LazyForecast, LazyForecastDetails } from "@/components/lazy-weather-components"
 import { AirQualityDisplay } from "@/components/air-quality-display"
 import { PollenDisplay } from "@/components/pollen-display"
@@ -91,37 +91,19 @@ export function WeatherDisplay({
 
   return (
     <div className="space-y-5 sm:space-y-7">
-      {/* 1. Location Header with Large Temperature */}
-      <div className="text-center mb-4">
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <h1 className={cn("text-xl sm:text-2xl font-extrabold tracking-wider uppercase text-primary font-sans", themeClasses.glow)} style={{
-            fontSize: "clamp(18px, 3.5vw, 28px)"
-          }}>
-            {weather.location} WEATHER
-          </h1>
-          {weather.forecast?.[0] && (
-            <ShareButton
-              weatherData={{
-                location: weather.location,
-                temperature: weather.temperature,
-                unit: weather.unit,
-                condition: weather.condition,
-                highTemp: Math.round(weather.forecast[0].highTemp),
-                lowTemp: Math.round(weather.forecast[0].lowTemp),
-              }}
-              variant="button"
-            />
-          )}
-        </div>
-        <p data-testid="temperature-value" className={cn("text-6xl sm:text-8xl font-bold my-2 tabular-nums tracking-tight font-mono", themeClasses.text)} style={{
-          fontSize: "clamp(48px, 12vw, 96px)"
-        }}>
-          {weather?.temperature ?? 'N/A'}{weather?.temperature != null ? '°' : ''}
-        </p>
-        <p className="text-base sm:text-lg text-muted-foreground/90 leading-relaxed">
-          {weather?.condition || 'Unknown'} - {weather?.description || 'No description available'}
-        </p>
-      </div>
+      {/* 1. Hero Weather Card */}
+      <HeroWeatherCard
+        location={weather.location}
+        temperature={weather.temperature}
+        unit={weather.unit}
+        condition={weather.condition}
+        description={weather.description}
+        highTemp={weather.forecast?.[0]?.highTemp}
+        lowTemp={weather.forecast?.[0]?.lowTemp}
+        feelsLike={feelsLike}
+        feelsLikeDelta={feelsLikeDelta}
+        glowClass={themeClasses.glow}
+      />
 
       {/* 2. Hourly Forecast - Always visible if data exists */}
       {weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
