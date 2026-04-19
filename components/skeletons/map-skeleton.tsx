@@ -47,17 +47,22 @@ export function MapSkeleton({
         }}
       />
 
-      {/* Sweep arc */}
-      <div
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[280px] w-[280px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-        style={{
-          background:
-            'conic-gradient(from 0deg, transparent 0deg, transparent 300deg, rgba(var(--theme-accent-rgb),0.35) 340deg, rgba(var(--theme-accent-rgb),0.55) 359deg, transparent 360deg)',
-          animation: 'radar-sweep 4s linear infinite',
-          maskImage: 'radial-gradient(circle, black 92%, transparent 93%)',
-          WebkitMaskImage: 'radial-gradient(circle, black 92%, transparent 93%)',
-        }}
-      />
+      {/* Sweep arc — outer div handles centering, inner handles rotation
+          to avoid transform conflict. Uses Tailwind's global animate-spin
+          keyframes (not styled-jsx, which would scope-rename and not bind). */}
+      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        <div
+          className="h-[280px] w-[280px] rounded-full motion-safe:animate-spin"
+          style={{
+            animationDuration: '4s',
+            animationTimingFunction: 'linear',
+            background:
+              'conic-gradient(from 0deg, transparent 0deg, transparent 300deg, rgba(var(--theme-accent-rgb),0.35) 340deg, rgba(var(--theme-accent-rgb),0.55) 359deg, transparent 360deg)',
+            maskImage: 'radial-gradient(circle, black 92%, transparent 93%)',
+            WebkitMaskImage: 'radial-gradient(circle, black 92%, transparent 93%)',
+          }}
+        />
+      </div>
 
       {/* Center pin */}
       <div
@@ -69,13 +74,6 @@ export function MapSkeleton({
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
         Acquiring radar
       </div>
-
-      <style jsx>{`
-        @keyframes radar-sweep {
-          from { transform: translate(-50%, -50%) rotate(0deg); }
-          to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-      `}</style>
     </div>
   )
 }

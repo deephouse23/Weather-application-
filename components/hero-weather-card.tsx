@@ -44,8 +44,7 @@ export function HeroWeatherCard({
   glowClass,
 }: HeroWeatherCardProps) {
   const accent = getHeroAccent(condition)
-  const unitSymbol = unit === '°F' || unit === '°C' ? unit : `°${unit || 'F'}`
-  const tempSuffix = unitSymbol.startsWith('°') ? unitSymbol : `°${unitSymbol}`
+  const displayTemp = typeof temperature === 'number' ? Math.round(temperature) : null
 
   return (
     <Card className={cn(HERO_CARD_BASE, accent, "relative overflow-hidden")}>
@@ -84,8 +83,8 @@ export function HeroWeatherCard({
               className="text-6xl sm:text-8xl font-bold tabular-nums tracking-tight font-mono leading-none text-foreground"
               style={{ fontSize: "clamp(56px, 11vw, 104px)" }}
             >
-              {temperature ?? 'N/A'}
-              {temperature != null ? tempSuffix.charAt(0) : ''}
+              {displayTemp ?? 'N/A'}
+              {displayTemp != null ? '°' : ''}
             </p>
 
             <p className="mt-2 text-base sm:text-lg text-muted-foreground/90 leading-snug">
