@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import WeatherIconModern from "@/components/weather-icon-modern"
@@ -144,7 +145,7 @@ export function HeroWeatherCard({
 
 function HeroChip({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-md px-2 py-1 bg-card/60 border border-[var(--border-invisible)] backdrop-blur-sm">
+    <div className="flex items-center gap-1.5 rounded-md px-2 py-1 bg-card/80 border border-[var(--border-invisible)]">
       {icon}
       <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
       <span className="tabular-nums text-foreground">{value}</span>
@@ -153,13 +154,25 @@ function HeroChip({ icon, label, value }: { icon: React.ReactNode; label: string
 }
 
 /**
- * Ambient backdrop for the hero card — three layered effects:
+ * Ambient backdrop for the hero card — three layered decorative effects:
  *   1. Static pixel grid (ties visually to the radar card).
  *   2. Rotating conic-gradient sweep arc (the "rotating watermark").
  *   3. Giant condition-aware weather icon watermark at low opacity.
- * All animations gated on motion-safe; all layers pointer-events-none.
+ *
+ * Deferred off the LCP path: mounted only after first client paint via
+ * useEffect+useState, so Lighthouse's FCP/LCP measurements don't pay
+ * for the watermark SVG, pixel grid, and conic-gradient sweep. Animations
+ * gated on motion-safe; all layers pointer-events-none.
  */
 function HeroAmbientBackdrop({ condition }: { condition: string }) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setMounted(true))
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
+  if (!mounted) return null
+
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
       {/* 1. Pixel grid — 16-bit texture, matches radar card */}
@@ -186,11 +199,11 @@ function HeroAmbientBackdrop({ condition }: { condition: string }) {
         />
       </div>
 
-      {/* 3. Giant condition icon watermark — offset toward center, pulses gently */}
-      <div
-        className="absolute top-1/2 left-[45%] -translate-y-1/2 opacity-[0.06] motion-safe:animate-pulse"
-        style={{ animationDuration: '8s' }}
-      >
+      {/* 3. Giant condition icon watermark — offset toward center, static.
+          (No pulse animation: Tailwind animate-pulse overrides opacity-[0.06]
+          up to 0.5–1 cycles, which both defeats the watermark subtlety and
+          costs compositor work every frame.) */}
+      <div className="absolute top-1/2 left-[45%] -translate-y-1/2 opacity-[0.08]">
         <WeatherIconModern condition={condition} size={320} />
       </div>
     </div>
