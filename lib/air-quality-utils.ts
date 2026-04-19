@@ -56,6 +56,54 @@ export const getAQIRecommendation = (aqi: number): string => {
 };
 
 /**
+ * Severity-driven chrome for the AQI card container.
+ * Keeps Good/Moderate neutral (so humidity and AQI don't fight for attention);
+ * escalates border, wash, and glow when AQI enters actionable tiers.
+ */
+export interface AQISeverityChrome {
+  borderClass: string
+  bgWashClass: string
+  glowClass: string
+  pulse: boolean
+}
+
+export const getAQISeverityChrome = (aqi: number): AQISeverityChrome => {
+  if (aqi <= 100) {
+    return { borderClass: '', bgWashClass: '', glowClass: '', pulse: false }
+  }
+  if (aqi <= 150) {
+    return {
+      borderClass: 'border border-orange-400/40',
+      bgWashClass: 'bg-orange-500/[0.06]',
+      glowClass: 'shadow-[0_0_24px_rgba(251,146,60,0.14)]',
+      pulse: false,
+    }
+  }
+  if (aqi <= 200) {
+    return {
+      borderClass: 'border border-red-400/50',
+      bgWashClass: 'bg-red-500/[0.08]',
+      glowClass: 'shadow-[0_0_28px_rgba(248,113,113,0.18)]',
+      pulse: false,
+    }
+  }
+  if (aqi <= 300) {
+    return {
+      borderClass: 'border border-purple-400/55',
+      bgWashClass: 'bg-purple-500/[0.09]',
+      glowClass: 'shadow-[0_0_32px_rgba(192,132,252,0.22)]',
+      pulse: true,
+    }
+  }
+  return {
+    borderClass: 'border border-red-900/70',
+    bgWashClass: 'bg-red-900/[0.12]',
+    glowClass: 'shadow-[0_0_36px_rgba(127,29,29,0.35)]',
+    pulse: true,
+  }
+}
+
+/**
  * Get color class for pollen category level
  */
 export const getPollenColor = (category: string | number): string => {
