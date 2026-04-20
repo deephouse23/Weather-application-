@@ -81,39 +81,61 @@ async function stripBrokenImages(markdown: string): Promise<string> {
   return cleaned
 }
 
-// Determine which week of the month it is for topic rotation
-function getWeekTheme(): { theme: string; instruction: string } {
+// Day-of-week topic selection:
+//   Sunday  → "This Week in Weather" weekly dispatch (recap past 7 days +
+//             preview the week ahead: forecasts, astronomical events,
+//             pattern shifts).
+//   Wednesday (and any other day via manual workflow_dispatch) → random
+//             deep-dive on a specific weather or space-weather topic,
+//             rotating through a curated list so consecutive Wednesdays
+//             don't repeat.
+function getDayTheme(): { theme: string; instruction: string } {
   const now = new Date()
-  const dayOfMonth = now.getDate()
-  const week = Math.ceil(dayOfMonth / 7)
+  const dayOfWeek = now.getUTCDay() // 0 = Sunday, 3 = Wednesday
 
-  switch (week) {
-    case 1:
-      return {
-        theme: 'this-week-in-weather',
-        instruction: 'Write a "This Week in Weather" recap covering the most notable weather events from the past 7 days. Include severe weather, record temperatures, significant storms, and any weather-related impacts on events or travel.',
-      }
-    case 2:
-      return {
-        theme: 'space-weather-report',
-        instruction: 'Write a space weather report covering solar activity from the past week. Include solar flare activity, geomagnetic storm levels (Kp index), aurora visibility, coronal mass ejections, and how solar cycle 25 is progressing.',
-      }
-    case 3:
-      return {
-        theme: 'weather-phenomena',
-        instruction: 'Write an educational deep-dive about a specific weather phenomenon. Pick something seasonal or recently relevant (supercells, derechos, bomb cyclones, atmospheric rivers, lake-effect snow, heat domes, etc.). Explain the science in accessible terms.',
-      }
-    case 4:
-      return {
-        theme: 'records-and-extremes',
-        instruction: 'Write about recent weather records and extremes. Cover global temperature records broken, unusual weather events, climate milestones, and the current hottest/coldest places on Earth.',
-      }
-    default:
-      return {
-        theme: 'wildcard',
-        instruction: 'Write a seasonal weather preview or cover an interesting weather topic of your choice. Could be a historical weather event anniversary, a look ahead at upcoming season patterns, or a weather science explainer.',
-      }
+  if (dayOfWeek === 0) {
+    return {
+      theme: 'this-week-in-weather',
+      instruction:
+        'Write a "This Week in Weather" weekly dispatch. Cover both what happened over the past 7 days (severe weather, record temperatures, notable storms, space weather, seismic activity) AND what is coming up this week (forecasted severe-weather windows, upcoming astronomical events like meteor showers / eclipses / moon phases, seasonal pattern shifts). Keep it forward-looking so readers finish knowing what to watch for in the week ahead. End with a Bottom Line section of 2-3 actionable takeaways.',
+    }
   }
+
+  // Wednesday deep-dive rotation. Pick deterministically from the ISO week
+  // number so consecutive Wednesdays pick different topics.
+  const deepDiveTopics: { theme: string; instruction: string }[] = [
+    {
+      theme: 'weather-phenomena',
+      instruction:
+        'Write an educational deep-dive about a specific weather phenomenon. Pick something seasonal or recently relevant (supercells, derechos, bomb cyclones, atmospheric rivers, lake-effect snow, heat domes, downbursts, haboobs, sun dogs, mesocyclones, microbursts, etc.). Explain the science in accessible terms with vivid language. Include at least one memorable real-world example.',
+    },
+    {
+      theme: 'space-weather-report',
+      instruction:
+        'Write a space-weather deep-dive. Could cover: how solar flares work and what the class letters mean, the current Solar Cycle 25 progression, how auroras form and where to see them, CME impacts on aviation and power grids, or the Sun-Earth electromagnetic connection. Use accessible language, specific numbers, and at least one recent example.',
+    },
+    {
+      theme: 'records-and-extremes',
+      instruction:
+        'Write about a specific weather record or extreme event — recent or historical. Cover the conditions that produced it, why it stands out meteorologically, and what it tells us about the atmosphere. Good topics: hottest/coldest ever recorded, biggest hail, most intense rainfall, wildest temperature swings, strongest verified tornado, longest drought, biggest snowstorm.',
+    },
+    {
+      theme: 'climate-patterns',
+      instruction:
+        'Write a deep-dive on a large-scale climate pattern and its current state. Topics: El Niño/La Niña (ENSO), Arctic Oscillation, North Atlantic Oscillation, Pacific Decadal Oscillation, Madden-Julian Oscillation, monsoons, jet-stream blocking. Explain the mechanism and what the current phase means for US weather right now.',
+    },
+    {
+      theme: 'historical-weather',
+      instruction:
+        'Write about a notable historical weather event — a famous storm, blizzard, heat wave, tornado outbreak, hurricane, or a weather event that changed history. Explain what made it extraordinary meteorologically, and tie it to modern-day parallels or lessons.',
+    },
+  ]
+
+  // ISO week index for rotation (approximate — doesn't need to be strictly
+  // ISO-8601 correct; only needs to shift topic week-over-week).
+  const startOfYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1))
+  const weekIndex = Math.floor((now.getTime() - startOfYear.getTime()) / (7 * 24 * 60 * 60 * 1000))
+  return deepDiveTopics[weekIndex % deepDiveTopics.length]
 }
 
 // Curated seasonal events/festivals by month for local context
@@ -221,7 +243,7 @@ async function generateBlogPost(): Promise<void> {
   console.log('[generate-blog-post] Fetching weather context...')
   const weatherContext = await fetchWeatherContext()
 
-  const { theme, instruction } = getWeekTheme()
+  const { theme, instruction } = getDayTheme()
   const today = new Date().toISOString().split('T')[0]
 
   console.log(`[generate-blog-post] Theme: ${theme}`)
@@ -242,7 +264,7 @@ Voice and tone:
 
 Rules:
 - No emojis ever
-- Include 1-2 inline images to break up the text. You MUST pick from the curated catalog below -- never invent image URLs. Match the image topic to your post topic; if nothing in the catalog fits, omit images entirely rather than guessing. Use this exact markdown format with the URL and alt text copied verbatim from the catalog: ![alt from catalog](url from catalog). Place images between sections, not at the very top or bottom.
+- REQUIRED: Include exactly 2 inline images to break up the text. Every post must ship with 2 images — this is a hard requirement. You MUST pick from the curated catalog below -- never invent image URLs. Match each image's topic to a section of your post; if only one catalog entry truly fits, still include 2 by picking a second that is thematically adjacent (e.g. a weather satellite view alongside a storm image). Use this exact markdown format with the URL and alt text copied verbatim from the catalog: ![alt from catalog](url from catalog). Place images between sections, not at the very top or bottom. Do not place both images next to each other — separate them with at least one section of text.
 
 Curated image catalog (public domain / CC; pick 1-2 that match your post topic):
 ${buildImageCatalog()}
@@ -336,7 +358,16 @@ Generate the blog post now.`
   const safeReadTime = typeof post.readTime === 'number' && post.readTime > 0 ? Math.min(post.readTime, 60) : Math.ceil((post.content || '').split(/\s+/).length / 200)
 
   // Build the markdown file
-  const heroImage = `/api/og/blog?title=${encodeURIComponent(post.title)}&type=${theme.includes('space') ? 'space' : theme.includes('severe') || theme.includes('week') ? 'severe' : theme.includes('record') || theme.includes('extreme') ? 'record' : theme.includes('phenomena') ? 'education' : 'dispatch'}`
+  const themeToOgType: Record<string, 'severe' | 'space' | 'education' | 'record' | 'dispatch'> = {
+    'this-week-in-weather': 'dispatch',
+    'space-weather-report': 'space',
+    'weather-phenomena': 'education',
+    'records-and-extremes': 'record',
+    'climate-patterns': 'education',
+    'historical-weather': 'record',
+  }
+  const ogType = themeToOgType[theme] ?? 'dispatch'
+  const heroImage = `/api/og/blog?title=${encodeURIComponent(post.title)}&type=${ogType}`
 
   const frontmatter = `---
 title: "${post.title.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"

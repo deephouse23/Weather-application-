@@ -27,6 +27,8 @@ Cloud cover is the wild card. A shortwave trough tracking across the Great Lakes
 
 Last week's severe weather push -- capped by the Plains supercell day on Wednesday that we broke down in [its own post](/blog/2026-04-15-supercells-natures-ultimate-weather-machine) -- has given way to a quieter pattern. The storm system that drove that event lifted into Canada and the jet has retreated north, shutting down the robust shear profiles that fed discrete rotating storms.
 
+![Supercell wall cloud illuminated by lightning (NOAA)](https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Wall_cloud_with_lightning_-_NOAA.jpg/1280px-Wall_cloud_with_lightning_-_NOAA.jpg)
+
 That does not mean the severe threat is off. The Storm Prediction Center is eyeing another shortwave lifting out of the southern Rockies **Thursday into Friday**, which would bring a renewed chance of strong-to-severe storms across Kansas, Oklahoma, and north Texas. The ingredients will not be as robust as last week -- the moisture return off the Gulf is lagging -- but a day-one risk area would not surprise anyone.
 
 For the Northeast and Mid-Atlantic, the big story is simply warmer air finally winning the fight. Highs in the 70s reach New York City by Wednesday for the first time this spring.
@@ -38,6 +40,8 @@ A few quieter items worth flagging:
 - **Tree pollen** is peaking across much of the central and eastern US right now. Oak, birch, and maple are running high-to-very-high in most reporting stations. If the "Pollen" card on your 16-Bit Weather dashboard has been lit up, this is why. Expect grass pollen to join the party in the next two weeks.
 - **Seismic activity** on the West Coast has been business-as-usual. USGS logged the usual cluster of M2-to-M3 events along the San Andreas and in the eastern Sierras over the weekend, nothing unusual. The Earth Sciences dashboard is the place to watch if that changes.
 - **Solar activity** remains in the quieter stretch that started in early April. The 10.7 cm flux has been hovering in the 140s, Kp index has not exceeded 3 all week, and there are no earth-directed CMEs in the pipeline. Aurora chasers, sorry -- this one is a waiting game.
+
+![Current Sun in extreme UV 193A (NASA SDO)](https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0193.jpg)
 
 ## April 22: Earth Day
 
