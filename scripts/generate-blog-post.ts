@@ -81,15 +81,99 @@ async function stripBrokenImages(markdown: string): Promise<string> {
   return cleaned
 }
 
+type EventData = {
+  alerts: { event: string; headline: string; areaDesc: string }[]
+  kpReadings: number[]
+  solarPeakFlux: number
+  earthquakes: { mag: number; title: string }[]
+}
+
+// Closer-section rotation. Every post used to end with "## Bottom Line" which
+// reads as a tell that an AI wrote it. Rotate by day-of-year so back-to-back
+// posts (Wed → Sun) get different closers, and a `null` slot drops the
+// labeled header entirely once per cycle in favor of a natural wrap-up.
+const CLOSER_HEADERS: (string | null)[] = [
+  'What to Watch',
+  'The Takeaway',
+  'Looking Ahead',
+  'Eyes on the Sky',
+  'Heads Up',
+  'On the Radar',
+  'Field Notes',
+  null,
+]
+
+function getCloserInstruction(): string {
+  const now = new Date()
+  const startOfYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1))
+  const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / 86_400_000)
+  const choice = CLOSER_HEADERS[dayOfYear % CLOSER_HEADERS.length]
+  return choice
+    ? `End the post with a "## ${choice}" section that gives readers something concrete to do, watch for, or remember — 2-3 brief points.`
+    : 'End the post with a strong, natural closing paragraph that ties everything together. Do NOT use a labeled section like "Bottom Line" or "Takeaway" — just a clean wrap-up paragraph.'
+}
+
+// Wednesday topic override: if a major event is unfolding right now, ditch the
+// rotation and write about that instead. Priority is by impact and uniqueness.
+// Returns null when nothing crosses a threshold, in which case the rotation
+// runs normally.
+function detectNoteworthyEvent(events: EventData): { theme: string; instruction: string } | null {
+  if (events.solarPeakFlux >= 1e-4) {
+    const fluxStr = events.solarPeakFlux.toExponential(2)
+    return {
+      theme: 'major-solar-event',
+      instruction: `BREAKING: A major X-class solar flare has erupted (peak X-ray flux ${fluxStr} W/m²). Write the post about THIS specific event — not a general space-weather explainer. Cover what causes X-class flares, immediate Earth-side impacts (HF radio blackouts, GPS degradation, possible follow-on CME), aurora potential, and what to watch for over the next 1-3 days. Use the specific Kp readings and flare data from the context. Make it feel timely and current.`,
+    }
+  }
+
+  const hurricaneAlerts = events.alerts.filter(a => /Hurricane (Warning|Watch)/i.test(a.event))
+  if (hurricaneAlerts.length > 0) {
+    const areas = hurricaneAlerts.slice(0, 3).map(a => a.areaDesc).join('; ')
+    return {
+      theme: 'major-hurricane-event',
+      instruction: `BREAKING: An active hurricane warning/watch is in effect for: ${areas}. Write the post about THIS hurricane — track, intensity, expected impacts, what coastal residents need to do right now. Use the specific alert headlines and locations from the context. Keep urgency front and center; this is news, not a primer.`,
+    }
+  }
+
+  const tornadoAlerts = events.alerts.filter(a => /Tornado (Warning|Watch)/i.test(a.event))
+  const isPDS = events.alerts.some(a => /particularly dangerous situation/i.test(a.headline))
+  if (tornadoAlerts.length >= 3 || isPDS) {
+    const tag = isPDS ? ' (PDS designation in effect)' : ''
+    return {
+      theme: 'tornado-outbreak',
+      instruction: `BREAKING: A tornado outbreak is unfolding right now${tag} — ${tornadoAlerts.length} active tornado-related alerts. Write the post about THIS event: the affected regions, the meteorological setup that produced it (CAPE, shear, jet positioning, dryline or cold-front interaction), historical comparisons if the setup matches a known outbreak archetype, and clear safety guidance. Use specific locations from the alert data. Make the science accessible but the urgency clear.`,
+    }
+  }
+
+  const bigQuake = events.earthquakes.find(q => q.mag >= 6.5)
+  if (bigQuake) {
+    return {
+      theme: 'significant-earthquake',
+      instruction: `BREAKING: A significant M${bigQuake.mag} earthquake has occurred (${bigQuake.title}). Write the post about THIS event: tectonic setting, why this region is seismically active, expected impacts (tsunami risk, aftershock probability), and how it compares to historical events in the same fault zone. Use the specific magnitude and location from the data.`,
+    }
+  }
+
+  const peakKp = events.kpReadings.length > 0 ? Math.max(...events.kpReadings) : 0
+  if (peakKp >= 7) {
+    const gLevel = Math.min(peakKp - 4, 5)
+    return {
+      theme: 'geomagnetic-storm',
+      instruction: `BREAKING: A strong geomagnetic storm is in progress (peak Kp=${peakKp}, G${gLevel} on the NOAA scale). Write the post about THIS event: what triggered it (CME impact?), aurora visibility (how far south can people see it?), grid/satellite/GPS impacts, and how long it's expected to last. Use the specific Kp readings from the context.`,
+    }
+  }
+
+  return null
+}
+
 // Day-of-week topic selection:
 //   Sunday  → "This Week in Weather" weekly dispatch (recap past 7 days +
 //             preview the week ahead: forecasts, astronomical events,
 //             pattern shifts).
-//   Wednesday (and any other day via manual workflow_dispatch) → random
-//             deep-dive on a specific weather or space-weather topic,
-//             rotating through a curated list so consecutive Wednesdays
-//             don't repeat.
-function getDayTheme(): { theme: string; instruction: string } {
+//   Wednesday (and any other day via manual workflow_dispatch) → first try
+//             detectNoteworthyEvent for an override (active outbreak,
+//             X-class flare, etc.), then fall through to the deterministic
+//             deep-dive rotation.
+function getDayTheme(events: EventData): { theme: string; instruction: string } {
   const now = new Date()
   const dayOfWeek = now.getUTCDay() // 0 = Sunday, 3 = Wednesday
 
@@ -99,6 +183,12 @@ function getDayTheme(): { theme: string; instruction: string } {
       instruction:
         'Write a "This Week in Weather" weekly dispatch. Cover both what happened over the past 7 days (severe weather, record temperatures, notable storms, space weather, seismic activity) AND what is coming up this week (forecasted severe-weather windows, upcoming astronomical events like meteor showers / eclipses / moon phases, seasonal pattern shifts). Keep it forward-looking so readers finish knowing what to watch for in the week ahead. End with a Bottom Line section of 2-3 actionable takeaways.',
     }
+  }
+
+  const eventOverride = detectNoteworthyEvent(events)
+  if (eventOverride) {
+    console.log(`[generate-blog-post] Event override fired: ${eventOverride.theme}`)
+    return eventOverride
   }
 
   // Wednesday deep-dive rotation. Pick deterministically from the ISO week
@@ -161,68 +251,72 @@ function getSeasonalEvents(): string {
     : ''
 }
 
-// Fetch weather data from public sources
-async function fetchWeatherContext(): Promise<string> {
+// Fetch weather data from public sources. Returns both the formatted markdown
+// (for the model prompt) and structured event data (for topic-override logic).
+async function fetchWeatherContext(): Promise<{ markdown: string; events: EventData }> {
   const sections: string[] = []
+  const events: EventData = { alerts: [], kpReadings: [], solarPeakFlux: 0, earthquakes: [] }
 
-  // NWS active alerts summary
   try {
     const res = await fetch('https://api.weather.gov/alerts/active?status=actual&severity=Extreme,Severe&limit=10', {
       headers: { 'User-Agent': '16bitweather.co blog-generator' }
     })
     if (res.ok) {
       const data = await res.json()
-      const alerts = data.features?.slice(0, 5).map((f: { properties: { event: string; headline: string; areaDesc: string } }) => 
-        `- ${f.properties.event}: ${f.properties.headline} (${f.properties.areaDesc})`
-      ).join('\n') || 'No extreme/severe alerts active'
-      sections.push(`## Current NWS Severe Alerts\n${alerts}`)
+      events.alerts = data.features?.map((f: { properties: { event: string; headline: string; areaDesc: string } }) => ({
+        event: f.properties.event,
+        headline: f.properties.headline,
+        areaDesc: f.properties.areaDesc,
+      })) ?? []
+      const alertsText = events.alerts.slice(0, 5).map(a => `- ${a.event}: ${a.headline} (${a.areaDesc})`).join('\n') || 'No extreme/severe alerts active'
+      sections.push(`## Current NWS Severe Alerts\n${alertsText}`)
     }
   } catch { sections.push('## NWS Alerts: unavailable') }
 
-  // Space weather - Kp index
   try {
     const res = await fetch('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json')
     if (res.ok) {
       const data = await res.json()
-      const recent = data.slice(-5).map((d: string[]) => `Kp=${d[1]} at ${d[0]}`).join(', ')
+      const recentRows = data.slice(-5) as string[][]
+      events.kpReadings = recentRows.map(d => parseFloat(d[1])).filter(n => !Number.isNaN(n))
+      const recent = recentRows.map(d => `Kp=${d[1]} at ${d[0]}`).join(', ')
       sections.push(`## Recent Kp Index\n${recent}`)
     }
   } catch { sections.push('## Kp Index: unavailable') }
 
-  // Space weather - solar flares (3-day)
   try {
     const res = await fetch('https://services.swpc.noaa.gov/json/goes/primary/xrays-3-day.json')
     if (res.ok) {
       const data = await res.json()
       const maxFlux = Math.max(...data.slice(-100).map((d: { flux: number }) => d.flux))
+      events.solarPeakFlux = maxFlux
       const flareClass = maxFlux >= 1e-4 ? 'X-class' : maxFlux >= 1e-5 ? 'M-class' : maxFlux >= 1e-6 ? 'C-class' : 'B-class or below'
       sections.push(`## Solar X-Ray Activity (3-day)\nPeak flux: ${maxFlux.toExponential(2)} W/m2 (${flareClass})`)
     }
   } catch { sections.push('## Solar Flares: unavailable') }
 
-  // USGS significant earthquakes (past week)
   try {
     const res = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_week.geojson')
     if (res.ok) {
       const data = await res.json()
-      const quakes = data.features?.slice(0, 3).map((f: { properties: { title: string; mag: number } }) => 
-        `- M${f.properties.mag}: ${f.properties.title}`
-      ).join('\n') || 'No significant earthquakes this week'
-      sections.push(`## Significant Earthquakes (Past Week)\n${quakes}`)
+      events.earthquakes = data.features?.map((f: { properties: { title: string; mag: number } }) => ({
+        mag: f.properties.mag,
+        title: f.properties.title,
+      })) ?? []
+      const quakesText = events.earthquakes.slice(0, 3).map(q => `- M${q.mag}: ${q.title}`).join('\n') || 'No significant earthquakes this week'
+      sections.push(`## Significant Earthquakes (Past Week)\n${quakesText}`)
     }
   } catch { sections.push('## Earthquakes: unavailable') }
 
-  // Current date context
   const now = new Date()
   sections.unshift(`## Date Context\nToday is ${now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}. Season: ${getSeasonName(now)}.`)
 
-  // Add seasonal/local event context
   const seasonalEvents = getSeasonalEvents()
   if (seasonalEvents) {
     sections.push(seasonalEvents)
   }
 
-  return sections.join('\n\n')
+  return { markdown: sections.join('\n\n'), events }
 }
 
 function getSeasonName(date: Date): string {
@@ -241,9 +335,9 @@ async function generateBlogPost(): Promise<void> {
   }
 
   console.log('[generate-blog-post] Fetching weather context...')
-  const weatherContext = await fetchWeatherContext()
+  const { markdown: weatherContext, events } = await fetchWeatherContext()
 
-  const { theme, instruction } = getDayTheme()
+  const { theme, instruction } = getDayTheme(events)
   const today = new Date().toISOString().split('T')[0]
 
   console.log(`[generate-blog-post] Theme: ${theme}`)
@@ -270,7 +364,7 @@ Curated image catalog (public domain / CC; pick 1-2 that match your post topic):
 ${buildImageCatalog()}
 - Write 400-800 words
 - Use markdown headers (## for main sections, ### for subsections)
-- End every post with a "## Bottom Line" section with 2-3 actionable takeaways
+- ${getCloserInstruction()}
 - Reference specific cities, temperatures, wind speeds, Kp index values to feel concrete and grounded
 - Tags should be lowercase, 4-6 tags mixing weather type + geography
 - The author is always "16bitbot"
@@ -365,6 +459,11 @@ Generate the blog post now.`
     'records-and-extremes': 'record',
     'climate-patterns': 'education',
     'historical-weather': 'record',
+    'major-solar-event': 'space',
+    'major-hurricane-event': 'severe',
+    'tornado-outbreak': 'severe',
+    'significant-earthquake': 'severe',
+    'geomagnetic-storm': 'space',
   }
   const ogType = themeToOgType[theme] ?? 'dispatch'
   const heroImage = `/api/og/blog?title=${encodeURIComponent(post.title)}&type=${ogType}`
