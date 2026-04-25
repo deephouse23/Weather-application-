@@ -88,6 +88,31 @@ type EventData = {
   earthquakes: { mag: number; title: string }[]
 }
 
+// Closer-section rotation. Every post used to end with "## Bottom Line" which
+// reads as a tell that an AI wrote it. Rotate by day-of-year so back-to-back
+// posts (Wed → Sun) get different closers, and a `null` slot drops the
+// labeled header entirely once per cycle in favor of a natural wrap-up.
+const CLOSER_HEADERS: (string | null)[] = [
+  'What to Watch',
+  'The Takeaway',
+  'Looking Ahead',
+  'Eyes on the Sky',
+  'Heads Up',
+  'On the Radar',
+  'Field Notes',
+  null,
+]
+
+function getCloserInstruction(): string {
+  const now = new Date()
+  const startOfYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1))
+  const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / 86_400_000)
+  const choice = CLOSER_HEADERS[dayOfYear % CLOSER_HEADERS.length]
+  return choice
+    ? `End the post with a "## ${choice}" section that gives readers something concrete to do, watch for, or remember — 2-3 brief points.`
+    : 'End the post with a strong, natural closing paragraph that ties everything together. Do NOT use a labeled section like "Bottom Line" or "Takeaway" — just a clean wrap-up paragraph.'
+}
+
 // Wednesday topic override: if a major event is unfolding right now, ditch the
 // rotation and write about that instead. Priority is by impact and uniqueness.
 // Returns null when nothing crosses a threshold, in which case the rotation
@@ -339,7 +364,7 @@ Curated image catalog (public domain / CC; pick 1-2 that match your post topic):
 ${buildImageCatalog()}
 - Write 400-800 words
 - Use markdown headers (## for main sections, ### for subsections)
-- End every post with a "## Bottom Line" section with 2-3 actionable takeaways
+- ${getCloserInstruction()}
 - Reference specific cities, temperatures, wind speeds, Kp index values to feel concrete and grounded
 - Tags should be lowercase, 4-6 tags mixing weather type + geography
 - The author is always "16bitbot"
