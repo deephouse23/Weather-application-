@@ -19,13 +19,12 @@ interface EnvConfig {
 }
 
 const envConfig: EnvConfig = {
-  required: {
+  required: {},
+  optional: {
     OPENWEATHER_API_KEY: {
       name: 'OPENWEATHER_API_KEY',
-      description: 'OpenWeatherMap API key (required for weather data) - server-only for security',
+      description: 'OpenWeatherMap API key. Optional after the Open-Meteo migration — only used by legacy fallback endpoints (pollen, UV onecall v3, precipitation history, extremes). Routes that need it check at request time.',
     },
-  },
-  optional: {
     NEXT_PUBLIC_SUPABASE_URL: {
       name: 'NEXT_PUBLIC_SUPABASE_URL',
       description: 'Supabase project URL (optional - for authentication)',
@@ -72,10 +71,6 @@ export function validateEnv(): void {
 
   // Check required variables
   for (const [key, config] of Object.entries(envConfig.required)) {
-    // In Playwright E2E runs we stub API calls, so allow missing API keys.
-    if (isPlaywright && key === 'OPENWEATHER_API_KEY') {
-      continue;
-    }
     if (!process.env[key]) {
       missingRequired.push(key);
       console.error(`❌ Missing required environment variable: ${config.name}`);
