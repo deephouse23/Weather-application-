@@ -4,10 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Active Feature Work
 
-**Current PRD:** `docs/PRD-earth-sciences-chat.md`
-- Expanding AI chat to cover meteorology, geology, volcanology, and seismology
-- Integrating USGS earthquake API for real-time seismic data
-- See PRD for detailed requirements and Ralph loop command
+Active PRDs at repo root:
+- `PRD-open-meteo-migration.md` — migrating primary weather source from OpenWeatherMap to Open-Meteo
+- `PRD-stargazer.md` — astrophotography forecast page
 
 ## Project Overview
 
@@ -130,6 +129,14 @@ Three main contexts wrap the app in `app/layout.tsx`:
 
 `@/*` maps to project root (configured in `tsconfig.json`). Use `@/lib/`, `@/components/`, `@/hooks/`, etc.
 
+### Repo layout notes
+
+- `_archive/` — historical plans and legacy code; excluded from search/build flows.
+- `tempest/` — legacy E2E scripts not run in CI; current E2E is in `tests/e2e/`.
+- `scripts/` — one-off TypeScript utilities run via `tsx` (e.g. `npm run test:profile`).
+- `planning/` — in-progress design notes (e.g. `ai-assistant-ux.md`).
+- `proxy.ts` — top-level proxy entry, separate from the Next.js app.
+
 ## Testing
 
 **Unit tests** in `__tests__/` with `.test.ts` suffix (Jest + jsdom).
@@ -164,60 +171,12 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
 Use the GitHub CLI (`gh`). Always create descriptive titles. Never include emojis in PR descriptions.
 
-## Workflow Orchestration
+## Dead Code Hygiene
 
-### Plan Mode Default
-- Enter plan mode for ANY non-trivial task (3+ steps or architectural decisions)
-- If something goes sideways, STOP and re-plan immediately — don't keep pushing
-- Use plan mode for verification steps, not just building
-- Write detailed specs upfront to reduce ambiguity
+- Before completing a feature or ending a session, run `npm run knip` to check for orphaned exports, unused files, and dead dependencies left behind by refactoring.
+- Remove anything flagged as unused, but ask for confirmation before deleting files.
+- Config: `knip.json` at project root; `scripts/`, `tempest/`, `public/` are excluded.
 
-### Subagent Strategy
-- Use subagents liberally to keep main context window clean
-- Offload research, exploration, and parallel analysis to subagents
-- For complex problems, throw more compute at it via subagents
-- One task per subagent for focused execution
+## Planning Notes
 
-### Self-Improvement Loop
-- After ANY correction from the user: update `tasks/lessons.md` with the pattern
-- Write rules for yourself that prevent the same mistake
-- Ruthlessly iterate on these lessons until mistake rate drops
-- Review lessons at session start for relevant project
-
-### Dead Code Hygiene
-- Before completing a feature or ending a session, run `npm run knip` to check for orphaned exports, unused files, and dead dependencies left behind by refactoring
-- Remove anything flagged as unused, but ask for confirmation before deleting files
-- Config: `knip.json` at project root; scripts/, tempest/, public/ are excluded
-
-### Verification Before Done
-- Never mark a task complete without proving it works
-- Diff behavior between main and your changes when relevant
-- Ask yourself: "Would a staff engineer approve this?"
-- Run tests, check logs, demonstrate correctness
-
-### Demand Elegance (Balanced)
-- For non-trivial changes: pause and ask "is there a more elegant way?"
-- If a fix feels hacky: "Knowing everything I know now, implement the elegant solution"
-- Skip this for simple, obvious fixes — don't over-engineer
-- Challenge your own work before presenting it
-
-### Autonomous Bug Fixing
-- When given a bug report: just fix it. Don't ask for hand-holding
-- Point at logs, errors, failing tests — then resolve them
-- Zero context switching required from the user
-- Go fix failing CI tests without being told how
-
-## Task Management
-
-1. **Plan First:** Write plan to `tasks/todo.md` with checkable items
-2. **Verify Plan:** Check in before starting implementation
-3. **Track Progress:** Mark items complete as you go
-4. **Explain Changes:** High-level summary at each step
-5. **Document Results:** Add review section to `tasks/todo.md`
-6. **Capture Lessons:** Update `tasks/lessons.md` after corrections
-
-## Core Principles
-
-- **Simplicity First:** Make every change as simple as possible. Impact minimal code.
-- **No Laziness:** Find root causes. No temporary fixes. Senior developer standards.
-- **Minimal Impact:** Changes should only touch what's necessary. Avoid introducing bugs.
+In-progress design notes live in `planning/`. Add new notes there when a task warrants written context beyond the conversation.

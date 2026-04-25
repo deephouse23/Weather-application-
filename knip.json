@@ -3,8 +3,7 @@
   "entry": [
     "app/**/*.{ts,tsx}",
     "sentry.*.config.ts",
-    "lighthouserc.js",
-    "run-lh.js"
+    "lighthouserc.js"
   ],
   "project": [
     "app/**/*.{ts,tsx}",
@@ -21,8 +20,6 @@
     "supabase/**",
     "content/**",
     "planning/**",
-    "docs/**",
-    "tasks/**",
     "lib/supabase/middleware.ts"
   ],
   "ignoreDependencies": [
