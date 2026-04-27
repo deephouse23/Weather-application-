@@ -29,7 +29,7 @@ Forbidden formatting:
 - No all-caps for emphasis. Use specificity instead.
 
 Required structure:
-- End with "## Bottom Line" — 2-3 actionable or memorable takeaways, each one sentence.
+- Close with whatever closing instruction the run-time prompt gives you. Do NOT default to "## Bottom Line" — that wording is a known AI tell and is rotated out per-run.
 - Include 2-3 inline images, separated by body text. Never at the very top, never at the very bottom.
 - Use ## section headers. Sub-sections only when they earn it. Skip ### unless the structure genuinely needs three levels.
 

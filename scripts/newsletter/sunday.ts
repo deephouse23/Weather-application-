@@ -12,7 +12,9 @@ import { fetchForecastOutlook } from './data/forecast';
 import { fetchPastWeekWarnings, MesonetEmptyError } from './data/mesonet';
 import { fetchSpaceWeatherSummary } from './data/space-weather';
 import { fetchPastWeekReports } from './data/spc-reports';
-import { selectImages, type ImageEntry } from './images';
+import { pickCloser, type CloserChoice } from './closers';
+import { getActiveTopics, selectImages, type ImageEntry } from './images';
+import type { TopicSlug } from './topics';
 import {
   callAnthropic,
   checkOpenerCollision,
@@ -43,6 +45,7 @@ export interface SundayResult {
   images: ImageEntry[];
   retries: number;
   wordCount: number;
+  closer: CloserChoice;
 }
 
 export async function runSunday(): Promise<SundayResult> {
@@ -78,14 +81,30 @@ export async function runSunday(): Promise<SundayResult> {
   ]);
   console.log(`[sunday] SPC: ${spcSummary.total} reports, max Kp: ${spaceSummary.maxKpPastWeek}, quakes: ${quakeSummary.significantCount} significant`);
 
-  // Sunday recap is a multi-domain summary, not a single topic. Pick
-  // images that span severe + tropical + space + marine/agricultural so
-  // the visual palette matches the content.
-  const sundayImageTopics = ['severe_storms', 'tropical', 'space_weather', 'tech_and_models'] as const;
+  // Sunday image pool is filtered by what's actually active in this
+  // week's data — see getActiveTopics. Without this, hurricane imagery
+  // ends up in April recaps because tropical was hardcoded.
+  const activeTopics = getActiveTopics({
+    severeReportCount: spcSummary.total,
+    maxKpPastWeek: spaceSummary.maxKpPastWeek,
+    notableFlareCount: spaceSummary.notableFlares.length,
+    significantQuakeCount: quakeSummary.significantCount,
+  });
+  const candidateOrder: TopicSlug[] = [
+    'severe_storms',
+    'space_weather',
+    'tech_and_models',
+    'atmosphere_layers',
+    'tropical',
+    'marine',
+    'aviation',
+    'agricultural',
+  ];
   const images: ImageEntry[] = [];
   const usedIds = new Set<string>(recentImageIds);
-  for (const t of sundayImageTopics) {
+  for (const t of candidateOrder) {
     if (images.length >= 3) break;
+    if (!activeTopics.has(t)) continue;
     try {
       const picked = selectImages({ topic: t, count: 1, excludeIds: usedIds });
       for (const p of picked) {
@@ -93,17 +112,21 @@ export async function runSunday(): Promise<SundayResult> {
         images.push(p);
       }
     } catch {
-      // pool starved — skip and try the next topic
+      // pool starved on this topic — skip and try the next
     }
   }
   if (images.length < 2) {
-    // Fallback: just pull any 2 unused images via a broad neighbor lookup.
+    // Last-resort fallback: any unused content-neutral images.
     const broadPicks = selectImages({ topic: 'tech_and_models', count: 2, excludeIds: usedIds });
     for (const p of broadPicks) images.push(p);
   }
-  console.log(`[sunday] selected images: ${images.map((i) => i.id).join(', ')}`);
+  console.log(
+    `[sunday] selected images: ${images.map((i) => i.id).join(', ')} (active topics: ${[...activeTopics].join(',')})`,
+  );
 
   const spotlight = getSpotlight();
+  const closer = pickCloser();
+  console.log(`[sunday] closer: ${closer.id}`);
 
   let draft = await generate({
     warnings,
@@ -115,6 +138,7 @@ export async function runSunday(): Promise<SundayResult> {
     denyPhrases,
     images,
     correction: null,
+    closer,
   });
 
   let retries = 0;
@@ -145,6 +169,7 @@ export async function runSunday(): Promise<SundayResult> {
       denyPhrases,
       images,
       correction: corrections.join('\n\n'),
+      closer,
     });
     openerHash = computeOpenerHash(draft);
     voiceViolations = sweepVoice(draft);
@@ -171,6 +196,7 @@ export async function runSunday(): Promise<SundayResult> {
       denyPhrases: [...denyPhrases, ...similarity.triggerPhrases],
       images,
       correction,
+      closer,
     });
     openerHash = computeOpenerHash(draft);
     try {
@@ -191,10 +217,12 @@ export async function runSunday(): Promise<SundayResult> {
     images,
     retries,
     wordCount: wordCount(draft),
+    closer,
   };
 }
 
 interface GenerateOpts {
+  closer: CloserChoice;
   warnings: Awaited<ReturnType<typeof fetchPastWeekWarnings>>;
   spcSummary: Awaited<ReturnType<typeof fetchPastWeekReports>>;
   spaceSummary: Awaited<ReturnType<typeof fetchSpaceWeatherSummary>>;
@@ -217,6 +245,7 @@ async function generate(opts: GenerateOpts): Promise<string> {
     denyPhrases,
     images,
     correction,
+    closer,
   } = opts;
 
   const systemBlocks = [
@@ -249,7 +278,7 @@ async function generate(opts: GenerateOpts): Promise<string> {
 - Open with a concrete specific hook from the past week's data — a named storm, a record, a count.
 - ## Rearview: 3-5 specific events. Cite states, magnitudes, dates. No generalities.
 - ## Roadmap: pattern overview, then 2-3 regional cuts (CONUS quadrants + a notable international callout). Tie to mechanism (jet stream position, ridge, trough, MJO phase, etc.) where you can.
-- ## Bottom Line: 2-3 actionable takeaways.`);
+- ${closer.instruction}`);
 
   if (correction) {
     sections.push(`CORRECTIONS FROM PRIOR ATTEMPT:\n${correction}`);

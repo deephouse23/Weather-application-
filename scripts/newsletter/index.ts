@@ -69,6 +69,7 @@ async function main() {
         spotlight: result.spotlight,
         retries: result.retries,
         wordCount: result.wordCount,
+        closerUsed: result.closer.id,
       },
       { dryRun },
     );
@@ -92,6 +93,7 @@ async function main() {
         spotlight: result.spotlight,
         retries: result.retries,
         wordCount: result.wordCount,
+        closerUsed: result.closer.id,
       },
       { dryRun },
     );

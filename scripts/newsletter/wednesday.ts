@@ -4,6 +4,7 @@
  */
 
 import { getSpotlight } from '../blog-spotlight';
+import { pickCloser, type CloserChoice } from './closers';
 import { selectImages, type ImageEntry } from './images';
 import { findAngleForTopic, fetchHeadlines, type NewsAngle } from './news';
 import {
@@ -42,6 +43,7 @@ export interface WednesdayResult {
   images: ImageEntry[];
   retries: number;
   wordCount: number;
+  closer: CloserChoice;
 }
 
 export async function runWednesday(): Promise<WednesdayResult> {
@@ -62,6 +64,8 @@ export async function runWednesday(): Promise<WednesdayResult> {
   }
 
   const spotlight = getSpotlight();
+  const closer = pickCloser();
+  console.log(`[wednesday] closer: ${closer.id}`);
   const denyPhrases = getKeyPhraseDenyList(history, 'wednesday_topic');
   const recentOpenerHashes = getOpenerHashes(history, 'wednesday_topic');
   const recentImageIds = new Set(getRecentImages(history));
@@ -81,6 +85,7 @@ export async function runWednesday(): Promise<WednesdayResult> {
     denyPhrases,
     images,
     correction: null,
+    closer,
   });
 
   let retries = 0;
@@ -106,6 +111,7 @@ export async function runWednesday(): Promise<WednesdayResult> {
       denyPhrases,
       images,
       correction: corrections.join('\n\n'),
+      closer,
     });
     openerHash = computeOpenerHash(draft);
     voiceViolations = sweepVoice(draft);
@@ -129,6 +135,7 @@ export async function runWednesday(): Promise<WednesdayResult> {
       denyPhrases: [...denyPhrases, ...similarity.triggerPhrases],
       images,
       correction,
+      closer,
     });
     openerHash = computeOpenerHash(draft);
     try {
@@ -151,6 +158,7 @@ export async function runWednesday(): Promise<WednesdayResult> {
     images,
     retries,
     wordCount: wordCount(draft),
+    closer,
   };
 }
 
@@ -161,10 +169,11 @@ interface GenerateOpts {
   denyPhrases: string[];
   images: ImageEntry[];
   correction: string | null;
+  closer: CloserChoice;
 }
 
 async function generate(opts: GenerateOpts): Promise<string> {
-  const { topic, newsAngle, spotlight, denyPhrases, images, correction } = opts;
+  const { topic, newsAngle, spotlight, denyPhrases, images, correction, closer } = opts;
 
   const systemBlocks = [
     { type: 'text' as const, text: VOICE_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' as const } },
@@ -199,7 +208,7 @@ async function generate(opts: GenerateOpts): Promise<string> {
   sections.push(`STRUCTURE:
 - Open with a concrete specific hook — a number, a place, a date, a measurement.
 - 2 or 3 ## section headers within the body. Use them to give the piece shape.
-- End with "## Bottom Line" — 2-3 actionable or memorable takeaways, each one sentence.
+- ${closer.instruction}
 - Word count target: 600-900.`);
 
   if (correction) {

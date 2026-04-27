@@ -26,6 +26,7 @@ export interface PublishWednesdayInput {
   spotlight: string | null;
   retries: number;
   wordCount: number;
+  closerUsed: string;
 }
 
 export interface PublishSundayInput {
@@ -40,6 +41,7 @@ export interface PublishSundayInput {
   spotlight: string | null;
   retries: number;
   wordCount: number;
+  closerUsed: string;
 }
 
 export type PublishInput = PublishWednesdayInput | PublishSundayInput;
@@ -78,6 +80,7 @@ export async function publishPost(input: PublishInput, opts: { dryRun?: boolean 
     spotlight_active: input.spotlight,
     generation_retries: input.retries,
     word_count: input.wordCount,
+    closer_used: input.closerUsed,
   };
 
   if (input.cadence === 'wednesday_topic') {

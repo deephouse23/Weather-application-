@@ -31,6 +31,7 @@ export interface BlogPost {
   spotlight_active?: string | null
   generation_retries?: number
   word_count?: number
+  closer_used?: string
 }
 
 export function getAllPosts(): BlogPost[] {
@@ -66,6 +67,7 @@ export function getAllPosts(): BlogPost[] {
       spotlight_active: data.spotlight_active,
       generation_retries: data.generation_retries,
       word_count: data.word_count,
+      closer_used: data.closer_used,
     } as BlogPost
   })
   

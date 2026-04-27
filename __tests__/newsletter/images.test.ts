@@ -1,6 +1,7 @@
 import {
   IMAGES,
   countImagesByTopic,
+  getActiveTopics,
   selectImages,
   type ImageEntry,
 } from '../../scripts/newsletter/images';
@@ -119,6 +120,81 @@ describe('selectImages', () => {
         rng: () => 0,
       }),
     ).toThrow(/catalog could not satisfy/);
+  });
+
+  it('excludes tropical from active topics outside hurricane season', () => {
+    // April — not hurricane season — and no severe/space data signals.
+    const active = getActiveTopics({
+      severeReportCount: 0,
+      maxKpPastWeek: 0,
+      notableFlareCount: 0,
+      significantQuakeCount: 0,
+      now: new Date('2026-04-26T12:00:00Z'),
+    });
+    expect(active.has('tropical')).toBe(false);
+    // Atmosphere/aviation/marine etc. should always be allowed.
+    expect(active.has('atmosphere_layers')).toBe(true);
+    expect(active.has('marine')).toBe(true);
+  });
+
+  it('includes tropical during hurricane season', () => {
+    const active = getActiveTopics({
+      severeReportCount: 0,
+      maxKpPastWeek: 0,
+      notableFlareCount: 0,
+      significantQuakeCount: 0,
+      now: new Date('2026-09-15T12:00:00Z'),
+    });
+    expect(active.has('tropical')).toBe(true);
+  });
+
+  it('gates severe_storms behind real report counts', () => {
+    const quiet = getActiveTopics({
+      severeReportCount: 0,
+      maxKpPastWeek: 0,
+      notableFlareCount: 0,
+      significantQuakeCount: 0,
+      now: new Date('2026-04-26T12:00:00Z'),
+    });
+    expect(quiet.has('severe_storms')).toBe(false);
+
+    const active = getActiveTopics({
+      severeReportCount: 47,
+      maxKpPastWeek: 0,
+      notableFlareCount: 0,
+      significantQuakeCount: 0,
+      now: new Date('2026-04-26T12:00:00Z'),
+    });
+    expect(active.has('severe_storms')).toBe(true);
+  });
+
+  it('gates space_weather on Kp >= 4 OR notable flares', () => {
+    const quiet = getActiveTopics({
+      severeReportCount: 0,
+      maxKpPastWeek: 2,
+      notableFlareCount: 0,
+      significantQuakeCount: 0,
+      now: new Date('2026-04-26T12:00:00Z'),
+    });
+    expect(quiet.has('space_weather')).toBe(false);
+
+    const flareOnly = getActiveTopics({
+      severeReportCount: 0,
+      maxKpPastWeek: 0,
+      notableFlareCount: 1,
+      significantQuakeCount: 0,
+      now: new Date('2026-04-26T12:00:00Z'),
+    });
+    expect(flareOnly.has('space_weather')).toBe(true);
+
+    const stormy = getActiveTopics({
+      severeReportCount: 0,
+      maxKpPastWeek: 5,
+      notableFlareCount: 0,
+      significantQuakeCount: 0,
+      now: new Date('2026-04-26T12:00:00Z'),
+    });
+    expect(stormy.has('space_weather')).toBe(true);
   });
 
   it('produces different orderings across rng seeds', () => {
