@@ -1,10 +1,10 @@
-name: Blog Post Generator
+name: Blog Post Generator (LEGACY — superseded by newsletter-wednesday.yml + newsletter-sunday.yml)
 
+# Schedule disabled. Newsletter pipeline (scripts/newsletter/) replaces this.
+# This workflow is kept for one rollback week, then deleted along with
+# scripts/generate-blog-post.legacy.ts.
 on:
-  schedule:
-    - cron: '0 12 * * 0'  # Every Sunday at noon UTC
-    - cron: '0 12 * * 3'  # Every Wednesday at noon UTC
-  workflow_dispatch: {}     # Manual trigger
+  workflow_dispatch: {}     # Manual trigger only — kept as a rollback option
 
 jobs:
   generate-blog-post:
@@ -29,7 +29,7 @@ jobs:
       - name: Generate blog post
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: npx tsx scripts/generate-blog-post.ts
+        run: npx tsx scripts/generate-blog-post.legacy.ts
 
       - name: Check for new posts
         id: check

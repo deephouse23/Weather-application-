@@ -18,7 +18,8 @@
     "lighthouse": "lhci autorun",
     "validate:pr": "npm run build && npm run test:e2e && npm run lighthouse",
     "knip": "knip",
-    "knip:fix": "knip --fix"
+    "knip:fix": "knip --fix",
+    "validate:images": "tsx scripts/newsletter/validate-images.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.35",

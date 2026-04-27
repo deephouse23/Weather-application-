@@ -4,6 +4,8 @@ import matter from 'gray-matter'
 
 const BLOG_DIR = path.join(process.cwd(), 'content/blog')
 
+export type NewsletterCadence = 'wednesday_topic' | 'sunday_rearview'
+
 export interface BlogPost {
   slug: string
   title: string
@@ -14,6 +16,21 @@ export interface BlogPost {
   heroImage: string
   readTime: number
   content: string
+  // Newsletter metadata. All optional — older posts predate these fields.
+  // See docs/PRD-newsletter-redesign.md §4.1 for semantics.
+  cadence?: NewsletterCadence
+  topic_slug?: string
+  topic_title?: string
+  theme?: string
+  opener_hash?: string
+  key_phrases?: string[]
+  similarity_max?: number
+  similarity_judge?: string
+  model_used?: string
+  images_used?: string[]
+  spotlight_active?: string | null
+  generation_retries?: number
+  word_count?: number
 }
 
 export function getAllPosts(): BlogPost[] {
@@ -36,6 +53,19 @@ export function getAllPosts(): BlogPost[] {
       heroImage: data.heroImage || '',
       readTime: data.readTime || Math.ceil(content.split(/\s+/).length / 200),
       content,
+      cadence: data.cadence,
+      topic_slug: data.topic_slug,
+      topic_title: data.topic_title,
+      theme: data.theme,
+      opener_hash: data.opener_hash,
+      key_phrases: data.key_phrases,
+      similarity_max: data.similarity_max,
+      similarity_judge: data.similarity_judge,
+      model_used: data.model_used,
+      images_used: data.images_used,
+      spotlight_active: data.spotlight_active,
+      generation_retries: data.generation_retries,
+      word_count: data.word_count,
     } as BlogPost
   })
   
