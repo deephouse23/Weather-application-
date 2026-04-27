@@ -1,6 +1,13 @@
 /**
- * Iowa State Mesonet (IEM) — authoritative archive of NWS products.
+ * Iowa State Mesonet (IEM) — VTEC Storm-Based Warnings (SBW) archive.
  * Free, no API key required for the endpoints used here.
+ *
+ * Scope note: `vtec/sbw_interval` returns POLYGON-based warnings only —
+ * Tornado, Severe Thunderstorm, Flash Flood, Marine, and Extreme Wind
+ * Warnings (TO.W, SV.W, FF.W, MA.W, EW.W). Zone- or county-based
+ * products (Winter Storm, Heat, Coastal Flood, Fire Weather) and watches
+ * are NOT included. Treat output as severe-event coverage, not a
+ * comprehensive NWS picture.
  *
  * Docs: https://mesonet.agron.iastate.edu/api/1/
  */
@@ -26,14 +33,14 @@ export interface MesonetPastWeekSummary {
 }
 
 /**
- * Fetches NWS warnings/watches issued in the trailing N days. Returns
- * counts by phenomenon and a list of the most notable individual events
- * (Tornado Emergency, Particularly Dangerous Situation, etc.).
+ * Fetches polygon-based NWS warnings (TO.W, SV.W, FF.W, MA.W, EW.W)
+ * issued in the trailing N days. Returns counts by phenomenon and a list
+ * of the most notable events.
  *
- * Throws MesonetEmptyError if the API responds but returns no records,
- * which the caller should treat as a hard failure rather than a clean
- * "nothing happened this week" — empty during severe season is a data
- * issue, not a quiet week.
+ * Throws MesonetEmptyError if the API responds but returns no records.
+ * Genuinely quiet weeks in deep winter or mid-summer can legitimately
+ * return zero SBWs in the contiguous US — callers may want to widen the
+ * window or downgrade to a soft-fail before escalating.
  */
 interface IemSbwRow {
   utc_issue: string;

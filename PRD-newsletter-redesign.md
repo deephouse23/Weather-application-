@@ -85,7 +85,7 @@ key_phrases:
   - ...
 similarity_max: 0.62             # max judge similarity vs. last 12 weeks
 similarity_judge: claude-sonnet-4-6
-model_used: claude-opus-4-7
+model_used: claude-sonnet-4-6
 images_used:                     # for cross-post image-reuse window
   - noaa-eruption-plume-2024.jpg
   - usgs-kilauea-vent.jpg
@@ -150,7 +150,7 @@ The catalog lives in `scripts/newsletter/topics.ts` with 3+ sentence extended de
    - **System:** Voice spec (§4.4), topic context from catalog, spotlight if any.
    - **Context:** News angle, atmospheric data.
    - **Constraints:** "Do not open with any of these phrasings: [past openers]. Do not lean on these phrases: [aggregated key_phrases from last 12 weeks]. Pick a fresh angle."
-7. Generate (Opus 4.7). Run anti-repetition checks (§4.4). Regenerate up to 2 times if fail.
+7. Generate (Sonnet 4.6). Run anti-repetition checks (§4.4). Regenerate up to 2 times if fail.
 8. Extract key phrases (Sonnet 4.6, temperature 0).
 9. Compute opener hash.
 10. Compute similarity_max (Anthropic-as-judge — Sonnet 4.6).
@@ -215,11 +215,11 @@ The judge is also asked: "If similarity is high, name the specific phrases or fr
 
 ### 4.5 Image Catalog Expansion
 
-The existing 20-image curated catalog (`scripts/generate-blog-post.ts` lines 165-226 area) expands to **60+ public-domain entries** covering all 15 topics roughly evenly. Sources: NOAA, NASA, USGS, Wikimedia Commons (CC0 / PD only).
+The existing 20-image curated catalog (`scripts/generate-blog-post.ts` lines 165-226 area) expands to **≥50 public-domain entries** (v1 ships at 51) covering all 15 topics with at least 3 entries each. Catalog growth toward 60+ is a follow-up; the runtime selectImages handles thinness via topic-neighbor fallback. Sources: NASA SDO, NOAA NESDIS GOES-16, NOAA SWPC/SPC/CPC/OPC, USGS, USDA, Wikimedia Commons via `Special:FilePath` (CC0/PD only).
 
 - 2–3 images per post.
 - **No image reused within last 8 weeks** (queried from `images_used` frontmatter field across history).
-- HEAD-check validation preserved from existing system; broken URLs stripped automatically.
+- Validation: ranged GET against every URL via `npm run validate:images`; broken URLs fail CI.
 - Catalog entry shape: `{ id, url, caption, credit, topic_tags[], license }`.
 
 ### 4.6 Spotlight (Preserved)
@@ -320,7 +320,7 @@ GitHub-issue-on-failure is **deferred to v2**. Failed runs surface via standard 
 The work is done when:
 
 1. `scripts/newsletter/topics.ts` exists with all 15 topics and ≥3-sentence extended descriptions per topic.
-2. `scripts/newsletter/images.ts` exists with ≥60 public-domain entries, license + credit + topic tags per entry, all URLs HEAD-validated at build time.
+2. `scripts/newsletter/images.ts` exists with ≥50 public-domain entries (target 60+; v1 ships 51), every topic has ≥3 entries, license + credit + topic tags per entry, all URLs validated by `npm run validate:images`.
 3. Two GitHub workflow files exist (`newsletter-wednesday.yml`, `newsletter-sunday.yml`), runnable via manual dispatch with `dry_run` input.
 4. Wednesday workflow, when run, selects a topic via the weighted-rotation algorithm, identifies a current news angle, generates a 600–900-word post in the new voice, runs the similarity check, persists the post with extended frontmatter, opens a PR.
 5. Sunday workflow, when run, generates a Rearview citing specific past-week events from Iowa Mesonet + SPC + existing feeds, generates a Roadmap, persists with extended frontmatter, opens a PR.

@@ -40,8 +40,13 @@ export async function fetchHeadlines(): Promise<NewsHeadline[]> {
       console.warn(`[news] aggregate ${res.status}; continuing without news`);
       return [];
     }
-    const data = (await res.json()) as { items?: NewsHeadline[]; articles?: NewsHeadline[] };
-    return data.items ?? data.articles ?? [];
+    const data = (await res.json()) as { items?: unknown; articles?: unknown };
+    const list = Array.isArray(data?.items)
+      ? data.items
+      : Array.isArray(data?.articles)
+        ? data.articles
+        : [];
+    return list as NewsHeadline[];
   } catch (err) {
     console.warn(`[news] fetch failed: ${(err as Error).message}; continuing without news`);
     return [];
@@ -63,7 +68,12 @@ export async function findAngleForTopic(
 
   const headlineBlock = headlines
     .slice(0, 30)
-    .map((h, i) => `${i + 1}. [${h.source}] ${h.title}${h.description ? ` — ${h.description.slice(0, 200)}` : ''}`)
+    .map((h, i) => {
+      const title = sanitizeForPrompt(h.title);
+      const desc = h.description ? sanitizeForPrompt(h.description).slice(0, 200) : '';
+      const source = sanitizeForPrompt(h.source);
+      return `${i + 1}. [${source}] ${title}${desc ? ` — ${desc}` : ''}`;
+    })
     .join('\n');
 
   const prompt = `You are scouting current-event hooks for a weather and earth-science publication.
@@ -101,6 +111,24 @@ Return JSON only, no prose.`;
   const parsed = parseAngle(raw, headlines);
   if (!parsed) return null;
   return parsed;
+}
+
+/**
+ * Strip user-content control characters and markdown fences from upstream
+ * headlines (especially Reddit titles) before they get interpolated into
+ * the LLM prompt. A title with triple-backticks would otherwise corrupt
+ * `parseAngle`'s JSON-fence detection downstream.
+ */
+function sanitizeForPrompt(input: string | undefined): string {
+  if (!input) return '';
+  return input
+    .replace(/```/g, "'''") // collapse triple backticks so JSON fences cannot break
+    .replace(/`/g, "'") // single backticks -> straight quote
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u001F\u007F]/g, ' ') // strip control characters
+    .replace(/\s+/g, ' ') // collapse whitespace runs (incl. newlines)
+    .trim()
+    .slice(0, 300);
 }
 
 function parseAngle(raw: string, headlines: NewsHeadline[]): NewsAngle | null {

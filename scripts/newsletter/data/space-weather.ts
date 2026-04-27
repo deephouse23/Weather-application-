@@ -28,7 +28,7 @@ interface XrayRow {
 export async function fetchSpaceWeatherSummary(): Promise<SpaceWeatherSummary> {
   const [kpRows, xrayRows] = await Promise.all([
     fetchJson<KpRow[]>('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'),
-    fetchJson<XrayRow[]>('https://services.swpc.noaa.gov/json/goes/primary/xrays-3-day.json'),
+    fetchJson<XrayRow[]>('https://services.swpc.noaa.gov/json/goes/primary/xrays-7-day.json'),
   ]);
 
   const kpRecent = parseKp(kpRows).slice(-56); // 7 days × 8 readings/day
@@ -76,12 +76,14 @@ function parseXrayPeak(rows: XrayRow[] | unknown): { time: string; flux: number 
   return { time: peak.time_tag, flux: peak.flux };
 }
 
-function classifyFlare(flux: number): string {
+function classifyFlare(flux: number): string | null {
   if (flux >= 1e-4) return `X${(flux / 1e-4).toFixed(1)}`;
   if (flux >= 1e-5) return `M${(flux / 1e-5).toFixed(1)}`;
   if (flux >= 1e-6) return `C${(flux / 1e-6).toFixed(1)}`;
   if (flux >= 1e-7) return `B${(flux / 1e-7).toFixed(1)}`;
-  return `A${(flux / 1e-8).toFixed(1)}`;
+  // Below B-class is quiescent background — not a meaningful "peak class".
+  // Returning null lets callers report "quiet" rather than misleading "A0.1".
+  return null;
 }
 
 async function fetchJson<T>(url: string): Promise<T> {

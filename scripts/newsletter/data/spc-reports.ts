@@ -88,19 +88,21 @@ function parseCsv(text: string, isoDate: string): SpcReport[] {
   for (const line of lines) {
     if (!line.trim()) continue;
     const lower = line.toLowerCase();
-    if (lower.startsWith('time,') || lower.startsWith('time:')) {
-      // Header row — preceding line tells us the category.
-      continue;
-    }
-    if (lower.includes('tornado')) {
+    // SPC daily report CSVs split into three sections, each preceded by a
+    // header row of the form "Time,F_Scale,..." (tornado), "Time,Size,..."
+    // (hail), or "Time,Speed,..." (wind). Match by column structure, NOT by
+    // free-text keyword: phrases like "brief tornado touchdown" or "60 mph
+    // winds" appear inside data rows' comments and would otherwise flip the
+    // category mid-section, dropping reports.
+    if (lower.startsWith('time,f_scale')) {
       category = 'tornado';
       continue;
     }
-    if (lower.includes('hail')) {
+    if (lower.startsWith('time,size')) {
       category = 'hail';
       continue;
     }
-    if (lower.includes('wind')) {
+    if (lower.startsWith('time,speed')) {
       category = 'wind';
       continue;
     }

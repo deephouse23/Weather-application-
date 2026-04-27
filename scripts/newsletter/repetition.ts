@@ -3,6 +3,7 @@ import type { BlogPost } from '@/lib/blog';
 export const DEFAULT_MODEL = process.env.NEWSLETTER_MODEL || 'claude-sonnet-4-6';
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
 const ANTHROPIC_VERSION = '2023-06-01';
+const REQUEST_TIMEOUT_MS = 120_000;
 
 export interface AnthropicCacheBlock {
   type: 'text';
@@ -46,15 +47,23 @@ export async function callAnthropic(opts: CallAnthropicOptions): Promise<string>
     body.system = opts.systemBlocks;
   }
 
-  const res = await fetch(ANTHROPIC_API, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': ANTHROPIC_VERSION,
-    },
-    body: JSON.stringify(body),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(ANTHROPIC_API, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': ANTHROPIC_VERSION,
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!res.ok) {
     const text = await res.text();
@@ -152,12 +161,28 @@ ${draft}`;
     worst_slug?: string;
     trigger_phrases?: string[];
   };
-  const max = typeof parsed.max === 'number' ? parsed.max : 0;
+  const scores = parsed.scores ?? [];
+  // Defensive: take the larger of the model's reported `max` and what we
+  // can derive from `scores`. Models occasionally report inconsistent
+  // values; we'd rather over-flag than miss a near-duplicate.
+  const reportedMax = typeof parsed.max === 'number' ? parsed.max : 0;
+  const derivedMax = scores.reduce(
+    (m, s) => (typeof s.score === 'number' && s.score > m ? s.score : m),
+    0,
+  );
+  const max = Math.max(reportedMax, derivedMax);
   const worstSlug = parsed.worst_slug;
-  const worstEntry = parsed.scores?.find((s) => s.slug === worstSlug);
+  const worstEntry =
+    scores.find((s) => s.slug === worstSlug) ??
+    scores.reduce<(typeof scores)[number] | undefined>(
+      (best, s) => (!best || s.score > best.score ? s : best),
+      undefined,
+    );
   return {
     max,
-    worstMatch: worstEntry ? { slug: worstEntry.slug, score: worstEntry.score, reason: worstEntry.reason } : null,
+    worstMatch: worstEntry
+      ? { slug: worstEntry.slug, score: worstEntry.score, reason: worstEntry.reason }
+      : null,
     triggerPhrases: parsed.trigger_phrases ?? [],
   };
 }

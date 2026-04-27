@@ -86,7 +86,13 @@ export const FORBIDDEN_PATTERNS: ForbiddenPattern[] = [
     pattern:
       /[\u{1F300}-\u{1FAFF}\u{1F000}-\u{1F02F}\u{2600}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F600}-\u{1F64F}]/gu,
   },
-  { label: 'all-caps emphasis', pattern: /\b[A-Z]{4,}\b/g },
+  // Skip well-known agency acronyms (which we cite by name in every post)
+  // and require ≥6 letters for what we treat as shouty all-caps emphasis.
+  // 4-5 letter all-caps tokens are almost always acronyms in a weather context.
+  {
+    label: 'all-caps emphasis',
+    pattern: /\b(?!(?:NOAA|NASA|USGS|USDA|EPA|NWS|SPC|SWPC|NCEP|NHC|GOES|MODIS|VIIRS|GFS|ECMWF|GEFS|HRRR|RAP|WPC|OPC|CONUS|MJO|ENSO|NDMC|NCDC|NCEI|VAAC|VTEC|IEM|ERA5|MRMS|GeoColor)\b)[A-Z]{6,}\b/g,
+  },
 ];
 
 export interface VoiceViolation {

@@ -1,11 +1,12 @@
 /**
- * HEAD-checks every URL in the image catalog and exits non-zero on any
- * non-200 response. Run via `npm run validate:images` or directly with
- * `npx tsx scripts/newsletter/validate-images.ts`.
+ * Validates every URL in the image catalog with a 1-byte ranged GET and
+ * exits non-zero on any response that isn't 200/206. Run via
+ * `npm run validate:images` or `npx tsx scripts/newsletter/validate-images.ts`.
  *
- * Concurrency is capped to avoid hammering small public servers like
- * spc.noaa.gov. Some hosts return 405 to HEAD; we fall back to a ranged
- * GET in those cases before declaring failure.
+ * Why ranged GET, not HEAD: Wikimedia rate-limits HEAD aggressively
+ * (returns 429) but accepts ranged GET fine. Single canonical method
+ * across all hosts, with a Wikimedia-policy-compliant User-Agent and a
+ * polite inter-request delay so small public servers don't throttle us.
  */
 
 import { IMAGES, type ImageEntry } from './images';

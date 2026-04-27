@@ -51,14 +51,14 @@ export async function runWednesday(): Promise<WednesdayResult> {
   const topic = topicResult.topic;
   console.log(`[wednesday] ${topicResult.rationale}`);
 
-  const headlines = await fetchHeadlines();
   let newsAngle: NewsAngle | null = null;
   try {
+    const headlines = await fetchHeadlines();
     newsAngle = await findAngleForTopic(topic, headlines);
     if (newsAngle) console.log(`[wednesday] news angle: ${newsAngle.angle.slice(0, 120)}`);
     else console.log('[wednesday] no fitting news angle — leaning evergreen');
   } catch (err) {
-    console.warn(`[wednesday] news angle lookup failed: ${(err as Error).message}`);
+    console.warn(`[wednesday] news lookup failed: ${(err as Error).message} — leaning evergreen`);
   }
 
   const spotlight = getSpotlight();

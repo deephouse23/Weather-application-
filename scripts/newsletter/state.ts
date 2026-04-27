@@ -212,9 +212,17 @@ function extractFirstWords(markdown: string, count: number): string[] {
     .replace(/`[^`\n]+`/g, '')
     .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-    .replace(/^#+\s+.*$/gm, '')
-    .replace(/<[^>]+>/g, '')
-    .replace(/[^\p{L}\p{N}\s'-]/gu, ' ');
+    .replace(/^#+\s+.*$/gm, '');
+  // Strip HTML-like tags. Loop until stable so that a malformed input like
+  // "<<script>" doesn't leave a residual "<script" after a single pass.
+  // (CodeQL js/incomplete-multi-character-sanitization. Output is hashed,
+  // not rendered, but loop-until-stable is the correct general fix.)
+  let prev: string;
+  do {
+    prev = text;
+    text = text.replace(/<[^>]+>/g, '');
+  } while (text !== prev);
+  text = text.replace(/[^\p{L}\p{N}\s'-]/gu, ' ');
 
   const words: string[] = [];
   for (const token of text.split(/\s+/)) {
