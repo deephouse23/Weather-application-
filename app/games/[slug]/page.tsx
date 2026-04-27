@@ -8,15 +8,17 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createPublicSupabaseClient } from '@/lib/supabase/server';
 import type { Game } from '@/lib/types/games';
 import GameDetailClient from './game-detail-client';
 
 const BASE_URL = 'https://www.16bitweather.co';
 
+// Public reads only — no auth/cookies — so this page stays static-eligible.
+// See createPublicSupabaseClient docstring for why this matters.
 async function getGameBySlug(slug: string): Promise<Game | null> {
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = createPublicSupabaseClient();
     const { data, error } = await supabase
       .from('games')
       .select('*')
@@ -33,7 +35,7 @@ async function getGameBySlug(slug: string): Promise<Game | null> {
 
 export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = createPublicSupabaseClient();
     const { data } = await supabase
       .from('games')
       .select('slug')
