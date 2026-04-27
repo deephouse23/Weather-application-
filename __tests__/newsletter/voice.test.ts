@@ -13,7 +13,7 @@ The polar jet sagged south of 40°N this week, dropping freezing levels across t
 
 The pattern relaxes by Wednesday as a Pacific ridge rebuilds.
 
-## Bottom Line
+## What to Watch
 
 - Cold persists through Tuesday across the upper Midwest.
 - Severe risk shifts to the Gulf Coast late week.`;
@@ -149,8 +149,11 @@ describe('VOICE_SYSTEM_PROMPT', () => {
     expect(VOICE_SYSTEM_PROMPT).toMatch(/no\s+emoji|no emojis/i);
   });
 
-  it('mentions the Bottom Line section requirement', () => {
+  it('warns against defaulting to "## Bottom Line"', () => {
+    // The closer is rotated per-run via scripts/newsletter/closers.ts; the
+    // voice spec explicitly tells the model NOT to fall back to "Bottom Line".
     expect(VOICE_SYSTEM_PROMPT).toMatch(/Bottom Line/);
+    expect(VOICE_SYSTEM_PROMPT).toMatch(/rotated out|do not default/i);
   });
 
   it('mentions the 2-3 image requirement', () => {

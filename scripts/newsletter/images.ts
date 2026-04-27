@@ -576,6 +576,59 @@ function pickFrom(
   }
 }
 
+/**
+ * Returns the set of topic slugs that are "live" given the week's actual
+ * data. Used by Sunday image selection so we don't drop Hurricane Katrina
+ * into a post about late-April Plains tornadoes (it has happened).
+ *
+ * Topics that are always relevant — atmosphere structure, tech_and_models
+ * (satellite imagery), aviation, marine, climate background — stay on. The
+ * gates only filter event-driven topics: severe_storms, tropical, space_weather.
+ */
+export interface ActivityIndicators {
+  severeReportCount: number;
+  maxKpPastWeek: number;
+  notableFlareCount: number;
+  significantQuakeCount: number;
+  /** Caller can pass a date override for tests. Defaults to now. */
+  now?: Date;
+}
+
+export function getActiveTopics(indicators: ActivityIndicators): Set<TopicSlug> {
+  const now = indicators.now ?? new Date();
+  const month = now.getUTCMonth() + 1; // 1-12
+  // Atlantic hurricane season is June 1 – November 30. Eastern Pacific is
+  // similar. Outside this window, only allow tropical imagery if there is
+  // an explicit signal — and we currently don't pull NHC active basins,
+  // so for v1 we simply gate by season.
+  const inHurricaneSeason = month >= 6 && month <= 11;
+
+  const active = new Set<TopicSlug>();
+  // Always-on (content-neutral atmospheric and structural imagery)
+  for (const slug of [
+    'atmosphere_layers',
+    'aviation',
+    'marine',
+    'tech_and_models',
+    'cryosphere',
+    'paleoclimate',
+    'urban_climate',
+    'biometeorology',
+    'agricultural',
+    'historical_events',
+    'volcanoes',
+    'ocean_currents',
+  ] as TopicSlug[]) {
+    active.add(slug);
+  }
+  if (indicators.severeReportCount > 0) active.add('severe_storms');
+  if (indicators.maxKpPastWeek >= 4 || indicators.notableFlareCount > 0) {
+    active.add('space_weather');
+  }
+  if (inHurricaneSeason) active.add('tropical');
+  return active;
+}
+
 export function countImagesByTopic(): Record<TopicSlug, number> {
   const counts = Object.fromEntries(TOPIC_SLUGS.map((s) => [s, 0])) as Record<TopicSlug, number>;
   for (const img of IMAGES) {
