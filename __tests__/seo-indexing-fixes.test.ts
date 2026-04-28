@@ -17,7 +17,7 @@ describe('SEO Indexing Fixes', () => {
     const robotsPath = path.join(process.cwd(), 'public', 'robots.txt')
     const content = fs.readFileSync(robotsPath, 'utf-8')
 
-    const requiredAllows = ['/blog', '/news', '/education', '/games', '/aviation', '/weather/']
+    const requiredAllows = ['/blog', '/news', '/education', '/aviation', '/weather/']
     for (const route of requiredAllows) {
       expect(content).toContain(`Allow: ${route}`)
     }
@@ -28,7 +28,7 @@ describe('SEO Indexing Fixes', () => {
     const content = fs.readFileSync(wrapperPath, 'utf-8')
 
     expect(content).toContain('<footer')
-    const requiredLinks = ['/radar', '/severe', '/aviation', '/education', '/blog', '/news', '/games', '/about']
+    const requiredLinks = ['/radar', '/severe', '/aviation', '/education', '/blog', '/news', '/about']
     for (const link of requiredLinks) {
       expect(content).toContain(`href="${link}"`)
     }

@@ -18,7 +18,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, Home, Map, Plane, GraduationCap, Gamepad2, Newspaper, Sun, ChevronDown, Cloud, Wrench, AlertTriangle, CloudLightning, Snowflake, CloudRain, Route, Info, FileText, Star, Activity } from "lucide-react"
+import { Menu, X, Home, Map, Plane, GraduationCap, Newspaper, Sun, ChevronDown, Cloud, AlertTriangle, CloudLightning, Snowflake, CloudRain, Route, Info, FileText, Star, Activity } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
 import AuthButton from "@/components/auth/auth-button"
@@ -41,9 +41,7 @@ interface NavigationProps {
 export default function Navigation({ weatherLocation, weatherTemperature, weatherUnit }: NavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [weatherMenuOpen, setWeatherMenuOpen] = useState(false)
-  const [toolsMenuOpen, setToolsMenuOpen] = useState(false)
-  const toggleWeatherMenu = () => { setWeatherMenuOpen(prev => !prev); setToolsMenuOpen(false) }
-  const toggleToolsMenu = () => { setToolsMenuOpen(prev => !prev); setWeatherMenuOpen(false) }
+  const toggleWeatherMenu = () => setWeatherMenuOpen(prev => !prev)
   const pathname = usePathname()
   const { theme } = useTheme()
 
@@ -139,12 +137,8 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
     { href: "/earth-sciences", label: "EARTH SCI", icon: Activity },
   ]
 
-  const toolsItems = [
-    { href: "/education", label: "EDUCATION", icon: GraduationCap },
-    { href: "/games", label: "GAMES", icon: Gamepad2 },
-  ]
-
   const rightNavItems = [
+    { href: "/education", label: "EDUCATION", icon: GraduationCap },
     { href: "/blog", label: "BLOG", icon: FileText },
     { href: "/news", label: "NEWS", icon: Newspaper },
     { href: "/about", label: "ABOUT", icon: Info },
@@ -154,14 +148,11 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
   const allNavItems = [
     ...topNavItems,
     ...weatherItems,
-    ...toolsItems,
     ...rightNavItems,
   ]
 
   const weatherPaths = weatherItems.map(i => i.href)
-  const toolsPaths = toolsItems.map(i => i.href)
   const isWeatherActive = weatherPaths.includes(pathname)
-  const isToolsActive = toolsPaths.includes(pathname)
 
   return (
     <>
@@ -203,7 +194,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
 
             {/* Weather Dropdown */}
             <div className="relative"
-              onMouseEnter={() => { setWeatherMenuOpen(true); setToolsMenuOpen(false) }}
+              onMouseEnter={() => setWeatherMenuOpen(true)}
               onMouseLeave={() => setWeatherMenuOpen(false)}
             >
               <Button
@@ -239,45 +230,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
               )}
             </div>
 
-            {/* Tools Dropdown */}
-            <div className="relative"
-              onMouseEnter={() => { setToolsMenuOpen(true); setWeatherMenuOpen(false) }}
-              onMouseLeave={() => setToolsMenuOpen(false)}
-            >
-              <Button
-                variant={isToolsActive ? "secondary" : "ghost"}
-                size="sm"
-                className={cn("font-semibold transition-all duration-200 gap-1", isToolsActive && "font-bold shadow-sm")}
-                onClick={() => toggleToolsMenu()}
-              >
-                <Wrench className="w-4 h-4" />
-                <span>Tools</span>
-                <ChevronDown className={cn("w-3 h-3 transition-transform", toolsMenuOpen && "rotate-180")} />
-              </Button>
-              {toolsMenuOpen && (
-                <div className="absolute top-full left-0 w-48 pt-2 z-50">
-                  <div className="rounded-lg border border-border bg-background/95 backdrop-blur-lg shadow-xl animate-in slide-in-from-top-2 py-1">
-                  {toolsItems.map((item) => {
-                    const Icon = item.icon
-                    const isActive = pathname === item.href
-                    return (
-                      <Link key={item.href} href={item.href}
-                        className={cn(
-                          "flex items-center gap-3 px-4 py-2.5 text-sm font-semibold transition-colors",
-                          isActive ? "bg-secondary text-secondary-foreground" : "text-foreground hover:bg-muted"
-                        )}
-                        onClick={() => setToolsMenuOpen(false)}
-                      >
-                        <Icon className="w-4 h-4" />{item.label}
-                      </Link>
-                    )
-                  })}
-                </div>
-                </div>
-              )}
-            </div>
-
-            {/* Blog, News, About */}
+            {/* Education, Blog, News, About */}
             {rightNavItems.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href

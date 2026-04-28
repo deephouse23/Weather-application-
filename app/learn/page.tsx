@@ -10,7 +10,7 @@
 'use client';
 
 import React from 'react';
-import { Cloud, Zap, BookOpen, BookMarked, Thermometer, Satellite, Gamepad2 } from 'lucide-react';
+import { Cloud, Zap, BookOpen, BookMarked, Thermometer, Satellite } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
@@ -57,13 +57,6 @@ export default function LearnPage() {
       title: 'Radar & Models',
       description: 'Professional-grade NEXRAD radar and GFS forecasting models, rendered in high-fidelity 16-bit style.',
       itemCount: undefined
-    },
-    {
-      href: '/games',
-      icon: Gamepad2,
-      title: 'Weather Arcade',
-      description: 'Test your meteorological mettle with retro-style quizzes and challenges. High scores needed.',
-      itemCount: 3
     },
     {
       href: '/learn/glossary',

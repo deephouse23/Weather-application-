@@ -77,7 +77,6 @@ export default function PageWrapper({ children, weatherLocation, weatherTemperat
                 <Link href="/education" className="text-muted-foreground hover:text-foreground transition-colors">Education</Link>
                 <Link href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">Blog</Link>
                 <Link href="/news" className="text-muted-foreground hover:text-foreground transition-colors">News</Link>
-                <Link href="/games" className="text-muted-foreground hover:text-foreground transition-colors">Games</Link>
                 <Link href="/cloud-types" className="text-muted-foreground hover:text-foreground transition-colors">Cloud Types</Link>
                 <Link href="/fun-facts" className="text-muted-foreground hover:text-foreground transition-colors">Fun Facts</Link>
               </nav>

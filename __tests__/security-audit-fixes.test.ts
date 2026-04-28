@@ -12,34 +12,9 @@ describe('Fix 1: XSS — blog article rendering', () => {
   });
 });
 
-describe('Fix 2: postMessage origin validation', () => {
-  // Interactive iframe/message handling lives in the client component;
-  // page.tsx is now a pure server component for SEO.
-  const src = readFileSync(join(__dirname, '..', 'app', 'games', '[slug]', 'game-detail-client.tsx'), 'utf-8');
-  it('should check event.origin before processing messages', () => {
-    expect(src).toContain('event.origin');
-  });
-});
-
-describe('Fix 3: Supabase filter injection in games search', () => {
-  const src = readFileSync(join(__dirname, '..', 'app', 'api', 'games', 'route.ts'), 'utf-8');
-  it('should not interpolate raw search into .or() filter', () => {
-    expect(src).not.toMatch(/\.or\(`[^`]*\$\{search\}[^`]*`\)/);
-  });
-});
-
-describe('Fix 4: Admin access control on POST /api/games', () => {
-  const src = readFileSync(join(__dirname, '..', 'app', 'api', 'games', 'route.ts'), 'utf-8');
-  it('should use getUser() instead of getSession() for write operations', () => {
-    expect(src).not.toContain('getSession()');
-    expect(src).toContain('getUser()');
-  });
-
-  it('should check admin role via app_metadata to match JWT/RLS policy', () => {
-    expect(src).toContain('app_metadata');
-    expect(src).not.toMatch(/user_metadata\?\.role/);
-  });
-});
+// Fixes 2, 3, 4 covered the games surface (postMessage origin validation,
+// Supabase filter injection on /api/games, admin auth on POST /api/games).
+// All three were removed alongside the games feature itself.
 
 describe('Fix 5: CSP unsafe-eval removed', () => {
   const src = readFileSync(join(__dirname, '..', 'next.config.mjs'), 'utf-8');
@@ -50,13 +25,7 @@ describe('Fix 5: CSP unsafe-eval removed', () => {
   });
 });
 
-describe('Fix 6: Stale session in scores route', () => {
-  const src = readFileSync(join(__dirname, '..', 'app', 'api', 'games', '[slug]', 'scores', 'route.ts'), 'utf-8');
-  it('should use getUser() instead of getSession()', () => {
-    expect(src).not.toContain('getSession()');
-    expect(src).toContain('getUser()');
-  });
-});
+// Fix 6 covered the games scores route, also removed with the games feature.
 
 describe('Fix 7: Info disclosure on cron endpoint', () => {
   const src = readFileSync(join(__dirname, '..', 'app', 'api', 'cron', 'keep-alive', 'route.ts'), 'utf-8');

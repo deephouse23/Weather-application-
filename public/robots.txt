@@ -7,7 +7,6 @@ Allow: /weather/
 Allow: /blog
 Allow: /news
 Allow: /education
-Allow: /games
 Allow: /aviation
 Allow: /severe
 Allow: /tropical

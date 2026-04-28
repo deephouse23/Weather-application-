@@ -13,7 +13,6 @@ const ALLOWED_REDIRECT_PATHS = [
   '/profile',
   '/settings',
   '/saved-locations',
-  '/games',
   '/weather',
   '/gfs-model',
   '/news',
@@ -25,7 +24,6 @@ const ALLOWED_REDIRECT_PATHS = [
 // Patterns that match dynamic routes
 const ALLOWED_REDIRECT_PATTERNS = [
   /^\/weather\/[^\/]+$/,           // /weather/[city]
-  /^\/games\/[^\/]+$/,             // /games/[slug]
   /^\/gfs-model\/[^\/]+\/[^\/]+$/, // /gfs-model/[region]/[run]
   /^\/education\/[^\/]+$/,         // /education/[topic]
 ]
