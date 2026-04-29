@@ -10,7 +10,7 @@ Active PRDs at repo root:
 
 ## Project Overview
 
-16-Bit Weather is a retro-styled weather education platform built with Next.js 16 (App Router) and React 19. It combines real-time weather data with pixel-influenced visuals, educational content, interactive games, global weather tracking, tool-backed AI (earth science and aviation aware), and Supabase-backed user AI memory. Live at 16bitweather.co, deployed on Vercel.
+16-Bit Weather is a retro-styled weather education platform built with Next.js 16 (App Router) and React 19. It combines real-time weather data with pixel-influenced visuals, educational content, global weather tracking, tool-backed AI (earth science and aviation aware), and Supabase-backed user AI memory. Live at 16bitweather.co, deployed on Vercel.
 
 ## Common Commands
 
@@ -58,7 +58,7 @@ Config: `.git/hooks/pre-push` and `lighthouserc.js`
 - **`app/`** - Routes using Next.js 16 App Router conventions
   - Server Components by default, `"use client"` for interactivity
   - `api/` - API routes that proxy external services (keeps API keys server-side)
-  - Dynamic routes: `weather/[city]`, `games/[slug]`, `gfs-model/[region]/[run]`
+  - Dynamic routes: `weather/[city]`, `gfs-model/[region]/[run]`
 
 ### API Route Groups
 
@@ -66,7 +66,6 @@ Config: `.git/hooks/pre-push` and `lighthouserc.js`
 - **Aviation**: `api/aviation/{alerts,metar,pireps,flight-lookup,turbulence}`
 - **Space Weather**: `api/space-weather/{kp-index,aurora,coronagraph,cme,flares,alerts,solar-wind,xray-flux,sunspots,scales}`
 - **News**: `api/news/{aggregate,rss,fox,nasa,reddit}`
-- **Games**: `api/games/{route,scores,play}`
 - **AI Chat**: `api/chat` (uses Vercel AI SDK + `@ai-sdk/anthropic`)
 - **Radar**: `api/weather/{noaa-wms,iowa-nexrad,radar}`
 
@@ -79,7 +78,7 @@ Config: `.git/hooks/pre-push` and `lighthouserc.js`
   - `theme-config.ts` - Theme definitions (12 themes with CSS custom properties)
   - `env-validation.ts` - Environment variable validation
   - `supabase/` - Database client, auth, middleware, SQL schemas
-  - `services/` - Domain services (games, news, GFS models, RSS, AI chat, aviation, space weather, USGS earthquakes, volcanoes)
+  - `services/` - Domain services (news, GFS models, RSS, AI chat, aviation, space weather, USGS earthquakes, volcanoes)
   - `weather/` - Weather data modules (current, forecast, geocoding, utils)
   - `validations/` - Zod validation schemas
   - `ai/` - AI utilities and configuration
@@ -90,7 +89,6 @@ Config: `.git/hooks/pre-push` and `lighthouserc.js`
   - `aviation/` - Flight conditions terminal, turbulence map
   - `space-weather/` - Aurora forecast, Kp index, solar wind, coronagraph
   - `news/` - News grid, cards, filters
-  - `games/` - Game cards, score submission
   - `terminal/` - Terminal-style UI components
   - `location-context.tsx` - Location state provider
 

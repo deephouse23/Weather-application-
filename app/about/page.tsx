@@ -52,7 +52,6 @@ const modules = [
   { href: "/severe", label: "Severe Weather", desc: "Active tornado, thunderstorm, and flood warnings", icon: CloudLightning },
   { href: "/aviation", label: "Aviation", desc: "METARs, PIREPs, SIGMETs, and flight conditions", icon: Plane },
   { href: "/space-weather", label: "Space Weather", desc: "Solar flares, Kp index, aurora forecast, and coronagraph", icon: Sun },
-  { href: "/games", label: "Retro Games", desc: "Weather-themed arcade games with leaderboards", icon: Gamepad2 },
   { href: "/news", label: "News Feed", desc: "Aggregated weather news from NOAA, NASA, and USGS", icon: Newspaper },
 ];
 
@@ -110,9 +109,9 @@ export default function AboutPage() {
             <div className="space-y-6">
               <p className="font-mono text-sm text-muted-foreground">
                 16-Bit Weather is a retro-styled weather education platform that combines real-time
-                weather data with pixel-influenced visuals, educational content, interactive games,
-                and tool-backed AI. It monitors weather across the United States through multiple
-                government data sources, updated in real-time.
+                weather data with pixel-influenced visuals, educational content, and tool-backed AI.
+                It monitors weather across the United States through multiple government data sources,
+                updated in real-time.
               </p>
 
               <div className="border border-primary/30 rounded-lg p-5 bg-primary/5">
