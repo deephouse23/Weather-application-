@@ -6,8 +6,8 @@ module.exports = {
       startServerReadyPattern: 'Ready',
       url: ['http://localhost:3000'],
       
-      // Number of runs to average
-      numberOfRuns: 3,
+      // Number of runs (median aggregate) — extra runs reduce CI flake vs 0.85 perf gate
+      numberOfRuns: 5,
       
       // Settings for Chrome
       settings: {

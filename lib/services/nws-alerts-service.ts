@@ -10,6 +10,8 @@ const NWS_USER_AGENT =
 
 const NWS_ACCEPT = 'application/geo+json, application/json'
 
+const NWS_FETCH_TIMEOUT_MS = 25_000
+
 export interface AlertCounts {
   total: number
   severity: { extreme: number; severe: number; moderate: number; minor: number }
@@ -155,9 +157,17 @@ async function fetchNwsFeatureCollection(url: string): Promise<{
     geometry?: NwsGeometry | null
   }>
 }> {
-  const response = await fetch(url, {
-    headers: { 'User-Agent': NWS_USER_AGENT, Accept: NWS_ACCEPT },
-  })
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), NWS_FETCH_TIMEOUT_MS)
+  let response: Response
+  try {
+    response = await fetch(url, {
+      signal: controller.signal,
+      headers: { 'User-Agent': NWS_USER_AGENT, Accept: NWS_ACCEPT },
+    })
+  } finally {
+    clearTimeout(timer)
+  }
   if (!response.ok) {
     throw new Error(`NWS alerts HTTP ${response.status}`)
   }
@@ -189,20 +199,20 @@ export function pointActiveAlertsUrl(lat: number, lon: number): string {
 export async function fetchActiveAlertsDetail(options?: {
   point?: { lat: number; lon: number }
 }): Promise<NWSAlertDetail[]> {
-  try {
-    const url = options?.point
-      ? pointActiveAlertsUrl(options.point.lat, options.point.lon)
-      : nationalActiveAlertsUrl()
-    const fc = await fetchNwsFeatureCollection(url)
-    return fc.features.map((f) => mapNwsFeatureToDetail(f))
-  } catch {
-    return []
-  }
+  const url = options?.point
+    ? pointActiveAlertsUrl(options.point.lat, options.point.lon)
+    : nationalActiveAlertsUrl()
+  const fc = await fetchNwsFeatureCollection(url)
+  return fc.features.map((f) => mapNwsFeatureToDetail(f))
 }
 
 export async function fetchActiveAlerts(): Promise<NWSAlert[]> {
-  const details = await fetchActiveAlertsDetail()
-  return details.map(toSummary)
+  try {
+    const details = await fetchActiveAlertsDetail()
+    return details.map(toSummary)
+  } catch {
+    return []
+  }
 }
 
 /** GeoJSON for OpenLayers — truncates long text on national feed to limit payload. */

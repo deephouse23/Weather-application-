@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     const insertRow = {
       user_id: user.id,
       report_type: v.report_type,
-      description: v.description.trim(),
+      description: v.description,
       latitude: v.latitude,
       longitude: v.longitude,
       location_name: v.location_name?.trim() || null,

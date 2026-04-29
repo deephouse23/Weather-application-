@@ -29,7 +29,14 @@ export async function GET(request: NextRequest) {
     const area = url.searchParams.get('area') ?? undefined
     const detail = url.searchParams.get('detail') === '1'
     const geojson = url.searchParams.get('geojson') === '1'
-    const point = parsePoint(url.searchParams.get('point'))
+    const pointParam = url.searchParams.get('point')
+    const point = parsePoint(pointParam)
+    if (pointParam != null && pointParam.trim() !== '' && !point) {
+      return NextResponse.json(
+        { error: 'Invalid point parameter; use lat,lon in decimal degrees (WGS84).' },
+        { status: 400 }
+      )
+    }
 
     let details = await fetchActiveAlertsDetail(point ? { point } : undefined)
 

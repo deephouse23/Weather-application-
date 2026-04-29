@@ -165,7 +165,10 @@ export default function WarningsClient() {
     return pts
   }, [spcReports, community])
 
-  const selected = sorted.find((a) => a.id === selectedId) ?? null
+  const selected = useMemo(
+    () => alerts.find((a) => a.id === selectedId) ?? null,
+    [alerts, selectedId]
+  )
 
   function requestBrowserLocation() {
     if (!navigator.geolocation) return

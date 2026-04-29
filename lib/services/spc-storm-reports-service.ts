@@ -30,8 +30,35 @@ function formatYYMMDD(date: Date): string {
   return `${yy}${mm}${dd}`
 }
 
-function splitCsv(line: string): string[] {
-  return line.split(',')
+/** RFC-style CSV row split (handles quoted fields with commas). */
+export function splitCsvLine(line: string): string[] {
+  const out: string[] = []
+  let cur = ''
+  let inQuotes = false
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i]
+    if (inQuotes) {
+      if (c === '"') {
+        if (line[i + 1] === '"') {
+          cur += '"'
+          i++
+        } else {
+          inQuotes = false
+        }
+      } else {
+        cur += c
+      }
+    } else if (c === '"') {
+      inQuotes = true
+    } else if (c === ',') {
+      out.push(cur)
+      cur = ''
+    } else {
+      cur += c
+    }
+  }
+  out.push(cur)
+  return out
 }
 
 function parseCsv(text: string, isoDate: string): SpcReport[] {
@@ -54,7 +81,7 @@ function parseCsv(text: string, isoDate: string): SpcReport[] {
       continue
     }
     if (!category) continue
-    const cols = splitCsv(line)
+    const cols = splitCsvLine(line)
     if (cols.length < 8) continue
     const [time, size, location, county, state, lat, lon, ...rest] = cols
     out.push({
@@ -98,20 +125,32 @@ export async function fetchRecentSpcReports(
   days = 2,
   now = new Date()
 ): Promise<SpcReport[]> {
-  const reports: SpcReport[] = []
-  for (let dayOffset = 0; dayOffset < days; dayOffset++) {
+  const dayJobs = Array.from({ length: days }, (_, dayOffset) => {
     const date = new Date(now.getTime() - dayOffset * 24 * 60 * 60 * 1000)
     const yymmdd = formatYYMMDD(date)
     const isoDate = date.toISOString().slice(0, 10)
     const url = `${SPC_BASE}/${yymmdd}_rpts.csv`
-    try {
+    return { yymmdd, isoDate, url }
+  })
+
+  const settled = await Promise.allSettled(
+    dayJobs.map(async ({ yymmdd, isoDate, url }) => {
       const text = await fetchText(url)
-      reports.push(...parseCsv(text, isoDate))
-    } catch (err) {
-      const msg = (err as Error).message
-      if (msg.includes('404')) continue
-      console.warn(`[spc-storm-reports] ${yymmdd}: ${msg}`)
+      return parseCsv(text, isoDate)
+    })
+  )
+
+  const reports: SpcReport[] = []
+  for (let i = 0; i < settled.length; i++) {
+    const r = settled[i]
+    const { yymmdd } = dayJobs[i]
+    if (r.status === 'fulfilled') {
+      reports.push(...r.value)
+      continue
     }
+    const msg = (r.reason as Error)?.message ?? String(r.reason)
+    if (msg.includes('404')) continue
+    console.warn(`[spc-storm-reports] ${yymmdd}: ${msg}`)
   }
   return reports
 }
