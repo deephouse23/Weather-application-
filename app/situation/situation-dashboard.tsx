@@ -6,6 +6,7 @@
  * list. Everything above (page chrome) is server-rendered.
  */
 import React, { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import type { NWSAlert, WISScore } from '@/lib/services/nws-alerts-service';
 
@@ -106,18 +107,22 @@ export default function SituationDashboard() {
 
             <div className="grid grid-cols-3 gap-4 text-center">
               <div className="space-y-1">
-                <p className="text-2xl font-bold font-mono">{wis.activeWarnings}</p>
-                <p className="text-xs font-mono text-muted-foreground uppercase">Warnings</p>
+                <p className="text-2xl font-bold font-mono">{wis.nwsWarnings ?? wis.activeWarnings}</p>
+                <p className="text-xs font-mono text-muted-foreground uppercase">NWS warnings</p>
               </div>
               <div className="space-y-1">
-                <p className="text-2xl font-bold font-mono">{wis.activeWatches}</p>
-                <p className="text-xs font-mono text-muted-foreground uppercase">Watches</p>
+                <p className="text-2xl font-bold font-mono">{wis.nwsWatches ?? wis.activeWatches}</p>
+                <p className="text-xs font-mono text-muted-foreground uppercase">NWS watches</p>
               </div>
               <div className="space-y-1">
-                <p className="text-2xl font-bold font-mono">{wis.activeAdvisories}</p>
-                <p className="text-xs font-mono text-muted-foreground uppercase">Advisories</p>
+                <p className="text-2xl font-bold font-mono">{wis.nwsAdvisories ?? wis.activeAdvisories}</p>
+                <p className="text-xs font-mono text-muted-foreground uppercase">Other products</p>
               </div>
             </div>
+            <p className="text-[10px] font-mono text-muted-foreground text-center mt-2 max-w-xl mx-auto">
+              Counts use NWS product names (watch/warning). Severity tiles still drive the WIS score — see{' '}
+              <Link href="/warnings" className="underline text-primary">Warnings command center</Link> for full text and maps.
+            </p>
           </div>
         </div>
       )}

@@ -145,8 +145,52 @@ export interface Database {
           animation_enabled?: boolean
           created_at?: string
           updated_at?: string
+        },
+      },
+      storm_reports: {
+        Row: {
+          id: string
+          user_id: string
+          report_type: 'hail' | 'wind' | 'tornado' | 'flood' | 'funnel' | 'other'
+          description: string
+          latitude: number
+          longitude: number
+          location_name: string | null
+          image_url: string | null
+          occurred_at: string
+          status: 'pending' | 'approved' | 'rejected'
+          created_at: string
+          updated_at: string
         }
-      }
+        Insert: {
+          id?: string
+          user_id: string
+          report_type: 'hail' | 'wind' | 'tornado' | 'flood' | 'funnel' | 'other'
+          description: string
+          latitude: number
+          longitude: number
+          location_name?: string | null
+          image_url?: string | null
+          occurred_at?: string
+          status?: 'pending' | 'approved' | 'rejected'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          report_type?: 'hail' | 'wind' | 'tornado' | 'flood' | 'funnel' | 'other'
+          description?: string
+          latitude?: number
+          longitude?: number
+          location_name?: string | null
+          image_url?: string | null
+          occurred_at?: string
+          status?: 'pending' | 'approved' | 'rejected'
+          created_at?: string
+          updated_at?: string
+        }
+      },
       user_ai_memory: {
         Row: {
           user_id: string

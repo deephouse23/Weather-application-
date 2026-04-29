@@ -58,7 +58,7 @@ export default function WISBadge() {
 
   return (
     <Link
-      href="/situation"
+      href="/warnings"
       className={cn(
         'flex items-center gap-1.5 px-2 py-1 rounded-full border text-xs font-mono font-bold transition-all hover:scale-105',
         levelColors[wis.level]
