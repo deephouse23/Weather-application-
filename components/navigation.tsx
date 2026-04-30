@@ -18,7 +18,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, Home, Map, Plane, GraduationCap, Newspaper, Sun, ChevronDown, Cloud, AlertTriangle, CloudLightning, Snowflake, CloudRain, Route, Info, FileText, Star, Activity } from "lucide-react"
+import { Menu, X, Home, Map, Plane, GraduationCap, Newspaper, Sun, ChevronDown, Cloud, AlertTriangle, CloudLightning, Snowflake, CloudRain, Route, Info, FileText, Star, Activity, BellRing } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { getComponentStyles, type ThemeType } from "@/lib/theme-utils"
 import AuthButton from "@/components/auth/auth-button"
@@ -127,6 +127,7 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
   const weatherItems = [
     { href: "/radar", label: "RADAR", icon: Map },
     { href: "/situation", label: "SITUATION", icon: AlertTriangle },
+    { href: "/warnings", label: "WARNINGS", icon: BellRing },
     { href: "/severe", label: "SEVERE", icon: CloudLightning },
     { href: "/winter", label: "WINTER", icon: Snowflake },
     { href: "/tropical", label: "TROPICAL", icon: CloudRain },
