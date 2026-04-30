@@ -67,13 +67,18 @@ export default function ExtremesPage() {
   const [autoRefresh, setAutoRefresh] = useState(true)
   const [selectedLocation, setSelectedLocation] = useState<LocationTemperature | null>(null)
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const fetchAbortRef = useRef<AbortController | null>(null)
 
   const handleLocationClick = (location: LocationTemperature) => {
     setSelectedLocation(location)
   }
 
-  // Fetch extremes data
+  // Fetch extremes data (abort in-flight request when a newer one starts — geolocation vs initial load)
   const fetchData = async (skipCache = false) => {
+    fetchAbortRef.current?.abort()
+    const controller = new AbortController()
+    fetchAbortRef.current = controller
+
     try {
       // Check client-side cache first
       if (!skipCache) {
@@ -93,20 +98,25 @@ export default function ExtremesPage() {
         url += `?lat=${userCoords.lat}&lon=${userCoords.lon}`
       }
 
-      const response = await fetch(url)
+      const response = await fetch(url, { signal: controller.signal })
       const responseData = await response.json()
 
       if (!response.ok) {
         throw new Error(responseData.error || 'Failed to fetch extreme temperatures')
       }
 
+      if (controller.signal.aborted) return
+
       setData(responseData)
       setCachedExtremesClient(responseData) // Cache on client side
     } catch (err) {
+      if ((err as Error).name === 'AbortError') return
       console.error('Error fetching extremes:', err)
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
-      setLoading(false)
+      if (!controller.signal.aborted) {
+        setLoading(false)
+      }
     }
   }
 
@@ -127,10 +137,13 @@ export default function ExtremesPage() {
     }
   }
 
-  // Initial fetch
+  // Initial fetch + request browser location (second fetch runs when userCoords is set)
   useEffect(() => {
     getUserLocation()
-    fetchData()
+    void fetchData()
+    return () => {
+      fetchAbortRef.current?.abort()
+    }
   }, [])
 
   // Re-fetch when user coords change

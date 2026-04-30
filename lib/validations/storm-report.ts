@@ -10,8 +10,6 @@ export const stormReportSubmitSchema = z.object({
   occurred_at: z.string().datetime().optional(),
 })
 
-export type StormReportSubmitInput = z.infer<typeof stormReportSubmitSchema>
-
 export function formatStormReportValidationErrors(err: z.ZodError): string {
   return err.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')
 }

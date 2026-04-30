@@ -19,6 +19,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { HOT_LOCATIONS, COLD_LOCATIONS, LOCATION_FACTS, HISTORICAL_AVERAGES, type LocationTemperature } from '@/lib/extremes/extremes-data';
+import { parseOptionalLatLonQuery } from '@/lib/extremes/parse-query-coords';
 
 /**
  * Fetch temperature data for a specific location using server-side API
@@ -76,8 +77,10 @@ export async function GET(request: NextRequest) {
     
     // Get user coordinates from query params (optional)
     const searchParams = request.nextUrl.searchParams;
-    const userLat = searchParams.get('lat');
-    const userLon = searchParams.get('lon');
+    const userCoords = parseOptionalLatLonQuery(
+      searchParams.get('lat'),
+      searchParams.get('lon')
+    );
     
     // Fetch all hot locations
     const hotPromises = HOT_LOCATIONS.map(loc => fetchLocationTemperature(loc, apiKey));
@@ -93,12 +96,12 @@ export async function GET(request: NextRequest) {
     validHotResults.sort((a, b) => b.temp - a.temp);
     validColdResults.sort((a, b) => a.temp - b.temp);
     
-    // Get user location temperature if provided
+    // Get user location temperature only when valid lat/lon query params are present
     let userLocation;
-    if (userLat !== undefined && userLon !== undefined) {
+    if (userCoords) {
       try {
         const response = await fetch(
-          `https://api.openweathermap.org/data/2.5/weather?lat=${userLat}&lon=${userLon}&units=imperial&appid=${apiKey}`
+          `https://api.openweathermap.org/data/2.5/weather?lat=${userCoords.lat}&lon=${userCoords.lon}&units=imperial&appid=${apiKey}`
         );
         
         if (response.ok) {
