@@ -5,6 +5,7 @@
 
 import { getSpotlight } from '../blog-spotlight';
 import { pickCloser, type CloserChoice } from './closers';
+import { embedImagesInDraft, pickImagesForContent } from './content-match';
 import { selectImages, type ImageEntry } from './images';
 import { findAngleForTopic, fetchHeadlines, type NewsAngle } from './news';
 import {
@@ -71,19 +72,35 @@ export async function runWednesday(): Promise<WednesdayResult> {
   const recentImageIds = new Set(getRecentImages(history));
   const priorPosts = getRecentByCadence(history, 'wednesday_topic');
 
-  const images = selectImages({
-    topic: topic.slug,
-    count: 3,
-    excludeIds: recentImageIds,
-  });
-  console.log(`[wednesday] selected images: ${images.map((i) => i.id).join(', ')}`);
+  // Build a candidate pool larger than the final 3 picks; the
+  // content-aware judge selects the best fits after the draft is final.
+  // Pull from the topic plus its neighbors so the judge has range.
+  const candidatePool: ImageEntry[] = [];
+  const poolIds = new Set<string>(recentImageIds);
+  try {
+    const topicPicks = selectImages({ topic: topic.slug, count: 6, excludeIds: poolIds });
+    for (const p of topicPicks) {
+      poolIds.add(p.id);
+      candidatePool.push(p);
+    }
+  } catch {
+    // topic pool starved
+  }
+  if (candidatePool.length < 6) {
+    try {
+      const broad = selectImages({ topic: 'tech_and_models', count: 4, excludeIds: poolIds });
+      for (const p of broad) candidatePool.push(p);
+    } catch {
+      // tech_and_models pool also starved
+    }
+  }
+  console.log(`[wednesday] candidate pool: ${candidatePool.length} images`);
 
   let draft = await generate({
     topic,
     newsAngle,
     spotlight,
     denyPhrases,
-    images,
     correction: null,
     closer,
   });
@@ -109,7 +126,6 @@ export async function runWednesday(): Promise<WednesdayResult> {
       newsAngle,
       spotlight,
       denyPhrases,
-      images,
       correction: corrections.join('\n\n'),
       closer,
     });
@@ -133,7 +149,6 @@ export async function runWednesday(): Promise<WednesdayResult> {
       newsAngle,
       spotlight,
       denyPhrases: [...denyPhrases, ...similarity.triggerPhrases],
-      images,
       correction,
       closer,
     });
@@ -145,19 +160,42 @@ export async function runWednesday(): Promise<WednesdayResult> {
     }
   }
 
-  const keyPhrases = await extractKeyPhrases(draft).catch(() => [] as string[]);
+  // Content-aware image picks: judge ranks the candidate pool against
+  // the actual prose, then we splice the picks in. Falls back to the
+  // first three pool entries if the judge call fails or returns nothing.
+  const placements = await pickImagesForContent({ draft, pool: candidatePool, count: 3 });
+  let images: ImageEntry[];
+  let finalDraft: string;
+  if (placements.length > 0) {
+    finalDraft = embedImagesInDraft(draft, placements);
+    images = placements.map((p) => p.image);
+    console.log(`[wednesday] content-match picked: ${images.map((i) => i.id).join(', ')}`);
+  } else {
+    console.warn('[wednesday] content-match returned no picks — falling back to first-from-pool');
+    images = candidatePool.slice(0, 3);
+    // Wednesday posts have variable section headings — embed function
+    // appends to nearest section if anchors don't match; supply the
+    // generic fallback anchors regardless.
+    const fallbackPlacements = images.map((image, i) => ({
+      image,
+      insertAfter: i === 0 ? '## ' : i === 1 ? '##' : '##',
+    }));
+    finalDraft = embedImagesInDraft(draft, fallbackPlacements);
+  }
+
+  const keyPhrases = await extractKeyPhrases(finalDraft).catch(() => [] as string[]);
 
   return {
     topic,
     newsAngle,
     spotlight,
-    draft,
+    draft: finalDraft,
     similarity,
     keyPhrases,
     openerHash,
     images,
     retries,
-    wordCount: wordCount(draft),
+    wordCount: wordCount(finalDraft),
     closer,
   };
 }
@@ -167,13 +205,12 @@ interface GenerateOpts {
   newsAngle: NewsAngle | null;
   spotlight: string | null;
   denyPhrases: string[];
-  images: ImageEntry[];
   correction: string | null;
   closer: CloserChoice;
 }
 
 async function generate(opts: GenerateOpts): Promise<string> {
-  const { topic, newsAngle, spotlight, denyPhrases, images, correction, closer } = opts;
+  const { topic, newsAngle, spotlight, denyPhrases, correction, closer } = opts;
 
   const systemBlocks = [
     { type: 'text' as const, text: VOICE_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' as const } },
@@ -200,14 +237,14 @@ async function generate(opts: GenerateOpts): Promise<string> {
     sections.push(`DO NOT use these specific phrases or near-paraphrases (recent posts have already used them):\n${denyPhrases.slice(0, 30).map((p) => `- ${p}`).join('\n')}`);
   }
 
-  sections.push(`IMAGES — embed each of these inline, separated by body text. Use Markdown image syntax with the provided URL and caption. Do not invent additional images.`);
-  for (const img of images) {
-    sections.push(`![${img.caption}](${img.url})\n*${img.credit}*`);
-  }
+  // Images are NOT embedded by the model. A separate content-aware
+  // judge (see content-match.ts) splices them in after this draft is
+  // final, so we don't pre-commit to subtopics the prose ends up
+  // de-emphasizing.
 
   sections.push(`STRUCTURE:
 - Open with a concrete specific hook — a number, a place, a date, a measurement.
-- 2 or 3 ## section headers within the body. Use them to give the piece shape.
+- 2 or 3 ## section headers within the body. Use them to give the piece shape. Do NOT include any images or image markdown.
 - ${closer.instruction}
 - Word count target: 600-900.`);
 

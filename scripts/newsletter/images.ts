@@ -2,6 +2,21 @@ import { TOPIC_SLUGS, type TopicSlug } from './topics';
 
 export type ImageLicense = 'PD-USGov' | 'PD' | 'CC0' | 'CC-BY-4.0';
 
+/**
+ * Image classification — used by the generator prompt and the hero-image
+ * picker to avoid presenting historical imagery as if it depicts this
+ * week's events.
+ *   - 'live':     real-time data product (GOES latest, SWPC current Kp, SDO live).
+ *                 Safe to caption as current.
+ *   - 'archival': dated photograph of a historical event. The prompt MUST
+ *                 frame these as illustrative; the hero picker skips them
+ *                 in favor of live imagery when available.
+ *   - 'reference': diagram/schematic with no time semantics (jet stream
+ *                  diagram, mesocyclone schematic). Always safe.
+ * Entries without `kind` default to 'reference'.
+ */
+export type ImageKind = 'live' | 'archival' | 'reference';
+
 export interface ImageEntry {
   id: string;
   url: string;
@@ -9,6 +24,8 @@ export interface ImageEntry {
   credit: string;
   topic_tags: TopicSlug[];
   license: ImageLicense;
+  kind?: ImageKind;
+  archival_year?: number;
 }
 
 /**
@@ -33,6 +50,8 @@ export const IMAGES: ImageEntry[] = [
     credit: 'Austin Post / USGS',
     topic_tags: ['volcanoes', 'historical_events'],
     license: 'PD-USGov',
+    kind: 'archival',
+    archival_year: 1980,
   },
   {
     id: 'pinatubo-eruption-1991',
@@ -41,6 +60,8 @@ export const IMAGES: ImageEntry[] = [
     credit: 'USGS',
     topic_tags: ['volcanoes', 'historical_events'],
     license: 'PD-USGov',
+    kind: 'archival',
+    archival_year: 1991,
   },
   {
     id: 'eyjafjallajokull-2010',
@@ -49,6 +70,8 @@ export const IMAGES: ImageEntry[] = [
     credit: 'NASA Earth Observatory',
     topic_tags: ['volcanoes', 'aviation'],
     license: 'PD-USGov',
+    kind: 'archival',
+    archival_year: 2010,
   },
 
   // ============================================================
@@ -110,6 +133,8 @@ export const IMAGES: ImageEntry[] = [
     id: 'antarctic-ice-shelf',
     url: 'https://commons.wikimedia.org/wiki/Special:FilePath/Larsen_B_Collapse.jpg?width=1280',
     caption: 'Larsen B Ice Shelf collapse imaged by NASA MODIS, 2002.',
+    kind: 'archival',
+    archival_year: 2002,
     credit: 'NASA',
     topic_tags: ['cryosphere'],
     license: 'PD-USGov',
@@ -165,14 +190,18 @@ export const IMAGES: ImageEntry[] = [
     credit: 'Justin Hobson / Wikimedia',
     topic_tags: ['severe_storms', 'historical_events'],
     license: 'CC0',
+    kind: 'archival',
+    archival_year: 2007,
   },
   {
     id: 'binger-tornado',
     url: 'https://www.spc.noaa.gov/faq/tornado/binger.jpg',
-    caption: 'Wedge tornado near Binger, Oklahoma.',
-    credit: 'NOAA NSSL',
+    caption: 'Wedge tornado near Binger, Oklahoma (1981).',
+    credit: 'NOAA NSSL archive',
     topic_tags: ['severe_storms'],
     license: 'PD-USGov',
+    kind: 'archival',
+    archival_year: 1981,
   },
   {
     id: 'mesocyclone-diagram',
@@ -193,6 +222,8 @@ export const IMAGES: ImageEntry[] = [
     credit: 'NASA',
     topic_tags: ['tropical', 'historical_events'],
     license: 'PD-USGov',
+    kind: 'archival',
+    archival_year: 2005,
   },
   {
     id: 'hurricane-eye-from-space',
@@ -209,6 +240,7 @@ export const IMAGES: ImageEntry[] = [
     credit: 'NOAA NESDIS',
     topic_tags: ['tropical', 'severe_storms'],
     license: 'PD-USGov',
+    kind: 'live',
   },
   {
     id: 'goes-conus-infrared',
@@ -217,6 +249,7 @@ export const IMAGES: ImageEntry[] = [
     credit: 'NOAA NESDIS',
     topic_tags: ['tropical', 'severe_storms'],
     license: 'PD-USGov',
+    kind: 'live',
   },
 
   // ============================================================
@@ -265,14 +298,17 @@ export const IMAGES: ImageEntry[] = [
     credit: 'NOAA SWPC',
     topic_tags: ['space_weather'],
     license: 'PD-USGov',
+    kind: 'live',
   },
   {
     id: 'solar-limb-flare',
     url: 'https://commons.wikimedia.org/wiki/Special:FilePath/171879main_LimbFlareJan12_lg.jpg?width=1280',
-    caption: 'Solar limb flare imaged by NASA TRACE.',
-    credit: 'NASA',
+    caption: 'Solar limb flare imaged by NASA TRACE (2007).',
+    credit: 'NASA TRACE archive',
     topic_tags: ['space_weather'],
     license: 'PD-USGov',
+    kind: 'archival',
+    archival_year: 2007,
   },
   {
     id: 'sdo-current-193',
@@ -281,6 +317,7 @@ export const IMAGES: ImageEntry[] = [
     credit: 'NASA SDO',
     topic_tags: ['space_weather'],
     license: 'PD-USGov',
+    kind: 'live',
   },
   {
     id: 'sdo-current-171',
@@ -289,6 +326,7 @@ export const IMAGES: ImageEntry[] = [
     credit: 'NASA SDO',
     topic_tags: ['space_weather'],
     license: 'PD-USGov',
+    kind: 'live',
   },
   {
     id: 'sdo-current-304',
@@ -297,6 +335,7 @@ export const IMAGES: ImageEntry[] = [
     credit: 'NASA SDO',
     topic_tags: ['space_weather'],
     license: 'PD-USGov',
+    kind: 'live',
   },
 
   // ============================================================
@@ -306,6 +345,8 @@ export const IMAGES: ImageEntry[] = [
     id: 'dust-bowl-storm',
     url: 'https://commons.wikimedia.org/wiki/Special:FilePath/Dust-storm-Texas-1935.png?width=1280',
     caption: 'Dust storm approaches Stratford, Texas, April 1935.',
+    kind: 'archival',
+    archival_year: 1935,
     credit: 'NOAA George E. Marsh Album / PD',
     topic_tags: ['historical_events', 'agricultural'],
     license: 'PD-USGov',
@@ -314,6 +355,8 @@ export const IMAGES: ImageEntry[] = [
     id: 'tambora-caldera',
     url: 'https://commons.wikimedia.org/wiki/Special:FilePath/Caldera_Mt_Tambora_Sumbawa_Indonesia.jpg?width=1280',
     caption: 'Mount Tambora caldera — site of the 1815 eruption that triggered the Year Without a Summer.',
+    kind: 'archival',
+    archival_year: 1815,
     credit: 'NASA',
     topic_tags: ['historical_events', 'volcanoes', 'paleoclimate'],
     license: 'PD-USGov',
@@ -414,6 +457,7 @@ export const IMAGES: ImageEntry[] = [
     credit: 'NOAA NESDIS',
     topic_tags: ['atmosphere_layers', 'tropical', 'tech_and_models'],
     license: 'PD-USGov',
+    kind: 'live',
   },
   {
     id: 'goes16-visible-conus',
@@ -422,6 +466,7 @@ export const IMAGES: ImageEntry[] = [
     credit: 'NOAA NESDIS',
     topic_tags: ['severe_storms', 'tech_and_models'],
     license: 'PD-USGov',
+    kind: 'live',
   },
   {
     id: 'goes16-full-disk-geocolor',
@@ -430,6 +475,7 @@ export const IMAGES: ImageEntry[] = [
     credit: 'NOAA NESDIS',
     topic_tags: ['marine', 'tropical', 'tech_and_models'],
     license: 'PD-USGov',
+    kind: 'live',
   },
   {
     id: 'swpc-space-weather-overview',
@@ -438,6 +484,7 @@ export const IMAGES: ImageEntry[] = [
     credit: 'NOAA SWPC',
     topic_tags: ['space_weather', 'tech_and_models'],
     license: 'PD-USGov',
+    kind: 'live',
   },
   {
     id: 'swpc-ovation-aurora',
@@ -446,6 +493,7 @@ export const IMAGES: ImageEntry[] = [
     credit: 'NOAA SWPC',
     topic_tags: ['space_weather', 'atmosphere_layers'],
     license: 'PD-USGov',
+    kind: 'live',
   },
   {
     id: 'opc-atlantic-surface',
@@ -454,6 +502,7 @@ export const IMAGES: ImageEntry[] = [
     credit: 'NOAA OPC',
     topic_tags: ['marine', 'tropical', 'tech_and_models'],
     license: 'PD-USGov',
+    kind: 'live',
   },
   {
     id: 'opc-pacific-surface',
@@ -462,6 +511,7 @@ export const IMAGES: ImageEntry[] = [
     credit: 'NOAA OPC',
     topic_tags: ['marine', 'tropical'],
     license: 'PD-USGov',
+    kind: 'live',
   },
   {
     id: 'us-drought-monitor',
@@ -470,6 +520,7 @@ export const IMAGES: ImageEntry[] = [
     credit: 'USDA / NDMC',
     topic_tags: ['agricultural', 'historical_events'],
     license: 'PD-USGov',
+    kind: 'live',
   },
   {
     id: 'cpc-precip-outlook',
@@ -478,6 +529,7 @@ export const IMAGES: ImageEntry[] = [
     credit: 'NOAA CPC',
     topic_tags: ['agricultural', 'tech_and_models', 'ocean_currents', 'biometeorology'],
     license: 'PD-USGov',
+    kind: 'live',
   },
   {
     id: 'cpc-temp-outlook',
@@ -486,6 +538,7 @@ export const IMAGES: ImageEntry[] = [
     credit: 'NOAA CPC',
     topic_tags: ['biometeorology', 'urban_climate', 'tech_and_models'],
     license: 'PD-USGov',
+    kind: 'live',
   },
   {
     id: 'sdo-current-hmi-magnetogram',
@@ -494,6 +547,7 @@ export const IMAGES: ImageEntry[] = [
     credit: 'NASA SDO',
     topic_tags: ['space_weather', 'tech_and_models'],
     license: 'PD-USGov',
+    kind: 'live',
   },
 ];
 
