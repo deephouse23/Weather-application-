@@ -9,4 +9,4 @@ if ! command -v gitleaks >/dev/null 2>&1; then
   exit 0
 fi
 
-gitleaks protect --staged --redact -v --no-banner
+gitleaks git --pre-commit --staged --redact -v --no-banner
