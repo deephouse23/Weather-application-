@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+# Block pushes that contain secrets anywhere in unpushed commits.
+# Backstop in case pre-commit was bypassed (--no-verify) or a different machine
+# committed without gitleaks installed.
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "[pre-push] gitleaks not installed — install with: brew install gitleaks"
+  echo "[pre-push] skipping secret scan (NOT recommended)"
+  exit 0
+fi
+
+gitleaks detect --redact -v --no-banner

@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+# Block commits that introduce secrets.
+# Scans only the staged diff — fast (typically <100ms).
+# Bypass in a true emergency with `git commit --no-verify`.
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "[pre-commit] gitleaks not installed — install with: brew install gitleaks"
+  echo "[pre-commit] skipping secret scan (NOT recommended)"
+  exit 0
+fi
+
+gitleaks protect --staged --redact -v --no-banner
