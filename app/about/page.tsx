@@ -48,7 +48,7 @@ function Accordion({ title, icon: Icon, children, defaultOpen = false }: {
 
 const modules = [
   { href: "/radar", label: "Radar", desc: "Real-time NOAA MRMS radar with animated playback", icon: Map },
-  { href: "/situation", label: "Current Situation", desc: "Live NWS alerts dashboard with Weather Intensity Score", icon: AlertTriangle },
+  { href: "/warnings", label: "Warnings Command Center", desc: "Live NWS alerts with WIS score, SPC outlook, alert polygons, and storm reports", icon: AlertTriangle },
   { href: "/severe", label: "Severe Weather", desc: "Active tornado, thunderstorm, and flood warnings", icon: CloudLightning },
   { href: "/aviation", label: "Aviation", desc: "METARs, PIREPs, SIGMETs, and flight conditions", icon: Plane },
   { href: "/space-weather", label: "Space Weather", desc: "Solar flares, Kp index, aurora forecast, and coronagraph", icon: Sun },
@@ -121,7 +121,7 @@ export default function AboutPage() {
                 </h3>
                 <p className="font-mono text-sm text-muted-foreground">
                   The platform features a{' '}
-                  <Link href="/situation" className="text-primary underline underline-offset-4 hover:text-primary/80">
+                  <Link href="/warnings" className="text-primary underline underline-offset-4 hover:text-primary/80">
                     Weather Intensity Score (WIS)
                   </Link>
                   {' '}— a scoring algorithm that monitors weather severity across the United States in

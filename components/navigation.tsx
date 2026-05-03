@@ -126,7 +126,6 @@ export default function Navigation({ weatherLocation, weatherTemperature, weathe
 
   const weatherItems = [
     { href: "/radar", label: "RADAR", icon: Map },
-    { href: "/situation", label: "SITUATION", icon: AlertTriangle },
     { href: "/warnings", label: "WARNINGS", icon: BellRing },
     { href: "/severe", label: "SEVERE", icon: CloudLightning },
     { href: "/winter", label: "WINTER", icon: Snowflake },

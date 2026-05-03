@@ -25,6 +25,27 @@ const URGENCY_ORDER: Record<string, number> = {
   Future: 2,
 }
 
+const LEVEL_COLORS: Record<string, string> = {
+  green: 'text-green-400 border-green-500/40',
+  yellow: 'text-yellow-400 border-yellow-500/40',
+  orange: 'text-orange-400 border-orange-500/40',
+  red: 'text-red-400 border-red-500/40',
+}
+
+const LEVEL_BG: Record<string, string> = {
+  green: 'bg-green-500/10',
+  yellow: 'bg-yellow-500/10',
+  orange: 'bg-orange-500/10',
+  red: 'bg-red-500/10',
+}
+
+const SEVERITY_BADGE: Record<string, string> = {
+  Extreme: 'bg-red-500/20 text-red-400 border-red-500/50',
+  Severe: 'bg-orange-500/20 text-orange-400 border-orange-500/50',
+  Moderate: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50',
+  Minor: 'bg-blue-500/20 text-blue-400 border-blue-500/50',
+}
+
 function timeLeft(expires: string): string {
   const now = Date.now()
   const exp = new Date(expires).getTime()
@@ -137,6 +158,13 @@ export default function WarningsClient() {
       .slice(0, 12)
   }, [alerts])
 
+  const severityCounts = useMemo(() => {
+    return alerts.reduce<Record<string, number>>((acc, a) => {
+      acc[a.severity] = (acc[a.severity] ?? 0) + 1
+      return acc
+    }, {})
+  }, [alerts])
+
   const mapPoints: MapPoint[] = useMemo(() => {
     const pts: MapPoint[] = []
     let i = 0
@@ -202,32 +230,70 @@ export default function WarningsClient() {
         />
       </div>
 
-      <SPCDay1RiskStrip />
-
       {wis && (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 font-mono text-sm">
-          <div className="rounded-lg border border-border bg-card/50 p-3">
-            <p className="text-xs text-muted-foreground uppercase">WIS score</p>
-            <p className="text-2xl font-bold">{wis.score}</p>
-            <p className="text-muted-foreground">{wis.label}</p>
-          </div>
-          <div className="rounded-lg border border-border bg-card/50 p-3">
-            <p className="text-xs text-muted-foreground uppercase">NWS warnings</p>
-            <p className="text-2xl font-bold text-orange-400">{wis.nwsWarnings}</p>
-            <p className="text-[10px] text-muted-foreground">Products with &quot;Warning&quot; in title</p>
-          </div>
-          <div className="rounded-lg border border-border bg-card/50 p-3">
-            <p className="text-xs text-muted-foreground uppercase">NWS watches</p>
-            <p className="text-2xl font-bold text-amber-300">{wis.nwsWatches}</p>
-            <p className="text-[10px] text-muted-foreground">Products with &quot;Watch&quot; in title</p>
-          </div>
-          <div className="rounded-lg border border-border bg-card/50 p-3">
-            <p className="text-xs text-muted-foreground uppercase">Other products</p>
-            <p className="text-2xl font-bold text-sky-300">{wis.nwsAdvisories}</p>
-            <p className="text-[10px] text-muted-foreground">Advisories, statements, etc.</p>
+        <div
+          className={cn(
+            'border rounded-lg p-6 md:p-8',
+            LEVEL_BG[wis.level],
+            LEVEL_COLORS[wis.level]
+          )}
+        >
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-center md:text-left space-y-1">
+              <p className="text-xs font-mono tracking-widest text-muted-foreground uppercase">
+                Weather Intensity Score
+              </p>
+              <div className="flex items-baseline gap-3">
+                <span className="text-6xl md:text-7xl font-extrabold font-mono">{wis.score}</span>
+                <span className="text-lg font-mono text-muted-foreground">/ 100</span>
+              </div>
+              <p className={cn('text-lg font-bold font-mono tracking-wider', LEVEL_COLORS[wis.level])}>
+                {wis.label}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="space-y-1">
+                <p className="text-2xl font-bold font-mono">{wis.nwsWarnings ?? wis.activeWarnings}</p>
+                <p className="text-xs font-mono text-muted-foreground uppercase">NWS warnings</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl font-bold font-mono">{wis.nwsWatches ?? wis.activeWatches}</p>
+                <p className="text-xs font-mono text-muted-foreground uppercase">NWS watches</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl font-bold font-mono">{wis.nwsAdvisories ?? wis.activeAdvisories}</p>
+                <p className="text-xs font-mono text-muted-foreground uppercase">Other products</p>
+              </div>
+            </div>
           </div>
         </div>
       )}
+
+      {Object.keys(severityCounts).length > 0 && (
+        <div className="flex flex-wrap gap-3">
+          {(['Extreme', 'Severe', 'Moderate', 'Minor'] as const).map((sev) => {
+            const count = severityCounts[sev]
+            if (!count) return null
+            return (
+              <span
+                key={sev}
+                className={cn(
+                  'px-3 py-1.5 rounded-full border text-sm font-mono font-bold',
+                  SEVERITY_BADGE[sev]
+                )}
+              >
+                {count} {sev.toUpperCase()}
+              </span>
+            )
+          })}
+          <span className="px-3 py-1.5 rounded-full border border-border text-sm font-mono text-muted-foreground">
+            {alerts.length} TOTAL ALERTS
+          </span>
+        </div>
+      )}
+
+      <SPCDay1RiskStrip />
 
       {tickerAlerts.length > 0 && (
         <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 overflow-hidden">
