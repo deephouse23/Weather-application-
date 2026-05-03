@@ -58,7 +58,14 @@ export async function publishPost(input: PublishInput, opts: { dryRun?: boolean 
   const datePrefix = isoDate.slice(0, 10);
 
   const { title, summary, slug } = buildHeader(input, datePrefix);
-  const heroImage = input.images[0]?.url ?? '';
+  // Hero is the page banner — should never be archival imagery presented
+  // without context. Prefer live > reference > archival, falling back to
+  // first image if every option is somehow archival.
+  const heroImage =
+    input.images.find((i) => i.kind === 'live')?.url ??
+    input.images.find((i) => (i.kind ?? 'reference') === 'reference')?.url ??
+    input.images[0]?.url ??
+    '';
   const tags = buildTags(input);
 
   const frontmatterFields: Record<string, unknown> = {

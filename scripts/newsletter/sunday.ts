@@ -269,16 +269,27 @@ async function generate(opts: GenerateOpts): Promise<string> {
     sections.push(`DO NOT use these specific phrases or near-paraphrases (recent posts have already used them):\n${denyPhrases.slice(0, 30).map((p) => `- ${p}`).join('\n')}`);
   }
 
-  sections.push(`IMAGES — embed each of these inline, separated by body text. Use Markdown image syntax. Do not invent additional images.`);
+  sections.push(`IMAGES — embed each of these inline, separated by body text. Use Markdown image syntax. Do not invent additional images.
+
+Image classification — adapt the alt text and surrounding prose accordingly:
+- LIVE: real-time data product. Safe to describe as current/this-week.
+- ARCHIVAL: dated photograph of a historical event. MUST be framed as illustrative. Do not imply it depicts this week's events. Include the year in the alt text (e.g. "...Manitoba (2007) — illustrative archival image").
+- REFERENCE: schematic/diagram with no time semantics. Always safe.`);
   for (const img of images) {
-    sections.push(`![${img.caption}](${img.url})\n*${img.credit}*`);
+    const kind = img.kind ?? 'reference';
+    const yearTag = img.archival_year ? ` (${img.archival_year})` : '';
+    sections.push(`[kind=${kind}]${yearTag} ![${img.caption}](${img.url})\n*${img.credit}*`);
   }
 
   sections.push(`STRUCTURE:
 - Open with a concrete specific hook from the past week's data — a named storm, a record, a count.
 - ## Rearview: 3-5 specific events. Cite states, magnitudes, dates. No generalities.
 - ## Roadmap: pattern overview, then 2-3 regional cuts (CONUS quadrants + a notable international callout). Tie to mechanism (jet stream position, ridge, trough, MJO phase, etc.) where you can.
-- ${closer.instruction}`);
+- ${closer.instruction}
+
+TIME PRECISION:
+- The data block uses UTC timestamps. When you describe an event in prose, convert to the affected region's local time-of-day before choosing words like "morning", "afternoon", "evening", or "overnight". A 19:57Z warning in Pennsylvania is afternoon EDT, not evening. A 02:00Z warning in Mississippi is late evening CDT, not morning.
+- Do not group temporally-distinct or geographically-distinct convective rounds into a single "later that evening" narrative unless they actually occurred together.`);
 
   if (correction) {
     sections.push(`CORRECTIONS FROM PRIOR ATTEMPT:\n${correction}`);

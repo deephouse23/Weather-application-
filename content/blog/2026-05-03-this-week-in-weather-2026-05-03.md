@@ -10,7 +10,7 @@ tags:
   - severe-weather
   - space-weather
   - roadmap
-heroImage: https://www.spc.noaa.gov/faq/tornado/binger.jpg
+heroImage: https://services.swpc.noaa.gov/images/swx-overview-large.gif
 readTime: 5
 cadence: sunday_rearview
 opener_hash: 8c80a803
@@ -41,10 +41,10 @@ closer_used: looking-ahead
 
 The week's signature number is 61 — confirmed tornadoes in seven days, concentrated in a corridor from Arkansas and Mississippi north through Missouri, Illinois, and Indiana. SPC storm reports logged 804 hail events and 679 wind reports across the period, with Missouri alone accounting for 460 combined reports, more than Texas (216) and Kansas (160) combined.
 
-The most compressed violence came on the night of April 28–29. Between 01:56Z and 02:28Z on April 29, tornado warnings fired for DeSoto County, MS twice, Marshall County, MS, Drew County, AR, and a joint warning covering Ashley and Chicot Counties in Arkansas alongside Washington County, MS — five warnings in 32 minutes across three states, all issued by Memphis (MEG) and Little Rock (LZK). Later that evening, a second round produced warnings for Clarke, Jasper, and Jones Counties in Mississippi and, notably, Indiana County in Pennsylvania — a reminder that the outbreak's northern fringe reached well into Appalachian terrain where tornado climatology is thinner and lead times shorter.
+The most compressed violence came on the night of April 28–29. Between 01:56Z and 02:28Z on April 29, tornado warnings fired for DeSoto County, MS twice, Marshall County, MS, Drew County, AR, and a joint warning covering Ashley and Chicot Counties in Arkansas alongside Washington County, MS — five warnings in 32 minutes across three states, all issued by Memphis (MEG) and Little Rock (LZK). The next afternoon brought a second round: NWS Jackson issued a tornado warning for Clarke, Jasper, and Jones Counties in Mississippi at 19:59Z, and two minutes earlier NWS Pittsburgh fired one for Indiana County, Pennsylvania at 19:57Z — separate convective lines riding the same trough, the latter a reminder that the system's northern edge reached well into Appalachian terrain where tornado climatology is thinner and lead times shorter.
 
-![Wedge tornado near Binger, Oklahoma.](https://www.spc.noaa.gov/faq/tornado/binger.jpg)
-*NOAA NSSL*
+![Wedge tornado near Binger, Oklahoma (1981) — archival illustration, not from this week's outbreak.](https://www.spc.noaa.gov/faq/tornado/binger.jpg)
+*NOAA NSSL archive*
 
 The week's 892 severe thunderstorm warnings and 173 tornado warnings represent a substantial activation of the warning system — roughly 1,100 convective warnings in addition to 65 flash flood warnings and 97 flood warnings, the latter concentrated in the same moisture-saturated corridor that fed the tornado events.
 
@@ -54,8 +54,8 @@ Away from the convective story: a M6.1 struck 18 km west of Sarabetsu, Japan on 
 
 The pattern for the week of April 30–May 7 is shaped by a progressive upper-level trough lifting out of the central U.S. and a rebuilding ridge along the West Coast. That configuration typically means the active severe weather axis shifts eastward and eventually loses organization as the trough flattens, while the interior West sees a brief unsettled window before high pressure reasserts. Moisture return from the Gulf remains the key variable for the South and Southeast.
 
-![Solar limb flare imaged by NASA TRACE.](https://commons.wikimedia.org/wiki/Special:FilePath/171879main_LimbFlareJan12_lg.jpg?width=1280)
-*NASA*
+![Solar limb flare imaged by NASA TRACE (2007) — archival illustration of M-class flare morphology.](https://commons.wikimedia.org/wiki/Special:FilePath/171879main_LimbFlareJan12_lg.jpg?width=1280)
+*NASA TRACE archive*
 
 **Northeast.** New York City averages 66°F for the week with 1.10 inches of total precipitation. The highest probability window is May 6 at 72%, consistent with the trough's eastern progression delivering a meaningful rain event to the mid-Atlantic and southern New England late in the period. Not a drought-breaker, but a legitimate soaking for areas that have been running dry through April.
 
