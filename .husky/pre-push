@@ -4,7 +4,10 @@
 # committed without gitleaks installed.
 
 if ! command -v gitleaks >/dev/null 2>&1; then
-  echo "[pre-push] gitleaks not installed — install with: brew install gitleaks"
+  echo "[pre-push] gitleaks not installed. Install one of:"
+  echo "  - macOS:        brew install gitleaks"
+  echo "  - Debian/Ubuntu: sudo apt-get install gitleaks"
+  echo "  - Other:        https://github.com/gitleaks/gitleaks#installing"
   echo "[pre-push] skipping secret scan (NOT recommended)"
   exit 0
 fi

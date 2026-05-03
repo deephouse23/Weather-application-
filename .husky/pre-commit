@@ -4,7 +4,10 @@
 # Bypass in a true emergency with `git commit --no-verify`.
 
 if ! command -v gitleaks >/dev/null 2>&1; then
-  echo "[pre-commit] gitleaks not installed — install with: brew install gitleaks"
+  echo "[pre-commit] gitleaks not installed. Install one of:"
+  echo "  - macOS:        brew install gitleaks"
+  echo "  - Debian/Ubuntu: sudo apt-get install gitleaks"
+  echo "  - Other:        https://github.com/gitleaks/gitleaks#installing"
   echo "[pre-commit] skipping secret scan (NOT recommended)"
   exit 0
 fi
