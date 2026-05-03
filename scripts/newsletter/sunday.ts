@@ -7,6 +7,7 @@
  */
 
 import { getSpotlight } from '../blog-spotlight';
+import { embedImagesInDraft, pickImagesForContent } from './content-match';
 import { fetchPastWeekQuakes } from './data/earthquakes';
 import { fetchForecastOutlook } from './data/forecast';
 import { fetchPastWeekWarnings, MesonetEmptyError } from './data/mesonet';
@@ -81,9 +82,10 @@ export async function runSunday(): Promise<SundayResult> {
   ]);
   console.log(`[sunday] SPC: ${spcSummary.total} reports, max Kp: ${spaceSummary.maxKpPastWeek}, quakes: ${quakeSummary.significantCount} significant`);
 
-  // Sunday image pool is filtered by what's actually active in this
-  // week's data — see getActiveTopics. Without this, hurricane imagery
-  // ends up in April recaps because tropical was hardcoded.
+  // Build a CANDIDATE POOL (not final picks). We feed this pool to a
+  // content-aware judge after the draft is written so the actual prose
+  // emphasis decides which images survive — not just "this data signal
+  // was non-zero." Pool size targets ~10 so the judge has real choices.
   const activeTopics = getActiveTopics({
     severeReportCount: spcSummary.total,
     maxKpPastWeek: spaceSummary.maxKpPastWeek,
@@ -100,34 +102,41 @@ export async function runSunday(): Promise<SundayResult> {
     'aviation',
     'agricultural',
   ];
-  const images: ImageEntry[] = [];
-  const usedIds = new Set<string>(recentImageIds);
+  const candidatePool: ImageEntry[] = [];
+  const poolIds = new Set<string>(recentImageIds);
   for (const t of candidateOrder) {
-    if (images.length >= 3) break;
     if (!activeTopics.has(t)) continue;
     try {
-      const picked = selectImages({ topic: t, count: 1, excludeIds: usedIds });
+      const picked = selectImages({ topic: t, count: 3, excludeIds: poolIds });
       for (const p of picked) {
-        usedIds.add(p.id);
-        images.push(p);
+        poolIds.add(p.id);
+        candidatePool.push(p);
       }
     } catch {
       // pool starved on this topic — skip and try the next
     }
   }
-  if (images.length < 2) {
-    // Last-resort fallback: any unused content-neutral images.
-    const broadPicks = selectImages({ topic: 'tech_and_models', count: 2, excludeIds: usedIds });
-    for (const p of broadPicks) images.push(p);
+  // Always include a few content-neutral live data products so the judge
+  // can fall back on them when the topic-specific options are weak.
+  if (candidatePool.length < 8) {
+    try {
+      const broad = selectImages({ topic: 'tech_and_models', count: 4, excludeIds: poolIds });
+      for (const p of broad) candidatePool.push(p);
+    } catch {
+      // pool exhausted; proceed with whatever we have
+    }
   }
   console.log(
-    `[sunday] selected images: ${images.map((i) => i.id).join(', ')} (active topics: ${[...activeTopics].join(',')})`,
+    `[sunday] candidate pool: ${candidatePool.length} images (active topics: ${[...activeTopics].join(',')})`,
   );
 
   const spotlight = getSpotlight();
   const closer = pickCloser();
   console.log(`[sunday] closer: ${closer.id}`);
 
+  // Generate the draft WITHOUT images embedded. Image selection happens
+  // after the prose is final so we can match images to actual emphasis,
+  // not pre-guessed topics.
   let draft = await generate({
     warnings,
     spcSummary,
@@ -136,7 +145,6 @@ export async function runSunday(): Promise<SundayResult> {
     forecast,
     spotlight,
     denyPhrases,
-    images,
     correction: null,
     closer,
   });
@@ -167,7 +175,6 @@ export async function runSunday(): Promise<SundayResult> {
       forecast,
       spotlight,
       denyPhrases,
-      images,
       correction: corrections.join('\n\n'),
       closer,
     });
@@ -194,7 +201,6 @@ export async function runSunday(): Promise<SundayResult> {
       forecast,
       spotlight,
       denyPhrases: [...denyPhrases, ...similarity.triggerPhrases],
-      images,
       correction,
       closer,
     });
@@ -206,17 +212,45 @@ export async function runSunday(): Promise<SundayResult> {
     }
   }
 
-  const keyPhrases = await extractKeyPhrases(draft).catch(() => [] as string[]);
+  // Content-aware image selection. The draft is final at this point; the
+  // judge picks images from the candidate pool based on what the prose
+  // actually emphasizes, then we splice them in. If the judge fails or
+  // returns nothing, fall back to the legacy "first N from pool" picks
+  // so the post still ships with images.
+  const placements = await pickImagesForContent({
+    draft,
+    pool: candidatePool,
+    count: 3,
+  });
+  let images: ImageEntry[];
+  let finalDraft: string;
+  if (placements.length > 0) {
+    finalDraft = embedImagesInDraft(draft, placements);
+    images = placements.map((p) => p.image);
+    console.log(`[sunday] content-match picked: ${images.map((i) => i.id).join(', ')}`);
+  } else {
+    console.warn('[sunday] content-match returned no picks — falling back to first-from-pool');
+    images = candidatePool.slice(0, 3);
+    const fallbackPlacements = images.map((image, i) => ({
+      image,
+      // Spread evenly: end of intro / mid-Roadmap / end. The embed
+      // function handles missing anchors by appending to nearest section.
+      insertAfter: i === 0 ? '## Rearview' : i === 1 ? '## Roadmap' : '## Looking Ahead',
+    }));
+    finalDraft = embedImagesInDraft(draft, fallbackPlacements);
+  }
+
+  const keyPhrases = await extractKeyPhrases(finalDraft).catch(() => [] as string[]);
 
   return {
     spotlight,
-    draft,
+    draft: finalDraft,
     similarity,
     keyPhrases,
     openerHash,
     images,
     retries,
-    wordCount: wordCount(draft),
+    wordCount: wordCount(finalDraft),
     closer,
   };
 }
@@ -230,7 +264,6 @@ interface GenerateOpts {
   forecast: Awaited<ReturnType<typeof fetchForecastOutlook>>;
   spotlight: string | null;
   denyPhrases: string[];
-  images: ImageEntry[];
   correction: string | null;
 }
 
@@ -243,7 +276,6 @@ async function generate(opts: GenerateOpts): Promise<string> {
     forecast,
     spotlight,
     denyPhrases,
-    images,
     correction,
     closer,
   } = opts;
@@ -269,22 +301,15 @@ async function generate(opts: GenerateOpts): Promise<string> {
     sections.push(`DO NOT use these specific phrases or near-paraphrases (recent posts have already used them):\n${denyPhrases.slice(0, 30).map((p) => `- ${p}`).join('\n')}`);
   }
 
-  sections.push(`IMAGES — embed each of these inline, separated by body text. Use Markdown image syntax. Do not invent additional images.
-
-Image classification — adapt the alt text and surrounding prose accordingly:
-- LIVE: real-time data product. Safe to describe as current/this-week.
-- ARCHIVAL: dated photograph of a historical event. MUST be framed as illustrative. Do not imply it depicts this week's events. Include the year in the alt text (e.g. "...Manitoba (2007) — illustrative archival image").
-- REFERENCE: schematic/diagram with no time semantics. Always safe.`);
-  for (const img of images) {
-    const kind = img.kind ?? 'reference';
-    const yearTag = img.archival_year ? ` (${img.archival_year})` : '';
-    sections.push(`[kind=${kind}]${yearTag} ![${img.caption}](${img.url})\n*${img.credit}*`);
-  }
+  // Images are NOT embedded by the model. A separate content-aware judge
+  // (see content-match.ts) picks images and splices them in after this
+  // draft is final, so we don't pre-commit to topics the prose may end
+  // up de-emphasizing.
 
   sections.push(`STRUCTURE:
 - Open with a concrete specific hook from the past week's data — a named storm, a record, a count.
-- ## Rearview: 3-5 specific events. Cite states, magnitudes, dates. No generalities.
-- ## Roadmap: pattern overview, then 2-3 regional cuts (CONUS quadrants + a notable international callout). Tie to mechanism (jet stream position, ridge, trough, MJO phase, etc.) where you can.
+- ## Rearview: 3-5 specific events. Cite states, magnitudes, dates. No generalities. Do NOT include any images or image markdown.
+- ## Roadmap: pattern overview, then 2-3 regional cuts (CONUS quadrants + a notable international callout). Tie to mechanism (jet stream position, ridge, trough, MJO phase, etc.) where you can. Do NOT include any images or image markdown.
 - ${closer.instruction}
 
 TIME PRECISION:

@@ -8,9 +8,8 @@ tags:
   - weekly-recap
   - forecast
   - severe-weather
-  - space-weather
   - roadmap
-heroImage: https://services.swpc.noaa.gov/images/swx-overview-large.gif
+heroImage: https://cdn.star.nesdis.noaa.gov/GOES16/ABI/CONUS/GEOCOLOR/1250x750.jpg
 readTime: 5
 cadence: sunday_rearview
 opener_hash: 8c80a803
@@ -29,8 +28,8 @@ similarity_judge: claude-sonnet-4-6
 model_used: claude-sonnet-4-6
 images_used:
   - binger-tornado
-  - solar-limb-flare
-  - swpc-space-weather-overview
+  - goes16-water-vapor
+  - cpc-precip-outlook
 spotlight_active: null
 generation_retries: 0
 word_count: 859
@@ -54,8 +53,8 @@ Away from the convective story: a M6.1 struck 18 km west of Sarabetsu, Japan on 
 
 The pattern for the week of April 30–May 7 is shaped by a progressive upper-level trough lifting out of the central U.S. and a rebuilding ridge along the West Coast. That configuration typically means the active severe weather axis shifts eastward and eventually loses organization as the trough flattens, while the interior West sees a brief unsettled window before high pressure reasserts. Moisture return from the Gulf remains the key variable for the South and Southeast.
 
-![Solar limb flare imaged by NASA TRACE (2007) — archival illustration of M-class flare morphology.](https://commons.wikimedia.org/wiki/Special:FilePath/171879main_LimbFlareJan12_lg.jpg?width=1280)
-*NASA TRACE archive*
+![GOES-16 mid-level water vapor — visualizes upper-tropospheric moisture and the trough structure described above.](https://cdn.star.nesdis.noaa.gov/GOES16/ABI/CONUS/09/1250x750.jpg)
+*NOAA NESDIS*
 
 **Northeast.** New York City averages 66°F for the week with 1.10 inches of total precipitation. The highest probability window is May 6 at 72%, consistent with the trough's eastern progression delivering a meaningful rain event to the mid-Atlantic and southern New England late in the period. Not a drought-breaker, but a legitimate soaking for areas that have been running dry through April.
 
@@ -67,8 +66,8 @@ The pattern for the week of April 30–May 7 is shaped by a progressive upper-le
 
 **Pacific Coast and International.** San Francisco stays near its seasonal norm at 64°F with just 0.18 inches — the rebuilding West Coast ridge keeps organized precipitation at bay. London's 64°F average high reflects the persistent maritime pattern that has characterized western Europe through spring 2026.
 
-![NOAA SWPC space-weather overview — real-time Kp, X-ray flux, and proton flux.](https://services.swpc.noaa.gov/images/swx-overview-large.gif)
-*NOAA SWPC*
+![NOAA CPC monthly precipitation outlook — probabilistic anomalies for the period covered by the regional cuts above.](https://www.cpc.ncep.noaa.gov/products/predictions/long_range/lead01/off01_prcp.gif)
+*NOAA CPC*
 
 ## Looking Ahead
 
