@@ -36,10 +36,11 @@ const ALLOWED_REDIRECT_PATTERNS = [
  * @returns The validated path or the default fallback
  *
  * @example
- * validateRedirectPath('/dashboard')        // Returns '/dashboard'
- * validateRedirectPath('//evil.com')        // Returns '/dashboard' (blocked)
- * validateRedirectPath('javascript:alert')  // Returns '/dashboard' (blocked)
- * validateRedirectPath('/weather/london')   // Returns '/weather/london'
+ * validateRedirectPath('/dashboard')            // Returns '/dashboard'
+ * validateRedirectPath('//evil.com')            // Returns '/dashboard' (blocked)
+ * validateRedirectPath('javascript:alert')      // Returns '/dashboard' (blocked)
+ * validateRedirectPath('/weather/london')       // Returns '/weather/london'
+ * validateRedirectPath('/dashboard?next=evil')   // Returns '/dashboard' (query stripped)
  */
 export function validateRedirectPath(
   path: string | null,
@@ -68,13 +69,13 @@ export function validateRedirectPath(
 
   // Check against static allowlist
   if ((ALLOWED_REDIRECT_PATHS as readonly string[]).includes(normalizedPath)) {
-    return path // Return original path (preserving query params if valid)
+    return normalizedPath // Return sanitized path without query params or fragments
   }
 
   // Check against dynamic patterns
   for (const pattern of ALLOWED_REDIRECT_PATTERNS) {
     if (pattern.test(normalizedPath)) {
-      return path
+      return normalizedPath
     }
   }
 
