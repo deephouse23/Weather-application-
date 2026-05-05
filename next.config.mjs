@@ -1,13 +1,11 @@
 import { withSentryConfig } from "@sentry/nextjs";
 
 // Bundle analyzer (only enabled when ANALYZE=true)
-// Use dynamic import to avoid ES module issues
+// Use dynamic import() — require() is invalid in .mjs (ES Module) files
 let withBundleAnalyzer = (config) => config;
 if (process.env.ANALYZE === 'true') {
-  const bundleAnalyzer = require('@next/bundle-analyzer');
-  withBundleAnalyzer = bundleAnalyzer.default({
-    enabled: true,
-  });
+  const { default: bundleAnalyzer } = await import('@next/bundle-analyzer');
+  withBundleAnalyzer = bundleAnalyzer({ enabled: true });
 }
 
 /** @type {import('next').NextConfig} */
