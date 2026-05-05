@@ -9,7 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { verifyBearerToken } from '@/lib/supabase/auth-client';
 import { rateLimitRequest } from '@/lib/services/weather-rate-limiter';
 
 // Cache with 15-minute TTL for precipitation data
@@ -38,30 +38,16 @@ export interface PrecipitationResponse {
   timestamp: string;
 }
 
-// Get user from request (optional for this endpoint)
+// Get user from request (optional for this endpoint).
+// Uses the singleton anon client via verifyBearerToken — no per-request createClient.
 async function getAuthenticatedUser(request: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return null;
-  }
-
   const authHeader = request.headers.get('authorization');
   if (!authHeader?.startsWith('Bearer ')) {
     return null;
   }
 
   const token = authHeader.substring(7);
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-
-  if (error || !user) {
-    return null;
-  }
-
-  return user;
+  return verifyBearerToken(token);
 }
 
 // Convert mm to inches
