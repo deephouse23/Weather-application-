@@ -240,7 +240,6 @@ jest.mock('next/server', () => ({
 jest.mock('@/lib/supabase/server', () => ({
   getServerUser: jest.fn().mockResolvedValue(null),
   createServerSupabaseClient: jest.fn(),
-  getServerSession: jest.fn().mockResolvedValue(null),
 }));
 
 jest.mock('@/lib/supabase/admin', () => ({
