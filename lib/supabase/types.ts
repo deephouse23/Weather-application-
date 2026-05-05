@@ -247,7 +247,7 @@ export type SavedLocationInsert = Database['public']['Tables']['saved_locations'
 export type SavedLocationUpdate = Database['public']['Tables']['saved_locations']['Update']
 
 export type UserPreferences = Database['public']['Tables']['user_preferences']['Row']
-type UserPreferencesInsert = Database['public']['Tables']['user_preferences']['Insert']
+export type UserPreferencesInsert = Database['public']['Tables']['user_preferences']['Insert']
 export type UserPreferencesUpdate = Database['public']['Tables']['user_preferences']['Update']
 
 type UserAIMemoryRow = Database['public']['Tables']['user_ai_memory']['Row']

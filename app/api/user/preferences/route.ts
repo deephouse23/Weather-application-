@@ -14,6 +14,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import type { UserPreferencesUpdate, UserPreferencesInsert } from '@/lib/supabase/types'
 import {
   updatePreferencesSchema,
   createPreferencesSchema,
@@ -86,18 +87,18 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json(formatValidationErrors(parseResult.error), { status: 400 })
     }
 
-    // Build updates object with only defined fields
+    // Build updates object with only defined fields, typed against the Database schema
+    // Zod strict() already validated that only known preference fields are present
+    const updates: UserPreferencesUpdate = {}
     const validatedData = parseResult.data
-    const updates: Record<string, string | boolean> = {}
-    for (const [key, value] of Object.entries(validatedData)) {
+    for (const [key, value] of Object.entries(validatedData as Record<string, unknown>)) {
       if (value !== undefined) {
-        updates[key] = value
+        updates[key as keyof UserPreferencesUpdate] = value as UserPreferencesUpdate[keyof UserPreferencesUpdate]
       }
     }
 
     const { data: updatedPreferences, error: updateError } = await supabase
       .from('user_preferences')
-      // @ts-expect-error - Table definition mismatch
       .update(updates)
       .eq('user_id', user.id)
       .select()
@@ -141,24 +142,25 @@ export async function POST(request: NextRequest) {
 
     const { theme, temperature_unit } = parseResult.data
 
-    // Create initial preferences
+    // Create initial preferences, typed against the Database schema
+    const insertData: UserPreferencesInsert = {
+      user_id: user.id,
+      theme,
+      temperature_unit,
+      wind_unit: 'mph',
+      pressure_unit: 'hpa',
+      auto_location: false,
+      notifications_enabled: false,
+      email_alerts: false,
+      severe_weather_alerts: false,
+      daily_forecast_email: false,
+      news_ticker_enabled: true,
+      animation_enabled: true
+    }
+
     const { data, error } = await supabase
       .from('user_preferences')
-      // @ts-expect-error - Table definition mismatch
-      .insert({
-        user_id: user.id,
-        theme,
-        temperature_unit,
-        wind_unit: 'mph',
-        pressure_unit: 'hpa',
-        auto_location: false,
-        notifications_enabled: false,
-        email_alerts: false,
-        severe_weather_alerts: false,
-        daily_forecast_email: false,
-        news_ticker_enabled: true,
-        animation_enabled: true
-      })
+      .insert(insertData)
       .select()
       .single()
 
