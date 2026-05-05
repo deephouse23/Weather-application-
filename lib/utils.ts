@@ -31,15 +31,20 @@ export const APP_CONSTANTS = {
     WEATHER_CACHE: 'bitweather_weather_data',
     WEATHER_CITY: 'bitweather_city',
     CACHE_TIMESTAMP: 'bitweather_cache_timestamp',
-    RATE_LIMIT: 'weather-app-rate-limit',
+    // Client-side throttle state only — NOT a security control.
+    // Server rate limits are enforced in API routes (weather-rate-limiter.ts, chat-rate-limiter.ts).
+    UX_THROTTLE_STATE: 'weather-app-rate-limit',
     SNAKE_SCORES: 'snakeHighScores',
     TETRIS_SCORES: 'tetrisHighScores',
     PACMAN_SCORES: 'pacmanHighScores',
   },
-  RATE_LIMITS: {
+  // Client-side UX throttling only — NOT a security control.
+  // These values prevent UI spam (debounce-like) and are trivially bypassable.
+  // Server rate limits are enforced in API routes (weather-rate-limiter.ts, chat-rate-limiter.ts).
+  UX_THROTTLE: {
     MAX_REQUESTS_PER_HOUR: 10,
     COOLDOWN_SECONDS: 2,
-    RATE_LIMIT_WINDOW: 60000, // 1 minute
+    THROTTLE_WINDOW: 60000, // 1 minute
     MAX_REQUESTS: 5
   },
   CACHE: {

@@ -7,14 +7,17 @@ import { toastService } from '@/lib/toast-service'
 import { useLocationContext } from '@/components/location-context'
 import { useAuth } from '@/lib/auth'
 import { safeStorage } from '@/lib/safe-storage'
+import { APP_CONSTANTS } from '@/lib/utils'
 
-// Constants
-const CACHE_KEY = 'bitweather_city'
-const WEATHER_KEY = 'bitweather_weather_data'
-const CACHE_TIMESTAMP_KEY = 'bitweather_cache_timestamp'
-const RATE_LIMIT_KEY = 'weather-app-rate-limit'
+// Constants — storage keys centralized in APP_CONSTANTS.STORAGE_KEYS
+const CACHE_KEY = APP_CONSTANTS.STORAGE_KEYS.WEATHER_CITY
+const WEATHER_KEY = APP_CONSTANTS.STORAGE_KEYS.WEATHER_CACHE
+const CACHE_TIMESTAMP_KEY = APP_CONSTANTS.STORAGE_KEYS.CACHE_TIMESTAMP
+// Client-side UX throttle state only — NOT a security control.
+// Server rate limits are enforced in API routes (weather-rate-limiter.ts, chat-rate-limiter.ts).
+const RATE_LIMIT_KEY = APP_CONSTANTS.STORAGE_KEYS.UX_THROTTLE_STATE
 const SEARCH_CACHE_KEY = 'weather-search-cache'
-const MAX_REQUESTS_PER_HOUR = 60  // Increased from 10 to prevent blocking legitimate usage
+const MAX_REQUESTS_PER_HOUR = APP_CONSTANTS.UX_THROTTLE.MAX_REQUESTS_PER_HOUR
 const SEARCH_CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 export function useWeatherController() {
@@ -47,8 +50,9 @@ export function useWeatherController() {
 
 
 
-    // Rate limiting logic
-    const getRateLimitData = useCallback(() => {
+    // Client-side UX throttle — prevents UI spam only, NOT a security control.
+    // Real rate limiting happens server-side (weather-rate-limiter.ts, chat-rate-limiter.ts).
+    const getThrottleData = useCallback(() => {
         try {
             const data = safeStorage.getItem(RATE_LIMIT_KEY)
             return data ? JSON.parse(data) : { requests: [], lastReset: Date.now() }
