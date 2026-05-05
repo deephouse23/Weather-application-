@@ -105,25 +105,3 @@ export function validateEnv(): void {
     console.info('✅ All environment variables validated successfully');
   }
 }
-
-/**
- * Get environment variable with fallback
- */
-function getEnv(key: string, fallback?: string): string {
-  const value = process.env[key];
-  if (!value && fallback) {
-    return fallback;
-  }
-  if (!value) {
-    throw new Error(`Environment variable ${key} is not set`);
-  }
-  return value;
-}
-
-/**
- * Get optional environment variable
- */
-function getOptionalEnv(key: string, fallback?: string): string | undefined {
-  return process.env[key] || fallback;
-}
-
