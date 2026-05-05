@@ -41,6 +41,10 @@ afterAll(() => {
 
 import { weatherTools, geocodeLocation } from '@/lib/ai/tools';
 
+// Re-import the module to access the unexported windUnitFromApi via the
+// fetchOpenMeteoForecast mock call args — we verify the unit is passed
+// through and the label is correct in the output.
+
 beforeEach(() => {
   jest.clearAllMocks();
   // Mock Open-Meteo geocoding API response (keyless). Tests expect the
@@ -104,12 +108,59 @@ describe('get_current_weather (Open-Meteo)', () => {
     expect(result).toHaveProperty('feelsLike', 52);
     expect(result).toHaveProperty('condition', 'Mainly Clear');
     expect(result).toHaveProperty('humidity', 60);
-    expect(result).toHaveProperty('wind_mph', 8);
+    expect(result).toHaveProperty('wind_speed', 8);
+    expect(result).toHaveProperty('wind_unit', 'mph');
     expect(result).toHaveProperty('wind_direction', 220);
     expect(result).toHaveProperty('uv_index', 4);
     expect(result).toHaveProperty('cloud_cover', 25);
     expect(result).toHaveProperty('dewpoint_f', 42);
     expect(result).toHaveProperty('cape', 150);
+  });
+
+  it('should pass windSpeedUnit=mph to the API and not double-convert', async () => {
+    mockFetchForecast.mockResolvedValue({
+      latitude: 40.71,
+      longitude: -74.01,
+      timezone: 'America/New_York',
+      current: {
+        time: '2026-03-25T12:00',
+        temperature_2m: 55,
+        relative_humidity_2m: 60,
+        apparent_temperature: 52,
+        is_day: 1,
+        precipitation: 0,
+        weather_code: 1,
+        cloud_cover: 25,
+        surface_pressure: 1013,
+        wind_speed_10m: 10,  // already in mph from the API
+        wind_direction_10m: 220,
+        wind_gusts_10m: 15,
+        uv_index: 4,
+      },
+      hourly: {
+        time: ['2026-03-25T12:00'],
+        visibility: [16093],
+      },
+    });
+
+    await weatherTools.get_current_weather.execute(
+      { location: 'New York' },
+      { toolCallId: 'test', messages: [], abortSignal: undefined as unknown as AbortSignal }
+    );
+
+    // Verify fetchOpenMeteoForecast was called with windSpeedUnit='mph'
+    expect(mockFetchForecast).toHaveBeenCalledWith(
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ windSpeedUnit: 'mph' })
+    );
+
+    // The API returns 10 mph — the tool should report 10, not 22.4
+    const callResult = await weatherTools.get_current_weather.execute(
+      { location: 'New York' },
+      { toolCallId: 'test2', messages: [], abortSignal: undefined as unknown as AbortSignal }
+    );
+    expect((callResult as Record<string, unknown>).wind_speed).toBe(10);
   });
 });
 
@@ -140,7 +191,7 @@ describe('get_forecast (Open-Meteo)', () => {
     const forecast = (result as { forecast: Array<Record<string, unknown>> }).forecast;
     expect(forecast).toHaveLength(3);
     expect(forecast[0]).toHaveProperty('condition', 'Mainly Clear');
-    expect(forecast[1]).toHaveProperty('condition', 'Slight Rain');
+    expect(forecast[1]).toHaveProperty('condition', 'Slight Rain, Continuous');
     expect(forecast[1]).toHaveProperty('pop', 80);
     expect(forecast[1]).toHaveProperty('precipitation_sum_in', 0.5);
     expect(forecast[0]).toHaveProperty('high', 60);
@@ -183,7 +234,8 @@ describe('get_hourly_forecast (Open-Meteo)', () => {
     expect(hourly[0]).toHaveProperty('pop', 10);
     expect(hourly[2]).toHaveProperty('condition', 'Slight Rain');
     expect(hourly[2]).toHaveProperty('pop', 80);
-    expect(hourly[0]).toHaveProperty('wind_mph', 8);
+    expect(hourly[0]).toHaveProperty('wind_speed', 8);
+    expect(hourly[0]).toHaveProperty('wind_unit', 'mph');
   });
 });
 
@@ -321,6 +373,8 @@ describe('get_travel_route_weather (Open-Meteo)', () => {
     expect(origin).toHaveProperty('location');
     expect(origin).toHaveProperty('current_temp', 55);
     expect(origin).toHaveProperty('condition', 'Mainly Clear');
+    expect(origin).toHaveProperty('wind_speed', 8);
+    expect(origin).toHaveProperty('wind_unit', 'mph');
   });
 });
 

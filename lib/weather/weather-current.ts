@@ -29,6 +29,7 @@ import {
   OpenWeatherMapForecastResponse
 } from './weather-forecast';
 import { buildWeatherDataFromOpenMeteo } from './open-meteo-adapter';
+import { isPlaywrightTestModeAllowedEnv } from '@/lib/playwright-test-mode';
 
 // ============================================================================
 // Types
@@ -77,7 +78,9 @@ export const fetchWeatherData = async (
     const { lat, lon, displayName, country } = await geocodeLocation(locationQuery);
 
     // Playwright E2E tests stub the legacy endpoints
-    const isPlaywrightTestMode = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true';
+    // SECURITY: Only activate when NODE_ENV is in the allowed set.
+    const isPlaywrightTestMode = isPlaywrightTestModeAllowedEnv() &&
+      process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true';
     if (isPlaywrightTestMode) {
       return await fetchWeatherLegacyEndpoints(lat, lon, displayName, unitSystem);
     }
@@ -333,6 +336,8 @@ async function buildWeatherDataFromOneCall(
         : undefined,
       gust: oneCall.current?.wind_gust
     } as WindData,
+    // OWM One Call: imperial → mph, metric → m/s
+    windUnit: unitSystem === 'imperial' ? 'mph' : 'm/s',
     pressure: formatPressureByRegion(oneCall.current?.pressure ?? 1013, resolvedCountryCode),
     sunrise: oneCall.current?.sunrise
       ? formatTime(oneCall.current.sunrise, oneCall.timezone_offset)
@@ -416,6 +421,8 @@ async function fetchWeatherLegacyEndpoints(
       direction: current?.wind?.deg ? getCompassDirection(current.wind.deg) : undefined,
       gust: current?.wind?.gust,
     } as WindData,
+    // OWM legacy: imperial → mph, metric → m/s
+    windUnit: useFahrenheit ? 'mph' : 'm/s',
     pressure: formatPressureByRegion(current?.main?.pressure ?? 1013, countryCode),
     sunrise: current?.sys?.sunrise
       ? formatTime(current.sys.sunrise, current?.timezone ?? 0)

@@ -1,31 +1,34 @@
-import { createClient } from '@supabase/supabase-js'
 import { Profile, ProfileUpdate, SavedLocation, SavedLocationInsert, SavedLocationUpdate, UserPreferences, UserPreferencesUpdate } from './types'
 import { DbSavedLocation, dbToSavedLocation, savedLocationToDb } from './schema-adapter'
-import { PLACEHOLDER_URL, PLACEHOLDER_SERVICE_KEY } from './constants'
+import { getSupabaseAdmin } from './admin'
 import { captureDbError } from '../error-utils'
 
-// Create a supabase client that works in both server and client contexts
+/**
+ * Server-side Supabase client (service-role, bypasses RLS).
+ *
+ * ⚠️  SECURITY: This uses SUPABASE_SERVICE_ROLE_KEY which bypasses all
+ *     Row-Level Security policies. It must ONLY be used on the server.
+ *     NEVER add the NEXT_PUBLIC_ prefix to SUPABASE_SERVICE_ROLE_KEY —
+ *     that would expose it to the browser, allowing unauthenticated users
+ *     to bypass every RLS policy.
+ *
+ * CONSOLIDATED: Previously this module maintained its own _serverClient singleton,
+ * duplicating the connection pool that lib/supabase/admin.ts already managed.
+ * Now it delegates to getSupabaseAdmin() so there is exactly one service-role
+ * connection pool per process — see t_14f59a96.
+ */
+
+/** Return a shared Supabase client (service-role on server, anon on browser). */
 const getSupabaseClient = () => {
   if (typeof window !== 'undefined') {
-    // Client-side: use the browser client
+    // Client-side: use the browser singleton (already cached at module level
+    // in lib/supabase/client.ts — `require` avoids bundling server code).
     const { supabase } = require('./client')
     return supabase
-  } else {
-    // Server-side: create a service role client with fallbacks
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || PLACEHOLDER_URL
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || PLACEHOLDER_SERVICE_KEY
-    
-    return createClient(
-      supabaseUrl,
-      serviceRoleKey,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
   }
+
+  // Server-side: reuse the admin singleton (one connection pool per process)
+  return getSupabaseAdmin()
 }
 
 // Null UUID used for mock/test sessions - no profile exists for this

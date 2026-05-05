@@ -27,10 +27,19 @@ import { getSpaceWeatherContext } from '@/lib/services/space-weather-service';
 // Shared helpers (moved from route.ts so tools can reuse them)
 // ---------------------------------------------------------------------------
 
-const OWM_KEY = () => process.env.OPENWEATHER_API_KEY ?? '';
 
 /** Safe fetch wrapper with 10s timeout. Returns structured error on network/timeout failures. */
 const FETCH_TIMEOUT_MS = 10_000;
+
+/** Map Open-Meteo wind_speed_unit param to a short display label. */
+function windUnitFromApi(unit: 'mph' | 'kmh' | 'ms' | 'kn'): string {
+    switch (unit) {
+        case 'mph': return 'mph';
+        case 'kmh': return 'km/h';
+        case 'ms': return 'm/s';
+        case 'kn': return 'kn';
+    }
+}
 async function safeFetch(url: string, errorLabel: string): Promise<{ data: any | null; error: string | null }> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -143,17 +152,15 @@ export const weatherTools = {
             const coords = await geocodeLocation(location);
             if (!coords) return { error: `Could not find location: ${location}` };
 
-            // --- OLD OWM implementation (kept for reference) ---
-            // const apiKey = OWM_KEY();
-            // const url = `https://api.openweathermap.org/data/2.5/weather?lat=${coords.lat}&lon=${coords.lon}&units=imperial&appid=${apiKey}`;
-            // const { data: d, error } = await safeFetch(url, 'Weather data unavailable');
-            // if (error || !d) return { error: error ?? 'Weather data unavailable' };
-            // return { location: coords.name, temperature: Math.round(d.main?.temp ?? 0), ... };
-            // --- END OLD OWM implementation ---
-
             try {
+                // Default to mph (imperial) wind speed unit to match the app's
+                // US-first approach.  Open-Meteo returns values already in the
+                // requested unit — no further conversion needed.
+                const windSpeedUnit: 'mph' | 'kmh' | 'ms' | 'kn' = 'mph';
+
                 const d = await fetchOpenMeteoForecast(coords.lat, coords.lon, {
                     forecastDays: 1,
+                    windSpeedUnit,
                     extraCurrentVars: ['dewpoint_2m', 'cape'],
                 });
 
@@ -164,15 +171,19 @@ export const weatherTools = {
                 const visMeters = d.hourly?.visibility?.[0];
                 const visMiles = visMeters != null ? Math.round(visMeters / 1609) : null;
 
+                // Map API wind_speed_unit value to a short display label
+                const wuLabel = windUnitFromApi(windSpeedUnit);
+
                 return {
                     location: coords.name,
                     temperature: Math.round(c.temperature_2m ?? 0),
                     feelsLike: Math.round(c.apparent_temperature ?? 0),
                     condition: getWMODescription(c.weather_code),
                     humidity: c.relative_humidity_2m ?? 0,
-                    wind_mph: Math.round(c.wind_speed_10m ?? 0),
+                    wind_speed: Math.round(c.wind_speed_10m ?? 0),
+                    wind_unit: wuLabel,
                     wind_direction: c.wind_direction_10m ?? 0,
-                    wind_gusts_mph: Math.round(c.wind_gusts_10m ?? 0),
+                    wind_gusts: Math.round(c.wind_gusts_10m ?? 0),
                     pressure_hPa: Math.round(c.surface_pressure ?? 0),
                     visibility_miles: visMiles,
                     clouds_pct: c.cloud_cover ?? 0,
@@ -208,12 +219,6 @@ export const weatherTools = {
         execute: async ({ location, days }) => {
             const coords = await geocodeLocation(location);
             if (!coords) return { error: `Could not find location: ${location}` };
-
-            // --- OLD OWM implementation (kept for reference) ---
-            // const apiKey = OWM_KEY();
-            // const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${coords.lat}&lon=${coords.lon}&units=imperial&exclude=minutely,hourly,alerts&appid=${apiKey}`;
-            // const { data: d, error } = await safeFetch(url, 'Forecast data unavailable');
-            // --- END OLD OWM implementation ---
 
             try {
                 const d = await fetchOpenMeteoForecast(coords.lat, coords.lon, {
@@ -262,14 +267,14 @@ export const weatherTools = {
             const coords = await geocodeLocation(location);
             if (!coords) return { error: `Could not find location: ${location}` };
 
-            // --- OLD OWM implementation (kept for reference) ---
-            // const apiKey = OWM_KEY();
-            // const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${coords.lat}&lon=${coords.lon}&units=imperial&exclude=daily,minutely,alerts&appid=${apiKey}`;
-            // --- END OLD OWM implementation ---
-
             try {
+                // Default to mph (imperial) wind speed unit to match the app's
+                // US-first approach.
+                const windSpeedUnit: 'mph' | 'kmh' | 'ms' | 'kn' = 'mph';
+
                 const d = await fetchOpenMeteoForecast(coords.lat, coords.lon, {
                     forecastDays: 2,
+                    windSpeedUnit,
                     extraHourlyVars: [
                         'temperature_2m',
                         'apparent_temperature',
@@ -282,6 +287,9 @@ export const weatherTools = {
                 const h = d.hourly;
                 if (!h?.time?.length) return { error: 'Hourly forecast unavailable' };
 
+                // Map API wind_speed_unit value to a short display label
+                const wuLabel = windUnitFromApi(windSpeedUnit);
+
                 const hourly = h.time.slice(0, hours).map((timeStr, i) => {
                     const time = new Date(timeStr);
                     const hrData = h as unknown as Record<string, number[]>;
@@ -293,7 +301,8 @@ export const weatherTools = {
                         condition: getWMODescription(hrData.weather_code?.[i] ?? 0),
                         pop: Math.round(hrData.precipitation_probability?.[i] ?? 0),
                         humidity: hrData.relative_humidity_2m?.[i] ?? 0,
-                        wind_mph: Math.round(hrData.wind_speed_10m?.[i] ?? 0),
+                        wind_speed: Math.round(hrData.wind_speed_10m?.[i] ?? 0),
+                        wind_unit: wuLabel,
                     };
                 });
 
@@ -315,11 +324,6 @@ export const weatherTools = {
         execute: async ({ location }) => {
             const coords = await geocodeLocation(location);
             if (!coords) return { error: `Could not find location: ${location}` };
-
-            // --- OLD OWM implementation (kept for reference) ---
-            // Used OWM One Call minutely precipitation data (not available in Open-Meteo).
-            // const url = `https://api.openweathermap.org/data/3.0/onecall?...&exclude=daily,hourly,alerts`;
-            // --- END OLD OWM implementation ---
 
             try {
                 const d = await fetchOpenMeteoForecast(coords.lat, coords.lon, {
@@ -388,12 +392,6 @@ export const weatherTools = {
         execute: async ({ location }) => {
             const coords = await geocodeLocation(location);
             if (!coords) return { error: `Could not find location: ${location}` };
-
-            // --- OLD OWM implementation (kept for reference) ---
-            // const apiKey = OWM_KEY();
-            // const url = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${coords.lat}&lon=${coords.lon}&appid=${apiKey}`;
-            // const { data: d, error } = await safeFetch(url, 'Air quality data unavailable');
-            // --- END OLD OWM implementation ---
 
             try {
                 const d = await fetchOpenMeteoAirQuality(coords.lat, coords.lon);
@@ -573,22 +571,23 @@ export const weatherTools = {
             if (!originCoords) return { error: `Could not find origin: ${origin}` };
             if (!destCoords) return { error: `Could not find destination: ${destination}` };
 
-            // --- OLD OWM implementation (kept for reference) ---
-            // const fetchWeather = async (lat, lon) => {
-            //     const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=imperial&exclude=minutely&appid=${apiKey}`;
-            //     ...
-            // };
-            // --- END OLD OWM implementation ---
 
             try {
+                // Default to mph (imperial) wind speed unit to match the app's
+                // US-first approach.
+                const windSpeedUnit: 'mph' | 'kmh' | 'ms' | 'kn' = 'mph';
+
                 const [originData, destData, aviationData] = await Promise.all([
-                    fetchOpenMeteoForecast(originCoords.lat, originCoords.lon, { forecastDays: 1 }),
-                    fetchOpenMeteoForecast(destCoords.lat, destCoords.lon, { forecastDays: 1 }),
+                    fetchOpenMeteoForecast(originCoords.lat, originCoords.lon, { forecastDays: 1, windSpeedUnit }),
+                    fetchOpenMeteoForecast(destCoords.lat, destCoords.lon, { forecastDays: 1, windSpeedUnit }),
                     getAviationContext().catch((err) => {
                         console.error('[AI Tools] Aviation context error:', err);
                         return null;
                     }),
                 ]);
+
+                // Map API wind_speed_unit value to a short display label
+                const wuLabel = windUnitFromApi(windSpeedUnit);
 
                 const summarizeWeather = (name: string, d: typeof originData | null) => {
                     if (!d?.current) return { location: name, error: 'Data unavailable' };
@@ -600,7 +599,8 @@ export const weatherTools = {
                         current_temp: Math.round(c.temperature_2m ?? 0),
                         feels_like: Math.round(c.apparent_temperature ?? 0),
                         condition: getWMODescription(c.weather_code),
-                        wind_mph: Math.round(c.wind_speed_10m ?? 0),
+                        wind_speed: Math.round(c.wind_speed_10m ?? 0),
+                        wind_unit: wuLabel,
                         humidity: c.relative_humidity_2m ?? 0,
                         today_high: daily ? Math.round(daily.temperature_2m_max[0] ?? 0) : null,
                         today_low: daily ? Math.round(daily.temperature_2m_min[0] ?? 0) : null,
