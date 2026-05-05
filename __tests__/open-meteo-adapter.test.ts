@@ -133,6 +133,16 @@ describe('buildWeatherDataFromOpenMeteo', () => {
     expect(result.wind.speed).toBe(12.3);
     expect(result.wind.direction).toBe('SW'); // 225 degrees
     expect(result.wind.gust).toBe(18.7);
+    // Imperial → wind_speed_unit=mph, so windUnit should be 'mph'
+    expect(result.windUnit).toBe('mph');
+  });
+
+  it('should use km/h wind unit for metric unit system', async () => {
+    const result = await buildWeatherDataFromOpenMeteo(
+      40.71, -74.01, 'New York', 'metric', 'DE'
+    );
+
+    expect(result.windUnit).toBe('km/h');
   });
 
   it('should format sunrise and sunset from ISO strings', async () => {
@@ -161,6 +171,23 @@ describe('buildWeatherDataFromOpenMeteo', () => {
 
     expect(result.aqi).toBe(42);
     expect(result.aqiCategory).toBe('Good');
+  });
+
+  it('should set windUnit to "mph" for imperial unit system', async () => {
+    const result = await buildWeatherDataFromOpenMeteo(
+      40.71, -74.01, 'New York', 'imperial', 'US'
+    );
+
+    expect(result.windUnit).toBe('mph');
+  });
+
+  it('should set windUnit to "km/h" for metric unit system', async () => {
+    const result = await buildWeatherDataFromOpenMeteo(
+      40.71, -74.01, 'Berlin', 'metric', 'DE'
+    );
+
+    expect(result.windUnit).toBe('km/h');
+    expect(result.unit).toBe('°C');
   });
 
   it('should build 48 hourly entries with temperature and conditions', async () => {

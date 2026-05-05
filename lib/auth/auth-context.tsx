@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase/client'
+import { isPlaywrightTestModeAllowedEnv } from '@/lib/playwright-test-mode'
 import { Profile, UserPreferences } from '@/lib/supabase/types'
 import { getProfile } from '@/lib/supabase/database'
 import { fetchUserPreferences } from '@/lib/services/preferences-service'
@@ -213,9 +214,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Initialize authentication
     const initializeAuth = async () => {
       try {
-        const isPlaywrightTestMode =
+        // SECURITY: Only activate Playwright test mode bypass when NODE_ENV
+        // is "development" or "test" (via shared allowlist).  This prevents
+        // the bypass from being active on Vercel preview/staging builds where
+        // NODE_ENV may not be "production" but still serves real user traffic.
+        const isPlaywrightTestMode = isPlaywrightTestModeAllowedEnv() && (
           process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true' ||
           process.env.PLAYWRIGHT_TEST_MODE === 'true'
+        )
 
         // Check if Supabase is properly configured
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -252,7 +258,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
               expires_in: 3600,
               token_type: 'bearer',
               user: {
-                id: '00000000-0000-0000-0000-000000000000',
+                id: 'e2e-test-user-not-real',
                 email: 'test@example.com',
                 aud: 'authenticated',
                 role: 'authenticated',

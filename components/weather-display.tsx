@@ -104,7 +104,7 @@ export function WeatherDisplay({
         feelsLikeDelta={feelsLikeDelta}
         humidity={weather.humidity}
         windSpeed={weather.wind?.speed}
-        windUnit={weather.unit === '°C' ? 'km/h' : 'mph'}
+        windUnit={weather.windUnit || 'mph'}
         precipChance={weather.forecast?.[0]?.details?.precipitationChance}
         glowClass={themeClasses.glow}
       />
@@ -151,7 +151,9 @@ export function WeatherDisplay({
           pressure: weather?.pressure || '1013',
           uvIndex: weather?.uvIndex || 0,
           sunrise: weather?.sunrise || 'N/A',
-          sunset: weather?.sunset || 'N/A'
+          sunset: weather?.sunset || 'N/A',
+          windUnit: weather?.windUnit || 'mph',
+        }}
         }}
       />
 
@@ -392,7 +394,7 @@ export function WeatherDisplay({
           </CardHeader>
           <CardContent className="text-center pt-2 px-4 pb-4">
             <p className={cn("text-3xl font-bold tabular-nums", themeClasses.text)}>
-              {windSpeed || 'N/A'} <span className="text-lg">mph</span>
+              {windSpeed || 'N/A'} <span className="text-lg">{weather.windUnit || 'mph'}</span>
             </p>
             <div className="flex items-center justify-center gap-2 mt-2">
               {weather?.wind?.direction && (
@@ -408,7 +410,7 @@ export function WeatherDisplay({
             </div>
             {weather?.wind?.gust && (
               <p className={cn("text-xs mt-1", themeClasses.secondaryText)}>
-                Gusts {weather.wind.gust} mph
+                Gusts {weather.wind.gust} {weather.windUnit || 'mph'}
               </p>
             )}
             <Badge
