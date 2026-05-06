@@ -5,6 +5,7 @@ import { safeStorage } from '@/lib/safe-storage'
 import { ThemeType, THEME_LIST, FREE_THEMES, getThemeDefinition } from '@/lib/theme-config'
 import { supabase } from '@/lib/supabase/client'
 import { AuthChangeEvent, Session } from '@supabase/supabase-js'
+import { isPlaywrightTestModeAllowedEnv } from '@/lib/playwright-test-mode'
 
 export type Theme = ThemeType
 
@@ -61,9 +62,12 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     checkUser()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
-      const isPlaywrightTestMode =
+      // SECURITY: Only activate Playwright test mode when NODE_ENV is
+      // "development" or "test" (via shared allowlist).
+      const isPlaywrightTestMode = isPlaywrightTestModeAllowedEnv(window.location.hostname) && (
         process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true' ||
         process.env.PLAYWRIGHT_TEST_MODE === 'true'
+      )
 
       if (session?.user) {
         setUser(session.user)

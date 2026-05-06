@@ -78,8 +78,11 @@ export const fetchWeatherData = async (
     const { lat, lon, displayName, country } = await geocodeLocation(locationQuery);
 
     // Playwright E2E tests stub the legacy endpoints
-    // SECURITY: Only activate when NODE_ENV is in the allowed set.
-    const isPlaywrightTestMode = isPlaywrightTestModeAllowedEnv() &&
+    // SECURITY: Only activate when NODE_ENV is in the allowed set AND hostname
+    // is localhost (defense-in-depth against staging deploys with leaked env vars).
+    const isPlaywrightTestMode = isPlaywrightTestModeAllowedEnv(
+      typeof window !== 'undefined' ? window.location.hostname : undefined
+    ) &&
       process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true';
     if (isPlaywrightTestMode) {
       return await fetchWeatherLegacyEndpoints(lat, lon, displayName, unitSystem);
@@ -118,7 +121,13 @@ export const fetchWeatherByLocation = async (
   }
 
   try {
-    const isPlaywrightTestMode = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true';
+    // SECURITY: Only activate Playwright test mode when NODE_ENV is in the
+    // allowed set AND hostname is localhost (defense-in-depth against staging
+    // deploys with leaked env vars).
+    const isPlaywrightTestMode = isPlaywrightTestModeAllowedEnv(
+      typeof window !== 'undefined' ? window.location.hostname : undefined
+    ) &&
+      process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true';
     if (isPlaywrightTestMode) {
       return await fetchWeatherLegacyEndpoints(
         latitude,

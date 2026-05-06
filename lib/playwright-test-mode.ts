@@ -8,6 +8,8 @@ import type { NextRequest } from 'next/server';
  */
 const ALLOWED_NODE_ENVS = new Set(['development', 'test']);
 
+const LOCALHOST_HOSTNAMES = /^(localhost|127\.0\.0\.1|\[::1\])$/i;
+
 /**
  * Client-safe check: is the current NODE_ENV permitted for Playwright bypass?
  * Useful in 'use client' components that can't import the server-only
@@ -15,9 +17,26 @@ const ALLOWED_NODE_ENVS = new Set(['development', 'test']);
  *
  * process.env.NODE_ENV is inlined at build time by webpack/Next.js, so this
  * is safe to call on the client.
+ *
+ * SECURITY: Optionally pass a hostname (e.g. `window.location.hostname`) to
+ * add a runtime defense-in-depth check. If provided, the function also
+ * verifies the page is actually being served from localhost. This prevents
+ * the bypass from activating on staging/preview deploys even if
+ * NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE was accidentally baked into the client
+ * bundle.
  */
-export function isPlaywrightTestModeAllowedEnv(): boolean {
-  return ALLOWED_NODE_ENVS.has(process.env.NODE_ENV ?? '');
+export function isPlaywrightTestModeAllowedEnv(hostname?: string): boolean {
+  const envAllowed = ALLOWED_NODE_ENVS.has(process.env.NODE_ENV ?? '');
+
+  // If no hostname is provided, fall back to NODE_ENV check only (backward
+  // compat for server-side call sites). With a hostname, also verify we're
+  // on localhost — this is the runtime guard that blocks the bypass on any
+  // non-local deployment, regardless of env var misconfiguration.
+  if (hostname !== undefined) {
+    return envAllowed && LOCALHOST_HOSTNAMES.test(hostname);
+  }
+
+  return envAllowed;
 }
 
 /**
@@ -97,14 +116,18 @@ export function warnIfPlaywrightTestModeMisconfigured(): void {
   if (!isTestMode) return;
 
   const env = process.env.NODE_ENV ?? 'undefined';
-  const vercelEnv = process.env.VERCEL_ENV; // "production" | "preview" | "development"
   const allowed = env === 'development' || env === 'test';
 
   // Extra guard: even if NODE_ENV is development/test, block on Vercel
   // preview/production because those serve real traffic.
-  const isVercelServingTraffic = vercelEnv === 'production' || vercelEnv === 'preview';
+  // Consistent with isPlaywrightTestModeRequest(): if VERCEL=1 is set,
+  // treat missing VERCEL_ENV as "serving traffic" (safe default).
+  const isVercelServingTraffic =
+    process.env.VERCEL === '1' &&
+    (!process.env.VERCEL_ENV || process.env.VERCEL_ENV !== 'development');
 
   if (!allowed || isVercelServingTraffic) {
+    const vercelEnv = process.env.VERCEL_ENV;
     const msg =
       `[SECURITY] PLAYWRIGHT_TEST_MODE is enabled but NODE_ENV="${env}"` +
       (vercelEnv ? `, VERCEL_ENV="${vercelEnv}"` : '') +

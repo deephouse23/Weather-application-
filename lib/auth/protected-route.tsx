@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from './auth-context'
+import { isPlaywrightTestModeAllowedEnv } from '@/lib/playwright-test-mode'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -15,10 +16,15 @@ export function ProtectedRoute({ children, redirectTo = '/auth/login' }: Protect
   const router = useRouter()
 
   // Playwright E2E runs: bypass client-side auth gating for determinism.
-  // Middleware/test fixtures already cover auth behavior when needed.
-  const isPlaywrightTestMode =
+  // SECURITY: Only activate when NODE_ENV is "development" or "test" (via shared
+  // allowlist).  Prevents bypass on staging/preview where env var may be set but
+  // real traffic is served.
+  const isPlaywrightTestMode = isPlaywrightTestModeAllowedEnv(
+    typeof window !== 'undefined' ? window.location.hostname : undefined
+  ) && (
     process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true' ||
     process.env.PLAYWRIGHT_TEST_MODE === 'true'
+  )
 
   useEffect(() => {
     if (!isPlaywrightTestMode && !loading && !user) {

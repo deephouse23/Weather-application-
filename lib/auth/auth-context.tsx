@@ -218,7 +218,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // is "development" or "test" (via shared allowlist).  This prevents
         // the bypass from being active on Vercel preview/staging builds where
         // NODE_ENV may not be "production" but still serves real user traffic.
-        const isPlaywrightTestMode = isPlaywrightTestModeAllowedEnv() && (
+        const isPlaywrightTestMode = isPlaywrightTestModeAllowedEnv(window.location.hostname) && (
           process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true' ||
           process.env.PLAYWRIGHT_TEST_MODE === 'true'
         )

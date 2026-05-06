@@ -310,6 +310,51 @@ describe('isPlaywrightTestModeAllowedEnv — client-safe helper', () => {
   });
 });
 
+describe('isPlaywrightTestModeAllowedEnv — hostname guard', () => {
+  let isPlaywrightTestModeAllowedEnv: typeof import('@/lib/playwright-test-mode')['isPlaywrightTestModeAllowedEnv'];
+
+  beforeAll(() => {
+    setEnv({ NODE_ENV: 'test' });
+    const mod = require('@/lib/playwright-test-mode');
+    isPlaywrightTestModeAllowedEnv = mod.isPlaywrightTestModeAllowedEnv;
+  });
+
+  it('should allow localhost hostname when NODE_ENV=development', () => {
+    setEnv({ NODE_ENV: 'development' });
+    expect(isPlaywrightTestModeAllowedEnv('localhost')).toBe(true);
+  });
+
+  it('should allow 127.0.0.1 hostname when NODE_ENV=development', () => {
+    setEnv({ NODE_ENV: 'development' });
+    expect(isPlaywrightTestModeAllowedEnv('127.0.0.1')).toBe(true);
+  });
+
+  it('should allow [::1] hostname when NODE_ENV=development', () => {
+    setEnv({ NODE_ENV: 'development' });
+    expect(isPlaywrightTestModeAllowedEnv('[::1]')).toBe(true);
+  });
+
+  it('should reject non-localhost hostname even when NODE_ENV=development', () => {
+    setEnv({ NODE_ENV: 'development' });
+    expect(isPlaywrightTestModeAllowedEnv('staging.example.com')).toBe(false);
+  });
+
+  it('should reject non-localhost hostname even when NODE_ENV=test', () => {
+    setEnv({ NODE_ENV: 'test' });
+    expect(isPlaywrightTestModeAllowedEnv('preview.vercel.app')).toBe(false);
+  });
+
+  it('should fall back to NODE_ENV check when hostname is undefined', () => {
+    setEnv({ NODE_ENV: 'development' });
+    expect(isPlaywrightTestModeAllowedEnv(undefined)).toBe(true);
+  });
+
+  it('should fall back to NODE_ENV block when hostname is undefined and NODE_ENV=production', () => {
+    setEnv({ NODE_ENV: 'production' });
+    expect(isPlaywrightTestModeAllowedEnv(undefined)).toBe(false);
+  });
+});
+
 describe('warnIfPlaywrightTestModeMisconfigured', () => {
   let warnIfPlaywrightTestModeMisconfigured: typeof import('@/lib/playwright-test-mode')['warnIfPlaywrightTestModeMisconfigured'];
 
@@ -328,6 +373,7 @@ describe('warnIfPlaywrightTestModeMisconfigured', () => {
     setEnv({
       NODE_ENV: 'development',
       PLAYWRIGHT_TEST_MODE: 'true',
+      VERCEL: '1',
       VERCEL_ENV: 'preview',
     });
     expect(() => warnIfPlaywrightTestModeMisconfigured()).toThrow(/SECURITY.*VERCEL_ENV/);
@@ -337,9 +383,25 @@ describe('warnIfPlaywrightTestModeMisconfigured', () => {
     setEnv({
       NODE_ENV: 'development',
       PLAYWRIGHT_TEST_MODE: 'true',
+      VERCEL: '1',
       VERCEL_ENV: 'production',
     });
     expect(() => warnIfPlaywrightTestModeMisconfigured()).toThrow(/SECURITY.*VERCEL_ENV/);
+  });
+
+  it('should include VERCEL_ENV in the error message when set', () => {
+    setEnv({
+      NODE_ENV: 'development',
+      PLAYWRIGHT_TEST_MODE: 'true',
+      VERCEL: '1',
+      VERCEL_ENV: 'preview',
+    });
+    try {
+      warnIfPlaywrightTestModeMisconfigured();
+      fail('Expected an error to be thrown');
+    } catch (e: any) {
+      expect(e.message).toContain('VERCEL_ENV="preview"');
+    }
   });
 
   it('should NOT throw when NODE_ENV=development', () => {
@@ -397,5 +459,96 @@ describe('middleware.ts — delegates to shared helper', () => {
   it('should use isPlaywrightTestModeRequest instead of inline isPlaywrightTestMode', () => {
     expect(src).toContain('isPlaywrightTestModeRequest(request)');
     expect(src).not.toMatch(/const isPlaywrightTestMode\s*=/);
+  });
+});
+
+describe('protected-route.tsx — delegates to shared helper', () => {
+  const src = require('fs').readFileSync(
+    require('path').join(__dirname, '..', 'lib', 'auth', 'protected-route.tsx'),
+    'utf-8'
+  );
+
+  it('should import isPlaywrightTestModeAllowedEnv from the shared module', () => {
+    expect(src).toContain("import { isPlaywrightTestModeAllowedEnv } from '@/lib/playwright-test-mode'");
+  });
+
+  it('should guard the env var check with isPlaywrightTestModeAllowedEnv()', () => {
+    // The bypass must require both the NODE_ENV allowlist AND the env var.
+    // This prevents activation on staging where NODE_ENV may not be "production".
+    // Now also passes hostname for defense-in-depth.
+    expect(src).toMatch(/isPlaywrightTestModeAllowedEnv/);
+  });
+});
+
+describe('auth-context.tsx — hostname guard', () => {
+  const src = require('fs').readFileSync(
+    require('path').join(__dirname, '..', 'lib', 'auth', 'auth-context.tsx'),
+    'utf-8'
+  );
+
+  it('should pass window.location.hostname to isPlaywrightTestModeAllowedEnv', () => {
+    // Client-side defense-in-depth: even if NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE
+    // is baked into the bundle, the bypass won't activate for non-localhost hosts.
+    expect(src).toMatch(/isPlaywrightTestModeAllowedEnv\(window\.location\.hostname\)/);
+  });
+});
+
+describe('protected-route.tsx — hostname guard', () => {
+  const src = require('fs').readFileSync(
+    require('path').join(__dirname, '..', 'lib', 'auth', 'protected-route.tsx'),
+    'utf-8'
+  );
+
+  it('should pass window.location.hostname to isPlaywrightTestModeAllowedEnv (with SSR guard)', () => {
+    expect(src).toMatch(/isPlaywrightTestModeAllowedEnv\(\s*typeof window.*window\.location\.hostname/);
+  });
+});
+
+describe('theme-provider.tsx — hostname guard', () => {
+  const src = require('fs').readFileSync(
+    require('path').join(__dirname, '..', 'components', 'theme-provider.tsx'),
+    'utf-8'
+  );
+
+  it('should pass window.location.hostname to isPlaywrightTestModeAllowedEnv', () => {
+    expect(src).toMatch(/isPlaywrightTestModeAllowedEnv\(window\.location\.hostname\)/);
+  });
+});
+
+describe('weather-current.ts — hostname guard', () => {
+  const src = require('fs').readFileSync(
+    require('path').join(__dirname, '..', 'lib', 'weather', 'weather-current.ts'),
+    'utf-8'
+  );
+
+  it('should pass hostname (with SSR guard) to isPlaywrightTestModeAllowedEnv', () => {
+    expect(src).toMatch(/isPlaywrightTestModeAllowedEnv\(\s*typeof window.*window\.location\.hostname/);
+  });
+});
+
+describe('instrumentation.ts — startup security check', () => {
+  const src = require('fs').readFileSync(
+    require('path').join(__dirname, '..', 'instrumentation.ts'),
+    'utf-8'
+  );
+
+  it('should import warnIfPlaywrightTestModeMisconfigured from the shared module', () => {
+    expect(src).toContain("import { warnIfPlaywrightTestModeMisconfigured } from './lib/playwright-test-mode'");
+  });
+
+  it('should call warnIfPlaywrightTestModeMisconfigured in register()', () => {
+    expect(src).toContain('warnIfPlaywrightTestModeMisconfigured()');
+  });
+});
+
+describe('next.config.mjs — build-time security check', () => {
+  const src = require('fs').readFileSync(
+    require('path').join(__dirname, '..', 'next.config.mjs'),
+    'utf-8'
+  );
+
+  it('should abort production builds if PLAYWRIGHT_TEST_MODE is set', () => {
+    expect(src).toContain('BUILD ABORTED');
+    expect(src).toMatch(/PLAYWRIGHT_TEST_MODE/);
   });
 });
