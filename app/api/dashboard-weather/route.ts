@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const lat = searchParams.get('lat')
     const lon = searchParams.get('lon')
+    const units = searchParams.get('units') === 'metric' ? 'metric' : 'imperial'
 
     if (!lat || !lon) {
       return NextResponse.json({ error: 'Latitude and longitude are required' }, { status: 400 })
@@ -48,26 +49,29 @@ export async function GET(request: NextRequest) {
     // Phase 2: Use Open-Meteo instead of OpenWeatherMap
     const forecast = await fetchOpenMeteoForecast(latitude, longitude, {
       forecastDays: 1,
-      temperatureUnit: 'fahrenheit',
-      windSpeedUnit: 'mph',
-      precipitationUnit: 'inch',
+      temperatureUnit: units === 'metric' ? 'celsius' : 'fahrenheit',
+      windSpeedUnit: units === 'metric' ? 'kmh' : 'mph',
+      precipitationUnit: units === 'metric' ? 'mm' : 'inch',
     })
 
     const current = forecast.current
     const hourly = forecast.hourly
 
-    // Find current hour's visibility
+    // Find current hour's visibility (Open-Meteo returns meters regardless of unit prefs)
     const now = new Date()
-    let visibilityKm = 10
+    let visibilityRaw = 10000
     if (hourly?.time && hourly?.visibility) {
       for (let i = 0; i < hourly.time.length; i++) {
         if (new Date(hourly.time[i]) >= now) {
-          // visibility is in meters from Open-Meteo
-          visibilityKm = Math.round((hourly.visibility[i] ?? 10000) / 1000)
+          visibilityRaw = hourly.visibility[i] ?? 10000
           break
         }
       }
     }
+    const visibility =
+      units === 'metric'
+        ? Math.round(visibilityRaw / 1000) // km
+        : Math.round(visibilityRaw / 1609) // miles
 
     // Transform to dashboard format (same shape as before)
     const dashboardWeather = {
@@ -78,7 +82,8 @@ export async function GET(request: NextRequest) {
       icon: wmoToOWMIcon(current?.weather_code ?? 0, current?.is_day ?? 1),
       feelsLike: Math.round(current?.apparent_temperature ?? 0),
       pressure: Math.round(current?.surface_pressure ?? 1013),
-      visibility: visibilityKm
+      visibility,
+      units,
     }
 
     return NextResponse.json(dashboardWeather, {

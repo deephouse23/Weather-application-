@@ -286,7 +286,7 @@ async function buildWeatherDataFromOneCall(
         details: {
           humidity: d.humidity ?? 0,
           windSpeed: Math.round(d.wind_speed ?? 0),
-          windDirection: d.wind_deg ? getWindDirection(d.wind_deg) : undefined,
+          windDirection: d.wind_deg != null ? getWindDirection(d.wind_deg) : undefined,
           pressure: `${d.pressure ?? 1013} hPa`,
           cloudCover: d.clouds ?? 0,
           precipitationChance: Math.round((d.pop ?? 0) * 100),

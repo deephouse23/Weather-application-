@@ -5,16 +5,24 @@ import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { MapPin, Star, Trash2, RefreshCw, Thermometer, Droplets, Wind, Eye, Sun } from 'lucide-react'
-import { SavedLocation } from '@/lib/supabase/types'
-import { toggleLocationFavorite, deleteSavedLocation } from '@/lib/supabase/database'
+import { SavedLocation, UserPreferences } from '@/lib/supabase/types'
+import { toggleLocationFavorite, deleteSavedLocation, getUserPreferences } from '@/lib/supabase/database'
 import { getDashboardWeather, getWeatherIcon, getTemperatureColor } from '@/lib/dashboard-weather'
 import { useTheme } from '@/components/theme-provider'
+import { useAuth } from '@/lib/auth'
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
 
 interface LocationCardProps {
   location: SavedLocation
   onUpdate: () => void
 }
+
+const tempUnitLabel = (u: UserPreferences['temperature_unit'] | undefined) =>
+  u === 'celsius' ? '°C' : '°F'
+const windUnitLabel = (u: UserPreferences['wind_unit'] | undefined) =>
+  u === 'kmh' ? 'km/h' : u === 'ms' ? 'm/s' : 'mph'
+const owmUnits = (u: UserPreferences['temperature_unit'] | undefined) =>
+  u === 'celsius' ? 'metric' : 'imperial'
 
 interface BasicWeatherData {
   temperature: number
@@ -25,6 +33,7 @@ interface BasicWeatherData {
   feelsLike: number
   pressure: number
   visibility: number
+  units?: 'metric' | 'imperial'
 }
 
 interface DetailedWeatherData {
@@ -57,13 +66,19 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
   const [showDetailedWeather, setShowDetailedWeather] = useState(false)
   const [detailedWeatherData, setDetailedWeatherData] = useState<DetailedWeatherData | null>(null)
   const [detailedLoading, setDetailedLoading] = useState(false)
+  const [preferences, setPreferences] = useState<UserPreferences | null>(null)
   const { theme } = useTheme()
+  const { user } = useAuth()
   const themeClasses = getComponentStyles(theme as ThemeType, 'dashboard')
+
+  const tempUnit = tempUnitLabel(preferences?.temperature_unit)
+  const windUnit = windUnitLabel(preferences?.wind_unit)
+  const apiUnits = owmUnits(preferences?.temperature_unit)
 
   const fetchWeather = async () => {
     setLoading(true)
     try {
-      const weatherData = await getDashboardWeather(location.latitude, location.longitude)
+      const weatherData = await getDashboardWeather(location.latitude, location.longitude, apiUnits)
       setWeather(weatherData)
     } catch (error) {
       console.error('Error fetching weather for location:', error)
@@ -74,12 +89,32 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
 
   useEffect(() => {
     fetchWeather()
-  }, [location.id])
+    // Refresh when coordinates or unit pref change (not just id) so edits and pref toggles refetch.
+  }, [location.id, location.latitude, location.longitude, apiUnits])
+
+  useEffect(() => {
+    let cancelled = false
+    if (!user) {
+      setPreferences(null)
+      return
+    }
+    getUserPreferences(user.id)
+      .then((prefs) => {
+        if (!cancelled) setPreferences(prefs)
+      })
+      .catch(() => {
+        if (!cancelled) setPreferences(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [user])
 
   const handleToggleFavorite = async () => {
+    if (!user) return
     setActionLoading('favorite')
     try {
-      await toggleLocationFavorite(location.id, !location.is_favorite)
+      await toggleLocationFavorite(user.id, location.id, !location.is_favorite)
       onUpdate()
     } catch (error) {
       console.error('Error toggling favorite:', error)
@@ -89,13 +124,14 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
   }
 
   const handleDelete = async () => {
+    if (!user) return
     if (!confirm(`Remove ${location.custom_name || location.location_name} from saved locations?`)) {
       return
     }
 
     setActionLoading('delete')
     try {
-      await deleteSavedLocation(location.id)
+      await deleteSavedLocation(user.id, location.id)
       onUpdate()
     } catch (error) {
       console.error('Error deleting location:', error)
@@ -110,14 +146,26 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
     try {
       // Fetch current weather
       const currentResponse = await fetch(
-        `/api/weather/current?lat=${location.latitude}&lon=${location.longitude}&units=imperial`
+        `/api/weather/current?lat=${location.latitude}&lon=${location.longitude}&units=${apiUnits}`
       )
       if (!currentResponse.ok) throw new Error('Failed to fetch current weather')
-      const currentData = await currentResponse.json()
+      const currentRaw = await currentResponse.json()
+
+      // OWM /weather response shape — map to BasicWeatherData
+      const currentData: BasicWeatherData = {
+        temperature: Math.round(currentRaw?.main?.temp ?? 0),
+        feelsLike: Math.round(currentRaw?.main?.feels_like ?? 0),
+        humidity: currentRaw?.main?.humidity ?? 0,
+        windSpeed: currentRaw?.wind?.speed ?? 0,
+        pressure: currentRaw?.main?.pressure ?? 0,
+        visibility: currentRaw?.visibility != null ? Math.round(currentRaw.visibility / 1000) : 0,
+        description: currentRaw?.weather?.[0]?.description ?? '',
+        icon: currentRaw?.weather?.[0]?.icon ?? '',
+      }
 
       // Fetch forecast
       const forecastResponse = await fetch(
-        `/api/weather/forecast?lat=${location.latitude}&lon=${location.longitude}&units=imperial`
+        `/api/weather/forecast?lat=${location.latitude}&lon=${location.longitude}&units=${apiUnits}`
       )
       if (!forecastResponse.ok) throw new Error('Failed to fetch forecast')
       const forecastData = await forecastResponse.json()
@@ -130,7 +178,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
         )
         if (uvResponse.ok) {
           const uvData = await uvResponse.json()
-          uvIndex = uvData.value || 0
+          uvIndex = uvData.value ?? 0
         }
       } catch (err) {
         console.warn('UV index fetch failed:', err)
@@ -145,25 +193,59 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
         )
         if (aqiResponse.ok) {
           const aqiData = await aqiResponse.json()
-          aqi = aqiData.aqi || 0
+          aqi = aqiData.aqi ?? 0
           aqiCategory = aqiData.category || 'No Data'
         }
       } catch (err) {
         console.warn('Air quality fetch failed:', err)
       }
 
-      // Process forecast data
-      const processedForecast = forecastData.list?.slice(0, 5).map((item: any, index: number) => {
-        const date = new Date()
-        date.setDate(date.getDate() + index)
-        return {
-          day: date.toLocaleDateString('en-US', { weekday: 'short' }),
-          highTemp: Math.round(item.main.temp_max),
-          lowTemp: Math.round(item.main.temp_min),
-          condition: item.weather[0].main,
-          description: item.weather[0].description
+      // OWM /forecast returns 3-hour intervals (40 entries over 5 days). Group
+      // by calendar date and aggregate min/max so each forecast tile maps to a
+      // real day instead of a 3-hour slice.
+      type OwmListEntry = {
+        dt: number
+        dt_txt?: string
+        main?: { temp_max?: number; temp_min?: number }
+        weather?: Array<{ main?: string; description?: string }>
+      }
+      const list: OwmListEntry[] = forecastData.list ?? []
+      const byDate = new Map<
+        string,
+        { highTemp: number; lowTemp: number; entries: OwmListEntry[] }
+      >()
+      for (const item of list) {
+        const date = new Date((item.dt ?? 0) * 1000)
+        const key = date.toISOString().slice(0, 10)
+        const max = item.main?.temp_max ?? -Infinity
+        const min = item.main?.temp_min ?? Infinity
+        const existing = byDate.get(key)
+        if (existing) {
+          existing.highTemp = Math.max(existing.highTemp, max)
+          existing.lowTemp = Math.min(existing.lowTemp, min)
+          existing.entries.push(item)
+        } else {
+          byDate.set(key, { highTemp: max, lowTemp: min, entries: [item] })
         }
-      }) || []
+      }
+      const processedForecast = Array.from(byDate.entries())
+        .slice(0, 5)
+        .map(([dateKey, agg]) => {
+          // Pick the entry closest to local noon as the day's representative weather
+          const noon = agg.entries.reduce((best, e) => {
+            const eHour = new Date((e.dt ?? 0) * 1000).getUTCHours()
+            const bestHour = new Date((best.dt ?? 0) * 1000).getUTCHours()
+            return Math.abs(eHour - 12) < Math.abs(bestHour - 12) ? e : best
+          }, agg.entries[0])
+          const date = new Date(`${dateKey}T12:00:00Z`)
+          return {
+            day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+            highTemp: Math.round(agg.highTemp),
+            lowTemp: Math.round(agg.lowTemp),
+            condition: noon.weather?.[0]?.main ?? '',
+            description: noon.weather?.[0]?.description ?? '',
+          }
+        })
 
       // Combine all data
       const fullWeatherData: DetailedWeatherData = {
@@ -279,13 +361,13 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
                 </div>
                 <div>
                   <p className={`text-3xl font-bold font-mono ${getTemperatureColor(weather.temperature)}`}>
-                    {weather.temperature}°F
+                    {weather.temperature}{tempUnit}
                   </p>
                   <p className={`text-sm font-mono capitalize ${themeClasses.mutedText}`}>
                     {weather.description}
                   </p>
                   <p className={`text-xs font-mono ${themeClasses.mutedText}`}>
-                    Feels like {weather.feelsLike}°F
+                    Feels like {weather.feelsLike}{tempUnit}
                   </p>
                 </div>
               </div>
@@ -301,7 +383,7 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
 
               <div className={`p-3 border-0 rounded-sm`}>
                 <Wind className={`w-4 h-4 mx-auto mb-1 ${themeClasses.mutedText}`} />
-                <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>{Math.round(weather.windSpeed)} mph</p>
+                <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>{Math.round(weather.windSpeed)} {windUnit}</p>
                 <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Wind Speed</p>
               </div>
 
@@ -313,7 +395,9 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
 
               <div className={`p-3 border-0 rounded-sm`}>
                 <MapPin className={`w-4 h-4 mx-auto mb-1 ${themeClasses.mutedText}`} />
-                <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>{weather.visibility} km</p>
+                <p className={`text-sm font-mono font-bold ${themeClasses.text}`}>
+                  {weather.visibility} {(weather.units ?? apiUnits) === 'metric' ? 'km' : 'mi'}
+                </p>
                 <p className={`text-xs font-mono ${themeClasses.mutedText}`}>Visibility</p>
               </div>
             </div>
@@ -378,10 +462,10 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
                           {day.day}
                         </p>
                         <p className={`font-mono text-sm mb-1 ${getTemperatureColor(day.highTemp)}`}>
-                          {day.highTemp}°
+                          {day.highTemp}{tempUnit}
                         </p>
                         <p className={`font-mono text-xs ${themeClasses.mutedText}`}>
-                          {day.lowTemp}°
+                          {day.lowTemp}{tempUnit}
                         </p>
                         <p className={`font-mono text-[10px] mt-1 ${themeClasses.mutedText} truncate`}>
                           {day.condition}

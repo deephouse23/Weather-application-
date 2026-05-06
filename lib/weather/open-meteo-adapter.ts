@@ -59,8 +59,16 @@ export async function buildWeatherDataFromOpenMeteo(
   const windSpeedUnit = unitSystem === 'metric' ? 'kmh' as const : 'mph' as const;
   const precipitationUnit = unitSystem === 'metric' ? 'mm' as const : 'inch' as const;
 
+  const forecastQuery = new URLSearchParams({
+    lat: String(lat),
+    lon: String(lon),
+    days: '7',
+    temperature_unit: temperatureUnit,
+    wind_speed_unit: windSpeedUnit,
+    precipitation_unit: precipitationUnit,
+  });
   const [forecastRes, airQualityRes, pollenData] = await Promise.all([
-    fetch(getApiUrl(`/api/open-meteo/forecast?lat=${lat}&lon=${lon}&days=7`)),
+    fetch(getApiUrl(`/api/open-meteo/forecast?${forecastQuery.toString()}`)),
     fetch(getApiUrl(`/api/open-meteo/air-quality?lat=${lat}&lon=${lon}`)).catch(() => null),
     fetchPollenData(lat, lon),
   ]);

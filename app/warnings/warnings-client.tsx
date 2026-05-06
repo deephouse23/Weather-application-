@@ -77,53 +77,67 @@ export default function WarningsClient() {
   const [userPoint, setUserPoint] = useState<{ lat: number; lon: number } | null>(null)
   const [geoBusy, setGeoBusy] = useState(false)
 
-  const load = useCallback(async (point: { lat: number; lon: number } | null) => {
-    setLoading(true)
-    setError(null)
-    const qp = point ? `&point=${point.lat},${point.lon}` : ''
-    try {
-      const [dRes, gRes, sRes, cRes] = await Promise.all([
-        fetch(`/api/weather/alerts?detail=1${qp}`),
-        fetch(`/api/weather/alerts?geojson=1${qp}`),
-        fetch('/api/weather/storm-reports?days=2'),
-        fetch('/api/storm-reports'),
-      ])
-      if (!dRes.ok) throw new Error('alerts detail failed')
-      const dJson = (await dRes.json()) as { alerts: NWSAlertDetail[]; wis: WISScore }
-      setAlerts(dJson.alerts ?? [])
-      setWis(dJson.wis ?? null)
+  const load = useCallback(
+    async (point: { lat: number; lon: number } | null, signal?: AbortSignal) => {
+      setLoading(true)
+      setError(null)
+      const qp = point ? `&point=${point.lat},${point.lon}` : ''
+      try {
+        const [dRes, gRes, sRes, cRes] = await Promise.all([
+          fetch(`/api/weather/alerts?detail=1${qp}`, { signal }),
+          fetch(`/api/weather/alerts?geojson=1${qp}`, { signal }),
+          fetch('/api/weather/storm-reports?days=2', { signal }),
+          fetch('/api/storm-reports', { signal }),
+        ])
+        if (!dRes.ok) throw new Error('alerts detail failed')
+        const dJson = (await dRes.json()) as { alerts: NWSAlertDetail[]; wis: WISScore }
+        if (signal?.aborted) return
+        setAlerts(dJson.alerts ?? [])
+        setWis(dJson.wis ?? null)
 
-      if (gRes.ok) {
-        const gj = (await gRes.json()) as AlertsFeatureCollection
-        setGeoJson(gj?.type === 'FeatureCollection' ? gj : null)
-      } else {
-        setGeoJson(null)
+        if (gRes.ok) {
+          const gj = (await gRes.json()) as AlertsFeatureCollection
+          if (signal?.aborted) return
+          setGeoJson(gj?.type === 'FeatureCollection' ? gj : null)
+        } else {
+          setGeoJson(null)
+        }
+
+        if (sRes.ok) {
+          const sJson = (await sRes.json()) as { reports?: SpcReport[] }
+          if (signal?.aborted) return
+          setSpcReports(sJson.reports ?? [])
+        } else setSpcReports([])
+
+        if (cRes.ok) {
+          const cJson = (await cRes.json()) as { reports?: CommunityReport[] }
+          if (signal?.aborted) return
+          setCommunity(cJson.reports ?? [])
+        } else setCommunity([])
+      } catch (e) {
+        if ((e as Error)?.name === 'AbortError') return
+        console.error('[warnings-client]', e)
+        setError('Could not load warnings data. Try again shortly.')
+      } finally {
+        if (!signal?.aborted) setLoading(false)
       }
-
-      if (sRes.ok) {
-        const sJson = (await sRes.json()) as { reports?: SpcReport[] }
-        setSpcReports(sJson.reports ?? [])
-      } else setSpcReports([])
-
-      if (cRes.ok) {
-        const cJson = (await cRes.json()) as { reports?: CommunityReport[] }
-        setCommunity(cJson.reports ?? [])
-      } else setCommunity([])
-    } catch (e) {
-      console.error('[warnings-client]', e)
-      setError('Could not load warnings data. Try again shortly.')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+    },
+    []
+  )
 
   useEffect(() => {
-    load(userPoint)
+    const ctrl = new AbortController()
+    load(userPoint, ctrl.signal)
+    return () => ctrl.abort()
   }, [load, userPoint])
 
   useEffect(() => {
-    const t = setInterval(() => load(userPoint), 90_000)
-    return () => clearInterval(t)
+    const ctrl = new AbortController()
+    const t = setInterval(() => load(userPoint, ctrl.signal), 90_000)
+    return () => {
+      clearInterval(t)
+      ctrl.abort()
+    }
   }, [load, userPoint])
 
   const sorted = useMemo(() => {
