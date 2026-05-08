@@ -391,7 +391,8 @@ export async function GET(request: NextRequest) {
           peakDate.setFullYear(peakDate.getFullYear() + 1);
         }
         const peakMoon = calculateMoonInfo(lat, lon, calculateDarkWindow(lat, lon, peakDate));
-        const moonIllumPct = peakMoon.illumination * 100;
+        // peakMoon.illumination is already 0-100 (see lib/stargazer/astronomy.ts)
+        const moonIllumPct = peakMoon.illumination;
 
         let moonInterference: MeteorShowerEvent['moonInterference'];
         if (moonIllumPct < 15) {

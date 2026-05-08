@@ -48,7 +48,7 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
 
   // Add headers for better caching and security.
-  // NOTE: Content-Security-Policy is set per-request in proxy.ts so we can
+  // NOTE: Content-Security-Policy is set per-request in middleware.ts so we can
   // use a fresh nonce for script-src in production. Do NOT duplicate CSP
   // here — a static CSP would collide with the nonce CSP.
   async headers() {

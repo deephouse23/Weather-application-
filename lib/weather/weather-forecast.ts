@@ -226,9 +226,9 @@ export const processHourlyForecast = (
       description: hour.weather?.[0]?.description || 'clear sky',
       precipChance: Math.round((hour.pop ?? 0) * 100),
       windSpeed: hour.wind_speed,
-      windDirection: hour.wind_deg ? getWindDirection(hour.wind_deg) : undefined,
+      windDirection: hour.wind_deg != null ? getWindDirection(hour.wind_deg) : undefined,
       humidity: hour.humidity,
-      uvIndex: hour.uvi ? Math.round(hour.uvi) : undefined,
+      uvIndex: hour.uvi != null ? Math.round(hour.uvi) : undefined,
       icon: hour.weather?.[0]?.icon
     };
   });

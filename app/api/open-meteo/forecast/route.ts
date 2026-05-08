@@ -37,10 +37,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Allowlist unit values — they're forwarded into the upstream Open-Meteo URL.
+    const tempUnitParam = sp.get('temperature_unit');
+    const windUnitParam = sp.get('wind_speed_unit');
+    const precipUnitParam = sp.get('precipitation_unit');
+    const temperatureUnit: 'celsius' | 'fahrenheit' =
+      tempUnitParam === 'celsius' ? 'celsius' : 'fahrenheit';
+    const windSpeedUnit: 'mph' | 'kmh' | 'ms' | 'kn' =
+      windUnitParam === 'kmh' || windUnitParam === 'ms' || windUnitParam === 'kn'
+        ? windUnitParam
+        : 'mph';
+    const precipitationUnit: 'inch' | 'mm' = precipUnitParam === 'mm' ? 'mm' : 'inch';
+
     const parsedDays = days ? parseInt(days, 10) : 7;
     const forecastDays = Number.isNaN(parsedDays) ? 7 : Math.min(Math.max(parsedDays, 1), 16);
     const data = await fetchOpenMeteoForecast(latitude, longitude, {
       forecastDays,
+      temperatureUnit,
+      windSpeedUnit,
+      precipitationUnit,
     });
 
     return NextResponse.json(data, {

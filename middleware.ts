@@ -37,7 +37,7 @@ function buildCspHeader(isProd: boolean): string {
   ].join('; ')
 }
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers)
 
   const isProd = process.env.NODE_ENV === 'production'
@@ -80,15 +80,15 @@ export async function proxy(request: NextRequest) {
   )
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession()
+    data: { user },
+  } = await supabase.auth.getUser()
 
   const protectedRoutes = ['/dashboard', '/profile', '/settings', '/saved-locations']
   const isProtectedRoute = protectedRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   )
 
-  if (isProtectedRoute && !session) {
+  if (isProtectedRoute && !user) {
     const redirectUrl = new URL('/auth/login', request.url)
     redirectUrl.searchParams.set('next', request.nextUrl.pathname)
     return NextResponse.redirect(redirectUrl)
@@ -99,7 +99,7 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route)
   )
 
-  if (isAuthRoute && session) {
+  if (isAuthRoute && user) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 

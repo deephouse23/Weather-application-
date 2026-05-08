@@ -91,8 +91,8 @@ function parseCsv(text: string, isoDate: string): SpcReport[] {
       location: location?.trim() ?? '',
       county: county?.trim() ?? '',
       state: state?.trim() ?? '',
-      lat: parseFloat(lat ?? '') || null,
-      lon: parseFloat(lon ?? '') || null,
+      lat: Number.isFinite(parseFloat(lat ?? '')) ? parseFloat(lat ?? '') : null,
+      lon: Number.isFinite(parseFloat(lon ?? '')) ? parseFloat(lon ?? '') : null,
       comments: rest.join(',').trim(),
       date: isoDate,
     })
