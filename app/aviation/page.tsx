@@ -26,6 +26,7 @@ export default function AviationPage() {
   const [alerts, setAlerts] = useState<AviationAlert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [alertsFetchedAt, setAlertsFetchedAt] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchAlerts = async () => {
@@ -39,6 +40,7 @@ export default function AviationPage() {
 
         const data = await response.json();
         setAlerts(data.alerts || []);
+        setAlertsFetchedAt(Date.now());
         setError(null);
       } catch (err) {
         console.error('Error fetching aviation alerts:', err);
@@ -86,10 +88,16 @@ export default function AviationPage() {
 
         {/* Error Display */}
         {error && (
-          <div className={cn(
-            'mb-6 p-4 border-4 border-red-500 bg-red-500/10 font-mono text-sm',
-            'text-red-500'
-          )}>
+          <div
+            className="mb-6 p-4 border-4 font-mono text-sm"
+            style={{
+              color: 'var(--severity-extreme)',
+              backgroundColor: 'var(--severity-extreme-bg)',
+              borderColor: 'var(--severity-extreme)',
+            }}
+            role="alert"
+            aria-live="polite"
+          >
             {error}
           </div>
         )}
@@ -103,6 +111,7 @@ export default function AviationPage() {
           <FlightConditionsTerminal
             alerts={alerts}
             isLoading={isLoading}
+            alertsFetchedAt={alertsFetchedAt}
           />
         </Suspense>
       </div>

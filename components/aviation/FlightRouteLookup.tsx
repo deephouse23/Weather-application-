@@ -21,8 +21,8 @@ import dynamic from 'next/dynamic';
 // Lazy load FlightNumberInput for performance
 const FlightNumberInput = dynamic(() => import('./FlightNumberInput'), {
   loading: () => (
-    <div className="h-[60px] flex items-center justify-center bg-gray-900 border-2 border-dashed border-gray-600 rounded">
-      <div className="text-center text-gray-400 font-mono text-xs">
+    <div className="h-[60px] flex items-center justify-center bg-card border-2 border-dashed border-border rounded">
+      <div className="text-center text-muted-foreground font-mono text-xs">
         <div className="animate-pulse">Loading Flight Input...</div>
       </div>
     </div>
@@ -55,6 +55,8 @@ export interface FlightData {
     lon: number;
   };
   status: string;
+  /** Set when route data is synthesized rather than from a live provider. */
+  mock?: boolean;
 }
 
 // PIREP data for route display
@@ -125,14 +127,14 @@ function isPointNearRoute(
   return Math.abs(crossTrack) <= corridorWidth;
 }
 
-// Get turbulence color
-function getTurbulenceColor(intensity: string | null): string {
-  if (!intensity) return 'text-green-500';
+// Get turbulence severity CSS variable for the given intensity
+function getTurbulenceSeverityVar(intensity: string | null): string {
+  if (!intensity) return '--severity-light';
   const upper = intensity.toUpperCase();
-  if (upper.includes('EXTRM') || upper.includes('EXTREME')) return 'text-red-500';
-  if (upper.includes('SEV')) return 'text-orange-500';
-  if (upper.includes('MOD')) return 'text-yellow-500';
-  return 'text-green-500';
+  if (upper.includes('EXTRM') || upper.includes('EXTREME')) return '--severity-extreme';
+  if (upper.includes('SEV')) return '--severity-severe';
+  if (upper.includes('MOD')) return '--severity-moderate';
+  return '--severity-light';
 }
 
 export default function FlightRouteLookup({ initialFlight, onRouteSearch }: FlightRouteLookupProps) {
@@ -297,7 +299,7 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
       {/* Flight Number Lookup Section */}
       <div className={cn('p-4 border-2 rounded', themeClasses.borderColor)}>
         <div className={cn('flex items-center gap-2 mb-3', themeClasses.headerText)}>
-          <Plane className="w-4 h-4 text-cyan-500" />
+          <Plane className="w-4 h-4 text-primary" aria-hidden="true" />
           <span className="text-sm font-mono font-bold uppercase">Search by Flight Number</span>
         </div>
         <FlightNumberInput
@@ -308,37 +310,63 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
 
       {/* Flight Info Display */}
       {flightData && (
-        <div className={cn('p-4 border-2 rounded bg-cyan-500/10', themeClasses.borderColor)}>
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Plane className="w-4 h-4 text-cyan-500" />
+        <div
+          className={cn('p-4 border-2 rounded bg-primary/10', themeClasses.borderColor)}
+          aria-label={`Flight ${flightData.flightNumber} from ${flightData.departure.city} to ${flightData.arrival.city}`}
+        >
+          <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Plane className="w-4 h-4 text-primary" aria-hidden="true" />
               <span className={cn('text-sm font-mono font-bold', themeClasses.accentText)}>
                 {flightData.flightNumber}
               </span>
               <span className={cn('text-xs font-mono opacity-70', themeClasses.text)}>
                 {flightData.airline.name}
               </span>
+              {flightData.mock && (
+                <span
+                  className="text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase tracking-wider"
+                  style={{
+                    color: 'var(--severity-moderate)',
+                    backgroundColor: 'var(--severity-moderate-bg)',
+                    border: '1px solid var(--severity-moderate)',
+                  }}
+                  title="Route data is synthesized for demonstration. Live provider integration is coming soon."
+                  aria-label="Demo data: route is synthesized, not from a live provider"
+                >
+                  Demo data
+                </span>
+              )}
             </div>
             <button
               onClick={handleClear}
               className={cn(
-                'p-1 text-xs font-mono border rounded hover:bg-gray-700 transition-colors',
+                'p-1 text-xs font-mono border rounded hover:bg-muted transition-colors',
                 themeClasses.borderColor,
                 themeClasses.text
               )}
+              aria-label="Clear flight selection"
             >
               Clear
             </button>
           </div>
-          <div className="flex items-center gap-3 font-mono text-sm">
+          <div className="flex items-center gap-3 font-mono text-sm flex-wrap">
             <div className="flex items-center gap-1">
-              <MapPin className="w-3 h-3 text-green-500" />
+              <MapPin
+                className="w-3 h-3"
+                style={{ color: 'var(--severity-light)' }}
+                aria-hidden="true"
+              />
               <span className={themeClasses.text}>{flightData.departure.iata}</span>
               <span className={cn('text-xs opacity-60', themeClasses.text)}>{flightData.departure.city}</span>
             </div>
-            <ArrowRight className="w-4 h-4 text-gray-500" />
+            <ArrowRight className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <div className="flex items-center gap-1">
-              <MapPin className="w-3 h-3 text-red-500" />
+              <MapPin
+                className="w-3 h-3"
+                style={{ color: 'var(--severity-extreme)' }}
+                aria-hidden="true"
+              />
               <span className={themeClasses.text}>{flightData.arrival.iata}</span>
               <span className={cn('text-xs opacity-60', themeClasses.text)}>{flightData.arrival.city}</span>
             </div>
@@ -349,7 +377,7 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
       {/* Manual Route Entry */}
       <div className={cn('p-4 border-2 rounded', themeClasses.borderColor)}>
         <div className={cn('flex items-center gap-2 mb-3', themeClasses.headerText)}>
-          <Route className="w-4 h-4 text-purple-500" />
+          <Route className="w-4 h-4 text-primary" aria-hidden="true" />
           <span className="text-sm font-mono font-bold uppercase">Manual Route Entry</span>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -367,17 +395,17 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
                 placeholder="e.g. KLAX"
                 maxLength={4}
                 className={cn(
-                  'w-full px-3 py-2 font-mono text-sm border-2 rounded bg-gray-900 uppercase',
+                  'w-full px-3 py-2 font-mono text-sm border-2 rounded bg-card uppercase',
                   themeClasses.borderColor,
                   themeClasses.text,
-                  'focus:outline-none focus:ring-2 focus:ring-cyan-500'
+                  'focus:outline-none focus:ring-2 focus:ring-primary'
                 )}
                 data-testid="departure-input"
               />
             </div>
 
             <div className="hidden sm:flex items-end pb-2">
-              <ArrowRight className="w-5 h-5 text-gray-500" />
+              <ArrowRight className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
             </div>
 
             {/* Arrival Input */}
@@ -393,10 +421,10 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
                 placeholder="e.g. KJFK"
                 maxLength={4}
                 className={cn(
-                  'w-full px-3 py-2 font-mono text-sm border-2 rounded bg-gray-900 uppercase',
+                  'w-full px-3 py-2 font-mono text-sm border-2 rounded bg-card uppercase',
                   themeClasses.borderColor,
                   themeClasses.text,
-                  'focus:outline-none focus:ring-2 focus:ring-cyan-500'
+                  'focus:outline-none focus:ring-2 focus:ring-primary'
                 )}
                 data-testid="arrival-input"
               />
@@ -411,8 +439,8 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
               'w-full flex items-center justify-center gap-2 px-4 py-2 font-mono text-sm font-bold border-2 rounded transition-colors',
               themeClasses.borderColor,
               isSearching || !departureCode || !arrivalCode
-                ? 'opacity-50 cursor-not-allowed bg-gray-800'
-                : 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400'
+                ? 'opacity-50 cursor-not-allowed bg-muted'
+                : 'bg-primary/20 hover:bg-primary/30 text-primary'
             )}
             data-testid="search-route-button"
           >
@@ -433,9 +461,20 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
 
       {/* Error Display */}
       {searchError && (
-        <div className={cn('p-3 border-2 border-red-500/50 bg-red-500/10 rounded', themeClasses.borderColor)}>
-          <div className="flex items-center gap-2 text-red-500 font-mono text-sm">
-            <AlertTriangle className="w-4 h-4" />
+        <div
+          className={cn('p-3 border-2 rounded', themeClasses.borderColor)}
+          style={{
+            backgroundColor: 'var(--severity-extreme-bg)',
+            borderColor: 'var(--severity-extreme)',
+          }}
+          role="alert"
+          aria-live="polite"
+        >
+          <div
+            className="flex items-center gap-2 font-mono text-sm"
+            style={{ color: 'var(--severity-extreme)' }}
+          >
+            <AlertTriangle className="w-4 h-4" aria-hidden="true" />
             {searchError}
           </div>
         </div>
@@ -446,7 +485,11 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
         <div className={cn('p-4 border-2 rounded', themeClasses.borderColor)}>
           <div className="flex items-center justify-between mb-3">
             <div className={cn('flex items-center gap-2', themeClasses.headerText)}>
-              <AlertTriangle className="w-4 h-4 text-yellow-500" />
+              <AlertTriangle
+                className="w-4 h-4"
+                style={{ color: 'var(--severity-moderate)' }}
+                aria-hidden="true"
+              />
               <span className="text-sm font-mono font-bold uppercase">
                 Turbulence Reports Along Route
               </span>
@@ -455,19 +498,27 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
               onClick={() => handleRouteSearch(departureCode, arrivalCode, flightData)}
               disabled={isSearching}
               className={cn(
-                'p-1.5 border-2 rounded hover:bg-gray-700 transition-colors',
+                'p-1.5 border-2 rounded hover:bg-muted transition-colors',
                 themeClasses.borderColor,
                 isSearching && 'opacity-50 cursor-not-allowed'
               )}
               aria-label="Refresh route data"
             >
-              <RefreshCw className={cn('w-4 h-4', isSearching && 'animate-spin')} />
+              <RefreshCw className={cn('w-4 h-4', isSearching && 'animate-spin')} aria-hidden="true" />
             </button>
           </div>
 
           {routePireps.length === 0 ? (
-            <div className={cn('flex items-center gap-2 p-3 bg-green-500/10 rounded', themeClasses.text)}>
-              <Info className="w-4 h-4 text-green-500" />
+            <div
+              className={cn('flex items-center gap-2 p-3 rounded', themeClasses.text)}
+              style={{ backgroundColor: 'var(--severity-light-bg)' }}
+              role="status"
+            >
+              <Info
+                className="w-4 h-4"
+                style={{ color: 'var(--severity-light)' }}
+                aria-hidden="true"
+              />
               <span className="font-mono text-sm">
                 No significant turbulence reported along this route in the last 4 hours.
               </span>
@@ -477,19 +528,23 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
               <div className={cn('text-xs font-mono mb-2', themeClasses.text)}>
                 <span className={themeClasses.accentText}>{routePireps.length}</span> PIREPs found within 150nm of route
               </div>
-              <div className="max-h-[300px] overflow-y-auto space-y-2">
+              <div
+                className="max-h-[300px] overflow-y-auto space-y-2"
+                role="list"
+                aria-label="Turbulence reports along route"
+              >
                 {routePireps.map((pirep) => (
                   <div
                     key={pirep.id}
                     className={cn(
-                      'p-3 border-2 rounded font-mono text-xs',
-                      themeClasses.borderColor,
-                      'bg-gray-900/50'
+                      'p-3 border-2 rounded font-mono text-xs bg-card/50',
+                      themeClasses.borderColor
                     )}
+                    role="listitem"
                   >
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
                       <div className="flex items-center gap-2">
-                        <span className={getTurbulenceColor(pirep.turbulenceIntensity)}>
+                        <span style={{ color: `var(${getTurbulenceSeverityVar(pirep.turbulenceIntensity)})` }}>
                           {pirep.turbulenceIntensity || 'SMOOTH'}
                         </span>
                         {pirep.turbulenceType && (
@@ -498,7 +553,7 @@ export default function FlightRouteLookup({ initialFlight, onRouteSearch }: Flig
                       </div>
                       <span className="opacity-60">{mounted ? formatTimeAgo(pirep.observationTime) : '...'}</span>
                     </div>
-                    <div className="flex items-center gap-4 opacity-70">
+                    <div className="flex items-center gap-4 opacity-70 flex-wrap">
                       <span>{formatAltitude(pirep.altitudeFt)}</span>
                       <span>
                         {Math.abs(pirep.latitude).toFixed(2)}{pirep.latitude >= 0 ? 'N' : 'S'}, {Math.abs(pirep.longitude).toFixed(2)}{pirep.longitude >= 0 ? 'E' : 'W'}

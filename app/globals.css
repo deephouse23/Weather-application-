@@ -20,6 +20,20 @@
     font-family: var(--font-body, var(--font-ui), ui-sans-serif, system-ui, sans-serif);
     font-weight: 400;
   }
+
+  /* Universal severity tokens — meaning is universal (red = danger),
+     not theme-dependent. Used by aviation, alerts, and any feature
+     that needs semantic severity color. */
+  :root {
+    --severity-light: hsl(142 71% 45%);
+    --severity-moderate: hsl(48 96% 53%);
+    --severity-severe: hsl(25 95% 53%);
+    --severity-extreme: hsl(0 84% 60%);
+    --severity-light-bg: hsl(142 71% 45% / 0.12);
+    --severity-moderate-bg: hsl(48 96% 53% / 0.12);
+    --severity-severe-bg: hsl(25 95% 53% / 0.12);
+    --severity-extreme-bg: hsl(0 84% 60% / 0.12);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════

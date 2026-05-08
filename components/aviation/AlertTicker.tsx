@@ -9,7 +9,7 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, type CSSProperties } from 'react';
 import { AlertTriangle, Info, Plane } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
@@ -23,27 +23,27 @@ interface AlertTickerProps {
   isLoading?: boolean;
 }
 
+const severityVar: Record<AviationAlert['severity'], string> = {
+  extreme: '--severity-extreme',
+  severe: '--severity-severe',
+  moderate: '--severity-moderate',
+  low: '--severity-light',
+};
+
+function severityStyle(severity: AviationAlert['severity']): CSSProperties {
+  const v = severityVar[severity] ?? severityVar.low;
+  return {
+    color: `var(${v})`,
+    backgroundColor: `var(${v}-bg)`,
+  };
+}
+
 export default function AlertTicker({ alerts, isLoading = false }: AlertTickerProps) {
   const { theme } = useTheme();
   const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [displayText, setDisplayText] = useState('');
   const [isTyping, setIsTyping] = useState(true);
-
-  // Severity color mapping
-  const getSeverityColor = (severity: AviationAlert['severity']) => {
-    switch (severity) {
-      case 'extreme':
-        return 'text-red-500 bg-red-500/10';
-      case 'severe':
-        return 'text-orange-500 bg-orange-500/10';
-      case 'moderate':
-        return 'text-yellow-500 bg-yellow-500/10';
-      case 'low':
-      default:
-        return 'text-green-500 bg-green-500/10';
-    }
-  };
 
   const getAlertIcon = (type: AviationAlert['type']) => {
     switch (type) {
@@ -88,17 +88,25 @@ export default function AlertTicker({ alerts, isLoading = false }: AlertTickerPr
 
   if (isLoading) {
     return (
-      <div className={cn(
-        'border-4 p-3 font-mono',
-        themeClasses.borderColor,
-        themeClasses.background
-      )}>
+      <div
+        className={cn(
+          'border-4 p-3 font-mono',
+          themeClasses.borderColor,
+          themeClasses.background
+        )}
+        role="status"
+        aria-live="polite"
+      >
         <div className="flex items-center gap-2">
           <div className="animate-pulse flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-yellow-500" />
+            <AlertTriangle
+              className="w-4 h-4"
+              style={{ color: 'var(--severity-moderate)' }}
+              aria-hidden="true"
+            />
             <span className={cn('text-xs', themeClasses.text)}>LOADING AVIATION ALERTS...</span>
           </div>
-          <span className="animate-pulse text-yellow-500">_</span>
+          <span className="animate-pulse" style={{ color: 'var(--severity-moderate)' }} aria-hidden="true">_</span>
         </div>
       </div>
     );
@@ -106,14 +114,21 @@ export default function AlertTicker({ alerts, isLoading = false }: AlertTickerPr
 
   if (alerts.length === 0) {
     return (
-      <div className={cn(
-        'border-4 p-3 font-mono',
-        themeClasses.borderColor,
-        themeClasses.background
-      )}>
+      <div
+        className={cn(
+          'border-4 p-3 font-mono',
+          themeClasses.borderColor,
+          themeClasses.background
+        )}
+        role="status"
+      >
         <div className="flex items-center gap-2">
-          <Info className="w-4 h-4 text-green-500" />
-          <span className={cn('text-xs text-green-500')}>
+          <Info
+            className="w-4 h-4"
+            style={{ color: 'var(--severity-light)' }}
+            aria-hidden="true"
+          />
+          <span className="text-xs" style={{ color: 'var(--severity-light)' }}>
             NO ACTIVE AVIATION ALERTS - ALL CLEAR
           </span>
         </div>
@@ -122,43 +137,51 @@ export default function AlertTicker({ alerts, isLoading = false }: AlertTickerPr
   }
 
   const currentAlert = alerts[currentIndex];
+  const severityStyles = severityStyle(currentAlert.severity);
 
   return (
-    <div className={cn(
-      'border-4 p-3 font-mono overflow-hidden',
-      themeClasses.borderColor,
-      themeClasses.background
-    )}>
+    <div
+      className={cn(
+        'border-4 p-3 font-mono overflow-hidden',
+        themeClasses.borderColor,
+        themeClasses.background
+      )}
+      role="region"
+      aria-label="Aviation alerts ticker"
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className={cn(
-            'text-xs font-bold px-2 py-0.5 border-2',
-            getSeverityColor(currentAlert.severity),
-            themeClasses.borderColor
-          )}>
+          <span
+            className={cn(
+              'text-xs font-bold px-2 py-0.5 border-2 inline-flex items-center',
+              themeClasses.borderColor
+            )}
+            style={severityStyles}
+            aria-hidden="true"
+          >
             {getAlertIcon(currentAlert.type)}
           </span>
-          <span className={cn(
-            'text-xs font-bold uppercase',
-            getSeverityColor(currentAlert.severity)
-          )}>
+          <span
+            className="text-xs font-bold uppercase px-1"
+            style={severityStyles}
+          >
             {currentAlert.type}
           </span>
         </div>
-        <span className={cn('text-xs', themeClasses.text)}>
+        <span className={cn('text-xs', themeClasses.text)} aria-label={`Alert ${currentIndex + 1} of ${alerts.length}`}>
           {currentIndex + 1}/{alerts.length}
         </span>
       </div>
 
       {/* Ticker Display */}
-      <div className={cn('text-sm', getSeverityColor(currentAlert.severity))}>
+      <div className="text-sm" style={severityStyles} aria-live="polite">
         {displayText}
-        {isTyping && <span className="animate-pulse">_</span>}
+        {isTyping && <span className="animate-pulse" aria-hidden="true">_</span>}
       </div>
 
       {/* Alert Counter */}
-      <div className="flex gap-1 mt-2">
+      <div className="flex gap-1 mt-2" aria-hidden="true">
         {alerts.map((_, idx) => (
           <div
             key={idx}
@@ -166,7 +189,7 @@ export default function AlertTicker({ alerts, isLoading = false }: AlertTickerPr
               'h-1 flex-1 transition-all duration-300',
               idx === currentIndex
                 ? themeClasses.accentBg
-                : 'bg-gray-700'
+                : 'bg-muted'
             )}
           />
         ))}

@@ -16,6 +16,7 @@ import { LoadingSpinner } from '@/components/ui/loading-state';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
+import { useDemoMode } from '@/hooks/useDemoMode';
 
 // Flight data interface matching the API response
 export interface FlightData {
@@ -42,6 +43,8 @@ export interface FlightData {
     lon: number;
   };
   status: string;
+  /** Set when the route was synthesized rather than fetched from a live provider. */
+  mock?: boolean;
 }
 
 interface FlightNumberInputProps {
@@ -57,6 +60,7 @@ export default function FlightNumberInput({
 }: FlightNumberInputProps) {
   const { theme } = useTheme();
   const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
+  const [demoMode, setDemoMode] = useDemoMode();
 
   const [flightNumber, setFlightNumber] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -77,7 +81,9 @@ export default function FlightNumberInput({
     setError(null);
 
     try {
-      const response = await fetch(`/api/aviation/flight-lookup?flight=${encodeURIComponent(trimmed)}`);
+      const params = new URLSearchParams({ flight: trimmed });
+      if (demoMode) params.set('mock', '1');
+      const response = await fetch(`/api/aviation/flight-lookup?${params.toString()}`);
       const result = await response.json();
 
       if (!response.ok || !result.success) {
@@ -98,7 +104,7 @@ export default function FlightNumberInput({
     } finally {
       setIsSearching(false);
     }
-  }, [flightNumber, onFlightFound, onError]);
+  }, [flightNumber, demoMode, onFlightFound, onError]);
 
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
@@ -134,11 +140,11 @@ export default function FlightNumberInput({
             maxLength={10}
             disabled={isSearching}
             className={cn(
-              'w-full pl-10 pr-3 py-2 font-mono text-sm border-2 rounded bg-gray-900',
+              'w-full pl-10 pr-3 py-2 font-mono text-sm border-2 rounded bg-card',
               themeClasses.borderColor,
               themeClasses.text,
-              'focus:outline-none focus:ring-2 focus:ring-cyan-500',
-              'placeholder:text-gray-500',
+              'focus:outline-none focus:ring-2 focus:ring-primary',
+              'placeholder:text-muted-foreground',
               isSearching && 'opacity-50 cursor-not-allowed'
             )}
             data-testid="flight-number-input"
@@ -154,8 +160,8 @@ export default function FlightNumberInput({
             'flex items-center justify-center gap-2 px-4 py-2 font-mono text-sm font-bold border-2 rounded transition-colors min-w-[100px]',
             themeClasses.borderColor,
             isSearching || !flightNumber.trim()
-              ? 'opacity-50 cursor-not-allowed bg-gray-800'
-              : 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400'
+              ? 'opacity-50 cursor-not-allowed bg-muted'
+              : 'bg-primary/20 hover:bg-primary/30 text-primary'
           )}
           data-testid="flight-search-button"
           aria-label="Search flight"
@@ -177,21 +183,60 @@ export default function FlightNumberInput({
       {/* Error Display */}
       {error && (
         <div
-          className={cn(
-            'flex items-center gap-2 p-2 text-xs font-mono rounded',
-            'bg-red-500/10 text-red-400 border border-red-500/30'
-          )}
+          className="flex items-center gap-2 p-2 text-xs font-mono rounded border"
+          style={{
+            color: 'var(--severity-extreme)',
+            backgroundColor: 'var(--severity-extreme-bg)',
+            borderColor: 'var(--severity-extreme)',
+          }}
           data-testid="flight-search-error"
           role="alert"
+          aria-live="polite"
         >
-          <AlertTriangle className="w-3 h-3 flex-shrink-0" />
+          <AlertTriangle className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
           <span>{error}</span>
         </div>
       )}
 
+      {/* Demo Mode Toggle */}
+      <label
+        className={cn(
+          'flex items-center justify-between gap-2 px-2 py-1 text-xs font-mono cursor-pointer select-none rounded border',
+          themeClasses.borderColor,
+          themeClasses.text,
+        )}
+        title="When on, flight searches return synthesized routes for screenshots and offline demos."
+      >
+        <span className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={demoMode}
+            onChange={(e) => setDemoMode(e.target.checked)}
+            className="accent-primary"
+            data-testid="aviation-demo-mode-toggle"
+            aria-label="Force demo data for flight lookups"
+          />
+          <span className="uppercase tracking-wider">Demo mode</span>
+          {demoMode && (
+            <span
+              className="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase"
+              style={{
+                color: 'var(--severity-moderate)',
+                backgroundColor: 'var(--severity-moderate-bg)',
+              }}
+            >
+              ON
+            </span>
+          )}
+        </span>
+        <span className="opacity-60 text-[10px]">
+          {demoMode ? 'Forcing mock data' : 'Use real data when available'}
+        </span>
+      </label>
+
       {/* Help Text */}
       <div className={cn('text-xs font-mono opacity-50', themeClasses.text)}>
-        Supported airlines: AA, UA, DL, WN, B6, AS, NK, F9, G4, HA
+        Supported airlines: AA, UA, DL, WN, B6, AS, NK, F9, G4, HA. Without an AviationStack key configured, all routes are synthesized for demonstration.
       </div>
     </div>
   );

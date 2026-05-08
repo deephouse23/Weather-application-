@@ -49,6 +49,18 @@ const envConfig: EnvConfig = {
       name: 'SENTRY_PROJECT',
       description: 'Sentry project (optional - defaults to "javascript-nextjs")',
     },
+    AVIATIONSTACK_API_KEY: {
+      name: 'AVIATIONSTACK_API_KEY',
+      description: 'AviationStack API key (optional - enables real flight schedule data on /aviation; without it, the service returns labeled mock routes). Free tier: 100 req/month.',
+    },
+    OPENSKY_USERNAME: {
+      name: 'OPENSKY_USERNAME',
+      description: 'OpenSky Network username (optional - raises rate limits for live position lookups on /aviation; anonymous works for low-traffic dev).',
+    },
+    OPENSKY_PASSWORD: {
+      name: 'OPENSKY_PASSWORD',
+      description: 'OpenSky Network password (optional - paired with OPENSKY_USERNAME).',
+    },
   },
 };
 

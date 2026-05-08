@@ -21,8 +21,8 @@ import dynamic from 'next/dynamic';
 // Lazy load TurbulenceMap to optimize performance
 const TurbulenceMap = dynamic(() => import('./TurbulenceMap'), {
   loading: () => (
-    <div className="h-[350px] flex items-center justify-center bg-gray-900 border-2 border-dashed border-gray-600 rounded">
-      <div className="text-center text-gray-400 font-mono text-sm">
+    <div className="h-[350px] flex items-center justify-center bg-card border-2 border-dashed border-border rounded">
+      <div className="text-center text-muted-foreground font-mono text-sm">
         <div className="animate-pulse">Loading Turbulence Map...</div>
       </div>
     </div>
@@ -33,8 +33,8 @@ const TurbulenceMap = dynamic(() => import('./TurbulenceMap'), {
 // Lazy load FlightRouteLookup
 const FlightRouteLookup = dynamic(() => import('./FlightRouteLookup'), {
   loading: () => (
-    <div className="h-[200px] flex items-center justify-center bg-gray-900 border-2 border-dashed border-gray-600 rounded">
-      <div className="text-center text-gray-400 font-mono text-sm">
+    <div className="h-[200px] flex items-center justify-center bg-card border-2 border-dashed border-border rounded">
+      <div className="text-center text-muted-foreground font-mono text-sm">
         <div className="animate-pulse">Loading Route Lookup...</div>
       </div>
     </div>
@@ -45,9 +45,21 @@ const FlightRouteLookup = dynamic(() => import('./FlightRouteLookup'), {
 interface FlightConditionsTerminalProps {
   alerts: AviationAlert[];
   isLoading?: boolean;
+  alertsFetchedAt?: number | null;
 }
 
-export default function FlightConditionsTerminal({ alerts, isLoading = false }: FlightConditionsTerminalProps) {
+function formatAlertsAge(fetchedAt: number | null | undefined, now: number): string | null {
+  if (!fetchedAt) return null;
+  const diffMs = now - fetchedAt;
+  if (diffMs < 0) return 'just now';
+  const minutes = Math.floor(diffMs / 60000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  return `${hours}h ${minutes % 60}m ago`;
+}
+
+export default function FlightConditionsTerminal({ alerts, isLoading = false, alertsFetchedAt = null }: FlightConditionsTerminalProps) {
   const { theme } = useTheme();
   const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
@@ -60,6 +72,8 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
     const timer = setInterval(() => setCurrentTime(new Date()), 10000);
     return () => clearInterval(timer);
   }, []);
+
+  const alertsAge = currentTime ? formatAlertsAge(alertsFetchedAt, currentTime.getTime()) : null;
 
   const formatZuluTime = (date: Date | null) => {
     if (!date) return '--:--:--Z';
@@ -120,7 +134,10 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
               </div>
             </div>
             <div className={'text-center p-2 container-nested'}>
-              <div className="text-2xl font-bold font-mono text-orange-500">
+              <div
+                className="text-2xl font-bold font-mono"
+                style={{ color: 'var(--severity-severe)' }}
+              >
                 {alertStats.sigmet}
               </div>
               <div className={cn('text-xs font-mono uppercase', themeClasses.text)}>
@@ -128,7 +145,10 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
               </div>
             </div>
             <div className={'text-center p-2 container-nested'}>
-              <div className="text-2xl font-bold font-mono text-yellow-500">
+              <div
+                className="text-2xl font-bold font-mono"
+                style={{ color: 'var(--severity-moderate)' }}
+              >
                 {alertStats.airmet}
               </div>
               <div className={cn('text-xs font-mono uppercase', themeClasses.text)}>
@@ -136,10 +156,14 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
               </div>
             </div>
             <div className={'text-center p-2 container-nested'}>
-              <div className={cn(
-                'text-2xl font-bold font-mono',
-                alertStats.severe > 0 ? 'text-red-500' : 'text-green-500'
-              )}>
+              <div
+                className="text-2xl font-bold font-mono"
+                style={{
+                  color: alertStats.severe > 0
+                    ? 'var(--severity-extreme)'
+                    : 'var(--severity-light)',
+                }}
+              >
                 {alertStats.severe > 0 ? alertStats.severe : 'OK'}
               </div>
               <div className={cn('text-xs font-mono uppercase', themeClasses.text)}>
@@ -154,22 +178,24 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
       <Card className={cn('container-primary', themeClasses.background)}>
         <button
           onClick={() => toggleSection('turbulence')}
-          className={'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'}
+          className="w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-muted/50 transition-colors"
+          aria-expanded={expandedSection === 'turbulence'}
+          aria-controls="aviation-turbulence-panel"
         >
           <div className="flex items-center gap-2">
-            <MapIcon className="w-4 h-4 text-purple-500" />
+            <MapIcon className="w-4 h-4 text-primary" aria-hidden="true" />
             <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
               Turbulence Forecast Map
             </span>
           </div>
           {expandedSection === 'turbulence' ? (
-            <ChevronUp className="w-4 h-4" />
+            <ChevronUp className="w-4 h-4" aria-hidden="true" />
           ) : (
-            <ChevronDown className="w-4 h-4" />
+            <ChevronDown className="w-4 h-4" aria-hidden="true" />
           )}
         </button>
         {expandedSection === 'turbulence' && (
-          <CardContent className="p-4">
+          <CardContent className="p-4" id="aviation-turbulence-panel">
             <TurbulenceMap initialAltitude="all" initialHours={2} />
           </CardContent>
         )}
@@ -179,25 +205,27 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
       <Card className={cn('container-primary', themeClasses.background)}>
         <button
           onClick={() => toggleSection('route')}
-          className={'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'}
+          className="w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-muted/50 transition-colors"
+          aria-expanded={expandedSection === 'route'}
+          aria-controls="aviation-route-panel"
         >
           <div className="flex items-center gap-2">
-            <Route className="w-4 h-4 text-cyan-500" />
+            <Route className="w-4 h-4 text-primary" aria-hidden="true" />
             <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
               Flight Route Lookup
             </span>
-            <span className="text-xs px-2 py-0.5 bg-cyan-500/20 text-cyan-500 rounded">
+            <span className="text-xs px-2 py-0.5 bg-primary/20 text-primary rounded">
               NEW
             </span>
           </div>
           {expandedSection === 'route' ? (
-            <ChevronUp className="w-4 h-4" />
+            <ChevronUp className="w-4 h-4" aria-hidden="true" />
           ) : (
-            <ChevronDown className="w-4 h-4" />
+            <ChevronDown className="w-4 h-4" aria-hidden="true" />
           )}
         </button>
         {expandedSection === 'route' && (
-          <CardContent className="p-4">
+          <CardContent className="p-4" id="aviation-route-panel">
             <FlightRouteLookup />
           </CardContent>
         )}
@@ -207,30 +235,50 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
       <Card className={cn('container-primary', themeClasses.background)}>
         <button
           onClick={() => toggleSection('alerts')}
-          className={'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'}
+          className="w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-muted/50 transition-colors"
+          aria-expanded={expandedSection === 'alerts'}
+          aria-controls="aviation-alerts-panel"
         >
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-yellow-500" />
+            <AlertTriangle
+              className="w-4 h-4"
+              style={{ color: 'var(--severity-moderate)' }}
+              aria-hidden="true"
+            />
             <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
               Aviation Alerts Feed
             </span>
             {alertStats.total > 0 && (
-              <span className={cn('text-xs px-2 py-0.5 rounded',
-                alertStats.severe > 0 ? 'bg-red-500/20 text-red-500' : 'bg-yellow-500/20 text-yellow-500'
-              )}>
+              <span
+                className="text-xs px-2 py-0.5 rounded font-mono"
+                style={{
+                  color: alertStats.severe > 0
+                    ? 'var(--severity-extreme)'
+                    : 'var(--severity-moderate)',
+                  backgroundColor: alertStats.severe > 0
+                    ? 'var(--severity-extreme-bg)'
+                    : 'var(--severity-moderate-bg)',
+                }}
+              >
                 {alertStats.total} ACTIVE
               </span>
             )}
           </div>
           {expandedSection === 'alerts' ? (
-            <ChevronUp className="w-4 h-4" />
+            <ChevronUp className="w-4 h-4" aria-hidden="true" />
           ) : (
-            <ChevronDown className="w-4 h-4" />
+            <ChevronDown className="w-4 h-4" aria-hidden="true" />
           )}
         </button>
         {expandedSection === 'alerts' && (
-          <CardContent className="p-0">
+          <CardContent className="p-0" id="aviation-alerts-panel">
             <AlertTicker alerts={alerts} isLoading={isLoading} />
+            {alertsAge && (
+              <div className={cn('flex items-center gap-2 px-3 py-2 text-xs font-mono opacity-60', themeClasses.text)}>
+                <Clock className="w-3 h-3" aria-hidden="true" />
+                <span>Alerts updated {alertsAge}</span>
+              </div>
+            )}
           </CardContent>
         )}
       </Card>
@@ -239,38 +287,48 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
       <Card className={cn('container-primary', themeClasses.background)}>
         <button
           onClick={() => toggleSection('info')}
-          className={'w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-gray-800/50 transition-colors'}
+          className="w-full flex items-center justify-between p-3 border-b border-subtle hover:bg-muted/50 transition-colors"
+          aria-expanded={expandedSection === 'info'}
+          aria-controls="aviation-info-panel"
         >
           <div className="flex items-center gap-2">
-            <Radio className="w-4 h-4 text-green-500" />
+            <Radio
+              className="w-4 h-4"
+              style={{ color: 'var(--severity-light)' }}
+              aria-hidden="true"
+            />
             <span className={cn('text-sm font-mono font-bold uppercase', themeClasses.headerText)}>
               Data Sources & Turbulence Guide
             </span>
           </div>
           {expandedSection === 'info' ? (
-            <ChevronUp className="w-4 h-4" />
+            <ChevronUp className="w-4 h-4" aria-hidden="true" />
           ) : (
-            <ChevronDown className="w-4 h-4" />
+            <ChevronDown className="w-4 h-4" aria-hidden="true" />
           )}
         </button>
         {expandedSection === 'info' && (
-          <CardContent className="p-4 space-y-4">
+          <CardContent className="p-4 space-y-4" id="aviation-info-panel">
             {/* Data Sources */}
             <div>
               <div className={cn('text-xs font-mono font-bold mb-2 flex items-center gap-2', themeClasses.headerText)}>
-                <Radio className="w-3 h-3 text-green-500" />
+                <Radio
+                  className="w-3 h-3"
+                  style={{ color: 'var(--severity-light)' }}
+                  aria-hidden="true"
+                />
                 DATA SOURCES
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs">
                 <div className={'p-3 card-inner'}>
                   <div className={cn('font-bold mb-1', themeClasses.accentText)}>NOAA AWC</div>
                   <div className={cn(themeClasses.text)}>Aviation Weather Center</div>
-                  <div className="text-green-500 mt-1">STATUS: ONLINE</div>
+                  <div className="mt-1" style={{ color: 'var(--severity-light)' }}>STATUS: ONLINE</div>
                 </div>
                 <div className={'p-3 card-inner'}>
                   <div className={cn('font-bold mb-1', themeClasses.accentText)}>NOAA GFS</div>
                   <div className={cn(themeClasses.text)}>Global Forecast System</div>
-                  <div className="text-green-500 mt-1">STATUS: ONLINE</div>
+                  <div className="mt-1" style={{ color: 'var(--severity-light)' }}>STATUS: ONLINE</div>
                 </div>
               </div>
             </div>
@@ -278,41 +336,60 @@ export default function FlightConditionsTerminal({ alerts, isLoading = false }: 
             {/* Turbulence Guide */}
             <div className={cn('pt-4 border-t', themeClasses.borderColor)}>
               <div className={cn('text-xs font-mono font-bold mb-2 flex items-center gap-2', themeClasses.headerText)}>
-                <Wind className="w-3 h-3 text-cyan-500" />
+                <Wind
+                  className="w-3 h-3 text-primary"
+                  aria-hidden="true"
+                />
                 TURBULENCE INTENSITY GUIDE
               </div>
-              <div className="space-y-2 font-mono text-xs">
-                <div className={'flex items-center gap-3 p-2 card-inner'}>
-                  <div className="w-4 h-4 bg-green-500 rounded" />
+              <div className="space-y-2 font-mono text-xs" role="list">
+                <div className="flex items-center gap-3 p-2 card-inner" role="listitem">
+                  <div
+                    className="w-4 h-4 rounded"
+                    style={{ backgroundColor: 'var(--severity-light)' }}
+                    aria-hidden="true"
+                  />
                   <div>
-                    <span className="text-green-500 font-bold">LIGHT</span>
+                    <span className="font-bold" style={{ color: 'var(--severity-light)' }}>LIGHT</span>
                     <span className={cn('ml-2', themeClasses.text)}>
                       Minor turbulence. Seat belt recommended.
                     </span>
                   </div>
                 </div>
-                <div className={'flex items-center gap-3 p-2 card-inner'}>
-                  <div className="w-4 h-4 bg-yellow-500 rounded" />
+                <div className="flex items-center gap-3 p-2 card-inner" role="listitem">
+                  <div
+                    className="w-4 h-4 rounded"
+                    style={{ backgroundColor: 'var(--severity-moderate)' }}
+                    aria-hidden="true"
+                  />
                   <div>
-                    <span className="text-yellow-500 font-bold">MODERATE</span>
+                    <span className="font-bold" style={{ color: 'var(--severity-moderate)' }}>MODERATE</span>
                     <span className={cn('ml-2', themeClasses.text)}>
                       Definite strains against seat belt. Unsecured objects may move.
                     </span>
                   </div>
                 </div>
-                <div className={'flex items-center gap-3 p-2 card-inner'}>
-                  <div className="w-4 h-4 bg-orange-500 rounded" />
+                <div className="flex items-center gap-3 p-2 card-inner" role="listitem">
+                  <div
+                    className="w-4 h-4 rounded"
+                    style={{ backgroundColor: 'var(--severity-severe)' }}
+                    aria-hidden="true"
+                  />
                   <div>
-                    <span className="text-orange-500 font-bold">SEVERE</span>
+                    <span className="font-bold" style={{ color: 'var(--severity-severe)' }}>SEVERE</span>
                     <span className={cn('ml-2', themeClasses.text)}>
                       Abrupt changes in altitude/attitude. Aircraft may be momentarily out of control.
                     </span>
                   </div>
                 </div>
-                <div className={'flex items-center gap-3 p-2 card-inner'}>
-                  <div className="w-4 h-4 bg-red-500 rounded" />
+                <div className="flex items-center gap-3 p-2 card-inner" role="listitem">
+                  <div
+                    className="w-4 h-4 rounded"
+                    style={{ backgroundColor: 'var(--severity-extreme)' }}
+                    aria-hidden="true"
+                  />
                   <div>
-                    <span className="text-red-500 font-bold">EXTREME</span>
+                    <span className="font-bold" style={{ color: 'var(--severity-extreme)' }}>EXTREME</span>
                     <span className={cn('ml-2', themeClasses.text)}>
                       Aircraft violently tossed. Practically impossible to control. May cause structural damage.
                     </span>
