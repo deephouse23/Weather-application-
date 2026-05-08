@@ -12,3 +12,4 @@ export { default as TurbulenceMap } from './TurbulenceMap';
 export { default as FlightRouteLookup } from './FlightRouteLookup';
 export { default as FlightNumberInput } from './FlightNumberInput';
 export type { FlightData } from './FlightNumberInput';
+export { default as AirportMiseryBoard } from './AirportMiseryBoard';
