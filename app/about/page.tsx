@@ -9,7 +9,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import {
-  Code, MessageCircle, Terminal, Cpu, Zap, CloudLightning, Map, Plane, Sun,
+  Code, MessageCircle, Terminal, Cpu, Zap, CloudLightning, Map, Route, Sun,
   Gamepad2, Newspaper, Sparkles, AlertTriangle, ChevronDown,
   Globe, Database, Shield, Gauge
 } from 'lucide-react';
@@ -50,7 +50,7 @@ const modules = [
   { href: "/radar", label: "Radar", desc: "Real-time NOAA MRMS radar with animated playback", icon: Map },
   { href: "/warnings", label: "Warnings Command Center", desc: "Live NWS alerts with WIS score, SPC outlook, alert polygons, and storm reports", icon: AlertTriangle },
   { href: "/severe", label: "Severe Weather", desc: "Active tornado, thunderstorm, and flood warnings", icon: CloudLightning },
-  { href: "/aviation", label: "Aviation", desc: "METARs, PIREPs, SIGMETs, and flight conditions", icon: Plane },
+  { href: "/travel", label: "Travel Hub", desc: "Will your trip suck? Airport delay risk, road conditions, and a personal trip score for fly or drive", icon: Route },
   { href: "/space-weather", label: "Space Weather", desc: "Solar flares, Kp index, aurora forecast, and coronagraph", icon: Sun },
   { href: "/news", label: "News Feed", desc: "Aggregated weather news from NOAA, NASA, and USGS", icon: Newspaper },
 ];

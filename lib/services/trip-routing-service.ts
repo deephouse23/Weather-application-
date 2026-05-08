@@ -10,17 +10,6 @@
  *    en-route hazard scoring
  */
 
-import type { MajorAirport } from '@/lib/data/major-us-airports';
-
-export interface TripEndpoint {
-  /** Raw user input (free text or IATA/ICAO code). */
-  query: string;
-  /** Coordinates after geocoding/airport resolution. */
-  resolved?: { lat: number; lon: number; label: string };
-  /** Populated when the endpoint matched an IATA/ICAO code or hub city. */
-  airport?: MajorAirport;
-}
-
 export interface MatchedCorridor {
   name: string;
   matchedSegment: {
