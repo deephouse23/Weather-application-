@@ -231,10 +231,12 @@ export default function LocationCard({ location, onUpdate }: LocationCardProps) 
       const processedForecast = Array.from(byDate.entries())
         .slice(0, 5)
         .map(([dateKey, agg]) => {
-          // Pick the entry closest to local noon as the day's representative weather
+          // Pick the entry closest to local noon as the day's representative weather.
+          // Uses viewer-local time (getHours) rather than UTC so a sunny afternoon
+          // in US Eastern doesn't get represented by 7am UTC-noon overcast skies.
           const noon = agg.entries.reduce((best, e) => {
-            const eHour = new Date((e.dt ?? 0) * 1000).getUTCHours()
-            const bestHour = new Date((best.dt ?? 0) * 1000).getUTCHours()
+            const eHour = new Date((e.dt ?? 0) * 1000).getHours()
+            const bestHour = new Date((best.dt ?? 0) * 1000).getHours()
             return Math.abs(eHour - 12) < Math.abs(bestHour - 12) ? e : best
           }, agg.entries[0])
           const date = new Date(`${dateKey}T12:00:00Z`)
