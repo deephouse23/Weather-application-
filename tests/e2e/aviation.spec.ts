@@ -122,19 +122,24 @@ test.describe('/aviation', () => {
   test('flight lookup surfaces Demo data badge for mock provider', async ({ page }) => {
     await page.goto('/aviation', { waitUntil: 'domcontentloaded' });
 
-    // Open the route lookup section
-    await page.getByRole('button', { name: /Flight Route Lookup/i }).click();
+    // Wait for the lazy-loaded terminal to finish hydrating before
+    // interacting. The route section sits inside three nested
+    // dynamic()/lazy() boundaries, so the route button only appears once
+    // FlightConditionsTerminal has resolved.
+    const routeButton = page.getByRole('button', { name: /Flight Route Lookup/i });
+    await routeButton.waitFor({ state: 'visible', timeout: 30000 });
+    await routeButton.click();
 
+    // FlightRouteLookup → FlightNumberInput is a second dynamic boundary.
     const flightInput = page.getByTestId('flight-number-input');
-    await expect(flightInput).toBeVisible({ timeout: 10000 });
+    await expect(flightInput).toBeVisible({ timeout: 30000 });
 
     await flightInput.fill('AA123');
     await page.getByTestId('flight-search-button').click();
 
-    // The badge is part of the flight info display once a result loads.
-    // We rely on the *real* flight-lookup route handler running locally —
-    // without env keys, it returns the mock provider with mock:true.
-    await expect(page.getByText(/Demo data/i)).toBeVisible({ timeout: 10000 });
+    // Without an AviationStack key configured, the route handler answers
+    // from the mock provider and the UI surfaces the Demo data badge.
+    await expect(page.getByText(/Demo data/i)).toBeVisible({ timeout: 15000 });
   });
 
   test('turbulence map mounts with OpenLayers viewport', async ({ page }) => {
