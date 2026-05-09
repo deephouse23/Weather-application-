@@ -53,6 +53,7 @@ export default function PageWrapper({ children, weatherLocation, weatherTemperat
               <nav className="flex flex-col gap-1.5">
                 <Link href="/radar" className="text-muted-foreground hover:text-foreground transition-colors">Radar</Link>
                 <Link href="/severe" className="text-muted-foreground hover:text-foreground transition-colors">Severe Weather</Link>
+                <Link href="/aviation" className="text-muted-foreground hover:text-foreground transition-colors">Aviation</Link>
                 <Link href="/space-weather" className="text-muted-foreground hover:text-foreground transition-colors">Space Weather</Link>
                 <Link href="/stargazer" className="text-muted-foreground hover:text-foreground transition-colors">Stargazer</Link>
                 <Link href="/tropical" className="text-muted-foreground hover:text-foreground transition-colors">Tropical</Link>
