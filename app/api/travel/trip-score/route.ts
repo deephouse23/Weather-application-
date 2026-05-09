@@ -39,7 +39,12 @@ import {
   haversineMeters,
   matchCorridor,
 } from '@/lib/services/trip-routing-service';
-import type { MetarObservation, MetarResponse } from '@/app/api/aviation/metar/route';
+import type { MetarObservation } from '@/app/api/aviation/metar/route';
+import {
+  fetchMetarsBulk,
+  fetchAviationAlertsFromNOAA,
+  type NoaaAlert,
+} from '@/lib/services/aviation-noaa-service';
 import interstateData from '@/public/data/us-interstates.json';
 
 const OPEN_METEO_BASE = 'https://api.open-meteo.com/v1/forecast';
@@ -53,13 +58,6 @@ interface InterstateCorridorData {
   path: number[][];
 }
 
-interface AlertLike {
-  hazard?: string;
-  region?: string;
-  rawText?: string;
-  text?: string;
-  type?: string;
-}
 
 interface GeocodingResult {
   name: string;
@@ -291,29 +289,20 @@ function computeCeilingFt(clouds: MetarObservation['clouds'] | undefined): numbe
   return ceiling;
 }
 
-async function fetchMetar(
-  airport: MajorAirport,
-  baseUrl: string,
-): Promise<MetarObservation | undefined> {
+async function fetchMetarsForAirports(
+  airports: MajorAirport[],
+): Promise<Map<string, MetarObservation>> {
   try {
-    const res = await fetchWithTimeout(
-      `${baseUrl}/api/aviation/metar?station=${airport.icao}`,
-    );
-    if (!res.ok) return undefined;
-    const data = (await res.json()) as MetarResponse;
-    return data.observation;
+    return await fetchMetarsBulk(airports.map((a) => a.icao));
   } catch (error) {
-    console.error('[trip-score]', `metar fetch failed for ${airport.icao}`, error);
-    return undefined;
+    console.error('[trip-score]', 'bulk metar fetch failed', error);
+    return new Map();
   }
 }
 
-async function fetchAlerts(baseUrl: string): Promise<AlertLike[]> {
+async function fetchAlerts(): Promise<NoaaAlert[]> {
   try {
-    const res = await fetchWithTimeout(`${baseUrl}/api/aviation/alerts`);
-    if (!res.ok) return [];
-    const data = (await res.json()) as { alerts?: AlertLike[] };
-    return Array.isArray(data.alerts) ? data.alerts : [];
+    return await fetchAviationAlertsFromNOAA();
   } catch (error) {
     console.error('[trip-score]', 'alerts fetch failed', error);
     return [];
@@ -328,7 +317,7 @@ async function fetchAlerts(baseUrl: string): Promise<AlertLike[]> {
  * between MAJOR_US_AIRPORTS hubs) this catches >95% of relevant advisories.
  */
 function alertAppliesToFlight(
-  alert: AlertLike,
+  alert: NoaaAlert,
   origin: MajorAirport,
   dest: MajorAirport,
   midpointAirports: MajorAirport[],
@@ -356,7 +345,7 @@ interface EnrouteHazardFlags {
 }
 
 function deriveEnrouteHazards(
-  alerts: AlertLike[],
+  alerts: NoaaAlert[],
   origin: MajorAirport,
   dest: MajorAirport,
   midpoint: { lat: number; lon: number },
@@ -499,11 +488,12 @@ async function handleFlyMode(
   const originAirport = origin.airport;
   const destAirport = destination.airport;
 
-  const [originMetar, destMetar, alerts] = await Promise.all([
-    fetchMetar(originAirport, baseUrl),
-    fetchMetar(destAirport, baseUrl),
-    fetchAlerts(baseUrl),
+  const [metars, alerts] = await Promise.all([
+    fetchMetarsForAirports([originAirport, destAirport]),
+    fetchAlerts(),
   ]);
+  const originMetar = metars.get(originAirport.icao);
+  const destMetar = metars.get(destAirport.icao);
 
   const originInput: AirportMiseryInput = originMetar
     ? {
