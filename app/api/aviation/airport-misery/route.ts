@@ -7,6 +7,10 @@
  * Aggregates METAR observations + SIGMET/AIRMET advisories across the top US
  * hub airports, scores each one with the unified misery model, and returns a
  * sortable board for the aviation page.
+ *
+ * Data fetches go directly to NOAA via aviation-noaa-service so we don't have
+ * to spawn 30 self-fetched serverless invocations per request (which silently
+ * failed on Vercel when NEXT_PUBLIC_BASE_URL was misconfigured to localhost).
  */
 
 import { NextResponse } from 'next/server';
@@ -19,7 +23,12 @@ import {
   type AirportMiseryInput,
   type MiseryScore,
 } from '@/lib/services/misery-score-service';
-import type { MetarObservation, MetarResponse } from '@/app/api/aviation/metar/route';
+import {
+  fetchMetarsBulk,
+  fetchAviationAlertsFromNOAA,
+  type NoaaAlert,
+} from '@/lib/services/aviation-noaa-service';
+import type { MetarObservation } from '@/app/api/aviation/metar/route';
 
 export interface AirportMiseryRow {
   airport: MajorAirport;
@@ -31,40 +40,6 @@ export interface AirportMiseryRow {
 interface AirportMiseryResponse {
   airports: AirportMiseryRow[];
   fetchedAt: string;
-}
-
-interface AlertLike {
-  hazard?: string;
-  region?: string;
-  rawText?: string;
-  text?: string;
-  type?: string;
-}
-
-const REQUEST_TIMEOUT_MS = 8000;
-
-function getBaseUrl(): string {
-  if (process.env.NEXT_PUBLIC_BASE_URL) {
-    return process.env.NEXT_PUBLIC_BASE_URL.replace(/\/$/, '');
-  }
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  return 'http://localhost:3000';
-}
-
-async function fetchWithTimeout(url: string, ms: number): Promise<Response> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ms);
-  try {
-    return await fetch(url, {
-      signal: controller.signal,
-      headers: { Accept: 'application/json' },
-      cache: 'no-store',
-    });
-  } finally {
-    clearTimeout(timer);
-  }
 }
 
 /**
@@ -93,7 +68,7 @@ function computeCeilingFt(
  * Determine whether an active SIGMET/AIRMET applies to a given airport.
  * Heuristic: text mentions the airport's ICAO, IATA, or state code.
  */
-function alertAppliesToAirport(alert: AlertLike, airport: MajorAirport): boolean {
+function alertAppliesToAirport(alert: NoaaAlert, airport: MajorAirport): boolean {
   const haystack = `${alert.region ?? ''} ${alert.text ?? ''} ${alert.rawText ?? ''}`.toUpperCase();
   if (!haystack.trim()) return false;
 
@@ -107,7 +82,7 @@ interface HazardFlags {
   icingNearby: boolean;
 }
 
-function hazardFlagsFor(airport: MajorAirport, alerts: AlertLike[]): HazardFlags {
+function hazardFlagsFor(airport: MajorAirport, alerts: NoaaAlert[]): HazardFlags {
   const flags: HazardFlags = {
     thunderstormsNearby: false,
     turbulenceNearby: false,
@@ -135,86 +110,48 @@ function hazardFlagsFor(airport: MajorAirport, alerts: AlertLike[]): HazardFlags
   return flags;
 }
 
-function placeholderRow(airport: MajorAirport): AirportMiseryRow {
+function buildRow(
+  airport: MajorAirport,
+  observation: MetarObservation | undefined,
+  alerts: NoaaAlert[],
+): AirportMiseryRow {
+  const hazards = hazardFlagsFor(airport, alerts);
+
+  if (!observation) {
+    return {
+      airport,
+      score: scoreAirportMisery({ ...hazards }),
+      isStale: true,
+    };
+  }
+
+  const input: AirportMiseryInput = {
+    ceilingFt: computeCeilingFt(observation.clouds),
+    visibilityMi: observation.visibility,
+    windKt: observation.windSpeed,
+    gustKt: observation.windGust,
+    ...hazards,
+  };
+
   return {
     airport,
-    score: scoreAirportMisery({}),
-    isStale: true,
+    score: scoreAirportMisery(input),
+    metar: observation,
+    isStale: false,
   };
-}
-
-async function fetchMetarForAirport(
-  airport: MajorAirport,
-  baseUrl: string,
-): Promise<MetarObservation | undefined> {
-  try {
-    const res = await fetchWithTimeout(
-      `${baseUrl}/api/aviation/metar?station=${airport.icao}`,
-      REQUEST_TIMEOUT_MS,
-    );
-    if (!res.ok) return undefined;
-    const data: MetarResponse = await res.json();
-    return data.observation;
-  } catch (error) {
-    console.error('[airport-misery]', `metar fetch failed for ${airport.icao}`, error);
-    return undefined;
-  }
-}
-
-async function fetchAlerts(baseUrl: string): Promise<AlertLike[]> {
-  try {
-    const res = await fetchWithTimeout(
-      `${baseUrl}/api/aviation/alerts`,
-      REQUEST_TIMEOUT_MS,
-    );
-    if (!res.ok) return [];
-    const data = (await res.json()) as { alerts?: AlertLike[] };
-    return Array.isArray(data.alerts) ? data.alerts : [];
-  } catch (error) {
-    console.error('[airport-misery]', 'alerts fetch failed', error);
-    return [];
-  }
 }
 
 export async function GET() {
   try {
-    const baseUrl = getBaseUrl();
+    const icaos = MAJOR_US_AIRPORTS.map((a) => a.icao);
 
-    const alerts = await fetchAlerts(baseUrl);
+    const [metars, alerts] = await Promise.all([
+      fetchMetarsBulk(icaos),
+      fetchAviationAlertsFromNOAA(),
+    ]);
 
-    const rows: AirportMiseryRow[] = await Promise.all(
-      MAJOR_US_AIRPORTS.map(async (airport): Promise<AirportMiseryRow> => {
-        try {
-          const observation = await fetchMetarForAirport(airport, baseUrl);
-          const hazards = hazardFlagsFor(airport, alerts);
-
-          if (!observation) {
-            return {
-              airport,
-              score: scoreAirportMisery({ ...hazards }),
-              isStale: true,
-            };
-          }
-
-          const input: AirportMiseryInput = {
-            ceilingFt: computeCeilingFt(observation.clouds),
-            visibilityMi: observation.visibility,
-            windKt: observation.windSpeed,
-            gustKt: observation.windGust,
-            ...hazards,
-          };
-
-          return {
-            airport,
-            score: scoreAirportMisery(input),
-            metar: observation,
-            isStale: false,
-          };
-        } catch (error) {
-          console.error('[airport-misery]', `row failed for ${airport.icao}`, error);
-          return placeholderRow(airport);
-        }
-      }),
+    const rows = MAJOR_US_AIRPORTS.map((airport) =>
+      buildRow(airport, metars.get(airport.icao), alerts),
     );
 
     const payload: AirportMiseryResponse = {
