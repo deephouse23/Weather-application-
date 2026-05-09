@@ -9,6 +9,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import PageWrapper from '@/components/page-wrapper';
 import dynamic from 'next/dynamic';
@@ -127,12 +128,12 @@ function FlyContent() {
     <div className="space-y-8">
       <AirportMiseryBoard />
       <div className="text-center">
-        <a
+        <Link
           href="/aviation"
           className="inline-flex items-center gap-2 px-4 py-2 rounded border border-border bg-card/50 hover:bg-card font-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
         >
           Open detail console (SIGMETs · turbulence · METARs) →
-        </a>
+        </Link>
       </div>
     </div>
   );

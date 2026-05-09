@@ -44,10 +44,13 @@ interface AlertLike {
 const REQUEST_TIMEOUT_MS = 8000;
 
 function getBaseUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, '') ||
-    'http://localhost:3000'
-  );
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL.replace(/\/$/, '');
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return 'http://localhost:3000';
 }
 
 async function fetchWithTimeout(url: string, ms: number): Promise<Response> {
@@ -94,14 +97,8 @@ function alertAppliesToAirport(alert: AlertLike, airport: MajorAirport): boolean
   const haystack = `${alert.region ?? ''} ${alert.text ?? ''} ${alert.rawText ?? ''}`.toUpperCase();
   if (!haystack.trim()) return false;
 
-  // Match ICAO/IATA codes as standalone tokens.
-  const icaoRegex = new RegExp(`\\b${airport.icao}\\b`);
-  const iataRegex = new RegExp(`\\b${airport.iata}\\b`);
-  if (icaoRegex.test(haystack) || iataRegex.test(haystack)) return true;
-
-  // Fallback: state code as a standalone token.
-  const stateRegex = new RegExp(`\\b${airport.state}\\b`);
-  return stateRegex.test(haystack);
+  if (haystack.includes(airport.icao) || haystack.includes(airport.iata)) return true;
+  return haystack.includes(airport.state);
 }
 
 interface HazardFlags {

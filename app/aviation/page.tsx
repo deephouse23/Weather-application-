@@ -10,6 +10,7 @@
 'use client';
 
 import React, { useEffect, useState, Suspense, lazy } from 'react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
@@ -85,7 +86,7 @@ export default function AviationPage() {
             }}
             className="mt-3"
           />
-          <a
+          <Link
             href="/travel"
             className={cn(
               'mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded border font-mono text-xs uppercase tracking-wider transition-colors',
@@ -93,7 +94,7 @@ export default function AviationPage() {
             )}
           >
             Driving instead? Open Travel Hub →
-          </a>
+          </Link>
         </div>
 
         {/* Error Display */}

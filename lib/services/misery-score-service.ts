@@ -151,7 +151,7 @@ export function scoreAirportMisery(input: AirportMiseryInput): MiseryScore {
   }
   if (input.icingNearby) {
     score += 12;
-    drivers.push({ label: 'Icing advisory', weight: 12, category: 'turbulence' });
+    drivers.push({ label: 'Icing advisory', weight: 12, category: 'precip' });
   }
 
   const finalScore = clampScore(score);

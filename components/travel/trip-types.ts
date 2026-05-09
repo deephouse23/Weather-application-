@@ -27,12 +27,20 @@ export interface DrivePeakWindow {
   endISO: string;
 }
 
+export interface TripEndpointPoint {
+  lat: number;
+  lon: number;
+  label?: string;
+}
+
 export interface DriveTripScore {
   mode: 'drive';
   score: MiseryScore;
   route: {
     corridorName: string;
     segments: DriveSegment[];
+    origin?: TripEndpointPoint;
+    destination?: TripEndpointPoint;
   };
   worstSegment: DriveWorstSegment;
   peakWindow?: DrivePeakWindow;

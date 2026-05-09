@@ -77,10 +77,13 @@ interface ResolvedEndpoint {
 }
 
 function getBaseUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, '') ||
-    'http://localhost:3000'
-  );
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL.replace(/\/$/, '');
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return 'http://localhost:3000';
 }
 
 async function fetchWithTimeout(
@@ -341,9 +344,7 @@ function alertAppliesToFlight(
   }
 
   for (const token of tokens) {
-    if (!token) continue;
-    const re = new RegExp(`\\b${token}\\b`);
-    if (re.test(haystack)) return true;
+    if (token && haystack.includes(token)) return true;
   }
   return false;
 }

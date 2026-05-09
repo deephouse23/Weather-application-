@@ -108,7 +108,11 @@ function FlightCategoryChip({ category }: { category?: string }) {
   return (
     <span
       className="inline-flex items-center px-1.5 py-0.5 font-mono text-[10px] tracking-wider border rounded"
-      style={{ color, borderColor: color, backgroundColor: `${color}1a` }}
+      style={{
+        color,
+        borderColor: color,
+        backgroundColor: `color-mix(in srgb, ${color} 10%, transparent)`,
+      }}
       title={`Flight category: ${value}`}
     >
       {value}
