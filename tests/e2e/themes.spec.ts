@@ -134,11 +134,15 @@ test.describe('Theme System', () => {
   });
 
   test('UI elements render correctly in synthwave theme', async ({ page }) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    // setTheme must run BEFORE goto: it uses page.addInitScript to seed
+    // localStorage so ThemeProvider reads synthwave84 on its initial
+    // hydration. With the old goto-then-setTheme order, ThemeProvider
+    // already booted with the default 'nord' and a post-hydration DOM
+    // mutation didn't update its React state — getCurrentTheme then read
+    // back 'nord' from data-theme that ThemeProvider had re-applied.
+    // Mirrors the working pattern in the "nord theme" test above.
     await setTheme(page, 'synthwave84');
-
-    // Wait for theme to be applied
-    await page.waitForTimeout(300);
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
 
     // Verify search input is visible (use .first() to handle duplicate elements)
     await expect(page.getByTestId('location-search-input').first()).toBeVisible({ timeout: 10000 });
