@@ -49,9 +49,18 @@ const envConfig: EnvConfig = {
       name: 'SENTRY_PROJECT',
       description: 'Sentry project (optional - defaults to "javascript-nextjs")',
     },
-    AVIATIONSTACK_API_KEY: {
-      name: 'AVIATIONSTACK_API_KEY',
-      description: 'AviationStack API key (optional - enables real flight schedule data on /aviation; without it, the service returns labeled mock routes). Free tier: 100 req/month.',
+    AEROAPI_KEY: {
+      name: 'AEROAPI_KEY',
+      description: 'FlightAware AeroAPI key (optional - enables real flight schedule data on /aviation; without it, the service returns labeled mock routes). Free tier: $5/month credit ~ 1000 lookups. HTTPS-only, x-apikey header.',
+    },
+    AEROAPI_MONTHLY_CAP: {
+      name: 'AEROAPI_MONTHLY_CAP',
+      // Math: $5 free credit per month / ~$0.005 per /flights/{ident} query ≈ 1000
+      // queries. Cap at 800 leaves a 20% buffer for surges and any per-query
+      // cost variance. Override to a smaller value when stress-testing the
+      // mock fallback in production. AeroAPI does NOT enforce a vendor-side
+      // spending cap on the personal tier; this env var IS the spending cap.
+      description: 'AeroAPI app-side monthly call cap, integer (optional - default 800). Once reached, the provider falls through to mock data for the rest of the UTC month.',
     },
     OPENSKY_USERNAME: {
       name: 'OPENSKY_USERNAME',
@@ -74,9 +83,7 @@ export function validateEnv(): void {
     return;
   }
 
-  const isPlaywright =
-    process.env.PLAYWRIGHT_TEST_MODE === 'true' ||
-    process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true';
+  const isPlaywright = process.env.PLAYWRIGHT_TEST_MODE === 'true';
 
   const missingRequired: string[] = [];
   const missingOptional: string[] = [];

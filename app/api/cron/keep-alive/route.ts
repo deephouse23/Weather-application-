@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import type { NextRequest } from 'next/server'
+import { timingSafeEqual } from 'node:crypto'
 import { PLACEHOLDER_URL, PLACEHOLDER_SERVICE_KEY } from '@/lib/supabase/constants'
 
 export const dynamic = 'force-dynamic'
@@ -11,8 +12,14 @@ export async function GET(request: NextRequest) {
     return new Response('CRON_SECRET not configured', { status: 500 })
   }
 
-  const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${cronSecret}`) {
+  // Constant-time bearer-token compare. The previous `!==` short-circuited
+  // on first differing byte; remote timing attacks over HTTPS are noisy in
+  // practice but the fix is one line.
+  const authHeader = request.headers.get('authorization') ?? ''
+  const expected = `Bearer ${cronSecret}`
+  const a = Buffer.from(authHeader)
+  const b = Buffer.from(expected)
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
     return new Response('Unauthorized', { status: 401 })
   }
 

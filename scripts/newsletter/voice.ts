@@ -1,6 +1,6 @@
 /**
  * Voice spec for newsletter generation. Encodes the editorial rules from
- * docs/PRD-newsletter-redesign.md §4.4. Used as system-prompt fragments
+ * planning/prds/PRD-newsletter-redesign.md §4.4. Used as system-prompt fragments
  * and as a post-generation lint pass.
  */
 

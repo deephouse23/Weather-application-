@@ -1,13 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
+import { tileProxyOriginHeaders } from '@/lib/services/tile-proxy-cors'
 
 export const runtime = 'nodejs'
+
+// Mirror the noaa-wms allow-list. Only forward known WMS params, drop anything
+// else — keeps the request shape predictable and prevents an attacker from
+// using this proxy to push exotic params at the upstream Iowa CGI script.
+const ALLOWED_PARAMS = [
+  'REQUEST', 'SERVICE', 'VERSION', 'LAYERS', 'WIDTH', 'HEIGHT',
+  'CRS', 'SRS', 'BBOX', 'TIME', 'STYLES', 'FORMAT', 'TRANSPARENT',
+] as const
 
 // Proxy Iowa State NEXRAD WMS tiles to bypass CORS restrictions
 // GET /api/weather/iowa-nexrad?REQUEST=GetMap&SERVICE=WMS&...
 export async function GET(request: NextRequest) {
   try {
+    const rateLimit = await rateLimitRequest(request)
+    if (!rateLimit.allowed) return rateLimit.response
+
     const { searchParams } = new URL(request.url)
-    
+
     // Validate required WMS parameters
     const requiredParams = ['LAYERS', 'FORMAT']
     for (const param of requiredParams) {
@@ -16,14 +29,14 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Build Iowa State NEXRAD WMS URL with all parameters
+    // Build Iowa State NEXRAD WMS URL with allow-listed parameters only.
     const iowaBaseUrl = 'https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi'
     const iowaUrl = new URL(iowaBaseUrl)
-    
-    // Copy all query parameters from the request
-    searchParams.forEach((value, key) => {
-      iowaUrl.searchParams.set(key, value)
-    })
+
+    for (const key of ALLOWED_PARAMS) {
+      const val = searchParams.get(key)
+      if (val) iowaUrl.searchParams.set(key, val)
+    }
 
     const response = await fetch(iowaUrl.toString(), {
       headers: {
@@ -44,7 +57,7 @@ export async function GET(request: NextRequest) {
         headers: {
           'Content-Type': 'image/png',
           'Cache-Control': 'public, max-age=60',
-          'Access-Control-Allow-Origin': '*',
+          ...tileProxyOriginHeaders(request),
         },
       })
     }
@@ -81,9 +94,7 @@ export async function GET(request: NextRequest) {
       headers: {
         'Content-Type': contentType,
         'Cache-Control': cacheControl,
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        ...tileProxyOriginHeaders(request),
       },
     })
   } catch (error) {
@@ -98,7 +109,7 @@ export async function GET(request: NextRequest) {
       headers: {
         'Content-Type': 'image/png',
         'Cache-Control': 'public, max-age=30',
-        'Access-Control-Allow-Origin': '*',
+        ...tileProxyOriginHeaders(request),
       },
     })
   }
@@ -109,9 +120,7 @@ export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      ...tileProxyOriginHeaders(request),
       'Access-Control-Max-Age': '86400',
     },
   })

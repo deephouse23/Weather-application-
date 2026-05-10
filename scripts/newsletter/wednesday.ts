@@ -1,6 +1,6 @@
 /**
  * Wednesday cadence — topic deep-dive pipeline.
- * See docs/PRD-newsletter-redesign.md §4.2 for the spec.
+ * See planning/prds/PRD-newsletter-redesign.md §4.2 for the spec.
  */
 
 import { getSpotlight } from '../blog-spotlight';

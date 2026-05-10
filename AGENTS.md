@@ -6,6 +6,8 @@ This document provides guidelines for AI agents working on the 16-Bit Weather co
 
 Retro-styled weather education platform built with Next.js 16 (App Router) and React 19. Features real-time weather data, pixel-influenced UI, educational content, interactive games, global weather tracking, tool-backed AI assistance, and Supabase-backed user AI memory.
 
+**Product specs (PRDs):** `planning/prds/` — start at [`planning/prds/README.md`](planning/prds/README.md).
+
 ## Build/Test/Lint Commands
 
 ```bash

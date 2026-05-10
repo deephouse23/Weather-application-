@@ -5,7 +5,7 @@ Generates the 16bitweather.co weekly blog posts on two cadences.
 - **Wednesday — topic deep-dive.** Pulls one of 15 topics via weighted-random rotation, finds a current-news angle, writes a 600–900-word piece.
 - **Sunday — Rearview + Roadmap.** Recap of past 7 days using real data (Iowa Mesonet, NOAA SPC, NOAA SWPC, USGS) plus a 7-day forward outlook with regional cuts.
 
-See `docs/PRD-newsletter-redesign.md` for the design.
+See [`planning/prds/PRD-newsletter-redesign.md`](../../planning/prds/PRD-newsletter-redesign.md) for the design.
 
 ## Layout
 

@@ -10,7 +10,6 @@ export function isPlaywrightTestModeRequest(request: NextRequest): boolean {
   const hasTestIndicator =
     testModeHeader === 'true' || testModeCookie?.value === 'true';
   const isExplicitTestEnv =
-    process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true' ||
     process.env.PLAYWRIGHT_TEST_MODE === 'true';
   const isCIOrPreview =
     process.env.CI === 'true' ||

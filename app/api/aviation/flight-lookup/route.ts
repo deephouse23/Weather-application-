@@ -5,7 +5,7 @@
  * Licensed under Fair Source License, Version 0.9
  *
  * Looks up flight routes by flight number (e.g., AA123) using a provider
- * abstraction (AviationStack with mock fallback). See
+ * abstraction (FlightAware AeroAPI with mock fallback). See
  * lib/services/flight-lookup-service.ts for fallback chain semantics.
  */
 
@@ -30,7 +30,7 @@ export interface FlightLookupResponse {
     /** True when route data is synthesized rather than from a live provider. */
     mock?: boolean;
     /** Which provider answered the request. */
-    source?: 'aviationstack' | 'mock';
+    source?: 'aeroapi' | 'mock';
   };
   error?: string;
   errorCode?:

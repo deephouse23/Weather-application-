@@ -19,8 +19,7 @@
     "tests/__mocks__/**",
     "supabase/**",
     "content/**",
-    "planning/**",
-    "lib/supabase/middleware.ts"
+    "planning/**"
   ],
   "ignoreDependencies": [
     "autoprefixer",

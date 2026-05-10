@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { captureError, captureDbError } from '@/lib/error-utils'
+import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
 
 export async function POST(request: NextRequest) {
   try {
+    const rateLimit = await rateLimitRequest(request)
+    if (!rateLimit.allowed) return rateLimit.response
+
     const body = await request.json()
 
     // Validate required fields

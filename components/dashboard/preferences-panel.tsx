@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Bot, Save, Settings, Thermometer, Wind } from 'lucide-react'
+import { Save, Settings, Thermometer, Wind } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -11,7 +11,6 @@ import { useAuth } from '@/lib/auth'
 import { updateProfile } from '@/lib/supabase/database'
 import { updateUserPreferencesAPI } from '@/lib/services/preferences-service'
 import type { SavedLocation } from '@/lib/supabase/types'
-import AIPersonalitySelector from '@/components/dashboard/ai-personality-selector'
 import { cn } from '@/lib/utils'
 
 type TemperatureUnit = 'fahrenheit' | 'celsius'
@@ -231,17 +230,6 @@ export default function PreferencesPanel({ locations }: PreferencesPanelProps) {
               Save a location first to pick a default.
             </p>
           )}
-        </div>
-
-        {/* AI Personality */}
-        <div className="space-y-3">
-          <Label
-            className={`flex items-center gap-2 font-mono uppercase tracking-wider ${themeClasses.text}`}
-          >
-            <Bot className="w-4 h-4" aria-hidden="true" />
-            AI Personality
-          </Label>
-          <AIPersonalitySelector />
         </div>
 
         {/* Save */}

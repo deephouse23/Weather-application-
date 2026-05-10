@@ -4,9 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Active Feature Work
 
-Active PRDs at repo root:
-- `PRD-open-meteo-migration.md` — migrating primary weather source from OpenWeatherMap to Open-Meteo
-- `PRD-stargazer.md` — astrophotography forecast page
+Product specs (PRDs) live under **`planning/prds/`** — see [`planning/prds/README.md`](planning/prds/README.md) for the index and any legacy paths not in the tree.
+
+- `planning/prds/PRD-open-meteo-migration.md` — migrating primary weather source from OpenWeatherMap to Open-Meteo
+- `planning/prds/PRD-stargazer.md` — astrophotography forecast page
+- `planning/prds/PRD-newsletter-redesign.md` — weekly newsletter generator redesign
 
 ## Project Overview
 
@@ -132,7 +134,7 @@ Three main contexts wrap the app in `app/layout.tsx`:
 - `_archive/` — historical plans and legacy code; excluded from search/build flows.
 - `tempest/` — legacy E2E scripts not run in CI; current E2E is in `tests/e2e/`.
 - `scripts/` — one-off TypeScript utilities run via `tsx` (e.g. `npm run test:profile`).
-- `planning/` — in-progress design notes (e.g. `ai-assistant-ux.md`).
+- `planning/` — in-progress design notes (e.g. `ai-assistant-ux.md`) and **`planning/prds/`** for product requirement docs.
 - `proxy.ts` — top-level proxy entry, separate from the Next.js app.
 
 ## Testing

@@ -17,7 +17,7 @@ export interface BlogPost {
   readTime: number
   content: string
   // Newsletter metadata. All optional — older posts predate these fields.
-  // See docs/PRD-newsletter-redesign.md §4.1 for semantics.
+  // See planning/prds/PRD-newsletter-redesign.md §4.1 for semantics.
   cadence?: NewsletterCadence
   topic_slug?: string
   topic_title?: string

@@ -202,9 +202,13 @@ export async function fetchMetarsBulk(icaos: string[]): Promise<Map<string, Meta
   return results;
 }
 
-function mapSeverity(hazard: string, severity: string): NoaaAlert['severity'] {
-  const h = hazard.toLowerCase();
-  const s = (severity ?? '').toLowerCase();
+function mapSeverity(hazard: unknown, severity: unknown): NoaaAlert['severity'] {
+  // NOAA AWC has been seen to return non-string values (or omit the field
+  // entirely) for these. The TS signature said `string` but at runtime the
+  // `??` guard alone wasn't enough — `(123 ?? '').toLowerCase()` still
+  // throws. Coerce both to string explicitly before lowercasing.
+  const h = (typeof hazard === 'string' ? hazard : '').toLowerCase();
+  const s = (typeof severity === 'string' ? severity : '').toLowerCase();
   if (h.includes('extreme') || s.includes('extreme')) return 'extreme';
   if (h.includes('severe') || s.includes('sev')) return 'severe';
   if (h.includes('moderate') || s.includes('mod')) return 'moderate';

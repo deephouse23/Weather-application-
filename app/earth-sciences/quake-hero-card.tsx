@@ -9,6 +9,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import type { ClientEarthquake } from './earth-sciences-client';
+import { safeExternalUrl } from '@/lib/safe-url';
 
 const HERO_MIN_MAGNITUDE = 4.5;
 
@@ -80,22 +81,42 @@ export default function QuakeHeroCard({ quake }: QuakeHeroCardProps) {
   if (!quake || quake.magnitude < HERO_MIN_MAGNITUDE) return null;
 
   const tier = magnitudeTier(quake.magnitude);
+  const safeUrl = safeExternalUrl(quake.url);
+
+  const cardClass = cn(
+    'group relative block overflow-hidden rounded-lg border-2 p-5 md:p-6 transition-all',
+    'bg-gradient-to-br from-background to-background/60',
+    tier.border,
+    tier.glow,
+    safeUrl && 'hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary'
+  );
+
+  const ariaLabel = `Featured earthquake: magnitude ${quake.magnitude.toFixed(1)} ${quake.location}`;
+  const Wrapper = safeUrl
+    ? ({ children }: { children: React.ReactNode }) => (
+        <a
+          href={safeUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={ariaLabel}
+          data-testid="quake-hero-card"
+          className={cardClass}
+        >
+          {children}
+        </a>
+      )
+    : ({ children }: { children: React.ReactNode }) => (
+        <div
+          aria-label={ariaLabel}
+          data-testid="quake-hero-card"
+          className={cardClass}
+        >
+          {children}
+        </div>
+      );
 
   return (
-    <a
-      href={quake.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={`Featured earthquake: magnitude ${quake.magnitude.toFixed(1)} ${quake.location}`}
-      data-testid="quake-hero-card"
-      className={cn(
-        'group relative block overflow-hidden rounded-lg border-2 p-5 md:p-6 transition-all',
-        'bg-gradient-to-br from-background to-background/60',
-        tier.border,
-        tier.glow,
-        'hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary'
-      )}
-    >
+    <Wrapper>
       {/* Scanline / retro overlay */}
       <div
         aria-hidden="true"
@@ -166,7 +187,7 @@ export default function QuakeHeroCard({ quake }: QuakeHeroCardProps) {
           </div>
         </div>
       </div>
-    </a>
+    </Wrapper>
   );
 }
 

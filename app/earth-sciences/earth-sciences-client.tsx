@@ -17,6 +17,7 @@ import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
 import type { EarthquakesApiResponse } from '@/app/api/earth-sciences/earthquakes/route';
 import QuakeHeroCard from './quake-hero-card';
+import { safeExternalUrl } from '@/lib/safe-url';
 
 // The world map embeds ~70KB of SVG path data for Natural Earth continents.
 // Lazy-load it so the paths live in their own chunk and aren't pulled into
@@ -296,14 +297,21 @@ export default function EarthSciencesClient() {
                     {q.depth} km
                   </td>
                   <td className="px-4 py-3">
-                    <a
-                      href={q.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-foreground hover:text-primary transition-colors"
-                    >
-                      {q.location}
-                    </a>
+                    {(() => {
+                      const safe = safeExternalUrl(q.url);
+                      return safe ? (
+                        <a
+                          href={safe}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-foreground hover:text-primary transition-colors"
+                        >
+                          {q.location}
+                        </a>
+                      ) : (
+                        <span className="text-foreground">{q.location}</span>
+                      );
+                    })()}
                   </td>
                   <td className="px-4 py-3 text-right text-muted-foreground">
                     {formatTimeAgo(q.time)}

@@ -1,7 +1,7 @@
 /**
  * Unit tests for lib/services/flight-lookup-service.
  *
- * Covers: flight-number parsing, provider fallback chain (AviationStack →
+ * Covers: flight-number parsing, provider fallback chain (AeroAPI →
  * mock), in-process schedule cache, OpenSky live-position enrichment, and
  * the public lookupFlight() outcome shape.
  */
@@ -21,7 +21,7 @@ const ORIGINAL_ENV = { ...process.env };
 beforeEach(() => {
   _resetCacheForTests();
   process.env = { ...ORIGINAL_ENV };
-  delete process.env.AVIATIONSTACK_API_KEY;
+  delete process.env.AEROAPI_KEY;
   delete process.env.OPENSKY_USERNAME;
   delete process.env.OPENSKY_PASSWORD;
 });
@@ -75,7 +75,7 @@ describe('lookupFlight - input validation', () => {
 describe('lookupFlight - provider fallback chain', () => {
   test('uses first provider that returns a result', async () => {
     const realProvider: FlightProvider = {
-      name: 'aviationstack',
+      name: 'aeroapi',
       isAvailable: () => true,
       lookupFlight: jest.fn(async () => ({
         flightNumber: 'AA123',
@@ -97,7 +97,7 @@ describe('lookupFlight - provider fallback chain', () => {
           lon: -118.408,
         },
         status: 'active',
-        source: 'aviationstack',
+        source: 'aeroapi',
         mock: false,
       })),
     };
@@ -115,7 +115,7 @@ describe('lookupFlight - provider fallback chain', () => {
 
     expect(out.ok).toBe(true);
     if (out.ok) {
-      expect(out.result.source).toBe('aviationstack');
+      expect(out.result.source).toBe('aeroapi');
       expect(out.result.mock).toBe(false);
     }
     expect(realProvider.lookupFlight).toHaveBeenCalledTimes(1);
@@ -124,7 +124,7 @@ describe('lookupFlight - provider fallback chain', () => {
 
   test('falls through to next provider when first returns null', async () => {
     const empty: FlightProvider = {
-      name: 'aviationstack',
+      name: 'aeroapi',
       isAvailable: () => true,
       lookupFlight: jest.fn(async () => null),
     };
@@ -173,7 +173,7 @@ describe('lookupFlight - provider fallback chain', () => {
 
   test('skips providers that report unavailable', async () => {
     const unavailable: FlightProvider = {
-      name: 'aviationstack',
+      name: 'aeroapi',
       isAvailable: () => false,
       lookupFlight: jest.fn(),
     };
@@ -217,7 +217,7 @@ describe('lookupFlight - provider fallback chain', () => {
 
   test('returns FLIGHT_NOT_FOUND when no provider can resolve the flight', async () => {
     const empty1: FlightProvider = {
-      name: 'aviationstack',
+      name: 'aeroapi',
       isAvailable: () => true,
       lookupFlight: jest.fn(async () => null),
     };
@@ -240,7 +240,7 @@ describe('lookupFlight - provider fallback chain', () => {
 
   test('continues past provider that throws', async () => {
     const broken: FlightProvider = {
-      name: 'aviationstack',
+      name: 'aeroapi',
       isAvailable: () => true,
       lookupFlight: jest.fn(async () => {
         throw new Error('boom');
@@ -289,7 +289,7 @@ describe('lookupFlight - provider fallback chain', () => {
 describe('lookupFlight - schedule cache', () => {
   test('caches a successful lookup so the second call skips providers', async () => {
     const provider: FlightProvider = {
-      name: 'aviationstack',
+      name: 'aeroapi',
       isAvailable: () => true,
       lookupFlight: jest.fn(async (): Promise<FlightLookupResult> => ({
         flightNumber: 'AA123',
@@ -311,7 +311,7 @@ describe('lookupFlight - schedule cache', () => {
           lon: -118.408,
         },
         status: 'active',
-        source: 'aviationstack',
+        source: 'aeroapi',
         mock: false,
       })),
     };
@@ -324,7 +324,7 @@ describe('lookupFlight - schedule cache', () => {
 
   test('bypassCache forces a refetch', async () => {
     const provider: FlightProvider = {
-      name: 'aviationstack',
+      name: 'aeroapi',
       isAvailable: () => true,
       lookupFlight: jest.fn(async (): Promise<FlightLookupResult> => ({
         flightNumber: 'AA123',
@@ -346,7 +346,7 @@ describe('lookupFlight - schedule cache', () => {
           lon: -118.408,
         },
         status: 'active',
-        source: 'aviationstack',
+        source: 'aeroapi',
         mock: false,
       })),
     };
@@ -460,7 +460,7 @@ describe('fetchLivePosition (OpenSky)', () => {
 });
 
 describe('lookupFlight - default providers integration', () => {
-  test('without AVIATIONSTACK_API_KEY, mock provider answers and result is labeled mock', async () => {
+  test('without AEROAPI_KEY, mock provider answers and result is labeled mock', async () => {
     // Default providers, no env keys set.
     const out = await lookupFlight('AA123', { includeLivePosition: false });
     expect(out.ok).toBe(true);
@@ -477,7 +477,7 @@ describe('lookupFlight - default providers integration', () => {
 describe('lookupFlight - forceMock option', () => {
   test('skips live providers and returns mock data when forceMock=true', async () => {
     const live: FlightProvider = {
-      name: 'aviationstack',
+      name: 'aeroapi',
       isAvailable: () => true,
       lookupFlight: jest.fn(),
     };
@@ -545,11 +545,11 @@ describe('lookupFlight - forceMock option', () => {
         lon: -118.408,
       },
       status: 'active',
-      source: 'aviationstack',
+      source: 'aeroapi',
       mock: false,
     };
     const live: FlightProvider = {
-      name: 'aviationstack',
+      name: 'aeroapi',
       isAvailable: () => true,
       lookupFlight: jest.fn(async () => liveResult),
     };

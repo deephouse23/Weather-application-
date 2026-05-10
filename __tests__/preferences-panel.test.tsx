@@ -19,11 +19,8 @@ jest.mock('@/lib/theme-utils', () => ({
   }),
 }))
 
-// Stub AI personality selector (already has its own auth dependency)
-jest.mock('@/components/dashboard/ai-personality-selector', () => ({
-  __esModule: true,
-  default: () => <div data-testid="ai-personality-selector-stub" />,
-}))
+// AI personality selector was removed alongside the chat feature in Phase 4.
+// The PreferencesPanel no longer renders or imports it.
 
 jest.mock('@/lib/auth', () => {
   const STABLE_USER = { id: 'user-1' }

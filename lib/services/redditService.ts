@@ -8,6 +8,7 @@
  */
 
 import { NewsItem } from '@/components/NewsTicker/NewsTicker';
+import { safeExternalUrl } from '@/lib/safe-url';
 
 // Reddit subreddits for weather content
 const WEATHER_SUBREDDITS = {
@@ -98,16 +99,27 @@ export async function fetchRedditPosts(
         imageUrl = post.data.thumbnail;
       }
 
+      // Reddit normally returns permalinks starting with `/r/...`. Run them
+      // through the same scheme guard the RSS parsers use, so any malformed
+      // permalink that produces a non-http(s) URL gets dropped here rather
+      // than reaching <a href> at render time.
+      const permalinkUrl = `https://www.reddit.com${post.data.permalink}`;
+      const safeUrl = safeExternalUrl(permalinkUrl);
+      if (!safeUrl) {
+        continue;
+      }
+      const safeImage = imageUrl ? safeExternalUrl(imageUrl) : undefined;
+
       const newsItem: NewsItem = {
         id: `reddit-${subreddit}-${post.data.id}`,
         title: post.data.title,
-        url: `https://www.reddit.com${post.data.permalink}`,
+        url: safeUrl,
         source: `r/${subreddit}`,
         category: 'weather', // Could be refined based on subreddit
         priority: prioritizeRedditPost(post.data),
         timestamp: new Date(post.data.created_utc * 1000),
         description: truncateText(post.data.selftext, 200),
-        imageUrl: imageUrl,
+        imageUrl: safeImage ?? undefined,
         author: post.data.author,
       };
 
@@ -304,26 +316,35 @@ async function searchRedditWeather(
 
     const data: RedditResponse = await response.json();
 
-    const newsItems: NewsItem[] = data.data.children.map((post) => {
-      let imageUrl: string | undefined;
+    const newsItems: NewsItem[] = data.data.children
+      .map((post): NewsItem | null => {
+        let imageUrl: string | undefined;
 
-      if (post.data.preview?.images[0]?.source?.url) {
-        imageUrl = post.data.preview.images[0].source.url.replace(/&amp;/g, '&');
-      }
+        if (post.data.preview?.images[0]?.source?.url) {
+          imageUrl = post.data.preview.images[0].source.url.replace(/&amp;/g, '&');
+        }
 
-      return {
-        id: `reddit-search-${post.data.id}`,
-        title: post.data.title,
-        url: `https://www.reddit.com${post.data.permalink}`,
-        source: 'r/weather',
-        category: 'weather',
-        priority: prioritizeRedditPost(post.data),
-        timestamp: new Date(post.data.created_utc * 1000),
-        description: truncateText(post.data.selftext, 200),
-        imageUrl: imageUrl,
-        author: post.data.author,
-      };
-    });
+        const permalinkUrl = `https://www.reddit.com${post.data.permalink}`;
+        const safeUrl = safeExternalUrl(permalinkUrl);
+        if (!safeUrl) {
+          return null;
+        }
+        const safeImage = imageUrl ? safeExternalUrl(imageUrl) : undefined;
+
+        return {
+          id: `reddit-search-${post.data.id}`,
+          title: post.data.title,
+          url: safeUrl,
+          source: 'r/weather',
+          category: 'weather',
+          priority: prioritizeRedditPost(post.data),
+          timestamp: new Date(post.data.created_utc * 1000),
+          description: truncateText(post.data.selftext, 200),
+          imageUrl: safeImage ?? undefined,
+          author: post.data.author,
+        };
+      })
+      .filter((item): item is NewsItem => item !== null);
 
     return newsItems;
   } catch (error) {

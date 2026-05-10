@@ -101,14 +101,9 @@ export interface Database {
           theme: string
           temperature_unit: 'celsius' | 'fahrenheit'
           wind_unit: 'mph' | 'kmh' | 'ms'
-          pressure_unit: 'hpa' | 'inhg' | 'mmhg'
           auto_location: boolean
           notifications_enabled: boolean
-          email_alerts: boolean
-          severe_weather_alerts: boolean
-          daily_forecast_email: boolean
-          news_ticker_enabled: boolean
-          animation_enabled: boolean
+          visible_metrics: string[] | null
           created_at: string
           updated_at: string
         }
@@ -118,14 +113,9 @@ export interface Database {
           theme?: string
           temperature_unit?: 'celsius' | 'fahrenheit'
           wind_unit?: 'mph' | 'kmh' | 'ms'
-          pressure_unit?: 'hpa' | 'inhg' | 'mmhg'
           auto_location?: boolean
           notifications_enabled?: boolean
-          email_alerts?: boolean
-          severe_weather_alerts?: boolean
-          daily_forecast_email?: boolean
-          news_ticker_enabled?: boolean
-          animation_enabled?: boolean
+          visible_metrics?: string[] | null
           created_at?: string
           updated_at?: string
         }
@@ -135,14 +125,9 @@ export interface Database {
           theme?: string
           temperature_unit?: 'celsius' | 'fahrenheit'
           wind_unit?: 'mph' | 'kmh' | 'ms'
-          pressure_unit?: 'hpa' | 'inhg' | 'mmhg'
           auto_location?: boolean
           notifications_enabled?: boolean
-          email_alerts?: boolean
-          severe_weather_alerts?: boolean
-          daily_forecast_email?: boolean
-          news_ticker_enabled?: boolean
-          animation_enabled?: boolean
+          visible_metrics?: string[] | null
           created_at?: string
           updated_at?: string
         },

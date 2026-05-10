@@ -1,4 +1,6 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
+import { tileProxyOriginHeaders } from '@/lib/services/tile-proxy-cors'
 
 export const runtime = 'nodejs'
 
@@ -18,53 +20,61 @@ const LAYER_MAP: Record<string, string> = {
 }
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ layer: string; tile: string[] }> }
 ) {
-  const { layer, tile } = await params
-  const apiKey = process.env.OPENWEATHER_API_KEY
-  if (!apiKey) {
-    console.error('[Radar Proxy] OPENWEATHER_API_KEY is not configured')
-    return new NextResponse('API key not configured', { status: 500 })
-  }
-  
-  // Early return for unsupported precipitation layer
-  if (layer === 'precipitation_new') {
-    return new NextResponse(
-      JSON.stringify({ 
-        error: 'precipitation_new removed - use NOAA MRMS via WMS',
-        message: 'OpenWeather radar replaced with NOAA MRMS for higher quality'
-      }), 
-      { 
-        status: 410, // 410 Gone - resource permanently removed
-        headers: { 'Content-Type': 'application/json' }
-      }
-    )
-  }
-  
-  const mapped = LAYER_MAP[layer]
-  if (!mapped) {
-    return new NextResponse('Unsupported layer', { status: 400 })
-  }
-
-  // tile may be [time, z, x, y] or [z, x, y]
-  let time: string | undefined
-  let z: string, x: string, y: string
-  if (tile.length === 4) {
-    ;[time, z, x, y] = tile
-  } else if (tile.length === 3) {
-    ;[z, x, y] = tile as [string, string, string]
-  } else {
-    return new NextResponse('Invalid tile path', { status: 400 })
-  }
-
-  const base = 'https://tile.openweathermap.org/map'
-  const path = time
-    ? `${mapped}/${time}/${z}/${x}/${y}.png`
-    : `${mapped}/${z}/${x}/${y}.png`
-  const url = `${base}/${path}?appid=${apiKey}`
-
+  // Single try wraps the whole handler — any throw from rateLimitRequest,
+  // params await, layer validation, URL construction, or the fetch becomes
+  // a transparent-PNG fallback instead of an unhandled 500.
+  let mapped: string | undefined
+  let path: string | undefined
   try {
+    const rateLimit = await rateLimitRequest(request)
+    if (!rateLimit.allowed) return rateLimit.response
+
+    const { layer, tile } = await params
+    const apiKey = process.env.OPENWEATHER_API_KEY
+    if (!apiKey) {
+      console.error('[Radar Proxy] OPENWEATHER_API_KEY is not configured')
+      return new NextResponse('API key not configured', { status: 500 })
+    }
+
+    // Early return for unsupported precipitation layer
+    if (layer === 'precipitation_new') {
+      return new NextResponse(
+        JSON.stringify({
+          error: 'precipitation_new removed - use NOAA MRMS via WMS',
+          message: 'OpenWeather radar replaced with NOAA MRMS for higher quality'
+        }),
+        {
+          status: 410, // 410 Gone - resource permanently removed
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    mapped = LAYER_MAP[layer]
+    if (!mapped) {
+      return new NextResponse('Unsupported layer', { status: 400 })
+    }
+
+    // tile may be [time, z, x, y] or [z, x, y]
+    let time: string | undefined
+    let z: string, x: string, y: string
+    if (tile.length === 4) {
+      ;[time, z, x, y] = tile
+    } else if (tile.length === 3) {
+      ;[z, x, y] = tile as [string, string, string]
+    } else {
+      return new NextResponse('Invalid tile path', { status: 400 })
+    }
+
+    const base = 'https://tile.openweathermap.org/map'
+    path = time
+      ? `${mapped}/${time}/${z}/${x}/${y}.png`
+      : `${mapped}/${z}/${x}/${y}.png`
+    const url = `${base}/${path}?appid=${apiKey}`
+
     const response = await fetch(url, {
       headers: { 'User-Agent': '16-Bit-Weather/radar-proxy' },
       // Timeouts via AbortSignal timeout; keep short for "now" tiles
@@ -98,11 +108,15 @@ export async function GET(
       'Cache-Control': isNowFrame
         ? 'public, max-age=60, s-maxage=60, stale-while-revalidate=60'
         : 'public, max-age=1800, s-maxage=3600, stale-while-revalidate=1800',
-      'Access-Control-Allow-Origin': '*',
+      ...tileProxyOriginHeaders(request),
     })
     return new NextResponse(buf, { headers })
   } catch (e) {
-    console.error('Radar proxy fetch error', { layer: mapped, path, error: String(e) })
+    // mapped/path may be undefined if the throw happened before they were
+    // assigned (e.g. rateLimit failure, params-await error). That's fine —
+    // the log just loses some context, the user still gets a transparent
+    // PNG instead of a 500.
+    console.error('Radar proxy error', { layer: mapped ?? null, path: path ?? null, error: String(e) })
     const transparentPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64')
     return new NextResponse(transparentPng, {
       headers: {

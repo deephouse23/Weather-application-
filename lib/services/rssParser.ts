@@ -9,6 +9,7 @@
 
 import { XMLParser } from 'fast-xml-parser';
 import { decodeHtmlEntities } from './rss/html-utils';
+import { safeExternalUrl } from '@/lib/safe-url';
 
 export interface ParsedFeedItem {
   id: string;
@@ -166,18 +167,22 @@ function parseRSS2Feed(parsed: Record<string, unknown>): ParsedFeed {
     const link = getTextValue(item, 'link');
     const pubDateStr = getTextValue(item, ['pubDate', 'pubdate', 'dc:date']);
 
-    if (!title || !link) {
-      return; // Skip invalid items
+    // Drop items with no title, no link, or a non-http(s) link.
+    const safeLink = safeExternalUrl(link);
+    if (!title || !safeLink) {
+      return;
     }
+    const rawImage = extractImageFromRSS(item);
+    const safeImage = rawImage ? safeExternalUrl(rawImage) : undefined;
 
     const feedItem: ParsedFeedItem = {
-      id: link + '-' + index,
+      id: safeLink + '-' + index,
       title: cleanText(title),
       description: cleanText(getTextValue(item, 'description') || ''),
-      link: link,
+      link: safeLink,
       pubDate: pubDateStr ? new Date(pubDateStr) : new Date(),
       author: getTextValue(item, ['author', 'dc:creator', 'dc:author']),
-      imageUrl: extractImageFromRSS(item),
+      imageUrl: safeImage ?? undefined,
       content: getTextValue(item, ['content:encoded', 'content', 'description']),
       categories: extractCategories(item)
     };
@@ -212,18 +217,21 @@ function parseATOMFeed(parsed: Record<string, unknown>): ParsedFeed {
     const link = getAtomLink(entry);
     const publishedStr = getTextValue(entry, ['published', 'updated']);
 
-    if (!title || !link) {
-      return; // Skip invalid entries
+    const safeLink = safeExternalUrl(link);
+    if (!title || !safeLink) {
+      return; // Skip invalid entries or non-http(s) links
     }
+    const rawImage = extractImageFromAtom(entry);
+    const safeImage = rawImage ? safeExternalUrl(rawImage) : undefined;
 
     const feedItem: ParsedFeedItem = {
-      id: getTextValue(entry, 'id') || link + '-' + index,
+      id: getTextValue(entry, 'id') || safeLink + '-' + index,
       title: cleanText(title),
       description: cleanText(getTextValue(entry, 'summary') || ''),
-      link: link,
+      link: safeLink,
       pubDate: publishedStr ? new Date(publishedStr) : new Date(),
       author: getTextValue(entry, ['author', 'author.name']),
-      imageUrl: extractImageFromAtom(entry),
+      imageUrl: safeImage ?? undefined,
       content: getTextValue(entry, 'content'),
       categories: extractCategoriesAtom(entry)
     };
