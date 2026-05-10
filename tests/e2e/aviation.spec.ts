@@ -130,6 +130,18 @@ test.describe('/aviation', () => {
     await routeButton.waitFor({ state: 'visible', timeout: 30000 });
     await routeButton.click();
 
+    // Confirms the React state actually flipped before we look for the
+    // child input. On `next dev`, the click can race hydration — the
+    // button is visible but onClick hasn't attached, so expandedSection
+    // never advances and FlightRouteLookup never mounts. Re-click once
+    // if the first one was a no-op.
+    try {
+      await expect(routeButton).toHaveAttribute('aria-expanded', 'true', { timeout: 5000 });
+    } catch {
+      await routeButton.click();
+      await expect(routeButton).toHaveAttribute('aria-expanded', 'true', { timeout: 10000 });
+    }
+
     // FlightRouteLookup → FlightNumberInput is a second dynamic boundary.
     const flightInput = page.getByTestId('flight-number-input');
     await expect(flightInput).toBeVisible({ timeout: 30000 });

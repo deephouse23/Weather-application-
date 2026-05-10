@@ -44,10 +44,22 @@ export function getAllPosts(): BlogPost[] {
     const fileContents = fs.readFileSync(filePath, 'utf8')
     const { data, content } = matter(fileContents)
     
+    // gray-matter (js-yaml) auto-coerces YAML timestamp scalars to Date
+    // objects. Next's metadata serializer renders that as "[object Object]"
+    // for `article:published_time`, which X's card validator rejects —
+    // breaking the share preview image. Force a string here.
+    const rawDate = data.date;
+    const dateString =
+      rawDate instanceof Date
+        ? rawDate.toISOString()
+        : typeof rawDate === 'string' && rawDate
+          ? rawDate
+          : new Date().toISOString();
+
     return {
       slug: data.slug || filename.replace(/\.mdx?$/, ''),
       title: data.title || 'Untitled',
-      date: data.date || new Date().toISOString(),
+      date: dateString,
       author: data.author || '16bitbot',
       summary: data.summary || '',
       tags: data.tags || [],
