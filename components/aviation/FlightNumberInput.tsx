@@ -236,7 +236,7 @@ export default function FlightNumberInput({
 
       {/* Help Text */}
       <div className={cn('text-xs font-mono opacity-50', themeClasses.text)}>
-        Supported airlines: AA, UA, DL, WN, B6, AS, NK, F9, G4, HA. Without an AviationStack key configured, all routes are synthesized for demonstration.
+        Supported airlines: AA, UA, DL, WN, B6, AS, NK, F9, G4, HA. Without an AeroAPI key configured, all routes are synthesized for demonstration.
       </div>
     </div>
   );

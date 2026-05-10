@@ -16,6 +16,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import type { ClientEarthquake } from './earth-sciences-client';
+import { safeExternalUrl } from '@/lib/safe-url';
 import {
   WORLD_LAND_PATH,
   WORLD_MAP_VIEW_W,
@@ -315,14 +316,19 @@ export default function QuakeWorldMap({ quakes, className }: QuakeWorldMapProps)
               </div>
             )}
           </dl>
-          <a
-            href={selected.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-flex items-center gap-1 text-[10px] uppercase tracking-widest text-primary hover:underline"
-          >
-            USGS details →
-          </a>
+          {(() => {
+            const safe = safeExternalUrl(selected.url);
+            return safe ? (
+              <a
+                href={safe}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center gap-1 text-[10px] uppercase tracking-widest text-primary hover:underline"
+              >
+                USGS details →
+              </a>
+            ) : null;
+          })()}
         </div>
       )}
     </div>

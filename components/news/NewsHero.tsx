@@ -17,6 +17,7 @@ import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import CategoryBadge from './CategoryBadge';
 import PriorityIndicator from './PriorityIndicator';
 import type { RSSItem } from '@/lib/services/rss/rssAggregator';
+import { safeExternalUrl } from '@/lib/safe-url';
 
 interface NewsHeroProps {
   item: RSSItem;
@@ -27,6 +28,15 @@ export default function NewsHero({ item, className }: NewsHeroProps) {
   const { theme } = useTheme();
   const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
   const [imageError, setImageError] = useState(false);
+  const safeUrl = safeExternalUrl(item.url);
+
+  const openSafeUrl = () => {
+    if (!safeUrl) {
+      console.warn('[NewsHero] dropping unsafe URL', item.url);
+      return;
+    }
+    window.open(safeUrl, '_blank', 'noopener,noreferrer');
+  };
 
   // Calculate time ago
   const timeAgo = getTimeAgo(new Date(item.timestamp));
@@ -39,7 +49,7 @@ export default function NewsHero({ item, className }: NewsHeroProps) {
         themeClasses.background,
         className
       )}
-      onClick={() => window.open(item.url, '_blank', 'noopener,noreferrer')}
+      onClick={openSafeUrl}
     >
       <div className="flex flex-col lg:flex-row">
         {/* Image */}
@@ -134,7 +144,7 @@ export default function NewsHero({ item, className }: NewsHeroProps) {
               className={cn('font-mono font-bold border-2', themeClasses.accentText)}
               onClick={(e) => {
                 e.stopPropagation();
-                window.open(item.url, '_blank', 'noopener,noreferrer');
+                openSafeUrl();
               }}
             >
               READ FULL STORY <ExternalLink className="w-4 h-4 ml-2" />

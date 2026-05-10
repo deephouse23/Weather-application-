@@ -1,4 +1,6 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
+import { tileProxyOriginHeaders } from '@/lib/services/tile-proxy-cors'
 
 export const runtime = 'nodejs'
 
@@ -18,9 +20,12 @@ const LAYER_MAP: Record<string, string> = {
 }
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ layer: string; tile: string[] }> }
 ) {
+  const rateLimit = await rateLimitRequest(request)
+  if (!rateLimit.allowed) return rateLimit.response
+
   const { layer, tile } = await params
   const apiKey = process.env.OPENWEATHER_API_KEY
   if (!apiKey) {
@@ -98,7 +103,7 @@ export async function GET(
       'Cache-Control': isNowFrame
         ? 'public, max-age=60, s-maxage=60, stale-while-revalidate=60'
         : 'public, max-age=1800, s-maxage=3600, stale-while-revalidate=1800',
-      'Access-Control-Allow-Origin': '*',
+      ...tileProxyOriginHeaders(request),
     })
     return new NextResponse(buf, { headers })
   } catch (e) {

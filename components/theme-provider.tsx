@@ -61,10 +61,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     checkUser()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
-      const isPlaywrightTestMode =
-        process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true' ||
-        process.env.PLAYWRIGHT_TEST_MODE === 'true'
-
       if (session?.user) {
         setUser(session.user)
         setIsAuthenticated(true)
@@ -72,9 +68,12 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       } else {
         setUser(null)
         setIsAuthenticated(false)
-        // E2E: allow premium theme from localStorage (themes.spec) without a real session
+        // Drop premium theme back to free default on logout. Phase 4 removed
+        // the NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE bypass that used to skip this
+        // for E2E themes.spec — the test should sign in with a real fixture
+        // user instead of relying on a client bundle env var.
         const current = themeRef.current
-        if (!isPlaywrightTestMode && !FREE_THEMES.includes(current as ThemeType)) {
+        if (!FREE_THEMES.includes(current as ThemeType)) {
           setThemeState('nord')
         }
       }

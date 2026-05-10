@@ -7,13 +7,17 @@
  * Provider-agnostic flight schedule + live position lookup.
  *
  * Fallback chain:
- *   1. AviationStack (real schedule data, free tier 100 req/month)
+ *   1. FlightAware AeroAPI (real schedule data; HTTPS, x-apikey header).
+ *      Replaced AviationStack on 2026-05-10 — that vendor's free tier only
+ *      supported HTTP, which transmitted the access_key in cleartext URLs.
  *   2. OpenSky Network (live position by callsign — enrichment only, not gating)
  *   3. Mock (synthesized routes — last resort, response carries `mock: true`)
  *
  * Server-side cache keeps us under provider quotas. The cache lives in-process,
  * so warm Vercel functions share it; cold starts repopulate.
  */
+
+import { tryIncrementAeroApiUsage } from './aeroapi-usage';
 
 export interface AirlineData {
   name: string;
@@ -55,13 +59,13 @@ export interface FlightLookupResult {
   status: FlightStatus;
   livePosition?: LivePosition;
   /** Which provider returned the schedule data. */
-  source: 'aviationstack' | 'mock';
+  source: 'aeroapi' | 'mock';
   /** True when route data is synthesized rather than from a live provider. */
   mock: boolean;
 }
 
 export interface FlightProvider {
-  readonly name: 'aviationstack' | 'mock';
+  readonly name: 'aeroapi' | 'mock';
   isAvailable(): boolean;
   lookupFlight(
     airlineCode: string,
@@ -171,78 +175,90 @@ export function _resetCacheForTests(): void {
 }
 
 // ───────────────────────────────────────────────────────────────
-// AviationStack provider (real schedule data)
+// FlightAware AeroAPI provider (real schedule data)
+//
+// Auth: x-apikey header (NEVER in URL — that was the AviationStack bug).
+// Endpoint: GET /flights/{ident}?ident_type=designator&max_pages=1
+// Spec:    https://www.flightaware.com/commercial/aeroapi/resources/aeroapi-openapi.yml
+// Pricing: ~$5/month free credit, pay-per-query, ~$0.005/lookup → ~1000/mo.
+//
+// Spending guard: AeroAPI charges the credit card on file once the free
+// credit is exhausted (no vendor-side cap). lib/services/aeroapi-usage.ts
+// tracks per-UTC-month usage in Supabase and gates each call. When the cap
+// is hit (or the cap-check RPC fails for any reason), this provider returns
+// null and the outer cascade serves mock data — fail-closed.
+//
+// Field mapping (AeroAPI flight → FlightLookupResult):
+//   ident_iata / `${operator_iata}${flight_number}`     → flightNumber
+//   operator_iata / operator_icao / operator            → airline (curated AIRLINES preferred)
+//   origin.code_iata / origin.code_icao                 → departure (curated AIRPORTS lookup)
+//   destination.code_iata / destination.code_icao       → arrival   (curated AIRPORTS lookup)
+//   cancelled === true → 'cancelled'
+//   diverted === true  → 'diverted'
+//   else parsed from `status` string (case-insensitive)
+//
+// Quota / auth failures (401/402/429/5xx) log a warn and return null so the
+// outer cascade falls through to MockProvider — UI shows the existing
+// "MOCK DATA" badge instead of a broken page. The usage counter is NOT
+// decremented on these failures — they consumed something on FlightAware's
+// side even when they fail, and over-counting is the safe direction.
 // ───────────────────────────────────────────────────────────────
 
-interface AviationStackAirport {
-  airport?: string | null;
-  iata?: string | null;
-  icao?: string | null;
-  timezone?: string | null;
-}
-
-interface AviationStackAirline {
+interface AeroApiAirport {
+  code?: string | null;
+  code_icao?: string | null;
+  code_iata?: string | null;
   name?: string | null;
-  iata?: string | null;
-  icao?: string | null;
+  city?: string | null;
 }
 
-interface AviationStackFlight {
-  flight_status?: string | null;
-  departure?: AviationStackAirport | null;
-  arrival?: AviationStackAirport | null;
-  airline?: AviationStackAirline | null;
-  flight?: { iata?: string | null; icao?: string | null; number?: string | null } | null;
+interface AeroApiFlight {
+  ident?: string | null;
+  ident_iata?: string | null;
+  ident_icao?: string | null;
+  operator?: string | null;
+  operator_iata?: string | null;
+  operator_icao?: string | null;
+  flight_number?: string | null;
+  cancelled?: boolean;
+  diverted?: boolean;
+  origin?: AeroApiAirport | null;
+  destination?: AeroApiAirport | null;
+  scheduled_out?: string | null;
+  scheduled_in?: string | null;
+  status?: string | null;
 }
 
-interface AviationStackResponse {
-  data?: AviationStackFlight[];
-  error?: { code?: string; message?: string };
+interface AeroApiFlightsResponse {
+  flights?: AeroApiFlight[];
 }
 
-const AVIATIONSTACK_BASE_URL = 'http://api.aviationstack.com/v1';
+const AEROAPI_BASE_URL = 'https://aeroapi.flightaware.com/aeroapi';
+const AEROAPI_TIMEOUT_MS = 8000;
 
-function mapAviationStackStatus(raw: string | null | undefined): FlightStatus {
-  switch ((raw || '').toLowerCase()) {
-    case 'active':
-    case 'en-route':
-      return 'active';
-    case 'landed':
-      return 'landed';
-    case 'cancelled':
-      return 'cancelled';
-    case 'diverted':
-      return 'diverted';
-    case 'scheduled':
-    default:
-      return 'scheduled';
-  }
+function mapAeroApiStatus(flight: AeroApiFlight): FlightStatus {
+  // Boolean flags take precedence — they're the most authoritative signal.
+  if (flight.cancelled === true) return 'cancelled';
+  if (flight.diverted === true) return 'diverted';
+  const raw = (flight.status || '').toLowerCase();
+  if (raw.includes('arrived') || raw.includes('landed') || raw.includes('gate arrival')) return 'landed';
+  if (raw.includes('en route') || raw.includes('airborne') || raw.includes('taxi')) return 'active';
+  return 'scheduled';
 }
 
-function airportFromAviationStack(
-  raw: AviationStackAirport | null | undefined,
+function airportFromAeroApi(
+  raw: AeroApiAirport | null | undefined,
 ): AirportData | null {
   if (!raw) return null;
-  const iata = raw.iata?.toUpperCase();
-  const icao = raw.icao?.toUpperCase();
+  const iata = raw.code_iata?.toUpperCase();
+  const icao = raw.code_icao?.toUpperCase();
   if (iata && AIRPORTS_BY_IATA[iata]) return AIRPORTS_BY_IATA[iata];
   if (icao && AIRPORTS_BY_ICAO[icao]) return AIRPORTS_BY_ICAO[icao];
-  // We don't have coords for unknown airports — caller decides whether to bail.
-  if (iata && icao && raw.airport) {
-    return {
-      iata,
-      icao,
-      name: raw.airport,
-      city: raw.airport,
-      lat: 0,
-      lon: 0,
-    };
-  }
   return null;
 }
 
-class AviationStackProvider implements FlightProvider {
-  readonly name = 'aviationstack' as const;
+class AeroApiProvider implements FlightProvider {
+  readonly name = 'aeroapi' as const;
 
   constructor(
     private readonly apiKey: string | undefined,
@@ -259,55 +275,80 @@ class AviationStackProvider implements FlightProvider {
   ): Promise<FlightLookupResult | null> {
     if (!this.apiKey) return null;
 
-    const flightIata = `${airlineCode}${flightNum}`;
-    const url = `${AVIATIONSTACK_BASE_URL}/flights?access_key=${encodeURIComponent(
-      this.apiKey,
-    )}&flight_iata=${encodeURIComponent(flightIata)}&limit=1`;
+    // App-side monthly cap: atomic check-and-increment via Supabase RPC.
+    // Increment fires BEFORE the fetch so a fetch failure still consumes
+    // a slot — over-count is the safe direction, under-count means we
+    // could blow past the cap. RPC failure / Supabase down also returns
+    // !allowed (fail-closed). See lib/services/aeroapi-usage.ts.
+    const usage = await tryIncrementAeroApiUsage();
+    if (!usage.allowed) {
+      return null;
+    }
 
-    let json: AviationStackResponse;
+    const flightIata = `${airlineCode}${flightNum}`;
+    const url = `${AEROAPI_BASE_URL}/flights/${encodeURIComponent(flightIata)}?ident_type=designator&max_pages=1`;
+
+    let json: AeroApiFlightsResponse;
     try {
-      const res = await this.fetchImpl(url);
+      const res = await this.fetchImpl(url, {
+        headers: { 'x-apikey': this.apiKey },
+        signal: AbortSignal.timeout(AEROAPI_TIMEOUT_MS),
+      });
       if (!res.ok) {
-        console.warn(
-          `[flight-lookup] AviationStack returned ${res.status} for ${flightIata}`,
-        );
+        // 401 = bad key; 402 = quota credit exhausted; 429 = rate limit hit.
+        // All three should fall through to MockProvider, not surface as 5xx.
+        if (res.status === 401 || res.status === 402 || res.status === 429) {
+          console.warn(
+            `[flight-lookup] AeroAPI ${res.status} (auth/quota/rate) for ${flightIata}; falling back to mock`,
+          );
+        } else {
+          console.warn(`[flight-lookup] AeroAPI returned ${res.status} for ${flightIata}`);
+        }
         return null;
       }
-      json = (await res.json()) as AviationStackResponse;
+      json = (await res.json()) as AeroApiFlightsResponse;
     } catch (err) {
-      console.warn(`[flight-lookup] AviationStack fetch failed:`, err);
+      console.warn(`[flight-lookup] AeroAPI fetch failed:`, err);
       return null;
     }
 
-    if (json.error) {
-      console.warn(
-        `[flight-lookup] AviationStack error: ${json.error.code} ${json.error.message}`,
-      );
-      return null;
+    // Pick the first non-cancelled leg whose airports both resolve in our
+    // curated AIRPORTS table. Mirrors the AviationStack behavior of dropping
+    // unknown airports rather than rendering with lat=0,lon=0.
+    const flights = json.flights ?? [];
+    let chosen: { flight: AeroApiFlight; departure: AirportData; arrival: AirportData } | null = null;
+    for (const flight of flights) {
+      if (flight.cancelled === true) continue;
+      const departure = airportFromAeroApi(flight.origin);
+      const arrival = airportFromAeroApi(flight.destination);
+      if (departure && arrival) {
+        chosen = { flight, departure, arrival };
+        break;
+      }
     }
+    if (!chosen) return null;
 
-    const flight = json.data?.[0];
-    if (!flight) return null;
-
-    const departure = airportFromAviationStack(flight.departure);
-    const arrival = airportFromAviationStack(flight.arrival);
-    if (!departure || !arrival) return null;
-    if (departure.lat === 0 && departure.lon === 0) return null;
-    if (arrival.lat === 0 && arrival.lon === 0) return null;
-
-    const airline: AirlineData = AIRLINES[airlineCode] ?? {
-      name: flight.airline?.name || airlineCode,
-      iata: flight.airline?.iata?.toUpperCase() || airlineCode,
-      icao: flight.airline?.icao?.toUpperCase() || airlineCode,
+    const { flight, departure, arrival } = chosen;
+    const operatorIata = flight.operator_iata?.toUpperCase() || airlineCode;
+    const operatorIcao = flight.operator_icao?.toUpperCase();
+    const airline: AirlineData = AIRLINES[operatorIata] ?? AIRLINES[airlineCode] ?? {
+      name: flight.operator || operatorIata,
+      iata: operatorIata,
+      icao: operatorIcao || operatorIata,
     };
 
+    const flightNumber =
+      (flight.operator_iata && flight.flight_number)
+        ? `${flight.operator_iata.toUpperCase()}${flight.flight_number}`
+        : (flight.ident_iata?.toUpperCase() || flight.ident?.toUpperCase() || flightIata);
+
     return {
-      flightNumber: flightIata,
+      flightNumber,
       airline,
       departure,
       arrival,
-      status: mapAviationStackStatus(flight.flight_status),
-      source: 'aviationstack',
+      status: mapAeroApiStatus(flight),
+      source: 'aeroapi',
       mock: false,
     };
   }
@@ -527,7 +568,7 @@ export type LookupOutcome =
 
 function defaultProviders(fetchImpl: typeof fetch = globalThis.fetch): FlightProvider[] {
   return [
-    new AviationStackProvider(process.env.AVIATIONSTACK_API_KEY, fetchImpl),
+    new AeroApiProvider(process.env.AEROAPI_KEY, fetchImpl),
     new MockProvider(),
   ];
 }

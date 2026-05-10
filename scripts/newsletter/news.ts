@@ -13,9 +13,40 @@
 
 import { callAnthropic, DEFAULT_MODEL } from './repetition';
 import type { Topic } from './topics';
+import { sanitizeForPrompt } from './util/sanitize';
 
-const NEWS_AGGREGATE_URL =
-  process.env.NEWSLETTER_NEWS_URL ?? 'https://www.16bitweather.co/api/news/aggregate';
+// Production host is the only valid source. Phase 2 C-Link3-Low flagged the
+// previous unvalidated env-var override as an SSRF surface. The override
+// only fires for someone with secrets-write access, but a host allow-list
+// closes the gap. To run the newsletter against a local dev server, add the
+// loopback host to ALLOWED_NEWS_HOSTS temporarily and revert before merging.
+const ALLOWED_NEWS_HOSTS: ReadonlySet<string> = new Set([
+  'www.16bitweather.co',
+  '16bitweather.co',
+]);
+
+function resolveNewsAggregateUrl(): string {
+  const fallback = 'https://www.16bitweather.co/api/news/aggregate';
+  const override = process.env.NEWSLETTER_NEWS_URL?.trim();
+  if (!override) return fallback;
+  try {
+    const parsed = new URL(override);
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      console.warn(`[news] NEWSLETTER_NEWS_URL has unsupported scheme ${parsed.protocol}; using default`);
+      return fallback;
+    }
+    if (!ALLOWED_NEWS_HOSTS.has(parsed.hostname.toLowerCase())) {
+      console.warn(`[news] NEWSLETTER_NEWS_URL host ${parsed.hostname} not in allow-list; using default`);
+      return fallback;
+    }
+    return override;
+  } catch {
+    console.warn(`[news] NEWSLETTER_NEWS_URL is not a valid URL; using default`);
+    return fallback;
+  }
+}
+
+const NEWS_AGGREGATE_URL = resolveNewsAggregateUrl();
 const FETCH_TIMEOUT_MS = 12_000;
 
 export interface NewsHeadline {
@@ -113,23 +144,7 @@ Return JSON only, no prose.`;
   return parsed;
 }
 
-/**
- * Strip user-content control characters and markdown fences from upstream
- * headlines (especially Reddit titles) before they get interpolated into
- * the LLM prompt. A title with triple-backticks would otherwise corrupt
- * `parseAngle`'s JSON-fence detection downstream.
- */
-function sanitizeForPrompt(input: string | undefined): string {
-  if (!input) return '';
-  return input
-    .replace(/```/g, "'''") // collapse triple backticks so JSON fences cannot break
-    .replace(/`/g, "'") // single backticks -> straight quote
-    // eslint-disable-next-line no-control-regex
-    .replace(/[\u0000-\u001F\u007F]/g, ' ') // strip control characters
-    .replace(/\s+/g, ' ') // collapse whitespace runs (incl. newlines)
-    .trim()
-    .slice(0, 300);
-}
+// sanitizeForPrompt moved to ./util/sanitize (Phase 4 cleanup).
 
 function parseAngle(raw: string, headlines: NewsHeadline[]): NewsAngle | null {
   const trimmed = raw.trim();

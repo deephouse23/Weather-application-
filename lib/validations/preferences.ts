@@ -11,7 +11,6 @@ import { THEME_LIST, type ThemeType } from '@/lib/theme-config'
 // Unit type enums (matching database schema)
 export const temperatureUnitSchema = z.enum(['celsius', 'fahrenheit'])
 export const windUnitSchema = z.enum(['mph', 'kmh', 'ms'])
-export const pressureUnitSchema = z.enum(['hpa', 'inhg', 'mmhg'])
 
 // Theme validation using existing THEME_LIST
 // Cast needed because Zod requires at least one element in the tuple
@@ -21,19 +20,17 @@ export const themeSchema = z.enum(THEME_LIST as [ThemeType, ...ThemeType[]])
  * Schema for PUT requests - updating existing preferences
  * All fields are optional since partial updates are allowed
  * .strict() rejects unknown fields to prevent injection
+ *
+ * Field set matches the live `public.user_preferences` schema after the
+ * 2026-05-09 alignment migration. Adding new fields requires both a DB
+ * migration and a UI surface — see `lib/theme-config.ts` for theme values.
  */
 export const updatePreferencesSchema = z.object({
   theme: themeSchema.optional(),
   temperature_unit: temperatureUnitSchema.optional(),
   wind_unit: windUnitSchema.optional(),
-  pressure_unit: pressureUnitSchema.optional(),
   auto_location: z.boolean().optional(),
   notifications_enabled: z.boolean().optional(),
-  email_alerts: z.boolean().optional(),
-  severe_weather_alerts: z.boolean().optional(),
-  daily_forecast_email: z.boolean().optional(),
-  news_ticker_enabled: z.boolean().optional(),
-  animation_enabled: z.boolean().optional(),
 }).strict()
 
 /**

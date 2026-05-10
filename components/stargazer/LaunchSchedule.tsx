@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import type { Launch } from '@/lib/stargazer/types';
+import { safeExternalUrl } from '@/lib/safe-url';
 
 interface LaunchScheduleProps {
   launches: Launch[];
@@ -18,9 +19,17 @@ function formatDate(date: Date): string {
 }
 
 function ExternalLink({ href, children }: { href: string; children: React.ReactNode }) {
+  const safe = safeExternalUrl(href);
+  if (!safe) {
+    return (
+      <span className="inline-flex items-center gap-1 border border-cyan-400/30 px-2 py-1 text-[10px] uppercase tracking-wider text-cyan-400 opacity-50">
+        {children}
+      </span>
+    );
+  }
   return (
     <a
-      href={href}
+      href={safe}
       target="_blank"
       rel="noopener noreferrer"
       className="inline-flex items-center gap-1 border border-cyan-400/30 px-2 py-1 text-[10px] uppercase tracking-wider text-cyan-400 hover:bg-cyan-400/10 transition-colors"

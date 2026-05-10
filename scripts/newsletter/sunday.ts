@@ -33,6 +33,7 @@ import {
   loadHistory,
 } from './state';
 import { buildVoiceCorrectionInstruction, sweepVoice, VOICE_SYSTEM_PROMPT } from './voice';
+import { sanitizeForPrompt } from './util/sanitize';
 
 const SIMILARITY_THRESHOLD = 0.85;
 const MAX_RETRIES = 2;
@@ -347,7 +348,14 @@ function formatDataBlock(opts: {
   if (warnings.notable.length > 0) {
     lines.push('Notable events:');
     for (const w of warnings.notable.slice(0, 6)) {
-      lines.push(`- ${w.phenomena}.${w.significance} ${w.area_desc} (${w.wfo}) ${w.issued}`);
+      // Sanitize each field even though Mesonet/NWS are trusted upstreams.
+      // Phase 2 C-Link5-Med: an unexpected control char or backtick in any
+      // of these fields would corrupt the model's downstream JSON parsing.
+      const phenomena = sanitizeForPrompt(w.phenomena);
+      const significance = sanitizeForPrompt(w.significance);
+      const areaDesc = sanitizeForPrompt(w.area_desc);
+      const wfo = sanitizeForPrompt(w.wfo);
+      lines.push(`- ${phenomena}.${significance} ${areaDesc} (${wfo}) ${w.issued}`);
     }
   }
 

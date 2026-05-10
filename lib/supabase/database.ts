@@ -1,31 +1,17 @@
-import { createClient } from '@supabase/supabase-js'
 import { Profile, ProfileUpdate, SavedLocation, SavedLocationInsert, SavedLocationUpdate, UserPreferences, UserPreferencesUpdate } from './types'
 import { DbSavedLocation, dbToSavedLocation, savedLocationToDb } from './schema-adapter'
-import { PLACEHOLDER_URL, PLACEHOLDER_SERVICE_KEY } from './constants'
 import { captureDbError } from '../error-utils'
 
-// Create a supabase client that works in both server and client contexts
+// All exports below are called from `'use client'` modules. The browser-only
+// supabase client honors RLS via the user's JWT cookie; that is the intended
+// path. A server-side fallback used to live here that returned a service-role
+// client — it was unused at runtime but a footgun for future server callers
+// (RLS bypass with row-level filters as the only protection). It was removed
+// in the Phase 4 cleanup. Server-side consumers must now use
+// `createServerSupabaseClient()` from `lib/supabase/server.ts` instead.
 const getSupabaseClient = () => {
-  if (typeof window !== 'undefined') {
-    // Client-side: use the browser client
-    const { supabase } = require('./client')
-    return supabase
-  } else {
-    // Server-side: create a service role client with fallbacks
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || PLACEHOLDER_URL
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || PLACEHOLDER_SERVICE_KEY
-    
-    return createClient(
-      supabaseUrl,
-      serviceRoleKey,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
-  }
+  const { supabase } = require('./client')
+  return supabase
 }
 
 // Null UUID used for mock/test sessions - no profile exists for this
@@ -117,10 +103,13 @@ export const updateProfile = async (userId: string, updates: ProfileUpdate): Pro
   // Explicitly select all columns to ensure we get complete data back
   const selectColumns = 'id, username, full_name, email, default_location, avatar_url, preferred_units, timezone, created_at, updated_at'
 
-  // Try to update with full column set first
+  // Use the field-allowlist for both attempts. Phase 1 L4 noted the first
+  // call previously passed `updates` raw — that's an unnecessary trust
+  // assumption (relies on RLS to catch a column-overwrite of a column the
+  // caller shouldn't be touching, like `email`).
   let { data, error } = await supabase
     .from('profiles')
-    .update(updates)
+    .update(safeUpdates)
     .eq('id', userId)
     .select(selectColumns)
     .single()

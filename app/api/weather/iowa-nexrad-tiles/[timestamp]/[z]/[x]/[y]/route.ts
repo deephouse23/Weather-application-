@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
+import { tileProxyOriginHeaders } from '@/lib/services/tile-proxy-cors'
 
 export const runtime = 'nodejs'
+
+// Strict path-segment validation — these get interpolated into the upstream
+// URL string at line below. Without these regexes, a path like
+// `/iowa-nexrad-tiles/x?injected=val/0/0/0` would graft attacker-controlled
+// query params onto the upstream request.
+const TIMESTAMP_RE = /^\d{8}-\d{4}$/   // YYYYMMDD-HHMM
+const ZOOM_RE = /^\d{1,2}$/             // 0..99 (Iowa caps at ~12)
+const COORD_RE = /^\d+$/                // tile x or y, non-negative integer
 
 // Proxy Iowa State RIDGE NEXRAD tile cache
 // GET /api/weather/iowa-nexrad-tiles/{timestamp}/{z}/{x}/{y}.png
@@ -9,17 +19,24 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ timestamp: string; z: string; x: string; y: string }> }
 ) {
+  const rateLimit = await rateLimitRequest(request)
+  if (!rateLimit.allowed) return rateLimit.response
+
   const { timestamp, z, x, y } = await params
 
   if (!timestamp || !z || !x || !y) {
     return new NextResponse('Missing required parameters', { status: 400 })
   }
 
+  if (!TIMESTAMP_RE.test(timestamp) || !ZOOM_RE.test(z) || !COORD_RE.test(x) || !COORD_RE.test(y)) {
+    return new NextResponse('Invalid path parameter', { status: 400 })
+  }
+
   // Iowa State TMS tile cache URL
   // For current/latest: nexrad-n0q (EPSG:3857 Web Mercator)
   // For historical with timestamp: nexrad-n0q-{timestamp}
   // timestamp format: YYYYMMDD-HHMM (UTC)
-  
+
   // Try historical timestamp first, fallback to current if not available
   const iowaUrl = `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-${timestamp}/${z}/${x}/${y}.png`
 
@@ -43,7 +60,7 @@ export async function GET(
         headers: {
           'Content-Type': 'image/png',
           'Cache-Control': 'public, max-age=60',
-          'Access-Control-Allow-Origin': '*',
+          ...tileProxyOriginHeaders(request),
         },
       })
     }
@@ -83,9 +100,7 @@ export async function GET(
       headers: {
         'Content-Type': 'image/png',
         'Cache-Control': cacheControl,
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        ...tileProxyOriginHeaders(request),
       },
     })
   } catch (error) {
@@ -100,7 +115,7 @@ export async function GET(
       headers: {
         'Content-Type': 'image/png',
         'Cache-Control': 'public, max-age=30',
-        'Access-Control-Allow-Origin': '*',
+        ...tileProxyOriginHeaders(request),
       },
     })
   }
@@ -111,9 +126,7 @@ export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      ...tileProxyOriginHeaders(request),
       'Access-Control-Max-Age': '86400',
     },
   })

@@ -180,6 +180,11 @@ const WeatherMapOpenLayers = ({
       window.removeEventListener('resize', handleResize)
       resizeObserver.disconnect()
       map.setTarget(undefined)
+      // Match the cleanup pattern used by every other OpenLayers consumer
+      // (TurbulenceMap, TravelCorridorMap, SPCOutlookMap, warnings-alert-map).
+      // Without dispose() the map's tile sources, listeners, and any retained
+      // workers leak across SPA navigations.
+      map.dispose()
       mapInstanceRef.current = null
     }
   }, [])

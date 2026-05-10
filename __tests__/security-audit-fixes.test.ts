@@ -42,10 +42,19 @@ describe('Fix 8: Open proxy params on NOAA WMS', () => {
   });
 });
 
-describe('Fix 9: Test auth bypass restricted to localhost', () => {
-  const src = readFileSync(join(__dirname, '..', 'lib', 'supabase', 'middleware.ts'), 'utf-8');
-  it('should check for localhost before allowing Playwright bypass', () => {
-    expect(src).toContain('localhost');
+describe('Fix 9: Test auth bypass gated to non-prod', () => {
+  // The lib/supabase/middleware.ts file (parallel/dead helper) was deleted
+  // in Phase 4 cleanup. The active Playwright bypass now lives only in
+  // lib/playwright-test-mode.ts and is gated via NODE_ENV !== 'production'.
+  const src = readFileSync(join(__dirname, '..', 'lib', 'playwright-test-mode.ts'), 'utf-8');
+  it('should require non-production NODE_ENV to enable the bypass', () => {
+    expect(src).toMatch(/NODE_ENV !== 'production'/);
+  });
+  it('should check for explicit PLAYWRIGHT_TEST_MODE env', () => {
+    expect(src).toContain('PLAYWRIGHT_TEST_MODE');
+  });
+  it('should not read the NEXT_PUBLIC_ variant (would inline into client bundle)', () => {
+    expect(src).not.toContain('NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE');
   });
 });
 
