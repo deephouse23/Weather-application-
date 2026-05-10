@@ -122,13 +122,18 @@ async function resolveEndpoint(
   const trimmed = query.trim();
   if (!trimmed) return null;
 
-  const dashSplit = trimmed.split(/\s+[—–-]\s+/);
-  const codeCandidate = dashSplit[0]?.trim() ?? trimmed;
-  const cityCandidate = dashSplit.length > 1
-    ? dashSplit.slice(1).join(' ').trim()
-    : trimmed;
+  // Only treat the input as a "<CODE> — <City, ST>" autocomplete value if it
+  // actually starts with a 3-4 letter IATA/ICAO-shaped token. Without this
+  // gate, "Toledo — OH" would split as code=Toledo, city=OH (and 3-4 letter
+  // city names would do worse). The single anchored prefix match is also
+  // immune to the polynomial-backtracking concern CodeQL raised about a
+  // bare `\s+[—–-]\s+` split on user-controlled input.
+  const prefixMatch = trimmed.match(/^([A-Za-z]{3,4})\s+[—–-]\s+(.+)$/);
+  const hasAirportPrefix = prefixMatch !== null;
+  const codeCandidate = hasAirportPrefix ? prefixMatch[1] : trimmed;
+  const cityCandidate = hasAirportPrefix ? prefixMatch[2].trim() : trimmed;
 
-  const codeMatch = findAirportByCode(codeCandidate) ?? findAirportByCode(trimmed);
+  const codeMatch = findAirportByCode(codeCandidate);
   if (codeMatch) {
     return {
       query: trimmed,
@@ -143,7 +148,7 @@ async function resolveEndpoint(
     const cityMatch =
       (cityOnly && findAirportByCity(cityOnly)) ||
       findAirportByCity(cityCandidate) ||
-      findAirportByCity(trimmed);
+      (hasAirportPrefix ? undefined : findAirportByCity(trimmed));
     if (cityMatch) {
       return {
         query: trimmed,
@@ -154,7 +159,7 @@ async function resolveEndpoint(
     }
   }
 
-  const geocodeQuery = cityCandidate || trimmed;
+  const geocodeQuery = hasAirportPrefix ? cityCandidate : trimmed;
   try {
     const url = `${baseUrl}/api/weather/geocoding?q=${encodeURIComponent(geocodeQuery)}&limit=1`;
     const res = await fetchWithTimeout(url);
