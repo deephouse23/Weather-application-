@@ -10,7 +10,7 @@ tags:
   - severe-weather
   - space-weather
   - roadmap
-heroImage: https://services.swpc.noaa.gov/images/swx-overview-large.gif
+heroImage: https://commons.wikimedia.org/wiki/Special:FilePath/Anvil_shaped_cumulus_panorama_edit_crop.jpg?width=1280
 readTime: 5
 cadence: sunday_rearview
 opener_hash: 18128406
@@ -58,8 +58,6 @@ On the solar side, a quiet week by Kp standards — the index peaked at 0 — en
 
 The week's largest seismic event, a M6.0 near Nena in the Philippines on May 4, produced no tsunami warnings.
 
-![A composite radar mosaic showing the Panhandle tornado warnings on the morning of May 7, 2026, with storm tracks overlaid across Holmes, Walton, and Washington counties.](https://placehold.co/800x450)
-
 ## Roadmap
 
 The dominant pattern for the week of May 11–17 is a split-flow regime: a ridge anchored over the Desert Southwest and California coast, and a progressive trough swinging through the central and eastern U.S. That ridge is the reason Denver is looking at an 82°F average high and San Francisco sits near 67°F with only 0.02 inches of precipitation expected — both regions are effectively decoupled from the active weather to the east.
@@ -70,8 +68,6 @@ The trough's axis is the week's main organizing feature. As it digs into the Pla
 *NOAA NESDIS*
 
 The Northeast sees the trough's downstream signature most clearly on May 13, when precipitation probability for the New York City area peaks at 81%. That's the sharpest probability spike in the national dataset this week — a number consistent with a coherent synoptic-scale system rather than isolated afternoon convection. Expect a wet Wednesday across the I-95 corridor, with the NYC area averaging a 70°F high for the week and accumulating roughly 0.21 inches total.
-
-![Surface analysis chart for May 12, 2026, showing the trough position over the central U.S. and the associated moisture return from the Gulf of Mexico into the South Plains and lower Mississippi Valley.](https://placehold.co/800x450)
 
 Chicago sits in the trough's wake: a 63°F average high, 0.30 inches of precipitation, and a modest 38% peak probability on May 12. That's a cooler, unsettled signal consistent with post-frontal flow rather than an active severe weather threat.
 
