@@ -107,10 +107,12 @@ async function fetchWithTimeout(
 }
 
 /**
- * Resolve a free-text query to coordinates. Tries:
- *   1. IATA/ICAO code lookup against the major airports table.
- *   2. City match against the major airports table (so "Atlanta" → ATL).
- *   3. Internal /api/weather/geocoding (Open-Meteo).
+ * Resolve a free-text query to coordinates. Tries the airports table by
+ * IATA/ICAO, then by city, then falls back to /api/weather/geocoding.
+ *
+ * TripInput autocomplete sends pre-formatted "<CODE> — <City>, <ST>"; we
+ * split on the dash before lookup since neither findAirportByCode nor the
+ * geocoder understand the prefixed form.
  */
 async function resolveEndpoint(
   query: string,
@@ -120,8 +122,13 @@ async function resolveEndpoint(
   const trimmed = query.trim();
   if (!trimmed) return null;
 
-  // 1) Direct airport code match.
-  const codeMatch = findAirportByCode(trimmed);
+  const dashSplit = trimmed.split(/\s+[—–-]\s+/);
+  const codeCandidate = dashSplit[0]?.trim() ?? trimmed;
+  const cityCandidate = dashSplit.length > 1
+    ? dashSplit.slice(1).join(' ').trim()
+    : trimmed;
+
+  const codeMatch = findAirportByCode(codeCandidate) ?? findAirportByCode(trimmed);
   if (codeMatch) {
     return {
       query: trimmed,
@@ -131,9 +138,12 @@ async function resolveEndpoint(
     };
   }
 
-  // 2) City/name match against hubs (most useful in fly mode).
   if (preferAirport) {
-    const cityMatch = findAirportByCity(trimmed);
+    const cityOnly = cityCandidate.replace(/,\s*[A-Z]{2}$/i, '').trim();
+    const cityMatch =
+      (cityOnly && findAirportByCity(cityOnly)) ||
+      findAirportByCity(cityCandidate) ||
+      findAirportByCity(trimmed);
     if (cityMatch) {
       return {
         query: trimmed,
@@ -144,9 +154,9 @@ async function resolveEndpoint(
     }
   }
 
-  // 3) Generic geocoding for free-text input.
+  const geocodeQuery = cityCandidate || trimmed;
   try {
-    const url = `${baseUrl}/api/weather/geocoding?q=${encodeURIComponent(trimmed)}&limit=1`;
+    const url = `${baseUrl}/api/weather/geocoding?q=${encodeURIComponent(geocodeQuery)}&limit=1`;
     const res = await fetchWithTimeout(url);
     if (!res.ok) return null;
 
