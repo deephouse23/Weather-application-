@@ -78,8 +78,13 @@ interface AutocompleteOption {
 }
 
 function buildAutocompleteOptions(mode: TripMode): AutocompleteOption[] {
+  // value = bare IATA code so picking from the dropdown puts only "DEN"
+  // into the field. The full "DEN — Denver, CO" label still renders in
+  // the dropdown for searchability (chrome/edge match label too) and
+  // visual confirmation. Submitting the bare code matches what the
+  // server resolver expects without prefix-parsing gymnastics.
   const airportOptions: AutocompleteOption[] = MAJOR_US_AIRPORTS.map((a) => ({
-    value: `${a.iata} — ${a.city}, ${a.state}`,
+    value: a.iata,
     label: `${a.iata} — ${a.city}, ${a.state}`,
   }));
 
