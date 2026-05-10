@@ -20,6 +20,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { HOT_LOCATIONS, COLD_LOCATIONS, LOCATION_FACTS, HISTORICAL_AVERAGES, type LocationTemperature } from '@/lib/extremes/extremes-data';
 import { parseOptionalLatLonQuery } from '@/lib/extremes/parse-query-coords';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
 
 /**
  * Fetch temperature data for a specific location using server-side API
@@ -29,7 +30,7 @@ async function fetchLocationTemperature(
   apiKey: string
 ): Promise<LocationTemperature | null> {
   try {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `https://api.openweathermap.org/data/2.5/weather?lat=${location.lat}&lon=${location.lon}&units=imperial&appid=${apiKey}`,
       { next: { revalidate: 1800 } } // Cache for 30 minutes
     );
@@ -100,8 +101,9 @@ export async function GET(request: NextRequest) {
     let userLocation;
     if (userCoords) {
       try {
-        const response = await fetch(
-          `https://api.openweathermap.org/data/2.5/weather?lat=${userCoords.lat}&lon=${userCoords.lon}&units=imperial&appid=${apiKey}`
+        const response = await fetchWithTimeout(
+          `https://api.openweathermap.org/data/2.5/weather?lat=${userCoords.lat}&lon=${userCoords.lon}&units=imperial&appid=${apiKey}`,
+          { signal: request.signal }
         );
         
         if (response.ok) {

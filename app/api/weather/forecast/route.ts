@@ -14,6 +14,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout'
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5'
 
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
     // Make request to OpenWeatherMap API
     const forecastUrl = `${BASE_URL}/forecast?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=${units}`
     
-    const response = await fetch(forecastUrl)
+    const response = await fetchWithTimeout(forecastUrl, { signal: request.signal })
     
     if (!response.ok) {
       const errorData = await response.text()
