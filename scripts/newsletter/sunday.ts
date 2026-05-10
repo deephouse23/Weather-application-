@@ -1,6 +1,6 @@
 /**
  * Sunday cadence — Rearview + Roadmap pipeline.
- * See docs/PRD-newsletter-redesign.md §4.3 for the spec.
+ * See planning/prds/PRD-newsletter-redesign.md §4.3 for the spec.
  *
  * Hard rule: if Iowa Mesonet returns nothing for the past week, we fail
  * the run rather than fabricate Rearview content.

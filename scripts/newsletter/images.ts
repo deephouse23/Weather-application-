@@ -583,7 +583,7 @@ export interface SelectImagesOptions {
  *
  * Throws if the catalog cannot satisfy the request even after fallback.
  * Callers should treat this as a "catalog needs maintenance" error per
- * docs/PRD-newsletter-redesign.md §7.
+ * planning/prds/PRD-newsletter-redesign.md §7.
  */
 export function selectImages(opts: SelectImagesOptions): ImageEntry[] {
   const { topic, count, excludeIds, rng = Math.random } = opts;
