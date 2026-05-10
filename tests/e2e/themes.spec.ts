@@ -134,6 +134,23 @@ test.describe('Theme System', () => {
   });
 
   test('UI elements render correctly in synthwave theme', async ({ page }) => {
+    // synthwave84 is a premium theme. ThemeProvider's onAuthStateChange
+    // resets premium themes back to 'nord' for unauthenticated users
+    // (see components/theme-provider.tsx:71-78). Without seeded auth,
+    // the test was passing only by racing the data-theme attribute
+    // mutation against ThemeProvider's reset render — which is exactly
+    // the kind of flakiness we're stamping out here. Seed mock auth so
+    // ThemeProvider sees an authenticated user and leaves the premium
+    // theme alone.
+    test.skip(useKernelBrowsers, 'Auth mocking not supported in Kernel cloud browsers');
+
+    await setupMockAuth(page);
+    await stubSupabaseProfile(page, {
+      id: '00000000-0000-0000-0000-000000000000',
+      username: 'testuser',
+      email: 'test@example.com',
+    });
+
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await setTheme(page, 'synthwave84');
 
