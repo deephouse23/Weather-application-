@@ -26,15 +26,17 @@
 --     the original audit ask used "leaderboard_alltime" which does not exist).
 --   - No external FKs into any of these tables outside the dropped set.
 
-DROP TABLE public.chat_messages CASCADE;
-DROP TABLE public.chat_rate_limits CASCADE;
-DROP TABLE public.user_ai_memory CASCADE;
+-- IF EXISTS on every drop so the migration is idempotent on systems where
+-- some of these tables/views are already absent (fresh DBs, partial states).
+DROP TABLE IF EXISTS public.chat_messages CASCADE;
+DROP TABLE IF EXISTS public.chat_rate_limits CASCADE;
+DROP TABLE IF EXISTS public.user_ai_memory CASCADE;
 
 DROP VIEW IF EXISTS public.leaderboard_daily CASCADE;
 DROP VIEW IF EXISTS public.leaderboard_weekly CASCADE;
 DROP VIEW IF EXISTS public.leaderboard_all_time CASCADE;
 
-DROP TABLE public.user_game_stats CASCADE;
-DROP TABLE public.game_scores CASCADE;
-DROP TABLE public.daily_challenges CASCADE;
-DROP TABLE public.games CASCADE;
+DROP TABLE IF EXISTS public.user_game_stats CASCADE;
+DROP TABLE IF EXISTS public.game_scores CASCADE;
+DROP TABLE IF EXISTS public.daily_challenges CASCADE;
+DROP TABLE IF EXISTS public.games CASCADE;

@@ -68,7 +68,12 @@ export async function tryIncrementAeroApiUsage(): Promise<
 
   let data: number | null;
   try {
-    const result = await supabase.rpc('increment_aeroapi_usage', { p_cap: cap });
+    // Hard timeout — the fail-closed contract demands a prompt verdict.
+    // A slow / half-open path to PostgREST would otherwise stall every
+    // flight lookup until the request times out at the route boundary.
+    const result = await supabase
+      .rpc('increment_aeroapi_usage', { p_cap: cap })
+      .abortSignal(AbortSignal.timeout(1500));
     if (result.error) {
       console.warn('[aeroapi-usage] RPC error, failing closed:', result.error.message);
       return { allowed: false, reason: 'rpc_failed' };

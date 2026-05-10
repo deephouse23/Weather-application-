@@ -620,7 +620,13 @@ export async function lookupFlight(
     try {
       const result = await provider.lookupFlight(airlineCode, flightNum);
       if (result) {
-        if (!options.forceMock) {
+        // Only cache when the result came from a real provider. The mock
+        // path is now reachable from transient AeroAPI failures (cap hit,
+        // 401/402/429, RPC failure) — caching that mock would pin
+        // synthetic data for SCHEDULE_TTL_MS even after the underlying
+        // condition cleared. Same condition we already use to skip live-
+        // position enrichment on mock results.
+        if (!options.forceMock && !result.mock) {
           cacheSet(scheduleCache, cacheKey, result, SCHEDULE_TTL_MS);
         }
 
@@ -632,7 +638,7 @@ export async function lookupFlight(
           ).catch(() => null);
           if (livePosition) {
             const enriched = { ...result, livePosition };
-            if (!options.forceMock) {
+            if (!options.forceMock && !result.mock) {
               cacheSet(scheduleCache, cacheKey, enriched, SCHEDULE_TTL_MS);
             }
             return { ok: true, result: enriched };

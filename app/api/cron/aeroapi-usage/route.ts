@@ -31,65 +31,63 @@ function priorUtcMonthKey(d: Date): string {
 }
 
 export async function GET(request: NextRequest) {
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) {
-    return new Response('CRON_SECRET not configured', { status: 500 });
+  try {
+    const cronSecret = process.env.CRON_SECRET;
+    if (!cronSecret) {
+      return new Response('CRON_SECRET not configured', { status: 500 });
+    }
+
+    // Constant-time bearer compare, matching /api/cron/keep-alive.
+    const authHeader = request.headers.get('authorization') ?? '';
+    const expected = `Bearer ${cronSecret}`;
+    const a = Buffer.from(authHeader);
+    const b = Buffer.from(expected);
+    if (a.length !== b.length || !timingSafeEqual(a, b)) {
+      return new Response('Unauthorized', { status: 401 });
+    }
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || PLACEHOLDER_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || PLACEHOLDER_SERVICE_KEY;
+    if (supabaseUrl === PLACEHOLDER_URL || serviceRoleKey === PLACEHOLDER_SERVICE_KEY) {
+      return Response.json({ error: 'Supabase not configured' }, { status: 500 });
+    }
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    const now = new Date();
+    const currentMonth = utcMonthKey(now);
+    const priorMonth = priorUtcMonthKey(now);
+
+    const { data, error } = await supabase
+      .from('aeroapi_usage')
+      .select('month, query_count, updated_at')
+      .in('month', [currentMonth, priorMonth]);
+
+    if (error) {
+      console.error('[cron/aeroapi-usage] query failed:', error.message);
+      return Response.json({ error: 'Query failed' }, { status: 503 });
+    }
+
+    const rows = (data ?? []) as Array<{ month: string; query_count: number; updated_at: string }>;
+    const currentRow = rows.find((r) => r.month === currentMonth) ?? null;
+    const priorRow = rows.find((r) => r.month === priorMonth) ?? null;
+
+    const capRaw = process.env.AEROAPI_MONTHLY_CAP;
+    const cap = capRaw ? Number.parseInt(capRaw, 10) : AEROAPI_DEFAULT_MONTHLY_CAP;
+
+    return Response.json({
+      cap: Number.isFinite(cap) && cap > 0 ? cap : AEROAPI_DEFAULT_MONTHLY_CAP,
+      current: currentRow
+        ? { month: currentMonth, queryCount: currentRow.query_count, updatedAt: currentRow.updated_at }
+        : { month: currentMonth, queryCount: 0, updatedAt: null },
+      prior: priorRow
+        ? { month: priorMonth, queryCount: priorRow.query_count, updatedAt: priorRow.updated_at }
+        : { month: priorMonth, queryCount: 0, updatedAt: null },
+    });
+  } catch (error) {
+    console.error('[cron/aeroapi-usage] unhandled error:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-
-  // Constant-time bearer compare, matching /api/cron/keep-alive.
-  const authHeader = request.headers.get('authorization') ?? '';
-  const expected = `Bearer ${cronSecret}`;
-  const a = Buffer.from(authHeader);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length || !timingSafeEqual(a, b)) {
-    return new Response('Unauthorized', { status: 401 });
-  }
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || PLACEHOLDER_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || PLACEHOLDER_SERVICE_KEY;
-  if (supabaseUrl === PLACEHOLDER_URL || serviceRoleKey === PLACEHOLDER_SERVICE_KEY) {
-    return Response.json({ error: 'Supabase not configured' }, { status: 500 });
-  }
-
-  const supabase = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-
-  const now = new Date();
-  const currentMonth = utcMonthKey(now);
-  const priorMonth = priorUtcMonthKey(now);
-
-  const { data, error } = await supabase
-    .from('aeroapi_usage')
-    .select('month, query_count, updated_at')
-    .in('month', [currentMonth, priorMonth]);
-
-  if (error) {
-    console.error('[cron/aeroapi-usage] query failed:', error.message);
-    return Response.json({ error: 'Query failed' }, { status: 503 });
-  }
-
-  const rows = (data ?? []) as Array<{ month: string; query_count: number; updated_at: string }>;
-  const findRow = (m: string) => rows.find((r) => r.month === m) ?? null;
-
-  const capRaw = process.env.AEROAPI_MONTHLY_CAP;
-  const cap = capRaw ? Number.parseInt(capRaw, 10) : AEROAPI_DEFAULT_MONTHLY_CAP;
-
-  return Response.json({
-    cap: Number.isFinite(cap) && cap > 0 ? cap : AEROAPI_DEFAULT_MONTHLY_CAP,
-    current: findRow(currentMonth)
-      ? {
-          month: currentMonth,
-          queryCount: findRow(currentMonth)!.query_count,
-          updatedAt: findRow(currentMonth)!.updated_at,
-        }
-      : { month: currentMonth, queryCount: 0, updatedAt: null },
-    prior: findRow(priorMonth)
-      ? {
-          month: priorMonth,
-          queryCount: findRow(priorMonth)!.query_count,
-          updatedAt: findRow(priorMonth)!.updated_at,
-        }
-      : { month: priorMonth, queryCount: 0, updatedAt: null },
-  });
 }

@@ -23,14 +23,26 @@
 --   FROM public.user_ai_memory;
 -- Expect max_notes_bytes <= 12000 and max_loc_count <= 50.
 -- Verified pre-flight on 2026-05-09: 0 rows, no backfill required.
+--
+-- Guarded with `to_regclass` because a sibling migration in this same day
+-- (20260509_drop_ai_chat_and_games_orphans.sql) drops user_ai_memory entirely.
+-- On a fresh DB, supabase CLI applies migrations in lexicographic order, and
+-- 'drop_*' sorts before 'user_*' — without this guard, this file's ALTER and
+-- DROP POLICY statements would error against the now-missing table. The live
+-- DB had this migration applied first (chronological order via Supabase MCP),
+-- so the guard is purely defensive for fresh-DB rebuilds.
+DO $$
+BEGIN
+  IF to_regclass('public.user_ai_memory') IS NOT NULL THEN
+    ALTER TABLE public.user_ai_memory
+      ADD CONSTRAINT memory_notes_size_check
+      CHECK (octet_length(memory_notes) <= 12000);
 
-ALTER TABLE public.user_ai_memory
-  ADD CONSTRAINT memory_notes_size_check
-  CHECK (octet_length(memory_notes) <= 12000);
+    ALTER TABLE public.user_ai_memory
+      ADD CONSTRAINT recent_locations_count_check
+      CHECK (jsonb_array_length(recent_locations) <= 50);
 
-ALTER TABLE public.user_ai_memory
-  ADD CONSTRAINT recent_locations_count_check
-  CHECK (jsonb_array_length(recent_locations) <= 50);
-
-DROP POLICY IF EXISTS "Users can insert their own memory" ON public.user_ai_memory;
-DROP POLICY IF EXISTS "Users can update their own memory" ON public.user_ai_memory;
+    DROP POLICY IF EXISTS "Users can insert their own memory" ON public.user_ai_memory;
+    DROP POLICY IF EXISTS "Users can update their own memory" ON public.user_ai_memory;
+  END IF;
+END $$;

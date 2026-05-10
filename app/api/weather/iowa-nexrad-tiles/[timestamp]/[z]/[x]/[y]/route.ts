@@ -24,12 +24,14 @@ export async function GET(
 
   const { timestamp, z, x, y } = await params
 
+  // Validation 400s still need CORS headers — without them, allowed browser
+  // clients see an opaque CORS failure instead of the real 400.
   if (!timestamp || !z || !x || !y) {
-    return new NextResponse('Missing required parameters', { status: 400 })
+    return new NextResponse('Missing required parameters', { status: 400, headers: tileProxyOriginHeaders(request) })
   }
 
   if (!TIMESTAMP_RE.test(timestamp) || !ZOOM_RE.test(z) || !COORD_RE.test(x) || !COORD_RE.test(y)) {
-    return new NextResponse('Invalid path parameter', { status: 400 })
+    return new NextResponse('Invalid path parameter', { status: 400, headers: tileProxyOriginHeaders(request) })
   }
 
   // Iowa State TMS tile cache URL

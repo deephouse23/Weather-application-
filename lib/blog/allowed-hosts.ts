@@ -52,6 +52,9 @@ export function allowedBlogUrl(href: string | undefined | null): string | null {
   } catch {
     return null;
   }
-  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null;
+  // HTTPS only — `http:` images become mixed content on the HTTPS site
+  // (browsers block them), and `http:` <a href> downgrades the security
+  // properties of any outbound link from a generated post.
+  if (parsed.protocol !== 'https:') return null;
   return ALLOWED_BLOG_LINK_HOSTS.has(parsed.hostname.toLowerCase()) ? href : null;
 }
