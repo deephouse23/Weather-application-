@@ -17,7 +17,7 @@ describe('SEO Indexing Fixes', () => {
     const robotsPath = path.join(process.cwd(), 'public', 'robots.txt')
     const content = fs.readFileSync(robotsPath, 'utf-8')
 
-    const requiredAllows = ['/blog', '/news', '/education', '/games', '/aviation', '/weather/']
+    const requiredAllows = ['/blog', '/news', '/education', '/aviation', '/weather/']
     for (const route of requiredAllows) {
       expect(content).toContain(`Allow: ${route}`)
     }
@@ -28,7 +28,7 @@ describe('SEO Indexing Fixes', () => {
     const content = fs.readFileSync(wrapperPath, 'utf-8')
 
     expect(content).toContain('<footer')
-    const requiredLinks = ['/radar', '/severe', '/aviation', '/education', '/blog', '/news', '/games', '/about']
+    const requiredLinks = ['/radar', '/severe', '/aviation', '/education', '/blog', '/news', '/about']
     for (const link of requiredLinks) {
       expect(content).toContain(`href="${link}"`)
     }
@@ -36,7 +36,7 @@ describe('SEO Indexing Fixes', () => {
 
   it('sitemap should not include /ai route', async () => {
     const { default: sitemap } = await import('../app/sitemap')
-    const entries = sitemap()
+    const entries = await sitemap()
     const paths = entries.map((e: { url: string }) => {
       try { return new URL(e.url).pathname } catch { return e.url }
     })
@@ -46,7 +46,7 @@ describe('SEO Indexing Fixes', () => {
 
   it('sitemap should have fewer than 80 URLs to focus crawl budget', async () => {
     const { default: sitemap } = await import('../app/sitemap')
-    const entries = sitemap()
+    const entries = await sitemap()
 
     expect(entries.length).toBeLessThan(80)
   })

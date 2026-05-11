@@ -9,6 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
 
 // Simple in-memory cache with 10-minute TTL
 const metarCache = new Map<string, { data: MetarResponse; expires: number }>();
@@ -260,12 +261,13 @@ export async function GET(request: NextRequest) {
     // Using the Text Data Server API
     const url = `https://aviationweather.gov/api/data/metar?ids=${station}&format=raw&taf=false`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: {
         'Accept': 'text/plain',
         'User-Agent': '16-Bit-Weather/1.0',
       },
       cache: 'no-store', // Don't cache at edge, we manage our own cache
+      signal: request.signal,
     });
 
     if (!response.ok) {

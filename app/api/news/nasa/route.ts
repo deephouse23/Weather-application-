@@ -13,7 +13,7 @@ const CACHE_DURATION = 60 * 60; // 1 hour
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const maxItems = parseInt(searchParams.get('maxItems') || '15');
+    const maxItems = Math.max(1, Math.min(parseInt(searchParams.get('maxItems') || '15', 10) || 15, 100));
 
     const news = await fetchAllNASAWeatherNews(maxItems);
 

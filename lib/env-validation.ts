@@ -19,13 +19,12 @@ interface EnvConfig {
 }
 
 const envConfig: EnvConfig = {
-  required: {
+  required: {},
+  optional: {
     OPENWEATHER_API_KEY: {
       name: 'OPENWEATHER_API_KEY',
-      description: 'OpenWeatherMap API key (required for weather data) - server-only for security',
+      description: 'OpenWeatherMap API key. Optional after the Open-Meteo migration — only used by legacy fallback endpoints (pollen, UV onecall v3, precipitation history, extremes). Routes that need it check at request time.',
     },
-  },
-  optional: {
     NEXT_PUBLIC_SUPABASE_URL: {
       name: 'NEXT_PUBLIC_SUPABASE_URL',
       description: 'Supabase project URL (optional - for authentication)',
@@ -50,6 +49,27 @@ const envConfig: EnvConfig = {
       name: 'SENTRY_PROJECT',
       description: 'Sentry project (optional - defaults to "javascript-nextjs")',
     },
+    AEROAPI_KEY: {
+      name: 'AEROAPI_KEY',
+      description: 'FlightAware AeroAPI key (optional - enables real flight schedule data on /aviation; without it, the service returns labeled mock routes). Free tier: $5/month credit ~ 1000 lookups. HTTPS-only, x-apikey header.',
+    },
+    AEROAPI_MONTHLY_CAP: {
+      name: 'AEROAPI_MONTHLY_CAP',
+      // Math: $5 free credit per month / ~$0.005 per /flights/{ident} query ≈ 1000
+      // queries. Cap at 800 leaves a 20% buffer for surges and any per-query
+      // cost variance. Override to a smaller value when stress-testing the
+      // mock fallback in production. AeroAPI does NOT enforce a vendor-side
+      // spending cap on the personal tier; this env var IS the spending cap.
+      description: 'AeroAPI app-side monthly call cap, integer (optional - default 800). Once reached, the provider falls through to mock data for the rest of the UTC month.',
+    },
+    OPENSKY_USERNAME: {
+      name: 'OPENSKY_USERNAME',
+      description: 'OpenSky Network username (optional - raises rate limits for live position lookups on /aviation; anonymous works for low-traffic dev).',
+    },
+    OPENSKY_PASSWORD: {
+      name: 'OPENSKY_PASSWORD',
+      description: 'OpenSky Network password (optional - paired with OPENSKY_USERNAME).',
+    },
   },
 };
 
@@ -63,19 +83,13 @@ export function validateEnv(): void {
     return;
   }
 
-  const isPlaywright =
-    process.env.PLAYWRIGHT_TEST_MODE === 'true' ||
-    process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true';
+  const isPlaywright = process.env.PLAYWRIGHT_TEST_MODE === 'true';
 
   const missingRequired: string[] = [];
   const missingOptional: string[] = [];
 
   // Check required variables
   for (const [key, config] of Object.entries(envConfig.required)) {
-    // In Playwright E2E runs we stub API calls, so allow missing API keys.
-    if (isPlaywright && key === 'OPENWEATHER_API_KEY') {
-      continue;
-    }
     if (!process.env[key]) {
       missingRequired.push(key);
       console.error(`❌ Missing required environment variable: ${config.name}`);

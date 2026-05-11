@@ -1,31 +1,17 @@
-import { createClient } from '@supabase/supabase-js'
 import { Profile, ProfileUpdate, SavedLocation, SavedLocationInsert, SavedLocationUpdate, UserPreferences, UserPreferencesUpdate } from './types'
 import { DbSavedLocation, dbToSavedLocation, savedLocationToDb } from './schema-adapter'
-import { PLACEHOLDER_URL, PLACEHOLDER_SERVICE_KEY } from './constants'
 import { captureDbError } from '../error-utils'
 
-// Create a supabase client that works in both server and client contexts
+// All exports below are called from `'use client'` modules. The browser-only
+// supabase client honors RLS via the user's JWT cookie; that is the intended
+// path. A server-side fallback used to live here that returned a service-role
+// client — it was unused at runtime but a footgun for future server callers
+// (RLS bypass with row-level filters as the only protection). It was removed
+// in the Phase 4 cleanup. Server-side consumers must now use
+// `createServerSupabaseClient()` from `lib/supabase/server.ts` instead.
 const getSupabaseClient = () => {
-  if (typeof window !== 'undefined') {
-    // Client-side: use the browser client
-    const { supabase } = require('./client')
-    return supabase
-  } else {
-    // Server-side: create a service role client with fallbacks
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || PLACEHOLDER_URL
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || PLACEHOLDER_SERVICE_KEY
-    
-    return createClient(
-      supabaseUrl,
-      serviceRoleKey,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
-  }
+  const { supabase } = require('./client')
+  return supabase
 }
 
 // Null UUID used for mock/test sessions - no profile exists for this
@@ -117,10 +103,13 @@ export const updateProfile = async (userId: string, updates: ProfileUpdate): Pro
   // Explicitly select all columns to ensure we get complete data back
   const selectColumns = 'id, username, full_name, email, default_location, avatar_url, preferred_units, timezone, created_at, updated_at'
 
-  // Try to update with full column set first
+  // Use the field-allowlist for both attempts. Phase 1 L4 noted the first
+  // call previously passed `updates` raw — that's an unnecessary trust
+  // assumption (relies on RLS to catch a column-overwrite of a column the
+  // caller shouldn't be touching, like `email`).
   let { data, error } = await supabase
     .from('profiles')
-    .update(updates)
+    .update(safeUpdates)
     .eq('id', userId)
     .select(selectColumns)
     .single()
@@ -202,8 +191,13 @@ const saveLocation = async (locationData: SavedLocationInsert): Promise<SavedLoc
   return data
 }
 
+// All saved-location mutators take userId so they always filter by both
+// (id, user_id). Server callers run with the service-role key, which bypasses
+// RLS — without the explicit user_id check, any authenticated session could
+// pass another user's locationId and mutate their row.
 const updateSavedLocation = async (
-  locationId: string, 
+  userId: string,
+  locationId: string,
   updates: SavedLocationUpdate
 ): Promise<SavedLocation | null> => {
   const supabase = getSupabaseClient()
@@ -211,41 +205,51 @@ const updateSavedLocation = async (
     .from('saved_locations')
     .update(updates)
     .eq('id', locationId)
+    .eq('user_id', userId)
     .select()
     .single()
 
   if (error) {
-    captureDbError('updateSavedLocation', error, { locationId })
+    captureDbError('updateSavedLocation', error, { userId, locationId })
     return null
   }
 
   return data
 }
 
-export const deleteSavedLocation = async (locationId: string): Promise<boolean> => {
+export const deleteSavedLocation = async (
+  userId: string,
+  locationId: string
+): Promise<boolean> => {
   const supabase = getSupabaseClient()
   const { error } = await supabase
     .from('saved_locations')
     .delete()
     .eq('id', locationId)
+    .eq('user_id', userId)
 
   if (error) {
-    captureDbError('deleteSavedLocation', error, { locationId })
+    captureDbError('deleteSavedLocation', error, { userId, locationId })
     return false
   }
 
   return true
 }
 
-export const toggleLocationFavorite = async (locationId: string, isFavorite: boolean): Promise<boolean> => {
+export const toggleLocationFavorite = async (
+  userId: string,
+  locationId: string,
+  isFavorite: boolean
+): Promise<boolean> => {
   const supabase = getSupabaseClient()
   const { error } = await supabase
     .from('saved_locations')
     .update({ is_favorite: isFavorite })
     .eq('id', locationId)
+    .eq('user_id', userId)
 
   if (error) {
-    captureDbError('toggleLocationFavorite', error, { locationId, isFavorite })
+    captureDbError('toggleLocationFavorite', error, { userId, locationId, isFavorite })
     return false
   }
 
@@ -325,13 +329,22 @@ const getFavoriteLocations = async (userId: string): Promise<SavedLocation[]> =>
   return data || []
 }
 
+// PostgREST .or() interpolates raw strings into a filter expression.
+// Strip characters that have meaning to the filter parser before composing
+// the .or() clause so a search term like `x,user_id.eq.<other>` cannot
+// append OR conditions and exfiltrate other rows.
+const sanitizeSearchTerm = (term: string): string =>
+  term.replace(/[,()*:\\"]/g, '').trim()
+
 const searchSavedLocations = async (userId: string, searchTerm: string): Promise<SavedLocation[]> => {
   const supabase = getSupabaseClient()
+  const safeTerm = sanitizeSearchTerm(searchTerm)
+  if (!safeTerm) return []
   const { data, error } = await supabase
     .from('saved_locations')
     .select('*')
     .eq('user_id', userId)
-    .or(`location_name.ilike.%${searchTerm}%,city.ilike.%${searchTerm}%,custom_name.ilike.%${searchTerm}%`)
+    .or(`location_name.ilike.%${safeTerm}%,city.ilike.%${safeTerm}%,custom_name.ilike.%${safeTerm}%`)
     .order('is_favorite', { ascending: false })
     .order('updated_at', { ascending: false })
 

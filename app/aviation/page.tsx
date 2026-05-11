@@ -10,12 +10,14 @@
 'use client';
 
 import React, { useEffect, useState, Suspense, lazy } from 'react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import PageWrapper from '@/components/page-wrapper';
 import type { AviationAlert } from '@/components/aviation';
 import { ShareButtons } from '@/components/share-buttons';
+import AirportMiseryBoard from '@/components/aviation/AirportMiseryBoard';
 
 // Lazy load the heavy terminal component
 const FlightConditionsTerminal = lazy(() => import('@/components/aviation/FlightConditionsTerminal'));
@@ -26,6 +28,7 @@ export default function AviationPage() {
   const [alerts, setAlerts] = useState<AviationAlert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [alertsFetchedAt, setAlertsFetchedAt] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchAlerts = async () => {
@@ -39,6 +42,7 @@ export default function AviationPage() {
 
         const data = await response.json();
         setAlerts(data.alerts || []);
+        setAlertsFetchedAt(Date.now());
         setError(null);
       } catch (err) {
         console.error('Error fetching aviation alerts:', err);
@@ -82,17 +86,52 @@ export default function AviationPage() {
             }}
             className="mt-3"
           />
+          <Link
+            href="/travel"
+            className={cn(
+              'mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded border font-mono text-xs uppercase tracking-wider transition-colors',
+              'border-border bg-card/40 hover:bg-card/70 text-muted-foreground hover:text-foreground'
+            )}
+          >
+            Driving instead? Open Travel Hub →
+          </Link>
         </div>
 
         {/* Error Display */}
         {error && (
-          <div className={cn(
-            'mb-6 p-4 border-4 border-red-500 bg-red-500/10 font-mono text-sm',
-            'text-red-500'
-          )}>
+          <div
+            className="mb-6 p-4 border-4 font-mono text-sm"
+            style={{
+              color: 'var(--severity-extreme)',
+              backgroundColor: 'var(--severity-extreme-bg)',
+              borderColor: 'var(--severity-extreme)',
+            }}
+            role="alert"
+            aria-live="polite"
+          >
             {error}
           </div>
         )}
+
+        {/* Airport Misery Board - hub airport delay risk ranking */}
+        <AirportMiseryBoard className="mb-8" />
+
+        {/* Detail Console heading */}
+        <div className="mb-3 mt-8 flex items-center gap-3">
+          <h2
+            className={cn(
+              'font-mono text-sm sm:text-base font-bold uppercase tracking-[0.2em]',
+              themeClasses.accentText,
+            )}
+          >
+            Detail Console
+          </h2>
+          <div
+            className="flex-1 h-px"
+            style={{ backgroundColor: 'var(--primary)', opacity: 0.3 }}
+            aria-hidden="true"
+          />
+        </div>
 
         {/* Main Terminal */}
         <Suspense fallback={
@@ -103,6 +142,7 @@ export default function AviationPage() {
           <FlightConditionsTerminal
             alerts={alerts}
             isLoading={isLoading}
+            alertsFetchedAt={alertsFetchedAt}
           />
         </Suspense>
       </div>

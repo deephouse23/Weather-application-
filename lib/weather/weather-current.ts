@@ -76,13 +76,10 @@ export const fetchWeatherData = async (
     // Geocode location
     const { lat, lon, displayName, country } = await geocodeLocation(locationQuery);
 
-    // Playwright E2E tests stub the legacy endpoints
-    const isPlaywrightTestMode = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true';
-    if (isPlaywrightTestMode) {
-      return await fetchWeatherLegacyEndpoints(lat, lon, displayName, unitSystem);
-    }
-
-    // Phase 2: Use Open-Meteo instead of OWM One Call
+    // Phase 2: Use Open-Meteo instead of OWM One Call.
+    // (Phase 4 cleanup removed a NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE branch
+    // that re-routed through the legacy OWM endpoints. E2E fixtures should
+    // stub the Open-Meteo path directly.)
     return buildWeatherDataFromOpenMeteo(lat, lon, displayName, unitSystem, country);
 
     // [OWM ROLLBACK] Previous One Call 3.0 path — kept for rollback
@@ -115,16 +112,9 @@ export const fetchWeatherByLocation = async (
   }
 
   try {
-    const isPlaywrightTestMode = process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true';
-    if (isPlaywrightTestMode) {
-      return await fetchWeatherLegacyEndpoints(
-        latitude,
-        longitude,
-        locationName || `${latitude}, ${longitude}`,
-        unitSystem
-      );
-    }
-
+    // (Phase 4 cleanup removed a NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE branch
+    // that re-routed through the legacy OWM endpoints. E2E fixtures should
+    // stub the Open-Meteo path directly.)
     // Resolve display name and country via reverse geocoding
     let countryCode: string | undefined;
     let resolvedDisplayName = locationName;
@@ -286,7 +276,7 @@ async function buildWeatherDataFromOneCall(
         details: {
           humidity: d.humidity ?? 0,
           windSpeed: Math.round(d.wind_speed ?? 0),
-          windDirection: d.wind_deg ? getWindDirection(d.wind_deg) : undefined,
+          windDirection: d.wind_deg != null ? getWindDirection(d.wind_deg) : undefined,
           pressure: `${d.pressure ?? 1013} hPa`,
           cloudCover: d.clouds ?? 0,
           precipitationChance: Math.round((d.pop ?? 0) * 100),

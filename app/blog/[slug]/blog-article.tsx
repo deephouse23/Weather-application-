@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import rehypeSanitize from 'rehype-sanitize'
 import remarkGfm from 'remark-gfm'
 import Link from 'next/link'
+import Image from 'next/image'
 
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/components/theme-provider'
@@ -11,6 +12,7 @@ import { getComponentStyles, type ThemeType } from '@/lib/theme-utils'
 import PageWrapper from '@/components/page-wrapper'
 import { ShareButtons } from '@/components/share-buttons'
 import type { BlogPost } from '@/lib/blog'
+import { allowedBlogUrl } from '@/lib/blog/allowed-hosts'
 
 interface BlogArticleProps {
   post: BlogPost
@@ -30,10 +32,21 @@ export function BlogArticle({ post, relatedPosts }: BlogArticleProps) {
   return (
     <PageWrapper>
       <article className="max-w-3xl mx-auto px-4 py-8">
-        {/* Hero image */}
+        {/* Hero image — LCP candidate, priority-loaded.
+            unoptimized: heroImage is served by our own /api/og endpoint (already
+            a generated image); re-optimizing at build time would require a
+            running server and adds no benefit. */}
         {post.heroImage && (
           <div className="relative w-full h-64 sm:h-80 mb-6 rounded-lg overflow-hidden">
-            <img src={post.heroImage} alt={post.title} className="w-full h-full object-cover" />
+            <Image
+              src={post.heroImage}
+              alt={post.title}
+              fill
+              priority
+              unoptimized
+              sizes="(max-width: 768px) 100vw, 768px"
+              className="object-cover"
+            />
           </div>
         )}
 
@@ -109,18 +122,42 @@ export function BlogArticle({ post, relatedPosts }: BlogArticleProps) {
               ),
               strong: ({ children }) => <strong>{children}</strong>,
               em: ({ children }) => <em>{children}</em>,
-              a: ({ href, children }) => (
-                <a href={href} className="underline text-[hsl(var(--primary))]" target="_blank" rel="noopener noreferrer">{children}</a>
-              ),
+              a: ({ href, children }) => {
+                // Render the link only when the host is in the curated
+                // allow-list. Out-of-list hrefs (incl. javascript: / data: /
+                // unknown attacker hosts) render as plain text. Defense
+                // against indirect prompt-injection that gets the model to
+                // embed phishing URLs in a generated post.
+                const safe = allowedBlogUrl(typeof href === 'string' ? href : null)
+                if (!safe) return <span>{children}</span>
+                return (
+                  <a href={safe} className="underline text-[hsl(var(--primary))]" target="_blank" rel="noopener noreferrer">{children}</a>
+                )
+              },
               code: ({ children }) => (
                 <code className="rounded bg-black/25 px-1 py-0.5 font-mono text-[0.85em]">{children}</code>
               ),
               pre: ({ children }) => (
                 <pre className="mb-4 overflow-x-auto rounded bg-black/30 p-3 font-mono text-xs">{children}</pre>
               ),
-              img: ({ src, alt }) => (
-                <img src={src} alt={alt || ''} className="w-full rounded-lg my-6 border border-[hsl(var(--border))]" loading="lazy" />
-              ),
+              img: ({ src, alt }) => {
+                // Same allow-list as <a>. Out-of-list image hosts could
+                // beacon viewer IP/UA on every page load with no click
+                // required, so refuse to render them at all.
+                const safe = allowedBlogUrl(typeof src === 'string' ? src : null)
+                if (!safe) return null
+                return (
+                  <Image
+                    src={safe}
+                    alt={alt || ''}
+                    width={1200}
+                    height={675}
+                    unoptimized
+                    sizes="(max-width: 768px) 100vw, 768px"
+                    className="w-full h-auto rounded-lg my-6 border border-[hsl(var(--border))]"
+                  />
+                )
+              },
             }}
           >
             {post.content}

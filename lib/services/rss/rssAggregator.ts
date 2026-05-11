@@ -9,6 +9,7 @@
 
 import { FEED_SOURCES, FeedSource, FeedCategory, CATEGORY_CONFIG } from './feedSources';
 import { decodeHtmlEntities } from './html-utils';
+import { safeExternalUrl } from '@/lib/safe-url';
 
 export interface RSSItem {
   id: string;
@@ -122,20 +123,24 @@ function parseRSSFeed(xml: string, source: FeedSource): RSSItem[] {
         if (imgMatch) imageUrl = imgMatch[1];
       }
 
-      if (title && link) {
+      // Drop items whose link or image URL isn't an http(s) URL.
+      // Stops `javascript:` and other URI schemes from reaching renderers.
+      const safeLink = safeExternalUrl(link);
+      const safeImage = imageUrl ? safeExternalUrl(imageUrl) : null;
+      if (title && safeLink) {
         // Create unique ID using hash of full URL + index
-        const uniqueId = `${source.id}-${simpleHash(link + i.toString())}-${i}`;
+        const uniqueId = `${source.id}-${simpleHash(safeLink + i.toString())}-${i}`;
         items.push({
           id: uniqueId,
           title: cleanHtml(title),
           description: cleanHtml(description || '').slice(0, 300),
-          url: link,
+          url: safeLink,
           source: source.name,
           sourceId: source.id,
           category: source.category,
           priority: source.priority,
           timestamp: pubDate ? new Date(pubDate) : new Date(),
-          imageUrl: imageUrl || undefined,
+          imageUrl: safeImage || undefined,
           author: author ? cleanHtml(author) : undefined,
         });
       }
@@ -183,14 +188,16 @@ function parseAtomFeed(xml: string, source: FeedSource): RSSItem[] {
         if (depthMatch) depth = parseFloat(depthMatch[1]);
       }
 
-      if (title && link) {
+      // Same scheme guard as the RSS branch above.
+      const safeLink = safeExternalUrl(link);
+      if (title && safeLink) {
         // Create unique ID using hash of full URL + index
-        const uniqueId = `${source.id}-${simpleHash(link + i.toString())}-${i}`;
+        const uniqueId = `${source.id}-${simpleHash(safeLink + i.toString())}-${i}`;
         items.push({
           id: uniqueId,
           title: cleanHtml(title),
           description: cleanHtml(summary || '').slice(0, 300),
-          url: link,
+          url: safeLink,
           source: source.name,
           sourceId: source.id,
           category: source.category,

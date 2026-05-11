@@ -385,20 +385,48 @@ export async function setupMockAuth(page: Page, userId: string = '00000000-0000-
     });
   });
 
-  // IMPORTANT:
-  // Avoid persisting access/refresh tokens in clear text in tests (cookies/localStorage),
-  // as code scanning flags this. Playwright test mode bypasses middleware via this cookie,
-  // and auth behavior is mocked via route intercepts above.
   // Use origin only to avoid path-scoped cookies that won't be sent to /
   const rawTestUrl2 = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://127.0.0.1:3000';
   const parsedUrl2 = new URL(rawTestUrl2);
   const testUrlOrigin2 = parsedUrl2.origin;
   const isHttps2 = parsedUrl2.protocol === 'https:';
-  
+
+  // Seed the supabase-ssr auth cookie so the browser-side `getSession()`
+  // returns the mock session WITHOUT relying on the phantom-session bypass
+  // that used to live in lib/auth/auth-context.tsx (removed in Phase 4
+  // because it was gated on a NEXT_PUBLIC_ env var inlined into the prod
+  // bundle).
+  //
+  // Format the storage adapter expects (per @supabase/ssr): cookie name
+  // `sb-${projectRef}-auth-token` where projectRef is the first DNS label
+  // of NEXT_PUBLIC_SUPABASE_URL, value `base64-${base64url(JSON.stringify(session))}`.
+  // The mock session is short enough to avoid cookie chunking.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+  const projectRef = new URL(supabaseUrl).hostname.split('.')[0];
+  const storageKey = `sb-${projectRef}-auth-token`;
+  const sessionJson = JSON.stringify(mockSession);
+  const base64url = Buffer.from(sessionJson, 'utf-8')
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+  const supabaseAuthCookieValue = `base64-${base64url}`;
+
   await page.context().addCookies([
     {
       name: 'playwright-test-mode',
       value: 'true',
+      url: testUrlOrigin2,
+      httpOnly: false,
+      secure: isHttps2,
+      sameSite: 'Lax' as const,
+    },
+    {
+      // The supabase-ssr auth cookie itself. With this present, the browser
+      // client's `auth.getSession()` resolves to the mock session at startup
+      // and ProtectedRoute renders the page instead of redirecting to /auth/login.
+      name: storageKey,
+      value: supabaseAuthCookieValue,
       url: testUrlOrigin2,
       httpOnly: false,
       secure: isHttps2,

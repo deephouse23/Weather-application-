@@ -65,6 +65,9 @@ describe('Weather Intensity Score (WIS)', () => {
       expect(result.activeWatches).toBe(8);
       expect(result.activeAdvisories).toBe(7);
       expect(result.totalAlerts).toBe(30);
+      expect(result.nwsWarnings).toBe(0);
+      expect(result.nwsWatches).toBe(0);
+      expect(result.nwsAdvisories).toBe(0);
     });
   });
 
@@ -82,12 +85,13 @@ describe('Weather Intensity Score (WIS)', () => {
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
+          type: 'FeatureCollection',
           features: [
-            { properties: { id: '1', headline: '', event: '', severity: 'Extreme', urgency: 'Immediate', expires: '', areaDesc: '' } },
-            { properties: { id: '2', headline: '', event: '', severity: 'Severe', urgency: 'Expected', expires: '', areaDesc: '' } },
-            { properties: { id: '3', headline: '', event: '', severity: 'Moderate', urgency: 'Expected', expires: '', areaDesc: '' } },
-            { properties: { id: '4', headline: '', event: '', severity: 'Minor', urgency: 'Future', expires: '', areaDesc: '' } },
-            { properties: { id: '5', headline: '', event: '', severity: 'Minor', urgency: 'Future', expires: '', areaDesc: '' } },
+            { type: 'Feature', geometry: null, properties: { id: '1', headline: '', event: '', severity: 'Extreme', urgency: 'Immediate', expires: '', areaDesc: '' } },
+            { type: 'Feature', geometry: null, properties: { id: '2', headline: '', event: '', severity: 'Severe', urgency: 'Expected', expires: '', areaDesc: '' } },
+            { type: 'Feature', geometry: null, properties: { id: '3', headline: '', event: '', severity: 'Moderate', urgency: 'Expected', expires: '', areaDesc: '' } },
+            { type: 'Feature', geometry: null, properties: { id: '4', headline: '', event: '', severity: 'Minor', urgency: 'Future', expires: '', areaDesc: '' } },
+            { type: 'Feature', geometry: null, properties: { id: '5', headline: '', event: '', severity: 'Minor', urgency: 'Future', expires: '', areaDesc: '' } },
           ]
         }),
       });
@@ -111,6 +115,64 @@ describe('Weather Intensity Score (WIS)', () => {
       expect(result.score).toBe(0);
       expect(result.level).toBe('green');
     });
+
+    it('should count NWS warning products from event text', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              geometry: null,
+              properties: {
+                id: 'w1',
+                headline: 'Severe Thunderstorm Warning',
+                event: 'Severe Thunderstorm Warning',
+                severity: 'Severe',
+                urgency: 'Immediate',
+                expires: '2099-01-01T00:00:00Z',
+                areaDesc: 'Test',
+                sent: '',
+                effective: '',
+                ends: '',
+                description: '',
+                instruction: '',
+                certainty: '',
+                response: '',
+                sender: '',
+              },
+            },
+            {
+              type: 'Feature',
+              geometry: null,
+              properties: {
+                id: 'w2',
+                headline: 'Severe Thunderstorm Watch',
+                event: 'Severe Thunderstorm Watch',
+                severity: 'Moderate',
+                urgency: 'Expected',
+                expires: '2099-01-01T00:00:00Z',
+                areaDesc: 'Test',
+                sent: '',
+                effective: '',
+                ends: '',
+                description: '',
+                instruction: '',
+                certainty: '',
+                response: '',
+                sender: '',
+              },
+            },
+          ],
+        }),
+      });
+
+      const result = await getWISScore();
+      expect(result.nwsWarnings).toBe(1);
+      expect(result.nwsWatches).toBe(1);
+      expect(result.nwsAdvisories).toBe(0);
+    });
   });
 
   describe('fetchActiveAlerts', () => {
@@ -126,7 +188,10 @@ describe('Weather Intensity Score (WIS)', () => {
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
+          type: 'FeatureCollection',
           features: [{
+            type: 'Feature',
+            geometry: null,
             properties: {
               id: 'urn:oid:123',
               headline: 'Tornado Warning',
@@ -152,7 +217,10 @@ describe('Weather Intensity Score (WIS)', () => {
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
+          type: 'FeatureCollection',
           features: [{
+            type: 'Feature',
+            geometry: null,
             properties: {
               id: '1', headline: '', event: '',
               severity: 'Unknown',

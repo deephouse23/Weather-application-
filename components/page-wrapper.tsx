@@ -58,12 +58,13 @@ export default function PageWrapper({ children, weatherLocation, weatherTemperat
                 <Link href="/stargazer" className="text-muted-foreground hover:text-foreground transition-colors">Stargazer</Link>
                 <Link href="/tropical" className="text-muted-foreground hover:text-foreground transition-colors">Tropical</Link>
                 <Link href="/winter" className="text-muted-foreground hover:text-foreground transition-colors">Winter</Link>
+                <Link href="/earth-sciences" className="text-muted-foreground hover:text-foreground transition-colors">Earth Sciences</Link>
               </nav>
             </div>
             <div>
               <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Tools</h3>
               <nav className="flex flex-col gap-1.5">
-                <Link href="/situation" className="text-muted-foreground hover:text-foreground transition-colors">Situation</Link>
+                <Link href="/warnings" className="text-muted-foreground hover:text-foreground transition-colors">Warnings</Link>
                 <Link href="/extremes" className="text-muted-foreground hover:text-foreground transition-colors">Extremes</Link>
                 <Link href="/hourly" className="text-muted-foreground hover:text-foreground transition-colors">Hourly</Link>
                 <Link href="/travel" className="text-muted-foreground hover:text-foreground transition-colors">Travel</Link>
@@ -76,7 +77,6 @@ export default function PageWrapper({ children, weatherLocation, weatherTemperat
                 <Link href="/education" className="text-muted-foreground hover:text-foreground transition-colors">Education</Link>
                 <Link href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">Blog</Link>
                 <Link href="/news" className="text-muted-foreground hover:text-foreground transition-colors">News</Link>
-                <Link href="/games" className="text-muted-foreground hover:text-foreground transition-colors">Games</Link>
                 <Link href="/cloud-types" className="text-muted-foreground hover:text-foreground transition-colors">Cloud Types</Link>
                 <Link href="/fun-facts" className="text-muted-foreground hover:text-foreground transition-colors">Fun Facts</Link>
               </nav>

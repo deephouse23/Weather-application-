@@ -58,6 +58,7 @@ export async function GET(request: NextRequest) {
       headers: {
         'User-Agent': '16BitWeather/1.0 (https://www.16bitweather.co)',
       },
+      signal: AbortSignal.timeout(8000),
     });
 
     if (!response.ok) {

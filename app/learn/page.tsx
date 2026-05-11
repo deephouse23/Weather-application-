@@ -10,7 +10,7 @@
 'use client';
 
 import React from 'react';
-import { Cloud, Zap, BookOpen, BookMarked, Thermometer, Satellite, Gamepad2 } from 'lucide-react';
+import { Cloud, Zap, BookOpen, BookMarked, Thermometer, Satellite } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
@@ -59,13 +59,6 @@ export default function LearnPage() {
       itemCount: undefined
     },
     {
-      href: '/games',
-      icon: Gamepad2,
-      title: 'Weather Arcade',
-      description: 'Test your meteorological mettle with retro-style quizzes and challenges. High scores needed.',
-      itemCount: 3
-    },
-    {
       href: '/learn/glossary',
       icon: BookMarked,
       title: 'Weather Glossary',
@@ -98,7 +91,7 @@ export default function LearnPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
           <Card className={cn('container-nested', themeClasses.background)}>
             <CardContent className="p-4 text-center">
-              <div className={cn('text-3xl font-bold font-mono', themeClasses.accentText)}>7</div>
+              <div className={cn('text-3xl font-bold font-mono', themeClasses.accentText)}>{learningTopics.length}</div>
               <div className={cn('text-xs font-mono uppercase', themeClasses.text)}>Topics</div>
             </CardContent>
           </Card>

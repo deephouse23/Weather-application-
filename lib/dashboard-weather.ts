@@ -10,14 +10,19 @@ interface DashboardWeatherData {
   feelsLike: number
   pressure: number
   visibility: number
+  units?: 'metric' | 'imperial'
 }
 
-export async function getDashboardWeather(latitude: number, longitude: number): Promise<DashboardWeatherData | null> {
+export async function getDashboardWeather(
+  latitude: number,
+  longitude: number,
+  units: 'metric' | 'imperial' = 'imperial'
+): Promise<DashboardWeatherData | null> {
   try {
     // Use our API route instead of calling OpenWeather directly
     const response = await fetch(
-      `/api/dashboard-weather?lat=${latitude}&lon=${longitude}`,
-      { 
+      `/api/dashboard-weather?lat=${latitude}&lon=${longitude}&units=${units}`,
+      {
         cache: 'default',
         headers: {
           'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200'

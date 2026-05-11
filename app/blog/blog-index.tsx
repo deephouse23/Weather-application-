@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/components/theme-provider'
@@ -113,7 +114,15 @@ export function BlogIndex({ posts, tags, initialTag }: BlogIndexProps) {
             >
               {feat.heroImage ? (
                 <div className="relative w-full h-56 sm:h-72 md:h-80">
-                  <img src={feat.heroImage} alt={feat.title} className="w-full h-full object-cover" />
+                  <Image
+                    src={feat.heroImage}
+                    alt={feat.title}
+                    fill
+                    priority
+                    unoptimized
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 1024px"
+                    className="object-cover"
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-6">
                     <span className="inline-block px-2 py-0.5 text-xs font-mono uppercase tracking-widest text-[hsl(var(--primary))] border border-[hsl(var(--primary))] rounded mb-3">

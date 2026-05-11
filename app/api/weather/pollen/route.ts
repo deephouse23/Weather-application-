@@ -14,6 +14,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout'
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5'
 
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest) {
       try {
         const googlePollenUrl = `https://pollen.googleapis.com/v1/forecast:lookup?key=${googlePollenApiKey}&location.latitude=${latitude}&location.longitude=${longitude}&days=1`
         
-        const response = await fetch(googlePollenUrl)
+        const response = await fetchWithTimeout(googlePollenUrl, { signal: request.signal })
         
         if (response.ok) {
           const data = await response.json()
@@ -160,7 +161,7 @@ export async function GET(request: NextRequest) {
     // Fallback to OpenWeather Air Pollution API for basic air quality data
     const airPollutionUrl = `${BASE_URL}/air_pollution?lat=${latitude}&lon=${longitude}&appid=${openWeatherApiKey}`
     
-    const response = await fetch(airPollutionUrl)
+    const response = await fetchWithTimeout(airPollutionUrl, { signal: request.signal })
     
     if (!response.ok) {
       return NextResponse.json({

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimitRequest } from '@/lib/services/weather-rate-limiter'
+import { tileProxyOriginHeaders } from '@/lib/services/tile-proxy-cors'
 
 export const runtime = 'nodejs'
 
@@ -6,6 +8,9 @@ export const runtime = 'nodejs'
 // GET /api/weather/noaa-wms?REQUEST=GetMap&SERVICE=WMS&...
 export async function GET(request: NextRequest) {
   try {
+    const rateLimit = await rateLimitRequest(request)
+    if (!rateLimit.allowed) return rateLimit.response
+
     const { searchParams } = new URL(request.url)
     
     // Validate required WMS parameters
@@ -46,7 +51,7 @@ export async function GET(request: NextRequest) {
         headers: {
           'Content-Type': 'image/png',
           'Cache-Control': 'public, max-age=60',
-          'Access-Control-Allow-Origin': '*',
+          ...tileProxyOriginHeaders(request),
         },
       })
     }
@@ -83,9 +88,7 @@ export async function GET(request: NextRequest) {
       headers: {
         'Content-Type': contentType,
         'Cache-Control': cacheControl,
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        ...tileProxyOriginHeaders(request),
       },
     })
   } catch (error) {
@@ -100,7 +103,7 @@ export async function GET(request: NextRequest) {
       headers: {
         'Content-Type': 'image/png',
         'Cache-Control': 'public, max-age=30',
-        'Access-Control-Allow-Origin': '*',
+        ...tileProxyOriginHeaders(request),
       },
     })
   }
@@ -111,9 +114,7 @@ export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      ...tileProxyOriginHeaders(request),
       'Access-Control-Max-Age': '86400',
     },
   })

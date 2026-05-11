@@ -101,14 +101,9 @@ export interface Database {
           theme: string
           temperature_unit: 'celsius' | 'fahrenheit'
           wind_unit: 'mph' | 'kmh' | 'ms'
-          pressure_unit: 'hpa' | 'inhg' | 'mmhg'
           auto_location: boolean
           notifications_enabled: boolean
-          email_alerts: boolean
-          severe_weather_alerts: boolean
-          daily_forecast_email: boolean
-          news_ticker_enabled: boolean
-          animation_enabled: boolean
+          visible_metrics: string[] | null
           created_at: string
           updated_at: string
         }
@@ -118,14 +113,9 @@ export interface Database {
           theme?: string
           temperature_unit?: 'celsius' | 'fahrenheit'
           wind_unit?: 'mph' | 'kmh' | 'ms'
-          pressure_unit?: 'hpa' | 'inhg' | 'mmhg'
           auto_location?: boolean
           notifications_enabled?: boolean
-          email_alerts?: boolean
-          severe_weather_alerts?: boolean
-          daily_forecast_email?: boolean
-          news_ticker_enabled?: boolean
-          animation_enabled?: boolean
+          visible_metrics?: string[] | null
           created_at?: string
           updated_at?: string
         }
@@ -135,18 +125,57 @@ export interface Database {
           theme?: string
           temperature_unit?: 'celsius' | 'fahrenheit'
           wind_unit?: 'mph' | 'kmh' | 'ms'
-          pressure_unit?: 'hpa' | 'inhg' | 'mmhg'
           auto_location?: boolean
           notifications_enabled?: boolean
-          email_alerts?: boolean
-          severe_weather_alerts?: boolean
-          daily_forecast_email?: boolean
-          news_ticker_enabled?: boolean
-          animation_enabled?: boolean
+          visible_metrics?: string[] | null
+          created_at?: string
+          updated_at?: string
+        },
+      },
+      storm_reports: {
+        Row: {
+          id: string
+          user_id: string
+          report_type: 'hail' | 'wind' | 'tornado' | 'flood' | 'funnel' | 'other'
+          description: string
+          latitude: number
+          longitude: number
+          location_name: string | null
+          image_url: string | null
+          occurred_at: string
+          status: 'pending' | 'approved' | 'rejected'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          report_type: 'hail' | 'wind' | 'tornado' | 'flood' | 'funnel' | 'other'
+          description: string
+          latitude: number
+          longitude: number
+          location_name?: string | null
+          image_url?: string | null
+          occurred_at?: string
+          status?: 'pending' | 'approved' | 'rejected'
           created_at?: string
           updated_at?: string
         }
-      }
+        Update: {
+          id?: string
+          user_id?: string
+          report_type?: 'hail' | 'wind' | 'tornado' | 'flood' | 'funnel' | 'other'
+          description?: string
+          latitude?: number
+          longitude?: number
+          location_name?: string | null
+          image_url?: string | null
+          occurred_at?: string
+          status?: 'pending' | 'approved' | 'rejected'
+          created_at?: string
+          updated_at?: string
+        }
+      },
       user_ai_memory: {
         Row: {
           user_id: string

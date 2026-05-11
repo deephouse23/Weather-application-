@@ -71,7 +71,12 @@ describe('GET /api/open-meteo/forecast', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.latitude).toBe(40.71);
-    expect(mockedFetch).toHaveBeenCalledWith(40.71, -74.01, { forecastDays: 7 });
+    expect(mockedFetch).toHaveBeenCalledWith(40.71, -74.01, {
+      forecastDays: 7,
+      temperatureUnit: 'fahrenheit',
+      windSpeedUnit: 'mph',
+      precipitationUnit: 'inch',
+    });
   });
 
   it('should return 400 for invalid coordinates', async () => {
@@ -107,6 +112,11 @@ describe('GET /api/open-meteo/forecast', () => {
     const req = new NextRequest('http://localhost/api/open-meteo/forecast?lat=40.71&lon=-74.01&days=30');
     const res = await GET(req);
     expect(res.status).toBe(200);
-    expect(mockedFetch).toHaveBeenCalledWith(40.71, -74.01, { forecastDays: 16 });
+    expect(mockedFetch).toHaveBeenCalledWith(40.71, -74.01, {
+      forecastDays: 16,
+      temperatureUnit: 'fahrenheit',
+      windSpeedUnit: 'mph',
+      precipitationUnit: 'inch',
+    });
   });
 });

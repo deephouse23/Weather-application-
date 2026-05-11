@@ -213,10 +213,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Initialize authentication
     const initializeAuth = async () => {
       try {
-        const isPlaywrightTestMode =
-          process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true' ||
-          process.env.PLAYWRIGHT_TEST_MODE === 'true'
-
         // Check if Supabase is properly configured
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
           console.warn('Supabase not configured - running in anonymous mode')
@@ -227,51 +223,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
           return
         }
 
-        // Get initial session
-        let session: Session | null = null
-        let error: any = null
-
-        if (isPlaywrightTestMode) {
-          const sessionResult = await Promise.race([
-            supabase.auth.getSession(),
-            new Promise<{ data: { session: Session | null }; error: Error }>((resolve) =>
-              setTimeout(() => resolve({ data: { session: null }, error: new Error('getSession timeout') }), 1500)
-            ),
-          ])
-
-          session = sessionResult.data.session
-          error = sessionResult.error
-
-          // In Playwright test mode, if session fetching hangs/fails (notably on WebKit),
-          // fall back to a deterministic mock session so ProtectedRoute can render.
-          if (!session) {
-            const fakeSession = {
-              access_token: 'mock-access-token',
-              refresh_token: 'mock-refresh-token',
-              expires_at: Math.floor(Date.now() / 1000) + 3600,
-              expires_in: 3600,
-              token_type: 'bearer',
-              user: {
-                id: '00000000-0000-0000-0000-000000000000',
-                email: 'test@example.com',
-                aud: 'authenticated',
-                role: 'authenticated',
-                email_confirmed_at: new Date().toISOString(),
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              },
-            } as unknown as Session
-
-            if (isMounted) {
-              await handleAuthState('INITIAL_SESSION', fakeSession)
-            }
-            return
-          }
-        } else {
-          const result = await supabase.auth.getSession()
-          session = result.data.session
-          error = result.error
-        }
+        // Get initial session. The Playwright test-mode phantom-session
+        // bypass that used to live here was removed in the Phase 4 cleanup
+        // (Phase 1 M2): NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE got inlined into
+        // every client bundle, so a misconfigured prod build would render
+        // protected pages with a fake user and ship 401s on every API call.
+        // Server-side auth bypass for Playwright still lives in
+        // lib/playwright-test-mode.ts and is gated to non-prod NODE_ENV.
+        const result = await supabase.auth.getSession()
+        const session: Session | null = result.data.session
+        const error: any = result.error
 
         if (error) {
           console.error('Error getting initial session:', error)

@@ -106,7 +106,7 @@ export default defineConfig({
     useKernelBrowsers || process.env.PLAYWRIGHT_TEST_BASE_URL
       ? undefined
       : {
-          command: 'npx cross-env PLAYWRIGHT_TEST_MODE=true NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE=true npm run dev',
+          command: 'npx cross-env PLAYWRIGHT_TEST_MODE=true npm run dev',
           url: 'http://127.0.0.1:3000',
           reuseExistingServer: true,
           timeout: 120 * 1000,

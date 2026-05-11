@@ -57,10 +57,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Build aggregation options
+    // Build aggregation options — clamp to safe bounds
     const options: AggregatedNewsOptions = {
-      maxItems: maxItemsParam ? parseInt(maxItemsParam) : 30,
-      maxAge: maxAgeParam ? parseInt(maxAgeParam) : 72,
+      maxItems: Math.max(1, Math.min(maxItemsParam ? parseInt(maxItemsParam, 10) || 30 : 30, 100)),
+      maxAge: Math.max(1, Math.min(maxAgeParam ? parseInt(maxAgeParam, 10) || 72 : 72, 168)),
     };
 
     // Parse categories

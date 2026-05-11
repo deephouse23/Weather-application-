@@ -4,249 +4,223 @@
  * Copyright (C) 2025 16-Bit Weather
  * Licensed under Fair Source License, Version 0.9
  *
- * Fetches Graphical Turbulence Guidance (GTG) data from NOAA Aviation Weather Center
+ * Fetches real Graphical AIRMET (G-AIRMET) turbulence forecasts from
+ * NOAA AWC. CONUS + Alaska/Hawaii coverage. Returns GeoJSON-style polygons
+ * normalized for client consumption.
+ *
+ * Endpoint reference: https://aviationweather.gov/api/data/gairmet?type=turb&format=json
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 
-interface GTGDataPoint {
-  lat: number;
-  lon: number;
-  severity: 'smooth' | 'light' | 'moderate' | 'severe' | 'extreme';
-  edr: number;
+export type TurbulenceSeverity =
+  | 'smooth'
+  | 'light'
+  | 'moderate'
+  | 'severe'
+  | 'extreme';
+
+export interface TurbulencePolygon {
+  /** Stable id for keyed React rendering. */
+  id: string;
+  /** GeoJSON-style coordinate ring(s). Outer ring first. */
+  coordinates: number[][][];
+  severity: TurbulenceSeverity;
+  /** Raw severity string from AWC (e.g., "MOD-SEV"). */
+  rawSeverity: string;
+  /** Hazard label (always "TURB" for this endpoint). */
+  hazard: string;
+  /** Forecast hour offset (0, 3, 6, 9, ...). */
+  forecastHour: number;
+  /** ISO timestamp the forecast becomes valid. */
+  validFrom: string;
+  /** ISO timestamp the forecast expires. */
+  validTo: string;
+  /** Top of layer (hundreds of feet). null when omitted. */
+  topFt: number | null;
+  /** Base of layer (hundreds of feet). null when omitted. */
+  baseFt: number | null;
 }
 
-interface GTGResponse {
+export interface TurbulenceResponse {
   success: boolean;
   data: {
-    validTime: string;
-    altitude: string;
-    forecastHour: number;
-    turbulence: GTGDataPoint[];
-    bounds: {
-      north: number;
-      south: number;
-      east: number;
-      west: number;
-    };
+    polygons: TurbulencePolygon[];
+    fetchedAt: string;
+    source: 'NOAA AWC G-AIRMET';
+    coverage: 'CONUS+AK+HI';
   };
-  source: string;
-  cached: boolean;
+  error?: string;
 }
 
-// Map EDR values to severity levels
-function edrToSeverity(edr: number): GTGDataPoint['severity'] {
-  if (edr >= 0.6) return 'extreme';
-  if (edr >= 0.4) return 'severe';
-  if (edr >= 0.2) return 'moderate';
-  if (edr >= 0.1) return 'light';
+const AWC_GAIRMET_URL =
+  'https://aviationweather.gov/api/data/gairmet?type=turb&format=json';
+
+const FETCH_TIMEOUT_MS = 8000;
+
+function mapSeverity(raw: string | undefined | null): TurbulenceSeverity {
+  if (!raw) return 'smooth';
+  const upper = raw.toUpperCase();
+  if (upper.includes('EXTRM') || upper.includes('EXTREME')) return 'extreme';
+  if (upper.includes('SEV')) return 'severe';
+  if (upper.includes('MOD')) return 'moderate';
+  if (upper.includes('LGT') || upper.includes('LIGHT')) return 'light';
   return 'smooth';
 }
 
-// Seeded pseudo-random number generator for deterministic results
-// Uses simple linear congruential generator (LCG) for reproducibility
-function seededRandom(seed: number): () => number {
-  let state = seed;
-  return () => {
-    state = (state * 1664525 + 1013904223) % 4294967296;
-    return state / 4294967296;
+interface RawGairmetFeature {
+  geometry?: {
+    type?: string;
+    coordinates?: unknown;
+  };
+  properties?: {
+    hazard?: string;
+    severity?: string;
+    fcstHr?: number | string;
+    validTime?: string;
+    forecast?: string;
+    expireTime?: string;
+    top?: number | string;
+    base?: number | string;
+    icao?: string;
   };
 }
 
-// Create a deterministic seed from parameters (ensures same input = same output)
-function createSeed(altitude: string, forecastHour: number, lat: number, lon: number): number {
-  const altNum = parseInt(altitude.replace('FL', ''), 10) || 350;
-  // Round to 6-hour cycle for time-based stability
-  const hourCycle = Math.floor(Date.now() / (6 * 60 * 60 * 1000));
-  return (altNum * 1000 + forecastHour * 100 + Math.abs(lat * 10) + Math.abs(lon) + hourCycle) % 4294967296;
+function asFiniteNumber(v: unknown): number | null {
+  if (typeof v === 'number' && Number.isFinite(v)) return v;
+  if (typeof v === 'string') {
+    const parsed = Number(v);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
 }
 
-// Generate simulated turbulence data based on altitude and forecast
-// This simulates the NOAA GTG data structure while they expose a public API
-// Uses deterministic seeding to ensure consistent results for same parameters
-function generateTurbulenceData(altitude: string, forecastHour: number): GTGDataPoint[] {
-  const turbulencePoints: GTGDataPoint[] = [];
+/** Coerce AWC's polygon coordinates into [[[lon,lat], ...]] form. */
+function normalizeCoordinates(raw: unknown): number[][][] | null {
+  if (!Array.isArray(raw)) return null;
 
-  // Extract flight level number (e.g., FL350 -> 350)
-  const flLevel = parseInt(altitude.replace('FL', ''), 10) || 350;
+  // Polygon: [[[lon,lat], ...], (holes...)]
+  // MultiPolygon: [[[[lon,lat], ...]], ...]
+  // Sometimes AWC returns a flat ring [[lon,lat], ...] for older payloads.
+  if (raw.length === 0) return null;
 
-  // Turbulence is more common at certain flight levels (jet stream altitudes)
-  const jetStreamAltitudes = [300, 350, 400];
-  const isJetStreamAlt = jetStreamAltitudes.some(fl => Math.abs(flLevel - fl) <= 50);
-  const baseProbability = isJetStreamAlt ? 0.3 : 0.15;
-
-  // Known turbulence-prone areas in CONUS (mountain ranges, jet stream)
-  const turbulenceZones = [
-    // Rocky Mountains
-    { lat: 40, lon: -105, radius: 4, intensity: 0.4 },
-    { lat: 38, lon: -107, radius: 3, intensity: 0.35 },
-    { lat: 45, lon: -110, radius: 3, intensity: 0.3 },
-    // Sierra Nevada
-    { lat: 38, lon: -120, radius: 2, intensity: 0.35 },
-    // Jet stream corridor
-    { lat: 35, lon: -95, radius: 5, intensity: 0.3 },
-    { lat: 38, lon: -85, radius: 4, intensity: 0.25 },
-    { lat: 42, lon: -75, radius: 3, intensity: 0.25 },
-    // Appalachians
-    { lat: 37, lon: -80, radius: 2, intensity: 0.2 },
-    // Great Lakes
-    { lat: 44, lon: -87, radius: 3, intensity: 0.2 },
-  ];
-
-  // Adjust intensity based on forecast hour (more uncertainty further out)
-  const forecastMultiplier = 1 + (forecastHour / 24);
-
-  // Generate grid points across CONUS
-  for (let lat = 25; lat <= 50; lat += 2) {
-    for (let lon = -125; lon <= -65; lon += 2) {
-      let edr = 0;
-
-      // Check if point is in any turbulence zone
-      for (const zone of turbulenceZones) {
-        const distance = Math.sqrt(
-          Math.pow(lat - zone.lat, 2) + Math.pow(lon - zone.lon, 2)
-        );
-
-        if (distance < zone.radius) {
-          // EDR decreases with distance from center
-          const zoneEdr = zone.intensity * (1 - distance / zone.radius) * forecastMultiplier;
-          edr = Math.max(edr, zoneEdr);
-        }
-      }
-
-      // Add deterministic variation based on location (seeded random for consistency)
-      const random = seededRandom(createSeed(altitude, forecastHour, lat, lon));
-      if (random() < baseProbability) {
-        edr = Math.max(edr, random() * 0.3);
-      }
-
-      // Only include points with some turbulence (EDR > 0.05)
-      if (edr > 0.05) {
-        // Cap EDR at realistic maximum and round to 2 decimal places
-        // Important: Round BEFORE calling edrToSeverity to avoid mismatch
-        // e.g., 0.095 rounds to 0.10 (light), so severity should also be light
-        const roundedEdr = Math.round(Math.min(edr, 0.8) * 100) / 100;
-
-        turbulencePoints.push({
-          lat,
-          lon,
-          edr: roundedEdr,
-          severity: edrToSeverity(roundedEdr)
-        });
-      }
+  const first = raw[0];
+  // Flat ring (number[][]) → wrap once
+  if (Array.isArray(first) && typeof first[0] === 'number') {
+    return [raw as number[][]];
+  }
+  // Polygon with rings (number[][][]) → use as-is
+  if (Array.isArray(first) && Array.isArray(first[0]) && typeof first[0][0] === 'number') {
+    return raw as number[][][];
+  }
+  // MultiPolygon → flatten to outer rings only
+  if (Array.isArray(first) && Array.isArray(first[0]) && Array.isArray(first[0][0])) {
+    const outerRings: number[][][] = [];
+    for (const polygon of raw as number[][][][]) {
+      if (polygon[0]) outerRings.push(polygon[0]);
     }
+    return outerRings.length > 0 ? outerRings : null;
   }
-
-  return turbulencePoints;
+  return null;
 }
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const altitudeParam = searchParams.get('altitude');
-  const forecastParam = searchParams.get('forecast');
+function parseGairmetFeatures(raw: unknown): TurbulencePolygon[] {
+  const features = Array.isArray(raw) ? raw : [];
+  const polygons: TurbulencePolygon[] = [];
 
-  // Validate required parameters
-  if (!altitudeParam || !forecastParam) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: `Missing required parameter: ${!altitudeParam ? 'altitude' : 'forecast'}`
-      },
-      { status: 400 }
-    );
-  }
+  features.forEach((feature: RawGairmetFeature, index) => {
+    const coords = normalizeCoordinates(feature.geometry?.coordinates);
+    if (!coords) return;
 
-  // Validate altitude format
-  const validAltitudes = ['FL200', 'FL250', 'FL300', 'FL350', 'FL400', 'FL450'];
-  const normalizedAltitude = altitudeParam.toUpperCase();
-  if (!validAltitudes.includes(normalizedAltitude)) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: `Invalid altitude: ${altitudeParam}. Valid values: ${validAltitudes.join(', ')}`
-      },
-      { status: 400 }
-    );
-  }
+    const props = feature.properties ?? {};
+    const rawSeverity = props.severity ?? '';
+    const fcstHr = asFiniteNumber(props.fcstHr) ?? 0;
+    const validFrom = props.validTime ?? props.forecast ?? new Date().toISOString();
+    const validTo = props.expireTime ?? validFrom;
 
-  // Validate forecast hour
-  const validForecasts = [0, 6, 12, 18];
-  const forecast = parseInt(forecastParam, 10);
-  if (!Number.isFinite(forecast) || !validForecasts.includes(forecast)) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: `Invalid forecast: ${forecastParam}. Valid values: ${validForecasts.join(', ')}`
-      },
-      { status: 400 }
-    );
-  }
-  const normalizedForecast = forecast;
+    polygons.push({
+      id: `gairmet-${fcstHr}-${index}`,
+      coordinates: coords,
+      severity: mapSeverity(rawSeverity),
+      rawSeverity,
+      hazard: props.hazard ?? 'TURB',
+      forecastHour: fcstHr,
+      validFrom,
+      validTo,
+      topFt: asFiniteNumber(props.top),
+      baseFt: asFiniteNumber(props.base),
+    });
+  });
 
+  return polygons;
+}
+
+async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    // Try to fetch from NOAA GTG API (currently returns 404, so we fall back to simulated data)
-    // The official NOAA GTG endpoint for reference:
-    // const gtgUrl = `https://aviationweather.gov/api/data/gtg?format=json&fl=${normalizedAltitude.replace('FL', '')}&fcst=${normalizedForecast}`;
+    return await fetch(url, {
+      signal: controller.signal,
+      next: { revalidate: 600 }, // 10-min CDN cache
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
-    // Generate turbulence data
-    const turbulenceData = generateTurbulenceData(normalizedAltitude, normalizedForecast);
+export async function GET(_request: NextRequest) {
+  try {
+    const res = await fetchWithTimeout(AWC_GAIRMET_URL, FETCH_TIMEOUT_MS);
 
-    // Calculate valid time based on forecast hour (use UTC for aviation synoptic times)
-    // Aviation uses standard UTC synoptic hours: 00Z, 06Z, 12Z, 18Z
-    const now = new Date();
-    const roundedUtc = new Date(Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate(),
-      Math.floor(now.getUTCHours() / 6) * 6,
-      0, 0, 0
-    ));
-    const validTime = new Date(roundedUtc.getTime() + normalizedForecast * 60 * 60 * 1000);
+    if (!res.ok) {
+      console.error(`[API] AWC G-AIRMET returned ${res.status}`);
+      return NextResponse.json<TurbulenceResponse>(
+        {
+          success: false,
+          data: {
+            polygons: [],
+            fetchedAt: new Date().toISOString(),
+            source: 'NOAA AWC G-AIRMET',
+            coverage: 'CONUS+AK+HI',
+          },
+          error: `Upstream NOAA AWC returned ${res.status}`,
+        },
+        { status: 502 },
+      );
+    }
 
-    const response: GTGResponse = {
+    const raw = await res.json();
+    const polygons = parseGairmetFeatures(raw);
+
+    const response: TurbulenceResponse = {
       success: true,
       data: {
-        validTime: validTime.toISOString(),
-        altitude: normalizedAltitude,
-        forecastHour: normalizedForecast,
-        turbulence: turbulenceData,
-        bounds: {
-          north: 50,
-          south: 25,
-          east: -65,
-          west: -125
-        }
+        polygons,
+        fetchedAt: new Date().toISOString(),
+        source: 'NOAA AWC G-AIRMET',
+        coverage: 'CONUS+AK+HI',
       },
-      source: 'NOAA GTG (Simulated)',
-      cached: false
     };
 
     return NextResponse.json(response, {
       headers: {
-        'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=3600'
-      }
-    });
-
-  } catch (error) {
-    console.error('Turbulence API error:', error);
-
-    return NextResponse.json({
-      success: false,
-      data: {
-        validTime: new Date().toISOString(),
-        altitude: normalizedAltitude,
-        forecastHour: normalizedForecast,
-        turbulence: [],
-        bounds: {
-          north: 50,
-          south: 25,
-          east: -65,
-          west: -125
-        }
+        'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200',
       },
-      source: 'NOAA GTG',
-      cached: false,
-      error: 'Unable to fetch turbulence data. Please try again later.'
-    }, { status: 500 });
+    });
+  } catch (error) {
+    console.error('[API] Turbulence (G-AIRMET) error:', error);
+    return NextResponse.json<TurbulenceResponse>(
+      {
+        success: false,
+        data: {
+          polygons: [],
+          fetchedAt: new Date().toISOString(),
+          source: 'NOAA AWC G-AIRMET',
+          coverage: 'CONUS+AK+HI',
+        },
+        error: 'Unable to fetch turbulence data. Please try again later.',
+      },
+      { status: 500 },
+    );
   }
 }

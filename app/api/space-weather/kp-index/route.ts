@@ -8,6 +8,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
 
 export interface KpIndexData {
   timestamp: string;
@@ -29,14 +30,14 @@ export async function GET() {
   try {
     // Fetch both current Kp index and forecast
     const [kpResponse, forecastResponse] = await Promise.allSettled([
-      fetch('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json', {
+      fetchWithTimeout('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json', {
         headers: { 'Accept': 'application/json' },
         next: { revalidate: 300 } // Cache for 5 minutes
-      }),
-      fetch('https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json', {
+      } as RequestInit),
+      fetchWithTimeout('https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json', {
         headers: { 'Accept': 'application/json' },
         next: { revalidate: 900 } // Cache for 15 minutes
-      })
+      } as RequestInit)
     ]);
 
     // Parse Kp index data (array format: [time_tag, Kp, a_running, station_count])

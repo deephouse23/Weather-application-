@@ -13,7 +13,7 @@ const CACHE_DURATION = 10 * 60; // 10 minutes
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const maxItems = parseInt(searchParams.get('maxItems') || '30');
+    const maxItems = Math.max(1, Math.min(parseInt(searchParams.get('maxItems') || '30', 10) || 30, 100));
 
     const news = await fetchAllRedditWeatherNews(maxItems);
 

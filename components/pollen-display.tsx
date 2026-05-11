@@ -51,24 +51,34 @@ function PollenCategory({ categoryName, categoryData, theme, minimal }: PollenCa
   const renderPollenData = () => {
     if (validData.length === 0) {
       return (
-        <p className={cn("text-sm", textStyles)}>
+        <p className={cn("text-sm whitespace-nowrap", textStyles)}>
           No Data
         </p>
       )
-    } else if (validData.length === 1) {
-      const [plant, category] = validData[0]
-      return (
-        <p className={`text-sm ${getPollenColor(category)}`}>
-          {plant}: {category}
-        </p>
-      )
-    } else {
-      return validData.map(([plant, category]) => (
-        <p key={plant} className={`text-sm ${getPollenColor(category)}`}>
-          {plant}: {category}
-        </p>
-      ))
     }
+
+    if (minimal) {
+      return (
+        <ul className="space-y-1 leading-tight">
+          {validData.map(([plant, category]) => (
+            <li key={plant}>
+              <div className={cn("text-[11px] truncate", textStyles)} title={plant}>
+                {plant}
+              </div>
+              <div className={cn("text-xs font-semibold whitespace-nowrap", getPollenColor(category))}>
+                {category}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    return validData.map(([plant, category]) => (
+      <p key={plant} className={cn("text-sm whitespace-nowrap", getPollenColor(category))}>
+        {plant}: {category}
+      </p>
+    ))
   }
 
   return (

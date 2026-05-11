@@ -14,6 +14,9 @@ export interface EarthquakeData {
     distance?: number; // km from user (if coordinates provided)
     id: string;
     url: string;
+    latitude: number;
+    longitude: number;
+    tsunami: boolean;
 }
 
 export interface EarthquakeResponse {
@@ -90,6 +93,7 @@ function parseUSGSResponse(
                 place: string;
                 time: number;
                 url: string;
+                tsunami?: number;
             };
             geometry: {
                 coordinates: [number, number, number]; // [lon, lat, depth]
@@ -110,7 +114,10 @@ function parseUSGSResponse(
                 time: new Date(feature.properties.time),
                 depth: Math.round(depth),
                 id: feature.id,
-                url: feature.properties.url
+                url: feature.properties.url,
+                latitude: lat,
+                longitude: lon,
+                tsunami: feature.properties.tsunami === 1
             };
 
             if (userLat !== undefined && userLon !== undefined) {
@@ -207,14 +214,26 @@ export async function fetchRecentEarthquakes(
 }
 
 /**
- * Fetch significant earthquakes globally (M4.5+)
- * For "any big earthquakes lately?" type queries
- * @param days Number of days to look back (default: 7)
+ * Fetch global earthquakes with configurable minimum magnitude.
+ * Used by the /earth-sciences page to populate its M2.5+/M4.5+/M6+ filter tabs.
+ * @param minMagnitude Minimum magnitude (default 2.5)
+ * @param days Lookback window in days (default 7)
+ * @param limit Max results (default 50)
  */
-async function fetchSignificantEarthquakes(days: number = 7): Promise<EarthquakeResponse> {
-    const cacheKey = `significant_global_${days}`;
+export async function fetchGlobalEarthquakes(
+    minMagnitude: number = 2.5,
+    days: number = 7,
+    limit: number = 50
+): Promise<EarthquakeResponse> {
+    // Normalize at the boundary — callers beyond the API route can pass NaN,
+    // negatives, or huge values that would otherwise corrupt cache keys, date
+    // math, or the upstream USGS request.
+    const safeMinMag = Number.isFinite(minMagnitude) && minMagnitude >= 0 ? minMagnitude : 2.5;
+    const safeDays = Number.isFinite(days) ? Math.min(Math.max(Math.trunc(days), 1), 30) : 7;
+    const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(Math.trunc(limit), 1), 200) : 50;
 
-    // Check cache
+    const cacheKey = `global_${safeMinMag}_${safeDays}_${safeLimit}`;
+
     const cached = earthquakeCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
         return cached.data;
@@ -222,17 +241,16 @@ async function fetchSignificantEarthquakes(days: number = 7): Promise<Earthquake
 
     try {
         const endTime = new Date();
-        const startTime = new Date(endTime.getTime() - days * 24 * 60 * 60 * 1000);
+        const startTime = new Date(endTime.getTime() - safeDays * 24 * 60 * 60 * 1000);
 
         const url = new URL('https://earthquake.usgs.gov/fdsnws/event/1/query');
         url.searchParams.set('format', 'geojson');
         url.searchParams.set('starttime', startTime.toISOString());
         url.searchParams.set('endtime', endTime.toISOString());
-        url.searchParams.set('minmagnitude', '4.5');
+        url.searchParams.set('minmagnitude', safeMinMag.toString());
         url.searchParams.set('orderby', 'time');
-        url.searchParams.set('limit', '10'); // Top 10 significant quakes
+        url.searchParams.set('limit', safeLimit.toString());
 
-        // Create AbortController with timeout to prevent hanging requests
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
@@ -255,21 +273,19 @@ async function fetchSignificantEarthquakes(days: number = 7): Promise<Earthquake
 
         const data = await response.json();
         const earthquakes = parseUSGSResponse(data);
+        const significantQuakes = earthquakes.filter(q => q.magnitude >= 4.5);
 
         const result: EarthquakeResponse = {
             recent: earthquakes,
-            significantNearby: earthquakes.length > 0,
-            lastSignificant: earthquakes.length > 0 ? earthquakes[0] : undefined
+            significantNearby: significantQuakes.length > 0,
+            lastSignificant: significantQuakes.length > 0 ? significantQuakes[0] : undefined
         };
 
-        // Cache the result
         earthquakeCache.set(cacheKey, { data: result, timestamp: Date.now() });
-
         return result;
-
     } catch (error) {
         const isTimeout = error instanceof Error && error.name === 'AbortError';
-        console.error('[USGS API] Error fetching significant earthquakes:', isTimeout ? 'Request timed out' : error);
+        console.error('[USGS API] Error fetching global earthquakes:', isTimeout ? 'Request timed out' : error);
         return {
             recent: [],
             significantNearby: false,

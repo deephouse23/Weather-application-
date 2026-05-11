@@ -17,6 +17,7 @@ import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import CategoryBadge from './CategoryBadge';
 import PriorityIndicator from './PriorityIndicator';
 import type { RSSItem } from '@/lib/services/rss/rssAggregator';
+import { safeExternalUrl } from '@/lib/safe-url';
 
 interface NewsCardProps {
   item: RSSItem;
@@ -28,6 +29,15 @@ export default function NewsCard({ item, variant = 'default', className }: NewsC
   const { theme } = useTheme();
   const themeClasses = getComponentStyles((theme || 'nord') as ThemeType, 'weather');
   const [imageError, setImageError] = useState(false);
+  const safeUrl = safeExternalUrl(item.url);
+
+  const openSafeUrl = () => {
+    if (!safeUrl) {
+      console.warn('[NewsCard] dropping unsafe URL', item.url);
+      return;
+    }
+    window.open(safeUrl, '_blank', 'noopener,noreferrer');
+  };
 
   // Calculate time ago
   const timeAgo = getTimeAgo(new Date(item.timestamp));
@@ -59,7 +69,7 @@ export default function NewsCard({ item, variant = 'default', className }: NewsC
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      window.open(item.url, '_blank', 'noopener,noreferrer');
+      openSafeUrl();
     }
   };
 
@@ -73,7 +83,7 @@ export default function NewsCard({ item, variant = 'default', className }: NewsC
           themeClasses.background,
           className
         )}
-        onClick={() => window.open(item.url, '_blank', 'noopener,noreferrer')}
+        onClick={openSafeUrl}
         onKeyDown={handleKeyDown}
         role="link"
         tabIndex={0}
@@ -221,7 +231,7 @@ export default function NewsCard({ item, variant = 'default', className }: NewsC
           variant="outline"
           size="sm"
           className={cn('font-mono font-bold text-xs border-2 flex-shrink-0', themeClasses.accentText)}
-          onClick={() => window.open(item.url, '_blank', 'noopener,noreferrer')}
+          onClick={openSafeUrl}
           aria-label={`Read full article: ${item.title}`}
         >
           READ <ExternalLink className="w-3 h-3 ml-1" aria-hidden="true" />

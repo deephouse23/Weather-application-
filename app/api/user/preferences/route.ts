@@ -47,14 +47,8 @@ export async function GET() {
         theme: 'nord',
         temperature_unit: 'fahrenheit',
         wind_unit: 'mph',
-        pressure_unit: 'hpa',
         auto_location: false,
-        notifications_enabled: false,
-        email_alerts: false,
-        severe_weather_alerts: false,
-        daily_forecast_email: false,
-        news_ticker_enabled: true,
-        animation_enabled: true,
+        notifications_enabled: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
@@ -97,7 +91,10 @@ export async function PUT(request: NextRequest) {
 
     const { data: updatedPreferences, error: updateError } = await supabase
       .from('user_preferences')
-      // @ts-expect-error - Table definition mismatch
+      // The supabase-js generic infers `never` for our local Database type
+      // (it expects a PostgrestVersion marker we don't generate). Column set
+      // matches the live schema (see migrations/20260509_user_preferences_align.sql).
+      // @ts-expect-error - supabase-js Database generic mismatch, not a column mismatch
       .update(updates)
       .eq('user_id', user.id)
       .select()
@@ -144,20 +141,15 @@ export async function POST(request: NextRequest) {
     // Create initial preferences
     const { data, error } = await supabase
       .from('user_preferences')
-      // @ts-expect-error - Table definition mismatch
+      // See PUT for why this @ts-expect-error is required (supabase-js generic mismatch).
+      // @ts-expect-error - supabase-js Database generic mismatch, not a column mismatch
       .insert({
         user_id: user.id,
         theme,
         temperature_unit,
         wind_unit: 'mph',
-        pressure_unit: 'hpa',
         auto_location: false,
-        notifications_enabled: false,
-        email_alerts: false,
-        severe_weather_alerts: false,
-        daily_forecast_email: false,
-        news_ticker_enabled: true,
-        animation_enabled: true
+        notifications_enabled: true,
       })
       .select()
       .single()

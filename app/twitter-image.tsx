@@ -132,8 +132,6 @@ export default async function Image() {
             <span>FORECASTS</span>
             <span>•</span>
             <span>EDUCATION</span>
-            <span>•</span>
-            <span>GAMES</span>
           </div>
         </div>
 

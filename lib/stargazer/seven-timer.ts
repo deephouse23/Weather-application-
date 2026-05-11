@@ -50,25 +50,6 @@ export function sevenTimerTimeToDate(init: string, timepoint: number): Date {
 }
 
 /**
- * Map 7Timer cloud cover index (1-9) to approximate percentage (0-100).
- * Scale: 1=~3%, 2=~12%, 3=~25%, 4=~37%, 5=~50%, 6=~62%, 7=~75%, 8=~87%, 9=~97%
- */
-export function cloudCoverToPercent(value: number): number {
-  const mapping: Record<number, number> = {
-    1: 3,
-    2: 12,
-    3: 25,
-    4: 37,
-    5: 50,
-    6: 62,
-    7: 75,
-    8: 87,
-    9: 97,
-  };
-  return mapping[value] ?? 50;
-}
-
-/**
  * Get the nearest 7Timer data point for a specific time.
  */
 export function getSevenTimerAtTime(

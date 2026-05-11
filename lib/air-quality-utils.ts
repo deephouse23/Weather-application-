@@ -56,6 +56,34 @@ export const getAQIRecommendation = (aqi: number): string => {
 };
 
 /**
+ * Severity-driven chrome for the AQI card container.
+ * Keeps the dashboard card rhythm intact: no background wash (which reads
+ * muddy against the navy theme), just a colored left-border stripe that
+ * mirrors the HERO_CARD `border-l-4 border-l-primary` pattern used
+ * elsewhere. Severity color matches the existing getAQIColor tier.
+ */
+export interface AQISeverityChrome {
+  borderStripeClass: string
+  pulse: boolean
+}
+
+export const getAQISeverityChrome = (aqi: number): AQISeverityChrome => {
+  if (aqi <= 100) {
+    return { borderStripeClass: '', pulse: false }
+  }
+  if (aqi <= 150) {
+    return { borderStripeClass: 'border-l-4 border-l-orange-400/70', pulse: false }
+  }
+  if (aqi <= 200) {
+    return { borderStripeClass: 'border-l-4 border-l-red-400/80', pulse: false }
+  }
+  if (aqi <= 300) {
+    return { borderStripeClass: 'border-l-4 border-l-purple-400/80', pulse: true }
+  }
+  return { borderStripeClass: 'border-l-4 border-l-red-900', pulse: true }
+}
+
+/**
  * Get color class for pollen category level
  */
 export const getPollenColor = (category: string | number): string => {

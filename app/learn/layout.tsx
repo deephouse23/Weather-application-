@@ -84,13 +84,6 @@ const learnSchema = {
     {
       '@type': 'ListItem',
       position: 6,
-      name: 'Weather Games',
-      description: 'Educational weather games and trivia',
-      url: 'https://www.16bitweather.co/games',
-    },
-    {
-      '@type': 'ListItem',
-      position: 7,
       name: 'Weather Glossary',
       description: 'In-depth definitions of every weather metric',
       url: 'https://www.16bitweather.co/education/glossary',

@@ -14,22 +14,17 @@ export function ProtectedRoute({ children, redirectTo = '/auth/login' }: Protect
   const { user, loading } = useAuth()
   const router = useRouter()
 
-  // Playwright E2E runs: bypass client-side auth gating for determinism.
-  // Middleware/test fixtures already cover auth behavior when needed.
-  const isPlaywrightTestMode =
-    process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === 'true' ||
-    process.env.PLAYWRIGHT_TEST_MODE === 'true'
-
+  // The previous Playwright test-mode bypass that rendered children
+  // unconditionally lived here. Removed in Phase 4 cleanup (Phase 1 M2):
+  // it relied on a NEXT_PUBLIC_ env var that gets inlined into client
+  // bundles, so a misconfigured prod build would expose every protected
+  // page to anonymous visitors. E2E auth is now handled via real test-user
+  // sessions seeded by Playwright fixtures, not a render-layer bypass.
   useEffect(() => {
-    if (!isPlaywrightTestMode && !loading && !user) {
+    if (!loading && !user) {
       router.push(redirectTo)
     }
-  }, [user, loading, router, redirectTo, isPlaywrightTestMode])
-
-  // Bypass auth for Playwright tests
-  if (isPlaywrightTestMode) {
-    return <>{children}</>
-  }
+  }, [user, loading, router, redirectTo])
 
   if (loading) {
     return (

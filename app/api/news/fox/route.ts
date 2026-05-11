@@ -13,7 +13,7 @@ const CACHE_DURATION = 15 * 60; // 15 minutes
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const maxItems = parseInt(searchParams.get('maxItems') || '20');
+    const maxItems = Math.max(1, Math.min(parseInt(searchParams.get('maxItems') || '20', 10) || 20, 100));
 
     const news = await fetchAllFOXWeatherNews(maxItems);
 

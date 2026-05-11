@@ -1,20 +1,24 @@
-'use client';
-
 /**
  * 16-Bit Weather Platform - Tropical Tracker Page
  *
  * NHC tropical outlooks, satellite imagery, and hurricane season info.
+ * Pure server component — all data is static image references to NHC.
  */
-
+import type { Metadata } from 'next';
 import React from 'react';
-import { cn } from '@/lib/utils';
-import { useTheme } from '@/components/theme-provider';
-import { getComponentStyles, type ThemeType } from '@/lib/theme-utils';
 import PageWrapper from '@/components/page-wrapper';
 import { ExternalLink } from 'lucide-react';
 import { ShareButtons } from '@/components/share-buttons';
 
 const NHC_BASE = 'https://www.nhc.noaa.gov';
+const BASE_URL = 'https://www.16bitweather.co';
+
+export const metadata: Metadata = {
+  title: 'Tropical Tracker — NHC Outlooks & Atlantic Satellite | 16 Bit Weather',
+  description:
+    'Live NHC tropical weather outlooks, Atlantic basin satellite imagery, and sea surface temperatures — hurricane season tracking in a retro terminal UI.',
+  alternates: { canonical: `${BASE_URL}/tropical` },
+};
 
 const graphics = [
   {
@@ -44,9 +48,6 @@ const graphics = [
 ];
 
 export default function TropicalPage() {
-  const { theme } = useTheme();
-  getComponentStyles((theme || 'nord') as ThemeType, 'weather');
-
   return (
     <PageWrapper>
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">

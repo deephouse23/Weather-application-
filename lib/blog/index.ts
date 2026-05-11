@@ -4,6 +4,8 @@ import matter from 'gray-matter'
 
 const BLOG_DIR = path.join(process.cwd(), 'content/blog')
 
+export type NewsletterCadence = 'wednesday_topic' | 'sunday_rearview'
+
 export interface BlogPost {
   slug: string
   title: string
@@ -14,6 +16,22 @@ export interface BlogPost {
   heroImage: string
   readTime: number
   content: string
+  // Newsletter metadata. All optional — older posts predate these fields.
+  // See planning/prds/PRD-newsletter-redesign.md §4.1 for semantics.
+  cadence?: NewsletterCadence
+  topic_slug?: string
+  topic_title?: string
+  theme?: string
+  opener_hash?: string
+  key_phrases?: string[]
+  similarity_max?: number
+  similarity_judge?: string
+  model_used?: string
+  images_used?: string[]
+  spotlight_active?: string | null
+  generation_retries?: number
+  word_count?: number
+  closer_used?: string
 }
 
 export function getAllPosts(): BlogPost[] {
@@ -26,16 +44,42 @@ export function getAllPosts(): BlogPost[] {
     const fileContents = fs.readFileSync(filePath, 'utf8')
     const { data, content } = matter(fileContents)
     
+    // gray-matter (js-yaml) auto-coerces YAML timestamp scalars to Date
+    // objects. Next's metadata serializer renders that as "[object Object]"
+    // for `article:published_time`, which X's card validator rejects —
+    // breaking the share preview image. Force a string here.
+    const rawDate = data.date;
+    const dateString =
+      rawDate instanceof Date
+        ? rawDate.toISOString()
+        : typeof rawDate === 'string' && rawDate
+          ? rawDate
+          : new Date().toISOString();
+
     return {
       slug: data.slug || filename.replace(/\.mdx?$/, ''),
       title: data.title || 'Untitled',
-      date: data.date || new Date().toISOString(),
+      date: dateString,
       author: data.author || '16bitbot',
       summary: data.summary || '',
       tags: data.tags || [],
       heroImage: data.heroImage || '',
       readTime: data.readTime || Math.ceil(content.split(/\s+/).length / 200),
       content,
+      cadence: data.cadence,
+      topic_slug: data.topic_slug,
+      topic_title: data.topic_title,
+      theme: data.theme,
+      opener_hash: data.opener_hash,
+      key_phrases: data.key_phrases,
+      similarity_max: data.similarity_max,
+      similarity_judge: data.similarity_judge,
+      model_used: data.model_used,
+      images_used: data.images_used,
+      spotlight_active: data.spotlight_active,
+      generation_retries: data.generation_retries,
+      word_count: data.word_count,
+      closer_used: data.closer_used,
     } as BlogPost
   })
   
