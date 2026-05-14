@@ -96,6 +96,7 @@
     "world-atlas": "^2.0.2"
   },
   "overrides": {
-    "lodash": "4.18.1"
+    "lodash": "4.18.1",
+    "tmp": "^0.2.5"
   }
 }
