@@ -3,6 +3,7 @@ name: E2E Tests (PR)
 on:
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: e2e-pr-${{ github.workflow }}-${{ github.event.pull_request.number }}

@@ -3,6 +3,7 @@ name: Lighthouse (PR)
 on:
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: lighthouse-pr-${{ github.workflow }}-${{ github.event.pull_request.number }}
