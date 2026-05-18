@@ -44,11 +44,12 @@ describe('SEO Indexing Fixes', () => {
     expect(paths).not.toContain('/ai')
   })
 
-  it('sitemap should have fewer than 80 URLs to focus crawl budget', async () => {
+  it('sitemap should stay under a soft cap to focus crawl budget', async () => {
     const { default: sitemap } = await import('../app/sitemap')
     const entries = await sitemap()
 
-    expect(entries.length).toBeLessThan(80)
+    // Soft cap; newsletter pipeline adds ~2 posts/week so this needs headroom.
+    expect(entries.length).toBeLessThan(200)
   })
 
   it('city pages should use ISR revalidate instead of force-dynamic', () => {
