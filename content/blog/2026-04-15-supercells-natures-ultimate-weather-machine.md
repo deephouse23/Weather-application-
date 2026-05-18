@@ -7,6 +7,19 @@ summary: "Spring brings supercells to the Plains - massive rotating storms that 
 tags: ["supercells","tornadoes","severe weather","plains","spring storms"]
 heroImage: "/api/og/blog?title=Supercells%3A%20Nature's%20Ultimate%20Weather%20Machine&type=education"
 readTime: 6
+keyTerms:
+  - term: Supercell
+    definition: A thunderstorm with a deep, persistently rotating updraft (mesocyclone). The rarest but most dangerous storm type.
+    href: /education/glossary#supercell
+  - term: Mesocyclone
+    definition: A cyclonically rotating vortex within a supercell, typically 2-10 km across. The precursor to most significant tornadoes.
+  - term: CAPE
+    definition: Convective Available Potential Energy. Measures how much buoyancy energy is available for thunderstorm updrafts.
+    href: /education/glossary#cape
+  - term: Wind Shear
+    definition: Change in wind speed or direction with height. Critical for organizing storm rotation and supercell maintenance.
+  - term: Updraft
+    definition: A warm, moist air current rising within a thunderstorm. In supercells the updraft rotates, sustaining the storm for hours.
 ---
 
 ## The Beast Awakens

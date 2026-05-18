@@ -13,6 +13,7 @@ import PageWrapper from '@/components/page-wrapper'
 import { ShareButtons } from '@/components/share-buttons'
 import type { BlogPost } from '@/lib/blog'
 import { allowedBlogUrl } from '@/lib/blog/allowed-hosts'
+import { KeyTerms } from '@/components/blog/key-terms'
 
 interface BlogArticleProps {
   post: BlogPost
@@ -79,6 +80,11 @@ export function BlogArticle({ post, relatedPosts }: BlogArticleProps) {
         <p className="text-base font-mono text-muted-foreground mb-6 leading-relaxed">
           {post.summary}
         </p>
+
+        {/* Key Terms */}
+        {post.keyTerms && post.keyTerms.length > 0 && (
+          <KeyTerms terms={post.keyTerms} />
+        )}
 
         {/* Tags */}
         <div className="flex flex-wrap gap-2 mb-6">

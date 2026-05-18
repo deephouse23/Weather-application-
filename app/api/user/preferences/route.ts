@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
     const { theme, temperature_unit } = parseResult.data
 
     // Create initial preferences
-    const payload = {
+    const initialPreferences: Record<string, string | boolean> = {
       user_id: user.id,
       theme,
       temperature_unit,
@@ -150,7 +150,9 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase
       .from('user_preferences')
-      .insert(payload as never)
+      // See PUT for why this @ts-expect-error is required (supabase-js generic mismatch).
+      // @ts-expect-error - supabase-js Database generic mismatch, not a column mismatch
+      .insert(initialPreferences)
       .select()
       .single()
 

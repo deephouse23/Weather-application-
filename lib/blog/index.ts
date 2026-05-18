@@ -6,6 +6,12 @@ const BLOG_DIR = path.join(process.cwd(), 'content/blog')
 
 export type NewsletterCadence = 'wednesday_topic' | 'sunday_rearview'
 
+export interface KeyTerm {
+  term: string
+  definition: string
+  href?: string
+}
+
 export interface BlogPost {
   slug: string
   title: string
@@ -32,6 +38,7 @@ export interface BlogPost {
   generation_retries?: number
   word_count?: number
   closer_used?: string
+  keyTerms?: KeyTerm[]
 }
 
 export function getAllPosts(): BlogPost[] {
@@ -80,6 +87,7 @@ export function getAllPosts(): BlogPost[] {
       generation_retries: data.generation_retries,
       word_count: data.word_count,
       closer_used: data.closer_used,
+      keyTerms: Array.isArray(data.keyTerms) ? data.keyTerms : undefined,
     } as BlogPost
   })
   
